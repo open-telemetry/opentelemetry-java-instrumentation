@@ -305,9 +305,38 @@
   `otel.instrumentation.elasticsearch.query-sanitization.enabled` or
   `otel.instrumentation.opensearch.query-sanitization.enabled`, which override
   `otel.instrumentation.common.db.query-sanitization.enabled`.
+- The experimental Kafka broker JMX metrics now start with the JMX domain of their MBean, use
+  singular count units (for example `{message}` instead of `{messages}`), and report durations in
+  seconds. Update dashboards and alerts that use the old names:
+  - `kafka.network.io`, `kafka.purgatory.size`, `kafka.partition.count` and
+    `kafka.lag.max` are prefixed with `kafka.server.`.
+  - `kafka.message.count` becomes `kafka.server.messages`.
+  - `kafka.request.count` becomes `kafka.server.requests`.
+  - `kafka.request.failed` becomes `kafka.server.failed_requests`.
+  - `kafka.isr.operation.count` becomes `kafka.server.isr.operations`.
+  - `kafka.partition.underReplicated` becomes `kafka.server.partition.under_replicated`.
+  - `kafka.partition.offline` becomes `kafka.controller.partition.offline`, and
+    `kafka.leaderElection.count` and `kafka.leaderElection.unclean.count` become
+    `kafka.controller.leader_elections` and `kafka.controller.unclean_leader_elections`.
+  - `kafka.request.queue` becomes `kafka.network.request.queue`.
+  - `kafka.request.time.total` becomes `kafka.network.requests`: it reported a request count,
+    not a time. `kafka.request.time.50p` and `kafka.request.time.99p` become
+    `kafka.network.request.duration.p50` and `kafka.network.request.duration.p99`, in seconds
+    instead of milliseconds.
+  - `kafka.logs.flush.Count` becomes `kafka.log.flushes`, and `kafka.logs.flush.time.50p` and
+    `kafka.logs.flush.time.99p` become `kafka.log.flush.duration.p50` and
+    `kafka.log.flush.duration.p99`, in seconds instead of milliseconds.
+  - The attributes `type`, `direction` and `operation` become `kafka.request.type`,
+    `network.io.direction` (`in` and `out` become `receive` and `transmit`) and
+    `kafka.server.isr.operation`. Request type values are now lowercase.
+  - `kafka.server.messages`, `kafka.server.requests`, `kafka.server.failed_requests` and
+    `kafka.server.network.io` now have a `kafka.topic.name` attribute instead of a broker-wide value.
+  - `kafka.server.isr.operations` is now a counter instead of an updowncounter.
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- `TracedOnSubscribe.perSubscription(...)` now returns `Observable.OnSubscribe<T>` instead of
+  `TracedOnSubscribe<T, REQUEST>`. Recompile consumers.
 - Make the Netty 4.1 library's `NettyRequest` final; use it only as an opaque request view.
 - Java HTTP Client's `addAttributesExtractor` now requires
   `AttributesExtractor<HttpRequest, HttpResponse<?>>`.

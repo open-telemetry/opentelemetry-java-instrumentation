@@ -18,7 +18,6 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import javax.servlet.ServletException;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
@@ -30,11 +29,14 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 class Servlet3UserNameTest extends AbstractHttpServerUsingTest<Tomcat> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+
+  @TempDir private static File baseDir;
 
   @BeforeAll
   void startTomcat() {
@@ -49,8 +51,6 @@ class Servlet3UserNameTest extends AbstractHttpServerUsingTest<Tomcat> {
   @Override
   protected Tomcat setupServer() throws Exception {
     Tomcat tomcat = new Tomcat();
-    File baseDir = Files.createTempDirectory("tomcat").toFile();
-    baseDir.deleteOnExit();
     tomcat.setBaseDir(baseDir.getAbsolutePath());
     tomcat.setPort(port);
     tomcat.getConnector();
