@@ -51,17 +51,22 @@ public final class R2dbcSqlAttributesGetter
   @Override
   public String getErrorType(
       DbExecution request, @Nullable Void response, @Nullable Throwable error) {
-    if (error instanceof R2dbcException) {
-      return ((R2dbcException) error).getSqlState();
-    }
-    return null;
+    return getSqlState(error);
   }
 
   @Nullable
   @Override
   public String getDbResponseStatusCode(
       DbExecution request, @Nullable Void response, @Nullable Throwable error) {
-    return getErrorType(request, null, error);
+    return getSqlState(error);
+  }
+
+  @Nullable
+  private static String getSqlState(@Nullable Throwable error) {
+    if (error instanceof R2dbcException) {
+      return ((R2dbcException) error).getSqlState();
+    }
+    return null;
   }
 
   @Nullable

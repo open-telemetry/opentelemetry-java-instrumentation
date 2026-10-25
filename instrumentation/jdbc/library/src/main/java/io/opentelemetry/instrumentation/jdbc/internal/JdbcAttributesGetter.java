@@ -55,19 +55,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public String getErrorType(
       DbRequest request, @Nullable Void response, @Nullable Throwable error) {
-    if (error instanceof SQLException) {
-      SQLException sqlException = (SQLException) error;
-      int errorCode = sqlException.getErrorCode();
-      if (errorCode != 0) {
-        return Integer.toString(errorCode);
-      }
-      String sqlState = sqlException.getSQLState();
-      if (sqlState == null || sqlState.isEmpty() || sqlState.equals("00000")) {
-        return null;
-      }
-      return sqlState;
-    }
-    return null;
+    return getSqlExceptionCode(error);
   }
 
   @Nullable
@@ -87,7 +75,24 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
         return null;
       }
     }
-    return getErrorType(request, null, error);
+    return getSqlExceptionCode(error);
+  }
+
+  @Nullable
+  private static String getSqlExceptionCode(@Nullable Throwable error) {
+    if (!(error instanceof SQLException)) {
+      return null;
+    }
+    SQLException sqlException = (SQLException) error;
+    int errorCode = sqlException.getErrorCode();
+    if (errorCode != 0) {
+      return Integer.toString(errorCode);
+    }
+    String sqlState = sqlException.getSQLState();
+    if (sqlState == null || sqlState.isEmpty() || sqlState.equals("00000")) {
+      return null;
+    }
+    return sqlState;
   }
 
   @Override

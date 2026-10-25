@@ -42,27 +42,34 @@ class SpymemcachedAttributesGetter
   @Nullable
   public String getDbResponseStatusCode(
       SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
-    String code = getErrorType(request, response, error);
-    if (StatusCode.TIMEDOUT.name().equals(code)
-        || StatusCode.INTERRUPTED.name().equals(code)
-        || StatusCode.ERR_CLIENT.name().equals(code)) {
+    OperationStatus status = getOperationStatus(response, error);
+    if (status == null || status.isSuccess()) {
       return null;
     }
-    return code;
+    StatusCode code = status.getStatusCode();
+    if (code == null) {
+      return null;
+    }
+    switch (code) {
+      case SUCCESS:
+      case ERR_NOT_FOUND:
+      case ERR_EXISTS:
+      case ERR_NOT_STORED:
+      case CANCELLED:
+      case TIMEDOUT:
+      case INTERRUPTED:
+      case ERR_CLIENT:
+        return null;
+      default:
+        return code.name();
+    }
   }
 
   @Override
   @Nullable
   public String getErrorType(
       SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
-    if (error != null || !(response instanceof OperationFuture)) {
-      return null;
-    }
-    OperationFuture<?> future = (OperationFuture<?>) response;
-    if (future.isCancelled()) {
-      return null;
-    }
-    OperationStatus status = future.getStatus();
+    OperationStatus status = getOperationStatus(response, error);
     if (status == null || status.isSuccess()) {
       return null;
     }
@@ -80,6 +87,19 @@ class SpymemcachedAttributesGetter
       default:
         return code.name();
     }
+  }
+
+  @Nullable
+  private static OperationStatus getOperationStatus(
+      @Nullable Object response, @Nullable Throwable error) {
+    if (error != null || !(response instanceof OperationFuture)) {
+      return null;
+    }
+    OperationFuture<?> future = (OperationFuture<?>) response;
+    if (future.isCancelled()) {
+      return null;
+    }
+    return future.getStatus();
   }
 
   @Override

@@ -49,13 +49,18 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
   @Override
   public String getDbResponseStatusCode(
       RediscalaRequest request, @Nullable Void response, @Nullable Throwable error) {
-    return getErrorType(request, null, error);
+    return getRedisErrorCode(error);
   }
 
   @Nullable
   @Override
   public String getErrorType(
       RediscalaRequest request, @Nullable Void unused, @Nullable Throwable error) {
+    return getRedisErrorCode(error);
+  }
+
+  @Nullable
+  private static String getRedisErrorCode(@Nullable Throwable error) {
     // Rediscala wraps decoded Redis error replies in ReplyErrorException. RESP errors start with an
     // error prefix; a missing prefix preserves the shared exception-class fallback.
     // https://redis.io/docs/latest/develop/reference/protocol-spec/#resp-errors
