@@ -33,6 +33,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
 import java.net.{URL, URLClassLoader}
+import java.lang.reflect.{InvocationHandler, Method, Proxy}
 import java.util.concurrent.{
   CompletableFuture,
   CountDownLatch,
@@ -103,6 +104,32 @@ class ClientCallbackTest {
           )
           assertThat(Await.result(recoveredCallback.future, 5.seconds))
             .isEqualTo("caller")
+
+          if (java.lang.Boolean.getBoolean("testLatestDeps")) {
+            val transformedCallback = Promise[String]()
+            val transform = response.getClass.getMethods.find { method =>
+              method.getName == "transform" &&
+              method.getParameterCount == 2 &&
+              method.getParameterTypes.apply(1) == classOf[ExecutionContext]
+            }.get
+            val transformed = transform
+              .invoke(
+                response,
+                (result: Try[HttpResponse]) => {
+                  assertThat(Span.current().getSpanContext)
+                    .isEqualTo(parent.getSpanContext)
+                  assertThat(Context.current().get(marker)).isEqualTo("caller")
+                  result
+                },
+                inlineExecutionContext
+              )
+              .asInstanceOf[Future[HttpResponse]]
+            transformed.onComplete(_ =>
+              transformedCallback.success(Context.current().get(marker))
+            )(inlineExecutionContext)
+            assertThat(Await.result(transformedCallback.future, 5.seconds))
+              .isEqualTo("caller")
+          }
 
           val failedCallback = Promise[String]()
           response.failed
@@ -189,7 +216,8 @@ class ClientCallbackTest {
       .build()
     try {
       server.start().join()
-      val loader = childAkkaHttpClassLoader()
+      val scalaLoader = isolatedScalaClassLoader()
+      val loader = childAkkaHttpClassLoader(scalaLoader)
       val previousContextClassLoader =
         Thread.currentThread().getContextClassLoader
       var helperClass: Class[_] = null
@@ -198,6 +226,18 @@ class ClientCallbackTest {
         Thread.currentThread().setContextClassLoader(loader)
         helperClass = Class.forName(childHttpClientClassName, true, loader)
         assertThat(helperClass.getClassLoader).isSameAs(loader)
+        val promiseClass = Class.forName(
+          "scala.concurrent.impl.Promise$DefaultPromise",
+          false,
+          scalaLoader
+        )
+        assertThat(promiseClass.getClassLoader).isSameAs(scalaLoader)
+        val akkaLookup = Try(
+          Class.forName("akka.http.scaladsl.HttpExt", false, scalaLoader)
+        )
+        assertThat(akkaLookup.isFailure).isTrue()
+        assertThat(akkaLookup.failed.get)
+          .isInstanceOf(classOf[ClassNotFoundException])
         assertThat(
           Class
             .forName("akka.http.scaladsl.HttpExt", false, loader)
@@ -207,7 +247,7 @@ class ClientCallbackTest {
         assertThat(
           Class.forName("scala.concurrent.Future", false, loader).getClassLoader
         )
-          .isSameAs(classOf[Future[_]].getClassLoader)
+          .isSameAs(scalaLoader)
 
         helper = helperClass
           .getDeclaredConstructor()
@@ -219,23 +259,80 @@ class ClientCallbackTest {
             helper,
             "http://localhost:" + server.activeLocalPort() + "/"
           )
-          .asInstanceOf[Future[AnyRef]]
+        assertThat(promiseClass.isInstance(response)).isTrue()
         assertThat(received.await(10, TimeUnit.SECONDS)).isTrue()
 
         val marker = ContextKey.named[String]("parent-scala-child-akka")
-        val callback = Promise[String]()
+        val callbackResult = new CompletableFuture[AnyRef]()
+        val scalaFunction1 = Class.forName("scala.Function1", true, scalaLoader)
+        val scalaExecutionContext =
+          Class.forName("scala.concurrent.ExecutionContext", true, scalaLoader)
+        val callback = Proxy.newProxyInstance(
+          scalaLoader,
+          Array(scalaFunction1),
+          new InvocationHandler {
+            override def invoke(
+                proxy: Any,
+                method: Method,
+                args: Array[AnyRef]
+            ): AnyRef = {
+              if (method.getName == "apply") {
+                try {
+                  assertThat(Context.current().get(marker)).isEqualTo("caller")
+                  callbackResult.complete(
+                    args(0).getClass
+                      .getMethod("get")
+                      .invoke(args(0))
+                      .asInstanceOf[AnyRef]
+                  )
+                } catch {
+                  case error: Throwable =>
+                    callbackResult.completeExceptionally(
+                      Option(error.getCause).getOrElse(error)
+                    )
+                }
+                null
+              } else {
+                null
+              }
+            }
+          }
+        )
+        val executionContext = Proxy.newProxyInstance(
+          scalaLoader,
+          Array(scalaExecutionContext),
+          new InvocationHandler {
+            override def invoke(
+                proxy: Any,
+                method: Method,
+                args: Array[AnyRef]
+            ): AnyRef =
+              method.getName match {
+                case "prepare" =>
+                  proxy.asInstanceOf[AnyRef]
+                case "execute" =>
+                  val scope = Context.root().makeCurrent()
+                  try args(0).asInstanceOf[Runnable].run()
+                  finally scope.close()
+                  null
+                case "reportFailure" =>
+                  throw args(0).asInstanceOf[Throwable]
+                case _ =>
+                  null
+              }
+          }
+        )
         val scope = Context.root().`with`(marker, "caller").makeCurrent()
         try {
-          response.onComplete(_ =>
-            callback.success(Context.current().get(marker))
-          )(
-            inlineExecutionContext
-          )
+          Class
+            .forName("scala.concurrent.Future", false, scalaLoader)
+            .getMethod("onComplete", scalaFunction1, scalaExecutionContext)
+            .invoke(response, callback, executionContext)
         } finally {
           scope.close()
         }
         reply.complete(ServerResponse.of("ok"))
-        val result = Await.result(response, 5.seconds)
+        val result = callbackResult.get(5, TimeUnit.SECONDS)
         assertThat(
           helperClass
             .getMethod("status", classOf[Object])
@@ -244,7 +341,6 @@ class ClientCallbackTest {
         helperClass
           .getMethod("discardEntity", classOf[Object])
           .invoke(helper, result)
-        assertThat(Await.result(callback.future, 5.seconds)).isEqualTo("caller")
       } finally {
         try {
           if (helper != null) helperClass.getMethod("terminate").invoke(helper)
@@ -253,6 +349,7 @@ class ClientCallbackTest {
             .currentThread()
             .setContextClassLoader(previousContextClassLoader)
           loader.close()
+          scalaLoader.close()
         }
       }
       testing.waitAndAssertTraces(new Consumer[TraceAssert] {
@@ -327,7 +424,7 @@ class ClientCallbackTest {
         )
       assertThat(received.await(10, TimeUnit.SECONDS)).isTrue()
       val marker = ContextKey.named[String]("registration")
-      val callbacks = Seq("first", "second", null).map { value =>
+      val callbackGroups = Seq("first", "second", null).map { value =>
         val context =
           if (value == null) Context.root()
           else Context.root().`with`(marker, value)
@@ -345,22 +442,64 @@ class ClientCallbackTest {
               ()
             })
           }(inlineExecutionContext)
-          callback.future
+          if (value == "first") {
+            val zipWith = response.getClass.getMethods.find { method =>
+              method.getName == "zipWith" &&
+              method.getParameterCount == 3 &&
+              method.getParameterTypes.apply(1).getName == "scala.Function2" &&
+              method.getParameterTypes.apply(2) == classOf[ExecutionContext]
+            }
+            if (
+              !scala.util.Properties.versionNumberString.startsWith("2.11.")
+            ) {
+              assertThat(zipWith.isDefined).isTrue()
+            }
+            zipWith
+              .map { method =>
+                val zipped = method
+                  .invoke(
+                    response,
+                    Future.successful(1),
+                    (result: HttpResponse, number: Int) => {
+                      assertThat(Context.current().get(marker)).isEqualTo(value)
+                      result.status.intValue() + number
+                    },
+                    inlineExecutionContext
+                  )
+                  .asInstanceOf[Future[Int]]
+                val zippedCallback = Promise[Unit]()
+                zipped.onComplete { result =>
+                  zippedCallback.complete(Try {
+                    assertThat(result.get).isEqualTo(201)
+                    assertThat(Context.current().get(marker)).isEqualTo(value)
+                    ()
+                  })
+                }(inlineExecutionContext)
+                Seq(callback.future, zippedCallback.future)
+              }
+              .getOrElse(Seq(callback.future))
+          } else {
+            Seq(callback.future)
+          }
         } finally {
           scope.close()
         }
       }
+      val callbacks = callbackGroups.flatten
       withFullQueue(system) {
         reply.complete(ServerResponse.of("ok"))
         val result = Await.result(response, 5.seconds)
         assertThat(result.status.intValue()).isEqualTo(200)
         result.discardEntityBytes()
         callbacks.foreach(Await.result(_, 5.seconds))
+        assertThat(Context.current().get(marker)).isNull()
+        val projectionMarker =
+          ContextKey.named[String]("failed-projection")
         val projectionScope =
           Context
             .root()
             .`with`(
-              ContextKey.named[String]("failed-projection"),
+              projectionMarker,
               "registration"
             )
             .makeCurrent()
@@ -371,7 +510,7 @@ class ClientCallbackTest {
             callback.success(
               Context
                 .current()
-                .get(ContextKey.named[String]("failed-projection"))
+                .get(projectionMarker)
             )
           )(inlineExecutionContext)
           assertThat(Await.result(callback.future, 5.seconds))
@@ -438,7 +577,71 @@ class ClientCallbackTest {
     )
   }
 
-  private def childAkkaHttpClassLoader(): URLClassLoader = {
+  private def isolatedScalaClassLoader(): URLClassLoader = {
+    val scalaLibraries = new java.util.LinkedHashSet[URL]()
+    Seq(
+      "scala/concurrent/Future.class",
+      "scala/compat/java8/OptionConverters.class",
+      "scala/util/parsing/combinator/Parsers.class",
+      "com/typesafe/sslconfig/ssl/SSLConfigSettings.class"
+    ).foreach { resourcePath =>
+      val resource = getClass.getClassLoader.getResource(resourcePath)
+      if (resource != null) {
+        val library =
+          if (resource.getProtocol == "jar") {
+            resource
+              .openConnection()
+              .asInstanceOf[java.net.JarURLConnection]
+              .getJarFileURL
+          } else {
+            var path = java.nio.file.Paths.get(resource.toURI)
+            resourcePath.split("/").foreach(_ => path = path.getParent)
+            path.toUri.toURL
+          }
+        scalaLibraries.add(library)
+      }
+    }
+    val filteredParent = new ClassLoader(getClass.getClassLoader) {
+      override protected def loadClass(
+          name: String,
+          resolve: Boolean
+      ): Class[_] = {
+        if (name.startsWith("akka.")) throw new ClassNotFoundException(name)
+        super.loadClass(name, resolve)
+      }
+    }
+    new URLClassLoader(
+      scalaLibraries.toArray(new Array[URL](scalaLibraries.size())),
+      filteredParent
+    ) {
+      override protected def loadClass(
+          name: String,
+          resolve: Boolean
+      ): Class[_] = {
+        if (
+          !name.startsWith("scala.") &&
+          !name.startsWith("com.typesafe.sslconfig.ssl.") &&
+          !name.startsWith("com.typesafe.sslconfig.util.")
+        ) return super.loadClass(name, resolve)
+        synchronized {
+          var loaded = findLoadedClass(name)
+          if (loaded == null) {
+            try loaded = findClass(name)
+            catch {
+              case _: ClassNotFoundException =>
+                loaded = super.loadClass(name, false)
+            }
+          }
+          if (resolve) resolveClass(loaded)
+          loaded
+        }
+      }
+    }
+  }
+
+  private def childAkkaHttpClassLoader(
+      scalaLoader: ClassLoader
+  ): URLClassLoader = {
     val urls = new java.util.LinkedHashSet[URL]()
     urls.add(getClass.getProtectionDomain.getCodeSource.getLocation)
     Seq("akka", "com/typesafe/sslconfig/akka").foreach { packageName =>
@@ -460,7 +663,7 @@ class ClientCallbackTest {
     }
     new URLClassLoader(
       urls.toArray(new Array[URL](urls.size())),
-      getClass.getClassLoader
+      scalaLoader
     ) {
       override protected def loadClass(
           name: String,
