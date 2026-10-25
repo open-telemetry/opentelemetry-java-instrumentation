@@ -78,7 +78,10 @@ class ResponseFutureInstrumentation implements TypeInstrumentation {
             .and(returns(named("scala.concurrent.Future"))),
         getClass().getName() + "$ResultAdvice");
     transformer.applyAdviceToMethod(
-        isDeclaredBy(named("akka.http.scaladsl.util.FastFuture$FulfilledFuture"))
+        isDeclaredBy(
+                namedOneOf(
+                    "akka.http.scaladsl.util.FastFuture$ErrorFuture",
+                    "akka.http.scaladsl.util.FastFuture$FulfilledFuture"))
             .and(namedOneOf("zip", "zipWith", "fallbackTo"))
             .and(takesArgument(0, named("scala.concurrent.Future"))),
         getClass().getName() + "$CombinedResultAdvice");

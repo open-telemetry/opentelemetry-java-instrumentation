@@ -59,6 +59,10 @@ testing {
 
 // Reuse the Scala 2.12 runtime already supplied by javaRouteTest for client compatibility coverage.
 sourceSets.named("javaRouteTest") {
+  java {
+    srcDir("src/test/java")
+    include("**/ResponseFutureCallbacksTest.java")
+  }
   scala {
     srcDir("src/test/scala")
     include("**/AkkaHttpClientInstrumentationTest.scala", "**/client/ClientCallbackTest.scala")

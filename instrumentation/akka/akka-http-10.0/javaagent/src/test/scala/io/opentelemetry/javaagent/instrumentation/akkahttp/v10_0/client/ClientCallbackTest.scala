@@ -105,6 +105,18 @@ class ClientCallbackTest {
           assertThat(Await.result(recoveredCallback.future, 5.seconds))
             .isEqualTo("caller")
 
+          val zippedResponse = response.zip(Future.successful(1))
+          val zippedCallback = Promise[String]()
+          zippedResponse.onComplete { result =>
+            zippedCallback.complete(Try {
+              assertThat(result.failed.get)
+                .isInstanceOf(classOf[IllegalUriException])
+              assertThat(Context.current().get(marker)).isEqualTo("caller")
+              Context.current().get(marker)
+            })
+          }
+          Await.result(zippedCallback.future, 5.seconds)
+
           if (java.lang.Boolean.getBoolean("testLatestDeps")) {
             val transformedCallback = Promise[String]()
             val transform = response.getClass.getMethods.find { method =>
@@ -191,6 +203,102 @@ class ClientCallbackTest {
       })
     } finally {
       Await.result(system.terminate(), 10.seconds)
+    }
+  }
+
+  @Test
+  def successfulResponseZipWithCallbacks(): Unit = {
+    assumeTrue(!scala.util.Properties.versionNumberString.startsWith("2.11."))
+    val system = ActorSystem("zip-with-client")
+    val received = new CountDownLatch(1)
+    val reply = new CompletableFuture[ServerResponse]()
+    val server = Server
+      .builder()
+      .http(PortUtils.findOpenPort())
+      .service(
+        "/",
+        new HttpService {
+          override def serve(
+              ctx: ServiceRequestContext,
+              request: ServerRequest
+          ): ServerResponse = {
+            received.countDown()
+            ServerResponse.of(reply)
+          }
+        }
+      )
+      .build()
+    try {
+      server.start().join()
+      implicit val materializer: ActorMaterializer =
+        ActorMaterializer.create(system)
+      val response = Http
+        .get(system)
+        .singleRequest(
+          HttpRequest(uri =
+            "http://localhost:" + server.activeLocalPort() + "/"
+          )
+        )
+      assertThat(received.await(10, TimeUnit.SECONDS)).isTrue()
+
+      val marker = ContextKey.named[String]("zip-with-registration")
+      val zipExecutionContext = new ExecutionContext {
+        override def execute(command: Runnable): Unit = {
+          val scope = Context.root().makeCurrent()
+          try {
+            command.run()
+            assertThat(Context.current().get(marker)).isNull()
+          } finally {
+            scope.close()
+          }
+        }
+
+        override def reportFailure(error: Throwable): Unit = throw error
+      }
+      val scope =
+        Context.root().`with`(marker, "registered").makeCurrent()
+      val callback = Promise[Int]()
+      try {
+        val zipWith = response.getClass.getMethods.find { method =>
+          method.getName == "zipWith" &&
+          method.getParameterCount == 3 &&
+          method.getParameterTypes.apply(1).getName == "scala.Function2" &&
+          method.getParameterTypes.apply(2) == classOf[ExecutionContext]
+        }
+        assertThat(zipWith.isDefined).isTrue()
+        val zipped = zipWith.get
+          .invoke(
+            response,
+            Future.successful(1),
+            (result: HttpResponse, number: Int) => {
+              assertThat(Context.current().get(marker)).isEqualTo("registered")
+              val status = result.status.intValue()
+              result.discardEntityBytes()
+              status + number
+            },
+            zipExecutionContext
+          )
+          .asInstanceOf[Future[Int]]
+        zipped.onComplete { result =>
+          callback.complete(Try {
+            assertThat(Context.current().get(marker)).isEqualTo("registered")
+            result.get
+          })
+        }(zipExecutionContext)
+        assertThat(Context.current().get(marker)).isEqualTo("registered")
+      } finally {
+        scope.close()
+      }
+      assertThat(Context.current().get(marker)).isNull()
+
+      reply.complete(ServerResponse.of("ok"))
+      assertThat(Await.result(callback.future, 5.seconds)).isEqualTo(201)
+      assertThat(Context.current().get(marker)).isNull()
+      assertClientTrace(StatusData.unset(), null)
+    } finally {
+      reply.complete(ServerResponse.of("cleanup"))
+      Await.result(system.terminate(), 10.seconds)
+      server.stop().join()
     }
   }
 

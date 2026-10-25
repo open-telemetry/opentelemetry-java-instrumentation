@@ -10,6 +10,7 @@ import static java.util.logging.Level.FINE;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.Optional;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import scala.Function1;
@@ -27,6 +28,23 @@ final class ResponseFutureCallbacks {
       VirtualField.find(Future.class, Boolean.class);
   private static final boolean SCALA_213 =
       Properties$.MODULE$.versionNumberString().startsWith("2.13.");
+  private static final ClassValue<Optional<Future<?>>> FAILED_FAILURE_FUTURE =
+      new ClassValue<Optional<Future<?>>>() {
+        @Override
+        protected Optional<Future<?>> computeValue(Class<?> type) {
+          try {
+            Class<?> futureModuleClass =
+                Class.forName("scala.concurrent.Future$", false, type.getClassLoader());
+            Object futureModule = futureModuleClass.getField("MODULE$").get(null);
+            return Optional.of(
+                (Future<?>)
+                    futureModuleClass.getMethod("failedFailureFuture").invoke(futureModule));
+          } catch (ReflectiveOperationException e) {
+            logger.log(FINE, "Unable to resolve Scala failed-future projection", e);
+            return Optional.empty();
+          }
+        }
+      };
 
   static void mark(Future<?> future) {
     // Retain the marker for callbacks registered after completion, without retaining request state.
@@ -43,8 +61,11 @@ final class ResponseFutureCallbacks {
     if (HTTP_RESPONSE.get(source) == null) {
       return;
     }
-    if (SCALA_213 && source.value().isDefined() && source.value().get().isSuccess()) {
-      return;
+    if (SCALA_213) {
+      Optional<Future<?>> cachedFailure = FAILED_FAILURE_FUTURE.get(source.getClass());
+      if (!cachedFailure.isPresent() || result == cachedFailure.get()) {
+        return;
+      }
     }
     mark(result);
   }
