@@ -51,7 +51,7 @@ class JettyHttpContentInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static CallbackScope onEnter(@Advice.This HttpContent content) {
-      JettyContentContext caller = JettyContentContext.get(content);
+      JettyContentContext caller = JettyContentContext.getCaller(content);
       return caller == null ? null : caller.open();
     }
 

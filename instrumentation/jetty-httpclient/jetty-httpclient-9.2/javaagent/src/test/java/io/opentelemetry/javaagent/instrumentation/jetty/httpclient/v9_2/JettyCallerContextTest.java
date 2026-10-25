@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.Closeable;
+import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -32,6 +33,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import org.eclipse.jetty.client.AsyncContentProvider;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.HttpContent;
+import org.eclipse.jetty.client.HttpSender;
+import org.eclipse.jetty.client.api.ContentProvider;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Result;
 import org.eclipse.jetty.client.util.DeferredContentProvider;
@@ -63,6 +67,15 @@ class JettyCallerContextTest {
     server.createContext(
         "/",
         exchange -> {
+          if (exchange.getRequestURI().getPath().equals("/early")) {
+            exchange.sendResponseHeaders(200, -1);
+            exchange.close();
+            return;
+          }
+          if (exchange.getRequestURI().getPath().equals("/reject")) {
+            exchange.close();
+            return;
+          }
           String header = exchange.getRequestHeaders().getFirst("traceparent");
           if (header != null) {
             propagation.put(exchange.getRequestURI().getPath(), header);
@@ -108,7 +121,7 @@ class JettyCallerContextTest {
             observations.record("complete");
             completed.complete(result);
           });
-      assertThat(Context.current()).isSameAs(caller);
+      assertContext(Context.current(), caller);
       assertThat(request.getContent()).isSameAs(body);
       for (int i = 0; i < listeners.size(); i++) {
         assertThat(request.getRequestListeners(null).get(i)).isSameAs(listeners.get(i));
@@ -116,14 +129,15 @@ class JettyCallerContextTest {
     }
 
     assertThat(body.ready.await(10, SECONDS)).isTrue();
-    Context unrelated = Context.root().with(VALUE, "unrelated");
+    assertThat(body.originalIterator).isSameAs(body.iterator);
+    Context unrelated = body.creationContext.with(VALUE, "unrelated");
     Thread producer =
         new Thread(
             () -> {
               try (Scope ignored = unrelated.makeCurrent()) {
                 body.available = true;
                 body.listener.onContent();
-                observations.restored = Context.current() == unrelated;
+                observations.restored = Context.current();
               }
             });
     producer.start();
@@ -134,7 +148,7 @@ class JettyCallerContextTest {
     parent.end();
 
     observations.assertCaller(caller);
-    assertThat(observations.restored).isTrue();
+    assertContext(observations.restored, unrelated);
     assertThat(observations.events)
         .contains(
             "queued",
@@ -174,6 +188,37 @@ class JettyCallerContextTest {
   }
 
   @Test
+  void ordinaryBodyUsesCallerContext() throws Exception {
+    Observations observations = new Observations();
+    Body body = new Body(observations);
+    body.available = true;
+    ContentProvider provider =
+        new ContentProvider() {
+          @Override
+          public long getLength() {
+            return body.getLength();
+          }
+
+          @Override
+          public Iterator<ByteBuffer> iterator() {
+            return body.iterator();
+          }
+        };
+    Context caller = Context.root().with(VALUE, "ordinary");
+    Request request = client.newRequest(url + "/ordinary").method("POST").content(provider);
+    try (Scope ignored = caller.makeCurrent()) {
+      assertThat(request.send().getStatus()).isEqualTo(200);
+      assertThat(request.getContent()).isSameAs(provider);
+    }
+    assertThat(body.closed.await(10, SECONDS)).isTrue();
+    observations.assertCaller(caller);
+    assertThat(observations.events).contains("iterator", "next", "succeeded", "close");
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT).hasNoParent()));
+  }
+
+  @Test
   void requestCallbackCanStartIndependentClientWork() throws Exception {
     CompletableFuture<Result> nested = new CompletableFuture<>();
     CompletableFuture<Result> completed = new CompletableFuture<>();
@@ -207,7 +252,7 @@ class JettyCallerContextTest {
         r -> {
           try (Scope ignored = nested.makeCurrent()) {
             r.abort(new IllegalStateException("nested abort"));
-            assertThat(Context.current()).isSameAs(nested);
+            assertContext(Context.current(), nested);
           }
           assertThat(Context.current().get(VALUE)).isEqualTo("caller");
         });
@@ -216,6 +261,35 @@ class JettyCallerContextTest {
     }
     assertThat(completed.get(10, SECONDS).isFailed()).isTrue();
     assertThat(failureContext.get(10, SECONDS).get(VALUE)).isEqualTo("nested");
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT).hasNoParent()));
+  }
+
+  @Test
+  void responseCallbackAbortPreservesExplicitNestedContext() throws Exception {
+    CompletableFuture<Result> completed = new CompletableFuture<>();
+    CompletableFuture<Context> failureContext = new CompletableFuture<>();
+    CompletableFuture<Context> restored = new CompletableFuture<>();
+    Context caller = Context.root().with(VALUE, "caller");
+    Context nested = Context.root().with(VALUE, "nested-response");
+    Body body = new Body(new Observations());
+    Request request = client.newRequest(url + "/early").method("POST").content(body);
+    request.onRequestFailure((r, failure) -> failureContext.complete(Context.current()));
+    request.onResponseHeaders(
+        response -> {
+          try (Scope ignored = nested.makeCurrent()) {
+            request.abort(new IllegalStateException("abort from response"));
+            restored.complete(Context.current());
+          }
+        });
+    try (Scope ignored = caller.makeCurrent()) {
+      request.send(completed::complete);
+    }
+    assertThat(completed.get(10, SECONDS).isFailed()).isTrue();
+    assertContext(failureContext.get(10, SECONDS), nested);
+    assertContext(restored.get(10, SECONDS), nested);
+    assertThat(body.closed.await(10, SECONDS)).isTrue();
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT).hasNoParent()));
@@ -256,7 +330,7 @@ class JettyCallerContextTest {
             }
           });
       body.close();
-      assertThat(Context.current()).isSameAs(unrelated);
+      assertContext(Context.current(), unrelated);
     }
     chunk.get(10, SECONDS);
     assertThat(completed.get(10, SECONDS).isSucceeded()).isTrue();
@@ -268,7 +342,7 @@ class JettyCallerContextTest {
   }
 
   @Test
-  void deferredChunkFailureAndCloseUseCallerContext() throws Exception {
+  void abortRestoresContextAndClosesBody() throws Exception {
     Observations observations = new Observations();
     Body body = new Body(observations);
     Context caller = Context.root().with(VALUE, "caller");
@@ -282,21 +356,61 @@ class JettyCallerContextTest {
     Context unrelated = Context.root().with(VALUE, "aborter");
     try (Scope ignored = unrelated.makeCurrent()) {
       request.abort(new IllegalStateException("abort upload"));
-      assertThat(Context.current()).isSameAs(unrelated);
+      assertContext(Context.current(), unrelated);
     }
     assertThat(completed.get(10, SECONDS).isFailed()).isTrue();
     assertThat(body.closed.await(10, SECONDS)).isTrue();
     observations.assertCaller(caller);
-    assertThat(observations.events).contains("failure", "failed", "close");
+    assertThat(observations.events).contains("failure", "close");
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT).hasNoParent()));
   }
 
+  @Test
+  void deferredChunkFailureUsesCallerContext() throws Exception {
+    Observations observations = new Observations();
+    DeferredContentProvider body = new DeferredContentProvider();
+    CompletableFuture<Throwable> chunk = new CompletableFuture<>();
+    body.offer(
+        ByteBuffer.allocate(16 * 1024 * 1024),
+        new Callback() {
+          @Override
+          public void succeeded() {
+            chunk.completeExceptionally(new AssertionError("Upload should fail"));
+          }
+
+          @Override
+          public void failed(Throwable failure) {
+            observations.record("chunk-failure");
+            chunk.complete(failure);
+          }
+        });
+    body.close();
+    Context caller = Context.root().with(VALUE, "caller");
+    CompletableFuture<Result> completed = new CompletableFuture<>();
+    try (Scope ignored = caller.makeCurrent()) {
+      client.newRequest(url + "/reject").method("POST").content(body).send(completed::complete);
+    }
+    assertThat(completed.get(10, SECONDS).isFailed()).isTrue();
+    assertThat(chunk.get(10, SECONDS)).isNotNull();
+    observations.assertCaller(caller);
+    assertThat(observations.events).contains("chunk-failure");
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT).hasNoParent()));
+  }
+
+  private static void assertContext(Context actual, Context expected) {
+    assertThat(actual.get(VALUE)).isEqualTo(expected.get(VALUE));
+    assertThat(Span.fromContext(actual).getSpanContext())
+        .isEqualTo(Span.fromContext(expected).getSpanContext());
+  }
+
   private static class Observations {
     final ConcurrentLinkedQueue<String> events = new ConcurrentLinkedQueue<>();
     final ConcurrentLinkedQueue<Context> contexts = new ConcurrentLinkedQueue<>();
-    volatile boolean restored;
+    volatile Context restored;
 
     void record(String event) {
       events.add(event);
@@ -306,9 +420,7 @@ class JettyCallerContextTest {
     void assertCaller(Context caller) {
       assertThat(contexts).isNotEmpty();
       for (Context context : contexts) {
-        assertThat(context.get(VALUE)).isEqualTo(caller.get(VALUE));
-        assertThat(Span.fromContext(context).getSpanContext())
-            .isEqualTo(Span.fromContext(caller).getSpanContext());
+        assertContext(context, caller);
       }
     }
   }
@@ -319,6 +431,8 @@ class JettyCallerContextTest {
     final Observations observations;
     final BodyIterator iterator = new BodyIterator();
     volatile Listener listener;
+    volatile Context creationContext;
+    volatile Object originalIterator;
     volatile boolean available;
     boolean consumed;
 
@@ -330,6 +444,15 @@ class JettyCallerContextTest {
     public void setListener(Listener listener) {
       observations.record("setListener");
       this.listener = listener;
+      try {
+        Field content = HttpSender.class.getDeclaredField("content");
+        content.setAccessible(true);
+        Field iterator = HttpContent.class.getDeclaredField("iterator");
+        iterator.setAccessible(true);
+        originalIterator = iterator.get(content.get(listener));
+      } catch (ReflectiveOperationException e) {
+        throw new LinkageError(e.getMessage(), e);
+      }
       ready.countDown();
     }
 
@@ -342,6 +465,7 @@ class JettyCallerContextTest {
     @Override
     public Iterator<ByteBuffer> iterator() {
       observations.record("iterator");
+      creationContext = Context.current();
       return iterator;
     }
 

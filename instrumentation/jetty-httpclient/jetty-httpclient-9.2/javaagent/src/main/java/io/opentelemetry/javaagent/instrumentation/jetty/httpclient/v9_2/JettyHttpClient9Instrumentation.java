@@ -52,7 +52,7 @@ class JettyHttpClient9Instrumentation implements TypeInstrumentation {
       }
 
       List<Response.ResponseListener> wrappedListeners =
-          wrapResponseListeners(context.caller.context(), listeners);
+          wrapResponseListeners(context.caller, listeners);
       return new Object[] {context, wrappedListeners};
     }
 

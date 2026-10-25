@@ -14,13 +14,9 @@ import javax.annotation.Nullable;
 import org.eclipse.jetty.client.HttpRequest;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.client.api.Result;
 
 public final class JettyRequestContext
-    implements Request.FailureListener,
-        Response.SuccessListener,
-        Response.FailureListener,
-        Response.CompleteListener {
+    implements Request.FailureListener, Response.SuccessListener, Response.FailureListener {
 
   private static final VirtualField<Request, JettyRequestContext> REQUEST_CONTEXT =
       VirtualField.find(Request.class, JettyRequestContext.class);
@@ -44,7 +40,7 @@ public final class JettyRequestContext
         .onRequestFailure(context)
         .onResponseFailure(context)
         .onResponseSuccess(context)
-        .onComplete(context);
+        .onComplete(result -> context.complete(request));
     return context;
   }
 
@@ -84,10 +80,5 @@ public final class JettyRequestContext
   @Override
   public void onFailure(Response response, Throwable failure) {
     end(response.getRequest(), response, failure);
-  }
-
-  @Override
-  public void onComplete(Result result) {
-    complete(result.getRequest());
   }
 }

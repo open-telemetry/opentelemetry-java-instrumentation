@@ -11,30 +11,46 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.HttpContent;
+import org.eclipse.jetty.client.HttpExchange;
+import org.eclipse.jetty.client.api.Request;
 
-public final class JettyContentContext {
+public final class JettyContentContext implements Context {
 
-  private static final ContextKey<JettyContentContext> ACTIVE =
-      ContextKey.named("otel-jetty-caller-context");
   private static final VirtualField<HttpContent, JettyContentContext> CONTENT_CONTEXT =
       VirtualField.find(HttpContent.class, JettyContentContext.class);
+  private static final VirtualField<HttpExchange, JettyContentContext> EXCHANGE_CONTEXT =
+      VirtualField.find(HttpExchange.class, JettyContentContext.class);
   private static final ThreadLocal<JettyContentContext> initializingContent = new ThreadLocal<>();
   private static final ThreadLocal<JettyContentContext> activeCallback = new ThreadLocal<>();
 
   private final Context context;
 
   JettyContentContext(Context caller) {
-    context = caller.with(ACTIVE, this);
+    context = caller;
   }
 
-  public Context context() {
-    return context;
+  @Nullable
+  @Override
+  public <V> V get(ContextKey<V> key) {
+    return context.get(key);
+  }
+
+  @Override
+  public <V> Context with(ContextKey<V> key, V value) {
+    return context.with(key, value);
+  }
+
+  @Override
+  public Scope makeCurrent() {
+    // Response proxies use this context, so response callbacks share the reentrancy frame.
+    CallbackScope scope = open();
+    return scope == null ? Scope.noop() : scope;
   }
 
   @Nullable
   public CallbackScope open() {
     // Reentrant Jetty calls must not overwrite a context explicitly chosen by application code.
-    if (activeCallback.get() == this || Context.current().get(ACTIVE) == this) {
+    if (activeCallback.get() == this) {
       return null;
     }
     JettyContentContext previous = activeCallback.get();
@@ -44,8 +60,17 @@ public final class JettyContentContext {
   }
 
   @Nullable
-  public static JettyContentContext get(HttpContent content) {
+  public static JettyContentContext getCaller(HttpContent content) {
     return CONTENT_CONTEXT.get(content);
+  }
+
+  @Nullable
+  public static JettyContentContext getCaller(HttpExchange exchange) {
+    return EXCHANGE_CONTEXT.get(exchange);
+  }
+
+  public static void initialize(HttpExchange exchange, Request request) {
+    EXCHANGE_CONTEXT.set(exchange, JettyRequestContext.getCaller(request));
   }
 
   public static void initialize(HttpContent content) {
@@ -65,7 +90,7 @@ public final class JettyContentContext {
     return previous;
   }
 
-  public static final class CallbackScope implements AutoCloseable {
+  public static final class CallbackScope implements Scope {
     private final Scope scope;
     @Nullable private final JettyContentContext previous;
 
