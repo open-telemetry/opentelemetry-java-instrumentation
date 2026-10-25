@@ -3,53 +3,45 @@
 This guidance applies to library and javaagent instrumentation, whether or not it uses the
 `Instrumenter` API.
 
-For outgoing client and producer operations, distinguish code that performs the operation from
-application code that handles its result.
+## Choose context by the code being invoked
 
-Make the operation's context current while executing the instrumented library operation,
-including request-preparation interceptors and before-send hooks within that execution. This
-lets those hooks access the operation's span and lets nested instrumentation apply its
-suppression rules.
+Classify each hook or callback by the work it invokes, not by request versus response or before
+versus after timing. Application code that contributes to request or body generation, consumes a
+response, or handles completion or failure runs with the caller `Context` captured before the
+outgoing operation. This includes application-defined hooks invoked before sending, whether they
+run inline or asynchronously. Preserve an application’s explicit context choices.
 
-Invoke application response handlers and completion callbacks with the caller's context
-captured before starting the operation, rather than the client or producer context. Spans
-created by this application code should be siblings of the outgoing span, not its children.
-This also applies when the library invokes a callback synchronously before the initiating
-method returns.
+Use the outgoing operation’s `Context` for library-internal execution that performs or continues
+the instrumented operation, and where required for internal instrumentation or duplicate-span
+suppression. Do not make every request hook inherit the outgoing span merely because it runs
+before sending. Application callback work is typically a sibling of the outgoing span, but
+CLIENT and PRODUCER spans need not be leaves: justified internal spans may be children.
 
-For example, for a simple request with an active caller span, the expected relationships are:
+Capture and restore the full caller `Context`, including when it has no span or carries custom
+values. Restore the callback thread’s previous context after invoking application code. A
+`Scope` is thread-bound and must be closed on the thread where it was opened; it is distinct from
+the asynchronous operation span’s lifetime. When propagating remotely, inject the context
+containing the outgoing span even when application hooks or callbacks run with the caller
+context.
 
-```text
-caller
-|-- outgoing client operation
-|   `-- remote server operation
-`-- application callback work
-```
-
-Without an active caller span, application callback work should not inherit the outgoing
-span. Restore the captured context even when it contains no span, rather than leaving the
-completion thread's context active.
+Independently instrumented outgoing work started by application callback code must use that
+callback’s intended context. Do not accidentally suppress it or parent it to the enclosing
+outgoing span by leaving the operation context current.
 
 ## Separate span lifetime from context scope
 
-For asynchronous operations, close the initiating thread's scope when the initiating method
-returns, and end the span when the operation finishes. Any scope opened on another thread must
-be closed on that same thread.
-
-For a terminal completion callback, end the operation before invoking application code under
-the captured caller context. Ending a span does not remove it from the current context.
-Application response callbacks that run before completion also use the caller's context, but
-do not end the operation prematurely.
-
-Classify hooks and callbacks by what they do. An internal callback may still perform part of
-the instrumented operation, while a response handler invoked inside a synchronous client
-method may already be application continuation code.
+For asynchronous operations, close the initiating thread’s scope when the initiating method
+returns, and end the operation span once at its actual terminal completion. Do not end the span
+just because request/body generation or a nonterminal response callback runs. A terminal
+completion callback may coincide with that boundary; its context scope remains the captured
+caller context regardless of span-ending order.
 
 ## Test the context boundaries
 
-Check callback-created spans with and without a caller span, on success and failure. Cover
-inline completion where the library supports it, as well as asynchronous completion. Verify
-that the callback's scope restores the previous context on exit.
-
-Request-preparation and before-send hooks should observe the outgoing span when they execute
-within the instrumented operation.
+Cover application request and body generation, response consumption (including deferred demand),
+and completion and failure callbacks. Exercise inline and asynchronous execution. Verify behavior
+with no caller span, with custom caller `Context` values, and restoration of an unrelated context
+on the callback thread. Check that outgoing propagation includes the outgoing span, and that
+independently instrumented outgoing work from callbacks is neither suppressed nor parented to the
+enclosing operation. Allow justified internal spans and duplicate-span suppression; do not assume
+the CLIENT or PRODUCER span is always a leaf.
