@@ -22,6 +22,9 @@ import javax.annotation.Nullable;
  */
 public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
 
+  private static final String H2_DATABASE = "h2database";
+  private static final int H2_OBJECT_CLOSED_ERROR_CODE = 90007;
+
   @Override
   public String getDbSystemName(DbRequest request) {
     return request.getDbInfo().getDbSystemName();
@@ -71,6 +74,12 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public String getDbResponseStatusCode(
       DbRequest request, @Nullable Void response, @Nullable Throwable error) {
+    if (H2_DATABASE.equals(getDbSystemName(request))
+        && error instanceof SQLException
+        && ((SQLException) error).getErrorCode() == H2_OBJECT_CLOSED_ERROR_CODE
+        && "90007".equals(((SQLException) error).getSQLState())) {
+      return null;
+    }
     if ("oracle.db".equals(getDbSystemName(request)) && error instanceof SQLException) {
       int errorCode = ((SQLException) error).getErrorCode();
       // Oracle Statement.ensureOpen() generates these locally, before any server request.

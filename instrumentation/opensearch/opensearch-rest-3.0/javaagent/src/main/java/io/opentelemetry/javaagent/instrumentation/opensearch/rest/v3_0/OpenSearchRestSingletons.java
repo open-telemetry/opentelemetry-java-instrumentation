@@ -11,6 +11,7 @@ import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.Op
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchRestResponse;
 import javax.annotation.Nullable;
 import org.opensearch.client.Response;
+import org.opensearch.client.ResponseException;
 
 class OpenSearchRestSingletons {
 
@@ -33,6 +34,14 @@ class OpenSearchRestSingletons {
         return response.getStatusLine().getStatusCode();
       }
     };
+  }
+
+  @Nullable
+  static OpenSearchRestResponse convertException(@Nullable Throwable error) {
+    if (error instanceof ResponseException) {
+      return convertResponse(((ResponseException) error).getResponse());
+    }
+    return null;
   }
 
   private OpenSearchRestSingletons() {}

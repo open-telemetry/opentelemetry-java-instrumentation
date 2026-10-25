@@ -24,6 +24,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.api.trace.SpanKind;
@@ -34,10 +35,12 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.http.HttpHost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.ResponseListener;
 import org.elasticsearch.client.RestClient;
 import org.junit.jupiter.api.BeforeAll;
@@ -115,6 +118,71 @@ class ElasticsearchRest5Test {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(URL_FULL, httpHost.toURI() + "/missing-index")),
                 span -> span.hasName("HEAD").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void recordsFailureResponseStatusFromException() throws IOException {
+    ResponseException error =
+        catchThrowableOfType(
+            () -> client.performRequest("GET", "/missing-index"), ResponseException.class);
+
+    assertThat(error.getResponse().getStatusLine().getStatusCode()).isEqualTo(404);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(httpHost.getHostName() + ":" + httpHost.getPort())
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "404"),
+                            equalTo(ERROR_TYPE, ResponseException.class.getName()),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SERVER_PORT, httpHost.getPort())),
+                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void recordsAsyncFailureResponseStatusFromException() throws InterruptedException {
+    AtomicReference<Exception> exception = new AtomicReference<>();
+    CountDownLatch countDownLatch = new CountDownLatch(1);
+    client.performRequestAsync(
+        "GET",
+        "/missing-index",
+        new ResponseListener() {
+          @Override
+          public void onSuccess(Response response) {
+            countDownLatch.countDown();
+          }
+
+          @Override
+          public void onFailure(Exception e) {
+            exception.set(e);
+            countDownLatch.countDown();
+          }
+        });
+
+    assertThat(countDownLatch.await(10, SECONDS)).isTrue();
+    assertThat(exception.get()).isInstanceOf(ResponseException.class);
+    assertThat(((ResponseException) exception.get()).getResponse().getStatusLine().getStatusCode())
+        .isEqualTo(404);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(httpHost.getHostName() + ":" + httpHost.getPort())
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "404"),
+                            equalTo(ERROR_TYPE, ResponseException.class.getName()),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SERVER_PORT, httpHost.getPort())),
+                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
 
   @Test

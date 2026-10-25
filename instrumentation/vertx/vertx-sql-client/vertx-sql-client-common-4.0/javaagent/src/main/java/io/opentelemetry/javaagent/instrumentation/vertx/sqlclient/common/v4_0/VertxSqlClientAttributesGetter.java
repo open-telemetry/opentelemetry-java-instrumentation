@@ -22,7 +22,9 @@ class VertxSqlClientAttributesGetter
     implements SqlClientAttributesGetter<VertxSqlClientRequest, Void> {
 
   private static final Function<Throwable, String> responseStatusExtractor =
-      createResponseStatusExtractor();
+      createResponseStatusExtractor(false);
+  private static final Function<Throwable, String> dbResponseStatusExtractor =
+      createResponseStatusExtractor(true);
 
   @Override
   public String getDbSystemName(VertxSqlClientRequest request) {
@@ -80,7 +82,7 @@ class VertxSqlClientAttributesGetter
             instanceof ConnectException) {
       return null;
     }
-    return responseStatusExtractor.apply(error);
+    return dbResponseStatusExtractor.apply(error);
   }
 
   @Override
@@ -89,12 +91,13 @@ class VertxSqlClientAttributesGetter
     return request.isParameterizedQuery();
   }
 
-  private static Function<Throwable, String> createResponseStatusExtractor() {
+  private static Function<Throwable, String> createResponseStatusExtractor(boolean preserveNull) {
     Function<Throwable, String> extractor =
-        responseStatusExtractor("io.vertx.sqlclient.DatabaseException", "getSqlState");
+        responseStatusExtractor(
+            "io.vertx.sqlclient.DatabaseException", "getSqlState", preserveNull);
     // older versions only have this method
     Function<Throwable, String> fallback =
-        responseStatusExtractor("io.vertx.pgclient.PgException", "getCode");
+        responseStatusExtractor("io.vertx.pgclient.PgException", "getCode", preserveNull);
     return error -> {
       String status = extractor.apply(error);
       return status != null ? status : fallback.apply(error);
@@ -102,7 +105,7 @@ class VertxSqlClientAttributesGetter
   }
 
   private static Function<Throwable, String> responseStatusExtractor(
-      String className, String methodName) {
+      String className, String methodName, boolean preserveNull) {
     try {
       // loaded via reflection, because this class is not available in all versions that we support
       Class<?> exClass = Class.forName(className);
@@ -111,7 +114,8 @@ class VertxSqlClientAttributesGetter
       return (error) -> {
         if (exClass.isInstance(error)) {
           try {
-            return String.valueOf(method.invoke(error)); // can be String or int
+            Object status = method.invoke(error); // can be String or int
+            return status == null && preserveNull ? null : String.valueOf(status);
           } catch (IllegalAccessException | InvocationTargetException ignored) {
             return null;
           }
