@@ -31,6 +31,12 @@ final class ResponseFutureCallbacks {
     HTTP_RESPONSE.set(future, marker);
   }
 
+  static void inherit(Future<?> source, Future<?> result) {
+    if (HTTP_RESPONSE.get(source) != null) {
+      mark(result);
+    }
+  }
+
   static <T, R> Function1<T, R> wrap(Future<?> future, Function1<T, R> callback) {
     if (HTTP_RESPONSE.get(future) == null
         || callback instanceof ContextFunction1

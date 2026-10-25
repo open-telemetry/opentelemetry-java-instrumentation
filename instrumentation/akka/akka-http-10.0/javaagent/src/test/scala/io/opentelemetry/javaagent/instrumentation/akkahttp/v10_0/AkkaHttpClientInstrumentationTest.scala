@@ -106,6 +106,7 @@ class AkkaHttpClientInstrumentationTest
     Http
       .get(system)
       .singleRequest(request)
+      .map(response => response)
       .onComplete {
         case Success(response: HttpResponse) => {
           response.discardEntityBytes(materializer)

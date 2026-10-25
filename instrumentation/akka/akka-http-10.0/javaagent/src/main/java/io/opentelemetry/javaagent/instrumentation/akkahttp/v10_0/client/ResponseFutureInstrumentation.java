@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.client;
 
+import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -58,6 +60,29 @@ class ResponseFutureInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("scala.Function2")))
             .and(takesArgument(2, named("scala.concurrent.ExecutionContext"))),
         getClass().getName() + "$ZipAdvice");
+    // These DefaultPromise combinators allocate a result promise (or return the marked receiver).
+    // Do not mark FastFuture.transformWith results: they can be unrelated, shared application
+    // futures.
+    transformer.applyAdviceToMethod(
+        isDeclaredBy(named("scala.concurrent.impl.Promise$DefaultPromise"))
+            .and(
+                namedOneOf(
+                    "map",
+                    "flatMap",
+                    "filter",
+                    "collect",
+                    "recover",
+                    "recoverWith",
+                    "transform",
+                    "transformWith",
+                    "andThen"))
+            .and(returns(named("scala.concurrent.Future"))),
+        getClass().getName() + "$ResultAdvice");
+    transformer.applyAdviceToMethod(
+        isDeclaredBy(named("scala.concurrent.impl.Promise$DefaultPromise"))
+            .and(namedOneOf("zip", "zipWith", "fallbackTo"))
+            .and(takesArgument(0, named("scala.concurrent.Future"))),
+        getClass().getName() + "$CombinedResultAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -94,6 +119,27 @@ class ResponseFutureInstrumentation implements TypeInstrumentation {
     public static Function2<?, ?, ?> onEnter(
         @Advice.This Future<?> future, @Advice.Argument(1) Function2<?, ?, ?> callback) {
       return ResponseFutureCallbacks.wrap(future, callback);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ResultAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Future<?> source, @Advice.Return Future<?> result) {
+      ResponseFutureCallbacks.inherit(source, result);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class CombinedResultAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This Future<?> source,
+        @Advice.Argument(0) Future<?> other,
+        @Advice.Return Future<?> result) {
+      if (result != other) {
+        ResponseFutureCallbacks.inherit(source, result);
+      }
     }
   }
 }

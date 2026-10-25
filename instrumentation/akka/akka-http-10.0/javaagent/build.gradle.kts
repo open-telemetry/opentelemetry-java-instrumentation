@@ -48,9 +48,22 @@ testing {
         val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.12"
         implementation("com.typesafe.akka:akka-http_$scalaVersion:${baseVersion("10.2.0").orLatest()}")
         implementation("com.typesafe.akka:akka-stream_$scalaVersion:${baseVersion("2.6.21").orLatest()}")
+        if (!otelProps.testLatestDeps) {
+          // Older Scala 2.12 compilers cannot read classes produced by the build JDK.
+          implementation("org.scala-lang:scala-library:2.12.21")
+        }
       }
     }
   }
+}
+
+// Reuse the Scala 2.12 runtime already supplied by javaRouteTest for client compatibility coverage.
+sourceSets.named("javaRouteTest") {
+  scala {
+    srcDir("src/test/scala")
+    include("**/AkkaHttpClientInstrumentationTest.scala", "**/client/ClientCallbackTest.scala")
+  }
+  resources.srcDir("src/test/resources")
 }
 
 tasks {
