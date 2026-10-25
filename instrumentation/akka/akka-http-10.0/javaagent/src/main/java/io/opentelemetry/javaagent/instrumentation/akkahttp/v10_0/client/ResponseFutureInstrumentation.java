@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.client;
 
+import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -25,7 +26,9 @@ import scala.concurrent.Future;
 class ResponseFutureInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("akka.http.scaladsl.util.FastFuture$ErrorFuture");
+    return namedOneOf(
+        "akka.http.scaladsl.util.FastFuture$ErrorFuture",
+        "akka.http.scaladsl.util.FastFuture$FulfilledFuture");
   }
 
   @Override
@@ -58,15 +61,27 @@ class ResponseFutureInstrumentation implements TypeInstrumentation {
             .and(takesArgument(2, named("scala.concurrent.ExecutionContext"))),
         getClass().getName() + "$ZipAdvice");
     transformer.applyAdviceToMethod(
-        named("recover")
+        isDeclaredBy(named("akka.http.scaladsl.util.FastFuture$ErrorFuture"))
+            .and(named("recover"))
             .and(takesArguments(2))
             .and(returns(named("scala.concurrent.Future"))),
         getClass().getName() + "$ResultAdvice");
     transformer.applyAdviceToMethod(
-        named("failed")
+        isDeclaredBy(named("akka.http.scaladsl.util.FastFuture$ErrorFuture"))
+            .and(named("failed"))
             .and(takesArguments(0))
             .and(returns(named("scala.concurrent.Future"))),
         getClass().getName() + "$FailedProjectionAdvice");
+    transformer.applyAdviceToMethod(
+        isDeclaredBy(named("akka.http.scaladsl.util.FastFuture$FulfilledFuture"))
+            .and(namedOneOf("map", "filter", "collect", "recover", "transform", "andThen"))
+            .and(returns(named("scala.concurrent.Future"))),
+        getClass().getName() + "$ResultAdvice");
+    transformer.applyAdviceToMethod(
+        isDeclaredBy(named("akka.http.scaladsl.util.FastFuture$FulfilledFuture"))
+            .and(namedOneOf("zip", "zipWith", "fallbackTo"))
+            .and(takesArgument(0, named("scala.concurrent.Future"))),
+        getClass().getName() + "$CombinedResultAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -117,9 +132,21 @@ class ResponseFutureInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class FailedProjectionAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.This Future<?> source, @Advice.Return Future<?> result) {
+    public static void onExit(@Advice.This Future<?> source, @Advice.Return Future<?> result) {
       ResponseFutureCallbacks.inheritFailed(source, result);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class CombinedResultAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This Future<?> source,
+        @Advice.Argument(0) Future<?> other,
+        @Advice.Return Future<?> result) {
+      if (result != other) {
+        ResponseFutureCallbacks.inherit(source, result);
+      }
     }
   }
 }

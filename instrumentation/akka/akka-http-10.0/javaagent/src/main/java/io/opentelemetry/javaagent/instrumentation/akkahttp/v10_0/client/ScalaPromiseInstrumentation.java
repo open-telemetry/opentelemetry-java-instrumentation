@@ -146,8 +146,7 @@ class ScalaPromiseInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class FailedProjectionAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(
-        @Advice.This Future<?> source, @Advice.Return Future<?> result) {
+    public static void onExit(@Advice.This Future<?> source, @Advice.Return Future<?> result) {
       ResponseFutureCallbacks.inheritFailed(source, result);
     }
   }

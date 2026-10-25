@@ -15,11 +15,11 @@ import javax.annotation.Nullable;
 import scala.Function1;
 import scala.Function2;
 import scala.PartialFunction;
-import scala.util.Properties$;
 import scala.concurrent.Future;
 import scala.runtime.AbstractFunction1;
 import scala.runtime.AbstractFunction2;
 import scala.runtime.AbstractPartialFunction;
+import scala.util.Properties$;
 
 final class ResponseFutureCallbacks {
   private static final Logger logger = Logger.getLogger(ResponseFutureCallbacks.class.getName());
@@ -43,9 +43,7 @@ final class ResponseFutureCallbacks {
     if (HTTP_RESPONSE.get(source) == null) {
       return;
     }
-    if (SCALA_213
-        && source.value().isDefined()
-        && source.value().get().isSuccess()) {
+    if (SCALA_213 && source.value().isDefined() && source.value().get().isSuccess()) {
       return;
     }
     mark(result);
