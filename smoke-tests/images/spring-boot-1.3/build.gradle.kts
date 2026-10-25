@@ -21,9 +21,8 @@ dependencies {
   implementation("org.apache.logging.log4j:log4j-core:2.17.2")
 }
 
-val runtimeClasspath = configurations.named("runtimeClasspath").map { it.files }
-
 tasks.jar {
+  val runtimeClasspath = configurations.named("runtimeClasspath").map { it.files }
   inputs.files(runtimeClasspath)
 
   doLast {
