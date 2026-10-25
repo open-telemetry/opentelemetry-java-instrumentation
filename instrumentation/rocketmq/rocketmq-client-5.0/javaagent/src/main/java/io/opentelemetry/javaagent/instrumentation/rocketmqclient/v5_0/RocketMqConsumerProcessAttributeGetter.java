@@ -71,9 +71,10 @@ class RocketMqConsumerProcessAttributeGetter
   @Override
   public String getErrorType(
       MessageView messageView, @Nullable ConsumeResult consumeResult, @Nullable Throwable error) {
-    return consumeResult == ConsumeResult.FAILURE
-        ? ConsumeResult.FAILURE.name()
-        : error == null ? null : error.getClass().getName();
+    if (consumeResult == ConsumeResult.FAILURE) {
+      return ConsumeResult.FAILURE.name();
+    }
+    return error == null ? null : error.getClass().getName();
   }
 
   @Override
