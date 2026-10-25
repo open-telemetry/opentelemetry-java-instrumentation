@@ -59,12 +59,10 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Returns the final value of {@code error.type} for the operation.
+   * Returns the {@code error.type} value for the operation, or {@code null} to omit the attribute.
    *
-   * <p>Returning {@code null} omits {@code error.type}, even when {@code error} is non-null. The
-   * default implementation returns the exception class name when {@code error} is non-null, and
-   * {@code null} otherwise. An override that wants this fallback can return {@code error == null ?
-   * null : error.getClass().getName()}.
+   * <p>The default implementation returns the exception class name, or {@code null} if there is no
+   * exception.
    *
    * <p>The cardinality of the error type should be low. The instrumentations implementing this
    * method are recommended to document the custom values they support.
