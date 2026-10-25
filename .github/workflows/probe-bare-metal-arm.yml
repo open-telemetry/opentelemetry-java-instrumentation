@@ -1,0 +1,25 @@
+name: Probe ARM bare-metal runner
+
+on:
+  push:
+    branches:
+      - trask-java-agent-startup-benchmarks
+    paths:
+      - .github/workflows/probe-bare-metal-arm.yml
+
+permissions: {}
+
+jobs:
+  probe:
+    runs-on: cncf-ubuntu-bm-arm
+    timeout-minutes: 5
+    steps:
+      - name: Check host and Docker
+        shell: bash
+        run: |
+          test "$(uname -m)" = aarch64
+          uname -a
+          cat /etc/os-release
+          lscpu
+          free -h
+          docker info --format 'Server={{.ServerVersion}} OS={{.OSType}} Architecture={{.Architecture}} CPUs={{.NCPU}}'
