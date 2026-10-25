@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.http.HttpEntity;
 import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseException;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -152,6 +153,9 @@ final class ElasticsearchDbAttributesGetter
   @Nullable
   public String getDbResponseStatusCode(
       ElasticsearchRestRequest request, @Nullable Response response, @Nullable Throwable error) {
+    if (response == null && error instanceof ResponseException) {
+      response = ((ResponseException) error).getResponse();
+    }
     if (response == null || response.getStatusLine().getStatusCode() < 400) {
       return null;
     }

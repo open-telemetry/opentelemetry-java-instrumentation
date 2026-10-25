@@ -44,6 +44,14 @@ class VertxSqlClientAttributesGetterTest {
   }
 
   @Test
+  void omitsNullSqlStateWithoutChangingErrorType() {
+    DatabaseException error = new DatabaseException("Unknown SQLSTATE", 0, null) {};
+
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("null");
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isNull();
+  }
+
+  @Test
   void handlesCyclicCauseChain() {
     SQLException cause = new SQLException("Server failure", "66000", 12541);
     DatabaseException error = new DatabaseException("Server failure", 12541, "66000", cause) {};

@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQ
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DERBY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CLICKHOUSE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.H2DATABASE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.SAP_HANA;
@@ -107,6 +108,25 @@ class JdbcAttributesGetterTest {
 
     assertThat(attributesGetter.getDbResponseStatusCode(request, null, error))
         .isEqualTo(Integer.toString(errorCode));
+  }
+
+  @Test
+  void omitsH2LocalClosedConnectionCodeWithoutChangingErrorType() {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(H2DATABASE).build(), "SELECT 1", false);
+    SQLException error = new SQLException("The object is already closed", "90007", 90007);
+
+    assertThat(attributesGetter.getErrorType(request, null, error)).isEqualTo("90007");
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isNull();
+  }
+
+  @Test
+  void keepsH2ClosedObjectCodeForOtherDatabaseSystems() {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);
+    SQLException error = new SQLException("Server failure", "90007", 90007);
+
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isEqualTo("90007");
   }
 
   @Test
