@@ -71,6 +71,17 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":javaagent-extension-api"))
+        implementation("io.opentelemetry:opentelemetry-sdk")
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation("org.apache.pekko:pekko-http_2.12:1.0.0")
+        implementation("org.apache.pekko:pekko-stream_2.12:1.0.1")
+      }
+    }
+
     // the agent matches methods of pekko classes by name, some of them are private and scala
     // mangles their names, run the tests against the scala 3 artifacts to catch a name that only
     // holds for scala 2

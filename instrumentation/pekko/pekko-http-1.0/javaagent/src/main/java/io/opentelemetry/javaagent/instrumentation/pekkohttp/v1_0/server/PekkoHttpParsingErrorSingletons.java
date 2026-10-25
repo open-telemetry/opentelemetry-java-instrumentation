@@ -66,8 +66,9 @@ public class PekkoHttpParsingErrorSingletons {
     if (PARSING_ERROR.get(info) == null) {
       return null;
     }
+    PARSING_ERROR.set(info, null);
 
-    Context parentContext = Context.current();
+    Context parentContext = Context.root();
     if (!instrumenter.shouldStart(parentContext, info)) {
       return null;
     }
