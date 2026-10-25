@@ -152,7 +152,7 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static Scope methodEnter(@Advice.Argument(0) Collection<String> keys) {
-      String queryText = SpymemcachedQuerySanitizer.sanitize("getBulk", "", new Object[] {keys});
+      String queryText = SpymemcachedQuerySanitizer.sanitizeBulk(keys);
       if (queryText.equals("getBulk")) {
         return null;
       }

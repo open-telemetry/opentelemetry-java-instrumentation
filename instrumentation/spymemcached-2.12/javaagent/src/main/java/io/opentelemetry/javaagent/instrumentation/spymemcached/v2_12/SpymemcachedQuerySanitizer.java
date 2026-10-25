@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
 import static io.opentelemetry.instrumentation.api.internal.StringUtils.appendTruncated;
+import static java.util.Arrays.asList;
 
 import java.util.Collection;
 import javax.annotation.Nullable;
@@ -26,22 +27,12 @@ final class SpymemcachedQuerySanitizer {
       case "getBulk":
         Object keys = args[0];
         if (keys instanceof Collection) {
-          for (Object key : (Collection<?>) keys) {
-            append(query, key);
-            if (query.length() >= LIMIT) {
-              break;
-            }
-          }
+          return sanitizeBulk((Collection<?>) keys);
         } else {
           // The transcoder precedes the keys in the transcoder/varargs overload.
           keys = keys instanceof String[] || args.length == 1 ? keys : args[1];
           if (keys instanceof String[]) {
-            for (String key : (String[]) keys) {
-              append(query, key);
-              if (query.length() >= LIMIT) {
-                break;
-              }
-            }
+            return sanitizeBulk(asList((String[]) keys));
           }
         }
         break;
@@ -92,6 +83,17 @@ final class SpymemcachedQuerySanitizer {
         break;
       default:
         break;
+    }
+    return query.toString();
+  }
+
+  static String sanitizeBulk(Iterable<?> keys) {
+    StringBuilder query = new StringBuilder("getBulk");
+    for (Object key : keys) {
+      append(query, key);
+      if (query.length() >= LIMIT) {
+        break;
+      }
     }
     return query.toString();
   }

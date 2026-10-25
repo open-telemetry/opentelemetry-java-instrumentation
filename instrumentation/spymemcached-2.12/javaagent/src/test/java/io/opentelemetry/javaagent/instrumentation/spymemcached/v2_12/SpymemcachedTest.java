@@ -88,13 +88,13 @@ import net.spy.memcached.ops.OperationQueueFactory;
 import net.spy.memcached.ops.OperationState;
 import net.spy.memcached.protocol.BaseOperationImpl;
 import net.spy.memcached.protocol.ascii.AsciiMemcachedNodeImpl;
+import net.spy.memcached.transcoders.SerializingTranscoder;
 import net.spy.memcached.transcoders.Transcoder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -603,28 +603,12 @@ class SpymemcachedTest {
     String outerKey = key("outer");
     String nestedKey = key("nested");
     MemcachedClient memcached = getMemcached(singletonMap("outer", "outer value"));
-    Transcoder<Object> defaultTranscoder = memcached.getTranscoder();
-    Transcoder<Object> transcoder =
-        new Transcoder<Object>() {
-          @Override
-          public boolean asyncDecode(CachedData cachedData) {
-            return defaultTranscoder.asyncDecode(cachedData);
-          }
-
-          @Override
-          public CachedData encode(Object value) {
-            return defaultTranscoder.encode(value);
-          }
-
+    SerializingTranscoder transcoder =
+        new SerializingTranscoder() {
           @Override
           public Object decode(CachedData cachedData) {
             memcached.asyncGetBulk(singletonList(nestedKey));
-            return defaultTranscoder.decode(cachedData);
-          }
-
-          @Override
-          public int getMaxSize() {
-            return defaultTranscoder.getMaxSize();
+            return super.decode(cachedData);
           }
         };
 
@@ -1204,54 +1188,28 @@ class SpymemcachedTest {
                             equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
-  @Test
-  void casNotFound() {
-    MemcachedClient memcached = getMemcached();
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          assertThat(
-                  memcached.cas(key("test-cas-doesnt-exist"), 1234, EXPIRATION_SECONDS, "cas bar"))
-              .isEqualTo(CASResponse.NOT_FOUND);
-        });
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("cas"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "cas"),
-                            equalTo(
-                                DB_QUERY_TEXT,
-                                "cas " + key("test-cas-doesnt-exist") + " 1234 3600 ?"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
-  }
-
   @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void casNumericValueIsSanitized(boolean withExpiration) throws Exception {
+  @CsvSource({"false,false", "true,false", "true,true"})
+  void casNotFound(boolean numericValue, boolean withExpiration) throws Exception {
     MemcachedClient memcached = getMemcached();
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          OperationFuture<CASResponse> future =
-              withExpiration
-                  ? memcached.asyncCAS(
-                      key("numeric-cas"), 1234, EXPIRATION_SECONDS, 5678, memcached.getTranscoder())
-                  : memcached.asyncCAS(
-                      key("numeric-cas"), 1234, (Object) 5678, memcached.getTranscoder());
-          assertThat(future.get()).isEqualTo(CASResponse.NOT_FOUND);
-        });
+    String casKey = key("test-cas-doesnt-exist");
+    CASResponse result =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              if (!numericValue) {
+                return memcached.cas(casKey, 1234, EXPIRATION_SECONDS, "cas bar");
+              }
+              if (withExpiration) {
+                return memcached
+                    .asyncCAS(casKey, 1234, EXPIRATION_SECONDS, 5678, memcached.getTranscoder())
+                    .get();
+              }
+              return memcached
+                  .asyncCAS(casKey, 1234, (Object) 5678, memcached.getTranscoder())
+                  .get();
+            });
+    assertThat(result).isEqualTo(CASResponse.NOT_FOUND);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -1267,15 +1225,16 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_QUERY_TEXT,
                                 "cas "
-                                    + key("numeric-cas")
-                                    + " 1234"
-                                    + (withExpiration ? " 3600 ?" : " ?")),
+                                    + casKey
+                                    + (numericValue && !withExpiration
+                                        ? " 1234 ?"
+                                        : " 1234 3600 ?")),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, memcachedAddress.getPort()))));
+                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test
