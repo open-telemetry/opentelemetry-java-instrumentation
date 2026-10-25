@@ -37,6 +37,10 @@ class TracingHttpRequest extends HttpRequest {
   @Override
   public void send(Response.CompleteListener listener) {
     parentContext = Context.current();
+    Request.Content body = getBody();
+    if (body != null) {
+      super.body(JettyClientWrapUtil.wrapRequestContent(body, parentContext));
+    }
     // start span and attach listeners - must handle all listeners, not just CompleteListener.
     Context startedContext =
         JettyClientTracingListener.handleRequest(parentContext, this, instrumenter);
@@ -49,6 +53,10 @@ class TracingHttpRequest extends HttpRequest {
   @Nullable
   private Scope openScope() {
     return context != null ? context.makeCurrent() : null;
+  }
+
+  private Scope openParentScope() {
+    return parentContext.makeCurrent();
   }
 
   // Added in Jetty 12.0.20.
@@ -107,49 +115,49 @@ class TracingHttpRequest extends HttpRequest {
 
   @Override
   public void notifyQueued() {
-    try (Scope scope = openScope()) {
+    try (Scope scope = openParentScope()) {
       super.notifyQueued();
     }
   }
 
   @Override
   public void notifyBegin() {
-    try (Scope scope = openScope()) {
+    try (Scope scope = openParentScope()) {
       super.notifyBegin();
     }
   }
 
   @Override
   public void notifyHeaders() {
-    try (Scope scope = openScope()) {
+    try (Scope scope = openParentScope()) {
       super.notifyHeaders();
     }
   }
 
   @Override
   public void notifyCommit() {
-    try (Scope scope = openScope()) {
+    try (Scope scope = openParentScope()) {
       super.notifyCommit();
     }
   }
 
   @Override
   public void notifyContent(ByteBuffer byteBuffer) {
-    try (Scope scope = openScope()) {
+    try (Scope scope = openParentScope()) {
       super.notifyContent(byteBuffer);
     }
   }
 
   @Override
   public void notifySuccess() {
-    try (Scope scope = openScope()) {
+    try (Scope scope = openParentScope()) {
       super.notifySuccess();
     }
   }
 
   @Override
   public void notifyFailure(Throwable failure) {
-    try (Scope scope = openScope()) {
+    try (Scope scope = openParentScope()) {
       super.notifyFailure(failure);
     }
   }

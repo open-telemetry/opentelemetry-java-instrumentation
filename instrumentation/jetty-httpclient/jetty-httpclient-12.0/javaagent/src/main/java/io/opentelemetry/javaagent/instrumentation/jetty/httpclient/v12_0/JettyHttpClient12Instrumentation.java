@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0;
 
+import static io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyClientWrapUtil.wrapRequestContent;
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0.JettyHttpClientSingletons.JETTY_CLIENT_CONTEXT_KEY;
-import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0.JettyHttpClientSingletons.REQUEST_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0.JettyHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.nameContains;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -21,6 +21,7 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.transport.HttpRequest;
 
 class JettyHttpClient12Instrumentation implements TypeInstrumentation {
@@ -57,16 +58,17 @@ class JettyHttpClient12Instrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceLocals onEnterSend(@Advice.This HttpRequest request) {
-      // start span
       Context parentContext = Context.current();
+      request.attribute(JETTY_CLIENT_CONTEXT_KEY, parentContext);
+      Request.Content body = request.getBody();
+      if (body != null) {
+        request.body(wrapRequestContent(body, parentContext));
+      }
       Context context =
           JettyClientTracingListener.handleRequest(parentContext, request, instrumenter());
       if (context == null) {
         return null;
       }
-      // Response callbacks use the caller context; request hooks use the operation context.
-      request.attribute(JETTY_CLIENT_CONTEXT_KEY, parentContext);
-      REQUEST_CONTEXT.set(request, context);
 
       return new AdviceLocals(context, context.makeCurrent());
     }
@@ -95,7 +97,7 @@ class JettyHttpClient12Instrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnterNotify(@Advice.This HttpRequest request) {
-      Context context = REQUEST_CONTEXT.get(request);
+      Context context = (Context) request.getAttributes().get(JETTY_CLIENT_CONTEXT_KEY);
       if (context == null) {
         return null;
       }
