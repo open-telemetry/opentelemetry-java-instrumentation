@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0;
 import static io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyClientWrapUtil.wrapRequestContent;
 import static io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyClientWrapUtil.wrapRequestTrailers;
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0.JettyHttpClientSingletons.JETTY_CLIENT_CONTEXT_KEY;
+import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0.JettyHttpClientSingletons.JETTY_CLIENT_LIBRARY_CONTEXT_BOUNDARY_KEY;
 import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v12_0.JettyHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.nameContains;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -67,6 +68,10 @@ class JettyHttpClient12Instrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceLocals onEnterSend(@Advice.This HttpRequest request) {
+      if (Boolean.TRUE.equals(
+          request.getAttributes().get(JETTY_CLIENT_LIBRARY_CONTEXT_BOUNDARY_KEY))) {
+        return null;
+      }
       Context parentContext = Context.current();
       request.attribute(JETTY_CLIENT_CONTEXT_KEY, parentContext);
       Request.Content body = request.getBody();

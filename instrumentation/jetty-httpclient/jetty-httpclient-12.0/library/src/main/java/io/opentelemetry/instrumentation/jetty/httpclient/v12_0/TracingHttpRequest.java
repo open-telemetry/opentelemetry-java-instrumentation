@@ -23,6 +23,9 @@ import org.eclipse.jetty.http.HttpFields;
 
 class TracingHttpRequest extends HttpRequest {
 
+  private static final String LIBRARY_CONTEXT_BOUNDARY_ATTRIBUTE =
+      "otel-jetty-httpclient-library-context-boundary";
+
   private final Instrumenter<Request, Response> instrumenter;
   private Context parentContext = Context.root();
   private boolean callerContextCaptured;
@@ -35,6 +38,7 @@ class TracingHttpRequest extends HttpRequest {
       Instrumenter<Request, Response> instrumenter) {
     super(client, conversation, uri);
     this.instrumenter = instrumenter;
+    attribute(LIBRARY_CONTEXT_BOUNDARY_ATTRIBUTE, true);
   }
 
   @Override
