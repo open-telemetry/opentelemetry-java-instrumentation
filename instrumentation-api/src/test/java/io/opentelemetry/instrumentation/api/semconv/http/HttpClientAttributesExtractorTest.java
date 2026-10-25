@@ -440,6 +440,20 @@ class HttpClientAttributesExtractorTest {
   }
 
   @Test
+  void shouldExtractErrorType_forPositiveInvalidStatusCode() {
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "600");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onEnd(attributes, Context.root(), emptyMap(), response, null);
+
+    assertThat(attributes.build()).containsEntry(ERROR_TYPE, "600");
+  }
+
+  @Test
   void shouldExtractErrorType_other() {
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());

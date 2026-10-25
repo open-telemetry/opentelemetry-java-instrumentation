@@ -453,6 +453,20 @@ class HttpServerAttributesExtractorTest {
   }
 
   @Test
+  void shouldExtractErrorType_forPositiveInvalidStatusCode() {
+    Map<String, String> response = new HashMap<>();
+    response.put("statusCode", "600");
+
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
+        HttpServerAttributesExtractor.create(new TestHttpServerAttributesGetter());
+
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onEnd(attributes, Context.root(), emptyMap(), response, null);
+
+    assertThat(attributes.build()).containsEntry(ERROR_TYPE, "600");
+  }
+
+  @Test
   void shouldPreferUrlSchemeFromForwardedHeader() {
     Map<String, String> request = new HashMap<>();
     request.put("urlScheme", "http");

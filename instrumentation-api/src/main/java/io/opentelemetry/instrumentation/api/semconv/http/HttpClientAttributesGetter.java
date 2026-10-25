@@ -45,19 +45,21 @@ public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
   /**
    * Returns the final {@code error.type} value for the HTTP client operation.
    *
-   * <p>The default implementation returns status codes classified as errors for clients (400 or
-   * greater, or below 100), the exception class name when {@code error} is non-null, or {@value
-   * io.opentelemetry.instrumentation.api.internal.HttpConstants#_OTHER} when the status is missing
-   * or non-positive. It omits {@code error.type} for a successful response without an exception.
+   * <p>The default implementation returns error response status codes for clients (400 or greater,
+   * or positive status codes below 100), the exception class name when {@code error} is non-null,
+   * or {@value io.opentelemetry.instrumentation.api.internal.HttpConstants#_OTHER} when the status
+   * is missing or non-positive and there is no exception. It omits {@code error.type} for a
+   * successful response without an exception. Positive invalid status codes are classified by the
+   * client status rules.
    *
    * <p>An override returning {@code null} omits the attribute, including for an error response
-   * status. To retain the default classification from an override, explicitly delegate to {@code
-   * HttpClientAttributesGetter.super.getErrorType(request, response, error)}.
+   * status. To retain the default classification from an override, delegate to {@link
+   * HttpErrorType#forClient(HttpCommonAttributesGetter, Object, Object, Throwable)}.
    */
   @Nullable
   @Override
   default String getErrorType(
       REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
-    return HttpStatusCodeConverter.CLIENT.getErrorType(this, request, response, error);
+    return HttpErrorType.forClient(this, request, response, error);
   }
 }

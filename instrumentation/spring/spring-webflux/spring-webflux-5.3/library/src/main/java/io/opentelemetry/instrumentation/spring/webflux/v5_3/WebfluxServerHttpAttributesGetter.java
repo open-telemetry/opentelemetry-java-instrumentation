@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
+import io.opentelemetry.instrumentation.api.semconv.http.HttpErrorType;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.HeaderUtil;
 import java.lang.invoke.MethodHandle;
@@ -111,7 +112,7 @@ enum WebfluxServerHttpAttributesGetter
     if (response == null && error == null) {
       return "cancelled";
     }
-    return HttpServerAttributesGetter.super.getErrorType(request, response, error);
+    return HttpErrorType.forServer(this, request, response, error);
   }
 
   @Override

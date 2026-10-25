@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -103,13 +102,13 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
   /**
    * Returns the final {@code error.type} value for the operation.
    *
-   * <p>The default implementation returns the exception class name when {@code error} is non-null,
-   * or {@value HttpConstants#_OTHER} otherwise. The HTTP client and server getter defaults also
-   * classify error response status codes and omit {@code error.type} for successful operations.
+   * <p>HTTP client and server getters provide role-specific defaults that classify response status
+   * codes, fall back to the exception class name, and omit {@code error.type} for successful
+   * operations.
    *
    * <p>A {@code null} result omits {@code error.type}, even when {@code error} is non-null. An
-   * override that wants to retain the inherited fallback behavior must explicitly delegate to the
-   * appropriate HTTP getter interface default.
+   * implementation of this interface must return the final value itself or delegate to the
+   * appropriate helper in {@link HttpErrorType}.
    *
    * <p>The cardinality of the error type should be low. The instrumentations implementing this
    * method are recommended to document the custom values they support.
@@ -118,8 +117,5 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    * server_certificate_invalid}, {@code 500}, {@code _OTHER}.
    */
   @Nullable
-  default String getErrorType(
-      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
-    return HttpStatusCodeConverter.defaultErrorType(error);
-  }
+  String getErrorType(REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error);
 }
