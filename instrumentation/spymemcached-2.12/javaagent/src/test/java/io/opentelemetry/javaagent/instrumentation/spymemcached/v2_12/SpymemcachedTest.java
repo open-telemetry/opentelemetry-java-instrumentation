@@ -521,7 +521,16 @@ class SpymemcachedTest {
                 span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(spanName("get"))
-                        .hasAttributesSatisfying(equalTo(DB_QUERY_TEXT, "getBulk"))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                            equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "getBulk"),
+                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                memcachedAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test
@@ -631,12 +640,30 @@ class SpymemcachedTest {
                 span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(spanName("get"))
-                        .hasAttributesSatisfying(equalTo(DB_QUERY_TEXT, "getBulk " + outerKey))),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                            equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "getBulk " + outerKey),
+                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                memcachedAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, memcachedAddress.getPort()))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName(spanName("get"))
-                        .hasAttributesSatisfying(equalTo(DB_QUERY_TEXT, "getBulk " + nestedKey))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                            equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "getBulk " + nestedKey),
+                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                memcachedAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test

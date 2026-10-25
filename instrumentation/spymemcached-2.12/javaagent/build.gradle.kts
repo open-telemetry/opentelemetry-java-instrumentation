@@ -20,9 +20,22 @@ dependencies {
   testImplementation("com.google.guava:guava")
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation("net.spy:spymemcached:2.12.0")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    if (!name.endsWith("unitTests", ignoreCase = true)) {
+      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    }
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
@@ -35,6 +48,6 @@ tasks {
   }
 
   check {
-    dependsOn(testExperimental)
+    dependsOn(testing.suites, testExperimental)
   }
 }
