@@ -19,7 +19,7 @@ public final class HttpErrorType {
   private HttpErrorType() {}
 
   /**
-   * Returns the final {@code error.type} value for an HTTP client operation.
+   * Returns the {@code error.type} value for an HTTP client operation.
    *
    * <p>Error status codes for clients (400 or greater, or positive status codes below 100) take
    * precedence over exceptions. For other statuses, the exception class name is returned when
@@ -38,7 +38,7 @@ public final class HttpErrorType {
   }
 
   /**
-   * Returns the final {@code error.type} value for an HTTP server operation.
+   * Returns the {@code error.type} value for an HTTP server operation.
    *
    * <p>Error status codes for servers (500 or greater, or positive status codes below 100) take
    * precedence over exceptions. For other statuses, the exception class name is returned when

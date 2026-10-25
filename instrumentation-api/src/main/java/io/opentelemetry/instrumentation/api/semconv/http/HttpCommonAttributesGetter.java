@@ -100,15 +100,7 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Returns the final {@code error.type} value for the operation.
-   *
-   * <p>HTTP client and server getters provide role-specific defaults that classify response status
-   * codes, fall back to the exception class name, and omit {@code error.type} for successful
-   * operations.
-   *
-   * <p>A {@code null} result omits {@code error.type}, even when {@code error} is non-null. An
-   * implementation of this interface must return the final value itself or delegate to the
-   * appropriate helper in {@link HttpErrorType}.
+   * Returns the {@code error.type} value for the operation, or {@code null} to omit the attribute.
    *
    * <p>The cardinality of the error type should be low. The instrumentations implementing this
    * method are recommended to document the custom values they support.

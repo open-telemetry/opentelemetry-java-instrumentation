@@ -52,7 +52,8 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
   }
 
   /**
-   * Returns the final {@code error.type} value for the HTTP server operation.
+   * Returns the {@code error.type} value for the HTTP server operation, or {@code null} to omit the
+   * attribute.
    *
    * <p>The default implementation returns error response status codes for servers (500 or greater,
    * or positive status codes below 100), the exception class name when {@code error} is non-null,
@@ -61,9 +62,8 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
    * successful response without an exception. Positive invalid status codes are classified by the
    * server status rules.
    *
-   * <p>An override returning {@code null} omits the attribute, including for an error response
-   * status. To retain the default classification from an override, delegate to {@link
-   * HttpErrorType#forServer(HttpCommonAttributesGetter, Object, Object, Throwable)}.
+   * <p>Use {@link HttpErrorType#forServer(HttpCommonAttributesGetter, Object, Object, Throwable)}
+   * to apply the default server classification.
    */
   @Nullable
   @Override

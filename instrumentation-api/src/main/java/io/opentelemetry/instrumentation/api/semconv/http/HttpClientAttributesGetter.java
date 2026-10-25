@@ -43,7 +43,8 @@ public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
   Integer getServerPort(REQUEST request);
 
   /**
-   * Returns the final {@code error.type} value for the HTTP client operation.
+   * Returns the {@code error.type} value for the HTTP client operation, or {@code null} to omit the
+   * attribute.
    *
    * <p>The default implementation returns error response status codes for clients (400 or greater,
    * or positive status codes below 100), the exception class name when {@code error} is non-null,
@@ -52,9 +53,8 @@ public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
    * successful response without an exception. Positive invalid status codes are classified by the
    * client status rules.
    *
-   * <p>An override returning {@code null} omits the attribute, including for an error response
-   * status. To retain the default classification from an override, delegate to {@link
-   * HttpErrorType#forClient(HttpCommonAttributesGetter, Object, Object, Throwable)}.
+   * <p>Use {@link HttpErrorType#forClient(HttpCommonAttributesGetter, Object, Object, Throwable)}
+   * to apply the default client classification.
    */
   @Nullable
   @Override
