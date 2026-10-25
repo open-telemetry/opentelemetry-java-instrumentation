@@ -1,8 +1,11 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import com.github.jengelman.gradle.plugins.shadow.transformers.PropertiesFileTransformer
 import me.champeau.jmh.JMHTask
 import net.ltgt.gradle.errorprone.errorprone
 
 plugins {
   id("otel.java-conventions")
+  id("com.gradleup.shadow")
   id("otel.jmh-conventions")
 }
 
@@ -17,8 +20,26 @@ dependencies {
 
 tasks {
 
-  named<Jar>("jmhJar") {
+  named<ShadowJar>("jmhJar") {
     archiveFileName.set("servlet-benchmarks.jar")
+    configurations = listOf(project.configurations["jmhRuntimeClasspath"])
+    exclude("*.jar", "**/module-info.class")
+    mergeServiceFiles()
+    append("META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports")
+    transform<PropertiesFileTransformer> {
+      paths.add("META-INF/spring.factories")
+      mergeStrategy.set(PropertiesFileTransformer.MergeStrategy.Append)
+    }
+    filesMatching(
+      listOf(
+        "META-INF/services/**",
+        "META-INF/*.kotlin_module",
+        "META-INF/spring.factories",
+        "META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports",
+      ),
+    ) {
+      duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
   }
 
   // TODO(trask) without disabling errorprone, jmh task fails with
