@@ -280,7 +280,10 @@ def main():
             hashes[name] = hashlib.file_digest(stream, "sha256").hexdigest()
     metadata = {
         "provenance": json.loads(args.provenance.read_text(encoding="utf-8")),
+        "driver_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "workflow_run": os.environ.get("GITHUB_RUN_ID"),
         "platform": platform.platform(),
+        "cpu_info": run(["lscpu"], capture_output=True, text=True).stdout,
         "cpu_topology": topology,
         "cpus": cpus,
         "java": run([java, "-version"], capture_output=True, text=True).stderr,
@@ -295,16 +298,28 @@ def main():
 
     def execute(name, agent, variant, mode, preflight=False):
         result_path = output / f"{name}.json"
+        active_agent = output / "active-agent.jar"
+        if agent is not None:
+            shutil.copyfile(agent, active_agent)
         cmd = command(
-            java, artifacts["benchmark"], agent, variant, result_path, mode, preflight
+            java,
+            artifacts["benchmark"],
+            active_agent if agent is not None else None,
+            variant,
+            result_path,
+            mode,
+            preflight,
         )
         metadata["commands"].append([str(arg) for arg in cmd])
         metadata_path.write_text(
             json.dumps(metadata, indent=2) + "\n", encoding="utf-8"
         )
         print(name, flush=True)
-        with (output / f"{name}.log").open("w", encoding="utf-8") as log:
-            run(cmd, stdout=log, stderr=subprocess.STDOUT)
+        try:
+            with (output / f"{name}.log").open("w", encoding="utf-8") as log:
+                run(cmd, stdout=log, stderr=subprocess.STDOUT)
+        finally:
+            active_agent.unlink(missing_ok=True)
         return read_result(result_path, variant)
 
     for agent in ("baseline", "candidate"):

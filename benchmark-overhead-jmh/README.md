@@ -49,6 +49,8 @@ Builds run on ordinary hosted runners. Measurements run serially on
 The runner selects four distinct allowed physical cores on one NUMA node,
 fixes the JVM processor count to four, and uses a 1 GiB fixed G1 heap.
 CPU affinity does not reserve cores or bind memory.
+Both agents load from the same temporary filename, so the artifact path is not
+another difference between baseline and candidate JVMs.
 
 Each measurement fork has five 5-second warmup iterations and five 5-second
 measurement iterations, with one JMH worker. Confirm warmup stability in the

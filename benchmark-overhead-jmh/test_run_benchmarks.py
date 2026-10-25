@@ -211,6 +211,90 @@ class RunnerTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             runner.summarize(rows, False)
 
+    def test_smoke_driver_uses_one_agent_path_and_cleans_it_on_failure(self):
+        for fail in (False, True):
+            with self.subTest(fail=fail), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                for name in ("benchmark", "baseline", "candidate"):
+                    (root / f"{name}.jar").write_bytes(name.encode())
+                (root / "provenance.json").write_text("{}", encoding="utf-8")
+                output = root / "results"
+                loaded_agents = []
+
+                def execute(
+                    cmd,
+                    *,
+                    output=output,
+                    loaded_agents=loaded_agents,
+                    fail=fail,
+                    **kwargs,
+                ):
+                    if cmd[0] == "lscpu":
+                        return subprocess.CompletedProcess(
+                            cmd,
+                            0,
+                            stdout="0,0,0,0,Y\n1,1,0,0,Y\n2,2,0,0,Y\n3,3,0,0,Y\n",
+                        )
+                    if cmd[1] == "-version":
+                        return subprocess.CompletedProcess(cmd, 0, stderr="test JDK")
+                    active = output / "active-agent.jar"
+                    if "-javaagent:" in cmd[-1]:
+                        self.assertIn(str(active), cmd[-1])
+                        loaded_agents.append(active.read_bytes())
+                    else:
+                        self.assertFalse(active.exists())
+                    if fail:
+                        raise subprocess.CalledProcessError(1, cmd)
+                    result = self.result()
+                    result["benchmark"] = cmd[3].strip("^$")
+                    Path(cmd[cmd.index("-rff") + 1]).write_text(
+                        json.dumps([result]), encoding="utf-8"
+                    )
+                    kwargs["stdout"].write("'GET /' SERVER [tracer: test]\n")
+                    return subprocess.CompletedProcess(cmd, 0)
+
+                argv = ["run_benchmarks.py"]
+                for name in ("benchmark", "baseline", "candidate"):
+                    argv.extend(
+                        [
+                            f"--{name}-jar"
+                            if name == "benchmark"
+                            else f"--{name}-agent",
+                            str(root / f"{name}.jar"),
+                        ]
+                    )
+                argv.extend(
+                    [
+                        "--provenance",
+                        str(root / "provenance.json"),
+                        "--output",
+                        str(output),
+                        "--mode",
+                        "smoke",
+                    ]
+                )
+                with (
+                    patch("sys.argv", argv),
+                    patch.dict(runner.os.environ, {}, clear=True),
+                    patch.object(runner.shutil, "which", return_value="java"),
+                    patch.object(
+                        runner.os,
+                        "sched_getaffinity",
+                        return_value={0, 1, 2, 3},
+                        create=True,
+                    ),
+                    patch.object(runner.os, "sched_setaffinity", create=True),
+                    patch.object(runner, "run", side_effect=execute),
+                ):
+                    if fail:
+                        with self.assertRaises(subprocess.CalledProcessError):
+                            runner.main()
+                    else:
+                        runner.main()
+                        self.assertEqual(loaded_agents[:2], [b"baseline", b"candidate"])
+                        self.assertTrue((output / "forks.csv").is_file())
+                self.assertFalse((output / "active-agent.jar").exists())
+
 
 if __name__ == "__main__":
     unittest.main()
