@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.common.v7_0;
 
 import static io.opentelemetry.javaagent.instrumentation.tomcat.common.v7_0.TomcatHelper.messageBytesToString;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.ArrayList;
@@ -46,17 +47,23 @@ class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
 
   @Override
   public List<String> getHttpRequestHeader(Request request, String name) {
-    List<String> result = null;
     MimeHeaders headers = request.getMimeHeaders();
     int i = headers.findHeader(name, 0);
+    if (i == -1) {
+      return emptyList();
+    }
+    String first = messageBytesToString(headers.getValue(i));
+    i = headers.findHeader(name, i + 1);
+    if (i == -1) {
+      return singletonList(first);
+    }
+    List<String> result = new ArrayList<>();
+    result.add(first);
     while (i != -1) {
-      if (result == null) {
-        result = new ArrayList<>();
-      }
       result.add(messageBytesToString(headers.getValue(i)));
       i = headers.findHeader(name, i + 1);
     }
-    return result != null ? result : emptyList();
+    return result;
   }
 
   @Override
@@ -73,6 +80,9 @@ class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   @Nullable
   @Override
   public String getNetworkProtocolName(Request request, @Nullable Response response) {
+    if (request.protocol().equals("HTTP/1.1")) {
+      return "http";
+    }
     String protocol = messageBytesToString(request.protocol());
     if (protocol != null && protocol.startsWith("HTTP/")) {
       return "http";
@@ -83,6 +93,9 @@ class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   @Nullable
   @Override
   public String getNetworkProtocolVersion(Request request, @Nullable Response response) {
+    if (request.protocol().equals("HTTP/1.1")) {
+      return "1.1";
+    }
     String protocol = messageBytesToString(request.protocol());
     if (protocol != null && protocol.startsWith("HTTP/")) {
       return protocol.substring("HTTP/".length());
