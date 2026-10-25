@@ -19,12 +19,13 @@ final class SpymemcachedQuerySanitizer {
     if (args.length == 0) {
       return query.toString();
     }
-    if (operation.equals("getBulk")
-        && descriptor.startsWith("(Ljava/util/Collection;Ljava/util/Iterator;")) {
-      return query.toString();
-    }
     switch (operation) {
       case "getBulk":
+        if (hasPerKeyTranscoders(descriptor)) {
+          // This overload requests as many keys as there are transcoders; identifying them would
+          // consume the iterator.
+          return query.toString();
+        }
         Object keys = args[0];
         if (keys instanceof Collection) {
           return sanitizeBulk((Collection<?>) keys);
@@ -39,6 +40,7 @@ final class SpymemcachedQuerySanitizer {
       case "set":
       case "add":
       case "replace":
+        // These take key, expiration, stored value, and an optional transcoder.
         append(query, args[0]);
         append(query, args[1]);
         append(query, "?");
@@ -46,25 +48,29 @@ final class SpymemcachedQuerySanitizer {
       case "cas":
         append(query, args[0]);
         append(query, args[1]);
-        // Use the declared primitive parameter, not the value's runtime type.
-        if (descriptor.startsWith("(Ljava/lang/String;JI")) {
+        // A numeric stored value must not be mistaken for expiration; use declared parameter types.
+        if (hasCasExpiration(descriptor)) {
           append(query, args[2]);
         }
         append(query, "?");
         break;
       case "append":
       case "prepend":
+        // These may start with a primitive long CAS token before the key.
         append(query, args[0]);
         if (args[0] instanceof Long) {
           append(query, args[1]);
         }
+        // The appended or prepended value is always masked.
         append(query, "?");
         break;
       case "incr":
       case "decr":
+        // These take key, delta, optional initial value, and optional expiration.
         append(query, args[0]);
         append(query, args[1]);
         if (args.length > 2) {
+          // The initial value is sensitive, while the following expiration is retained.
           append(query, "?");
           if (args.length > 3) {
             append(query, args[3]);
@@ -76,15 +82,27 @@ final class SpymemcachedQuerySanitizer {
       case "getAndTouch":
       case "touch":
       case "delete":
+        // These may have a numeric expiration or deletion delay; ignore transcoders.
         append(query, args[0]);
         if (args.length > 1 && (args[1] instanceof Integer || args[1] instanceof Long)) {
           append(query, args[1]);
         }
         break;
       default:
+        // Unknown operations omit arguments to avoid exposing stored values.
         break;
     }
     return query.toString();
+  }
+
+  private static boolean hasPerKeyTranscoders(String descriptor) {
+    // asyncGetBulk(Collection keys, Iterator transcoders)
+    return descriptor.startsWith("(Ljava/util/Collection;Ljava/util/Iterator;");
+  }
+
+  private static boolean hasCasExpiration(String descriptor) {
+    // cas/asyncCAS(String key, long cas, int expiration, Object value, ...)
+    return descriptor.startsWith("(Ljava/lang/String;JI");
   }
 
   static String sanitizeBulk(Iterable<?> keys) {
