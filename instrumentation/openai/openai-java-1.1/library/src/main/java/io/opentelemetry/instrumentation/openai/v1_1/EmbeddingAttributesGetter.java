@@ -35,8 +35,7 @@ final class EmbeddingAttributesGetter
       EmbeddingCreateParams request,
       @Nullable CreateEmbeddingResponse response,
       @Nullable Throwable error) {
-    String errorType = OpenAiErrorType.getErrorType(error);
-    return errorType != null ? errorType : error == null ? null : error.getClass().getName();
+    return OpenAiErrorType.getErrorType(error);
   }
 
   @Override
