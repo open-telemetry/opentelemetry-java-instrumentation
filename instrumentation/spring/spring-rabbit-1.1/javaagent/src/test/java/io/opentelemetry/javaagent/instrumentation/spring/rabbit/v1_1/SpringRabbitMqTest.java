@@ -484,7 +484,9 @@ class SpringRabbitMqTest {
               });
         },
         trace ->
-            trace.hasSpansSatisfyingExactly(span -> verifySettleSpan(span, fail ? "nack" : "ack")));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    verifySettleSpan(span, fail ? (testLatestDeps() ? "reject" : "nack") : "ack")));
     assertThat(delivered).hasValue(expectedCount);
     assertProcessMetrics(testing, queue, errorType, expectedCount);
   }
@@ -654,7 +656,9 @@ class SpringRabbitMqTest {
             trace.hasSpansSatisfyingExactlyInAnyOrder(
                 span -> span.hasKind(SpanKind.PRODUCER),
                 span -> span.hasKind(SpanKind.CONSUMER).hasStatus(StatusData.error())),
-        trace -> trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyNackSpan));
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> verifySettleSpan(span, testLatestDeps() ? "reject" : "nack")));
     assertProcessMetrics(
         testing,
         queue,
@@ -696,10 +700,6 @@ class SpringRabbitMqTest {
 
   private static void verifyAckSpan(SpanDataAssert span) {
     verifySettleSpan(span, "ack");
-  }
-
-  private static void verifyNackSpan(SpanDataAssert span) {
-    verifySettleSpan(span, "nack");
   }
 
   private static void verifySettleSpan(SpanDataAssert span, String operation) {
