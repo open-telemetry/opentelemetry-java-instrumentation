@@ -26,6 +26,7 @@ import com.alipay.sofa.rpc.core.response.SofaResponse;
 import com.alipay.sofa.rpc.filter.Filter;
 import com.alipay.sofa.rpc.filter.FilterInvoker;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -72,8 +73,8 @@ class SofaRpcTest extends AbstractSofaRpcTest {
 
   @SuppressWarnings("deprecation")
   private void assertStatusCode(boolean async, boolean syntheticFallback) {
-    String service = "test.Service";
-    String method = syntheticFallback ? "syntheticFallback" : "suppliedErrorCode";
+    String service = ErrorService.class.getName();
+    String method = syntheticFallback ? "throwBusinessException" : "throwException";
     String errorType = Integer.toString(RpcErrorType.SERVER_UNDECLARED_ERROR);
     SofaRequest request = new SofaRequest();
     request.setInterfaceName(service);
@@ -90,7 +91,7 @@ class SofaRpcTest extends AbstractSofaRpcTest {
       response.setAppResponse(exception);
     }
 
-    ConsumerConfig<?> config = new ConsumerConfig<>().setInJVM(false);
+    ConsumerConfig<?> config = new ConsumerConfig<>().setInterfaceId(service).setInJVM(false);
     FilterInvoker invoker =
         new FilterInvoker(null, null, config) {
           @Override
