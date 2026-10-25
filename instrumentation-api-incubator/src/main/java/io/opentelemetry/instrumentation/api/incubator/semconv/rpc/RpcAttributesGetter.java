@@ -91,15 +91,12 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Returns the final {@code error.type} value for the operation.
+   * Returns the {@code error.type} value for the operation, or {@code null} to omit the attribute.
    *
-   * <p>By default, returns the exception class name if an error was thrown, or {@code null} if
-   * there was no error.
+   * <p>The default implementation returns the exception class name, or {@code null} if there is no
+   * exception.
    *
-   * <p>An override can return a protocol-specific, low-cardinality classification. Returning {@code
-   * null} explicitly omits {@code error.type}, even when an error was thrown. To retain the
-   * exception-class fallback when an error cannot be classified more specifically, an override can
-   * return {@code error == null ? null : error.getClass().getName()}.
+   * <p>An override can return a protocol-specific, low-cardinality classification.
    *
    * <p>The cardinality of the error type should be low. The instrumentations implementing this
    * method are recommended to document the custom values they support.
