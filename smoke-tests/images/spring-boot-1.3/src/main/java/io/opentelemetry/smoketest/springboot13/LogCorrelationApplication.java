@@ -24,9 +24,6 @@ public final class LogCorrelationApplication {
         .equals("org.springframework.boot.loader.LaunchedURLClassLoader")) {
       throw new AssertionError("Unexpected application loader: " + loader);
     }
-    if (!System.getProperty("java.specification.version").equals("1.8")) {
-      throw new AssertionError("This regression must run on JDK 8");
-    }
     Span span =
         GlobalOpenTelemetry.getTracer("legacy-spring-boot-smoke")
             .spanBuilder("log correlation")

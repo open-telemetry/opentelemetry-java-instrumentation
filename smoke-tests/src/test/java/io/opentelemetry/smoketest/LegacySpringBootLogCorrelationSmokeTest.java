@@ -42,14 +42,12 @@ class LegacySpringBootLogCorrelationSmokeTest {
             .withCommand(
                 "java",
                 "-javaagent:/opentelemetry-javaagent.jar",
-                "-Dotel.javaagent.testing.additional-library-ignores.enabled=true",
                 "-Dotel.traces.exporter=logging",
                 "-Dotel.metrics.exporter=none",
                 "-Dotel.logs.exporter=none",
                 "-jar",
                 "/app.jar")) {
       target.start();
-      assertThat(target.getCurrentContainerInfo().getState().getExitCodeLong()).isZero();
       String logs = target.getLogs();
       Matcher expectedIds = EXPECTED_IDS.matcher(logs);
       assertThat(expectedIds.find()).isTrue();

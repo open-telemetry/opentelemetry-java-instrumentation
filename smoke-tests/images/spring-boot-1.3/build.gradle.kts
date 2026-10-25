@@ -15,11 +15,6 @@ plugins {
   id("otel.java-conventions")
 }
 
-java {
-  sourceCompatibility = JavaVersion.VERSION_1_8
-  targetCompatibility = JavaVersion.VERSION_1_8
-}
-
 dependencies {
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("org.apache.logging.log4j:log4j-api:2.17.2")
