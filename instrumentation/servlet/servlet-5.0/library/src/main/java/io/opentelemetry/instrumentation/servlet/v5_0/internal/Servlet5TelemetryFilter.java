@@ -39,15 +39,18 @@ public final class Servlet5TelemetryFilter implements Filter {
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
       instrumenter;
   private final boolean addTraceIdRequestAttribute;
+  private final int captureRequestBodyMaxSize;
 
   public Servlet5TelemetryFilter(
       Instrumenter<
               ServletRequestContext<HttpServletRequest>,
               ServletResponseContext<HttpServletResponse>>
           instrumenter,
-      boolean addTraceIdRequestAttribute) {
+      boolean addTraceIdRequestAttribute,
+      int captureRequestBodyMaxSize) {
     this.instrumenter = instrumenter;
     this.addTraceIdRequestAttribute = addTraceIdRequestAttribute;
+    this.captureRequestBodyMaxSize = captureRequestBodyMaxSize;
   }
 
   @Override
@@ -72,17 +75,23 @@ public final class Servlet5TelemetryFilter implements Filter {
         new ServletResponseContext<>(httpResponse);
 
     if (!instrumenter.shouldStart(parentContext, requestContext)) {
-      filterChain.doFilter(request, response);
+      filterChain.doFilter(httpRequest, httpResponse);
       return;
     }
 
     Context context = instrumenter.start(parentContext, requestContext);
 
+    if (captureRequestBodyMaxSize > 0 && Span.fromContext(context).isRecording()) {
+      // only capture when enabled and span is being sampled
+      httpRequest =
+          Servlet5BodyCaptureRequestWrapper.wrapIfNeeded(httpRequest, captureRequestBodyMaxSize);
+    }
+
     if (addTraceIdRequestAttribute) {
       SpanContext spanContext = Span.fromContext(context).getSpanContext();
       // we do this e.g. so that servlet containers can use these values in their access logs
-      request.setAttribute("trace_id", spanContext.getTraceId());
-      request.setAttribute("span_id", spanContext.getSpanId());
+      httpRequest.setAttribute("trace_id", spanContext.getTraceId());
+      httpRequest.setAttribute("span_id", spanContext.getSpanId());
     }
 
     OtelHttpServletRequest otelRequest =

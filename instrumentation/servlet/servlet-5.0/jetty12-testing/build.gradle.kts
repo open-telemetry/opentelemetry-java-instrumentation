@@ -18,6 +18,11 @@ otelJava {
 }
 
 tasks {
+
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-body.enabled=true")
+  }
+
   val testRequestParameterCapture = register<Test>("testRequestParameterCapture") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath

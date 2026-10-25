@@ -42,7 +42,7 @@ public class JakartaServletServiceAdvice {
         CallDepth callDepth,
         Object servletOrFilter,
         HttpServletRequest request,
-        ServletResponse response) {
+        HttpServletResponse response) {
       this.callDepth = callDepth;
       this.callDepth.getAndIncrement();
 
@@ -53,7 +53,7 @@ public class JakartaServletServiceAdvice {
       requestContext = new ServletRequestContext<>(request);
       if (attachedContext == null && helper().shouldStart(currentContext, requestContext)) {
         context = helper().start(currentContext, requestContext);
-        helper().setAsyncListenerResponse(context, (HttpServletResponse) response);
+        helper().setAsyncListenerResponse(context, response);
 
         contextToUpdate = context;
       } else if (attachedContext != null
@@ -81,10 +81,7 @@ public class JakartaServletServiceAdvice {
       if (context != null) {
         // Only trigger response customizer once, so only if server span was created here
         HttpServerResponseCustomizerHolder.getCustomizer()
-            .customize(
-                contextToUpdate,
-                (HttpServletResponse) response,
-                new Servlet5HttpServerResponseMutator());
+            .customize(contextToUpdate, response, new Servlet5HttpServerResponseMutator());
       }
     }
 
@@ -102,29 +99,32 @@ public class JakartaServletServiceAdvice {
   @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
   public static Object[] onEnter(
       @Advice.This(typing = Assigner.Typing.DYNAMIC) Object servletOrFilter,
-      @Advice.Argument(0) ServletRequest request,
-      @Advice.Argument(1) ServletResponse originalResponse) {
+      @Advice.Argument(0) ServletRequest servletRequest,
+      @Advice.Argument(1) ServletResponse servletResponse) {
 
-    ServletResponse response = originalResponse;
-
-    if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
-      return new Object[] {null, request, response};
+    if (!(servletRequest instanceof HttpServletRequest)
+        || !(servletResponse instanceof HttpServletResponse)) {
+      return new Object[] {null, servletRequest, servletResponse};
     }
-    HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+
+    HttpServletResponse response = (HttpServletResponse) servletResponse;
 
     String snippet = snippetInjectionHelper().getSnippet();
     if (!snippet.isEmpty()
-        && !((HttpServletResponse) response)
-            .containsHeader(Servlet5SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {
-      response =
-          new Servlet5SnippetInjectingResponseWrapper((HttpServletResponse) response, snippet);
+        && !response.containsHeader(Servlet5SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {
+      response = new Servlet5SnippetInjectingResponseWrapper(response, snippet);
     }
+
+    // TODO: optimize and avoid wrapping when span is not sampled
+    // or make the wrapping no-op when span is not sampled
+    HttpServletRequest request =
+        Servlet5Singletons.wrapForBodyCaptureIfNeeded((HttpServletRequest) servletRequest);
 
     AdviceScope adviceScope =
         new AdviceScope(
             CallDepth.forClass(AppServerBridge.getCallDepthKey()),
             servletOrFilter,
-            httpServletRequest,
+            request,
             response);
 
     return new Object[] {adviceScope, request, response};

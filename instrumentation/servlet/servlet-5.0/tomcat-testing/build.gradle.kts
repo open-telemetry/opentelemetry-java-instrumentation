@@ -23,6 +23,7 @@ tasks {
   withType<Test>().configureEach {
     // exercises an exclude-only selector, which captures every parameter that it does not exclude
     jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.excluded=ignored-*")
+    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-body.enabled=true")
   }
 
   val testExperimental = register<Test>("testExperimental") {
