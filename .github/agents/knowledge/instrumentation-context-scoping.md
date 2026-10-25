@@ -30,6 +30,11 @@ outgoing span by leaving the operation context current.
 
 ## Separate span lifetime from context scope
 
+Ideally, the outgoing span starts after application request preparation and ends before application
+response handling, so its duration excludes that application work. Temporal overlap is acceptable
+when the client does not expose suitable instrumentation hooks. Whether or not their execution
+overlaps the span, application hooks and callbacks run under the captured caller `Context`.
+
 For asynchronous operations, close the initiating thread’s scope when the initiating method
 returns, and end the operation span once at its actual terminal completion. Do not end the span
 just because request/body generation or a nonterminal response callback runs. A terminal
