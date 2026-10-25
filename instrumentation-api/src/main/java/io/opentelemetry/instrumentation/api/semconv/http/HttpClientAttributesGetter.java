@@ -43,8 +43,7 @@ public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
   Integer getServerPort(REQUEST request);
 
   /**
-   * Returns the {@code error.type} value for the HTTP client operation, or {@code null} to omit the
-   * attribute.
+   * Returns the {@code error.type} value for the HTTP client operation.
    *
    * <p>The default implementation returns error response status codes for clients (400 or greater,
    * or positive status codes below 100), the exception class name when {@code error} is non-null,
