@@ -109,22 +109,53 @@ class VirtualFieldStoreTest {
   }
 
   @Test
-  void clearsSendCallbackDataFromMessageWhenFutureCompletes() {
+  void clearsSendCallbackDataOnPulsarCompletionAfterFutureCancellation() {
     SendCallback callback = mock(SendCallback.class);
-    CompletableFuture<MessageId> future = new CompletableFuture<>();
-    when(callback.getFuture()).thenReturn(future);
     Message<?> message = mock(Message.class);
     String topic = "persistent://public/default/send-callback-data";
     when(message.getTopicName()).thenReturn(topic);
     PulsarRequest request =
         PulsarRequest.create(message, ProducerData.create("pulsar://localhost:6650", topic));
     SendCallbackData data = SendCallbackData.create(Context.root(), Context.root(), request);
+    CompletableFuture<MessageId> future = data.createSendFuture();
+    when(callback.getFuture()).thenReturn(future);
 
     VirtualFieldStore.inject(callback, data);
 
     assertThat(VirtualFieldStore.extractSendCallbackData(message)).isSameAs(data);
-    future.complete(mock(MessageId.class));
+    assertThat(future.cancel(false)).isTrue();
+    assertThat(VirtualFieldStore.extractSendCallbackData(message)).isSameAs(data);
+    assertThat(VirtualFieldStore.extractSendCallbackData(callback)).isSameAs(data);
+
+    try (Scope ignored = data.callbackCompletionContext().makeCurrent()) {
+      future.complete(mock(MessageId.class));
+    }
+
+    assertThat(future).isCancelled();
     assertThat(VirtualFieldStore.extractSendCallbackData(message)).isNull();
-    assertThat(VirtualFieldStore.takeSendCallbackData(callback)).isNull();
+    assertThat(VirtualFieldStore.extractSendCallbackData(callback)).isNull();
+  }
+
+  @Test
+  void prematureFutureCompletionDoesNotClearSendCallbackData() {
+    SendCallback callback = mock(SendCallback.class);
+    Message<?> message = mock(Message.class);
+    String topic = "persistent://public/default/premature-send-future-completion";
+    when(message.getTopicName()).thenReturn(topic);
+    PulsarRequest request =
+        PulsarRequest.create(message, ProducerData.create("pulsar://localhost:6650", topic));
+    SendCallbackData data = SendCallbackData.create(Context.root(), Context.root(), request);
+    CompletableFuture<MessageId> future = data.createSendFuture();
+    VirtualFieldStore.inject(callback, data);
+
+    future.complete(mock(MessageId.class));
+    assertThat(VirtualFieldStore.extractSendCallbackData(message)).isSameAs(data);
+    assertThat(VirtualFieldStore.extractSendCallbackData(message)).isSameAs(data);
+    assertThat(VirtualFieldStore.extractSendCallbackData(callback)).isSameAs(data);
+    try (Scope ignored = data.callbackCompletionContext().makeCurrent()) {
+      future.complete(mock(MessageId.class));
+    }
+    assertThat(VirtualFieldStore.extractSendCallbackData(message)).isNull();
+    assertThat(VirtualFieldStore.extractSendCallbackData(callback)).isNull();
   }
 }

@@ -48,12 +48,14 @@ import java.lang.reflect.Proxy;
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import org.apache.pulsar.PulsarVersion;
@@ -684,6 +686,139 @@ abstract class AbstractPulsarClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("caller-second"),
+                span ->
+                    span.hasName("send " + topic)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  void cancellingPendingLinkedBatchSendPreservesCallerContextUntilAcknowledgement()
+      throws Exception {
+    String topic =
+        "persistent://public/default/cancellingPendingLinkedBatchSendPreservesCallerContext";
+    ContextKey<String> key = ContextKey.named("pulsar-cancelled-batch-caller");
+    Map<String, Context> callers = new ConcurrentHashMap<>();
+    Map<String, Context> acknowledgements = new ConcurrentHashMap<>();
+    Map<String, Context> continuationsObserved = new ConcurrentHashMap<>();
+    Map<String, CompletableFuture<MessageId>> sends = new HashMap<>();
+    CountDownLatch firstAcknowledged = new CountDownLatch(1);
+    CountDownLatch continueAcknowledgements = new CountDownLatch(1);
+    CountDownLatch allAcknowledged = new CountDownLatch(3);
+    AtomicInteger acknowledgementCount = new AtomicInteger();
+    producer =
+        client
+            .newProducer(Schema.STRING)
+            .topic(topic)
+            .enableBatching(true)
+            .batchingMaxPublishDelay(1, HOURS)
+            .sendTimeout(0, SECONDS)
+            .intercept(
+                new ProducerInterceptor() {
+                  @Override
+                  public void close() {}
+
+                  @Override
+                  public boolean eligible(Message message) {
+                    return true;
+                  }
+
+                  @Override
+                  public Message beforeSend(Producer producer, Message message) {
+                    return message;
+                  }
+
+                  @Override
+                  public void onSendAcknowledgement(
+                      Producer producer, Message message, MessageId id, Throwable error) {
+                    acknowledgements.put((String) message.getValue(), Context.current());
+                    if (acknowledgementCount.incrementAndGet() == 1) {
+                      firstAcknowledged.countDown();
+                      try {
+                        assertThat(continueAcknowledgements.await(1, MINUTES)).isTrue();
+                      } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new AssertionError(e);
+                      }
+                    }
+                    allAcknowledged.countDown();
+                  }
+                })
+            .create();
+
+    List<CompletableFuture<Void>> continuations = new ArrayList<>();
+    for (String value : asList("first", "cancelled", "last")) {
+      CompletableFuture<MessageId> future =
+          testing.runWithSpan(
+              "caller-" + value,
+              () -> {
+                Context caller =
+                    Baggage.builder()
+                        .put("pulsar-test", value)
+                        .build()
+                        .storeInContext(Context.current().with(key, value));
+                callers.put(value, caller);
+                try (Scope ignored = caller.makeCurrent()) {
+                  return producer.newMessage().value(value).sendAsync();
+                }
+              });
+      sends.put(value, future);
+      if (!value.equals("cancelled")) {
+        continuations.add(
+            future.thenAccept(unused -> continuationsObserved.put(value, Context.current())));
+      }
+    }
+
+    CompletableFuture<Void> flush = producer.flushAsync();
+    try {
+      assertThat(firstAcknowledged.await(1, MINUTES)).isTrue();
+      assertThat(sends.get("cancelled").cancel(false)).isTrue();
+      assertThat(sends.get("cancelled")).isCancelled();
+    } finally {
+      continueAcknowledgements.countDown();
+    }
+    flush.get(1, MINUTES);
+    assertThat(allAcknowledged.await(1, MINUTES)).isTrue();
+    CompletableFuture.allOf(continuations.toArray(new CompletableFuture<?>[0])).get(1, MINUTES);
+    assertThat(sends.get("first").get(1, MINUTES)).isNotNull();
+    assertThat(sends.get("last").get(1, MINUTES)).isNotNull();
+
+    for (String value : asList("first", "cancelled", "last")) {
+      Context caller = callers.get(value);
+      Context acknowledgement = acknowledgements.get(value);
+      assertThat(Span.fromContext(acknowledgement).getSpanContext())
+          .isEqualTo(Span.fromContext(caller).getSpanContext());
+      assertThat(acknowledgement.get(key)).isEqualTo(value);
+      assertThat(Baggage.fromContext(acknowledgement).getEntryValue("pulsar-test"))
+          .isEqualTo(value);
+      if (!value.equals("cancelled")) {
+        Context continuation = continuationsObserved.get(value);
+        assertThat(Span.fromContext(continuation).getSpanContext())
+            .isEqualTo(Span.fromContext(caller).getSpanContext());
+        assertThat(continuation.get(key)).isEqualTo(value);
+        assertThat(Baggage.fromContext(continuation).getEntryValue("pulsar-test")).isEqualTo(value);
+      }
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("caller-first"),
+                span ->
+                    span.hasName("send " + topic)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("caller-cancelled"),
+                span ->
+                    span.hasName("send " + topic)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("caller-last"),
                 span ->
                     span.hasName("send " + topic)
                         .hasKind(SpanKind.PRODUCER)

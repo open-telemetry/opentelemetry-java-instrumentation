@@ -13,21 +13,26 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarRequest;
+import java.lang.ref.WeakReference;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.MessageId;
+import org.apache.pulsar.client.impl.SendCallback;
 
 public class SendCallbackData {
   private static final Logger logger = Logger.getLogger(SendCallbackData.class.getName());
   private static final ContextKey<SendCallbackData> KEY =
       ContextKey.named("opentelemetry-pulsar-send");
+  private static final ContextKey<Boolean> CALLBACK_COMPLETION_KEY =
+      ContextKey.named("opentelemetry-pulsar-callback-completion");
 
   private final Context parent;
   public final Context context;
   private final AtomicBoolean ended = new AtomicBoolean();
   @Nullable private CompletableFuture<MessageId> sendFuture;
+  @Nullable private WeakReference<SendCallback> callback;
   public PulsarRequest request;
 
   public static SendCallbackData create(Context parent, Context context, PulsarRequest request) {
@@ -49,8 +54,25 @@ public class SendCallbackData {
     return context.with(KEY, this);
   }
 
+  public Context callbackCompletionContext() {
+    return invocationContext().with(CALLBACK_COMPLETION_KEY, true);
+  }
+
+  static boolean isCallbackCompletion() {
+    return Boolean.TRUE.equals(Context.current().get(CALLBACK_COMPLETION_KEY));
+  }
+
   public Context preparationContext() {
     return parent.with(KEY, this);
+  }
+
+  void associateCallback(SendCallback callback) {
+    this.callback = new WeakReference<>(callback);
+  }
+
+  @Nullable
+  SendCallback callback() {
+    return callback == null ? null : callback.get();
   }
 
   Context parentContext() {
@@ -67,6 +89,12 @@ public class SendCallbackData {
         producerInstrumenter().end(context, request, null, error);
       } catch (Throwable t) {
         logger.log(FINE, "Failed to end Pulsar send", t);
+      } finally {
+        try {
+          VirtualFieldStore.clearSendCallbackData(this);
+        } catch (Throwable t) {
+          logger.log(FINE, "Failed to clear Pulsar send state", t);
+        }
       }
     }
   }
@@ -121,13 +149,12 @@ public class SendCallbackData {
       if (callbackData == null) {
         return error == null ? super.complete(messageId) : super.completeExceptionally(error);
       }
-      try {
-        callbackData.end(error);
-        try (Scope ignored = callbackData.parent.makeCurrent()) {
-          return error == null ? super.complete(messageId) : super.completeExceptionally(error);
-        }
-      } finally {
+      if (SendCallbackData.isCallbackCompletion()) {
         data = null;
+        callbackData.end(error);
+      }
+      try (Scope ignored = callbackData.parent.makeCurrent()) {
+        return error == null ? super.complete(messageId) : super.completeExceptionally(error);
       }
     }
   }

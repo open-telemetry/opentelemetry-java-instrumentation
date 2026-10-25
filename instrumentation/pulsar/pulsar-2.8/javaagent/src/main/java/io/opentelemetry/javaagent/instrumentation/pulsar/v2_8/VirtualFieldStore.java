@@ -7,11 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
-import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.impl.SendCallback;
 import org.apache.pulsar.client.impl.TopicMessageImpl;
@@ -41,19 +39,22 @@ public class VirtualFieldStore {
   public static void inject(SendCallback instance, SendCallbackData data) {
     if (instance != null) {
       CALLBACK_FIELD.set(instance, data);
-      CompletableFuture<MessageId> future = instance.getFuture();
-      if (future != null) {
-        Message<?> message = data.request.getMessage();
+      data.associateCallback(instance);
+      Message<?> message = data.request.getMessage();
+      if (message != null) {
         MESSAGE_SEND_CALLBACK_FIELD.set(message, data);
-        // Linked batch callbacks complete their futures without invoking sendComplete.
-        future.whenComplete(
-            (unused, error) -> {
-              CALLBACK_FIELD.set(instance, null);
-              if (MESSAGE_SEND_CALLBACK_FIELD.get(message) == data) {
-                MESSAGE_SEND_CALLBACK_FIELD.set(message, null);
-              }
-            });
       }
+    }
+  }
+
+  static void clearSendCallbackData(SendCallbackData data) {
+    SendCallback callback = data.callback();
+    if (callback != null && CALLBACK_FIELD.get(callback) == data) {
+      CALLBACK_FIELD.set(callback, null);
+    }
+    Message<?> message = data.request.getMessage();
+    if (message != null && MESSAGE_SEND_CALLBACK_FIELD.get(message) == data) {
+      MESSAGE_SEND_CALLBACK_FIELD.set(message, null);
     }
   }
 
@@ -99,6 +100,11 @@ public class VirtualFieldStore {
   @Nullable
   public static SendCallbackData extractSendCallbackData(Message<?> instance) {
     return MESSAGE_SEND_CALLBACK_FIELD.get(instance);
+  }
+
+  @Nullable
+  public static SendCallbackData extractSendCallbackData(SendCallback instance) {
+    return CALLBACK_FIELD.get(instance);
   }
 
   @Nullable

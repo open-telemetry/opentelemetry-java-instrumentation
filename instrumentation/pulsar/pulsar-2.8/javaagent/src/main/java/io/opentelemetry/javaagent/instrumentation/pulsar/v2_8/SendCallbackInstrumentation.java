@@ -62,7 +62,7 @@ class SendCallbackInstrumentation implements TypeInstrumentation {
           return null;
         }
 
-        Context currentContext = callbackData.invocationContext();
+        Context currentContext = callbackData.callbackCompletionContext();
         return new AdviceScope(callbackData, currentContext.makeCurrent());
       }
 
