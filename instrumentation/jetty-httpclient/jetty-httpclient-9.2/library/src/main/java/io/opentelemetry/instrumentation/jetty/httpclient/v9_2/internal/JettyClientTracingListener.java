@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.io.Closeable;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -17,10 +17,12 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
+import org.eclipse.jetty.client.AsyncContentProvider;
 import org.eclipse.jetty.client.HttpRequest;
 import org.eclipse.jetty.client.api.ContentProvider;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
+import org.eclipse.jetty.util.Callback;
 
 /**
  * JettyClientTracingListener performs three actions when {@link #handleRequest(Context,
@@ -44,6 +46,21 @@ public final class JettyClientTracingListener
     Request.ContentListener.class,
     Request.CommitListener.class,
     Request.QueuedListener.class
+  };
+
+  private static final Class<?> SYNCHRONIZABLE = findSynchronizable();
+
+  private static final Class<?>[] CONTENT_PROVIDER_INTERFACES = {
+    ContentProvider.class,
+    ContentProvider.Typed.class,
+    AsyncContentProvider.class,
+    SYNCHRONIZABLE,
+    Callback.class,
+    Closeable.class
+  };
+
+  private static final Class<?>[] CONTENT_ITERATOR_INTERFACES = {
+    Iterator.class, SYNCHRONIZABLE, Callback.class, Closeable.class
   };
 
   private final Context context;
@@ -125,12 +142,26 @@ public final class JettyClientTracingListener
       return;
     }
 
-    request.content((ContentProvider) wrapWithContext(contentProvider, context, true));
+    request.content((ContentProvider) wrapContentProviderWithContext(contentProvider, context));
   }
 
-  private static Object wrapWithContext(Object target, Context context, boolean wrapIterator) {
-    List<Class<?>> interfaces = new ArrayList<>();
-    addSupportedInterfaces(target.getClass(), interfaces, wrapIterator);
+  private static Object wrapContentProviderWithContext(
+      ContentProvider contentProvider, Context context) {
+    return wrapWithContext(contentProvider, context, CONTENT_PROVIDER_INTERFACES, true);
+  }
+
+  private static Object wrapContentIteratorWithContext(Object iterator, Context context) {
+    return wrapWithContext(iterator, context, CONTENT_ITERATOR_INTERFACES, false);
+  }
+
+  private static Object wrapWithContext(
+      Object target, Context context, Class<?>[] supportedInterfaces, boolean wrapIterator) {
+    List<Class<?>> interfaces = new ArrayList<>(supportedInterfaces.length);
+    for (Class<?> type : supportedInterfaces) {
+      if (type != null && type.isInstance(target)) {
+        interfaces.add(type);
+      }
+    }
     return Proxy.newProxyInstance(
         target.getClass().getClassLoader(),
         interfaces.toArray(new Class<?>[0]),
@@ -138,7 +169,7 @@ public final class JettyClientTracingListener
           try (Scope ignored = context.makeCurrent()) {
             Object result = method.invoke(target, args);
             if (wrapIterator && result instanceof Iterator) {
-              return wrapWithContext(result, context, false);
+              return wrapContentIteratorWithContext(result, context);
             }
             return result;
           } catch (InvocationTargetException e) {
@@ -147,33 +178,16 @@ public final class JettyClientTracingListener
         });
   }
 
-  private static void addSupportedInterfaces(
-      Class<?> type, List<Class<?>> interfaces, boolean wrapIterator) {
-    if (type == null) {
-      return;
+  @Nullable
+  private static Class<?> findSynchronizable() {
+    try {
+      return Class.forName(
+          "org.eclipse.jetty.client.Synchronizable",
+          false,
+          JettyClientTracingListener.class.getClassLoader());
+    } catch (ClassNotFoundException ignored) {
+      return null;
     }
-    for (Class<?> implementedInterface : type.getInterfaces()) {
-      String name = implementedInterface.getName();
-      boolean supported =
-          wrapIterator
-              ? name.equals("org.eclipse.jetty.client.api.ContentProvider")
-                  || name.equals("org.eclipse.jetty.client.api.ContentProvider$Typed")
-                  || name.equals("org.eclipse.jetty.client.AsyncContentProvider")
-                  || name.equals("org.eclipse.jetty.client.Synchronizable")
-                  || name.equals("org.eclipse.jetty.util.Callback")
-                  || name.equals("java.io.Closeable")
-              : name.equals("java.util.Iterator")
-                  || name.equals("org.eclipse.jetty.client.Synchronizable")
-                  || name.equals("org.eclipse.jetty.util.Callback")
-                  || name.equals("java.io.Closeable");
-      if (supported
-          && Modifier.isPublic(implementedInterface.getModifiers())
-          && !interfaces.contains(implementedInterface)) {
-        interfaces.add(implementedInterface);
-      }
-      addSupportedInterfaces(implementedInterface, interfaces, wrapIterator);
-    }
-    addSupportedInterfaces(type.getSuperclass(), interfaces, wrapIterator);
   }
 
   @Override
