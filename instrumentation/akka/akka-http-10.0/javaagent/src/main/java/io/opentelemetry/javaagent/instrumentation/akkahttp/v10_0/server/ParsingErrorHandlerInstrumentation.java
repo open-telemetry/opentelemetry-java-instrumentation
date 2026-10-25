@@ -53,7 +53,8 @@ class ParsingErrorHandlerInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Object[] onEnter(@Advice.Argument(1) ErrorInfo info) {
+    public static AkkaHttpParsingErrorSingletons.AdviceScope onEnter(
+        @Advice.Argument(1) ErrorInfo info) {
       return AkkaHttpParsingErrorSingletons.startSpan(info);
     }
 
@@ -62,11 +63,11 @@ class ParsingErrorHandlerInstrumentation implements TypeInstrumentation {
     public static Object onExit(
         @Advice.Return Object response,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable Object[] enter) {
-      if (enter == null) {
+        @Advice.Enter @Nullable AkkaHttpParsingErrorSingletons.AdviceScope adviceScope) {
+      if (adviceScope == null) {
         return response;
       }
-      return AkkaHttpParsingErrorSingletons.endSpan(enter, response, throwable);
+      return adviceScope.end(response, throwable);
     }
   }
 }
