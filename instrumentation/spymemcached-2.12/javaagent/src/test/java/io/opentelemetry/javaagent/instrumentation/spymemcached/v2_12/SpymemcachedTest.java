@@ -40,10 +40,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
+import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
@@ -545,41 +544,15 @@ class SpymemcachedTest {
           }
         };
 
-    Class<?> registry =
-        AgentClassLoaderAccess.loadClass(
-            "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
-    Method getInstrumentationClassLoader =
-        registry.getMethod("getInstrumentationClassLoader", String.class, ClassLoader.class);
-    ClassLoader instrumentationClassLoader =
-        (ClassLoader)
-            getInstrumentationClassLoader.invoke(
-                null,
-                "io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12."
-                    + "SpymemcachedInstrumentationModule",
-                MemcachedClient.class.getClassLoader());
-    Class<?> adviceClass =
-        Class.forName(
-            "io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12."
-                + "MemcachedClientInstrumentation$AsyncBulkAdvice",
-            true,
-            instrumentationClassLoader);
-    Method methodEnter =
-        adviceClass.getMethod(
-            "methodEnter", MemcachedClient.class, String.class, String.class, Object[].class);
-    assertThatThrownBy(
-            () ->
-                methodEnter.invoke(
-                    null,
-                    memcached,
-                    "asyncGetBulk",
-                    "(Ljava/util/Collection;)Lnet/spy/memcached/internal/BulkFuture;",
-                    (Object) new Object[] {keys}))
-        .isInstanceOf(InvocationTargetException.class)
-        .hasCauseInstanceOf(IllegalStateException.class);
-
     testing.runWithSpan(
         "parent",
-        () -> assertThat(memcached.asyncGet(key("test-get")).get()).isEqualTo("get test"));
+        () -> {
+          Map<String, Object> bulkResult = memcached.asyncGetBulk(keys).get();
+          assertThat(bulkResult).hasSize(1).containsEntry(key("test-get"), "get test");
+          assertThat(TestAgentListenerAccess.getAndResetAdviceFailureCount()).isEqualTo(1);
+          assertThat(memcached.asyncGet(key("test-get")).get()).isEqualTo("get test");
+          return null;
+        });
 
     testing.waitAndAssertTraces(
         trace ->
@@ -587,8 +560,33 @@ class SpymemcachedTest {
                 span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
                     span.hasName(spanName("get"))
-                        .hasAttributesSatisfying(
-                            equalTo(DB_QUERY_TEXT, "get " + key("test-get")))));
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                            equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "getBulk " + key("test-get")),
+                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                memcachedAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, memcachedAddress.getPort())),
+                span ->
+                    span.hasName(spanName("get"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                            equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get " + key("test-get")),
+                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                memcachedAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(stringKey("spymemcached.result"), experimental("hit")))));
   }
 
   @Test

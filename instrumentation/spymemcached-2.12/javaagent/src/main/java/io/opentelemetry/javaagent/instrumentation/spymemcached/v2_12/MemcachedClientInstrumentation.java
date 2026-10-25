@@ -120,8 +120,10 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
     public static void methodExit(
         @Advice.Return @Nullable BulkFuture<?> future,
         @Advice.Thrown @Nullable Throwable thrown,
-        @Advice.Enter AdviceScope<BulkFuture<?>, BulkGetCompletionListener> adviceScope) {
-      adviceScope.end(future, thrown);
+        @Advice.Enter @Nullable AdviceScope<BulkFuture<?>, BulkGetCompletionListener> adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(future, thrown);
+      }
     }
   }
 
