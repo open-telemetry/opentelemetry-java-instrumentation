@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.benchmark.servlet;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 import io.opentelemetry.javaagent.benchmark.servlet.app.HelloWorldApplication;
@@ -26,24 +27,36 @@ import org.openjdk.jmh.annotations.TearDown;
 @State(Scope.Thread)
 public class ServletBenchmark {
 
-  static {
-    // using static initializer instead of @Setup since only want to initialize the app under test
-    // once regardless of @State and @Threads
-    HelloWorldApplication.main();
-  }
-
   private URL client;
   private byte[] buffer;
 
   @Setup
-  public void setup() throws IOException {
+  public void setup(ApplicationState application) throws IOException {
     client = new URL("http://localhost:8080");
     buffer = new byte[8192];
+    HttpURLConnection connection = (HttpURLConnection) client.openConnection();
+    try (InputStream inputStream = connection.getInputStream()) {
+      String response = new String(inputStream.readAllBytes(), UTF_8);
+      if (!response.equals("Hello world!")) {
+        throw new IllegalStateException("Unexpected servlet response: " + response);
+      }
+    } finally {
+      connection.disconnect();
+    }
   }
 
-  @TearDown
-  public void tearDown() {
-    HelloWorldApplication.stop();
+  @State(Scope.Benchmark)
+  public static class ApplicationState {
+
+    @Setup
+    public void start() {
+      HelloWorldApplication.main();
+    }
+
+    @TearDown
+    public void stop() {
+      HelloWorldApplication.stop();
+    }
   }
 
   @Benchmark

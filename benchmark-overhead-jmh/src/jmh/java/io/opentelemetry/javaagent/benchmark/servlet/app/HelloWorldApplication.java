@@ -20,6 +20,6 @@ public class HelloWorldApplication {
   }
 
   public static void stop() {
-    context.stop();
+    context.close();
   }
 }

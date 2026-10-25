@@ -12,6 +12,18 @@ on:
         options:
           - petclinic
           - servlet-probe
+          - servlet-smoke
+          - servlet
+          - servlet-profile
+      baseline-ref:
+        description: Baseline agent ref (empty uses the workflow commit)
+        type: string
+      candidate-ref:
+        description: Candidate agent ref (empty uses the workflow commit)
+        type: string
+      artifact-run-id:
+        description: Reuse servlet build artifacts from this workflow run instead of rebuilding
+        type: string
 
 permissions:
   contents: read
@@ -91,6 +103,130 @@ jobs:
           uname -a
           lscpu
           cat /proc/self/status | grep -E 'Cpus_allowed_list|Mems_allowed_list'
+
+  servlet-build:
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      contains(fromJSON('["servlet-smoke","servlet","servlet-profile"]'), inputs.benchmark) &&
+      inputs.artifact-run-id == ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: harness
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.baseline-ref || github.sha }}
+          path: baseline
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.candidate-ref || github.sha }}
+          path: candidate
+          persist-credentials: false
+      - name: Set up build JDK
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 25.0.5+8
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: true
+      - name: Build fixed harness and agent artifacts
+        run: |
+          export JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")"
+          mkdir artifacts
+          cd harness
+          python3 -B -m unittest discover -s benchmark-overhead-jmh -p 'test_*.py'
+          ./gradlew :benchmark-overhead-jmh:spotlessApply :benchmark-overhead-jmh:jmhJar
+          git diff --exit-code
+          cp benchmark-overhead-jmh/build/libs/servlet-benchmarks.jar ../artifacts/
+          cd ../baseline
+          ./gradlew :javaagent:shadowJar -PremoveJarVersionNumbers=true
+          cp javaagent/build/libs/opentelemetry-javaagent.jar ../artifacts/baseline-agent.jar
+          baseline_sha="$(git rev-parse HEAD)"
+          cd ../candidate
+          candidate_sha="$(git rev-parse HEAD)"
+          if [[ "$baseline_sha" == "$candidate_sha" ]]; then
+            cp ../artifacts/baseline-agent.jar ../artifacts/candidate-agent.jar
+          else
+            ./gradlew :javaagent:shadowJar -PremoveJarVersionNumbers=true
+            cp javaagent/build/libs/opentelemetry-javaagent.jar ../artifacts/candidate-agent.jar
+          fi
+          cd ..
+          printf '{"baseline":"%s","candidate":"%s","harness":"%s","build_run":"%s"}\n' \
+            "$baseline_sha" "$candidate_sha" "$(git -C harness rev-parse HEAD)" "$GITHUB_RUN_ID" \
+            > artifacts/provenance.json
+      - name: Upload benchmark build
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: servlet-benchmark-build
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 14
+
+  servlet-run:
+    needs: servlet-build
+    if: >-
+      always() && !cancelled() && github.event_name == 'workflow_dispatch' &&
+      contains(fromJSON('["servlet-smoke","servlet","servlet-profile"]'), inputs.benchmark) &&
+      (needs.servlet-build.result == 'success' || inputs.artifact-run-id != '')
+    permissions:
+      contents: read
+      actions: read
+    runs-on: oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24
+    timeout-minutes: 60
+    concurrency:
+      group: servlet-benchmark
+      cancel-in-progress: false
+    container:
+      image: eclipse-temurin:25-jdk-noble@sha256:ba0f0e1a33864105e1d454e88105c617ab40f71062db1f306bf58be32a3f8e5e
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install runner dependencies
+        run: |
+          apt-get update -qq
+          apt-get install -y --no-install-recommends python3 util-linux
+      - name: Download fixed artifacts
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: servlet-benchmark-build
+          path: artifacts
+          run-id: ${{ inputs.artifact-run-id || github.run_id }}
+          github-token: ${{ github.token }}
+      - name: Run servlet benchmarks
+        env:
+          BENCHMARK: ${{ inputs.benchmark }}
+        run: |
+          mode=measure
+          if [[ "$BENCHMARK" == servlet-smoke ]]; then mode=smoke; fi
+          if [[ "$BENCHMARK" == servlet-profile ]]; then mode=profile; fi
+          python3 -B benchmark-overhead-jmh/run_benchmarks.py \
+            --benchmark-jar artifacts/servlet-benchmarks.jar \
+            --baseline-agent artifacts/baseline-agent.jar \
+            --candidate-agent artifacts/candidate-agent.jar \
+            --provenance artifacts/provenance.json \
+            --output benchmark-overhead-jmh/build/reports/servlet \
+            --mode "$mode"
+          cat benchmark-overhead-jmh/build/reports/servlet/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload benchmark observations and diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: servlet-benchmark-results
+          path: benchmark-overhead-jmh/build/reports/servlet/
+          if-no-files-found: warn
+          retention-days: 14
 
   workflow-notification:
     permissions:

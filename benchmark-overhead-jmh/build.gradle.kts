@@ -17,6 +17,10 @@ dependencies {
 
 tasks {
 
+  named<Jar>("jmhJar") {
+    archiveFileName.set("servlet-benchmarks.jar")
+  }
+
   // TODO(trask) without disabling errorprone, jmh task fails with
   //  Task :testing-overhead-jmh:jmhCompileGeneratedClasses FAILED
   //   error: plug-in not found: ErrorProne
