@@ -32,6 +32,7 @@ import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
+import java.net.{URL, URLClassLoader}
 import java.util.concurrent.{
   CompletableFuture,
   CountDownLatch,
@@ -96,6 +97,23 @@ class ClientCallbackTest {
             ()
           }
           Await.result(recovered, 5.seconds)
+          val recoveredCallback = Promise[String]()
+          recovered.onComplete(_ =>
+            recoveredCallback.success(Context.current().get(marker))
+          )
+          assertThat(Await.result(recoveredCallback.future, 5.seconds))
+            .isEqualTo("caller")
+
+          val failedCallback = Promise[String]()
+          response
+            .failed
+            .map(_ => Context.current().get(marker))
+            .onComplete(_ =>
+              failedCallback.success(Context.current().get(marker))
+            )
+          assertThat(Await.result(failedCallback.future, 5.seconds))
+            .isEqualTo("caller")
+
           val other = Promise[HttpResponse]()
           val recoveredWith = response.recoverWith {
             case _: IllegalUriException =>
@@ -147,6 +165,95 @@ class ClientCallbackTest {
       })
     } finally {
       Await.result(system.terminate(), 10.seconds)
+    }
+  }
+
+  @Test
+  def callbackContextWithParentScalaAndChildAkkaHttp(): Unit = {
+    val received = new CountDownLatch(1)
+    val reply = new CompletableFuture[ServerResponse]()
+    val server = Server
+      .builder()
+      .http(PortUtils.findOpenPort())
+      .service(
+        "/",
+        new HttpService {
+          override def serve(
+              ctx: ServiceRequestContext,
+              request: ServerRequest
+          ): ServerResponse = {
+            received.countDown()
+            ServerResponse.of(reply)
+          }
+        }
+      )
+      .build()
+    try {
+      server.start().join()
+      val loader = childAkkaHttpClassLoader()
+      val previousContextClassLoader = Thread.currentThread().getContextClassLoader
+      var helperClass: Class[_] = null
+      var helper: AnyRef = null
+      try {
+        Thread.currentThread().setContextClassLoader(loader)
+        helperClass = Class.forName(childHttpClientClassName, true, loader)
+        assertThat(helperClass.getClassLoader).isSameAs(loader)
+        assertThat(Class.forName("akka.http.scaladsl.HttpExt", false, loader).getClassLoader)
+          .isSameAs(loader)
+        assertThat(Class.forName("scala.concurrent.Future", false, loader).getClassLoader)
+          .isSameAs(classOf[Future[_]].getClassLoader)
+
+        helper =
+          helperClass.getDeclaredConstructor().newInstance().asInstanceOf[AnyRef]
+        val response = helperClass
+          .getMethod("singleRequest", classOf[String])
+          .invoke(
+            helper,
+            "http://localhost:" + server.activeLocalPort() + "/"
+          )
+          .asInstanceOf[Future[AnyRef]]
+        assertThat(received.await(10, TimeUnit.SECONDS)).isTrue()
+
+        val marker = ContextKey.named[String]("parent-scala-child-akka")
+        val callback = Promise[String]()
+        val scope = Context.root().`with`(marker, "caller").makeCurrent()
+        try {
+          response.onComplete(_ => callback.success(Context.current().get(marker)))(
+            inlineExecutionContext
+          )
+        } finally {
+          scope.close()
+        }
+        reply.complete(ServerResponse.of("ok"))
+        val result = Await.result(response, 5.seconds)
+        assertThat(
+          helperClass.getMethod("status", classOf[Object]).invoke(helper, result)
+        ).isEqualTo(200)
+        helperClass
+          .getMethod("discardEntity", classOf[Object])
+          .invoke(helper, result)
+        assertThat(Await.result(callback.future, 5.seconds)).isEqualTo("caller")
+      } finally {
+        try {
+          if (helper != null) helperClass.getMethod("terminate").invoke(helper)
+        } finally {
+          Thread.currentThread().setContextClassLoader(previousContextClassLoader)
+          loader.close()
+        }
+      }
+      testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+        override def accept(trace: TraceAssert): Unit =
+          trace.hasSpansSatisfyingExactly(new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit =
+              span
+                .hasName("GET")
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+          })
+      })
+    } finally {
+      reply.complete(ServerResponse.of("cleanup"))
+      server.stop().join()
     }
   }
 
@@ -235,6 +342,23 @@ class ClientCallbackTest {
         assertThat(result.status.intValue()).isEqualTo(200)
         result.discardEntityBytes()
         callbacks.foreach(Await.result(_, 5.seconds))
+        val projectionScope =
+          Context.root().`with`(ContextKey.named[String]("failed-projection"), "registration")
+            .makeCurrent()
+        try {
+          val projected = response.failed
+          val callback = Promise[String]()
+          projected.onComplete(_ =>
+            callback.success(Context.current().get(ContextKey.named[String]("failed-projection")))
+          )(inlineExecutionContext)
+          assertThat(Await.result(callback.future, 5.seconds))
+            .isEqualTo(
+              if (java.lang.Boolean.getBoolean("testLatestDeps")) null
+              else "registration"
+            )
+        } finally {
+          projectionScope.close()
+        }
         val other = Future.failed[Int](new IllegalStateException("other"))
         val scope = Context.root().`with`(marker, "unrelated").makeCurrent()
         try {
@@ -291,6 +415,50 @@ class ClientCallbackTest {
     )
   }
 
+  private def childAkkaHttpClassLoader(): URLClassLoader = {
+    val urls = new java.util.LinkedHashSet[URL]()
+    urls.add(getClass.getProtectionDomain.getCodeSource.getLocation)
+    Seq("akka", "com/typesafe/sslconfig/akka").foreach { packageName =>
+      val resources = getClass.getClassLoader.getResources(packageName)
+      while (resources.hasMoreElements) {
+        val resource = resources.nextElement()
+        if (resource.getProtocol == "jar") {
+          urls.add(
+            resource
+              .openConnection()
+              .asInstanceOf[java.net.JarURLConnection]
+              .getJarFileURL
+          )
+        } else if (resource.getProtocol == "file") {
+          val path = java.nio.file.Paths.get(resource.toURI)
+          urls.add(path.getParent.toUri.toURL)
+        }
+      }
+    }
+    new URLClassLoader(urls.toArray(new Array[URL](urls.size())), getClass.getClassLoader) {
+      override protected def loadClass(name: String, resolve: Boolean): Class[_] = {
+        if (name.startsWith("akka.")
+          || name.startsWith("com.typesafe.sslconfig.akka.")
+          || name == childHttpClientClassName) {
+          var loaded = findLoadedClass(name)
+          if (loaded == null) {
+            try loaded = findClass(name)
+            catch {
+              case _: ClassNotFoundException => loaded = super.loadClass(name, false)
+            }
+          }
+          if (resolve) resolveClass(loaded)
+          loaded
+        } else {
+          super.loadClass(name, resolve)
+        }
+      }
+    }
+  }
+
+  private val childHttpClientClassName =
+    "io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.client.ChildLoadedAkkaHttpClient"
+
   private def withFullQueue(system: ActorSystem)(body: => Unit): Unit = {
     val release = new CountDownLatch(1)
     try {
@@ -321,4 +489,27 @@ class ClientCallbackTest {
       release.countDown()
     }
   }
+}
+
+private[client] class ChildLoadedAkkaHttpClient {
+  private val system = ActorSystem("child-loaded-http-client")
+  private implicit val actorMaterializer: ActorMaterializer =
+    ActorMaterializer.create(system)
+
+  def singleRequest(uri: String): Future[AnyRef] =
+    Http
+      .get(system.asInstanceOf[ActorSystem])
+      .singleRequest(HttpRequest(uri = uri))
+      .asInstanceOf[Future[AnyRef]]
+
+  def status(response: AnyRef): Int =
+    response.asInstanceOf[HttpResponse].status.intValue()
+
+  def discardEntity(response: AnyRef): Unit =
+    response
+      .asInstanceOf[HttpResponse]
+      .discardEntityBytes(actorMaterializer)
+
+  def terminate(): Unit =
+    Await.result(system.terminate(), 10.seconds)
 }

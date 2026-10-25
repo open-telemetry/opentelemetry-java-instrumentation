@@ -15,6 +15,7 @@ import javax.annotation.Nullable;
 import scala.Function1;
 import scala.Function2;
 import scala.PartialFunction;
+import scala.util.Properties$;
 import scala.concurrent.Future;
 import scala.runtime.AbstractFunction1;
 import scala.runtime.AbstractFunction2;
@@ -22,19 +23,32 @@ import scala.runtime.AbstractPartialFunction;
 
 final class ResponseFutureCallbacks {
   private static final Logger logger = Logger.getLogger(ResponseFutureCallbacks.class.getName());
-  private static final VirtualField<Future<?>, ResponseFutureCallbacks> HTTP_RESPONSE =
-      VirtualField.find(Future.class, ResponseFutureCallbacks.class);
-  private static final ResponseFutureCallbacks marker = new ResponseFutureCallbacks();
+  private static final VirtualField<Future<?>, Boolean> HTTP_RESPONSE =
+      VirtualField.find(Future.class, Boolean.class);
+  private static final boolean SCALA_213 =
+      Properties$.MODULE$.versionNumberString().startsWith("2.13.");
 
   static void mark(Future<?> future) {
     // Retain the marker for callbacks registered after completion, without retaining request state.
-    HTTP_RESPONSE.set(future, marker);
+    HTTP_RESPONSE.set(future, true);
   }
 
   static void inherit(Future<?> source, Future<?> result) {
     if (HTTP_RESPONSE.get(source) != null) {
       mark(result);
     }
+  }
+
+  static void inheritFailed(Future<?> source, Future<?> result) {
+    if (HTTP_RESPONSE.get(source) == null) {
+      return;
+    }
+    if (SCALA_213
+        && source.value().isDefined()
+        && source.value().get().isSuccess()) {
+      return;
+    }
+    mark(result);
   }
 
   static <T, R> Function1<T, R> wrap(Future<?> future, Function1<T, R> callback) {
