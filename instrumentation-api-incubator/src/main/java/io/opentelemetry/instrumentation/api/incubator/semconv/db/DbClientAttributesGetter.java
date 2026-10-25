@@ -77,13 +77,10 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   }
 
   /**
-   * Returns the final {@code error.type} describing the class of error the operation ended with, or
-   * {@code null} to omit the attribute, even when an exception is available.
+   * Returns the {@code error.type} value for the operation, or {@code null} to omit the attribute.
    *
    * <p>The default implementation returns the exception class name, or {@code null} if there is no
-   * exception. An override that wants this fallback after checking custom classifications can
-   * return {@code error == null ? null : error.getClass().getName()}. Attribute extractors use the
-   * returned value without any further fallback.
+   * exception.
    *
    * <p>The cardinality of the error type should be low. The instrumentations implementing this
    * method are recommended to document the custom values they support.
