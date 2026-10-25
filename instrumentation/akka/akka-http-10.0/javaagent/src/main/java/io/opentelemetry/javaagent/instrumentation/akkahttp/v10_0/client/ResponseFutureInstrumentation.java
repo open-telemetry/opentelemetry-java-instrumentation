@@ -62,8 +62,18 @@ class ResponseFutureInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$ZipAdvice");
     transformer.applyAdviceToMethod(
         isDeclaredBy(named("akka.http.scaladsl.util.FastFuture$ErrorFuture"))
-            .and(namedOneOf("recover", "transform"))
-            .and(takesArguments(2))
+            .and(
+                namedOneOf(
+                    "map",
+                    "flatMap",
+                    "filter",
+                    "collect",
+                    "recover",
+                    "transform",
+                    "andThen",
+                    "mapTo",
+                    "flatten",
+                    "withFilter"))
             .and(returns(named("scala.concurrent.Future"))),
         getClass().getName() + "$ResultAdvice");
     transformer.applyAdviceToMethod(

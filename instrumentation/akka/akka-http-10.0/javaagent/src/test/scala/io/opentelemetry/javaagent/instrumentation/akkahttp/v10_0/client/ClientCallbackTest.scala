@@ -105,6 +105,72 @@ class ClientCallbackTest {
           assertThat(Await.result(recoveredCallback.future, 5.seconds))
             .isEqualTo("caller")
 
+          assertFailedCallbackContext(
+            response.map(identity[HttpResponse])(inlineExecutionContext),
+            marker,
+            "caller"
+          )
+          assertFailedCallbackContext(
+            response.flatMap(value => Future.successful(value))(
+              inlineExecutionContext
+            ),
+            marker,
+            "caller"
+          )
+          assertFailedCallbackContext(
+            response.filter(_ => true)(inlineExecutionContext),
+            marker,
+            "caller"
+          )
+          assertFailedCallbackContext(
+            response.collect { case value => value }(inlineExecutionContext),
+            marker,
+            "caller"
+          )
+          assertFailedCallbackContext(
+            response.andThen { case _ => () }(inlineExecutionContext),
+            marker,
+            "caller"
+          )
+
+          val tryTransform = response.getClass.getMethods.find { method =>
+            method.getName == "transform" &&
+            method.getParameterCount == 2 &&
+            method.getParameterTypes.apply(1) == classOf[ExecutionContext]
+          }
+          assertThat(tryTransform.isDefined).isTrue()
+          val tryTransformed = tryTransform.get
+            .invoke(
+              response,
+              (result: Try[HttpResponse]) => {
+                assertThat(Context.current().get(marker)).isEqualTo("caller")
+                result
+              },
+              inlineExecutionContext
+            )
+            .asInstanceOf[Future[HttpResponse]]
+          assertFailedCallbackContext(tryTransformed, marker, "caller")
+
+          val threeArgumentTransform = response.getClass.getMethods.find {
+            method =>
+              method.getName == "transform" &&
+              method.getParameterCount == 3 &&
+              method.getParameterTypes.apply(2) == classOf[ExecutionContext]
+          }
+          assertThat(threeArgumentTransform.isDefined).isTrue()
+          val transformed = threeArgumentTransform.get
+            .invoke(
+              response,
+              (result: HttpResponse) => result,
+              (failure: Throwable) => {
+                assertThat(Context.current().get(marker)).isEqualTo("caller")
+                failure
+              },
+              inlineExecutionContext
+            )
+            .asInstanceOf[Future[HttpResponse]]
+          assertFailedCallbackContext(transformed, marker, "caller")
+
           val zippedResponse = response.zip(Future.successful(1))
           val zippedCallback = Promise[String]()
           zippedResponse.onComplete { result =>
@@ -664,6 +730,22 @@ class ClientCallbackTest {
           }
         })
     })
+
+  private def assertFailedCallbackContext(
+      future: Future[_],
+      marker: ContextKey[String],
+      expected: String
+  ): Unit = {
+    val callback = Promise[Throwable]()
+    future.onComplete { result =>
+      callback.complete(Try {
+        assertThat(Context.current().get(marker)).isEqualTo(expected)
+        result.failed.get
+      })
+    }(inlineExecutionContext)
+    assertThat(Await.result(callback.future, 5.seconds))
+      .isInstanceOf(classOf[IllegalUriException])
+  }
 
   private def newAffinitySystem(): ActorSystem = {
     // The affinity executor is not available in the baseline Akka 2.4.

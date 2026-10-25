@@ -61,7 +61,7 @@ testing {
 sourceSets.named("javaRouteTest") {
   java {
     srcDir("src/test/java")
-    include("**/ResponseFutureCallbacksTest.java")
+    include("**/AkkaHttpServerJavaRouteTest.java", "**/ResponseFutureCallbacksTest.java")
   }
   scala {
     srcDir("src/test/scala")
