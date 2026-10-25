@@ -4,12 +4,21 @@ on:
     # daily at 5:00 UTC
     - cron: "0 5 * * *"
   workflow_dispatch:
+    inputs:
+      benchmark:
+        description: Benchmark to run
+        type: choice
+        default: petclinic
+        options:
+          - petclinic
+          - servlet-probe
 
 permissions:
   contents: read
 
 jobs:
   run-overhead-tests:
+    if: github.event_name != 'workflow_dispatch' || inputs.benchmark == 'petclinic'
     permissions:
       contents: write # for git push to gh-pages branch
     runs-on: ubuntu-latest
@@ -70,12 +79,25 @@ jobs:
           git commit -m "update test result data"
           git push
 
+  servlet-probe:
+    if: github.event_name == 'workflow_dispatch' && inputs.benchmark == 'servlet-probe'
+    runs-on: oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24
+    timeout-minutes: 5
+    container:
+      image: ubuntu:24.04@sha256:68ee22004a9109b44973313b02ff7b1de250f1de0f5ecb628d73f579aaff33ac
+    steps:
+      - name: Check bare-metal scheduling and CPU topology
+        run: |
+          uname -a
+          lscpu
+          cat /proc/self/status | grep -E 'Cpus_allowed_list|Mems_allowed_list'
+
   workflow-notification:
     permissions:
       issues: write
     needs:
       - run-overhead-tests
-    if: always()
+    if: always() && (github.event_name != 'workflow_dispatch' || inputs.benchmark == 'petclinic')
     uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@f09a36e1fa2576787fe05cbc1313ef6066918c78 # v0.23.0
     with:
       success: ${{ needs.run-overhead-tests.result == 'success' }}
