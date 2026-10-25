@@ -13,12 +13,12 @@ jobs:
   probe:
     runs-on: oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24
     timeout-minutes: 5
-    env:
-      TMPDIR: ${{ runner.temp }}
-      TMP: ${{ runner.temp }}
-      TEMP: ${{ runner.temp }}
     steps:
       - name: Check host and Docker
+        env:
+          TMPDIR: ${{ runner.temp }}
+          TMP: ${{ runner.temp }}
+          TEMP: ${{ runner.temp }}
         shell: bash
         run: |
           test "$(uname -m)" = x86_64
