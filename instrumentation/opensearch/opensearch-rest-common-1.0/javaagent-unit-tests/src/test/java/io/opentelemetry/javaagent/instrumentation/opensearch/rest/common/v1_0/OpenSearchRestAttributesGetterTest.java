@@ -36,7 +36,7 @@ class OpenSearchRestAttributesGetterTest {
   }
 
   @Test
-  void responseStatusDoesNotChangeErrorTypeForExceptions() {
+  void responseStatusTakesPrecedenceOverExceptionStatus() {
     OpenSearchRestAttributesGetter getter = new OpenSearchRestAttributesGetter(error -> 503);
     OpenSearchRestResponse response = () -> 404;
     IllegalStateException error = new IllegalStateException("test");
