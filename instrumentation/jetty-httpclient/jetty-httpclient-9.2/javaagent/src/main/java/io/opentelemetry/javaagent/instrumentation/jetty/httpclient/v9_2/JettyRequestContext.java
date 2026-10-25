@@ -17,13 +17,15 @@ import org.eclipse.jetty.client.HttpRequest;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
-public final class JettyRequestContext
-    implements Request.FailureListener, Response.SuccessListener, Response.FailureListener {
+public final class JettyRequestContext {
 
   private static final VirtualField<Request, JettyRequestContext> REQUEST_CONTEXT =
       VirtualField.find(Request.class, JettyRequestContext.class);
+  private static final VirtualField<Request, RequestListener> REQUEST_LISTENER =
+      VirtualField.find(Request.class, RequestListener.class);
   private static final VirtualField<Response, Boolean> PROTOCOL_RESPONSE =
       VirtualField.find(Response.class, Boolean.class);
+  private static final RequestListener requestListener = new RequestListener();
 
   final JettyContentContext caller;
   @Nullable private final Context clientContext;
@@ -43,7 +45,7 @@ public final class JettyRequestContext
     JettyRequestContext context =
         new JettyRequestContext(new JettyContentContext(parentContext), clientContext, false);
     REQUEST_CONTEXT.set(request, context);
-    request.onRequestFailure(context).onResponseFailure(context).onResponseSuccess(context);
+    registerListener(request);
     return context;
   }
 
@@ -60,6 +62,7 @@ public final class JettyRequestContext
       // Redirects and authentication retries share the conversation and propagation headers.
       // Only the original request owns span completion.
       REQUEST_CONTEXT.set(copy, new JettyRequestContext(context.caller, null, true));
+      registerListener(copy);
       if (context.continuation || context.deferredCompletion) {
         context.complete(original);
       }
@@ -85,6 +88,16 @@ public final class JettyRequestContext
     return response != null && Boolean.TRUE.equals(PROTOCOL_RESPONSE.get(response));
   }
 
+  private static void registerListener(Request request) {
+    if (REQUEST_LISTENER.get(request) == null) {
+      request
+          .onRequestFailure(requestListener)
+          .onResponseFailure(requestListener)
+          .onResponseSuccess(requestListener);
+      REQUEST_LISTENER.set(request, requestListener);
+    }
+  }
+
   @Nullable
   public static JettyContentContext getCaller(Request request) {
     JettyRequestContext context = REQUEST_CONTEXT.get(request);
@@ -108,18 +121,32 @@ public final class JettyRequestContext
     deferredCompletion = true;
   }
 
-  @Override
-  public void onSuccess(Response response) {
-    end(response.getRequest(), response, null);
-  }
+  private static final class RequestListener
+      implements Request.FailureListener, Response.SuccessListener, Response.FailureListener {
+    @Override
+    public void onSuccess(Response response) {
+      Request request = response.getRequest();
+      JettyRequestContext context = REQUEST_CONTEXT.get(request);
+      if (context != null) {
+        context.end(request, response, null);
+      }
+    }
 
-  @Override
-  public void onFailure(Request request, Throwable failure) {
-    end(request, null, failure);
-  }
+    @Override
+    public void onFailure(Request request, Throwable failure) {
+      JettyRequestContext context = REQUEST_CONTEXT.get(request);
+      if (context != null) {
+        context.end(request, null, failure);
+      }
+    }
 
-  @Override
-  public void onFailure(Response response, Throwable failure) {
-    end(response.getRequest(), response, failure);
+    @Override
+    public void onFailure(Response response, Throwable failure) {
+      Request request = response.getRequest();
+      JettyRequestContext context = REQUEST_CONTEXT.get(request);
+      if (context != null) {
+        context.end(request, response, failure);
+      }
+    }
   }
 }

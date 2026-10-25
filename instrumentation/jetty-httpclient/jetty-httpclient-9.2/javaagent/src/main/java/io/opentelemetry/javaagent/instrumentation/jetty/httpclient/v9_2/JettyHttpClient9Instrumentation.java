@@ -74,6 +74,7 @@ class JettyHttpClient9Instrumentation implements TypeInstrumentation {
           0,
           (Response.CompleteListener)
               result -> {
+                context.end(httpRequest, result.getResponse(), result.getFailure());
                 if (JettyRequestContext.isProtocolResponse(result.getResponse())) {
                   context.deferCompletion();
                 } else {

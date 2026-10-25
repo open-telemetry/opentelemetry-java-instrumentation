@@ -21,7 +21,7 @@ public final class JettyContentContext implements Context {
   private static final VirtualField<HttpExchange, JettyContentContext> EXCHANGE_CONTEXT =
       VirtualField.find(HttpExchange.class, JettyContentContext.class);
   private static final ThreadLocal<JettyContentContext> initializingContent = new ThreadLocal<>();
-  private static final ThreadLocal<JettyContentContext> activeCallback = new ThreadLocal<>();
+  private static final ThreadLocal<CallbackFrame> activeCallback = new ThreadLocal<>();
 
   private final Context context;
 
@@ -50,13 +50,16 @@ public final class JettyContentContext implements Context {
   @Nullable
   public CallbackScope open() {
     // Reentrant Jetty calls must not overwrite a context explicitly chosen by application code.
-    if (activeCallback.get() == this) {
-      return null;
+    CallbackFrame previous = activeCallback.get();
+    for (CallbackFrame frame = previous; frame != null; frame = frame.previous) {
+      if (frame.context == this) {
+        return null;
+      }
     }
-    JettyContentContext previous = activeCallback.get();
     Scope scope = context.makeCurrent();
-    activeCallback.set(this);
-    return new CallbackScope(scope, previous);
+    CallbackFrame frame = new CallbackFrame(this, previous);
+    activeCallback.set(frame);
+    return new CallbackScope(scope, frame);
   }
 
   @Nullable
@@ -92,21 +95,36 @@ public final class JettyContentContext implements Context {
 
   public static final class CallbackScope implements Scope {
     private final Scope scope;
-    @Nullable private final JettyContentContext previous;
+    private final CallbackFrame frame;
 
-    private CallbackScope(Scope scope, @Nullable JettyContentContext previous) {
+    private CallbackScope(Scope scope, CallbackFrame frame) {
       this.scope = scope;
-      this.previous = previous;
+      this.frame = frame;
     }
 
     @Override
     public void close() {
-      if (previous == null) {
-        activeCallback.remove();
-      } else {
-        activeCallback.set(previous);
+      try {
+        scope.close();
+      } finally {
+        if (activeCallback.get() == frame) {
+          if (frame.previous == null) {
+            activeCallback.remove();
+          } else {
+            activeCallback.set(frame.previous);
+          }
+        }
       }
-      scope.close();
+    }
+  }
+
+  private static final class CallbackFrame {
+    final JettyContentContext context;
+    @Nullable final CallbackFrame previous;
+
+    CallbackFrame(JettyContentContext context, @Nullable CallbackFrame previous) {
+      this.context = context;
+      this.previous = previous;
     }
   }
 }

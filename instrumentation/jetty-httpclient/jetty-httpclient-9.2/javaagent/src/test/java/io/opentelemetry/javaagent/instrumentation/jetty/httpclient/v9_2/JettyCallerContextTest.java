@@ -19,7 +19,9 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import java.io.Closeable;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -33,6 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import org.eclipse.jetty.client.AsyncContentProvider;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpContent;
@@ -289,6 +292,64 @@ class JettyCallerContextTest {
   }
 
   @Test
+  void crossRequestReentryPreservesExplicitNestedContext() throws Exception {
+    Span parent = testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
+    Context caller = Context.root().with(parent).with(VALUE, "caller");
+    Context nested = caller.with(VALUE, "nested");
+    CompletableFuture<Result> completed = new CompletableFuture<>();
+    CompletableFuture<Context> failureContext = new CompletableFuture<>();
+    CompletableFuture<Context> restoredAfterAbort = new CompletableFuture<>();
+    CompletableFuture<Context> restoredAfterNestedCallback = new CompletableFuture<>();
+    CompletableFuture<Context> restoredAfterRequest = new CompletableFuture<>();
+    AtomicBoolean callbackEntered = new AtomicBoolean();
+    AtomicReference<Throwable> callbackFailure = new AtomicReference<>();
+    Request requestA =
+        client
+            .newRequest(url + "/request-a")
+            .onRequestFailure((request, failure) -> failureContext.complete(Context.current()));
+    requestA.onRequestBegin(
+        request -> {
+          callbackEntered.set(true);
+          try {
+            withJettyCallerContext(
+                request,
+                () -> {
+                  try (Scope scope = nested.makeCurrent()) {
+                    request.abort(new IllegalStateException("abort request A from B"));
+                    restoredAfterAbort.complete(Context.current());
+                  }
+                  restoredAfterNestedCallback.complete(Context.current());
+                });
+            restoredAfterRequest.complete(Context.current());
+          } catch (RuntimeException | Error e) {
+            callbackFailure.set(e);
+          }
+        });
+    assertThat(requestA.getRequestListeners(Request.BeginListener.class)).hasSize(1);
+    try {
+      try (Scope ignored = caller.makeCurrent()) {
+        requestA.send(completed::complete);
+        assertContext(Context.current(), caller);
+      }
+      Result result = completed.get(10, SECONDS);
+      assertThat(callbackEntered.get()).isTrue();
+      assertThat(callbackFailure.get()).isNull();
+      assertThat(result.isFailed()).isTrue();
+      assertContext(failureContext.get(10, SECONDS), nested);
+      assertContext(restoredAfterAbort.get(10, SECONDS), nested);
+      assertContext(restoredAfterNestedCallback.get(10, SECONDS), caller);
+      assertContext(restoredAfterRequest.get(10, SECONDS), caller);
+    } finally {
+      parent.end();
+    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
   void responseCallbackAbortPreservesExplicitNestedContext() throws Exception {
     CompletableFuture<Result> completed = new CompletableFuture<>();
     CompletableFuture<Context> failureContext = new CompletableFuture<>();
@@ -430,14 +491,28 @@ class JettyCallerContextTest {
         client
             .newRequest(url + "/reuse")
             .onRequestBegin(r -> callers.add(Context.current().get(VALUE)));
-    try (Scope ignored = Context.root().with(VALUE, "first").makeCurrent()) {
-      assertThat(request.send().getStatus()).isEqualTo(200);
+    int requestListenerCount = 0;
+    int responseListenerCount = 0;
+    for (int i = 0; i < 5; i++) {
+      try (Scope ignored = Context.root().with(VALUE, "caller-" + i).makeCurrent()) {
+        assertThat(request.send().getStatus()).isEqualTo(200);
+      }
+      if (i == 0) {
+        requestListenerCount = request.getRequestListeners(null).size();
+        responseListenerCount = responseListenerCount(request);
+      } else {
+        assertThat(request.getRequestListeners(null)).hasSize(requestListenerCount);
+        assertThat(responseListenerCount(request)).isEqualTo(responseListenerCount + i);
+      }
     }
-    try (Scope ignored = Context.root().with(VALUE, "second").makeCurrent()) {
-      assertThat(request.send().getStatus()).isEqualTo(200);
-    }
-    assertThat(callers).containsExactly("first", "second");
+    assertThat(callers).containsExactly("caller-0", "caller-1", "caller-2", "caller-3", "caller-4");
     testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT).hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT).hasNoParent()),
         trace ->
@@ -539,6 +614,50 @@ class JettyCallerContextTest {
     assertThat(actual.get(VALUE)).isEqualTo(expected.get(VALUE));
     assertThat(Span.fromContext(actual).getSpanContext())
         .isEqualTo(Span.fromContext(expected).getSpanContext());
+  }
+
+  private static int responseListenerCount(Request request) throws ReflectiveOperationException {
+    Field field = request.getClass().getDeclaredField("responseListeners");
+    field.setAccessible(true);
+    return ((List<?>) field.get(request)).size();
+  }
+
+  private static void withJettyCallerContext(Request request, Runnable callback) {
+    try {
+      Class<?> registryClass =
+          AgentClassLoaderAccess.loadClass(
+              "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
+      ClassLoader moduleClassLoader =
+          (ClassLoader)
+              registryClass
+                  .getMethod("getInstrumentationClassLoader", String.class, ClassLoader.class)
+                  .invoke(
+                      null,
+                      "io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.JettyHttpClient9InstrumentationModule",
+                      JettyCallerContextTest.class.getClassLoader());
+      Class<?> contentContextClass =
+          moduleClassLoader.loadClass(
+              "io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.JettyContentContext");
+      Class<?> requestContextClass =
+          moduleClassLoader.loadClass(
+              "io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.JettyRequestContext");
+      Object caller =
+          requestContextClass.getMethod("getCaller", Request.class).invoke(null, request);
+      Field callerContext = contentContextClass.getDeclaredField("context");
+      callerContext.setAccessible(true);
+      Constructor<?> constructor =
+          contentContextClass.getDeclaredConstructor(callerContext.getType());
+      constructor.setAccessible(true);
+      Object nestedCaller = constructor.newInstance(callerContext.get(caller));
+      Object scope = contentContextClass.getMethod("makeCurrent").invoke(nestedCaller);
+      try {
+        callback.run();
+      } finally {
+        scope.getClass().getMethod("close").invoke(scope);
+      }
+    } catch (ReflectiveOperationException e) {
+      throw new LinkageError(e.getMessage(), e);
+    }
   }
 
   private static class Observations {
