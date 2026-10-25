@@ -99,8 +99,7 @@ public class PekkoHttpServerHandlerWrapper
     // the response future is completed by application code, with the context of this request
     // current, completing the future that is handed back to pekko with that context still current
     // would let it flow into the stream callbacks that dispatch the next requests of the
-    // connection,
-    // whose handlers would then run as children of this request
+    // connection, whose handlers would then run as children of this request
     Promise<HttpResponse> promise = Promise$.MODULE$.apply();
     responseFuture.onComplete(new EndSpanHandler(tracingRequest, promise), executionContext);
     return promise.future();
