@@ -330,9 +330,9 @@ abstract class AbstractRocketMqClientTest {
       } finally {
         callback.end();
       }
-    } catch (Throwable throwable) {
-      callbackContext.completeExceptionally(throwable);
-      callbackSpanContext.completeExceptionally(throwable);
+    } catch (Throwable t) {
+      callbackContext.completeExceptionally(t);
+      callbackSpanContext.completeExceptionally(t);
     }
   }
 
