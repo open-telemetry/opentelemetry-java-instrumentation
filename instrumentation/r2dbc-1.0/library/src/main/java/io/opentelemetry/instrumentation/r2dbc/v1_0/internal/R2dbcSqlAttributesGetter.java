@@ -20,6 +20,11 @@ import javax.annotation.Nullable;
 public final class R2dbcSqlAttributesGetter
     implements SqlClientAttributesGetter<DbExecution, Void> {
 
+  private static final String POSTGRESQL_DATABASE = "postgresql";
+  private static final String POSTGRESQL_CLOSED_CONNECTION_EXCEPTION =
+      "io.r2dbc.postgresql.client.ReactorNettyClient$PostgresConnectionClosedException";
+  private static final String POSTGRESQL_CONNECTION_FAILURE = "08006";
+
   @Override
   public String getDbSystemName(DbExecution request) {
     return request.getSystemName();
@@ -58,6 +63,12 @@ public final class R2dbcSqlAttributesGetter
   @Override
   public String getDbResponseStatusCode(
       DbExecution request, @Nullable Void response, @Nullable Throwable error) {
+    if (POSTGRESQL_DATABASE.equals(getDbSystemName(request))
+        && error != null
+        && POSTGRESQL_CLOSED_CONNECTION_EXCEPTION.equals(error.getClass().getName())
+        && POSTGRESQL_CONNECTION_FAILURE.equals(getSqlState(error))) {
+      return null;
+    }
     return getSqlState(error);
   }
 
