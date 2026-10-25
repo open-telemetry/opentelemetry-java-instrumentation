@@ -72,7 +72,7 @@ public interface GenAiAttributesGetter<REQUEST, RESPONSE> {
   Long getUsageOutputTokens(REQUEST request, @Nullable RESPONSE response);
 
   /**
-   * Returns the {@code error.type} value for the operation, or {@code null} to omit the attribute.
+   * Returns the {@code error.type} value for the operation.
    *
    * <p>The default implementation returns the exception class name, or {@code null} if there is no
    * exception.
