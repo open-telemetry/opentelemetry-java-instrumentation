@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server;
 
 import static java.util.Collections.emptyList;
 
+import akka.http.javadsl.model.HttpResponse;
 import akka.http.scaladsl.model.ErrorInfo;
-import akka.http.scaladsl.model.HttpResponse;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.AkkaHttpUtil;
@@ -22,7 +22,6 @@ public final class AkkaHttpParsingErrorSingletons {
 
   private static final VirtualField<ErrorInfo, Boolean> PARSING_ERROR =
       VirtualField.find(ErrorInfo.class, Boolean.class);
-  private static final ScopedThreadValue<ErrorInfo> currentError = new ScopedThreadValue<>();
   private static final Instrumenter<ErrorInfo, HttpResponse> instrumenter =
       JavaagentHttpServerInstrumenters.create(
           AkkaHttpUtil.instrumentationName(),
@@ -33,36 +32,34 @@ public final class AkkaHttpParsingErrorSingletons {
     PARSING_ERROR.set(info, Boolean.TRUE);
   }
 
-  public static ScopedThreadValue<ErrorInfo> currentError() {
-    return currentError;
-  }
-
-  public static boolean consumeParsingError(ErrorInfo info) {
-    // Entity-stream failures use the same response path, but already have a server span.
-    if (PARSING_ERROR.get(info) != null) {
-      PARSING_ERROR.set(info, null);
-      return true;
+  @Nullable
+  public static Object[] startSpan(ErrorInfo info) {
+    if (PARSING_ERROR.get(info) == null) {
+      return null;
     }
-    return false;
-  }
-
-  public static HttpResponse traceResponse(HttpResponse response) {
-    ErrorInfo info = currentError.get();
-    if (info == null) {
-      return response;
-    }
-    currentError.set(null);
-    // No parsed headers are available. Do not inherit a preceding request's context.
+    PARSING_ERROR.set(info, null);
     Context parentContext = Context.root();
     if (!instrumenter.shouldStart(parentContext, info)) {
-      return response;
+      return null;
     }
     Context context = instrumenter.start(parentContext, info);
+    return new Object[] {context, context.makeCurrent(), info};
+  }
+
+  @Nullable
+  public static Object endSpan(
+      Object[] enter, @Nullable Object response, @Nullable Throwable error) {
+    ((Scope) enter[1]).close();
+    Context context = (Context) enter[0];
+    ErrorInfo info = (ErrorInfo) enter[2];
+    HttpResponse httpResponse = (HttpResponse) response;
     try {
-      response = AkkaHttpResponseMutator.customizeResponse(context, response);
-      return response;
+      if (httpResponse != null) {
+        httpResponse = AkkaHttpResponseMutator.customizeResponse(context, httpResponse);
+      }
+      return httpResponse;
     } finally {
-      instrumenter.end(context, info, response, null);
+      instrumenter.end(context, info, httpResponse, error);
     }
   }
 

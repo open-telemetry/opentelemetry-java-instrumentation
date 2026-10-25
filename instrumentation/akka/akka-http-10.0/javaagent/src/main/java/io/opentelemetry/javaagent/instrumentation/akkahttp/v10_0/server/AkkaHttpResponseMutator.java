@@ -25,13 +25,17 @@ class AkkaHttpResponseMutator implements HttpServerResponseMutator<HttpResponse>
 
   static akka.http.scaladsl.model.HttpResponse customizeResponse(
       Context context, akka.http.scaladsl.model.HttpResponse response) {
+    return (akka.http.scaladsl.model.HttpResponse)
+        customizeResponse(context, (HttpResponse) response);
+  }
+
+  static HttpResponse customizeResponse(Context context, HttpResponse response) {
     // Akka responses are immutable, so capture added headers and build a new response.
     AkkaHttpResponseMutator responseMutator = new AkkaHttpResponseMutator();
     HttpServerResponseCustomizerHolder.getCustomizer()
         .customize(context, response, responseMutator);
     if (!responseMutator.headers.isEmpty()) {
-      response =
-          (akka.http.scaladsl.model.HttpResponse) response.addHeaders(responseMutator.headers);
+      response = response.addHeaders(responseMutator.headers);
     }
     return response;
   }
