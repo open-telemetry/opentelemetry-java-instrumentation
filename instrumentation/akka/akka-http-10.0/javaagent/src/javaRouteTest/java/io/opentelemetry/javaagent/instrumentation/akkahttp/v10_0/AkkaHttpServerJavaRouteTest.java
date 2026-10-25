@@ -19,6 +19,7 @@ import akka.http.javadsl.model.HttpRequest;
 import akka.http.javadsl.model.HttpResponse;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
+import akka.http.javadsl.settings.ServerSettings;
 import akka.stream.javadsl.Flow;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -33,6 +34,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.CompletionStage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -67,6 +70,45 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
                             .hasStatus(StatusData.unset())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 400))));
+      } finally {
+        binding.unbind().toCompletableFuture().get(10, SECONDS);
+      }
+    } finally {
+      system.terminate();
+    }
+  }
+
+  @Test
+  void testCustomParsingErrorHandler() throws Exception {
+    ActorSystem system = ActorSystem.create("custom-parsing-error-handler");
+    int port = PortUtils.findOpenPort();
+    try {
+      ServerBinding binding =
+          Http.get(system)
+              .newServerAt("localhost", port)
+              .withSettings(
+                  ServerSettings.create(system)
+                      .withParsingErrorHandler(CustomParsingErrorHandler.class.getName()))
+              .bind(complete("ok"))
+              .toCompletableFuture()
+              .get(10, SECONDS);
+      try {
+        Map<String, String> responseHeaders =
+            assertResponse(
+                port, "GET /%% HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n", 418);
+        assertThat(responseHeaders).containsKeys("X-Test-TraceId", "X-Test-SpanId");
+
+        testing.waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("HTTP")
+                            .hasKind(SpanKind.SERVER)
+                            .hasNoParent()
+                            .hasStatus(StatusData.unset())
+                            .hasAttributesSatisfyingExactly(equalTo(HTTP_RESPONSE_STATUS_CODE, 418))
+                            .hasTraceId(responseHeaders.get("X-Test-TraceId"))
+                            .hasSpanId(responseHeaders.get("X-Test-SpanId"))));
       } finally {
         binding.unbind().toCompletableFuture().get(10, SECONDS);
       }
@@ -116,6 +158,25 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
           new BufferedReader(new InputStreamReader(socket.getInputStream(), US_ASCII));
       assertThat(reader.readLine()).isEqualTo("HTTP/1.1 400 Bad Request");
       while (reader.readLine() != null) {}
+    }
+  }
+
+  private static Map<String, String> assertResponse(int port, String request, int status)
+      throws IOException {
+    try (Socket socket = new Socket("localhost", port)) {
+      socket.setSoTimeout(10000);
+      socket.getOutputStream().write(request.getBytes(US_ASCII));
+      BufferedReader reader =
+          new BufferedReader(new InputStreamReader(socket.getInputStream(), US_ASCII));
+      assertThat(reader.readLine()).startsWith("HTTP/1.1 " + status + " ");
+      Map<String, String> headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+      String line;
+      while ((line = reader.readLine()) != null && !line.isEmpty()) {
+        int separator = line.indexOf(':');
+        headers.put(line.substring(0, separator), line.substring(separator + 1).trim());
+      }
+      while (reader.readLine() != null) {}
+      return headers;
     }
   }
 
