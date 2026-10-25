@@ -9,21 +9,24 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.HttpRequest;
+import org.eclipse.jetty.client.api.ContentProvider;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
 /**
  * JettyClientTracingListener performs three actions when {@link #handleRequest(Context,
  * HttpRequest, Instrumenter)} is called 1. Start the CLIENT span 2. Set the listener callbacks for
- * each lifecycle action that signal end of the request 3. Wrap request listeners to propagate
- * context into the listeners
+ * each lifecycle action that signal end of the request 3. Wrap application request callbacks and
+ * content providers with the caller context
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
@@ -68,10 +71,10 @@ public final class JettyClientTracingListener
 
     Context context = instrumenter.start(parentContext, request);
 
-    // wrap all important request-based listeners that may already be attached, null should ensure
-    // that all listeners are returned here
+    // wrap all important request-based listeners and request content that may already be attached
     List<Request.RequestListener> existingListeners = request.getRequestListeners(null);
-    wrapRequestListeners(existingListeners, context);
+    wrapRequestListeners(existingListeners, parentContext);
+    wrapContentProvider(request, parentContext);
 
     JettyClientTracingListener listener = new JettyClientTracingListener(context, instrumenter);
     request.onRequestFailure(listener).onResponseFailure(listener).onResponseSuccess(listener);
@@ -114,6 +117,49 @@ public final class JettyClientTracingListener
 
       iterator.set(proxiedListener);
     }
+  }
+
+  private static void wrapContentProvider(HttpRequest request, Context context) {
+    ContentProvider contentProvider = request.getContent();
+    if (contentProvider == null) {
+      return;
+    }
+
+    request.content((ContentProvider) wrapWithContext(contentProvider, context, true));
+  }
+
+  private static Object wrapWithContext(Object target, Context context, boolean wrapIterator) {
+    List<Class<?>> interfaces = new ArrayList<>();
+    // Preserve public Jetty interfaces used for asynchronous content and backpressure.
+    addPublicInterfaces(target.getClass(), interfaces);
+    return Proxy.newProxyInstance(
+        target.getClass().getClassLoader(),
+        interfaces.toArray(new Class<?>[0]),
+        (proxy, method, args) -> {
+          try (Scope ignored = context.makeCurrent()) {
+            Object result = method.invoke(target, args);
+            if (wrapIterator && result instanceof Iterator) {
+              return wrapWithContext(result, context, false);
+            }
+            return result;
+          } catch (InvocationTargetException e) {
+            throw e.getCause();
+          }
+        });
+  }
+
+  private static void addPublicInterfaces(Class<?> type, List<Class<?>> interfaces) {
+    if (type == null) {
+      return;
+    }
+    for (Class<?> implementedInterface : type.getInterfaces()) {
+      if (Modifier.isPublic(implementedInterface.getModifiers())
+          && !interfaces.contains(implementedInterface)) {
+        interfaces.add(implementedInterface);
+      }
+      addPublicInterfaces(implementedInterface, interfaces);
+    }
+    addPublicInterfaces(type.getSuperclass(), interfaces);
   }
 
   @Override

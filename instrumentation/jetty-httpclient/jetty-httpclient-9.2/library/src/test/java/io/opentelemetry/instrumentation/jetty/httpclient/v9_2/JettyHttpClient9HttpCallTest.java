@@ -92,7 +92,6 @@ class JettyHttpClient9HttpCallTest {
     Span callerSpan =
         testing.getOpenTelemetry().getTracer("test").spanBuilder("caller").startSpan();
     Context callerContext = enteringContext.with(callerSpan).with(CALLER_KEY, "caller");
-    Span clientSpan;
     try {
       ContentResponse response;
       try (Scope ignored = callerContext.makeCurrent()) {
@@ -104,10 +103,7 @@ class JettyHttpClient9HttpCallTest {
       assertThat(response.getStatus()).isEqualTo(200);
       assertThat(response.getContentAsString()).isEqualTo(EXPECTED_BODY);
       Context preparedContext = preparationContext.get();
-      assertThat(preparedContext.get(CALLER_KEY)).isEqualTo("caller");
-      assertThat(preparedContext).isNotSameAs(callerContext);
-      clientSpan = Span.fromContext(preparedContext);
-      assertThat(clientSpan.getSpanContext().isValid()).isTrue();
+      assertThat(preparedContext).isSameAs(callerContext);
     } finally {
       callerSpan.end();
     }
@@ -116,11 +112,7 @@ class JettyHttpClient9HttpCallTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("caller"),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasSpanId(clientSpan.getSpanContext().getSpanId())));
+                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -141,9 +133,8 @@ class JettyHttpClient9HttpCallTest {
         assertThat(Context.current()).isSameAs(callerContext);
       }
       assertThat(Context.current()).isSameAs(enteringContext);
-      assertThat(preparationContext.get()).isNotSameAs(callerContext);
     } finally {
-      Span.fromContext(preparationContext.get()).end();
+      assertThat(preparationContext.get()).isSameAs(callerContext);
     }
 
     testing.waitAndAssertTraces(
