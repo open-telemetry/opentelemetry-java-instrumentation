@@ -37,7 +37,27 @@ tasks {
   test {
     useJUnitPlatform()
     exclude("**/AotStartupBenchmark.class")
+    exclude("**/AgentStartupBenchmark.class")
   }
+
+}
+
+tasks.register<Test>("agentStartupBenchmark") {
+  description = "Compares ordinary Java agent startup against a fixed baseline."
+  group = "verification"
+  testClassesDirs = sourceSets.test.get().output.classesDirs
+  classpath = sourceSets.test.get().runtimeClasspath
+  useJUnitPlatform()
+  include("**/AgentStartupBenchmark.class")
+  maxParallelForks = 1
+  outputs.upToDateWhen { false }
+  outputs.cacheIf { false }
+  systemProperty("startup.benchmark.enabled", "true")
+  systemProperty("startup.benchmark.output", layout.buildDirectory.dir("reports/agent-startup").get().asFile.absolutePath)
+  systemProperty("startup.benchmark.baseline", providers.gradleProperty("startupBenchmarkBaseline").orElse("").get())
+  systemProperty("startup.benchmark.candidate", providers.gradleProperty("startupBenchmarkCandidate").orElse("").get())
+  systemProperty("startup.benchmark.samples", providers.gradleProperty("startupBenchmarkSamples").orElse("20").get())
+  systemProperty("startup.benchmark.warmups", providers.gradleProperty("startupBenchmarkWarmups").orElse("2").get())
 }
 
 tasks.register<Test>("aotStartupBenchmark") {
