@@ -9,17 +9,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 import org.opensearch.client.Response;
 import org.opensearch.client.ResponseListener;
 
 public class RestResponseListener implements ResponseListener {
-
-  @FunctionalInterface
-  public interface ExceptionConverter {
-    @Nullable
-    OpenSearchRestResponse convert(Throwable error);
-  }
 
   private final ResponseListener listener;
   private final Context parentContext;
@@ -27,7 +20,6 @@ public class RestResponseListener implements ResponseListener {
   private final Context context;
   private final OpenSearchRestRequest request;
   private final Function<Response, OpenSearchRestResponse> responseConverter;
-  private final ExceptionConverter exceptionConverter;
 
   public RestResponseListener(
       ResponseListener listener,
@@ -35,15 +27,13 @@ public class RestResponseListener implements ResponseListener {
       Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter,
       Context context,
       OpenSearchRestRequest request,
-      Function<Response, OpenSearchRestResponse> responseConverter,
-      ExceptionConverter exceptionConverter) {
+      Function<Response, OpenSearchRestResponse> responseConverter) {
     this.listener = listener;
     this.parentContext = parentContext;
     this.instrumenter = instrumenter;
     this.context = context;
     this.request = request;
     this.responseConverter = responseConverter;
-    this.exceptionConverter = exceptionConverter;
   }
 
   @Override
@@ -56,7 +46,7 @@ public class RestResponseListener implements ResponseListener {
 
   @Override
   public void onFailure(Exception e) {
-    instrumenter.end(context, request, exceptionConverter.convert(e), e);
+    instrumenter.end(context, request, null, e);
     try (Scope ignored = parentContext.makeCurrent()) {
       listener.onFailure(e);
     }

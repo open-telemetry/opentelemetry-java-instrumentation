@@ -16,7 +16,9 @@ import org.opensearch.client.ResponseException;
 class OpenSearchRestSingletons {
 
   private static final Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter =
-      OpenSearchRestInstrumenterFactory.create("io.opentelemetry.opensearch-rest-1.0");
+      OpenSearchRestInstrumenterFactory.create(
+          "io.opentelemetry.opensearch-rest-1.0",
+          OpenSearchRestSingletons::getStatusCodeFromException);
 
   static Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter() {
     return instrumenter;
@@ -37,9 +39,10 @@ class OpenSearchRestSingletons {
   }
 
   @Nullable
-  static OpenSearchRestResponse convertException(@Nullable Throwable error) {
+  static Integer getStatusCodeFromException(Throwable error) {
     if (error instanceof ResponseException) {
-      return convertResponse(((ResponseException) error).getResponse());
+      Response response = ((ResponseException) error).getResponse();
+      return response != null ? response.getStatusLine().getStatusCode() : null;
     }
     return null;
   }

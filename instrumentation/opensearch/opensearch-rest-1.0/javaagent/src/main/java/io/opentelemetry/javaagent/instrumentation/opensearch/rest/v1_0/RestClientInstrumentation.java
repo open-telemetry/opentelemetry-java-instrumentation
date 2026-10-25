@@ -83,20 +83,13 @@ class RestClientInstrumentation implements TypeInstrumentation {
           instrumenter(),
           context,
           otelRequest,
-          OpenSearchRestSingletons::convertResponse,
-          OpenSearchRestSingletons::convertException);
+          OpenSearchRestSingletons::convertResponse);
     }
 
     public void endWithResponse(@Nullable Response response, @Nullable Throwable throwable) {
       scope.close();
       instrumenter()
-          .end(
-              context,
-              otelRequest,
-              response != null
-                  ? OpenSearchRestSingletons.convertResponse(response)
-                  : OpenSearchRestSingletons.convertException(throwable),
-              throwable);
+          .end(context, otelRequest, OpenSearchRestSingletons.convertResponse(response), throwable);
     }
 
     public void endWithListener(@Nullable Throwable throwable) {
