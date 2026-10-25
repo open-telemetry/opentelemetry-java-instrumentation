@@ -146,9 +146,10 @@ jobs:
           mkdir artifacts
           cd harness
           python3 -B -m unittest discover -s benchmark-overhead-jmh -p 'test_*.py'
-          ./gradlew :benchmark-overhead-jmh:spotlessApply :benchmark-overhead-jmh:jmhJar
+          ./gradlew :benchmark-overhead-jmh:spotlessApply :benchmark-overhead-jmh:jar :benchmark-overhead-jmh:jmhJar
           git diff --exit-code
           cp benchmark-overhead-jmh/build/libs/servlet-benchmarks.jar ../artifacts/
+          cp benchmark-overhead-jmh/build/libs/servlet-benchmark-extension.jar ../artifacts/
           cd ../baseline
           ./gradlew :javaagent:shadowJar -PremoveJarVersionNumbers=true
           cp javaagent/build/libs/opentelemetry-javaagent.jar ../artifacts/baseline-agent.jar
@@ -216,6 +217,7 @@ jobs:
           if [[ "$BENCHMARK" == servlet-profile ]]; then mode=profile; fi
           python3 -B benchmark-overhead-jmh/run_benchmarks.py \
             --benchmark-jar artifacts/servlet-benchmarks.jar \
+            --extension-jar artifacts/servlet-benchmark-extension.jar \
             --baseline-agent artifacts/baseline-agent.jar \
             --candidate-agent artifacts/candidate-agent.jar \
             --provenance artifacts/provenance.json \

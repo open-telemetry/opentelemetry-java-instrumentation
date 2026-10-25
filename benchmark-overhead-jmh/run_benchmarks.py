@@ -72,10 +72,20 @@ def schedule(repetitions, variants):
                 yield repetition, agent, variant
 
 
-def command(java, benchmark, agent, variant, output, mode, preflight=False):
+def command(
+    java, benchmark, agent, variant, output, mode, preflight=False, extension=None
+):
     args = list(JVM_ARGS)
     if agent is not None:
         args.append(f"-javaagent:{agent}")
+        if extension is None:
+            raise ValueError("A benchmark span processor extension is required")
+        args.extend(
+            [
+                f"-Dotel.javaagent.extensions={extension}",
+                "-Dbenchmark.verify-tracing=true",
+            ]
+        )
     if preflight:
         args.remove("-Dotel.traces.exporter=none")
         args.append("-Dotel.traces.exporter=logging")
@@ -244,6 +254,7 @@ def summarize(rows, same_agent):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--benchmark-jar", type=Path, required=True)
+    parser.add_argument("--extension-jar", type=Path, required=True)
     parser.add_argument("--baseline-agent", type=Path, required=True)
     parser.add_argument("--candidate-agent", type=Path, required=True)
     parser.add_argument("--provenance", type=Path, required=True)
@@ -261,6 +272,7 @@ def main():
             raise ValueError(f"Remove inherited benchmark configuration: {name}")
     artifacts = {
         "benchmark": args.benchmark_jar.resolve(strict=True),
+        "extension": args.extension_jar.resolve(strict=True),
         "baseline": args.baseline_agent.resolve(strict=True),
         "candidate": args.candidate_agent.resolve(strict=True),
     }
@@ -309,6 +321,7 @@ def main():
             result_path,
             mode,
             preflight,
+            artifacts["extension"],
         )
         metadata["commands"].append([str(arg) for arg in cmd])
         metadata_path.write_text(
@@ -320,6 +333,10 @@ def main():
                 run(cmd, stdout=log, stderr=subprocess.STDOUT)
         finally:
             active_agent.unlink(missing_ok=True)
+        if agent is not None and "Verified active tracing and sampler " not in (
+            output / f"{name}.log"
+        ).read_text(encoding="utf-8"):
+            raise ValueError(f"SDK tracing was not verified in {name}.log")
         return read_result(result_path, variant)
 
     for agent in ("baseline", "candidate"):

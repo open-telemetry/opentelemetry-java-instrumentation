@@ -5,6 +5,11 @@ It measures steady-state request time and JVM-wide allocations, including the
 HTTP client. Exporters are disabled, so it does not measure telemetry delivery
 or span-data conversion for export.
 
+A benchmark-only agent extension installs a span processor with no callbacks.
+This keeps SDK tracing active even though exporters are disabled. Without a
+processor, the agent uses no-op tracers and sampling variants do not measure
+SDK span creation.
+
 ## Local usage
 
 The existing Gradle task builds and benchmarks the current agent:
@@ -20,11 +25,12 @@ variants. The default benchmark samples all traces.
 Build a reusable benchmark artifact without building an agent:
 
 ```sh
-./gradlew :benchmark-overhead-jmh:jmhJar
+./gradlew :benchmark-overhead-jmh:jar :benchmark-overhead-jmh:jmhJar
 ```
 
-The result is `benchmark-overhead-jmh/build/libs/servlet-benchmarks.jar`.
-Use the same artifact for both sides of an agent comparison.
+The results are `servlet-benchmarks.jar` and `servlet-benchmark-extension.jar`
+under `benchmark-overhead-jmh/build/libs/`. Use the same two artifacts for
+both sides of an agent comparison.
 
 ## Bare-metal comparisons
 
@@ -60,7 +66,10 @@ No observations are retried or discarded.
 
 Untimed preflights use the logging exporter to require a servlet server span
 from each agent. Each benchmark trial checks the expected response before
-measurements begin. Smoke and profile runs do not produce timing comparisons.
+measurements begin. Instrumented trials also verify valid trace contexts and
+recording decisions for deterministic trace IDs under the configured sampler,
+using the same exporter configuration as the measurements. Smoke and profile
+runs do not produce timing comparisons.
 
 Set `artifact-run-id` to a previous successful build's workflow run ID to reuse
 the exact build artifacts in a separate job. Ref inputs are ignored when

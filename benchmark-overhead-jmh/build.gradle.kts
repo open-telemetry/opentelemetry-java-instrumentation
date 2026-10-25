@@ -15,10 +15,16 @@ otelJava {
 }
 
 dependencies {
+  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
+
+  jmhImplementation("io.opentelemetry:opentelemetry-api")
   jmhImplementation("org.springframework.boot:spring-boot-starter-web:4.1.1")
 }
 
 tasks {
+  jar {
+    archiveFileName.set("servlet-benchmark-extension.jar")
+  }
 
   named<ShadowJar>("jmhJar") {
     archiveFileName.set("servlet-benchmarks.jar")
@@ -69,12 +75,13 @@ tasks {
 
   named<JMHTask>("jmh") {
     val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar").get()
-    inputs.files(layout.files(shadowTask))
+    val extensionTask = named<Jar>("jar").get()
+    inputs.files(layout.files(shadowTask, extensionTask))
 
-    // note: without an exporter, toSpanData() won't even be called
-    // (which is good for benchmarking the instrumentation itself)
     val args = mutableListOf(
       "-javaagent:${shadowTask.archiveFile.get()}",
+      "-Dotel.javaagent.extensions=${extensionTask.archiveFile.get()}",
+      "-Dbenchmark.verify-tracing=true",
       "-Dotel.traces.exporter=none",
       "-Dotel.metrics.exporter=none",
       "-Dotel.logs.exporter=none",

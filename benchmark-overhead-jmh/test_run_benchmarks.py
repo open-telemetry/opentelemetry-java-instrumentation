@@ -57,6 +57,7 @@ class RunnerTest(unittest.TestCase):
             "sampled",
             Path("unique.json"),
             "profile",
+            extension=Path("extension.jar"),
         )
         self.assertIn("filename=unique.jfr", command[-1])
         self.assertIn("-javaagent:agent.jar", command[-1])
@@ -70,10 +71,26 @@ class RunnerTest(unittest.TestCase):
             Path("check.json"),
             "smoke",
             preflight=True,
+            extension=Path("extension.jar"),
         )
         self.assertIn("-Dotel.traces.exporter=logging", command[-1])
         self.assertNotIn("-Dotel.traces.exporter=none", command[-1])
         self.assertEqual(command[command.index("-wi") + 1], "0")
+
+    def test_instrumented_commands_require_the_span_processor_and_tracing_check(self):
+        args = (
+            "java",
+            Path("jmh.jar"),
+            Path("agent.jar"),
+            "sampled",
+            Path("result.json"),
+            "measure",
+        )
+        with self.assertRaises(ValueError):
+            runner.command(*args)
+        command = runner.command(*args, extension=Path("extension.jar"))
+        self.assertIn("-Dotel.javaagent.extensions=extension.jar", command[-1])
+        self.assertIn("-Dbenchmark.verify-tracing=true", command[-1])
 
     def test_subprocess_errors_are_not_swallowed(self):
         with (
@@ -212,10 +229,13 @@ class RunnerTest(unittest.TestCase):
             runner.summarize(rows, False)
 
     def test_smoke_driver_uses_one_agent_path_and_cleans_it_on_failure(self):
-        for fail in (False, True):
-            with self.subTest(fail=fail), tempfile.TemporaryDirectory() as directory:
+        for failure in (None, "process", "tracing"):
+            with (
+                self.subTest(failure=failure),
+                tempfile.TemporaryDirectory() as directory,
+            ):
                 root = Path(directory)
-                for name in ("benchmark", "baseline", "candidate"):
+                for name in ("benchmark", "extension", "baseline", "candidate"):
                     (root / f"{name}.jar").write_bytes(name.encode())
                 (root / "provenance.json").write_text("{}", encoding="utf-8")
                 output = root / "results"
@@ -226,7 +246,7 @@ class RunnerTest(unittest.TestCase):
                     *,
                     output=output,
                     loaded_agents=loaded_agents,
-                    fail=fail,
+                    failure=failure,
                     **kwargs,
                 ):
                     if cmd[0] == "lscpu":
@@ -243,7 +263,7 @@ class RunnerTest(unittest.TestCase):
                         loaded_agents.append(active.read_bytes())
                     else:
                         self.assertFalse(active.exists())
-                    if fail:
+                    if failure == "process":
                         raise subprocess.CalledProcessError(1, cmd)
                     result = self.result()
                     result["benchmark"] = cmd[3].strip("^$")
@@ -251,9 +271,14 @@ class RunnerTest(unittest.TestCase):
                         json.dumps([result]), encoding="utf-8"
                     )
                     kwargs["stdout"].write("'GET /' SERVER [tracer: test]\n")
+                    if failure != "tracing":
+                        kwargs["stdout"].write(
+                            "Verified active tracing and sampler test\n"
+                        )
                     return subprocess.CompletedProcess(cmd, 0)
 
                 argv = ["run_benchmarks.py"]
+                argv.extend(["--extension-jar", str(root / "extension.jar")])
                 for name in ("benchmark", "baseline", "candidate"):
                     argv.extend(
                         [
@@ -286,8 +311,13 @@ class RunnerTest(unittest.TestCase):
                     patch.object(runner.os, "sched_setaffinity", create=True),
                     patch.object(runner, "run", side_effect=execute),
                 ):
-                    if fail:
+                    if failure == "process":
                         with self.assertRaises(subprocess.CalledProcessError):
+                            runner.main()
+                    elif failure == "tracing":
+                        with self.assertRaisesRegex(
+                            ValueError, "SDK tracing was not verified"
+                        ):
                             runner.main()
                     else:
                         runner.main()
