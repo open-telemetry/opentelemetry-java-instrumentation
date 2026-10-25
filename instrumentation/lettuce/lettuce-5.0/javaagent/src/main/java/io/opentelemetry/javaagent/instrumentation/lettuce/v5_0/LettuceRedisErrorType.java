@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 public final class LettuceRedisErrorType {
 
   @Nullable
-  static String getErrorType(@Nullable Throwable error) {
+  static String getResponseStatusCode(@Nullable Throwable error) {
     if (!(error instanceof RedisCommandExecutionException)) {
       return null;
     }

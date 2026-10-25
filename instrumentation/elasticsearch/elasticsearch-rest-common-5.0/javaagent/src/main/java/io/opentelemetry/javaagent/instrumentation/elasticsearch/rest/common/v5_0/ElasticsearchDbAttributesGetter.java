@@ -156,10 +156,11 @@ final class ElasticsearchDbAttributesGetter
     if (response == null && error instanceof ResponseException) {
       response = ((ResponseException) error).getResponse();
     }
-    if (response == null || response.getStatusLine().getStatusCode() < 400) {
+    if (response == null) {
       return null;
     }
-    return getErrorType(request, response, error);
+    int statusCode = response.getStatusLine().getStatusCode();
+    return statusCode >= 400 ? Integer.toString(statusCode) : null;
   }
 
   @Override

@@ -17,6 +17,11 @@ final class ClickHouseErrorCodeExtractor {
 
   @Nullable
   static String getErrorType(@Nullable Throwable error) {
+    return getNumericErrorCode(error);
+  }
+
+  @Nullable
+  private static String getNumericErrorCode(@Nullable Throwable error) {
     if (error instanceof ClickHouseException) {
       int errorCode = ((ClickHouseException) error).getErrorCode();
       return errorCode == 0 ? null : Integer.toString(errorCode);
@@ -47,7 +52,7 @@ final class ClickHouseErrorCodeExtractor {
         return null;
       }
     }
-    return getErrorType(error);
+    return getNumericErrorCode(error);
   }
 
   private ClickHouseErrorCodeExtractor() {}
