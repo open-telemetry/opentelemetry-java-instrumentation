@@ -130,8 +130,7 @@ public final class JettyClientTracingListener
 
   private static Object wrapWithContext(Object target, Context context, boolean wrapIterator) {
     List<Class<?>> interfaces = new ArrayList<>();
-    // Preserve public Jetty interfaces used for asynchronous content and backpressure.
-    addPublicInterfaces(target.getClass(), interfaces);
+    addSupportedInterfaces(target.getClass(), interfaces, wrapIterator);
     return Proxy.newProxyInstance(
         target.getClass().getClassLoader(),
         interfaces.toArray(new Class<?>[0]),
@@ -148,18 +147,33 @@ public final class JettyClientTracingListener
         });
   }
 
-  private static void addPublicInterfaces(Class<?> type, List<Class<?>> interfaces) {
+  private static void addSupportedInterfaces(
+      Class<?> type, List<Class<?>> interfaces, boolean wrapIterator) {
     if (type == null) {
       return;
     }
     for (Class<?> implementedInterface : type.getInterfaces()) {
-      if (Modifier.isPublic(implementedInterface.getModifiers())
+      String name = implementedInterface.getName();
+      boolean supported =
+          wrapIterator
+              ? name.equals("org.eclipse.jetty.client.api.ContentProvider")
+                  || name.equals("org.eclipse.jetty.client.api.ContentProvider$Typed")
+                  || name.equals("org.eclipse.jetty.client.AsyncContentProvider")
+                  || name.equals("org.eclipse.jetty.client.Synchronizable")
+                  || name.equals("org.eclipse.jetty.util.Callback")
+                  || name.equals("java.io.Closeable")
+              : name.equals("java.util.Iterator")
+                  || name.equals("org.eclipse.jetty.client.Synchronizable")
+                  || name.equals("org.eclipse.jetty.util.Callback")
+                  || name.equals("java.io.Closeable");
+      if (supported
+          && Modifier.isPublic(implementedInterface.getModifiers())
           && !interfaces.contains(implementedInterface)) {
         interfaces.add(implementedInterface);
       }
-      addPublicInterfaces(implementedInterface, interfaces);
+      addSupportedInterfaces(implementedInterface, interfaces, wrapIterator);
     }
-    addPublicInterfaces(type.getSuperclass(), interfaces);
+    addSupportedInterfaces(type.getSuperclass(), interfaces, wrapIterator);
   }
 
   @Override
