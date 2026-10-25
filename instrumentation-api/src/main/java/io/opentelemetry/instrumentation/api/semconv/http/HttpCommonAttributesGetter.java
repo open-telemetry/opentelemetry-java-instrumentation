@@ -100,7 +100,7 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Returns the {@code error.type} value for the operation, or {@code null} to omit the attribute.
+   * Returns the {@code error.type} value for the operation.
    *
    * <p>The cardinality of the error type should be low. The instrumentations implementing this
    * method are recommended to document the custom values they support.

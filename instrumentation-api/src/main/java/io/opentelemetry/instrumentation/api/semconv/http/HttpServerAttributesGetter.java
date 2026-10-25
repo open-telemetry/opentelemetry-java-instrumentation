@@ -52,8 +52,7 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
   }
 
   /**
-   * Returns the {@code error.type} value for the HTTP server operation, or {@code null} to omit the
-   * attribute.
+   * Returns the {@code error.type} value for the HTTP server operation.
    *
    * <p>The default implementation returns error response status codes for servers (500 or greater,
    * or positive status codes below 100), the exception class name when {@code error} is non-null,
