@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 
+import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -19,8 +20,10 @@ import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.eclipse.jetty.client.HttpConversation;
 import org.eclipse.jetty.client.HttpRequest;
 import org.eclipse.jetty.client.api.Request;
+import org.eclipse.jetty.client.api.Response;
 
 class JettyRequestBoundaryInstrumentation implements TypeInstrumentation {
 
@@ -29,7 +32,8 @@ class JettyRequestBoundaryInstrumentation implements TypeInstrumentation {
     return namedOneOf(
         "org.eclipse.jetty.client.RequestNotifier",
         "org.eclipse.jetty.client.HttpConnection",
-        "org.eclipse.jetty.client.HttpRequest");
+        "org.eclipse.jetty.client.HttpRequest",
+        "org.eclipse.jetty.client.HttpConversation");
   }
 
   @Override
@@ -43,7 +47,24 @@ class JettyRequestBoundaryInstrumentation implements TypeInstrumentation {
                     .and(takesArgument(0, named("org.eclipse.jetty.client.api.Request")))),
         getClass().getName() + "$RequestAdvice");
     transformer.applyAdviceToMethod(
-        named("abort").and(takesArguments(Throwable.class)), getClass().getName() + "$AbortAdvice");
+        named("abort")
+            .and(takesArguments(Throwable.class))
+            .and(isDeclaredBy(named("org.eclipse.jetty.client.HttpRequest"))),
+        getClass().getName() + "$AbortAdvice");
+    transformer.applyAdviceToMethod(
+        named("updateResponseListeners")
+            .and(takesArgument(0, named("org.eclipse.jetty.client.api.Response$ResponseListener"))),
+        getClass().getName() + "$ProtocolAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class ProtocolAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This HttpConversation conversation,
+        @Advice.Argument(0) @Nullable Response.ResponseListener listener) {
+      JettyRequestContext.updateProtocolResponse(conversation, listener);
+    }
   }
 
   @SuppressWarnings("unused")

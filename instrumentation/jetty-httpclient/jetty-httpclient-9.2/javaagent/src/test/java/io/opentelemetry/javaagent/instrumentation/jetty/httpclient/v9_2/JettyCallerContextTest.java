@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.Closeable;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -31,13 +32,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.jetty.client.AsyncContentProvider;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpContent;
 import org.eclipse.jetty.client.HttpSender;
 import org.eclipse.jetty.client.api.ContentProvider;
+import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Result;
+import org.eclipse.jetty.client.util.BasicAuthentication;
 import org.eclipse.jetty.client.util.DeferredContentProvider;
 import org.eclipse.jetty.util.Callback;
 import org.junit.jupiter.api.BeforeEach;
@@ -80,6 +84,23 @@ class JettyCallerContextTest {
           if (header != null) {
             propagation.put(exchange.getRequestURI().getPath(), header);
           }
+          String path = exchange.getRequestURI().getPath();
+          if (path.equals("/redirect") || path.equals("/redirect-again")) {
+            exchange
+                .getResponseHeaders()
+                .add("Location", path.equals("/redirect") ? "/redirect-again" : "/redirected");
+            exchange.sendResponseHeaders(302, -1);
+            exchange.close();
+            return;
+          }
+          if (path.equals("/auth")
+              && exchange.getRequestHeaders().getFirst("Authorization") == null) {
+            propagation.put("/challenge", header);
+            exchange.getResponseHeaders().add("WWW-Authenticate", "Basic realm=\"test\"");
+            exchange.sendResponseHeaders(401, -1);
+            exchange.close();
+            return;
+          }
           byte[] buffer = new byte[128];
           while (exchange.getRequestBody().read(buffer) != -1) {}
           byte[] response = "response".getBytes(UTF_8);
@@ -101,7 +122,8 @@ class JettyCallerContextTest {
         withSpan
             ? testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan()
             : Span.getInvalid();
-    Context caller = Context.root().with(parent).with(VALUE, "caller");
+    Context caller =
+        (withSpan ? Context.root().with(parent) : Context.root()).with(VALUE, "caller");
     Observations observations = new Observations();
     Body body = new Body(observations);
     CompletableFuture<Result> completed = new CompletableFuture<>();
@@ -397,6 +419,118 @@ class JettyCallerContextTest {
     observations.assertCaller(caller);
     assertThat(observations.events).contains("chunk-failure");
     testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT).hasNoParent()));
+  }
+
+  @Test
+  void reusedRequestCapturesEachCaller() throws Exception {
+    ConcurrentLinkedQueue<String> callers = new ConcurrentLinkedQueue<>();
+    Request request =
+        client
+            .newRequest(url + "/reuse")
+            .onRequestBegin(r -> callers.add(Context.current().get(VALUE)));
+    try (Scope ignored = Context.root().with(VALUE, "first").makeCurrent()) {
+      assertThat(request.send().getStatus()).isEqualTo(200);
+    }
+    try (Scope ignored = Context.root().with(VALUE, "second").makeCurrent()) {
+      assertThat(request.send().getStatus()).isEqualTo(200);
+    }
+    assertThat(callers).containsExactly("first", "second");
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT).hasNoParent()));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"redirect", "auth"})
+  void protocolFollowupsKeepTheOriginalOperation(String protocol) throws Exception {
+    client
+        .getAuthenticationStore()
+        .addAuthentication(new BasicAuthentication(URI.create(url), "test", "user", "password"));
+    Observations observations = new Observations();
+    client
+        .getRequestListeners()
+        .add(
+            new Request.Listener.Adapter() {
+              @Override
+              public void onBegin(Request request) {
+                observations.record("begin");
+              }
+            });
+    Span parent = testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
+    Context caller = Context.root().with(parent).with(VALUE, "protocol");
+    ContentResponse response;
+    try (Scope ignored = caller.makeCurrent()) {
+      response = client.newRequest(url + "/" + protocol).send();
+      assertThat(response.getStatus()).isEqualTo(200);
+    } finally {
+      parent.end();
+    }
+    observations.assertCaller(caller);
+    assertThat(observations.events).hasSize(protocol.equals("redirect") ? 3 : 2);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .satisfies(
+                            data ->
+                                assertThat(propagation.values())
+                                    .allSatisfy(
+                                        value -> assertThat(value).contains(data.getSpanId())))));
+    try (Scope ignored = Context.root().with(VALUE, "reused-continuation").makeCurrent()) {
+      assertThat(response.getRequest().send().getStatus()).isEqualTo(200);
+    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT).hasNoParent()));
+  }
+
+  @Test
+  void reusedRedirectDoesNotTraceProtocolFollowups() throws Exception {
+    AtomicBoolean reused = new AtomicBoolean();
+    CompletableFuture<Result> terminal = new CompletableFuture<>();
+    Request original =
+        client
+            .newRequest(url + "/redirect")
+            .onComplete(
+                result -> {
+                  if (reused.get() && result.getResponse().getStatus() == 200) {
+                    terminal.complete(result);
+                  }
+                });
+    Request request = original.send().getRequest();
+    Observations observations = new Observations();
+    client
+        .getRequestListeners()
+        .add(
+            new Request.Listener.Adapter() {
+              @Override
+              public void onBegin(Request r) {
+                observations.record("begin");
+              }
+            });
+    Context caller = Context.root().with(VALUE, "reused-redirect");
+    reused.set(true);
+    try (Scope ignored = caller.makeCurrent()) {
+      // Jetty completes a reused request on the intermediate response, before its protocol handler.
+      assertThat(request.path("/redirect").send().getStatus()).isEqualTo(302);
+    }
+    assertThat(terminal.get(10, SECONDS).isSucceeded()).isTrue();
+    observations.assertCaller(caller);
+    assertThat(observations.events).hasSize(3);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT).hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT).hasNoParent()));
   }
