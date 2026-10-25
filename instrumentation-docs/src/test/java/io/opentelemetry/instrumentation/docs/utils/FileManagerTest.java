@@ -89,6 +89,39 @@ class FileManagerTest {
   }
 
   @Test
+  void testIsValidInstrumentationPathExcludesSourceDirectories() {
+    for (String sourceSet : List.of("main", "version41Test")) {
+      String path =
+          "instrumentation/spring/spring-integration-4.1/library/src/"
+              + sourceSet
+              + "/java/io/opentelemetry/javaagent";
+
+      assertThat(FileManager.isValidInstrumentationPath(path)).isFalse();
+      assertThat(FileManager.isValidInstrumentationPath(path.replace('/', '\\'))).isFalse();
+    }
+  }
+
+  @Test
+  void testGetInstrumentationPathsExcludesSourceDirectories() throws IOException {
+    Path springIntegration = tempDir.resolve("instrumentation/spring/spring-integration-4.1");
+    Path javaagent = Files.createDirectories(springIntegration.resolve("javaagent"));
+    Path library = Files.createDirectories(springIntegration.resolve("library"));
+    Files.createDirectories(library.resolve("src/main/java/io/opentelemetry/javaagent"));
+    Files.createDirectories(library.resolve("src/version41Test/java/io/opentelemetry/javaagent"));
+    Files.createDirectories(javaagent.resolve("src/main/java/io/opentelemetry/javaagent"));
+    Files.createDirectories(javaagent.resolve("src/version41Test/java/io/opentelemetry/javaagent"));
+
+    List<InstrumentationPath> paths = fileManager.getInstrumentationPaths();
+
+    assertThat(paths)
+        .extracting(InstrumentationPath::type)
+        .containsExactlyInAnyOrder(InstrumentationType.JAVAAGENT, InstrumentationType.LIBRARY);
+    assertThat(paths)
+        .extracting(InstrumentationPath::srcPath)
+        .containsOnly("instrumentation/spring/spring-integration-4.1");
+  }
+
+  @Test
   void testExcludesCommonModules() {
     assertThat(
             FileManager.isValidInstrumentationPath(
