@@ -18,7 +18,6 @@ import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.junit.jupiter.api.AfterAll;
@@ -53,7 +52,7 @@ class DemoServlet3InstrumentationTest {
     server.setHandler(servletContext);
 
     server.start();
-    port = ((ServerConnector) server.getConnectors()[0]).getLocalPort();
+    port = server.getConnectors()[0].getLocalPort();
   }
 
   @AfterAll
