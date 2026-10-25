@@ -19,9 +19,7 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import java.io.Closeable;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -296,12 +294,14 @@ class JettyCallerContextTest {
     Span parent = testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
     Context caller = Context.root().with(parent).with(VALUE, "caller");
     Context nested = caller.with(VALUE, "nested");
-    CompletableFuture<Result> completed = new CompletableFuture<>();
+    CompletableFuture<Result> completedA = new CompletableFuture<>();
+    CompletableFuture<Result> completedB = new CompletableFuture<>();
+    CompletableFuture<Context> queuedContext = new CompletableFuture<>();
     CompletableFuture<Context> failureContext = new CompletableFuture<>();
     CompletableFuture<Context> restoredAfterAbort = new CompletableFuture<>();
-    CompletableFuture<Context> restoredAfterNestedCallback = new CompletableFuture<>();
-    CompletableFuture<Context> restoredAfterRequest = new CompletableFuture<>();
-    AtomicBoolean callbackEntered = new AtomicBoolean();
+    CompletableFuture<Context> restoredAfterNestedScope = new CompletableFuture<>();
+    CompletableFuture<Context> restoredAfterRequestB = new CompletableFuture<>();
+    CompletableFuture<Context> restoredAfterRequestA = new CompletableFuture<>();
     AtomicReference<Throwable> callbackFailure = new AtomicReference<>();
     Request requestA =
         client
@@ -309,36 +309,43 @@ class JettyCallerContextTest {
             .onRequestFailure((request, failure) -> failureContext.complete(Context.current()));
     requestA.onRequestBegin(
         request -> {
-          callbackEntered.set(true);
           try {
-            withJettyCallerContext(
-                request,
-                () -> {
-                  try (Scope scope = nested.makeCurrent()) {
-                    request.abort(new IllegalStateException("abort request A from B"));
-                    restoredAfterAbort.complete(Context.current());
-                  }
-                  restoredAfterNestedCallback.complete(Context.current());
-                });
-            restoredAfterRequest.complete(Context.current());
+            client
+                .newRequest(url + "/request-b")
+                .onRequestQueued(
+                    requestB -> {
+                      queuedContext.complete(Context.current());
+                      try (Scope ignored = nested.makeCurrent()) {
+                        requestA.abort(new IllegalStateException("abort request A from B"));
+                        restoredAfterAbort.complete(Context.current());
+                      }
+                      restoredAfterNestedScope.complete(Context.current());
+                    })
+                .send(completedB::complete);
+            restoredAfterRequestB.complete(Context.current());
           } catch (RuntimeException | Error e) {
             callbackFailure.set(e);
+          } finally {
+            restoredAfterRequestA.complete(Context.current());
           }
         });
     assertThat(requestA.getRequestListeners(Request.BeginListener.class)).hasSize(1);
     try {
       try (Scope ignored = caller.makeCurrent()) {
-        requestA.send(completed::complete);
+        requestA.send(completedA::complete);
         assertContext(Context.current(), caller);
       }
-      Result result = completed.get(10, SECONDS);
-      assertThat(callbackEntered.get()).isTrue();
+      Result resultA = completedA.get(10, SECONDS);
+      Result resultB = completedB.get(10, SECONDS);
       assertThat(callbackFailure.get()).isNull();
-      assertThat(result.isFailed()).isTrue();
+      assertThat(resultA.isFailed()).isTrue();
+      assertThat(resultB.isSucceeded()).isTrue();
+      assertContext(queuedContext.get(10, SECONDS), caller);
       assertContext(failureContext.get(10, SECONDS), nested);
       assertContext(restoredAfterAbort.get(10, SECONDS), nested);
-      assertContext(restoredAfterNestedCallback.get(10, SECONDS), caller);
-      assertContext(restoredAfterRequest.get(10, SECONDS), caller);
+      assertContext(restoredAfterNestedScope.get(10, SECONDS), caller);
+      assertContext(restoredAfterRequestB.get(10, SECONDS), caller);
+      assertContext(restoredAfterRequestA.get(10, SECONDS), caller);
     } finally {
       parent.end();
     }
@@ -346,6 +353,68 @@ class JettyCallerContextTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
+                span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void throwingContentIteratorRestoresProducerContextAndCallbackFrame() throws Exception {
+    Span parent = testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
+    Context caller = Context.root().with(parent).with(VALUE, "caller");
+    Span producerSpan =
+        testing
+            .getOpenTelemetry()
+            .getTracer("test")
+            .spanBuilder("producer")
+            .setParent(caller)
+            .startSpan();
+    Context producer = Context.root().with(producerSpan).with(VALUE, "producer");
+    IllegalStateException failure = new IllegalStateException("iterator failure");
+    ThrowingBody body = new ThrowingBody(failure);
+    CompletableFuture<Result> completed = new CompletableFuture<>();
+    CompletableFuture<Context> requestFailureContext = new CompletableFuture<>();
+    Request request =
+        client
+            .newRequest(url + "/throwing")
+            .method("POST")
+            .content(body)
+            .onRequestFailure(
+                (ignored, requestFailure) -> requestFailureContext.complete(Context.current()));
+    try {
+      try (Scope ignored = caller.makeCurrent()) {
+        request.send(completed::complete);
+      }
+      assertThat(body.ready.await(10, SECONDS)).isTrue();
+      Thread producerThread =
+          new Thread(
+              () -> {
+                try (Scope ignored = producer.makeCurrent()) {
+                  body.available = true;
+                  body.listener.onContent();
+                  body.restoredContext.complete(Context.current());
+                }
+              });
+      producerThread.start();
+      producerThread.join(10000);
+      assertThat(producerThread.isAlive()).isFalse();
+
+      Result result = completed.get(10, SECONDS);
+      assertThat(result.isFailed()).isTrue();
+      assertThat(body.iteratorThread.get()).isSameAs(producerThread);
+      assertContext(body.iteratorContext.get(10, SECONDS), caller);
+      assertThat(body.iteratorFailure.get(10, SECONDS)).isSameAs(failure);
+      assertContext(body.iteratorFailureContext.get(10, SECONDS), caller);
+      assertContext(requestFailureContext.get(10, SECONDS), caller);
+      assertContext(body.restoredContext.get(10, SECONDS), producer);
+    } finally {
+      producerSpan.end();
+      parent.end();
+    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span -> span.hasName("producer").hasParent(trace.getSpan(0)),
                 span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
 
@@ -622,44 +691,6 @@ class JettyCallerContextTest {
     return ((List<?>) field.get(request)).size();
   }
 
-  private static void withJettyCallerContext(Request request, Runnable callback) {
-    try {
-      Class<?> registryClass =
-          AgentClassLoaderAccess.loadClass(
-              "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
-      ClassLoader moduleClassLoader =
-          (ClassLoader)
-              registryClass
-                  .getMethod("getInstrumentationClassLoader", String.class, ClassLoader.class)
-                  .invoke(
-                      null,
-                      "io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.JettyHttpClient9InstrumentationModule",
-                      JettyCallerContextTest.class.getClassLoader());
-      Class<?> contentContextClass =
-          moduleClassLoader.loadClass(
-              "io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.JettyContentContext");
-      Class<?> requestContextClass =
-          moduleClassLoader.loadClass(
-              "io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.JettyRequestContext");
-      Object caller =
-          requestContextClass.getMethod("getCaller", Request.class).invoke(null, request);
-      Field callerContext = contentContextClass.getDeclaredField("context");
-      callerContext.setAccessible(true);
-      Constructor<?> constructor =
-          contentContextClass.getDeclaredConstructor(callerContext.getType());
-      constructor.setAccessible(true);
-      Object nestedCaller = constructor.newInstance(callerContext.get(caller));
-      Object scope = contentContextClass.getMethod("makeCurrent").invoke(nestedCaller);
-      try {
-        callback.run();
-      } finally {
-        scope.getClass().getMethod("close").invoke(scope);
-      }
-    } catch (ReflectiveOperationException e) {
-      throw new LinkageError(e.getMessage(), e);
-    }
-  }
-
   private static class Observations {
     final ConcurrentLinkedQueue<String> events = new ConcurrentLinkedQueue<>();
     final ConcurrentLinkedQueue<Context> contexts = new ConcurrentLinkedQueue<>();
@@ -764,6 +795,65 @@ class JettyCallerContextTest {
       public void close() {
         observations.record("close");
         closed.countDown();
+      }
+    }
+  }
+
+  private static class ThrowingBody implements AsyncContentProvider {
+    final CountDownLatch ready = new CountDownLatch(1);
+    final CompletableFuture<Context> iteratorContext = new CompletableFuture<>();
+    final CompletableFuture<Throwable> iteratorFailure = new CompletableFuture<>();
+    final CompletableFuture<Context> iteratorFailureContext = new CompletableFuture<>();
+    final CompletableFuture<Context> restoredContext = new CompletableFuture<>();
+    final AtomicReference<Thread> iteratorThread = new AtomicReference<>();
+    final RuntimeException failure;
+    final ThrowingIterator iterator = new ThrowingIterator();
+    volatile boolean available;
+    volatile Listener listener;
+
+    ThrowingBody(RuntimeException failure) {
+      this.failure = failure;
+    }
+
+    @Override
+    public void setListener(Listener listener) {
+      this.listener = listener;
+      ready.countDown();
+    }
+
+    @Override
+    public long getLength() {
+      return -1;
+    }
+
+    @Override
+    public Iterator<ByteBuffer> iterator() {
+      return iterator;
+    }
+
+    private class ThrowingIterator implements Iterator<ByteBuffer>, Callback {
+      @Override
+      public boolean hasNext() {
+        return true;
+      }
+
+      @Override
+      public ByteBuffer next() {
+        if (!available) {
+          return null;
+        }
+        iteratorThread.set(Thread.currentThread());
+        iteratorContext.complete(Context.current());
+        throw failure;
+      }
+
+      @Override
+      public void succeeded() {}
+
+      @Override
+      public void failed(Throwable failure) {
+        iteratorFailure.complete(failure);
+        iteratorFailureContext.complete(Context.current());
       }
     }
   }
