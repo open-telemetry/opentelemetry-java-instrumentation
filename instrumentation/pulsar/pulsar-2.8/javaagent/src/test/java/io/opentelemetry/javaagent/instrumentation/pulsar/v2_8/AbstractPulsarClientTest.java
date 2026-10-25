@@ -44,17 +44,24 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import org.apache.pulsar.PulsarVersion;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.api.BatchMessageContainer;
 import org.apache.pulsar.client.api.Consumer;
+import org.apache.pulsar.client.api.CryptoKeyReader;
 import org.apache.pulsar.client.api.Message;
+import org.apache.pulsar.client.api.MessageCrypto;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.Messages;
 import org.apache.pulsar.client.api.Producer;
@@ -64,6 +71,7 @@ import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.apache.pulsar.client.api.interceptor.ProducerInterceptor;
 import org.apache.pulsar.client.impl.MessageImpl;
+import org.apache.pulsar.client.impl.ProducerBuilderImpl;
 import org.apache.pulsar.client.impl.ProducerImpl;
 import org.apache.pulsar.client.impl.TypedMessageBuilderImpl;
 import org.apache.pulsar.common.naming.TopicName;
@@ -293,6 +301,7 @@ abstract class AbstractPulsarClientTest {
     AtomicReference<String> interceptorBaggage = new AtomicReference<>();
     AtomicReference<String> producerTraceparent = new AtomicReference<>();
     AtomicReference<Message<?>> replacement = new AtomicReference<>();
+    AtomicReference<Context> acknowledgementContext = new AtomicReference<>();
     producer =
         client
             .newProducer(Schema.STRING)
@@ -328,7 +337,9 @@ abstract class AbstractPulsarClientTest {
 
                   @Override
                   public void onSendAcknowledgement(
-                      Producer producer, Message message, MessageId id, Throwable error) {}
+                      Producer producer, Message message, MessageId id, Throwable error) {
+                    acknowledgementContext.set(Context.current());
+                  }
                 })
             .create();
 
@@ -367,6 +378,11 @@ abstract class AbstractPulsarClientTest {
         .containsExactly("pulsar-test=caller");
     producer.flush();
     future.get(1, MINUTES);
+    assertThat(Span.fromContext(acknowledgementContext.get()).getSpanContext())
+        .isEqualTo(Span.fromContext(caller).getSpanContext());
+    assertThat(acknowledgementContext.get().get(key)).isEqualTo("caller");
+    assertThat(Baggage.fromContext(acknowledgementContext.get()).getEntryValue("pulsar-test"))
+        .isEqualTo("caller");
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -546,6 +562,227 @@ abstract class AbstractPulsarClientTest {
           trace ->
               trace.hasSpansSatisfyingExactly(span -> span.hasName("continuation").hasNoParent()));
     }
+  }
+
+  @Test
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  void linkedBatchAcknowledgementsUseEachCallersContext() throws Exception {
+    String topic = "persistent://public/default/linkedBatchAcknowledgementsUseEachCallersContext";
+    ContextKey<String> key = ContextKey.named("pulsar-batch-caller");
+    Map<String, Context> callers = new ConcurrentHashMap<>();
+    Map<String, Context> acknowledgements = new ConcurrentHashMap<>();
+    Map<String, Context> continuationsObserved = new ConcurrentHashMap<>();
+    CountDownLatch acknowledged = new CountDownLatch(2);
+    producer =
+        client
+            .newProducer(Schema.STRING)
+            .topic(topic)
+            .enableBatching(true)
+            .batchingMaxPublishDelay(1, HOURS)
+            .intercept(
+                new ProducerInterceptor() {
+                  @Override
+                  public void close() {}
+
+                  @Override
+                  public boolean eligible(Message message) {
+                    return true;
+                  }
+
+                  @Override
+                  public Message beforeSend(Producer producer, Message message) {
+                    return message;
+                  }
+
+                  @Override
+                  public void onSendAcknowledgement(
+                      Producer producer, Message message, MessageId id, Throwable error) {
+                    String value = (String) message.getValue();
+                    acknowledgements.put(value, Context.current());
+                    acknowledged.countDown();
+                  }
+                })
+            .create();
+
+    List<CompletableFuture<Void>> continuations = new ArrayList<>();
+    for (String value : asList("first", "second")) {
+      CompletableFuture<MessageId> future =
+          testing.runWithSpan(
+              "caller-" + value,
+              () -> {
+                Context caller =
+                    Baggage.builder()
+                        .put("pulsar-test", value)
+                        .build()
+                        .storeInContext(Context.current().with(key, value));
+                callers.put(value, caller);
+                try (Scope ignored = caller.makeCurrent()) {
+                  return producer.newMessage().value(value).sendAsync();
+                }
+              });
+      continuations.add(
+          future.thenAccept(unused -> continuationsObserved.put(value, Context.current())));
+    }
+
+    producer.flushAsync().get(1, MINUTES);
+    assertThat(acknowledged.await(1, MINUTES)).isTrue();
+    CompletableFuture.allOf(continuations.toArray(new CompletableFuture<?>[0])).get(1, MINUTES);
+
+    for (String value : asList("first", "second")) {
+      Context caller = callers.get(value);
+      Context acknowledgement = acknowledgements.get(value);
+      Context continuation = continuationsObserved.get(value);
+      assertThat(Span.fromContext(acknowledgement).getSpanContext())
+          .isEqualTo(Span.fromContext(caller).getSpanContext());
+      assertThat(acknowledgement.get(key)).isEqualTo(value);
+      assertThat(Baggage.fromContext(acknowledgement).getEntryValue("pulsar-test"))
+          .isEqualTo(value);
+      assertThat(Span.fromContext(continuation).getSpanContext())
+          .isEqualTo(Span.fromContext(caller).getSpanContext());
+      assertThat(continuation.get(key)).isEqualTo(value);
+      assertThat(Baggage.fromContext(continuation).getEntryValue("pulsar-test")).isEqualTo(value);
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("caller-first"),
+                span ->
+                    span.hasName("send " + topic)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("caller-second"),
+                span ->
+                    span.hasName("send " + topic)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void messageCryptoHooksUseCallerContext() throws Exception {
+    String topic = "persistent://public/default/messageCryptoHooksUseCallerContext";
+    String nestedTopic = topic + "-nested";
+    ContextKey<String> key = ContextKey.named("pulsar-crypto-caller");
+    producer2 = client.newProducer(Schema.STRING).topic(nestedTopic).enableBatching(false).create();
+    CallerContextMessageCrypto crypto = new CallerContextMessageCrypto(producer2, true, false);
+    ProducerBuilderImpl<String> producerBuilder =
+        (ProducerBuilderImpl<String>)
+            client
+                .newProducer(Schema.STRING)
+                .topic(topic)
+                .enableBatching(false)
+                .defaultCryptoKeyReader("unused")
+                .addEncryptionKey("test-key");
+    producerBuilder.getConf().setMessageCrypto(crypto);
+    producer = producerBuilder.create();
+
+    AtomicReference<Context> caller = new AtomicReference<>();
+    AtomicReference<Context> sendReturnContext = new AtomicReference<>();
+    CompletableFuture<MessageId> future =
+        testing.runWithSpan(
+            "crypto-caller",
+            () -> {
+              Context context =
+                  Baggage.builder()
+                      .put("pulsar-test", "caller")
+                      .build()
+                      .storeInContext(Context.current().with(key, "caller"));
+              caller.set(context);
+              try (Scope ignored = context.makeCurrent()) {
+                CompletableFuture<MessageId> sendFuture =
+                    producer.newMessage().value("outer").sendAsync();
+                sendReturnContext.set(Context.current());
+                return sendFuture;
+              }
+            });
+    future.get(1, MINUTES);
+    crypto.nestedFuture.get().get(1, MINUTES);
+
+    SpanContext callerSpan = Span.fromContext(caller.get()).getSpanContext();
+    for (Context hookContext :
+        asList(crypto.maxOutputSizeContext.get(), crypto.encryptContext.get())) {
+      assertThat(Span.fromContext(hookContext).getSpanContext()).isEqualTo(callerSpan);
+      assertThat(hookContext.get(key)).isEqualTo("caller");
+      assertThat(Baggage.fromContext(hookContext).getEntryValue("pulsar-test")).isEqualTo("caller");
+    }
+    assertThat(Span.fromContext(sendReturnContext.get()).getSpanContext()).isEqualTo(callerSpan);
+    assertThat(sendReturnContext.get().get(key)).isEqualTo("caller");
+    assertThat(Baggage.fromContext(sendReturnContext.get()).getEntryValue("pulsar-test"))
+        .isEqualTo("caller");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactlyInAnyOrder(
+                span -> span.hasName("crypto-caller"),
+                span -> span.hasName("send " + topic).hasKind(SpanKind.PRODUCER),
+                span -> span.hasName("send " + nestedTopic).hasKind(SpanKind.PRODUCER)));
+    assertThat(
+            testing.spans().stream()
+                .filter(span -> span.getKind() == SpanKind.PRODUCER)
+                .map(SpanData::getParentSpanId))
+        .containsOnly(callerSpan.getSpanId());
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void failedMessageCryptoHookRestoresCallerContext() throws Exception {
+    String topic = "persistent://public/default/failedMessageCryptoHookRestoresCallerContext";
+    ContextKey<String> key = ContextKey.named("pulsar-crypto-failure-caller");
+    producer2 =
+        client.newProducer(Schema.STRING).topic(topic + "-nested").enableBatching(false).create();
+    CallerContextMessageCrypto crypto = new CallerContextMessageCrypto(producer2, false, true);
+    ProducerBuilderImpl<String> producerBuilder =
+        (ProducerBuilderImpl<String>)
+            client
+                .newProducer(Schema.STRING)
+                .topic(topic)
+                .enableBatching(false)
+                .defaultCryptoKeyReader("unused")
+                .addEncryptionKey("test-key");
+    producerBuilder.getConf().setMessageCrypto(crypto);
+    producer = producerBuilder.create();
+
+    AtomicReference<Context> caller = new AtomicReference<>();
+    AtomicReference<Context> sendReturnContext = new AtomicReference<>();
+    CompletableFuture<MessageId> future =
+        testing.runWithSpan(
+            "crypto-failure-caller",
+            () -> {
+              Context context =
+                  Baggage.builder()
+                      .put("pulsar-test", "caller")
+                      .build()
+                      .storeInContext(Context.current().with(key, "caller"));
+              caller.set(context);
+              try (Scope ignored = context.makeCurrent()) {
+                CompletableFuture<MessageId> sendFuture =
+                    producer.newMessage().value("message").sendAsync();
+                sendReturnContext.set(Context.current());
+                return sendFuture;
+              }
+            });
+
+    assertThatThrownBy(future::join)
+        .hasCauseInstanceOf(PulsarClientException.CryptoException.class);
+    SpanContext callerSpan = Span.fromContext(caller.get()).getSpanContext();
+    assertThat(Span.fromContext(crypto.maxOutputSizeContext.get()).getSpanContext())
+        .isEqualTo(callerSpan);
+    assertThat(Span.fromContext(crypto.encryptContext.get()).getSpanContext())
+        .isEqualTo(callerSpan);
+    assertThat(crypto.encryptContext.get().get(key)).isEqualTo("caller");
+    assertThat(Baggage.fromContext(crypto.encryptContext.get()).getEntryValue("pulsar-test"))
+        .isEqualTo("caller");
+    assertThat(Span.fromContext(sendReturnContext.get()).getSpanContext()).isEqualTo(callerSpan);
+    assertThat(sendReturnContext.get().get(key)).isEqualTo("caller");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("crypto-failure-caller"),
+                span -> span.hasName("send " + topic).hasKind(SpanKind.PRODUCER)));
   }
 
   @Test
@@ -803,6 +1040,66 @@ abstract class AbstractPulsarClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
+  }
+
+  private static class CallerContextMessageCrypto implements MessageCrypto<Object, Object> {
+
+    private final Producer<String> nestedProducer;
+    private final boolean sendNested;
+    private final boolean fail;
+    private final AtomicReference<Context> maxOutputSizeContext = new AtomicReference<>();
+    private final AtomicReference<Context> encryptContext = new AtomicReference<>();
+    private final AtomicReference<CompletableFuture<MessageId>> nestedFuture =
+        new AtomicReference<>();
+
+    private CallerContextMessageCrypto(
+        Producer<String> nestedProducer, boolean sendNested, boolean fail) {
+      this.nestedProducer = nestedProducer;
+      this.sendNested = sendNested;
+      this.fail = fail;
+    }
+
+    @Override
+    public void addPublicKeyCipher(Set<String> keyNames, CryptoKeyReader keyReader) {}
+
+    @Override
+    public boolean removeKeyCipher(String keyName) {
+      return true;
+    }
+
+    @Override
+    public int getMaxOutputSize(int inputLen) {
+      maxOutputSizeContext.set(Context.current());
+      if (sendNested) {
+        nestedFuture.set(nestedProducer.sendAsync("nested"));
+      }
+      return inputLen;
+    }
+
+    @Override
+    public void encrypt(
+        Set<String> encryptionKeys,
+        CryptoKeyReader keyReader,
+        Supplier<Object> messageMetadataSupplier,
+        ByteBuffer payload,
+        ByteBuffer encryptedPayload)
+        throws PulsarClientException {
+      encryptContext.set(Context.current());
+      if (fail) {
+        throw new PulsarClientException.CryptoException("Test encryption failure");
+      }
+      encryptedPayload.put(payload);
+      encryptedPayload.flip();
+    }
+
+    @Override
+    public boolean decrypt(
+        Supplier<Object> messageMetadataSupplier,
+        ByteBuffer payload,
+        ByteBuffer decryptedPayload,
+        CryptoKeyReader keyReader) {
+      return false;
+    }
   }
 
   static List<AttributeAssertion> sendAttributes(

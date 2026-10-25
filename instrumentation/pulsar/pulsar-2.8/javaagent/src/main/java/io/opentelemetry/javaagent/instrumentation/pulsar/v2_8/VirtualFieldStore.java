@@ -25,6 +25,8 @@ public class VirtualFieldStore {
       VirtualField.find(Consumer.class, String.class);
   private static final VirtualField<SendCallback, SendCallbackData> CALLBACK_FIELD =
       VirtualField.find(SendCallback.class, SendCallbackData.class);
+  private static final VirtualField<Message<?>, SendCallbackData> MESSAGE_SEND_CALLBACK_FIELD =
+      VirtualField.find(Message.class, SendCallbackData.class);
 
   private VirtualFieldStore() {}
 
@@ -41,8 +43,16 @@ public class VirtualFieldStore {
       CALLBACK_FIELD.set(instance, data);
       CompletableFuture<MessageId> future = instance.getFuture();
       if (future != null) {
+        Message<?> message = data.request.getMessage();
+        MESSAGE_SEND_CALLBACK_FIELD.set(message, data);
         // Linked batch callbacks complete their futures without invoking sendComplete.
-        future.whenComplete((unused, error) -> CALLBACK_FIELD.set(instance, null));
+        future.whenComplete(
+            (unused, error) -> {
+              CALLBACK_FIELD.set(instance, null);
+              if (MESSAGE_SEND_CALLBACK_FIELD.get(message) == data) {
+                MESSAGE_SEND_CALLBACK_FIELD.set(message, null);
+              }
+            });
       }
     }
   }
@@ -84,6 +94,11 @@ public class VirtualFieldStore {
   @Nullable
   public static String extract(Consumer<?> instance) {
     return CONSUMER_FIELD.get(instance);
+  }
+
+  @Nullable
+  public static SendCallbackData extractSendCallbackData(Message<?> instance) {
+    return MESSAGE_SEND_CALLBACK_FIELD.get(instance);
   }
 
   @Nullable

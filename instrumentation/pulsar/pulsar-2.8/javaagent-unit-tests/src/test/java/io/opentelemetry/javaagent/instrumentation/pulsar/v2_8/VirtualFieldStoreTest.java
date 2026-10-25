@@ -15,6 +15,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarRequest;
 import java.util.concurrent.CompletableFuture;
 import org.apache.pulsar.client.api.Message;
+import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.impl.SendCallback;
 import org.apache.pulsar.client.impl.TopicMessageImpl;
 import org.junit.jupiter.api.Test;
@@ -104,6 +105,26 @@ class VirtualFieldStoreTest {
     assertThat(callbackData).isSameAs(data);
     assertThat(callbackData.context).isSameAs(context);
     assertThat(callbackData.request).isSameAs(request);
+    assertThat(VirtualFieldStore.takeSendCallbackData(callback)).isNull();
+  }
+
+  @Test
+  void clearsSendCallbackDataFromMessageWhenFutureCompletes() {
+    SendCallback callback = mock(SendCallback.class);
+    CompletableFuture<MessageId> future = new CompletableFuture<>();
+    when(callback.getFuture()).thenReturn(future);
+    Message<?> message = mock(Message.class);
+    String topic = "persistent://public/default/send-callback-data";
+    when(message.getTopicName()).thenReturn(topic);
+    PulsarRequest request =
+        PulsarRequest.create(message, ProducerData.create("pulsar://localhost:6650", topic));
+    SendCallbackData data = SendCallbackData.create(Context.root(), Context.root(), request);
+
+    VirtualFieldStore.inject(callback, data);
+
+    assertThat(VirtualFieldStore.extractSendCallbackData(message)).isSameAs(data);
+    future.complete(mock(MessageId.class));
+    assertThat(VirtualFieldStore.extractSendCallbackData(message)).isNull();
     assertThat(VirtualFieldStore.takeSendCallbackData(callback)).isNull();
   }
 }
