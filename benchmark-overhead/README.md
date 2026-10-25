@@ -139,6 +139,8 @@ Separate untimed baseline and candidate launches record startup JFR files and ex
 
 The experimental `agent-startup-benchmark.yml` workflow builds exact agents on hosted runners and measures serially on the OpenTelemetry-managed x86-64 bare-metal runner. It uploads source identities, host information, complete reports, and profiles as workflow artifacts.
 
+Rerun only the `benchmark` job to repeat measurements with the same built JARs. Each attempt uploads a separate `agent-startup-results-<attempt>` artifact, retaining the earlier observations.
+
 ## JDK 25 AOT startup comparison
 
 The opt-in `aotStartupBenchmark` task compares the existing small Spring smoke application on HotSpot JDK 25 in four configurations: normal and AOT, each with and without the Java agent. It does not run in ordinary tests or the nightly overhead workflow, and has no performance pass/fail thresholds.

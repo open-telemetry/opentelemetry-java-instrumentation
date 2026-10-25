@@ -130,7 +130,7 @@ jobs:
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: agent-startup-results
+          name: agent-startup-results-${{ github.run_attempt }}
           path: |
             ${{ runner.temp }}/startup-agents/startup-harness/benchmark-overhead/build/reports/agent-startup
             ${{ runner.temp }}/startup-agents/startup-harness/benchmark-overhead/build/reports/tests
