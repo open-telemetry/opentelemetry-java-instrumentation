@@ -13,7 +13,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class OpenSearchRestAttributesGetterTest {
 
-  private final OpenSearchRestAttributesGetter getter = new OpenSearchRestAttributesGetter();
+  private final OpenSearchRestAttributesGetter getter =
+      new OpenSearchRestAttributesGetter(error -> null);
   private final OpenSearchRestRequest request = OpenSearchRestRequest.create("GET", null);
 
   @ParameterizedTest
@@ -36,10 +37,20 @@ class OpenSearchRestAttributesGetterTest {
 
   @Test
   void responseStatusDoesNotChangeErrorTypeForExceptions() {
+    OpenSearchRestAttributesGetter getter = new OpenSearchRestAttributesGetter(error -> 503);
     OpenSearchRestResponse response = () -> 404;
     IllegalStateException error = new IllegalStateException("test");
 
     assertThat(getter.getDbResponseStatusCode(request, response, error)).isEqualTo("404");
-    assertThat(getter.getErrorType(request, response, error)).isNull();
+    assertThat(getter.getErrorType(request, response, error)).isEqualTo("404");
+  }
+
+  @Test
+  void responseStatusCanBeExtractedFromErrorIndependentlyOfErrorType() {
+    OpenSearchRestAttributesGetter getter = new OpenSearchRestAttributesGetter(error -> 503);
+    IllegalStateException error = new IllegalStateException("test");
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("503");
+    assertThat(getter.getErrorType(request, null, error)).isNull();
   }
 }
