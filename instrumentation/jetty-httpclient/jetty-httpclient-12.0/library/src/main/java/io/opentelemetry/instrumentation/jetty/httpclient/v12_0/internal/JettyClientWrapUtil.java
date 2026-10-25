@@ -9,12 +9,14 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
+import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.io.Content;
 
 /**
@@ -93,6 +95,14 @@ public final class JettyClientWrapUtil {
     return new ContextAwareRequestContent(content, context);
   }
 
+  public static Supplier<HttpFields> wrapRequestTrailers(
+      Supplier<HttpFields> trailersSupplier, Context context) {
+    if (trailersSupplier instanceof ContextAwareTrailersSupplier) {
+      return trailersSupplier;
+    }
+    return new ContextAwareTrailersSupplier(trailersSupplier, context);
+  }
+
   private static final class ContextAwareRequestContent implements Request.Content {
     private final Request.Content delegate;
     private final Context context;
@@ -105,7 +115,8 @@ public final class JettyClientWrapUtil {
     @Override
     public Content.Chunk read() {
       try (Scope ignored = context.makeCurrent()) {
-        return delegate.read();
+        Content.Chunk chunk = delegate.read();
+        return chunk == null ? null : new ContextAwareChunk(chunk, context);
       }
     }
 
@@ -148,6 +159,66 @@ public final class JettyClientWrapUtil {
     public String getContentType() {
       try (Scope ignored = context.makeCurrent()) {
         return delegate.getContentType();
+      }
+    }
+  }
+
+  private static final class ContextAwareChunk implements Content.Chunk {
+    private final Content.Chunk delegate;
+    private final Context context;
+
+    private ContextAwareChunk(Content.Chunk delegate, Context context) {
+      this.delegate = delegate;
+      this.context = context;
+    }
+
+    @Override
+    public ByteBuffer getByteBuffer() {
+      return delegate.getByteBuffer();
+    }
+
+    @Override
+    @Nullable
+    public Throwable getFailure() {
+      return delegate.getFailure();
+    }
+
+    @Override
+    public boolean isLast() {
+      return delegate.isLast();
+    }
+
+    @Override
+    public boolean canRetain() {
+      return delegate.canRetain();
+    }
+
+    @Override
+    public void retain() {
+      delegate.retain();
+    }
+
+    @Override
+    public boolean release() {
+      try (Scope ignored = context.makeCurrent()) {
+        return delegate.release();
+      }
+    }
+  }
+
+  private static final class ContextAwareTrailersSupplier implements Supplier<HttpFields> {
+    private final Supplier<HttpFields> delegate;
+    private final Context context;
+
+    private ContextAwareTrailersSupplier(Supplier<HttpFields> delegate, Context context) {
+      this.delegate = delegate;
+      this.context = context;
+    }
+
+    @Override
+    public HttpFields get() {
+      try (Scope ignored = context.makeCurrent()) {
+        return delegate.get();
       }
     }
   }

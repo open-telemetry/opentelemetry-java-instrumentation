@@ -36,6 +36,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
+import org.eclipse.jetty.client.AsyncRequestContent;
 import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.Request;
@@ -43,7 +45,10 @@ import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.client.Result;
 import org.eclipse.jetty.client.StringRequestContent;
 import org.eclipse.jetty.http.HttpField;
+import org.eclipse.jetty.http.HttpFields;
+import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -629,8 +634,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
             return "text/plain";
           }
         };
-    Request request =
-        client.newRequest(resolveAddress("/success")).method("POST").body(content);
+    Request request = client.newRequest(resolveAddress("/success")).method("POST").body(content);
 
     Runnable send =
         () -> {
@@ -665,8 +669,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     assertThat(observedBodyContext.get(key)).isEqualTo("caller");
     assertThat(Span.fromContext(observedBodyContext).getSpanContext())
         .isEqualTo(callerSpanContext.get());
-    SpanContext callerContext =
-        withParent ? callerSpanContext.get() : SpanContext.getInvalid();
+    SpanContext callerContext = withParent ? callerSpanContext.get() : SpanContext.getInvalid();
 
     if (withParent) {
       testing.waitAndAssertTraces(
@@ -677,8 +680,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
                       span.hasName("POST")
                           .hasKind(SpanKind.CLIENT)
                           .hasParentSpanId(callerContext.getSpanId()),
-                  span ->
-                      span.hasName("request-body").hasParentSpanId(callerContext.getSpanId()),
+                  span -> span.hasName("request-body").hasParentSpanId(callerContext.getSpanId()),
                   span ->
                       span.hasName("GET")
                           .hasKind(SpanKind.CLIENT)
@@ -700,6 +702,276 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
                           .hasParentSpanId(requestBodySpanContext.get().getSpanId()),
                   span -> span.hasName("test-http-server")));
     }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void requestBodyInstalledInRequestHookRetainsCallerContext(boolean withParent)
+      throws ExecutionException, InterruptedException, TimeoutException {
+    warmConnection();
+
+    ContextKey<String> key = ContextKey.named("jetty-test");
+    CompletableFuture<Context> bodyContext = new CompletableFuture<>();
+    CompletableFuture<Result> completed = new CompletableFuture<>();
+    Request request =
+        client
+            .newRequest(resolveAddress("/success"))
+            .method("POST")
+            .body(new StringRequestContent("initial body"));
+    request.onRequestBegin(
+        ignored ->
+            request.body(
+                oneChunkContent(
+                    () -> {
+                      Context context = Context.current();
+                      bodyContext.complete(context);
+                      testing.runWithSpan("request-body", () -> {});
+                    })));
+
+    AtomicReference<SpanContext> callerSpanContext = new AtomicReference<>();
+    Runnable send =
+        () -> {
+          Context caller = Context.current().with(key, "caller");
+          callerSpanContext.set(Span.fromContext(caller).getSpanContext());
+          try (Scope ignored = caller.makeCurrent()) {
+            request.send(completed::complete);
+          }
+        };
+    if (withParent) {
+      testing.runWithSpan("parent", send::run);
+    } else {
+      send.run();
+    }
+
+    assertThat(completed.get(10, SECONDS).isSucceeded()).isTrue();
+    Context observedContext = bodyContext.get(10, SECONDS);
+    assertThat(observedContext.get(key)).isEqualTo("caller");
+    assertThat(Span.fromContext(observedContext).getSpanContext())
+        .isEqualTo(callerSpanContext.get());
+
+    if (withParent) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactlyInAnyOrder(
+                  span -> span.hasName("parent").hasNoParent(),
+                  span ->
+                      span.hasName("POST")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasParentSpanId(callerSpanContext.get().getSpanId()),
+                  span -> span.hasName("test-http-server"),
+                  span ->
+                      span.hasName("request-body")
+                          .hasParentSpanId(callerSpanContext.get().getSpanId())));
+    } else {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasNoParent(),
+                  span -> span.hasName("test-http-server").hasParent(trace.getSpan(0))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(span -> span.hasName("request-body").hasNoParent()));
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource({"false, false", "false, true", "true, false", "true, true"})
+  void requestTrailersSupplierRetainsCallerContext(boolean withParent, boolean installedInHook)
+      throws ExecutionException, InterruptedException, TimeoutException {
+    warmConnection();
+
+    ContextKey<String> key = ContextKey.named("jetty-test");
+    CompletableFuture<Context> trailerContext = new CompletableFuture<>();
+    CompletableFuture<Context> replacedTrailerContext = new CompletableFuture<>();
+    CompletableFuture<Result> completed = new CompletableFuture<>();
+    Request request =
+        client
+            .newRequest(resolveAddress("/success"))
+            .version(HttpVersion.HTTP_1_1)
+            .method("POST")
+            .body(oneChunkContent(() -> {}));
+    request.trailersSupplier(trailersSupplier(trailerContext));
+    if (installedInHook) {
+      request.onRequestBegin(
+          ignored -> request.trailersSupplier(trailersSupplier(replacedTrailerContext)));
+    }
+
+    AtomicReference<SpanContext> callerSpanContext = new AtomicReference<>();
+    Runnable send =
+        () -> {
+          Context caller = Context.current().with(key, "caller");
+          callerSpanContext.set(Span.fromContext(caller).getSpanContext());
+          try (Scope ignored = caller.makeCurrent()) {
+            request.send(completed::complete);
+          }
+        };
+    if (withParent) {
+      testing.runWithSpan("parent", send::run);
+    } else {
+      send.run();
+    }
+
+    assertThat(completed.get(10, SECONDS).isSucceeded()).isTrue();
+    Context observedContext =
+        (installedInHook ? replacedTrailerContext : trailerContext).get(10, SECONDS);
+    assertThat(observedContext.get(key)).isEqualTo("caller");
+    assertThat(Span.fromContext(observedContext).getSpanContext())
+        .isEqualTo(callerSpanContext.get());
+    assertThat(installedInHook ? trailerContext : replacedTrailerContext).isNotDone();
+
+    if (withParent) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactlyInAnyOrder(
+                  span -> span.hasName("parent").hasNoParent(),
+                  span ->
+                      span.hasName("POST")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasParentSpanId(callerSpanContext.get().getSpanId()),
+                  span -> span.hasName("test-http-server"),
+                  span ->
+                      span.hasName("request-trailers")
+                          .hasParentSpanId(callerSpanContext.get().getSpanId())));
+    } else {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasNoParent(),
+                  span -> span.hasName("test-http-server").hasParent(trace.getSpan(0))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("request-trailers").hasNoParent()));
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void asyncRequestContentCompletionRetainsCallerContext(boolean withParent)
+      throws ExecutionException, InterruptedException, TimeoutException {
+    warmConnection();
+
+    ContextKey<String> key = ContextKey.named("jetty-test");
+    CompletableFuture<Context> callbackContext = new CompletableFuture<>();
+    CompletableFuture<Result> completed = new CompletableFuture<>();
+    AsyncRequestContent content = new AsyncRequestContent();
+    Request request = client.newRequest(resolveAddress("/success")).method("POST").body(content);
+    AtomicReference<SpanContext> callerSpanContext = new AtomicReference<>();
+    Runnable send =
+        () -> {
+          Context caller = Context.current().with(key, "caller");
+          callerSpanContext.set(Span.fromContext(caller).getSpanContext());
+          try (Scope ignored = caller.makeCurrent()) {
+            request.send(completed::complete);
+          }
+        };
+    if (withParent) {
+      testing.runWithSpan("parent", send::run);
+    } else {
+      send.run();
+    }
+
+    Context deliveryContext = Context.root().with(key, "delivery");
+    try (Scope ignored = deliveryContext.makeCurrent()) {
+      content.write(
+          ByteBuffer.wrap("request body".getBytes(UTF_8)),
+          new Callback() {
+            @Override
+            public void succeeded() {
+              Context context = Context.current();
+              callbackContext.complete(context);
+              testing.runWithSpan("request-write-complete", () -> {});
+            }
+
+            @Override
+            public void failed(Throwable failure) {
+              callbackContext.completeExceptionally(failure);
+            }
+          });
+      content.close();
+      assertThat(Context.current().get(key)).isEqualTo("delivery");
+      assertThat(Span.current().getSpanContext().isValid()).isFalse();
+    }
+
+    assertThat(completed.get(10, SECONDS).isSucceeded()).isTrue();
+    Context observedContext = callbackContext.get(10, SECONDS);
+    assertThat(observedContext.get(key)).isEqualTo("caller");
+    assertThat(Span.fromContext(observedContext).getSpanContext())
+        .isEqualTo(callerSpanContext.get());
+
+    if (withParent) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactlyInAnyOrder(
+                  span -> span.hasName("parent").hasNoParent(),
+                  span ->
+                      span.hasName("POST")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasParentSpanId(callerSpanContext.get().getSpanId()),
+                  span -> span.hasName("test-http-server"),
+                  span ->
+                      span.hasName("request-write-complete")
+                          .hasParentSpanId(callerSpanContext.get().getSpanId())));
+    } else {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasNoParent(),
+                  span -> span.hasName("test-http-server").hasParent(trace.getSpan(0))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("request-write-complete").hasNoParent()));
+    }
+  }
+
+  private void warmConnection() throws ExecutionException, InterruptedException, TimeoutException {
+    CompletableFuture<Result> completed = new CompletableFuture<>();
+    client.newRequest(resolveAddress("/success")).send(completed::complete);
+    Result result = completed.get(10, SECONDS);
+    assertThat(result.isSucceeded()).isTrue();
+    assertThat(result.getResponse().getStatus()).isEqualTo(200);
+    testing.waitForTraces(1);
+    testing.clearAllExportedData();
+  }
+
+  private static Request.Content oneChunkContent(Runnable onRead) {
+    AtomicBoolean read = new AtomicBoolean();
+    AtomicReference<Throwable> failure = new AtomicReference<>();
+    return new Request.Content() {
+      @Override
+      public Content.Chunk read() {
+        Throwable contentFailure = failure.get();
+        if (contentFailure != null) {
+          return Content.Chunk.from(contentFailure);
+        }
+        if (!read.compareAndSet(false, true)) {
+          return null;
+        }
+        onRead.run();
+        return Content.Chunk.from(ByteBuffer.wrap("request body".getBytes(UTF_8)), true);
+      }
+
+      @Override
+      public void demand(Runnable callback) {
+        callback.run();
+      }
+
+      @Override
+      public long getLength() {
+        return -1;
+      }
+
+      @Override
+      public void fail(Throwable contentFailure) {
+        failure.set(contentFailure);
+      }
+    };
+  }
+
+  private Supplier<HttpFields> trailersSupplier(CompletableFuture<Context> callbackContext) {
+    return () -> {
+      callbackContext.complete(Context.current());
+      testing.runWithSpan("request-trailers", () -> {});
+      return HttpFields.build().add("X-Test-Trailer", "present").asImmutable();
+    };
   }
 
   private static class JettyClientListener

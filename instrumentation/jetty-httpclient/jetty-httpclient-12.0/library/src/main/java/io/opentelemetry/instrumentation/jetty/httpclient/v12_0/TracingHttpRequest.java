@@ -12,17 +12,20 @@ import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyCli
 import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyClientWrapUtil;
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.client.transport.HttpConversation;
 import org.eclipse.jetty.client.transport.HttpRequest;
+import org.eclipse.jetty.http.HttpFields;
 
 class TracingHttpRequest extends HttpRequest {
 
   private final Instrumenter<Request, Response> instrumenter;
   private Context parentContext = Context.root();
+  private boolean callerContextCaptured;
   @Nullable private Context context;
 
   TracingHttpRequest(
@@ -35,11 +38,33 @@ class TracingHttpRequest extends HttpRequest {
   }
 
   @Override
+  public Request body(Request.Content content) {
+    if (callerContextCaptured && content != null) {
+      content = JettyClientWrapUtil.wrapRequestContent(content, parentContext);
+    }
+    return super.body(content);
+  }
+
+  @Override
+  public Request trailersSupplier(Supplier<HttpFields> trailersSupplier) {
+    if (callerContextCaptured && trailersSupplier != null) {
+      trailersSupplier = JettyClientWrapUtil.wrapRequestTrailers(trailersSupplier, parentContext);
+    }
+    return super.trailersSupplier(trailersSupplier);
+  }
+
+  @Override
   public void send(Response.CompleteListener listener) {
     parentContext = Context.current();
+    callerContextCaptured = true;
     Request.Content body = getBody();
     if (body != null) {
       super.body(JettyClientWrapUtil.wrapRequestContent(body, parentContext));
+    }
+    Supplier<HttpFields> trailersSupplier = getTrailersSupplier();
+    if (trailersSupplier != null) {
+      super.trailersSupplier(
+          JettyClientWrapUtil.wrapRequestTrailers(trailersSupplier, parentContext));
     }
     // start span and attach listeners - must handle all listeners, not just CompleteListener.
     Context startedContext =
