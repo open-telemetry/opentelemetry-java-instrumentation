@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
@@ -577,7 +578,7 @@ class InfluxDbQueryLifecycleTest {
           });
       assertThat(callback.await(10, SECONDS)).isTrue();
       assertThat(successResult.get()).isNull();
-      if ("2.25".equals(System.getProperty("influxdb.test.client-version"))) {
+      if (testLatestDeps() || "2.25".equals(System.getProperty("influxdb.test.client-version"))) {
         assertThat(successCallbackCalled.get()).isFalse();
         assertThat(failure.get()).isInstanceOf(InfluxDBException.class);
         assertQuery(InfluxDBException.class.getName());
