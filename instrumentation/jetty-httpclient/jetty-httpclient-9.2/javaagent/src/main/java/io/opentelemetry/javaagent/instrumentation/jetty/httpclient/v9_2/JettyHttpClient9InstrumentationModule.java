@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -23,7 +23,11 @@ public class JettyHttpClient9InstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new JettyHttpClient9Instrumentation());
+    return asList(
+        new JettyHttpClient9Instrumentation(),
+        new JettyRequestBoundaryInstrumentation(),
+        new JettyHttpSenderInstrumentation(),
+        new JettyHttpContentInstrumentation());
   }
 
   @Override

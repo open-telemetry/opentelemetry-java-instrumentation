@@ -6,13 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 
 import static io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientWrapUtil.wrapResponseListeners;
-import static io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2.JettyHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientTracingListener;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
@@ -43,31 +40,20 @@ class JettyHttpClient9Instrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class JettyHttpClient9Advice {
 
-    public static class AdviceLocals {
-      public final Context context;
-      public final Scope scope;
-
-      public AdviceLocals(Context context, Scope scope) {
-        this.context = context;
-        this.scope = scope;
-      }
-    }
-
     @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] addTracingEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Argument(1) List<Response.ResponseListener> listeners) {
       Context parentContext = Context.current();
-      Context context =
-          JettyClientTracingListener.handleRequest(parentContext, httpRequest, instrumenter());
+      JettyRequestContext context = JettyRequestContext.start(httpRequest, parentContext);
       if (context == null) {
         return new Object[] {null, listeners};
       }
 
       List<Response.ResponseListener> wrappedListeners =
-          wrapResponseListeners(parentContext, listeners);
-      return new Object[] {new AdviceLocals(context, context.makeCurrent()), wrappedListeners};
+          wrapResponseListeners(context.caller.context(), listeners);
+      return new Object[] {context, wrappedListeners};
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
@@ -78,16 +64,10 @@ class JettyHttpClient9Instrumentation implements TypeInstrumentation {
       if (enterResult == null) {
         return;
       }
-      AdviceLocals locals = (AdviceLocals) enterResult[0];
-
-      if (locals == null) {
-        return;
-      }
-
-      // not ending span here unless error, span ended in the interceptor
-      locals.scope.close();
-      if (throwable != null) {
-        instrumenter().end(locals.context, httpRequest, null, throwable);
+      JettyRequestContext context = (JettyRequestContext) enterResult[0];
+      if (context != null && throwable != null) {
+        context.end(httpRequest, null, throwable);
+        context.complete(httpRequest);
       }
     }
   }
