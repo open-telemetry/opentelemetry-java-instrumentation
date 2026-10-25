@@ -11,6 +11,7 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import akka.actor.ActorSystem;
 import akka.http.javadsl.Http;
@@ -37,8 +38,12 @@ import java.net.Socket;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class AkkaHttpServerJavaRouteTest extends AllDirectives {
   @RegisterExtension
@@ -46,56 +51,29 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
 
   private final WebClient client = WebClient.of();
 
-  @Test
-  void testMalformedRequestTarget() throws Exception {
+  @ParameterizedTest
+  @MethodSource("malformedRequestTargetCases")
+  void testMalformedRequestTarget(String parsingErrorHandler, int expectedStatus) throws Exception {
     ActorSystem system = ActorSystem.create("malformed-request");
     int port = PortUtils.findOpenPort();
     try {
-      ServerBinding binding =
-          Http.get(system)
-              .newServerAt("localhost", port)
-              .bind(complete("ok"))
-              .toCompletableFuture()
-              .get(10, SECONDS);
-      try {
-        assertBadRequest(port, "GET /%% HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n");
-
-        testing.waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("HTTP")
-                            .hasKind(SpanKind.SERVER)
-                            .hasNoParent()
-                            .hasStatus(StatusData.unset())
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 400))));
-      } finally {
-        binding.unbind().toCompletableFuture().get(10, SECONDS);
+      ServerSettings settings = ServerSettings.create(system);
+      if (parsingErrorHandler != null) {
+        settings = settings.withParsingErrorHandler(parsingErrorHandler);
       }
-    } finally {
-      system.terminate();
-    }
-  }
-
-  @Test
-  void testCustomParsingErrorHandler() throws Exception {
-    ActorSystem system = ActorSystem.create("custom-parsing-error-handler");
-    int port = PortUtils.findOpenPort();
-    try {
       ServerBinding binding =
           Http.get(system)
               .newServerAt("localhost", port)
-              .withSettings(
-                  ServerSettings.create(system)
-                      .withParsingErrorHandler(CustomParsingErrorHandler.class.getName()))
+              .withSettings(settings)
               .bind(complete("ok"))
               .toCompletableFuture()
               .get(10, SECONDS);
       try {
         Map<String, String> responseHeaders =
             assertResponse(
-                port, "GET /%% HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n", 418);
+                port,
+                "GET /%% HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n",
+                expectedStatus);
         assertThat(responseHeaders).containsKeys("X-Test-TraceId", "X-Test-SpanId");
 
         testing.waitAndAssertTraces(
@@ -106,7 +84,8 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
                             .hasKind(SpanKind.SERVER)
                             .hasNoParent()
                             .hasStatus(StatusData.unset())
-                            .hasAttributesSatisfyingExactly(equalTo(HTTP_RESPONSE_STATUS_CODE, 418))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, expectedStatus))
                             .hasTraceId(responseHeaders.get("X-Test-TraceId"))
                             .hasSpanId(responseHeaders.get("X-Test-SpanId"))));
       } finally {
@@ -115,6 +94,12 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
     } finally {
       system.terminate();
     }
+  }
+
+  private static Stream<Arguments> malformedRequestTargetCases() {
+    return Stream.of(
+        argumentSet("default handler", null, 400),
+        argumentSet("custom handler", CustomParsingErrorHandler.class.getName(), 418));
   }
 
   @Test
@@ -133,10 +118,11 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
               .toCompletableFuture()
               .get(10, SECONDS);
       try {
-        assertBadRequest(
+        assertResponse(
             port,
             "POST / HTTP/1.1\r\nHost: localhost\r\nTransfer-Encoding: chunked\r\n"
-                + "Connection: close\r\n\r\ninvalid-chunk-size\r\n");
+                + "Connection: close\r\n\r\ninvalid-chunk-size\r\n",
+            400);
 
         testing.waitAndAssertTraces(
             trace ->
@@ -147,17 +133,6 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
       }
     } finally {
       system.terminate();
-    }
-  }
-
-  private static void assertBadRequest(int port, String request) throws IOException {
-    try (Socket socket = new Socket("localhost", port)) {
-      socket.setSoTimeout(10000);
-      socket.getOutputStream().write(request.getBytes(US_ASCII));
-      BufferedReader reader =
-          new BufferedReader(new InputStreamReader(socket.getInputStream(), US_ASCII));
-      assertThat(reader.readLine()).isEqualTo("HTTP/1.1 400 Bad Request");
-      while (reader.readLine() != null) {}
     }
   }
 
