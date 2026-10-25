@@ -11,7 +11,7 @@ permissions: {}
 
 jobs:
   probe:
-    runs-on: cncf-ubuntu-bm-arm
+    runs-on: cncf-ubuntu-24.04-bm-arm
     timeout-minutes: 5
     steps:
       - name: Check host and Docker
