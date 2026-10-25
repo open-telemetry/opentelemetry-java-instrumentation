@@ -39,10 +39,18 @@ tasks {
     exclude("**/AotStartupBenchmark.class")
     exclude("**/AgentStartupBenchmark.class")
   }
+}
 
+val startupRecorderJar = tasks.register<Jar>("startupRecorderJar") {
+  dependsOn(tasks.testClasses)
+  from(sourceSets.test.get().output.classesDirs)
+  include("io/opentelemetry/startup/StartupRecorder.class")
+  archiveFileName.set("startup-recorder.jar")
+  manifest.attributes("Premain-Class" to "io.opentelemetry.startup.StartupRecorder")
 }
 
 tasks.register<Test>("agentStartupBenchmark") {
+  dependsOn(startupRecorderJar)
   description = "Compares ordinary Java agent startup against a fixed baseline."
   group = "verification"
   testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -53,6 +61,7 @@ tasks.register<Test>("agentStartupBenchmark") {
   outputs.upToDateWhen { false }
   outputs.cacheIf { false }
   systemProperty("startup.benchmark.enabled", "true")
+  systemProperty("startup.benchmark.recorder", startupRecorderJar.get().archiveFile.get().asFile.absolutePath)
   systemProperty("startup.benchmark.output", layout.buildDirectory.dir("reports/agent-startup").get().asFile.absolutePath)
   systemProperty("startup.benchmark.baseline", providers.gradleProperty("startupBenchmarkBaseline").orElse("").get())
   systemProperty("startup.benchmark.candidate", providers.gradleProperty("startupBenchmarkCandidate").orElse("").get())

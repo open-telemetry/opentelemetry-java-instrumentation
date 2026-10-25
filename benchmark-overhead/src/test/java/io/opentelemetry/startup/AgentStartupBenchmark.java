@@ -154,6 +154,9 @@ class AgentStartupBenchmark {
             .withCopyFileToContainer(MountableFile.forHostPath(baseline), "/benchmark/baseline.jar")
             .withCopyFileToContainer(
                 MountableFile.forHostPath(candidate), "/benchmark/candidate.jar")
+            .withCopyFileToContainer(
+                MountableFile.forHostPath(Path.of(required("recorder"))),
+                "/benchmark/startup-recorder.jar")
             .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint("/bin/sh"))
             .withCommand(
                 "-c",
@@ -225,6 +228,11 @@ class AgentStartupBenchmark {
         assertThat(response.statusCode()).isEqualTo(200);
         assertThat(response.body()).isEqualTo("Hi!");
         String logs = application.getLogs();
+        if (profile) {
+          assertThat(logs.indexOf("Startup recording active before telemetry agent"))
+              .isGreaterThanOrEqualTo(0)
+              .isLessThan(logs.indexOf("opentelemetry-javaagent - version:"));
+        }
         StartupTimings timings = StartupTimings.parse(logs);
         if (!artifact.equals("no-agent")) {
           assertThat(logs).contains("opentelemetry-javaagent - version:");
@@ -276,11 +284,12 @@ class AgentStartupBenchmark {
 
   static List<String> arguments(String artifact, boolean profile) {
     List<String> arguments = new ArrayList<>(List.of("-Xmx512m"));
+    if (profile) {
+      arguments.add("-XX:FlightRecorderOptions=stackdepth=256");
+      arguments.add("-javaagent:/benchmark/startup-recorder.jar=/benchmark/startup.jfr");
+    }
     if (!artifact.equals("no-agent")) {
       arguments.add("-javaagent:/benchmark/" + artifact + ".jar");
-    }
-    if (profile) {
-      arguments.add("-XX:StartFlightRecording=name=startup,settings=profile");
     }
     arguments.addAll(
         List.of("-cp", "/app/resources:/app/classes:/app/libs/*", AotStartupBenchmark.APPLICATION));

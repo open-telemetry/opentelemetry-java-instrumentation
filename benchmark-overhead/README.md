@@ -135,7 +135,7 @@ The primary metric is JVM uptime at Spring startup completion, including `premai
 
 Results under `build/reports/agent-startup/<run-id>/` include raw observations, host load averages, agent hashes and versions, exact JVM commands, image/JDK identity, medians, interquartile ranges, and paired baseline-minus-candidate savings. The reported 95% interval uses a circular moving-block bootstrap over consecutive rounds. Read it alongside the A/A control and reproduce improvements in an independent run.
 
-Separate untimed baseline and candidate launches record startup JFR files and execution-sample summaries. Those launches are excluded from timing results. These are fresh JVMs with warm image/filesystem caches, not cold-machine starts or throughput measurements.
+Separate untimed baseline and candidate launches record startup JFR files and execution-sample summaries. A diagnostic-only recorder agent starts JFR before OpenTelemetry's `premain()`; the JVM's `-XX:StartFlightRecording` option starts too late to capture agent initialization. Those launches are excluded from timing results. These are fresh JVMs with warm image/filesystem caches, not cold-machine starts or throughput measurements.
 
 The experimental `agent-startup-benchmark.yml` workflow builds exact agents on hosted runners and measures serially on the OpenTelemetry-managed x86-64 bare-metal runner. It uploads source identities, host information, complete reports, and profiles as workflow artifacts.
 

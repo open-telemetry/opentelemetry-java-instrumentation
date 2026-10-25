@@ -32,7 +32,11 @@ class AgentStartupReportTest {
     assertThat(AgentStartupBenchmark.arguments("candidate", true))
         .contains(
             "-javaagent:/benchmark/candidate.jar",
-            "-XX:StartFlightRecording=name=startup,settings=profile");
+            "-javaagent:/benchmark/startup-recorder.jar=/benchmark/startup.jfr");
+    assertThat(AgentStartupBenchmark.arguments("candidate", true))
+        .containsSubsequence(
+            "-javaagent:/benchmark/startup-recorder.jar=/benchmark/startup.jfr",
+            "-javaagent:/benchmark/candidate.jar");
   }
 
   @Test

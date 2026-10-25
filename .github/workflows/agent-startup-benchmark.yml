@@ -108,7 +108,8 @@ jobs:
           cp "$AGENTS/startup-candidate/"*.txt build/reports/agent-startup/artifact-identities/candidate/
           ./gradlew agentStartupBenchmark \
             "-PstartupBenchmarkBaseline=$AGENTS/startup-baseline/opentelemetry-javaagent.jar" \
-            "-PstartupBenchmarkCandidate=$AGENTS/startup-candidate/opentelemetry-javaagent.jar"
+            "-PstartupBenchmarkCandidate=$AGENTS/startup-candidate/opentelemetry-javaagent.jar" \
+            -PstartupBenchmarkSamples=2 -PstartupBenchmarkWarmups=0
 
       - name: Publish summary
         working-directory: benchmark-overhead
