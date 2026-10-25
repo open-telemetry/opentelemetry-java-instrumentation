@@ -53,14 +53,11 @@ public final class AkkaHttpParsingErrorSingletons {
     Context context = (Context) enter[0];
     ErrorInfo info = (ErrorInfo) enter[2];
     HttpResponse httpResponse = (HttpResponse) response;
-    try {
-      if (httpResponse != null) {
-        httpResponse = AkkaHttpResponseMutator.customizeResponse(context, httpResponse);
-      }
-      return httpResponse;
-    } finally {
-      instrumenter.end(context, info, httpResponse, error);
+    if (httpResponse != null) {
+      httpResponse = AkkaHttpResponseMutator.customizeResponse(context, httpResponse);
     }
+    instrumenter.end(context, info, httpResponse, error);
+    return httpResponse;
   }
 
   private static class NoopTextMapGetter implements TextMapGetter<ErrorInfo> {
