@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v9_2;
 import static io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientWrapUtil.wrapResponseListeners;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientTracingListener;
 import java.util.List;
@@ -48,7 +49,11 @@ class TracingHttpClient extends HttpClient {
     // wrap listeners only when a span was started (context is not null)
     if (context != null) {
       listeners = wrapResponseListeners(parentContext, listeners);
+      try (Scope ignored = context.makeCurrent()) {
+        super.send(request, listeners);
+      }
+    } else {
+      super.send(request, listeners);
     }
-    super.send(request, listeners);
   }
 }
