@@ -267,8 +267,8 @@ abstract class AbstractPulsarClientTest {
     Context caller = Context.current().with(key, "caller");
     try (Scope ignored = caller.makeCurrent()) {
       CompletableFuture<MessageId> future = producer.sendAsync("closed");
-      assertThat(preparation.get().isValid()).isTrue();
-      assertThat(acknowledgement.get()).isEqualTo(preparation.get());
+      assertThat(preparation.get()).isEqualTo(Span.fromContext(caller).getSpanContext());
+      assertThat(acknowledgement.get()).isEqualTo(Span.fromContext(caller).getSpanContext());
       assertThat(terminalValue.get()).isEqualTo("caller");
       assertThat(terminalThread.get()).isSameAs(Thread.currentThread());
       assertThat(Context.current().get(key)).isEqualTo("caller");
@@ -287,7 +287,11 @@ abstract class AbstractPulsarClientTest {
   @SuppressWarnings({"rawtypes", "unchecked"})
   void replacementMessagePropagatesProducerContext() throws Exception {
     String topic = "persistent://public/default/replacementMessagePropagatesProducerContext";
-    AtomicReference<SpanContext> producerContext = new AtomicReference<>();
+    ContextKey<String> key = ContextKey.named("pulsar-replacement-caller");
+    AtomicReference<SpanContext> interceptorContext = new AtomicReference<>();
+    AtomicReference<String> interceptorValue = new AtomicReference<>();
+    AtomicReference<String> interceptorBaggage = new AtomicReference<>();
+    AtomicReference<String> producerTraceparent = new AtomicReference<>();
     AtomicReference<Message<?>> replacement = new AtomicReference<>();
     producer =
         client
@@ -307,7 +311,10 @@ abstract class AbstractPulsarClientTest {
 
                   @Override
                   public Message beforeSend(Producer producer, Message message) {
-                    producerContext.set(Span.current().getSpanContext());
+                    interceptorContext.set(Span.current().getSpanContext());
+                    interceptorValue.set(Context.current().get(key));
+                    interceptorBaggage.set(Baggage.current().getEntryValue("pulsar-test"));
+                    producerTraceparent.set((String) message.getProperties().get("traceparent"));
                     Message<?> copy =
                         ((TypedMessageBuilderImpl<?>)
                                 producer
@@ -326,7 +333,12 @@ abstract class AbstractPulsarClientTest {
             .create();
 
     CompletableFuture<MessageId> future;
-    try (Scope ignored = Baggage.builder().put("pulsar-test", "caller").build().makeCurrent()) {
+    Context caller =
+        Baggage.builder()
+            .put("pulsar-test", "caller")
+            .build()
+            .storeInContext(Context.current().with(key, "caller"));
+    try (Scope ignored = caller.makeCurrent()) {
       future =
           producer
               .newMessage()
@@ -335,18 +347,18 @@ abstract class AbstractPulsarClientTest {
               .property("baggage", "pulsar-test=stale")
               .sendAsync();
     }
-    assertThat(producerContext.get().isValid()).isTrue();
+    assertThat(interceptorContext.get()).isEqualTo(Span.fromContext(caller).getSpanContext());
+    assertThat(interceptorValue.get()).isEqualTo("caller");
+    assertThat(interceptorBaggage.get()).isEqualTo("caller");
+    assertThat(producerTraceparent.get())
+        .isNotNull()
+        .isNotEqualTo("00-0123456789abcdef0123456789abcdef-0123456789abcdef-01");
     assertThat(
             ((MessageImpl<?>) replacement.get())
                 .getMessageBuilder().getPropertiesList().stream()
                     .filter(property -> property.getKey().equals("traceparent"))
                     .map(property -> property.getValue()))
-        .containsExactly(
-            String.format(
-                "00-%s-%s-%s",
-                producerContext.get().getTraceId(),
-                producerContext.get().getSpanId(),
-                producerContext.get().getTraceFlags().asHex()));
+        .containsExactly(producerTraceparent.get());
     assertThat(
             ((MessageImpl<?>) replacement.get())
                 .getMessageBuilder().getPropertiesList().stream()
@@ -361,7 +373,7 @@ abstract class AbstractPulsarClientTest {
                 span ->
                     span.hasName("send " + topic)
                         .hasKind(SpanKind.PRODUCER)
-                        .hasSpanId(producerContext.get().getSpanId())
+                        .hasSpanId(producerTraceparent.get().substring(36, 52))
                         .hasNoParent()));
   }
 
@@ -393,6 +405,10 @@ abstract class AbstractPulsarClientTest {
     List<SpanContext> preparations = new ArrayList<>();
     List<SpanContext> acknowledgements = new ArrayList<>();
     List<String> preparationValues = new ArrayList<>();
+    List<String> producerSpanIds = new ArrayList<>();
+    List<String> preparationBaggage = new ArrayList<>();
+    List<String> acknowledgementValues = new ArrayList<>();
+    List<String> acknowledgementBaggage = new ArrayList<>();
     List<CompletableFuture<Void>> continuations = new ArrayList<>();
     producer =
         client
@@ -414,6 +430,9 @@ abstract class AbstractPulsarClientTest {
                   public Message beforeSend(Producer producer, Message message) {
                     preparations.add(Span.current().getSpanContext());
                     preparationValues.add(Context.current().get(key));
+                    preparationBaggage.add(Baggage.current().getEntryValue("pulsar-test"));
+                    String traceparent = (String) message.getProperties().get("traceparent");
+                    producerSpanIds.add(traceparent.substring(36, 52));
                     return message;
                   }
 
@@ -421,6 +440,8 @@ abstract class AbstractPulsarClientTest {
                   public void onSendAcknowledgement(
                       Producer producer, Message message, MessageId id, Throwable error) {
                     acknowledgements.add(Span.current().getSpanContext());
+                    acknowledgementValues.add(Context.current().get(key));
+                    acknowledgementBaggage.add(Baggage.current().getEntryValue("pulsar-test"));
                     acknowledged.countDown();
                     try {
                       assertThat(complete.await(1, MINUTES)).isTrue();
@@ -442,7 +463,7 @@ abstract class AbstractPulsarClientTest {
             for (int i = 0; i < (batching ? 2 : 1); i++) {
               CompletableFuture<MessageId> future =
                   producer.newMessage().value("message-" + i).sendAsync();
-              SpanContext producerContext = preparations.get(i);
+              String producerSpanId = producerSpanIds.get(i);
               assertThat(future.isDone()).isFalse();
               continuations.add(
                   future.handle(
@@ -457,7 +478,7 @@ abstract class AbstractPulsarClientTest {
                                 testing.spans().stream()
                                     .filter(span -> span.getKind() == SpanKind.PRODUCER)
                                     .map(span -> span.getSpanContext().getSpanId()))
-                            .contains(producerContext.getSpanId());
+                            .contains(producerSpanId);
                         testing.runWithSpan("continuation", () -> {});
                         return null;
                       }));
@@ -471,8 +492,9 @@ abstract class AbstractPulsarClientTest {
         send.run();
       }
       assertThat(preparationValues).containsOnly("caller");
-      assertThat(preparations)
-          .allSatisfy(spanContext -> assertThat(spanContext.isValid()).isTrue());
+      assertThat(preparationBaggage).containsOnly("caller");
+      SpanContext callerSpanContext = Span.fromContext(caller.get()).getSpanContext();
+      assertThat(preparations).containsOnly(callerSpanContext);
       if (failure) {
         admin.topics().terminateTopic(topic);
       }
@@ -484,9 +506,9 @@ abstract class AbstractPulsarClientTest {
       complete.countDown();
     }
     CompletableFuture.allOf(continuations.toArray(new CompletableFuture<?>[0])).get(1, MINUTES);
-    assertThat(acknowledgements)
-        .extracting(SpanContext::getSpanId)
-        .containsOnly(preparations.get(0).getSpanId());
+    assertThat(acknowledgements).containsOnly(Span.fromContext(caller.get()).getSpanContext());
+    assertThat(acknowledgementValues).containsOnly("caller");
+    assertThat(acknowledgementBaggage).containsOnly("caller");
     if (withParent) {
       testing.waitAndAssertTraces(
           trace -> {
@@ -524,6 +546,113 @@ abstract class AbstractPulsarClientTest {
           trace ->
               trace.hasSpansSatisfyingExactly(span -> span.hasName("continuation").hasNoParent()));
     }
+  }
+
+  @Test
+  @SuppressWarnings("rawtypes")
+  void nestedSendFromInterceptorUsesCallerContext() throws Exception {
+    String topic = "persistent://public/default/nestedSendFromInterceptor";
+    String nestedTopic = "persistent://public/default/nestedSendFromInterceptor-nested";
+    ContextKey<String> key = ContextKey.named("pulsar-interceptor-caller");
+    AtomicReference<SpanContext> interceptorContext = new AtomicReference<>();
+    AtomicReference<SpanContext> nestedInterceptorContext = new AtomicReference<>();
+    AtomicReference<String> interceptorValue = new AtomicReference<>();
+    AtomicReference<String> nestedInterceptorValue = new AtomicReference<>();
+    AtomicReference<String> interceptorBaggage = new AtomicReference<>();
+    AtomicReference<String> nestedInterceptorBaggage = new AtomicReference<>();
+    AtomicReference<CompletableFuture<MessageId>> nestedFuture = new AtomicReference<>();
+
+    producer2 =
+        client
+            .newProducer(Schema.STRING)
+            .topic(nestedTopic)
+            .enableBatching(false)
+            .intercept(
+                new ProducerInterceptor() {
+                  @Override
+                  public void close() {}
+
+                  @Override
+                  public boolean eligible(Message message) {
+                    return true;
+                  }
+
+                  @Override
+                  public Message beforeSend(Producer producer, Message message) {
+                    nestedInterceptorContext.set(Span.current().getSpanContext());
+                    nestedInterceptorValue.set(Context.current().get(key));
+                    nestedInterceptorBaggage.set(Baggage.current().getEntryValue("pulsar-test"));
+                    return message;
+                  }
+
+                  @Override
+                  public void onSendAcknowledgement(
+                      Producer producer, Message message, MessageId id, Throwable error) {}
+                })
+            .create();
+    producer =
+        client
+            .newProducer(Schema.STRING)
+            .topic(topic)
+            .enableBatching(false)
+            .intercept(
+                new ProducerInterceptor() {
+                  @Override
+                  public void close() {}
+
+                  @Override
+                  public boolean eligible(Message message) {
+                    return true;
+                  }
+
+                  @Override
+                  public Message beforeSend(Producer producer, Message message) {
+                    interceptorContext.set(Span.current().getSpanContext());
+                    interceptorValue.set(Context.current().get(key));
+                    interceptorBaggage.set(Baggage.current().getEntryValue("pulsar-test"));
+                    nestedFuture.set(producer2.newMessage().value("nested").sendAsync());
+                    return message;
+                  }
+
+                  @Override
+                  public void onSendAcknowledgement(
+                      Producer producer, Message message, MessageId id, Throwable error) {}
+                })
+            .create();
+
+    Context caller =
+        Baggage.builder()
+            .put("pulsar-test", "caller")
+            .build()
+            .storeInContext(Context.current().with(key, "caller"));
+    AtomicReference<Context> operationCaller = new AtomicReference<>();
+    CompletableFuture<MessageId> outerFuture;
+    try (Scope ignored = caller.makeCurrent()) {
+      outerFuture =
+          testing.runWithSpan(
+              "parent",
+              () -> {
+                operationCaller.set(Context.current());
+                return producer.newMessage().value("outer").sendAsync();
+              });
+    }
+
+    outerFuture.get(1, MINUTES);
+    nestedFuture.get().get(1, MINUTES);
+    SpanContext callerSpanContext = Span.fromContext(operationCaller.get()).getSpanContext();
+    assertThat(interceptorContext.get()).isEqualTo(callerSpanContext);
+    assertThat(nestedInterceptorContext.get()).isEqualTo(callerSpanContext);
+    assertThat(interceptorValue.get()).isEqualTo("caller");
+    assertThat(nestedInterceptorValue.get()).isEqualTo("caller");
+    assertThat(interceptorBaggage.get()).isEqualTo("caller");
+    assertThat(nestedInterceptorBaggage.get()).isEqualTo("caller");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("send " + topic).hasParent(trace.getSpan(0)),
+                span -> span.hasName("send " + nestedTopic).hasParent(trace.getSpan(0))));
   }
 
   @Test

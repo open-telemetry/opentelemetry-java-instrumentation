@@ -47,6 +47,10 @@ public class SendCallbackData {
     return context.with(KEY, this);
   }
 
+  Context parentContext() {
+    return parent;
+  }
+
   public static Context withoutOperation(Context context) {
     return context.with(KEY, null);
   }
