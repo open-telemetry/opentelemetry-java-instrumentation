@@ -33,7 +33,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.List;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class SofaRpcTest extends AbstractSofaRpcTest {
 
@@ -58,21 +58,9 @@ class SofaRpcTest extends AbstractSofaRpcTest {
   }
 
   @ParameterizedTest
-  @ValueSource(booleans = {false, true})
+  @CsvSource({"false, false", "false, true", "true, false", "true, true"})
   @SuppressWarnings("deprecation")
-  void syntheticFallbackStatusIsOmitted(boolean async) {
-    assertStatusCode(async, true);
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  @SuppressWarnings("deprecation")
-  void suppliedStatusCodeIsEmitted(boolean async) {
-    assertStatusCode(async, false);
-  }
-
-  @SuppressWarnings("deprecation")
-  private void assertStatusCode(boolean async, boolean syntheticFallback) {
+  void statusCodeIsEmitted(boolean async, boolean syntheticFallback) {
     String service = ErrorService.class.getName();
     String method = syntheticFallback ? "throwBusinessException" : "throwException";
     String errorType = Integer.toString(RpcErrorType.SERVER_UNDECLARED_ERROR);
