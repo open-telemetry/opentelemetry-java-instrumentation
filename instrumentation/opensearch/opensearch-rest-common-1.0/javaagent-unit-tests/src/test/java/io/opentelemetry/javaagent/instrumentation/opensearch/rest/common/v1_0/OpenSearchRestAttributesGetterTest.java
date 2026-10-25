@@ -33,4 +33,13 @@ class OpenSearchRestAttributesGetterTest {
     assertThat(getter.getDbResponseStatusCode(request, null, new IllegalStateException("test")))
         .isNull();
   }
+
+  @Test
+  void responseStatusDoesNotChangeErrorTypeForExceptions() {
+    OpenSearchRestResponse response = () -> 404;
+    IllegalStateException error = new IllegalStateException("test");
+
+    assertThat(getter.getDbResponseStatusCode(request, response, error)).isEqualTo("404");
+    assertThat(getter.getErrorType(request, response, error)).isNull();
+  }
 }

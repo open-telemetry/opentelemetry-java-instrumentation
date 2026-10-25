@@ -42,7 +42,7 @@ final class OpenSearchRestAttributesGetter
       @Nullable OpenSearchRestResponse response,
       @Nullable Throwable error) {
 
-    if (response != null) {
+    if (error == null && response != null) {
       int statusCode = response.getStatusCode();
       if (statusCode >= 400 || statusCode < 100) {
         return Integer.toString(statusCode);
@@ -60,7 +60,7 @@ final class OpenSearchRestAttributesGetter
     if (response == null || response.getStatusCode() < 400) {
       return null;
     }
-    return getErrorType(request, response, error);
+    return Integer.toString(response.getStatusCode());
   }
 
   @Override
