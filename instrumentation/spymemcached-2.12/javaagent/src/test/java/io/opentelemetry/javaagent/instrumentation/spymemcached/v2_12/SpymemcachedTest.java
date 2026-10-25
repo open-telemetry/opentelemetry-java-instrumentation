@@ -40,16 +40,20 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.nio.channels.SocketChannel;
 import java.time.Duration;
+import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -60,12 +64,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import net.spy.memcached.CASResponse;
 import net.spy.memcached.CASValue;
+import net.spy.memcached.CachedData;
 import net.spy.memcached.ConnectionFactory;
 import net.spy.memcached.ConnectionFactoryBuilder;
 import net.spy.memcached.ConnectionFactoryBuilder.Protocol;
@@ -83,6 +89,7 @@ import net.spy.memcached.ops.OperationQueueFactory;
 import net.spy.memcached.ops.OperationState;
 import net.spy.memcached.protocol.BaseOperationImpl;
 import net.spy.memcached.protocol.ascii.AsciiMemcachedNodeImpl;
+import net.spy.memcached.transcoders.Transcoder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -496,6 +503,142 @@ class SpymemcachedTest {
                                 memcachedAddress.getAddress().getHostAddress()),
                             equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+  }
+
+  @Test
+  void bulkGetWithIteratorTranscodersOmitsKeysWhenCountsDiffer() throws Exception {
+    MemcachedClient memcached = getMemcached(singletonMap("test-get", "get test"));
+    List<String> keys = asList(key("test-get"), key("test-get-2"));
+    Iterator<Transcoder<Object>> transcoders = singletonList(memcached.getTranscoder()).iterator();
+
+    Map<String, Object> result =
+        testing.runWithSpan("parent", () -> memcached.asyncGetBulk(keys, transcoders).get());
+
+    assertThat(result).hasSize(1).containsEntry(key("test-get"), "get test");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName(spanName("get"))
+                        .hasAttributesSatisfying(equalTo(DB_QUERY_TEXT, "getBulk"))));
+  }
+
+  @Test
+  void failedBulkCaptureDoesNotSuppressSubsequentRequest() throws Exception {
+    MemcachedClient memcached = getMemcached(singletonMap("test-get", "get test"));
+    AtomicBoolean failFirstIteration = new AtomicBoolean(true);
+    Collection<String> keys =
+        new AbstractCollection<String>() {
+          @Override
+          public Iterator<String> iterator() {
+            if (failFirstIteration.getAndSet(false)) {
+              throw new IllegalStateException("query capture failed");
+            }
+            return singletonList(key("test-get")).iterator();
+          }
+
+          @Override
+          public int size() {
+            return 1;
+          }
+        };
+
+    Class<?> registry =
+        AgentClassLoaderAccess.loadClass(
+            "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
+    Method getInstrumentationClassLoader =
+        registry.getMethod("getInstrumentationClassLoader", String.class, ClassLoader.class);
+    ClassLoader instrumentationClassLoader =
+        (ClassLoader)
+            getInstrumentationClassLoader.invoke(
+                null,
+                "io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12."
+                    + "SpymemcachedInstrumentationModule",
+                MemcachedClient.class.getClassLoader());
+    Class<?> adviceClass =
+        Class.forName(
+            "io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12."
+                + "MemcachedClientInstrumentation$AsyncBulkAdvice",
+            true,
+            instrumentationClassLoader);
+    Method methodEnter =
+        adviceClass.getMethod(
+            "methodEnter", MemcachedClient.class, String.class, String.class, Object[].class);
+    assertThatThrownBy(
+            () ->
+                methodEnter.invoke(
+                    null,
+                    memcached,
+                    "asyncGetBulk",
+                    "(Ljava/util/Collection;)Lnet/spy/memcached/internal/BulkFuture;",
+                    (Object) new Object[] {keys}))
+        .isInstanceOf(InvocationTargetException.class)
+        .hasCauseInstanceOf(IllegalStateException.class);
+
+    testing.runWithSpan(
+        "parent",
+        () -> assertThat(memcached.asyncGet(key("test-get")).get()).isEqualTo("get test"));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName(spanName("get"))
+                        .hasAttributesSatisfying(
+                            equalTo(DB_QUERY_TEXT, "get " + key("test-get")))));
+  }
+
+  @Test
+  void reentrantBulkRequestUsesItsOwnQueryText() throws Exception {
+    String outerKey = key("outer");
+    String nestedKey = key("nested");
+    MemcachedClient memcached = getMemcached(singletonMap("outer", "outer value"));
+    Transcoder<Object> defaultTranscoder = memcached.getTranscoder();
+    Transcoder<Object> transcoder =
+        new Transcoder<Object>() {
+          @Override
+          public boolean asyncDecode(CachedData cachedData) {
+            return defaultTranscoder.asyncDecode(cachedData);
+          }
+
+          @Override
+          public CachedData encode(Object value) {
+            return defaultTranscoder.encode(value);
+          }
+
+          @Override
+          public Object decode(CachedData cachedData) {
+            memcached.asyncGetBulk(singletonList(nestedKey));
+            return defaultTranscoder.decode(cachedData);
+          }
+
+          @Override
+          public int getMaxSize() {
+            return defaultTranscoder.getMaxSize();
+          }
+        };
+
+    testing.runWithSpan(
+        "parent",
+        () ->
+            assertThat(memcached.getBulk(singletonList(outerKey), transcoder))
+                .containsEntry(outerKey, "outer value"));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName(spanName("get"))
+                        .hasAttributesSatisfying(equalTo(DB_QUERY_TEXT, "getBulk " + outerKey))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(spanName("get"))
+                        .hasAttributesSatisfying(equalTo(DB_QUERY_TEXT, "getBulk " + nestedKey))));
   }
 
   @Test

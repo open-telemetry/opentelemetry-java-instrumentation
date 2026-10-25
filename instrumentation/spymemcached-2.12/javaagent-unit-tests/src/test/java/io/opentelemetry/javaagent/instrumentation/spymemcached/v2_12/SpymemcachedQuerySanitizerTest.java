@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.nCopies;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -95,6 +96,19 @@ class SpymemcachedQuerySanitizerTest {
     assertThat(SpymemcachedQuerySanitizer.sanitize("getBulk", "", new Object[] {keys, transcoders}))
         .isEqualTo("getBulk");
     verifyNoInteractions(keys, transcoders);
+  }
+
+  @Test
+  void omitsCollectionKeysWhenTranscodersAreAnIterator() {
+    Iterator<?> transcoders = singletonList(transcoder).iterator();
+
+    assertThat(
+            SpymemcachedQuerySanitizer.sanitize(
+                "getBulk",
+                "(Ljava/util/Collection;Ljava/util/Iterator;)Lnet/spy/memcached/internal/BulkFuture;",
+                new Object[] {asList("key1", "key2"), transcoders}))
+        .isEqualTo("getBulk");
+    assertThat(transcoders.next()).isSameAs(transcoder);
   }
 
   @Test

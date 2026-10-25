@@ -19,6 +19,7 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -153,7 +154,9 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
       if (queryText.equals("getBulk")) {
         return null;
       }
-      return Context.current().with(SpymemcachedRequest.BULK_QUERY_TEXT, queryText).makeCurrent();
+      return Context.current()
+          .with(SpymemcachedRequest.BULK_QUERY_TEXT, new AtomicReference<>(queryText))
+          .makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -188,11 +191,16 @@ class MemcachedClientInstrumentation implements TypeInstrumentation {
         return new AdviceScope<>(handler, callDepth, null);
       }
 
-      SpymemcachedRequest request =
-          SpymemcachedRequest.create(client.getConnection(), methodName, descriptor, args);
-      // Consume the synchronous bulk snapshot without propagating it to nested client calls.
-      Context parentContext = Context.current().with(SpymemcachedRequest.BULK_QUERY_TEXT, null);
-      return new AdviceScope<>(handler, callDepth, handler.create(parentContext, request));
+      try {
+        SpymemcachedRequest request =
+            SpymemcachedRequest.create(client.getConnection(), methodName, descriptor, args);
+        // Consume the synchronous bulk snapshot without propagating it to nested client calls.
+        Context parentContext = Context.current().with(SpymemcachedRequest.BULK_QUERY_TEXT, null);
+        return new AdviceScope<>(handler, callDepth, handler.create(parentContext, request));
+      } catch (Throwable t) {
+        callDepth.decrementAndGet();
+        throw t;
+      }
     }
 
     public void end(@Nullable F future, @Nullable Throwable throwable) {

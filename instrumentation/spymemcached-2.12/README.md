@@ -1,8 +1,9 @@
 # Settings for the Spymemcached instrumentation
 
 Query text includes keys and command parameters, with stored values replaced by `?`.
-Keys may contain sensitive information. Bulk keys supplied as one-shot iterators are omitted to
-avoid consuming the application's iterator.
+Keys may contain sensitive information. Bulk keys are omitted when supplied through iterators or
+paired with iterator-based transcoders, to avoid consuming iterators or reporting keys that may not
+be requested.
 
 | System property                                                  | Type    | Default | Description                                          |
 | ---------------------------------------------------------------- | ------- | ------- | ---------------------------------------------------- |

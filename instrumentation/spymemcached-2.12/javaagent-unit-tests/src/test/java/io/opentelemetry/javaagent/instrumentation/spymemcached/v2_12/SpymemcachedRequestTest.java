@@ -65,11 +65,11 @@ class SpymemcachedRequestTest {
   }
 
   @Test
-  void synchronousBulkSnapshotOnlyAppliesToBulkRequests() {
+  void synchronousBulkSnapshotIsUsedOnceOnlyForBulkRequests() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     try (Scope scope =
         Context.root()
-            .with(SpymemcachedRequest.BULK_QUERY_TEXT, "getBulk key1 key2")
+            .with(SpymemcachedRequest.BULK_QUERY_TEXT, new AtomicReference<>("getBulk key1 key2"))
             .makeCurrent()) {
       assertThat(
               SpymemcachedRequest.create(
@@ -79,6 +79,11 @@ class SpymemcachedRequestTest {
                       new Object[] {asList("key1", "key2").iterator()})
                   .getQueryText())
           .isEqualTo("getBulk key1 key2");
+      assertThat(
+              SpymemcachedRequest.create(
+                      connection, "asyncGetBulk", "", new Object[] {asList("key3", "key4")})
+                  .getQueryText())
+          .isEqualTo("getBulk key3 key4");
       assertThat(
               SpymemcachedRequest.create(connection, "asyncGet", "", new Object[] {"key3"})
                   .getQueryText())

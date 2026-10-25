@@ -18,6 +18,10 @@ final class SpymemcachedQuerySanitizer {
     if (args.length == 0) {
       return query.toString();
     }
+    if (operation.equals("getBulk")
+        && descriptor.startsWith("(Ljava/util/Collection;Ljava/util/Iterator;")) {
+      return query.toString();
+    }
     switch (operation) {
       case "getBulk":
         Object keys = args[0];
