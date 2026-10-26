@@ -37,7 +37,7 @@ class JedisErrorTypeTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"", "WRONGTYPE\u00e9 details"})
+  @ValueSource(strings = {"", "WRONGTYPEé details"})
   void unusableServerErrorPrefixKeepsExceptionClassFallback(String message) {
     JedisDataException serverError = new JedisDataException(message);
     JedisRequest request = requestFor(serverError);
