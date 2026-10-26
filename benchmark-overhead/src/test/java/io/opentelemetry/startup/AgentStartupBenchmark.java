@@ -81,8 +81,7 @@ class AgentStartupBenchmark {
     }
     saveMetadata(directory, metadata);
     DockerClient docker = DockerClientFactory.instance().client();
-    String volume = "otel-startup-" + UUID.randomUUID();
-    docker.createVolumeCmd().withName(volume).exec();
+    String volume = AgentStartupVolume.create(docker);
     List<AgentStartupReport.Sample> observations = new ArrayList<>();
     AgentStartupReport report = new AgentStartupReport(directory);
     try {
