@@ -51,7 +51,7 @@ class DbClientMetricsTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"default", "custom", "omit", "success"})
-  void spanAndMetricUseFinalClassification(String classification) {
+  void spanAndMetricUseClassification(String classification) {
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
