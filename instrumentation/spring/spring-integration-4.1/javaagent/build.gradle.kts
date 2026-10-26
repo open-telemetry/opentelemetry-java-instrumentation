@@ -136,10 +136,8 @@ tasks {
   }
 
   withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    if (name != "version41Test") {
-      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    }
   }
 }
 
