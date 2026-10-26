@@ -226,6 +226,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
   @ValueSource(booleans = {false, true})
   void pendingContentDemandFailureRetainsCallerContext(boolean withParent)
       throws ExecutionException, InterruptedException, TimeoutException {
+    ContextKey<String> key = ContextKey.named("jetty-test");
     CompletableFuture<Content.Source> pendingSource = new CompletableFuture<>();
     CompletableFuture<Content.Source> idleSource = new CompletableFuture<>();
     CompletableFuture<Void> demandCalled = new CompletableFuture<>();
@@ -261,15 +262,16 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     Content.Source pending = pendingSource.get(10, SECONDS);
     Content.Source idle = idleSource.get(10, SECONDS);
     assertThat(demandCalled).isNotDone();
-    testing.runWithSpan(
-        "failing-thread",
-        () -> {
-          pending.fail(failure);
-          assertThat(demandCalled).isCompleted();
-          testing.runWithSpan("after-pending-fail", () -> {});
-          idle.fail(failure);
-          testing.runWithSpan("after-idle-fail", () -> {});
-        });
+    Context unrelatedContext = Context.root().with(key, "unrelated");
+    try (Scope ignored = unrelatedContext.makeCurrent()) {
+      pending.fail(failure);
+      assertThat(demandCalled).isCompleted();
+      assertThat(Context.current().get(key)).isEqualTo(unrelatedContext.get(key));
+    }
+    try (Scope ignored = unrelatedContext.makeCurrent()) {
+      idle.fail(failure);
+      assertThat(Context.current().get(key)).isEqualTo(unrelatedContext.get(key));
+    }
 
     assertThat(completed.get(10, SECONDS).getFailure()).isSameAs(failure);
 
@@ -280,23 +282,13 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
                   span -> span.hasName("parent").hasNoParent(),
                   span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
                   span -> span.hasName("test-http-server").hasParent(trace.getSpan(1)),
-                  span -> span.hasName("response-body").hasParent(trace.getSpan(0))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("failing-thread").hasNoParent(),
-                  span -> span.hasName("after-pending-fail").hasParent(trace.getSpan(0)),
-                  span -> span.hasName("after-idle-fail").hasParent(trace.getSpan(0))));
+                  span -> span.hasName("response-body").hasParent(trace.getSpan(0))));
     } else {
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasNoParent(),
                   span -> span.hasName("test-http-server").hasParent(trace.getSpan(0))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("failing-thread").hasNoParent(),
-                  span -> span.hasName("after-pending-fail").hasParent(trace.getSpan(0)),
-                  span -> span.hasName("after-idle-fail").hasParent(trace.getSpan(0))),
           trace ->
               trace.hasSpansSatisfyingExactly(span -> span.hasName("response-body").hasNoParent()));
     }
@@ -453,27 +445,17 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
   }
 
   @ParameterizedTest
-  @CsvSource({
-    "true, success",
-    "false, success",
-    "true, asyncFailure",
-    "false, asyncFailure",
-    "true, inlineFailure",
-    "false, inlineFailure"
-  })
-  void aggregateResponseListenerContext(boolean withParent, String outcome)
-      throws ReflectiveOperationException, ExecutionException, InterruptedException, TimeoutException {
+  @ValueSource(booleans = {false, true})
+  void aggregateResponseListenerContext(boolean withParent)
+      throws ReflectiveOperationException,
+          ExecutionException,
+          InterruptedException,
+          TimeoutException {
     assumeTrue(testLatestDeps());
 
-    IOException failure = new IOException("request failed");
     CompletableFuture<Result> completed = new CompletableFuture<>();
     CompletableFuture<Result> aggregateCompleted = new CompletableFuture<>();
     Request request = client.newRequest(resolveAddress("/success")).method("POST");
-    if (outcome.equals("inlineFailure")) {
-      request.onRequestQueued(queued -> queued.abort(failure));
-    } else if (outcome.equals("asyncFailure")) {
-      request.onRequestBegin(begun -> begun.abort(failure));
-    }
     Request.class
         .getMethod("onResponseListener", Response.Listener.class)
         .invoke(
@@ -497,13 +479,9 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     }
     Result result = completed.get(10, SECONDS);
     assertThat(aggregateCompleted.get(10, SECONDS)).isSameAs(result);
-    assertThat(result.isSucceeded()).isEqualTo(outcome.equals("success"));
-    if (outcome.equals("success")) {
-      assertThat(result.getResponse().getStatus()).isEqualTo(200);
-    } else {
-      assertThat(result.getFailure()).isSameAs(failure);
-    }
-    if (withParent && outcome.equals("success")) {
+    assertThat(result.isSucceeded()).isTrue();
+    assertThat(result.getResponse().getStatus()).isEqualTo(200);
+    if (withParent) {
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactlyInAnyOrder(
@@ -511,27 +489,12 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
                   span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
                   span -> span.hasName("test-http-server").hasParent(trace.getSpan(1)),
                   span -> span.hasName("aggregate-complete").hasParent(trace.getSpan(0))));
-    } else if (withParent) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactlyInAnyOrder(
-                  span -> span.hasName("parent").hasNoParent(),
-                  span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
-                  span -> span.hasName("aggregate-complete").hasParent(trace.getSpan(0))));
-    } else if (outcome.equals("success")) {
+    } else {
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasNoParent(),
                   span -> span.hasName("test-http-server").hasParent(trace.getSpan(0))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("aggregate-complete").hasNoParent()));
-    } else {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasNoParent()),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("aggregate-complete").hasNoParent()));

@@ -64,15 +64,10 @@ public final class JettyClientWrapUtil {
             (proxy, method, args) -> {
               Context context = contextSupplier.get();
               try (Scope ignored = context.makeCurrent()) {
-                Object[] invocationArgs = args;
-                if (method.getName().equals("onContentSource")
-                    && args != null
-                    && args.length == 2
-                    && args[1] instanceof Content.Source) {
-                  invocationArgs = args.clone();
-                  invocationArgs[1] = wrapContentSource((Content.Source) args[1], context);
+                if (method.getName().equals("onContentSource")) {
+                  args[1] = wrapContentSource((Content.Source) args[1], context);
                 }
-                return method.invoke(listener, invocationArgs);
+                return method.invoke(listener, args);
               } catch (InvocationTargetException e) {
                 throw e.getCause();
               }
