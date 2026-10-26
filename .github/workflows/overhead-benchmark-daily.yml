@@ -390,7 +390,7 @@ jobs:
       contents: read
       actions: read
     runs-on: oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24
-    timeout-minutes: 190
+    timeout-minutes: 360
     concurrency:
       group: servlet-benchmark
       cancel-in-progress: false

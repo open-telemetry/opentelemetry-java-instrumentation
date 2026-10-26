@@ -41,7 +41,8 @@ This input is ignored when `artifact-run-id` reuses a complete bundle.
 `quarkus-rate` defaults to 2,000 requests/s and is ignored during calibration.
 Choose a rate with application and infrastructure headroom before comparing
 agents. `quarkus-repetitions` defaults to five paired repetitions. Each repetition
-also includes a fresh no-agent trial.
+also includes a fresh no-agent trial. It accepts one to ten pairs; five pairs
+take about 2.5 hours, excluding setup and queue time.
 
 Builds run on hosted runners. Measurements run serially on
 `oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24`, using a digest-pinned Java 21
