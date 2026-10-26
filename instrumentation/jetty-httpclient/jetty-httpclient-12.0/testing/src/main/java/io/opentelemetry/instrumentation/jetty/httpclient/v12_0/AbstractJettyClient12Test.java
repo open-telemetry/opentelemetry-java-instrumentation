@@ -380,7 +380,11 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
               new Response.Listener() {
                 @Override
                 public void onComplete(Result result) {
-                  aggregateCompleted.complete(null);
+                  try {
+                    testing.runWithSpan("aggregate-complete", () -> {});
+                  } finally {
+                    aggregateCompleted.complete(null);
+                  }
                 }
               });
     }
@@ -397,7 +401,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     } else {
       send.run();
     }
-    Result result = completed.join();
+    Result result = completed.get(10, SECONDS);
     if (testLatestDeps()) {
       aggregateCompleted.get(10, SECONDS);
     }
@@ -409,69 +413,153 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
       assertThat(result.getFailure()).isSameAs(failure);
     }
     if (withParent && outcome.equals("success")) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactlyInAnyOrder(
-                  span -> span.hasName("parent").hasNoParent(),
-                  span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
-                  span -> span.hasName("test-http-server").hasParent(trace.getSpan(1)),
-                  span -> span.hasName("listener-headers").hasParent(trace.getSpan(0)),
-                  span -> span.hasName("listener-success").hasParent(trace.getSpan(0)),
-                  span -> span.hasName("listener-complete").hasParent(trace.getSpan(0)),
-                  span -> span.hasName("registered-headers").hasParent(trace.getSpan(0)),
-                  span -> span.hasName("registered-success").hasParent(trace.getSpan(0)),
-                  span -> span.hasName("registered-complete").hasParent(trace.getSpan(0))));
+      if (testLatestDeps()) {
+        testing.waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactlyInAnyOrder(
+                    span -> span.hasName("parent").hasNoParent(),
+                    span ->
+                        span.hasName("POST").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                    span -> span.hasName("test-http-server").hasParent(trace.getSpan(1)),
+                    span -> span.hasName("listener-headers").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("listener-success").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("listener-complete").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("registered-headers").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("registered-success").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("registered-complete").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("aggregate-complete").hasParent(trace.getSpan(0))));
+      } else {
+        testing.waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactlyInAnyOrder(
+                    span -> span.hasName("parent").hasNoParent(),
+                    span ->
+                        span.hasName("POST").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                    span -> span.hasName("test-http-server").hasParent(trace.getSpan(1)),
+                    span -> span.hasName("listener-headers").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("listener-success").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("listener-complete").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("registered-headers").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("registered-success").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("registered-complete").hasParent(trace.getSpan(0))));
+      }
     } else if (withParent) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactlyInAnyOrder(
-                  span -> span.hasName("parent").hasNoParent(),
-                  span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
-                  span -> span.hasName("listener-failure").hasParent(trace.getSpan(0)),
-                  span -> span.hasName("listener-complete").hasParent(trace.getSpan(0)),
-                  span -> span.hasName("registered-failure").hasParent(trace.getSpan(0)),
-                  span -> span.hasName("registered-complete").hasParent(trace.getSpan(0))));
+      if (testLatestDeps()) {
+        testing.waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactlyInAnyOrder(
+                    span -> span.hasName("parent").hasNoParent(),
+                    span ->
+                        span.hasName("POST").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                    span -> span.hasName("listener-failure").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("listener-complete").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("registered-failure").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("registered-complete").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("aggregate-complete").hasParent(trace.getSpan(0))));
+      } else {
+        testing.waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactlyInAnyOrder(
+                    span -> span.hasName("parent").hasNoParent(),
+                    span ->
+                        span.hasName("POST").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                    span -> span.hasName("listener-failure").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("listener-complete").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("registered-failure").hasParent(trace.getSpan(0)),
+                    span -> span.hasName("registered-complete").hasParent(trace.getSpan(0))));
+      }
     } else if (outcome.equals("success")) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasNoParent(),
-                  span -> span.hasName("test-http-server").hasParent(trace.getSpan(0))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("registered-headers").hasNoParent()),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("listener-headers").hasNoParent()),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("registered-success").hasNoParent()),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("listener-success").hasNoParent()),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("registered-complete").hasNoParent()),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("listener-complete").hasNoParent()));
+      if (testLatestDeps()) {
+        testing.waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasNoParent(),
+                    span -> span.hasName("test-http-server").hasParent(trace.getSpan(0))),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("registered-headers").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("listener-headers").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("registered-success").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("listener-success").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("registered-complete").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("listener-complete").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("aggregate-complete").hasNoParent()));
+      } else {
+        testing.waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasNoParent(),
+                    span -> span.hasName("test-http-server").hasParent(trace.getSpan(0))),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("registered-headers").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("listener-headers").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("registered-success").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("listener-success").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("registered-complete").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("listener-complete").hasNoParent()));
+      }
     } else {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasNoParent()),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("registered-failure").hasNoParent()),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("listener-failure").hasNoParent()),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("registered-complete").hasNoParent()),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("listener-complete").hasNoParent()));
+      if (testLatestDeps()) {
+        testing.waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("registered-failure").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("listener-failure").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("registered-complete").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("listener-complete").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("aggregate-complete").hasNoParent()));
+      } else {
+        testing.waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("registered-failure").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("listener-failure").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("registered-complete").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("listener-complete").hasNoParent()));
+      }
     }
   }
 

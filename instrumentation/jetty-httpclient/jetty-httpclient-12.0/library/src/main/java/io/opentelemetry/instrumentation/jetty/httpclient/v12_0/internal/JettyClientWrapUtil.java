@@ -15,6 +15,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.util.thread.Invocable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -101,7 +102,8 @@ public final class JettyClientWrapUtil {
 
     @Override
     public void demand(Runnable callback) {
-      delegate.demand(context.wrap(callback));
+      delegate.demand(
+          Invocable.from(Invocable.getInvocationType(callback), context.wrap(callback)));
     }
 
     @Override
