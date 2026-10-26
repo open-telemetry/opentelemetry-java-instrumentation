@@ -59,7 +59,7 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
     LongUpDownCounterBuilder activeRequestsBuilder =
         meter
             .upDownCounterBuilder("http.server.active_requests")
-            .setUnit("{requests}")
+            .setUnit("{request}")
             .setDescription("Number of active HTTP server requests.");
     HttpExperimentalMetricsAdvice.applyServerActiveRequestsAdvice(activeRequestsBuilder);
     activeRequests = activeRequestsBuilder.build();

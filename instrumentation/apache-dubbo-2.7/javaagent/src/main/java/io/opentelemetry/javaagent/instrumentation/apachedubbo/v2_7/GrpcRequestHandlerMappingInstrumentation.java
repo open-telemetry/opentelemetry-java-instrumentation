@@ -22,9 +22,9 @@ import net.bytebuddy.matcher.ElementMatcher;
  * spans for the Dubbo Triple protocol (gRPC over HTTP/2).
  *
  * <p>Unlike the Dubbo binary protocol where trace context is embedded in the message body
- * (attachments), Triple transmits trace context as HTTP/2 headers. This means the parent trace
- * context is always available even when service routing fails, resulting in a single trace (1
- * client span + 1 server span named {@code dubbo}).
+ * (attachments), Triple transmits trace context as HTTP/2 headers. This allows parent trace context
+ * extraction even when service routing fails, falling back to the current context when no parent is
+ * propagated.
  */
 public class GrpcRequestHandlerMappingInstrumentation implements TypeInstrumentation {
 
