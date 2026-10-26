@@ -26,7 +26,6 @@ import com.couchbase.mock.Bucket.BucketType;
 import com.couchbase.mock.BucketConfiguration;
 import com.couchbase.mock.CouchbaseMock;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -56,10 +55,10 @@ class CouchbaseBaselineTest {
 
   @BeforeAll
   void setUp() throws Exception {
-    int httpPort = PortUtils.findOpenPort();
-    CouchbaseMock mock = new CouchbaseMock("127.0.0.1", httpPort, 1, 1);
+    CouchbaseMock mock = new CouchbaseMock("127.0.0.1", 0, 1, 1);
     cleanup.deferAfterAll(mock::stop);
     mock.start();
+    int httpPort = mock.getHttpPort();
 
     BucketConfiguration configuration = new BucketConfiguration();
     configuration.name = BUCKET_NAME;

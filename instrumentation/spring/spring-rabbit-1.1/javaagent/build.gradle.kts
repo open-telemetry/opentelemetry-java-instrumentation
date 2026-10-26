@@ -59,11 +59,7 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    if (!name.endsWith("unitTests", ignoreCase = true)) {
-      if (name != "testSpringDisabled") {
-        usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-      }
-    }
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
     // add byte buddy agent for mockito

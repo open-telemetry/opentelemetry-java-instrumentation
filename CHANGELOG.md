@@ -7,6 +7,7 @@
 - Messaging `MessagingAttributesGetter.getErrorType()` overrides now provide the final
   `error.type` value. Return `null` to omit it, or return `error == null ? null :
   error.getClass().getName()` for exception-class fallback.
+- Require R2DBC SPI 1.0 or later.
 - Rename the Spark Java instrumentation selector from `spark-2.3` to `spark-2.4`.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to
