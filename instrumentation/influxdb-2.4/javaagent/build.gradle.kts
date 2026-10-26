@@ -25,6 +25,13 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation("org.influxdb:influxdb-java:2.4")
+      }
+    }
+
     register<JvmTestSuite>("test24") {
       dependencies {
         implementation(project())
@@ -49,7 +56,7 @@ val test29RuntimeClasspath = configurations.create("test29RuntimeClasspath") {
 }
 
 tasks {
-  withType<Test>().configureEach {
+  withType<Test>().matching { it.name != "unitTests" }.configureEach {
     // we disable the okhttp instrumentation, so we don't need to assert on the okhttp spans
     // from the okhttp instrumentation we need OkHttp3IgnoredTypesConfigurer to fix context leaks
     jvmArgs("-Dotel.instrumentation.okhttp.enabled=false")
@@ -111,6 +118,6 @@ tasks {
   }
 
   check {
-    dependsOn(testQuerySanitizationDisabled, test213, test225, test29)
+    dependsOn("unitTests", testQuerySanitizationDisabled, test213, test225, test29)
   }
 }

@@ -21,7 +21,10 @@ final class InfluxDbQueryAttributesGetter
   @Override
   public String getErrorType(
       InfluxDbQuery request, @Nullable InfluxDbResponse response, @Nullable Throwable error) {
-    return response == null ? null : response.getErrorType();
+    if (response != null && response.getErrorType() != null) {
+      return response.getErrorType();
+    }
+    return error == null ? null : error.getClass().getName();
   }
 
   @Override
