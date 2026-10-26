@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -21,13 +22,14 @@ import javax.annotation.Nullable;
 class VertxSqlClientAttributesGetter
     implements SqlClientAttributesGetter<VertxSqlClientRequest, Void> {
 
-  private static final String MYSQL_DATABASE = "mysql.db";
   private static final String ORACLE_DATABASE = "oracle.db";
 
   private static final Function<Throwable, String> responseStatusExtractor =
       createResponseStatusExtractor(false);
   private static final Function<Throwable, String> dbResponseStatusExtractor =
       createResponseStatusExtractor(true);
+  private static final Function<Throwable, String> mysqlDbResponseStatusExtractor =
+      responseStatusExtractor("io.vertx.mysqlclient.MySQLException", "getSqlState", true);
   private static final Function<Throwable, String> dbResponseErrorCodeExtractor =
       createNonZeroErrorCodeExtractor();
 
@@ -87,14 +89,18 @@ class VertxSqlClientAttributesGetter
             instanceof ConnectException) {
       return null;
     }
-    if (MYSQL_DATABASE.equals(request.getDbSystemName())
+    if (MYSQL.equals(request.getDbSystemName())
         || ORACLE_DATABASE.equals(request.getDbSystemName())) {
       String errorCode = dbResponseErrorCodeExtractor.apply(error);
       if (errorCode != null) {
         return errorCode;
       }
     }
-    return dbResponseStatusExtractor.apply(error);
+    String status = dbResponseStatusExtractor.apply(error);
+    if (status != null || !MYSQL.equals(request.getDbSystemName())) {
+      return status;
+    }
+    return mysqlDbResponseStatusExtractor.apply(error);
   }
 
   @Override
@@ -117,8 +123,19 @@ class VertxSqlClientAttributesGetter
   }
 
   private static Function<Throwable, String> createNonZeroErrorCodeExtractor() {
+    Function<Throwable, String> databaseExceptionExtractor =
+        nonZeroErrorCodeExtractor("io.vertx.sqlclient.DatabaseException");
+    Function<Throwable, String> mysqlExceptionExtractor =
+        nonZeroErrorCodeExtractor("io.vertx.mysqlclient.MySQLException");
+    return error -> {
+      String errorCode = databaseExceptionExtractor.apply(error);
+      return errorCode != null ? errorCode : mysqlExceptionExtractor.apply(error);
+    };
+  }
+
+  private static Function<Throwable, String> nonZeroErrorCodeExtractor(String className) {
     try {
-      Class<?> exClass = Class.forName("io.vertx.sqlclient.DatabaseException");
+      Class<?> exClass = Class.forName(className);
       Method method = exClass.getDeclaredMethod("getErrorCode");
 
       return error -> {
