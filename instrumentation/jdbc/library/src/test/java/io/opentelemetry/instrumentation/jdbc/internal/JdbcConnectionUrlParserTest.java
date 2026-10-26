@@ -431,8 +431,15 @@ class JdbcConnectionUrlParserTest {
             .build(),
         arg("jdbc:mysql://(host=mdb.host,password=P,W)/mdbdb")
             .setSystem(MYSQL)
+            .setHost("mdb.host")
+            .setPort(3306)
             .setName("mdbdb")
-            .setNoConfiguredTarget()
+            .build(),
+        arg("jdbc:mysql://(host=mdb.host,%68ost=mdb.host2,port=33)/mdbdb")
+            .setSystem(MYSQL)
+            .setHost("mdb.host2")
+            .setPort(33)
+            .setName("mdbdb")
             .build(),
         arg("jdbc:mysql://(host=mdb.host,)/mdbdb")
             .setSystem(MYSQL)
@@ -470,10 +477,11 @@ class JdbcConnectionUrlParserTest {
             .build(),
         arg("jdbc:mysql://(host=mdb.host,port=)/mdbdb")
             .setSystem(MYSQL)
+            .setHost("mdb.host")
+            .setPort(3306)
             .setName("mdbdb")
-            .setNoConfiguredTarget()
             .build(),
-        arg("jdbc:mysql://(host=mdb.host,port=33),(host=mdb.host2,password=P,W)/mdbdb")
+        arg("jdbc:mysql://(host=mdb.host,port=33),(port=3306)/mdbdb")
             .setSystem(MYSQL)
             .setName("mdbdb")
             .setMultiTarget()
