@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 
-import io.grpc.ClientInterceptor;
 import io.grpc.Context;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.ServerBuilder;
@@ -18,6 +17,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetryBuilder;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.Experimental;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcConfig;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
@@ -32,9 +32,7 @@ public class GrpcSingletons {
   public static final VirtualField<ServerBuilder<?>, Boolean> SERVER_BUILDER_INSTRUMENTED =
       VirtualField.find(ServerBuilder.class, Boolean.class);
 
-  private static final ClientInterceptor clientInterceptor;
-
-  private static final GrpcTelemetry grpcTelemetry;
+  private static final GrpcTelemetry telemetry;
 
   private static final AtomicReference<Context.Storage> storageReference = new AtomicReference<>();
 
@@ -60,18 +58,16 @@ public class GrpcSingletons {
     if (serverRequestMetadata != null) {
       telemetryBuilder.setServerRequestMetadata(serverRequestMetadata);
     }
-    grpcTelemetry = telemetryBuilder.build();
-
-    clientInterceptor = grpcTelemetry.createClientInterceptor();
-  }
-
-  public static ClientInterceptor clientInterceptor() {
-    return clientInterceptor;
+    telemetry = telemetryBuilder.build();
   }
 
   @Nullable
   public static Context.Storage storage() {
     return storageReference.get();
+  }
+
+  public static void addClientInterceptor(ManagedChannelBuilder<?> builder) {
+    Experimental.addClientInterceptor(telemetry, builder);
   }
 
   public static Context.Storage setStorage(Context.Storage storage) {
@@ -80,7 +76,7 @@ public class GrpcSingletons {
   }
 
   public static void configureServerBuilder(ServerBuilder<?> serverBuilder) {
-    grpcTelemetry.configureServerBuilder(serverBuilder);
+    telemetry.configureServerBuilder(serverBuilder);
   }
 
   private GrpcSingletons() {}

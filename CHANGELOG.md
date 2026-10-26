@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes
 
+- GenAI error type getters now return the final value. Returning `null` omits `error.type`; overrides
+  should return `error == null ? null : error.getClass().getName()` for the exception-class fallback.
+- HTTP client and server getters now determine `error.type`; their returned value, including `null`,
+  is used as-is.
 - Messaging `MessagingAttributesGetter.getErrorType()` overrides now provide the final
   `error.type` value. Return `null` to omit it, or return `error == null ? null :
   error.getClass().getName()` for exception-class fallback.
@@ -336,6 +340,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Replace `GrpcRequest.getLogicalHost()` and `getLogicalPort()` with `getServerAddress()` and
+  `getServerPort()`. Unavailable ports are now `null` instead of `-1`.
+  ([#16161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16161))
 - `TracedOnSubscribe.perSubscription(...)` now returns `Observable.OnSubscribe<T>` instead of
   `TracedOnSubscribe<T, REQUEST>`. Recompile consumers.
 - Make the Netty 4.1 library's `NettyRequest` final; use it only as an opaque request view.

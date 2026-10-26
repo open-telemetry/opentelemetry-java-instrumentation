@@ -57,7 +57,6 @@ import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -87,10 +86,7 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
   private static AmazonSQSAsync sqsClient;
 
   protected boolean receiveTelemetryEnabled() {
-    return testing() instanceof AgentInstrumentationExtension
-        ? Boolean.getBoolean(
-            "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled")
-        : Boolean.getBoolean("test.messagingReceiveTelemetryEnabled");
+    return Boolean.getBoolean("test.messagingReceiveTelemetryEnabled");
   }
 
   protected abstract AmazonSQSAsyncClientBuilder configureClient(

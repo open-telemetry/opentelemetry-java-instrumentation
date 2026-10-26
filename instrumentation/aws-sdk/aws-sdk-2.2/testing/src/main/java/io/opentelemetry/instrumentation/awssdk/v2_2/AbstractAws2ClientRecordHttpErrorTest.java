@@ -26,7 +26,6 @@ import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -123,10 +122,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest extends AbstractAwsS
   }
 
   protected boolean isRecordIndividualHttpErrorEnabled() {
-    return getTesting() instanceof AgentInstrumentationExtension
-        ? Boolean.getBoolean(
-            "otel.instrumentation.aws-sdk.experimental-record-individual-http-error")
-        : Boolean.getBoolean("test.recordIndividualHttpError");
+    return Boolean.getBoolean("test.recordIndividualHttpError");
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
