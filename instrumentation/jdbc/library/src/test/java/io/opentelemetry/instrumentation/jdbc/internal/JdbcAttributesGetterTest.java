@@ -90,14 +90,15 @@ class JdbcAttributesGetterTest {
 
   @ParameterizedTest
   @ValueSource(ints = {17008, 17009})
-  void omitsOracleLocalClosedCodesWithoutChangingErrorType(int errorCode) {
+  void capturesOracleClosedCodesWithoutChangingErrorType(int errorCode) {
     DbRequest request =
         DbRequest.create(DbInfo.builder().dbSystemName(ORACLE_DB).build(), "SELECT 1", false);
     SQLException error = new SQLException("Closed locally", "99999", errorCode);
 
     assertThat(attributesGetter.getErrorType(request, null, error))
         .isEqualTo(Integer.toString(errorCode));
-    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isNull();
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error))
+        .isEqualTo(Integer.toString(errorCode));
   }
 
   @ParameterizedTest
@@ -112,17 +113,17 @@ class JdbcAttributesGetterTest {
   }
 
   @Test
-  void omitsH2LocalClosedConnectionCodeWithoutChangingErrorType() {
+  void capturesH2ClosedObjectCodeWithoutChangingErrorType() {
     DbRequest request =
         DbRequest.create(DbInfo.builder().dbSystemName(H2DATABASE).build(), "SELECT 1", false);
     SQLException error = new SQLException("The object is already closed", "90007", 90007);
 
     assertThat(attributesGetter.getErrorType(request, null, error)).isEqualTo("90007");
-    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isNull();
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isEqualTo("90007");
   }
 
   @Test
-  void omitsPostgresqlLocalClosedConnectionCodeWithoutChangingErrorType() {
+  void capturesPostgresqlLocalClosedConnectionCodeWithoutChangingErrorType() {
     DbRequest request =
         DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);
     SQLException error = new SQLException("This connection has been closed.", "08003");
@@ -132,7 +133,7 @@ class JdbcAttributesGetterTest {
         });
 
     assertThat(attributesGetter.getErrorType(request, null, error)).isEqualTo("08003");
-    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isNull();
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isEqualTo("08003");
   }
 
   @Test

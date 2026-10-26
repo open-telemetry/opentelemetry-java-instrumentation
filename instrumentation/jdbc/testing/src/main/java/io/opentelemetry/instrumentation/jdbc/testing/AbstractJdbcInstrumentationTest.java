@@ -2153,7 +2153,9 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
                                 equalTo(DB_OPERATION_NAME, operation),
                                 equalTo(ERROR_TYPE, Integer.toString(error.getErrorCode())),
-                                equalTo(DB_RESPONSE_STATUS_CODE, null))));
+                                equalTo(
+                                    DB_RESPONSE_STATUS_CODE,
+                                    Integer.toString(error.getErrorCode())))));
 
     if (emitExceptionAsLogs()) {
       testing()

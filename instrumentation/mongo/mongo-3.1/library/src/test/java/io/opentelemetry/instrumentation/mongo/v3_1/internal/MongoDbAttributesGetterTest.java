@@ -129,12 +129,13 @@ class MongoDbAttributesGetterTest {
 
   @ParameterizedTest
   @MethodSource("errorTypes")
-  void getErrorTypeReturnsServerCodeOrFallsBack(Throwable error, String expectedErrorType) {
+  void getErrorTypeAndResponseStatusKeepDistinctPolicies(
+      Throwable error, String expectedErrorType, String expectedStatus) {
     MongoDbAttributesGetter getter =
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
 
     assertThat(getter.getErrorType(null, null, error)).isEqualTo(expectedErrorType);
-    assertThat(getter.getDbResponseStatusCode(null, null, error)).isEqualTo(expectedErrorType);
+    assertThat(getter.getDbResponseStatusCode(null, null, error)).isEqualTo(expectedStatus);
   }
 
   @Test
@@ -241,19 +242,23 @@ class MongoDbAttributesGetterTest {
 
   private static Stream<Arguments> errorTypes() {
     return Stream.of(
-        argumentSet("server error code", new MongoException(11000, "duplicate key"), "11000"),
-        argumentSet("zero code falls back", new MongoException(0, "boom"), null),
-        argumentSet("client message sentinel (-3)", new MongoException("boom"), null),
+        argumentSet(
+            "server error code", new MongoException(11000, "duplicate key"), "11000", "11000"),
+        argumentSet("zero code falls back", new MongoException(0, "boom"), null, null),
+        argumentSet("unavailable code", new MongoException(-1, "boom"), null, null),
+        argumentSet("client message sentinel (-3)", new MongoException("boom"), null, "-3"),
         argumentSet(
             "client message-and-cause sentinel (-4)",
             new MongoException("boom", new RuntimeException()),
-            null),
+            null,
+            "-4"),
         argumentSet(
             "socket exception sentinel (-2)",
             new MongoSocketException("boom", new ServerAddress()),
-            null),
-        argumentSet("non-mongo exception", new IllegalStateException("boom"), null),
-        argumentSet("no error", null, null));
+            null,
+            "-2"),
+        argumentSet("non-mongo exception", new IllegalStateException("boom"), null, null),
+        argumentSet("no error", null, null, null));
   }
 
   private static CommandStartedEvent commandStartedEvent() {

@@ -373,7 +373,7 @@ class ClickHouseClientV1Test {
                             equalTo(DB_QUERY_TEXT, "select * from non_existent_table"),
                             equalTo(DB_QUERY_SUMMARY, "select non_existent_table"),
                             equalTo(ERROR_TYPE, "210"),
-                            equalTo(DB_RESPONSE_STATUS_CODE, null))));
+                            equalTo(DB_RESPONSE_STATUS_CODE, "210"))));
   }
 
   @Test

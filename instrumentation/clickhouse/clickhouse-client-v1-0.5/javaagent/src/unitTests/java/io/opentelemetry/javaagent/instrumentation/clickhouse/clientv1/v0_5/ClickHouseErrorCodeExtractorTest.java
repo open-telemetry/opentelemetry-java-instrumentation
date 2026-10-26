@@ -39,10 +39,11 @@ class ClickHouseErrorCodeExtractorTest {
 
   @ParameterizedTest
   @MethodSource("clientFailures")
-  void omitsClientCodesWithoutChangingErrorType(
+  void retainsClientCodesWithoutChangingErrorType(
       ClickHouseException error, String expectedErrorType) {
     assertThat(ClickHouseErrorCodeExtractor.getErrorType(error)).isEqualTo(expectedErrorType);
-    assertThat(ClickHouseErrorCodeExtractor.getDbResponseStatusCode(error)).isNull();
+    assertThat(ClickHouseErrorCodeExtractor.getDbResponseStatusCode(error))
+        .isEqualTo(expectedErrorType);
   }
 
   private static Stream<Arguments> clientFailures() {

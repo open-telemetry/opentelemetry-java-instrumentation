@@ -20,7 +20,6 @@ import javax.annotation.Nullable;
 public final class R2dbcSqlAttributesGetter
     implements SqlClientAttributesGetter<DbExecution, Void> {
 
-  private static final String POSTGRESQL_DATABASE = "postgresql";
   private static final String MYSQL_DATABASE = "mysql";
   private static final String MARIADB_DATABASE = "mariadb";
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
@@ -29,9 +28,6 @@ public final class R2dbcSqlAttributesGetter
   private static final String DB2_DATABASE = "ibm.db2";
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String OTHER_SQL_DATABASE = "other_sql";
-  private static final String POSTGRESQL_CLOSED_CONNECTION_EXCEPTION =
-      "io.r2dbc.postgresql.client.ReactorNettyClient$PostgresConnectionClosedException";
-  private static final String POSTGRESQL_CONNECTION_FAILURE = "08006";
 
   @Override
   public String getDbSystemName(DbExecution request) {
@@ -72,12 +68,6 @@ public final class R2dbcSqlAttributesGetter
   public String getDbResponseStatusCode(
       DbExecution request, @Nullable Void response, @Nullable Throwable error) {
     String dbSystemName = getDbSystemName(request);
-    if (POSTGRESQL_DATABASE.equals(dbSystemName)
-        && error != null
-        && POSTGRESQL_CLOSED_CONNECTION_EXCEPTION.equals(error.getClass().getName())
-        && POSTGRESQL_CONNECTION_FAILURE.equals(getSqlState(error))) {
-      return null;
-    }
     if (MYSQL_DATABASE.equals(dbSystemName)
         || MARIADB_DATABASE.equals(dbSystemName)
         || ORACLE_DB.equals(dbSystemName)

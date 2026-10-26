@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServ
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
+import net.spy.memcached.internal.BulkFuture;
 import net.spy.memcached.internal.GetFuture;
 import net.spy.memcached.internal.OperationFuture;
 import net.spy.memcached.ops.OperationStatus;
@@ -51,15 +52,7 @@ class SpymemcachedAttributesGetter
     if (code == null) {
       return null;
     }
-    switch (code) {
-      case CANCELLED:
-      case INTERRUPTED:
-      case TIMEDOUT:
-      case ERR_CLIENT:
-        return null;
-      default:
-        return code.name();
-    }
+    return code.name();
   }
 
   @Override
@@ -102,18 +95,13 @@ class SpymemcachedAttributesGetter
   @Nullable
   private static OperationStatus getOperationStatus(@Nullable Object response) {
     if (response instanceof OperationFuture) {
-      OperationFuture<?> future = (OperationFuture<?>) response;
-      if (future.isCancelled()) {
-        return null;
-      }
-      return future.getStatus();
+      return ((OperationFuture<?>) response).getStatus();
     }
     if (response instanceof GetFuture) {
-      GetFuture<?> getFuture = (GetFuture<?>) response;
-      if (getFuture.isCancelled()) {
-        return null;
-      }
-      return getFuture.getStatus();
+      return ((GetFuture<?>) response).getStatus();
+    }
+    if (response instanceof BulkFuture) {
+      return ((BulkFuture<?>) response).getStatus();
     }
     return null;
   }

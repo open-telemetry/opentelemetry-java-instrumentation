@@ -25,7 +25,7 @@ class VertxSqlClientAttributesGetterTest {
   private final VertxSqlClientRequest request = request(ORACLE_DB);
 
   @Test
-  void omitsClientConnectionStatusWithoutChangingErrorType() {
+  void capturesOracleConnectionStatusWithoutChangingErrorType() {
     SQLException cause =
         new SQLException(
             "No listener",
@@ -35,7 +35,7 @@ class VertxSqlClientAttributesGetterTest {
     DatabaseException error = new DatabaseException("No listener", 12541, "66000", cause) {};
 
     assertThat(getter.getErrorType(request, null, error)).isEqualTo("66000");
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isNull();
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("12541");
   }
 
   @Test

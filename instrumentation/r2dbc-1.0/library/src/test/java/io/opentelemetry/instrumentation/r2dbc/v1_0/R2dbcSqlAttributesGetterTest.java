@@ -53,7 +53,7 @@ class R2dbcSqlAttributesGetterTest {
   }
 
   @Test
-  void omitsPostgresqlLocalClosedConnectionCodeWithoutChangingErrorType()
+  void capturesPostgresqlClosedConnectionCodeWithoutChangingErrorType()
       throws ReflectiveOperationException {
     DbExecution request =
         new DbExecution(
@@ -62,7 +62,7 @@ class R2dbcSqlAttributesGetterTest {
     Throwable error = postgresqlConnectionClosedException();
 
     assertThat(getter.getErrorType(request, null, error)).isEqualTo("08006");
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isNull();
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("08006");
   }
 
   @Test
