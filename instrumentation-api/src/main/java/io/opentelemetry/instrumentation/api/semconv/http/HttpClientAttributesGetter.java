@@ -52,7 +52,7 @@ public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
    * response without an exception. Positive invalid status codes are classified by the client
    * status rules.
    *
-   * <p>Use {@link HttpErrorType#forClient(HttpCommonAttributesGetter, Object, Object, Throwable)}
+   * <p>Use {@link HttpErrorType#forClient(HttpClientAttributesGetter, Object, Object, Throwable)}
    * to apply the default client classification.
    */
   @Nullable

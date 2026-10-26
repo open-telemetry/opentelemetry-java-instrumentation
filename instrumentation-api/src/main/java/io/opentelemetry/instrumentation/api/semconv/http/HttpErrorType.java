@@ -30,7 +30,7 @@ public final class HttpErrorType {
    */
   @Nullable
   public static <REQUEST, RESPONSE> String forClient(
-      HttpCommonAttributesGetter<REQUEST, RESPONSE> getter,
+      HttpClientAttributesGetter<REQUEST, RESPONSE> getter,
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
