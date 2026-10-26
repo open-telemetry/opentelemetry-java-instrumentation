@@ -40,7 +40,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.jdbc.TestConnection;
 import io.opentelemetry.instrumentation.jdbc.TestDriver;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -87,6 +86,10 @@ public abstract class AbstractJdbcInstrumentationTest {
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected abstract InstrumentationExtension testing();
+
+  protected boolean hasSqliteConnectionInitializationSpans() {
+    return false;
+  }
 
   protected Connection wrap(Connection connection) throws SQLException {
     return connection;
@@ -1359,8 +1362,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                       equalTo(DB_NAMESPACE, "jdbcunittest"),
                                       equalTo(DB_CONNECTION_STRING, null))));
               // sqlite-jdbc executes extra statements during connection init
-              if (ds instanceof SQLiteDataSource
-                  && testing() instanceof AgentInstrumentationExtension) {
+              if (ds instanceof SQLiteDataSource && hasSqliteConnectionInitializationSpans()) {
                 assertions.add(
                     span ->
                         span.hasName("jdbcunittest")
