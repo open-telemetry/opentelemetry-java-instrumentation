@@ -47,7 +47,19 @@ testing {
 }
 
 tasks {
+  val testAzureDrop = register<Test>("testAzureDrop") {
+    val sourceTask = named<Test>("testAzure").get()
+    setJvmArgs(sourceTask.jvmArgs)
+    setSystemProperties(sourceTask.systemProperties)
+    testClassesDirs = sourceTask.testClassesDirs
+    classpath = sourceTask.classpath
+    filter {
+      includeTestsMatching("AzureHttpPropagationTest")
+    }
+    jvmArgs("-Dotel.traces.sampler=always_off")
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, testAzureDrop)
   }
 }
