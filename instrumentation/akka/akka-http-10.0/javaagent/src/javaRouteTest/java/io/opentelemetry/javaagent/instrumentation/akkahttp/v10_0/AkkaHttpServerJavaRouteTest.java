@@ -23,7 +23,6 @@ import akka.http.javadsl.server.Route;
 import akka.http.javadsl.settings.ServerSettings;
 import akka.stream.javadsl.Flow;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -55,7 +54,6 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
   @MethodSource("malformedRequestTargetCases")
   void testMalformedRequestTarget(String parsingErrorHandler, int expectedStatus) throws Exception {
     ActorSystem system = ActorSystem.create("malformed-request");
-    int port = PortUtils.findOpenPort();
     try {
       ServerSettings settings = ServerSettings.create(system);
       if (parsingErrorHandler != null) {
@@ -63,12 +61,13 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
       }
       ServerBinding binding =
           Http.get(system)
-              .newServerAt("localhost", port)
+              .newServerAt("localhost", 0)
               .withSettings(settings)
               .bind(complete("ok"))
               .toCompletableFuture()
               .get(10, SECONDS);
       try {
+        int port = binding.localAddress().getPort();
         Map<String, String> responseHeaders =
             assertResponse(
                 port,
@@ -105,11 +104,10 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
   @Test
   void testMalformedRequestEntityDoesNotCreateExtraSpan() throws Exception {
     ActorSystem system = ActorSystem.create("malformed-entity");
-    int port = PortUtils.findOpenPort();
     try {
       ServerBinding binding =
           Http.get(system)
-              .newServerAt("localhost", port)
+              .newServerAt("localhost", 0)
               .bindFlow(
                   Flow.of(HttpRequest.class)
                       .flatMapConcat(
@@ -118,6 +116,7 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
               .toCompletableFuture()
               .get(10, SECONDS);
       try {
+        int port = binding.localAddress().getPort();
         assertResponse(
             port,
             "POST / HTTP/1.1\r\nHost: localhost\r\nTransfer-Encoding: chunked\r\n"
@@ -158,7 +157,6 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
   @Test
   void testRoute() {
     ActorSystem system = ActorSystem.create("my-system");
-    int port = PortUtils.findOpenPort();
     Http http = Http.get(system);
 
     Route route =
@@ -171,8 +169,10 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
                         pathSingleSlash(() -> complete("test")),
                         path(integerSegment(), (i) -> complete("ok")))));
 
-    CompletionStage<ServerBinding> binding = http.newServerAt("localhost", port).bind(route);
+    CompletionStage<ServerBinding> binding = http.newServerAt("localhost", 0).bind(route);
     try {
+      ServerBinding serverBinding = binding.toCompletableFuture().join();
+      int port = serverBinding.localAddress().getPort();
       AggregatedHttpRequest request =
           AggregatedHttpRequest.of(HttpMethod.GET, "h1c://localhost:" + port + "/test/1");
       AggregatedHttpResponse response = client.execute(request).aggregate().join();

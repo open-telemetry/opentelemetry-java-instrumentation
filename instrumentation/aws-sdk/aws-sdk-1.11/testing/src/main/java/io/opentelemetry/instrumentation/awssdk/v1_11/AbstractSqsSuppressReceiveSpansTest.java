@@ -41,7 +41,6 @@ import com.amazonaws.services.sqs.model.SendMessageRequest;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
@@ -69,8 +68,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest extends AbstractAwsSdk
 
   @BeforeEach
   void setUp() {
-    sqsPort = PortUtils.findOpenPort();
-    sqsRestServer = SQSRestServerBuilder.withPort(sqsPort).withInterface("localhost").start();
+    sqsRestServer = SQSRestServerBuilder.withPort(0).withInterface("localhost").start();
+    sqsPort = sqsRestServer.waitUntilStarted().localAddress().getPort();
 
     AWSStaticCredentialsProvider credentials =
         new AWSStaticCredentialsProvider(new BasicAWSCredentials("x", "x"));

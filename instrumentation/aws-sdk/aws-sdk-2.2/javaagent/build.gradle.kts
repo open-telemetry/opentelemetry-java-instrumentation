@@ -137,14 +137,6 @@ testing {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
         implementation("org.testcontainers:testcontainers-localstack")
       }
-
-      targets {
-        all {
-          testTask.configure {
-            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-          }
-        }
-      }
     }
 
     register<JvmTestSuite>("testBedrockRuntime") {
@@ -193,6 +185,7 @@ tasks {
   }
 
   withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
