@@ -125,6 +125,32 @@ both questions:
 2. When emitted, does its value follow applicable `MUST`, `SHOULD`, and `RECOMMENDED`
    instructions?
 
+## Separate response status from error classification
+
+Response status attributes such as `db.response.status_code` and `rpc.status_code` describe the
+reported operation outcome, including success, warnings, or expected negative outcomes.
+`error.type` and an error span status describe an operation classified as a failure. Recording a
+response status does not by itself make the span an error. Follow the applicable convention and
+operation-specific classification, not an `ERR_` prefix or a library's `isSuccess()` flag alone.
+
+For example, gRPC's success status is `OK`, numerically `0`; Java's string `rpc.status_code`
+records `OK`. Spymemcached exposes `StatusCode.SUCCESS`. An expected cache miss can record
+normalized `ERR_NOT_FOUND` without `error.type` or an error span status. Conditional outcomes
+such as `ERR_EXISTS` can also be expected rather than failures.
+
+When adding response status capture, preserve existing error classification and exception-class
+fallback for `error.type`. Apply the attribute's inclusion rules even when the response status
+equals `error.type`; duplication alone is not a reason to omit it. An error-only API can still
+supply a useful response status. Do not invent success codes when no code is exposed, including
+Redis success statuses inferred from successful payloads.
+
+Use the representation defined by the applicable protocol convention. Do not impose a universal
+wire-only or enum-only rule; supported library-normalized or synthesized statuses are not
+inherently invalid. For example, choosing normalized Spymemcached enum names can include a
+synthesized `ERR_NOT_FOUND` for a GET miss or an older library's normalized `ERR_INTERNAL` for an
+oversized value. This is an instrumentation representation choice, not a language-neutral
+Memcached convention.
+
 ## Protect telemetry quality and users
 
 - Check metric data-point attribute cardinality and every convention-specific cardinality
