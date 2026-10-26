@@ -24,6 +24,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -36,11 +37,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import java.util.function.ToIntFunction;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class HttpClientAttributesExtractorTest {
@@ -344,21 +348,45 @@ class HttpClientAttributesExtractorTest {
         .containsEntry(HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
   }
 
-  @Test
-  void shouldExtractErrorType_httpStatusCode() {
+  @ParameterizedTest
+  @MethodSource("defaultErrorTypeArguments")
+  void shouldExtractErrorType_defaultClassification(
+      String statusCode, boolean hasConnectException, String expectedErrorType) {
     Map<String, String> response = new HashMap<>();
-    response.put("statusCode", "404");
+    if (!statusCode.isEmpty()) {
+      response.put("statusCode", statusCode);
+    }
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), emptyMap());
-    extractor.onEnd(attributes, Context.root(), emptyMap(), response, null);
+    extractor.onEnd(
+        attributes,
+        Context.root(),
+        emptyMap(),
+        response,
+        hasConnectException ? new ConnectException() : null);
 
-    assertThat(attributes.build())
-        .containsEntry(HTTP_RESPONSE_STATUS_CODE, 404)
-        .containsEntry(ERROR_TYPE, "404");
+    Attributes result = attributes.build();
+    if (!statusCode.isEmpty()) {
+      assertThat(result).containsEntry(HTTP_RESPONSE_STATUS_CODE, Integer.parseInt(statusCode));
+    }
+    if (expectedErrorType.isEmpty()) {
+      assertThat(result).doesNotContainKey(ERROR_TYPE);
+    } else {
+      assertThat(result).containsEntry(ERROR_TYPE, expectedErrorType);
+    }
+  }
+
+  private static Stream<Arguments> defaultErrorTypeArguments() {
+    return Stream.of(
+        argumentSet("client error status", "404", false, "404"),
+        argumentSet("exception with successful status", "200", true, "java.net.ConnectException"),
+        argumentSet("error status takes precedence", "500", true, "500"),
+        argumentSet("positive invalid status", "600", false, "600"),
+        argumentSet("missing status", "", false, HttpConstants._OTHER));
   }
 
   @Test
@@ -408,75 +436,6 @@ class HttpClientAttributesExtractorTest {
     assertThat(attributes.build())
         .containsEntry(HTTP_RESPONSE_STATUS_CODE, 500)
         .doesNotContainKey(ERROR_TYPE);
-  }
-
-  @Test
-  void shouldExtractErrorType_exceptionClassName() {
-    Map<String, String> response = new HashMap<>();
-    response.put("statusCode", "200");
-
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
-
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), emptyMap());
-    extractor.onEnd(attributes, Context.root(), emptyMap(), response, new ConnectException());
-
-    assertThat(attributes.build()).containsEntry(ERROR_TYPE, "java.net.ConnectException");
-  }
-
-  @Test
-  void shouldPreferErrorStatusOverExceptionClassName() {
-    Map<String, String> response = new HashMap<>();
-    response.put("statusCode", "500");
-
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
-
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onEnd(attributes, Context.root(), emptyMap(), response, new ConnectException());
-
-    assertThat(attributes.build()).containsEntry(ERROR_TYPE, "500");
-  }
-
-  @Test
-  void shouldExtractErrorType_forPositiveInvalidStatusCode() {
-    Map<String, String> response = new HashMap<>();
-    response.put("statusCode", "600");
-
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
-
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onEnd(attributes, Context.root(), emptyMap(), response, null);
-
-    assertThat(attributes.build()).containsEntry(ERROR_TYPE, "600");
-  }
-
-  @Test
-  void shouldExtractErrorType_other() {
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
-
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), emptyMap());
-    extractor.onEnd(attributes, Context.root(), emptyMap(), emptyMap(), null);
-
-    assertThat(attributes.build()).containsEntry(ERROR_TYPE, HttpConstants._OTHER);
-  }
-
-  @Test
-  void shouldOmitErrorType_forSuccessfulResponse() {
-    Map<String, String> response = new HashMap<>();
-    response.put("statusCode", "200");
-
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
-
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onEnd(attributes, Context.root(), emptyMap(), response, null);
-
-    assertThat(attributes.build()).doesNotContainKey(ERROR_TYPE);
   }
 
   @Test
