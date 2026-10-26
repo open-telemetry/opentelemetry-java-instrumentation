@@ -460,7 +460,7 @@ public final class UrlParsingUtils {
     return firstColon < 0 || (firstColon > 0 && isValidPort(value.substring(firstColon + 1)));
   }
 
-  private static boolean isValidPort(String value) {
+  static boolean isValidPort(String value) {
     if (value.isEmpty()) {
       return false;
     }

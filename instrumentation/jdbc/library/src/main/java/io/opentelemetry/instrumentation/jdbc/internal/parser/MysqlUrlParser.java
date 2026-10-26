@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthorityWithQueryAt;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractSubtype;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.hasMultipleTargets;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.isValidPort;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerTargetGroup;
 
@@ -75,6 +76,11 @@ public final class MysqlUrlParser implements JdbcUrlParser {
 
     ctx.applyUserProperty();
 
+    if (system.equals(MYSQL)) {
+      // MariaDB Connector/J doesn't support the key-value form
+      jdbcUrl = rewriteKeyValueHosts(jdbcUrl);
+    }
+
     // Parse URL (overwrites defaults and props)
     String subtype = extractSubtype(jdbcUrl);
     int protoLoc = jdbcUrl.indexOf("://");
@@ -93,6 +99,79 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       // Non-standard format: type/host:port/db?params
       parseNonStandardUrl(jdbcUrl, ctx);
     }
+  }
+
+  // Connector/J also accepts hosts in the key-value form, e.g. (host=h1,port=3306,key1=value1).
+  // Rewrite them to the equivalent address=(host=h1)(port=3306) form that is handled below.
+  private static String rewriteKeyValueHosts(String jdbcUrl) {
+    int protoLoc = jdbcUrl.indexOf("://");
+    if (protoLoc < 0) {
+      return jdbcUrl;
+    }
+    int hostsStart = protoLoc + 3;
+    int hostsEnd = indexOf(jdbcUrl, hostsStart, '/', '?');
+    if (hostsEnd == -1) {
+      hostsEnd = jdbcUrl.length();
+    }
+    StringBuilder hosts = new StringBuilder();
+    int entryStart = hostsStart;
+    int depth = 0;
+    for (int i = hostsStart; i <= hostsEnd; i++) {
+      char c = i < hostsEnd ? jdbcUrl.charAt(i) : ',';
+      if (c == '(') {
+        depth++;
+      } else if (c == ')') {
+        depth--;
+      } else if (c == ',' && depth <= 0) {
+        if (entryStart > hostsStart) {
+          hosts.append(',');
+        }
+        hosts.append(toAddressForm(jdbcUrl.substring(entryStart, i)));
+        entryStart = i + 1;
+      }
+    }
+    return jdbcUrl.substring(0, hostsStart) + hosts + jdbcUrl.substring(hostsEnd);
+  }
+
+  // Returns the entry unchanged when it is not a valid key-value host.
+  private static String toAddressForm(String entry) {
+    if (!entry.startsWith("(") || !entry.endsWith(")")) {
+      return entry;
+    }
+    String keyValues = entry.substring(1, entry.length() - 1);
+    if (keyValues.indexOf('(') >= 0 || keyValues.indexOf(')') >= 0) {
+      return entry;
+    }
+    String host = null;
+    String port = null;
+    for (String keyValue : keyValues.split(",", -1)) {
+      int equals = keyValue.indexOf('=');
+      if (equals <= 0) {
+        // e.g. an unencoded comma in a password makes the key-value boundaries ambiguous
+        return entry;
+      }
+      String key = keyValue.substring(0, equals).trim();
+      String value = keyValue.substring(equals + 1).trim();
+      if (key.equals("host")) {
+        if (host != null) {
+          return entry;
+        }
+        host = value;
+      } else if (key.equals("port")) {
+        if (port != null) {
+          return entry;
+        }
+        port = value;
+      }
+    }
+    if (host == null
+        || host.isEmpty()
+        || host.indexOf('=') >= 0
+        || (port != null && !isValidPort(port))) {
+      return entry;
+    }
+    String address = "address=(host=" + host + ")";
+    return port == null ? address : address + "(port=" + port + ")";
   }
 
   private static int indexOf(String string, int start, char... chars) {
