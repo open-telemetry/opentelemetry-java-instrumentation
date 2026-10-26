@@ -25,6 +25,13 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation("org.influxdb:influxdb-java:2.4")
+      }
+    }
+
     register<JvmTestSuite>("test24") {
       dependencies {
         implementation(project())
@@ -57,12 +64,6 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
-  if (!otelProps.testLatestDeps) {
-    check {
-      dependsOn(testing.suites)
-    }
-  }
-
   test {
     filter {
       excludeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
@@ -83,6 +84,7 @@ tasks {
   val test225 = register<Test>("test225") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().output + test225RuntimeClasspath
+    systemProperty("influxdb.test.client-version", "2.25")
 
     filter {
       includeTestsMatching("InfluxDbQueryLifecycleTest")
@@ -110,6 +112,6 @@ tasks {
   }
 
   check {
-    dependsOn(testQuerySanitizationDisabled, test213, test225, test29)
+    dependsOn(testing.suites, testQuerySanitizationDisabled, test213, test225, test29)
   }
 }

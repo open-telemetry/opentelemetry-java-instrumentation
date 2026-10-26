@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
@@ -38,6 +39,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -97,6 +99,27 @@ class InfluxDbQueryLifecycleTest {
                 }
               })
           .isInstanceOf(NullPointerException.class);
+      assertThat(client.query(QUERY)).isNotNull();
+    }
+    assertQuery(null);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "{\"error\":\"private query text\"}",
+        "{\"results\":[{}, {\"error\":\"private query text\"}]}"
+      })
+  void synchronousQueryResultError(String body) {
+    try (InfluxDB client = client(chain -> response(chain, body))) {
+      assertThat(client.query(QUERY)).isNotNull();
+    }
+    assertQuery("_OTHER");
+  }
+
+  @Test
+  void doneMarkerIsNotAQueryError() {
+    try (InfluxDB client = client(chain -> response(chain, "{\"error\":\"DONE\"}"))) {
       assertThat(client.query(QUERY)).isNotNull();
     }
     assertQuery(null);
@@ -451,6 +474,120 @@ class InfluxDbQueryLifecycleTest {
             false,
             true,
             IllegalStateException.class.getName()));
+  }
+
+  @Test
+  void asynchronousQueryResultError() throws InterruptedException {
+    CountDownLatch callback = new CountDownLatch(1);
+    AtomicReference<QueryResult> receivedResult = new AtomicReference<>();
+    try (InfluxDB client =
+        client(chain -> response(chain, "{\"error\":\"private query error\"}"))) {
+      client.query(
+          QUERY,
+          result -> {
+            receivedResult.set(result);
+            callback.countDown();
+          },
+          error -> {});
+      assertThat(callback.await(10, SECONDS)).isTrue();
+      assertThat(receivedResult.get()).isNotNull();
+      assertThat(receivedResult.get().getError()).isEqualTo("private query error");
+      assertQuery("_OTHER");
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"consumer", "bi-consumer"})
+  void chunkedQueryResultError(String callbackType) throws InterruptedException {
+    CountDownLatch callbacks = new CountDownLatch(3);
+    AtomicInteger callbackCount = new AtomicInteger();
+    AtomicReference<QueryResult> firstChunk = new AtomicReference<>();
+    AtomicReference<QueryResult> errorChunk = new AtomicReference<>();
+    AtomicReference<QueryResult> lastChunk = new AtomicReference<>();
+    AtomicReference<QueryResult> doneMarker = new AtomicReference<>();
+    Consumer<QueryResult> callback =
+        result -> {
+          switch (callbackCount.getAndIncrement()) {
+            case 0:
+              firstChunk.set(result);
+              break;
+            case 1:
+              errorChunk.set(result);
+              break;
+            case 2:
+              lastChunk.set(result);
+              break;
+            default:
+              if ("DONE".equals(result.getError())) {
+                doneMarker.set(result);
+              } else {
+                throw new AssertionError("unexpected query result chunk");
+              }
+          }
+          callbacks.countDown();
+        };
+    String body =
+        SUCCESS
+            + "\n"
+            + "{\"results\":[{\"statement_id\":0,\"error\":\"private statement error\"}]}\n"
+            + SUCCESS
+            + "\n";
+    try (InfluxDB client = client(chain -> response(chain, body))) {
+      if ("consumer".equals(callbackType)) {
+        client.query(QUERY, 1, callback);
+      } else {
+        client.query(QUERY, 1, (cancellable, result) -> callback.accept(result));
+      }
+      assertThat(callbacks.await(10, SECONDS)).isTrue();
+      assertThat(firstChunk.get().getResults().get(0).getError()).isNull();
+      assertThat(errorChunk.get().getResults().get(0).getError())
+          .isEqualTo("private statement error");
+      assertThat(lastChunk.get().getResults().get(0).getError()).isNull();
+      assertQuery("_OTHER");
+      assertThat(callbackCount.get()).isBetween(3, 4);
+      if (doneMarker.get() != null) {
+        assertThat(doneMarker.get().getError()).isEqualTo("DONE");
+      }
+    }
+  }
+
+  @Test
+  void asynchronousHttpErrorResponse() throws InterruptedException {
+    CountDownLatch callback = new CountDownLatch(1);
+    AtomicBoolean successCallbackCalled = new AtomicBoolean();
+    AtomicReference<QueryResult> successResult = new AtomicReference<>();
+    AtomicReference<Throwable> failure = new AtomicReference<>();
+    try (InfluxDB client =
+        client(
+            chain ->
+                response(chain, "{\"error\":\"private HTTP error\"}")
+                    .newBuilder()
+                    .code(400)
+                    .message("Bad Request")
+                    .build())) {
+      client.query(
+          QUERY,
+          result -> {
+            successCallbackCalled.set(true);
+            successResult.set(result);
+            callback.countDown();
+          },
+          error -> {
+            failure.set(error);
+            callback.countDown();
+          });
+      assertThat(callback.await(10, SECONDS)).isTrue();
+      assertThat(successResult.get()).isNull();
+      if (testLatestDeps() || "2.25".equals(System.getProperty("influxdb.test.client-version"))) {
+        assertThat(successCallbackCalled.get()).isFalse();
+        assertThat(failure.get()).isInstanceOf(InfluxDBException.class);
+        assertQuery(InfluxDBException.class.getName());
+      } else {
+        assertThat(successCallbackCalled.get()).isTrue();
+        assertThat(failure.get()).isNull();
+        assertQuery(null);
+      }
+    }
   }
 
   @Test
@@ -988,18 +1125,20 @@ class InfluxDbQueryLifecycleTest {
                 .hasName("db.client.operation.duration")
                 .hasUnit("s")
                 .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(DB_SYSTEM_NAME, "influxdb"),
-                                        equalTo(DB_NAMESPACE, "mydb"),
-                                        equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
-                                        equalTo(SERVER_ADDRESS, "localhost"),
-                                        equalTo(SERVER_PORT, 8086),
-                                        equalTo(ERROR_TYPE, errorType)))));
+                    histogram -> {
+                      histogram.satisfies(data -> assertThat(data.getPoints()).hasSize(1));
+                      histogram.hasPointsSatisfying(
+                          point ->
+                              point
+                                  .hasCount(1)
+                                  .hasAttributesSatisfyingExactly(
+                                      equalTo(DB_SYSTEM_NAME, "influxdb"),
+                                      equalTo(DB_NAMESPACE, "mydb"),
+                                      equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
+                                      equalTo(SERVER_ADDRESS, "localhost"),
+                                      equalTo(SERVER_PORT, 8086),
+                                      equalTo(ERROR_TYPE, errorType)));
+                    }));
   }
 
   private static void assertNoDuration() {

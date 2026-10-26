@@ -14,6 +14,7 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
 import org.influxdb.dto.Query;
+import org.influxdb.dto.QueryResult;
 import org.influxdb.impl.InfluxDBImpl;
 import retrofit2.Retrofit;
 
@@ -120,7 +121,7 @@ public class InfluxDbQueryAdviceScope {
     return queryState;
   }
 
-  public void end(@Nullable Throwable throwable) {
+  public void end(@Nullable Throwable throwable, @Nullable QueryResult result) {
     int depth = callDepth.decrementAndGet();
     if (scope != null) {
       scope.close();
@@ -131,6 +132,7 @@ public class InfluxDbQueryAdviceScope {
     // Successful async calls finish in callback advice; synchronous completion or an escaping
     // exception finishes here.
     if (depth == 0 && queryState != null && (!queryState.isAsynchronous() || throwable != null)) {
+      queryState.observe(result);
       queryState.end(throwable);
     }
   }
