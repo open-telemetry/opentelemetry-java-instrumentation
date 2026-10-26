@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.ByteBuddyVariant
+import io.opentelemetry.instrumentation.gradle.useByteBuddy
+
 plugins {
   id("otel.java-conventions")
   id("otel.nullaway-conventions")
@@ -5,6 +8,8 @@ plugins {
 }
 
 group = "io.opentelemetry.javaagent"
+
+useByteBuddy(sourceSets.main.get(), ByteBuddyVariant.EXTERNAL_ASM)
 
 dependencies {
   implementation(project(":javaagent-bootstrap"))

@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.ByteBuddyVariant
+import io.opentelemetry.instrumentation.gradle.mockito
+import io.opentelemetry.instrumentation.gradle.useByteBuddy
 import net.ltgt.gradle.errorprone.errorprone
 
 plugins {
@@ -8,6 +11,9 @@ plugins {
 }
 
 group = "io.opentelemetry.javaagent"
+
+useByteBuddy(sourceSets.main.get(), ByteBuddyVariant.EXTERNAL_ASM)
+useByteBuddy(sourceSets.test.get(), ByteBuddyVariant.STANDARD)
 
 dependencies {
   implementation(project(":javaagent-bootstrap"))
@@ -26,11 +32,11 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   // the incubator's ViewConfigCustomizer is used to support loading yaml-based metric views
   implementation("io.opentelemetry:opentelemetry-sdk-extension-incubator") {
-    // we use byte-buddy-dep
+    // Preserve the published dependency graph for consumers without our capability convention.
     exclude("net.bytebuddy", "byte-buddy")
   }
   implementation("io.opentelemetry:opentelemetry-sdk-extension-declarative-config") {
-    // we use byte-buddy-dep
+    // Preserve the published dependency graph for consumers without our capability convention.
     exclude("net.bytebuddy", "byte-buddy")
   }
 
@@ -69,10 +75,13 @@ dependencies {
 testing {
   suites {
     register<JvmTestSuite>("testExceptionHandler") {
+      mockito.enabled.set(false)
+      useByteBuddy(sources, ByteBuddyVariant.EXTERNAL_ASM)
       dependencies {
         implementation(project(":javaagent-bootstrap"))
         implementation(project(":javaagent-tooling"))
         implementation("net.bytebuddy:byte-buddy-dep")
+        implementation("net.bytebuddy:byte-buddy-agent")
 
         // Used by byte-buddy but not brought in as a transitive dependency.
         compileOnly("com.google.code.findbugs:annotations")
@@ -80,10 +89,13 @@ testing {
     }
 
     register<JvmTestSuite>("testMissingType") {
+      mockito.enabled.set(false)
+      useByteBuddy(sources, ByteBuddyVariant.EXTERNAL_ASM)
       dependencies {
         implementation(project(":javaagent-bootstrap"))
         implementation(project(":javaagent-tooling"))
         implementation("net.bytebuddy:byte-buddy-dep")
+        implementation("net.bytebuddy:byte-buddy-agent")
         compileOnly("org.apache.commons:commons-lang3:3.21.0")
 
         // Used by byte-buddy but not brought in as a transitive dependency.
@@ -104,6 +116,7 @@ testing {
     }
 
     register<JvmTestSuite>("testConfigFile") {
+      useByteBuddy(sources, ByteBuddyVariant.STANDARD)
       dependencies {
         implementation(project(":javaagent-tooling"))
         // requires mockito-inline
@@ -112,6 +125,7 @@ testing {
     }
 
     register<JvmTestSuite>("testDistributionConfig") {
+      useByteBuddy(sources, ByteBuddyVariant.STANDARD)
       dependencies {
         implementation(project(":javaagent-extension-api"))
         implementation(project(":instrumentation-api-incubator"))
@@ -153,16 +167,5 @@ tasks {
 
   check {
     dependsOn(testing.suites)
-  }
-}
-
-// Mockito inline mocking uses byte-buddy but agent tooling currently uses byte-buddy-dep, which cannot be on the same
-// classpath. Disable inline mocking to prevent conflicts.
-// TODO: Find a better solution
-configurations {
-  testRuntimeClasspath {
-    dependencies {
-      exclude("org.mockito", "mockito-inline")
-    }
   }
 }

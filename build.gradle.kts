@@ -28,6 +28,10 @@ plugins {
 }
 
 buildscript {
+  project.apply(from = "buildscripts/byte-buddy.gradle.kts")
+  configurations.named("classpath") {
+    attributes.attribute(Attribute.of("io.opentelemetry.byte-buddy-variant", String::class.java), "byte-buddy-dep")
+  }
   dependencies {
     classpath("com.squareup.okhttp3:okhttp:5.5.0")
     classpath("org.apache.commons:commons-lang3:3.21.0")
@@ -35,6 +39,12 @@ buildscript {
 }
 
 apply(from = "version.gradle.kts")
+
+allprojects {
+  if (this != rootProject) {
+    pluginManager.apply("otel.byte-buddy-conventions")
+  }
+}
 
 nexusPublishing {
   packageGroup.set("io.opentelemetry")

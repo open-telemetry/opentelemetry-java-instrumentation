@@ -38,6 +38,15 @@ repositories {
   gradlePluginPortal()
 }
 
+apply(from = "../buildscripts/byte-buddy.gradle.kts")
+afterEvaluate {
+  configurations.configureEach {
+    if (isCanBeResolved && !isCanBeConsumed) {
+      attributes.attribute(Attribute.of("io.opentelemetry.byte-buddy-variant", String::class.java), "byte-buddy-dep")
+    }
+  }
+}
+
 tasks.withType<Test>().configureEach {
   useJUnitPlatform()
 }
@@ -88,4 +97,5 @@ dependencies {
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
   testImplementation("org.assertj:assertj-core:3.27.7")
+  testImplementation(gradleTestKit())
 }

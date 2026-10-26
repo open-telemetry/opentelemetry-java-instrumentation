@@ -52,6 +52,36 @@ To ignore warnings, formatting issues, or other non-fatal issues in tests, use
 
 The `dev` flag will ignore warnings in tests.
 
+## Byte Buddy classpaths
+
+`byte-buddy` (relocated ASM) and `byte-buddy-dep` (external `org.objectweb.asm`)
+contain overlapping classes with incompatible ASM-facing signatures. Shared dependency
+conventions reject a classpath containing both unless its source set explicitly chooses
+a variant. `byte-buddy-agent` is independent and can accompany either.
+
+All suites receive Mockito, including inline mocking, and select standard Byte Buddy by
+default. A suite that does not use Mockito can set `mockito.enabled.set(false)`.
+Direct external-ASM transformation tests must opt out and explicitly select their variant:
+
+```kotlin
+testing.suites.register<JvmTestSuite>("transformations") {
+  mockito.enabled.set(false)
+  useByteBuddy(sources, ByteBuddyVariant.EXTERNAL_ASM)
+}
+```
+
+They must not depend on Mockito transitively (for example through `testing-common`).
+Split incompatible consumers into separate suites or classloaders rather than substituting
+an incompatible implementation. Suite names do not select a variant or disable Mockito.
+The helper configures both compile and runtime classpaths without changing dependency versions.
+
+Import `ByteBuddyVariant`, `useByteBuddy`, and `mockito` from
+`io.opentelemetry.instrumentation.gradle` in build scripts. For main source sets,
+call `useByteBuddy(sourceSets.main.get(), ByteBuddyVariant.EXTERNAL_ASM)` for agent implementation
+or use `ByteBuddyVariant.STANDARD` for relocated ASM. Installed-agent instrumentation tests
+retain the existing isolated agent classloader; their application-side `testing-common`
+dependency uses standard Byte Buddy.
+
 ## Smoke tests
 
 The smoke tests are not run as part of a global `test` task since they take a long time and are

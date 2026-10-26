@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.MockitoConventionPlugin
 import io.opentelemetry.instrumentation.gradle.OtelJavaExtension
 import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
 import io.opentelemetry.instrumentation.gradle.TestSuiteExecutionsPlugin
@@ -19,6 +20,7 @@ val otelJava = extensions.create<OtelJavaExtension>("otelJava")
 val otelProps = the<OtelPropsExtension>()
 
 apply<TestSuiteExecutionsPlugin>()
+apply<MockitoConventionPlugin>()
 
 afterEvaluate {
   val previousBaseArchiveName = base.archivesName.get()
@@ -199,9 +201,6 @@ testing {
 
       implementation("org.assertj:assertj-core")
       implementation("org.awaitility:awaitility")
-      implementation("org.mockito:mockito-core")
-      implementation("org.mockito:mockito-inline")
-      implementation("org.mockito:mockito-junit-jupiter")
 
       implementation("ch.qos.logback:logback-classic")
       implementation("org.slf4j:log4j-over-slf4j")

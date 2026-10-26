@@ -28,10 +28,20 @@ configurations.named("compileOnly") {
 val byteBuddyVersion = "1.18.14"
 val aetherVersion = "1.1.0"
 
+apply(from = "../buildscripts/byte-buddy.gradle.kts")
+afterEvaluate {
+  configurations.configureEach {
+    if (isCanBeResolved && !isCanBeConsumed) {
+      attributes.attribute(Attribute.of("io.opentelemetry.byte-buddy-variant", String::class.java), "byte-buddy-dep")
+    }
+  }
+}
+
 dependencies {
   implementation("com.google.guava:guava:33.7.2-jre")
   // we need to use byte buddy variant that does not shade asm
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}") {
+    // Also published in our plugin's metadata: external builds do not apply our capability rule.
     exclude("net.bytebuddy", "byte-buddy")
   }
   implementation("net.bytebuddy:byte-buddy-dep:${byteBuddyVersion}")

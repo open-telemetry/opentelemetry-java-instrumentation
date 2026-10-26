@@ -1,4 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.ByteBuddyVariant
 import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
+import io.opentelemetry.instrumentation.gradle.useByteBuddy
 
 plugins {
   `java-library`
@@ -13,6 +15,8 @@ val failOnContextLeakProperty = providers.gradleProperty("failOnContextLeak")
   .orElse(true)
 
 val otelProps = the<OtelPropsExtension>()
+
+useByteBuddy(sourceSets.main.get(), ByteBuddyVariant.EXTERNAL_ASM)
 
 dependencies {
   /*
@@ -45,6 +49,8 @@ dependencies {
 
 testing {
   suites.withType(JvmTestSuite::class).configureEach {
+    // testing-common exposes Mockito. The installed agent retains its isolated external-ASM copy.
+    useByteBuddy(sources, ByteBuddyVariant.STANDARD)
     dependencies {
       implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
     }
