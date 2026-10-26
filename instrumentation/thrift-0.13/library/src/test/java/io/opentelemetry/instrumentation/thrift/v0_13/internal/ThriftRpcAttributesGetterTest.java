@@ -25,10 +25,20 @@ class ThriftRpcAttributesGetterTest {
 
   @Test
   void rpcMethodUsesRpcServiceName() {
-    ThriftRequest request = new ThriftRequest("method", "handler", "idl", null, emptyMap());
+    ThriftRequest request = new ThriftRequest("method", "handler", "idl", null, null, emptyMap());
 
     assertThat(getter.getService(request)).isEqualTo("handler");
     assertThat(getter.getRpcMethod(request)).isEqualTo("idl/method");
+  }
+
+  @Test
+  void nullSocketAddressesUseLegacyConstructor() {
+    ThriftRequest request = new ThriftRequest("method", "service", null, null, emptyMap());
+
+    assertThat(getter.getService(request)).isEqualTo("service");
+    assertThat(getter.getRpcMethod(request)).isEqualTo("service/method");
+    assertThat(request.getLocalAddress()).isNull();
+    assertThat(request.getRemoteAddress()).isNull();
   }
 
   @ParameterizedTest

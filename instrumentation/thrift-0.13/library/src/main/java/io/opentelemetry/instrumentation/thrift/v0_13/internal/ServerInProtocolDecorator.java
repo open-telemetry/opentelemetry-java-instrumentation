@@ -102,8 +102,7 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
       Map<String, String> headers = ContextPropagationUtil.readHeaders(protocol);
       super.readFieldEnd();
 
-      ThriftRequest request =
-          new ThriftRequest(methodName, serviceName, rpcServiceName, getSocket(), headers);
+      ThriftRequest request = createRequest(headers);
       Context parentContext = Context.current();
       if (!instrumenter.shouldStart(parentContext, request)) {
         return readNextField();
@@ -132,9 +131,7 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
     super.readMessageEnd();
     // message didn't include context propagation field
     if (currentContext == null) {
-      ThriftRequest request =
-          new ThriftRequest(
-              this.methodName, this.serviceName, this.rpcServiceName, getSocket(), emptyMap());
+      ThriftRequest request = createRequest(emptyMap());
       Context parentContext = Context.current();
       if (!instrumenter.shouldStart(parentContext, request)) {
         return;
@@ -155,6 +152,17 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
       socket = SocketAccessor.getSocket(ServerCallContext.getTransport());
     }
     return socket;
+  }
+
+  private ThriftRequest createRequest(Map<String, String> headers) {
+    Socket socket = getSocket();
+    return new ThriftRequest(
+        methodName,
+        serviceName,
+        rpcServiceName,
+        socket != null ? socket.getLocalSocketAddress() : null,
+        socket != null ? socket.getRemoteSocketAddress() : null,
+        headers);
   }
 
   public void closeScope() {
