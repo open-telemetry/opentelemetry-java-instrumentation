@@ -49,7 +49,7 @@ public final class HttpErrorType {
    */
   @Nullable
   public static <REQUEST, RESPONSE> String forServer(
-      HttpCommonAttributesGetter<REQUEST, RESPONSE> getter,
+      HttpServerAttributesGetter<REQUEST, RESPONSE> getter,
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {

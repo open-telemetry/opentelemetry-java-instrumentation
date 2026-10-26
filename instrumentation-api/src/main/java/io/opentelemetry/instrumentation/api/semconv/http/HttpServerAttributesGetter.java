@@ -61,7 +61,7 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
    * response without an exception. Positive invalid status codes are classified by the server
    * status rules.
    *
-   * <p>Use {@link HttpErrorType#forServer(HttpCommonAttributesGetter, Object, Object, Throwable)}
+   * <p>Use {@link HttpErrorType#forServer(HttpServerAttributesGetter, Object, Object, Throwable)}
    * to apply the default server classification.
    */
   @Nullable
