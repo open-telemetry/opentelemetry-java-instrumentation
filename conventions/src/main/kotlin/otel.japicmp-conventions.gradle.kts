@@ -1,4 +1,5 @@
 import com.google.auto.value.AutoValue
+import io.opentelemetry.instrumentation.gradle.SourceIncompatibleRule
 import japicmp.model.JApiChangeStatus
 import japicmp.model.JApiClass
 import japicmp.model.JApiCompatibility
@@ -53,15 +54,6 @@ class AllowNewAbstractMethodOnAutovalueClasses : AbstractRecordingSeenMembers() 
     val newClass = japiClass.newClass.orElse(null) ?: return false
     return newClass.getAnnotation(AutoValue::class.java) != null ||
       newClass.getAnnotation(AutoValue.Builder::class.java) != null
-  }
-}
-
-class SourceIncompatibleRule : AbstractRecordingSeenMembers() {
-  override fun maybeAddViolation(member: JApiCompatibility): Violation? {
-    if (!member.isSourceCompatible()) {
-      return Violation.error(member, "Not source compatible: $member")
-    }
-    return null
   }
 }
 
@@ -148,16 +140,12 @@ if (project.findProperty("otel.stable") == "true" && project.path != ":javaagent
           onlyModified.set(oldArchive != null)
 
           // Reproduce defaults from japicmp-gradle-plugin 0.4.6 with compatibility adjustments.
-          // Generics are not detected correctly.
           // Allow adding default methods on interfaces.
           // Allow adding default implementations for default methods.
-          // japicmp 0.23.1 does not recognize default methods of superinterfaces.
           compatibilityChangeExcludes.set(
             listOf(
-              JApiCompatibilityChangeType.CLASS_GENERIC_TEMPLATE_CHANGED.name,
               JApiCompatibilityChangeType.METHOD_NEW_DEFAULT.name,
               JApiCompatibilityChangeType.METHOD_ABSTRACT_NOW_DEFAULT.name,
-              JApiCompatibilityChangeType.METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE.name,
             ),
           )
 
@@ -165,6 +153,7 @@ if (project.findProperty("otel.stable") == "true" && project.path != ":javaagent
             addSetupRule(RecordSeenMembersSetup::class.java)
             addRule(JApiChangeStatus.NEW, SourceCompatibleRule::class.java)
             addRule(JApiChangeStatus.MODIFIED, SourceCompatibleRule::class.java)
+            addRule(JApiChangeStatus.UNCHANGED, SourceIncompatibleRule::class.java)
             addRule(JApiChangeStatus.UNCHANGED, UnchangedMemberRule::class.java)
             addRule(AllowNewAbstractMethodOnAutovalueClasses::class.java)
             addRule(BinaryIncompatibleRule::class.java)
