@@ -52,17 +52,11 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
   }
 
   /**
-   * Returns the {@code error.type} value for the HTTP server operation.
+   * Returns the {@code error.type} value for the HTTP server operation, or {@code null} when no
+   * error type applies.
    *
-   * <p>The default implementation returns error response status codes for servers (500 or greater,
-   * or positive status codes below 100), the exception class name when {@code error} is non-null,
-   * or {@value io.opentelemetry.instrumentation.api.internal.HttpConstants#_OTHER} when the status
-   * is missing or non-positive and there is no exception. It returns {@code null} for a successful
-   * response without an exception. Positive invalid status codes are classified by the server
-   * status rules.
-   *
-   * <p>Use {@link HttpErrorType#forServer(HttpServerAttributesGetter, Object, Object, Throwable)}
-   * to apply the default server classification.
+   * <p>The default implementation uses {@link HttpErrorType#forServer(HttpServerAttributesGetter,
+   * Object, Object, Throwable)}.
    */
   @Nullable
   @Override

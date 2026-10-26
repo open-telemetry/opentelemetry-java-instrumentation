@@ -37,8 +37,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 import java.util.function.ToIntFunction;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -351,7 +351,10 @@ class HttpClientAttributesExtractorTest {
   @ParameterizedTest
   @MethodSource("defaultErrorTypeArguments")
   void shouldExtractErrorType_defaultClassification(
-      String statusCode, boolean hasConnectException, String expectedErrorType) {
+      String statusCode,
+      boolean hasConnectException,
+      boolean expectResponseStatusCode,
+      String expectedErrorType) {
     Map<String, String> response = new HashMap<>();
     if (!statusCode.isEmpty()) {
       response.put("statusCode", statusCode);
@@ -370,7 +373,7 @@ class HttpClientAttributesExtractorTest {
         hasConnectException ? new ConnectException() : null);
 
     Attributes result = attributes.build();
-    if (!statusCode.isEmpty()) {
+    if (expectResponseStatusCode) {
       assertThat(result).containsEntry(HTTP_RESPONSE_STATUS_CODE, Integer.parseInt(statusCode));
     }
     if (expectedErrorType.isEmpty()) {
@@ -382,11 +385,12 @@ class HttpClientAttributesExtractorTest {
 
   private static Stream<Arguments> defaultErrorTypeArguments() {
     return Stream.of(
-        argumentSet("client error status", "404", false, "404"),
-        argumentSet("exception with successful status", "200", true, "java.net.ConnectException"),
-        argumentSet("error status takes precedence", "500", true, "500"),
-        argumentSet("positive invalid status", "600", false, "600"),
-        argumentSet("missing status", "", false, HttpConstants._OTHER));
+        argumentSet("client error status", "404", false, true, "404"),
+        argumentSet(
+            "exception with successful status", "200", true, true, "java.net.ConnectException"),
+        argumentSet("error status takes precedence", "500", true, true, "500"),
+        argumentSet("positive invalid status", "600", false, true, "600"),
+        argumentSet("missing status", "", false, false, HttpConstants._OTHER));
   }
 
   @Test

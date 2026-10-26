@@ -43,17 +43,11 @@ public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
   Integer getServerPort(REQUEST request);
 
   /**
-   * Returns the {@code error.type} value for the HTTP client operation.
+   * Returns the {@code error.type} value for the HTTP client operation, or {@code null} when no
+   * error type applies.
    *
-   * <p>The default implementation returns error response status codes for clients (400 or greater,
-   * or positive status codes below 100), the exception class name when {@code error} is non-null,
-   * or {@value io.opentelemetry.instrumentation.api.internal.HttpConstants#_OTHER} when the status
-   * is missing or non-positive and there is no exception. It returns {@code null} for a successful
-   * response without an exception. Positive invalid status codes are classified by the client
-   * status rules.
-   *
-   * <p>Use {@link HttpErrorType#forClient(HttpClientAttributesGetter, Object, Object, Throwable)}
-   * to apply the default client classification.
+   * <p>The default implementation uses {@link HttpErrorType#forClient(HttpClientAttributesGetter,
+   * Object, Object, Throwable)}.
    */
   @Nullable
   @Override
