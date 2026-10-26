@@ -8,12 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.gwt.v2_0;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcServerExceptionEventExtractor;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcMetricsContextCustomizers;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
+import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -32,20 +34,23 @@ public class GwtSingletons {
 
   static {
     GwtRpcAttributesGetter rpcAttributesGetter = new GwtRpcAttributesGetter();
-    @SuppressWarnings(
-        "deprecation") // RpcMetricsContextCustomizers is deprecated for removal in 3.0
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+    RpcSemconvSelection.Selection selection =
+        RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry);
     InstrumenterBuilder<Method, Void> builder =
         Instrumenter.<Method, Void>builder(
-                GlobalOpenTelemetry.get(),
+                openTelemetry,
                 INSTRUMENTATION_NAME,
                 RpcSpanNameExtractor.create(rpcAttributesGetter))
-            .setSchemaUrl(
-                RpcSemconvSelection.Selection.forOpenTelemetry(GlobalOpenTelemetry.get())
-                    .schemaUrl())
-            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
-            .addOperationMetrics(RpcServerMetrics.get())
-            .addContextCustomizer(
-                RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
+            .setSchemaUrl(selection.schemaUrl())
+            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter));
+    if (selection.emitPreview()) {
+      @SuppressWarnings(
+          "deprecation") // RpcMetricsContextCustomizers is deprecated for removal in 3.0
+      ContextCustomizer<Method> contextCustomizer =
+          RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter);
+      builder.addOperationMetrics(RpcServerMetrics.get()).addContextCustomizer(contextCustomizer);
+    }
     setRpcServerExceptionEventExtractor(builder);
 
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysServer());

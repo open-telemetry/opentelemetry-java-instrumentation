@@ -1,5 +1,6 @@
 display_name: GWT
-description: This instrumentation enables RPC server spans and metrics for GWT RPC requests.
+description: This instrumentation enables RPC server spans for GWT RPC requests. RPC server metrics
+  are emitted when preview RPC semantic conventions are enabled.
 semantic_conventions:
   - RPC_SERVER_SPANS
   - RPC_SERVER_METRICS

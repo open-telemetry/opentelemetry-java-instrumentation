@@ -233,6 +233,16 @@ class GwtTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static void assertDurationMetrics(String errorType) {
+    if (!emitPreviewRpcSemconv()) {
+      assertThat(testing.metrics())
+          .noneMatch(
+              metric ->
+                  metric
+                      .getInstrumentationScopeInfo()
+                      .getName()
+                      .equals("io.opentelemetry.gwt-2.0"));
+      return;
+    }
     if (emitOldRpcSemconv()) {
       testing.waitAndAssertMetrics(
           "io.opentelemetry.gwt-2.0",
@@ -271,7 +281,13 @@ class GwtTest {
                                           equalTo(
                                               RPC_METHOD,
                                               "test.gwt.shared.MessageService/sendMessage"),
-                                          equalTo(ERROR_TYPE, errorType)))));
+                                          equalTo(ERROR_TYPE, errorType))
+                                      .satisfies(
+                                          pointData ->
+                                              assertThat(pointData.getBoundaries())
+                                                  .containsExactly(
+                                                      0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1,
+                                                      0.5, 1.0, 5.0, 10.0, 50.0, 100.0)))));
     }
   }
 }
