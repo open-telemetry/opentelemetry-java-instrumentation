@@ -1,8 +1,8 @@
 import com.google.auto.value.AutoValue
 import japicmp.model.JApiChangeStatus
+import japicmp.model.JApiClass
 import japicmp.model.JApiCompatibility
 import japicmp.model.JApiCompatibilityChangeType
-import japicmp.model.JApiClass
 import japicmp.model.JApiMethod
 import me.champeau.gradle.japicmp.JapicmpTask
 import me.champeau.gradle.japicmp.report.Violation
@@ -38,8 +38,8 @@ class AllowNewAbstractMethodOnAutovalueClasses : AbstractRecordingSeenMembers() 
       )
     if (
       member.compatibilityChanges.all { it.type in allowableAutovalueChanges } &&
-        member is JApiMethod &&
-        isAutoValueClass(member.getjApiClass())
+      member is JApiMethod &&
+      isAutoValueClass(member.getjApiClass())
     ) {
       return Violation.accept(member, "AutoValue will automatically add implementation")
     }
@@ -65,18 +65,16 @@ class SourceIncompatibleRule : AbstractRecordingSeenMembers() {
   }
 }
 
-fun getAllPublishedModules(): List<Project> {
-  return project.rootProject.allprojects
-    .filter {
-      it.plugins.hasPlugin("otel.publish-conventions") &&
-        it.findProperty("otel.stable") == "true" &&
-        !it.hasProperty("otel.release") &&
-        it.tasks.findByName("jar") != null
-    }
-    .toList()
-}
+fun getAllPublishedModules(): List<Project> = project.rootProject.allprojects
+  .filter {
+    it.plugins.hasPlugin("otel.publish-conventions") &&
+      it.findProperty("otel.stable") == "true" &&
+      !it.hasProperty("otel.release") &&
+      it.tasks.findByName("jar") != null
+  }
+  .toList()
 
-fun getClasspathForVersion(version: String): List<File> {
+fun getClasspathForVersion(version: String, allowMissingArtifacts: Boolean = false): List<File> {
   val publishedModules =
     getAllPublishedModules().map {
       Pair(
@@ -101,7 +99,7 @@ fun getClasspathForVersion(version: String): List<File> {
             .singleFile
         } catch (e: ResolveException) {
           // Stable artifacts introduced after the baseline have no old jar to contribute.
-          if (e.cause is ModuleVersionNotFoundException) {
+          if (allowMissingArtifacts && e.cause is ModuleVersionNotFoundException) {
             null
           } else {
             throw e
@@ -114,11 +112,9 @@ fun getClasspathForVersion(version: String): List<File> {
   }
 }
 
-fun getCurrentClassPath(): List<File> {
-  return getAllPublishedModules()
-    .map { it.tasks.getByName<Jar>("jar").archiveFile.get().asFile }
-    .toList()
-}
+fun getCurrentClassPath(): List<File> = getAllPublishedModules()
+  .map { it.tasks.getByName<Jar>("jar").archiveFile.get().asFile }
+  .toList()
 
 // generate the api diff report for any module that is stable
 if (project.findProperty("otel.stable") == "true" && project.path != ":javaagent") {
@@ -139,7 +135,7 @@ if (project.findProperty("otel.stable") == "true" && project.path != ":javaagent
           val archiveName = base.archivesName.get()
           val newModuleClasspath =
             apiNewVersion?.let { getClasspathForVersion(it) } ?: getCurrentClassPath()
-          val oldModuleClasspath = getClasspathForVersion(baselineVersion)
+          val oldModuleClasspath = getClasspathForVersion(baselineVersion, allowMissingArtifacts = true)
           val archivePattern = (archiveName + "-([0-9\\.]*)(-SNAPSHOT)?.jar").toRegex()
           val newArchive = newModuleClasspath.singleOrNull { it.name.matches(archivePattern) }
           val oldArchive = oldModuleClasspath.singleOrNull { it.name.matches(archivePattern) }
