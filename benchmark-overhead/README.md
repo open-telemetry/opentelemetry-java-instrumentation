@@ -122,11 +122,9 @@ reuses the pinned JDK 25 smoke image from the AOT benchmark, without
 AOT or bootstrap-classpath preloading. Instrumentation and the SDK remain active;
 all exporters are `none`.
 
-Use JDK 25 and Docker with Linux containers. Each application container uses CPUs
-`0,1`, a two-CPU quota, a 1 GiB memory limit, and `-Xmx512m`. The Docker host must
-expose those CPUs as distinct physical cores on the same NUMA node; the workflow
-verifies this before measurement. Do not build artifacts or run other benchmarks
-during measurement.
+Use JDK 25 and Docker with Linux containers. Each application container has a
+two-CPU quota, a 1 GiB memory limit, and `-Xmx512m`. Do not build artifacts or run
+other benchmarks during measurement.
 
 Build the agent and the smoke application's startup fixture, then run the
 standalone benchmark with its exact local JAR:

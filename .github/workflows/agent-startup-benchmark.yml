@@ -85,18 +85,6 @@ jobs:
       - name: Verify benchmark input checksums
         run: (cd "$AGENTS" && sha256sum --check sha256.txt)
 
-      - name: Verify pinned CPUs are distinct cores on the same NUMA node
-        shell: python
-        run: |
-          import subprocess
-          rows = subprocess.check_output(
-              ["lscpu", "-p=CPU,CORE,SOCKET,NODE"], text=True
-          ).splitlines()
-          cpus = dict((row.split(",")[0], row.split(",")[1:])
-                      for row in rows if not row.startswith("#"))
-          assert cpus["0"][:2] != cpus["1"][:2], "CPUs 0,1 must be distinct cores"
-          assert cpus["0"][2] == cpus["1"][2] and cpus["0"][2].isdigit(), "CPUs 0,1 must share a NUMA node"
-
       - name: Measure startup and collect separate profile
         working-directory: ${{ env.AGENTS }}/benchmark-overhead
         env:

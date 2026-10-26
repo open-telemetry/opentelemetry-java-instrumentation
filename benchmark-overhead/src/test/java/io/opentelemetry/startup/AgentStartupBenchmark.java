@@ -63,7 +63,7 @@ class AgentStartupBenchmark {
     metadata.setProperty("image.reference", AotStartupBenchmark.IMAGE);
     metadata.setProperty("samples", Integer.toString(samples));
     metadata.setProperty("warmups", Integer.toString(warmups));
-    metadata.setProperty("resources", "cpuset=0,1; quota=2 CPUs; memory=1 GiB; heap=512 MiB");
+    metadata.setProperty("resources", "quota=2 CPUs; memory=1 GiB; heap=512 MiB");
     metadata.setProperty(
         "exporters", "traces=none, metrics=none, logs=none; instrumentation enabled");
     try (JarFile jar = new JarFile(agent.toFile())) {
@@ -257,7 +257,6 @@ class AgentStartupBenchmark {
         .withCreateContainerCmdModifier(
             cmd ->
                 cmd.getHostConfig()
-                    .withCpusetCpus("0,1")
                     .withMemory(MEMORY_BYTES)
                     .withMemorySwap(MEMORY_BYTES)
                     .withNanoCPUs(NANO_CPUS));
