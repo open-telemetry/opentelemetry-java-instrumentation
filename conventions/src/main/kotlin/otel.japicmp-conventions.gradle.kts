@@ -1,8 +1,18 @@
+import com.google.auto.value.AutoValue
 import japicmp.model.JApiChangeStatus
+import japicmp.model.JApiCompatibility
+import japicmp.model.JApiCompatibilityChangeType
+import japicmp.model.JApiClass
+import japicmp.model.JApiMethod
 import me.champeau.gradle.japicmp.JapicmpTask
+import me.champeau.gradle.japicmp.report.Violation
+import me.champeau.gradle.japicmp.report.stdrules.AbstractRecordingSeenMembers
+import me.champeau.gradle.japicmp.report.stdrules.BinaryIncompatibleRule
 import me.champeau.gradle.japicmp.report.stdrules.RecordSeenMembersSetup
 import me.champeau.gradle.japicmp.report.stdrules.SourceCompatibleRule
 import me.champeau.gradle.japicmp.report.stdrules.UnchangedMemberRule
+import org.gradle.api.artifacts.ResolveException
+import org.gradle.internal.resolve.ModuleVersionNotFoundException
 
 plugins {
   base
@@ -18,26 +28,96 @@ plugins {
 val apidiffBaselineVersion: String =
   rootProject.extra["apidiffBaselineVersion"] as String
 
-/**
- * Locate the project's artifact of a particular version.
- */
-fun findArtifact(version: String): File {
+class AllowNewAbstractMethodOnAutovalueClasses : AbstractRecordingSeenMembers() {
+  override fun maybeAddViolation(member: JApiCompatibility): Violation? {
+    val allowableAutovalueChanges =
+      setOf(
+        JApiCompatibilityChangeType.METHOD_ABSTRACT_ADDED_TO_CLASS,
+        JApiCompatibilityChangeType.METHOD_ADDED_TO_PUBLIC_CLASS,
+        JApiCompatibilityChangeType.ANNOTATION_ADDED,
+      )
+    if (
+      member.compatibilityChanges.all { it.type in allowableAutovalueChanges } &&
+        member is JApiMethod &&
+        isAutoValueClass(member.getjApiClass())
+    ) {
+      return Violation.accept(member, "AutoValue will automatically add implementation")
+    }
+    if (member.compatibilityChanges.isEmpty() && member is JApiClass && isAutoValueClass(member)) {
+      return Violation.accept(member, "AutoValue class modification is allowed")
+    }
+    return null
+  }
+
+  private fun isAutoValueClass(japiClass: JApiClass): Boolean {
+    return japiClass.newClass.get().getAnnotation(AutoValue::class.java) != null ||
+      japiClass.newClass.get().getAnnotation(AutoValue.Builder::class.java) != null
+  }
+}
+
+class SourceIncompatibleRule : AbstractRecordingSeenMembers() {
+  override fun maybeAddViolation(member: JApiCompatibility): Violation? {
+    if (!member.isSourceCompatible()) {
+      return Violation.error(member, "Not source compatible: $member")
+    }
+    return null
+  }
+}
+
+fun getAllPublishedModules(): List<Project> {
+  return project.rootProject.allprojects
+    .filter {
+      it.plugins.hasPlugin("otel.publish-conventions") &&
+        it.findProperty("otel.stable") == "true" &&
+        !it.hasProperty("otel.release") &&
+        it.tasks.findByName("jar") != null
+    }
+    .toList()
+}
+
+fun getClasspathForVersion(version: String): List<File> {
+  val publishedModules =
+    getAllPublishedModules().map {
+      Triple(
+        it.findProperty("mavenGroupId") as String? ?: it.group.toString(),
+        it.base.archivesName.get(),
+        it,
+      )
+    }
   val existingGroup = group
+  group = "virtual_group"
   try {
-    val depModule = "${project.group}:${base.archivesName.get()}:$version@jar"
-    // Temporarily change the group name because we want to fetch an artifact with the same
-    // Maven coordinates as the project, which Gradle would not allow otherwise.
-    group = "virtual_group"
-    val depJar = "${base.archivesName.get()}-$version.jar"
-    val configuration: Configuration = configurations.detachedConfiguration(
-      dependencies.create(depModule)
-    )
-    return files(configuration.files).filter {
-      it.name.equals(depJar)
-    }.singleFile
+    return publishedModules
+      .map { (moduleGroup, archiveName, _) ->
+        val depModule = "$moduleGroup:$archiveName:$version@jar"
+        val depJar = "$archiveName-$version.jar"
+        val configuration: Configuration =
+          configurations.detachedConfiguration(
+            dependencies.create(depModule),
+          )
+        try {
+          files(configuration.files)
+            .filter { file -> file.name == depJar }
+            .singleFile
+        } catch (e: ResolveException) {
+          if (e.cause is ModuleVersionNotFoundException) {
+            null
+          } else {
+            throw e
+          }
+        }
+      }
+      .filterNotNull()
+      .toList()
   } finally {
     group = existingGroup
   }
+}
+
+fun getCurrentClassPath(): List<File> {
+  return getAllPublishedModules()
+    .map { it.tasks.getByName<Jar>("jar").archiveFile.get().asFile }
+    .toList()
 }
 
 // generate the api diff report for any module that is stable
@@ -47,41 +127,48 @@ if (project.findProperty("otel.stable") == "true" && project.path != ":javaagent
     tasks.findByName("jar")?.let {
       tasks {
         val jApiCmp = register<JapicmpTask>("jApiCmp") {
-          dependsOn("jar")
+          getAllPublishedModules().forEach {
+            dependsOn(it.tasks.getByName("jar"))
+          }
 
-          // the japicmp "new" version is either the user-specified one, or the locally built jar.
+          // The japicmp "new" version is either the user-specified one, or the locally built jar.
           val apiNewVersion = project.findProperty("apiNewVersion") as String?
-          val newArtifact = apiNewVersion?.let { findArtifact(it) }
-            ?: file(getByName<Jar>("jar").archiveFile)
-          newClasspath.from(files(newArtifact))
+          val apiBaseVersion = project.findProperty("apiBaseVersion") as String?
+          val baselineVersion = apiBaseVersion ?: apidiffBaselineVersion
+
+          val archiveName = base.archivesName.get()
+          val newModuleClasspath =
+            apiNewVersion?.let { getClasspathForVersion(it) } ?: getCurrentClassPath()
+          val oldModuleClasspath = getClasspathForVersion(baselineVersion)
+          val archivePattern = (archiveName + "-([0-9\\.]*)(-SNAPSHOT)?.jar").toRegex()
+          val newArchive = newModuleClasspath.singleOrNull { it.name.matches(archivePattern) }
+          val oldArchive = oldModuleClasspath.singleOrNull { it.name.matches(archivePattern) }
+          newClasspath.from(newModuleClasspath)
+          oldClasspath.from(oldModuleClasspath)
+          newArchives.from(newArchive)
+          oldArchives.from(oldArchive)
 
           // only output changes, not everything
           onlyModified.set(true)
 
-          // the japicmp "old" version is either the user-specified one, or the latest release.
-          val apiBaseVersion = project.findProperty("apiBaseVersion") as String?
-          val baselineVersion = apiBaseVersion ?: apidiffBaselineVersion
-          oldClasspath.from(
-            try {
-              files(findArtifact(baselineVersion))
-            } catch (e: Exception) {
-              // if we can't find the baseline artifact, this is probably one that's never been published before,
-              // so publish the whole API. We do that by flipping this flag, and comparing the current against nothing.
-              onlyModified.set(false)
-              files()
-            }
+          // Allow known false positives and adding default implementations to interface methods.
+          compatibilityChangeExcludes.set(
+            listOf(
+              JApiCompatibilityChangeType.CLASS_GENERIC_TEMPLATE_CHANGED.name,
+              JApiCompatibilityChangeType.METHOD_NEW_DEFAULT.name,
+              JApiCompatibilityChangeType.METHOD_ABSTRACT_NOW_DEFAULT.name,
+              JApiCompatibilityChangeType.METHOD_ABSTRACT_ADDED_IN_IMPLEMENTED_INTERFACE.name,
+            ),
           )
 
-          // Reproduce defaults from https://github.com/melix/japicmp-gradle-plugin/blob/09f52739ef1fccda6b4310cf3f4b19dc97377024/src/main/java/me/champeau/gradle/japicmp/report/ViolationsGenerator.java#L130
-          // only changing the BinaryIncompatibleRule to our custom one that allows new default methods
-          // on interfaces, and adding default implementations to interface methods previously
-          // abstract.
           richReport {
             addSetupRule(RecordSeenMembersSetup::class.java)
             addRule(JApiChangeStatus.NEW, SourceCompatibleRule::class.java)
             addRule(JApiChangeStatus.MODIFIED, SourceCompatibleRule::class.java)
             addRule(JApiChangeStatus.UNCHANGED, UnchangedMemberRule::class.java)
-            addRule(SourceCompatibleRule::class.java)
+            addRule(AllowNewAbstractMethodOnAutovalueClasses::class.java)
+            addRule(BinaryIncompatibleRule::class.java)
+            addRule(SourceIncompatibleRule::class.java)
           }
 
           // this is needed so that we only consider the current artifact, and not dependencies
@@ -95,7 +182,7 @@ if (project.findProperty("otel.stable") == "true" && project.path != ":javaagent
         }
         // have the check task depend on the api comparison task, to make it more likely it will get used.
         named("check") {
-          finalizedBy(jApiCmp)
+          dependsOn(jApiCmp)
         }
       }
     }
