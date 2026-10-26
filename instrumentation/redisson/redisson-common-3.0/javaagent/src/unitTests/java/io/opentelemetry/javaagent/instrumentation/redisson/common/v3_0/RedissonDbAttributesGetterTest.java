@@ -48,10 +48,15 @@ class RedissonDbAttributesGetterTest {
     assertThat(extractedErrorType(error)).isEqualTo("CUSTOM");
 
     RedissonErrorCapture.clearServerError(error);
+    assertThat(RedissonErrorCapture.getServerErrorType(error)).isNull();
+    assertThat(GETTER.getErrorType(REQUEST, null, error)).isEqualTo(RedisException.class.getName());
     assertThat(extractedErrorType(error)).isEqualTo(RedisException.class.getName());
-    assertThat(RedissonErrorCapture.currentServerErrorType().get()).isNull();
-    assertThat(extractedErrorType(new RedisException("CUSTOM other operation")))
+    RedisException uncapturedError = new RedisException("CUSTOM other operation");
+    assertThat(RedissonErrorCapture.getServerErrorType(uncapturedError)).isNull();
+    assertThat(GETTER.getErrorType(REQUEST, null, uncapturedError))
         .isEqualTo(RedisException.class.getName());
+    assertThat(extractedErrorType(uncapturedError)).isEqualTo(RedisException.class.getName());
+    assertThat(RedissonErrorCapture.currentServerErrorType().get()).isNull();
   }
 
   @Test
@@ -118,8 +123,11 @@ class RedissonDbAttributesGetterTest {
 
     RedissonErrorCapture.captureServerError(error);
 
-    assertThat(GETTER.getErrorType(REQUEST, null, error)).isNull();
+    assertThat(RedissonErrorCapture.getServerErrorType(error)).isNull();
+    assertThat(GETTER.getErrorType(REQUEST, null, error)).isEqualTo(RedisException.class.getName());
     assertThat(extractedErrorType(error)).isEqualTo(RedisException.class.getName());
+    assertThat(GETTER.getErrorType(REQUEST, null, null)).isNull();
+    assertThat(extractedErrorType(null)).isNull();
   }
 
   @Test
@@ -140,6 +148,9 @@ class RedissonDbAttributesGetterTest {
     assertThat(extractedErrorType(error)).isEqualTo("LOADING");
 
     RedissonErrorCapture.clearServerError(error);
+    assertThat(RedissonErrorCapture.getServerErrorType(error)).isNull();
+    assertThat(GETTER.getErrorType(REQUEST, null, error))
+        .isEqualTo(RedisLoadingException.class.getName());
     assertThat(extractedErrorType(error)).isEqualTo(RedisLoadingException.class.getName());
     assertThat(RedissonErrorCapture.currentServerErrorType().get()).isNull();
   }
@@ -161,6 +172,8 @@ class RedissonDbAttributesGetterTest {
     }
 
     assertThat(extractedErrorType(serverError)).isEqualTo("CUSTOM");
+    assertThat(GETTER.getErrorType(REQUEST, null, clientError))
+        .isEqualTo(RedisException.class.getName());
     assertThat(extractedErrorType(clientError)).isEqualTo(RedisException.class.getName());
   }
 
@@ -168,7 +181,9 @@ class RedissonDbAttributesGetterTest {
   void connectionExceptionIsNotClassifiedAsServerError() {
     RedisConnectionException error = new RedisConnectionException("ERR connection refused");
 
-    assertThat(GETTER.getErrorType(REQUEST, null, error)).isNull();
+    assertThat(RedissonErrorCapture.getServerErrorType(error)).isNull();
+    assertThat(GETTER.getErrorType(REQUEST, null, error))
+        .isEqualTo(RedisConnectionException.class.getName());
     assertThat(extractedErrorType(error)).isEqualTo(RedisConnectionException.class.getName());
   }
 
