@@ -188,7 +188,17 @@ class MongoDbAttributesGetter
       CommandStartedEvent request,
       @Nullable CommandSucceededEvent response,
       @Nullable Throwable error) {
-    return getServerErrorCode(response, error);
+    Integer writeErrorCode = getWriteErrorCode(response);
+    if (writeErrorCode != null) {
+      return writeErrorCode.toString();
+    }
+    if (error instanceof MongoException) {
+      int code = ((MongoException) error).getCode();
+      if (code != 0 && code != -1) {
+        return Integer.toString(code);
+      }
+    }
+    return null;
   }
 
   @Nullable

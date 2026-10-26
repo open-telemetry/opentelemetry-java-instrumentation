@@ -23,14 +23,7 @@ import javax.annotation.Nullable;
 public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
 
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
-  private static final String ORACLE_DB = "oracle.db";
-  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String OTHER_SQL = "other_sql";
-  private static final String H2_DATABASE = "h2database";
-  private static final int H2_OBJECT_CLOSED_ERROR_CODE = 90007;
-  private static final String POSTGRESQL_DATABASE = "postgresql";
-  private static final String POSTGRESQL_CONNECTION_DOES_NOT_EXIST = "08003";
-  private static final String POSTGRESQL_CONNECTION_CLASS = "org.postgresql.jdbc.PgConnection";
 
   @Override
   public String getDbSystemName(DbRequest request) {
@@ -69,25 +62,6 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public String getDbResponseStatusCode(
       DbRequest request, @Nullable Void response, @Nullable Throwable error) {
-    if (H2_DATABASE.equals(getDbSystemName(request))
-        && error instanceof SQLException
-        && ((SQLException) error).getErrorCode() == H2_OBJECT_CLOSED_ERROR_CODE
-        && "90007".equals(((SQLException) error).getSQLState())) {
-      // H2 generates this object-closed error locally before sending a database request.
-      return null;
-    }
-    if (ORACLE_DB.equals(getDbSystemName(request)) && error instanceof SQLException) {
-      int errorCode = ((SQLException) error).getErrorCode();
-      // Oracle Statement.ensureOpen() generates these locally, before any server request.
-      if (errorCode == 17008 || errorCode == 17009) {
-        return null;
-      }
-    }
-    if (POSTGRESQL_DATABASE.equals(getDbSystemName(request))
-        && error instanceof SQLException
-        && isPostgresqlConnectionClosed((SQLException) error)) {
-      return null;
-    }
     if (OTHER_SQL.equals(getDbSystemName(request)) && error instanceof SQLException) {
       SQLException sqlException = (SQLException) error;
       int errorCode = sqlException.getErrorCode();
@@ -105,16 +79,6 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
       return null;
     }
     return getSqlExceptionCode(error);
-  }
-
-  private static boolean isPostgresqlConnectionClosed(SQLException error) {
-    if (!POSTGRESQL_CONNECTION_DOES_NOT_EXIST.equals(error.getSQLState())) {
-      return false;
-    }
-    StackTraceElement[] stackTrace = error.getStackTrace();
-    return stackTrace.length > 0
-        && POSTGRESQL_CONNECTION_CLASS.equals(stackTrace[0].getClassName())
-        && "checkClosed".equals(stackTrace[0].getMethodName());
   }
 
   @Nullable

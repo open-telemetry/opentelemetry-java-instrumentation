@@ -65,7 +65,7 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   }
 
   /**
-   * Returns the status code returned by the database, if available.
+   * Returns an available response status code supplied by the database or client library.
    *
    * <p>Return {@code null} when no response status code is available, including errors represented
    * only by an exception class name or a fallback error type.

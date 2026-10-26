@@ -27,6 +27,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
+import net.spy.memcached.internal.BulkGetFuture;
 import net.spy.memcached.internal.GetFuture;
 import net.spy.memcached.internal.OperationFuture;
 import net.spy.memcached.ops.OperationStatus;
@@ -56,7 +57,11 @@ class SpymemcachedAttributesGetterTest {
         "ERR_NOT_SUPPORTED",
         "ERR_INTERNAL",
         "ERR_BUSY",
-        "ERR_TEMP_FAIL"
+        "ERR_TEMP_FAIL",
+        "CANCELLED",
+        "INTERRUPTED",
+        "TIMEDOUT",
+        "ERR_CLIENT"
       })
   void databaseOutcomeStatusesAreReportedRegardlessOfSuccess(StatusCode code) {
     OperationFuture<?> future = mock(OperationFuture.class);
@@ -77,7 +82,8 @@ class SpymemcachedAttributesGetterTest {
     assertThat(getter.getDbResponseStatusCode(null, future, null)).isEqualTo("SUCCESS");
     when(future.getStatus())
         .thenReturn(new OperationStatus(false, "cancelled", StatusCode.CANCELLED));
-    assertThat(getter.getDbResponseStatusCode(null, future, null)).isNull();
+    assertThat(getter.getDbResponseStatusCode(null, future, null)).isEqualTo("CANCELLED");
+    assertThat(getter.getErrorType(null, future, null)).isNull();
     assertThat(getter.getDbResponseStatusCode(null, null, new IllegalStateException("failed")))
         .isNull();
     assertThat(getter.getDbResponseStatusCode(null, null, null)).isNull();
@@ -110,12 +116,31 @@ class SpymemcachedAttributesGetterTest {
   @EnumSource(
       value = StatusCode.class,
       names = {"TIMEDOUT", "INTERRUPTED", "ERR_CLIENT"})
-  void clientStatusesRemainErrorsWithoutResponseStatusCodes(StatusCode code) {
+  void clientStatusesAreAvailableWithoutChangingErrorType(StatusCode code) {
     OperationFuture<?> future = mock(OperationFuture.class);
     when(future.getStatus()).thenReturn(new OperationStatus(false, "client failure", code));
 
     assertThat(getter.getErrorType(null, future, null)).isEqualTo(code.name());
-    assertThat(getter.getDbResponseStatusCode(null, future, null)).isNull();
+    assertThat(getter.getDbResponseStatusCode(null, future, null)).isEqualTo(code.name());
+  }
+
+  @Test
+  void cancelledFutureRetainsItsResponseStatus() {
+    OperationFuture<?> future = mock(OperationFuture.class);
+    when(future.isCancelled()).thenReturn(true);
+    when(future.getStatus())
+        .thenReturn(new OperationStatus(false, "cancelled", StatusCode.CANCELLED));
+
+    assertThat(getter.getDbResponseStatusCode(null, future, null)).isEqualTo("CANCELLED");
+    assertThat(getter.getErrorType(null, future, null)).isNull();
+  }
+
+  @Test
+  void bulkFutureStatusIsAvailable() {
+    BulkGetFuture<?> future = mock(BulkGetFuture.class);
+    when(future.getStatus()).thenReturn(new OperationStatus(true, "stored", StatusCode.SUCCESS));
+
+    assertThat(getter.getDbResponseStatusCode(null, future, null)).isEqualTo("SUCCESS");
   }
 
   @Test
