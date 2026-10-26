@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### 🛠️ Bug fixes
+
+- Fix Java agent startup resource schema conflicts when a service name is configured.
+  ([#20915](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/20915))
+
 ## Version 2.33.0 (2026-10-23)
 
 This release targets the OpenTelemetry SDK 1.67.0.
