@@ -14,10 +14,14 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerTargetGroup;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 /**
  * Parser for MySQL and MariaDB JDBC URLs.
@@ -134,28 +138,40 @@ public final class MysqlUrlParser implements JdbcUrlParser {
         entryStart = i + 1;
       }
     }
+    if (depth != 0) {
+      // leave unbalanced parentheses to the parsing below, which rejects them
+      return jdbcUrl;
+    }
     return jdbcUrl.substring(0, hostsStart) + hosts + jdbcUrl.substring(hostsEnd);
   }
 
   // Returns the entry unchanged when it is not a valid key-value host.
   private static String toAddressForm(String entry) {
-    if (!entry.startsWith("(") || !entry.endsWith(")")) {
+    String trimmed = entry.trim();
+    if (!trimmed.startsWith("(") || !trimmed.endsWith(")")) {
       return entry;
     }
-    String keyValues = entry.substring(1, entry.length() - 1);
+    String keyValues = trimmed.substring(1, trimmed.length() - 1);
     if (keyValues.indexOf('(') >= 0 || keyValues.indexOf(')') >= 0) {
       return entry;
     }
     String host = null;
     String port = null;
     for (String keyValue : keyValues.split(",", -1)) {
+      if (keyValue.trim().isEmpty()) {
+        // Connector/J skips empty entries
+        continue;
+      }
       int equals = keyValue.indexOf('=');
-      if (equals <= 0) {
+      if (equals < 0) {
         // e.g. an unencoded comma in a password makes the key-value boundaries ambiguous
         return entry;
       }
       String key = keyValue.substring(0, equals).trim();
-      String value = keyValue.substring(equals + 1).trim();
+      String value = decode(keyValue.substring(equals + 1).trim());
+      if (value == null) {
+        return entry;
+      }
       if (key.equals("host")) {
         if (host != null) {
           return entry;
@@ -168,14 +184,22 @@ public final class MysqlUrlParser implements JdbcUrlParser {
         port = value;
       }
     }
-    if (host == null
-        || host.isEmpty()
-        || host.indexOf('=') >= 0
-        || (port != null && !isValidPort(port))) {
+    // the decoded host must not contain characters that would break the address block
+    if (!DbServerTargetBuilder.isValidHost(host) || (port != null && !isValidPort(port))) {
       return entry;
     }
     String address = "address=(host=" + host + ")";
     return port == null ? address : address + "(port=" + port + ")";
+  }
+
+  // Connector/J percent-decodes key-value host properties
+  @Nullable
+  private static String decode(String value) {
+    try {
+      return URLDecoder.decode(value, "UTF-8");
+    } catch (UnsupportedEncodingException | IllegalArgumentException ignored) {
+      return null;
+    }
   }
 
   private static int indexOf(String string, int start, char... chars) {
