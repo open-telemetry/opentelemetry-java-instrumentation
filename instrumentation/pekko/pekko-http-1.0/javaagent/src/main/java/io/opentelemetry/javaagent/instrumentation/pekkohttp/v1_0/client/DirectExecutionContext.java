@@ -10,11 +10,11 @@ import static java.util.logging.Level.WARNING;
 import java.util.logging.Logger;
 import scala.concurrent.ExecutionContext;
 
-final class DirectExecutionContext implements ExecutionContext {
+public final class DirectExecutionContext implements ExecutionContext {
 
   private static final Logger logger = Logger.getLogger(DirectExecutionContext.class.getName());
 
-  static final DirectExecutionContext INSTANCE = new DirectExecutionContext();
+  public static final DirectExecutionContext INSTANCE = new DirectExecutionContext();
 
   private DirectExecutionContext() {}
 
