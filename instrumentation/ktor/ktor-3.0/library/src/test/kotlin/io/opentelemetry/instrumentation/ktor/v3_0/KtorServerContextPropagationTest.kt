@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.ktor.v3_0
 
 import io.ktor.http.HttpHeaders
+import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
@@ -25,8 +26,10 @@ import io.opentelemetry.sdk.trace.ReadableSpan
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.SpanProcessor
 import io.opentelemetry.sdk.trace.data.SpanData
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.net.HttpURLConnection
@@ -38,7 +41,25 @@ class KtorServerContextPropagationTest {
   private data class ObservedSpan(val traceId: String, val spanId: String, val recording: Boolean)
 
   @Test
-  fun eachRequestContinuesItsOwnTraceparent() {
+  fun eachRequestContinuesItsOwnTraceparent() = verifyEachRequestContinuesItsOwnTraceparent(dispatcherSwitch = false)
+
+  @Test
+  fun eachRequestContinuesItsOwnTraceparentAfterDispatcherSwitch() = verifyEachRequestContinuesItsOwnTraceparent(dispatcherSwitch = true)
+
+  private fun verifyEachRequestContinuesItsOwnTraceparent(dispatcherSwitch: Boolean) {
+    System.getProperty("otel.test.ktor.regularJarVersion")?.let { version ->
+      assertThat(Application::class.java.protectionDomain.codeSource.location.path)
+        .contains("ktor-server-core-jvm-$version.jar")
+    }
+    if (System.getProperty("otel.test.ktor.fatJar") == "true") {
+      val expectedVersion = if (System.getProperty("otel.test.ktor.genericManifestVersion") == "true") "1.0.0" else null
+      assertThat(Application::class.java.`package`.implementationVersion).isEqualTo(expectedVersion)
+      assertThat(Application::class.java.protectionDomain.codeSource.location.path).contains("application-all-ktor")
+      val pipelineClass = Class.forName("io.ktor.util.pipeline.SuspendFunctionGun", false, Application::class.java.classLoader)
+      assertThat(pipelineClass.`package`.implementationVersion).isEqualTo(expectedVersion)
+      assertThat(pipelineClass.protectionDomain.codeSource.location.path).contains("application-all-ktor")
+    }
+
     val completedSpans = CopyOnWriteArrayList<SpanData>()
     val processor = object : SpanProcessor {
       override fun isStartRequired() = false
@@ -64,7 +85,10 @@ class KtorServerContextPropagationTest {
       }
       routing {
         get("/") {
-          delay(5) // Suspension alone is enough; no dispatcher hop is needed.
+          delay(5)
+          if (dispatcherSwitch) {
+            withContext(Dispatchers.IO) { delay(5) }
+          }
           val span = Span.current()
           call.respondText("${span.spanContext.traceId} ${span.spanContext.spanId} ${span.isRecording}")
         }
