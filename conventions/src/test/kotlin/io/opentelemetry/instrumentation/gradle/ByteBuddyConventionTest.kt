@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.gradle
 
+import java.io.File
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import java.io.File
 
 class ByteBuddyConventionTest {
   @TempDir

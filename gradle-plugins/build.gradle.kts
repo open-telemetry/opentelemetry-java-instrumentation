@@ -29,11 +29,15 @@ val byteBuddyVersion = "1.18.14"
 val aetherVersion = "1.1.0"
 
 apply(from = "../buildscripts/byte-buddy.gradle.kts")
-afterEvaluate {
-  configurations.configureEach {
-    if (isCanBeResolved && !isCanBeConsumed) {
-      attributes.attribute(Attribute.of("io.opentelemetry.byte-buddy-variant", String::class.java), "byte-buddy-dep")
-    }
+configurations.configureEach {
+  if (name in listOf(
+      "compileClasspath",
+      "runtimeClasspath",
+      "testCompileClasspath",
+      "testRuntimeClasspath",
+      "precompiledScriptPluginAccessorsGenerationClasspath"
+    )) {
+    attributes.attribute(Attribute.of("io.opentelemetry.byte-buddy-variant", String::class.java), "byte-buddy-dep")
   }
 }
 
