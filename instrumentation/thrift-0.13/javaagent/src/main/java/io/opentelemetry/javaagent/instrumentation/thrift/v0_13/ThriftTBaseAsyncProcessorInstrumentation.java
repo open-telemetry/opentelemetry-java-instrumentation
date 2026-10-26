@@ -65,7 +65,10 @@ class ThriftTBaseAsyncProcessorInstrumentation implements TypeInstrumentation {
       if (serverInProtocolDecorator.isOneway()
           || serverOutProtocolDecorator.hasException()
           || throwable != null) {
-        serverInProtocolDecorator.endSpan(throwable, serverOutProtocolDecorator.hasException());
+        serverInProtocolDecorator.endSpan(
+            throwable,
+            serverOutProtocolDecorator.hasException(),
+            serverOutProtocolDecorator.getExceptionStatusCode());
       }
     }
   }

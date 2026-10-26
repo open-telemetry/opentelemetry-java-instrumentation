@@ -49,19 +49,22 @@ final class ThriftRpcAttributesGetter
       ThriftRequest request, @Nullable ThriftResponse response, @Nullable Throwable error) {
     // Application exception types are carried in RPC replies; transport exception types are not.
     if (error instanceof TApplicationException) {
-      int code = ((TApplicationException) error).getType();
-      if (code >= TApplicationException.UNKNOWN
-          && code <= TApplicationException.UNSUPPORTED_CLIENT_TYPE) {
-        return Integer.toString(code);
+      String statusCode = applicationExceptionStatusCode(((TApplicationException) error).getType());
+      if (statusCode != null) {
+        return statusCode;
       }
     }
-    return null;
+    return response == null ? null : response.getRpcStatusCode();
   }
 
   @Override
   @Nullable
   public String getErrorType(
       ThriftRequest request, @Nullable ThriftResponse response, @Nullable Throwable error) {
+    String rpcStatusCode = getRpcStatusCode(request, response, error);
+    if (rpcStatusCode != null) {
+      return rpcStatusCode;
+    }
     if (error instanceof TTransportException) {
       int errorCode = ((TTransportException) error).getType();
       switch (errorCode) {
@@ -83,6 +86,15 @@ final class ThriftRpcAttributesGetter
     }
     if (error == null && response != null && response.isFailed()) {
       return "_OTHER";
+    }
+    return null;
+  }
+
+  @Nullable
+  static String applicationExceptionStatusCode(int code) {
+    if (code >= TApplicationException.UNKNOWN
+        && code <= TApplicationException.UNSUPPORTED_CLIENT_TYPE) {
+      return Integer.toString(code);
     }
     return null;
   }

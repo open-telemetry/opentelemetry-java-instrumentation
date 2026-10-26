@@ -321,7 +321,7 @@ public abstract class AbstractThriftTest {
             equalTo(
                 ERROR_TYPE,
                 hasError && emitPreviewRpcSemconv()
-                    ? TApplicationException.class.getName()
+                    ? Integer.toString(TApplicationException.INTERNAL_ERROR)
                     : null));
     if (hasError) {
       span.hasException(new TApplicationException());
@@ -332,6 +332,17 @@ public abstract class AbstractThriftTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   protected SpanDataAssert assertServerSpan(
       SpanDataAssert span, String className, String method, int port, String errorType) {
+    return assertServerSpan(span, className, method, port, errorType, null);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  protected SpanDataAssert assertServerSpan(
+      SpanDataAssert span,
+      String className,
+      String method,
+      int port,
+      String errorType,
+      String rpcStatusCode) {
     String rpcServiceName =
         emitPreviewRpcSemconv() ? getServerRpcServiceName(className) : className;
     return span.hasName(rpcServiceName + "/" + method)
@@ -343,6 +354,7 @@ public abstract class AbstractThriftTest {
             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? className : null),
             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
             equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "apache_thrift" : null),
+            equalTo(stringKey("rpc.status_code"), emitPreviewRpcSemconv() ? rpcStatusCode : null),
             equalTo(SERVER_PORT, port),
             equalTo(SERVER_ADDRESS, "127.0.0.1"),
             equalTo(NETWORK_TYPE, "ipv4"),
@@ -361,6 +373,16 @@ public abstract class AbstractThriftTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   protected SpanDataAssert assertServerSpan(
       SpanDataAssert span, String className, String method, String errorType) {
+    return assertServerSpan(span, className, method, errorType, null);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  protected SpanDataAssert assertServerSpan(
+      SpanDataAssert span,
+      String className,
+      String method,
+      String errorType,
+      String rpcStatusCode) {
     String rpcServiceName =
         emitPreviewRpcSemconv() ? getServerRpcServiceName(className) : className;
     return span.hasName(rpcServiceName + "/" + method)
@@ -372,6 +394,7 @@ public abstract class AbstractThriftTest {
             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? className : null),
             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
             equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "apache_thrift" : null),
+            equalTo(stringKey("rpc.status_code"), emitPreviewRpcSemconv() ? rpcStatusCode : null),
             equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? errorType : null));
   }
 
@@ -575,63 +598,70 @@ public abstract class AbstractThriftTest {
                             .hasStatus(StatusData.error()),
                     span ->
                         assertServerSpan(
-                                span, CustomHandler.class.getName(), "withError", port, "_OTHER")
+                                span,
+                                CustomHandler.class.getName(),
+                                "withError",
+                                port,
+                                Integer.toString(TApplicationException.INTERNAL_ERROR),
+                                Integer.toString(TApplicationException.INTERNAL_ERROR))
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())));
+    assertApplicationExceptionMetrics(port, CustomHandler.class.getName());
+  }
 
-    if (emitPreviewRpcSemconv()) {
-      getTesting()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.thrift-0.13",
-              metric ->
-                  metric
-                      .hasName("rpc.server.call.duration")
-                      .satisfies(
-                          hasScopeSchemaUrl(
-                              emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
-                      .hasUnit("s")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                          equalTo(SERVER_PORT, port),
-                                          equalTo(
-                                              RPC_METHOD,
-                                              getServerRpcServiceName(CustomHandler.class.getName())
-                                                  + "/withError"),
-                                          equalTo(ERROR_TYPE, "_OTHER")))));
-      getTesting()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.thrift-0.13",
-              metric ->
-                  metric
-                      .hasName("rpc.client.call.duration")
-                      .satisfies(
-                          hasScopeSchemaUrl(
-                              emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
-                      .hasUnit("s")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                          equalTo(SERVER_ADDRESS, "localhost"),
-                                          equalTo(SERVER_PORT, port),
-                                          equalTo(
-                                              RPC_METHOD,
-                                              CustomService.class.getName() + "/withError"),
-                                          equalTo(
-                                              stringKey("rpc.status_code"),
-                                              Integer.toString(
-                                                  TApplicationException.INTERNAL_ERROR)),
-                                          equalTo(
-                                              ERROR_TYPE,
-                                              TApplicationException.class.getName())))));
+  private void assertApplicationExceptionMetrics(int port, String handlerClassName) {
+    if (!emitPreviewRpcSemconv()) {
+      return;
     }
+
+    String statusCode = Integer.toString(TApplicationException.INTERNAL_ERROR);
+    getTesting()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.thrift-0.13",
+            metric ->
+                metric
+                    .hasName("rpc.server.call.duration")
+                    .satisfies(
+                        hasScopeSchemaUrl(
+                            emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
+                    .hasUnit("s")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                                        equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                                        equalTo(SERVER_PORT, port),
+                                        equalTo(
+                                            RPC_METHOD,
+                                            getServerRpcServiceName(handlerClassName)
+                                                + "/withError"),
+                                        equalTo(stringKey("rpc.status_code"), statusCode),
+                                        equalTo(ERROR_TYPE, statusCode)))));
+    getTesting()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.thrift-0.13",
+            metric ->
+                metric
+                    .hasName("rpc.client.call.duration")
+                    .satisfies(
+                        hasScopeSchemaUrl(
+                            emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
+                    .hasUnit("s")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                                        equalTo(SERVER_ADDRESS, "localhost"),
+                                        equalTo(SERVER_PORT, port),
+                                        equalTo(
+                                            RPC_METHOD,
+                                            CustomService.class.getName() + "/withError"),
+                                        equalTo(stringKey("rpc.status_code"), statusCode),
+                                        equalTo(ERROR_TYPE, statusCode)))));
   }
 
   @Test
@@ -824,14 +854,61 @@ public abstract class AbstractThriftTest {
                                     CustomHandler.class.getName(),
                                     "withError",
                                     port,
-                                    "_OTHER")
+                                    Integer.toString(TApplicationException.INTERNAL_ERROR),
+                                    Integer.toString(TApplicationException.INTERNAL_ERROR))
                                 : assertServerSpan(
-                                    span, CustomHandler.class.getName(), "withError", "_OTHER"))
+                                    span,
+                                    CustomHandler.class.getName(),
+                                    "withError",
+                                    Integer.toString(TApplicationException.INTERNAL_ERROR),
+                                    Integer.toString(TApplicationException.INTERNAL_ERROR)))
                             .hasParent(trace.getSpan(1)),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void asyncServerWithError() throws Exception {
+    assumeTrue(!"1.8".equals(System.getProperty("java.specification.version")) || testLatestDeps());
+
+    int port = startAsyncServer(true);
+    CustomService.AsyncIface asyncClient = createAsyncClient(port);
+    CompletableFuture<String> completableFuture = new CompletableFuture<>();
+
+    asyncClient.withError(
+        new AsyncMethodCallback<String>() {
+          @Override
+          public void onComplete(String response) {
+            completableFuture.complete(response);
+          }
+
+          @Override
+          public void onError(Exception exception) {
+            completableFuture.completeExceptionally(exception);
+          }
+        });
+
+    assertThatThrownBy(() -> completableFuture.get(15, SECONDS))
+        .hasRootCauseInstanceOf(TApplicationException.class);
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> assertClientSpan(span, "withError", port, true).hasNoParent(),
+                    span ->
+                        assertServerSpan(
+                                span,
+                                CustomAsyncHandler.class.getName(),
+                                "withError",
+                                port,
+                                Integer.toString(TApplicationException.INTERNAL_ERROR),
+                                Integer.toString(TApplicationException.INTERNAL_ERROR))
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.error())));
+    assertApplicationExceptionMetrics(port, CustomAsyncHandler.class.getName());
   }
 
   @Test
@@ -1172,7 +1249,8 @@ public abstract class AbstractThriftTest {
                                 CustomAsyncHandler.class.getName(),
                                 "withError",
                                 port,
-                                IllegalStateException.class.getName())
+                                Integer.toString(TApplicationException.INTERNAL_ERROR),
+                                Integer.toString(TApplicationException.INTERNAL_ERROR))
                             .hasParent(trace.getSpan(1)),
                     span ->
                         span.hasName("callback")
@@ -1202,7 +1280,8 @@ public abstract class AbstractThriftTest {
                                 CustomAsyncHandler.class.getName(),
                                 "withError",
                                 port,
-                                IllegalStateException.class.getName())
+                                Integer.toString(TApplicationException.INTERNAL_ERROR),
+                                Integer.toString(TApplicationException.INTERNAL_ERROR))
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())),
             trace ->

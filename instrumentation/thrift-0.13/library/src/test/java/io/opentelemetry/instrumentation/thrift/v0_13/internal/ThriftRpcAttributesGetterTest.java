@@ -52,8 +52,7 @@ class ThriftRpcAttributesGetterTest {
     TApplicationException error = new TApplicationException(code);
 
     assertThat(getter.getRpcStatusCode(request, null, error)).isEqualTo(Integer.toString(code));
-    // Preserve exception-class fallback for error.type.
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo(Integer.toString(code));
   }
 
   @ParameterizedTest
@@ -90,5 +89,13 @@ class ThriftRpcAttributesGetterTest {
     assertThat(getter.getErrorType(request, ThriftResponse.FAILED, null)).isEqualTo("_OTHER");
     assertThat(getter.getRpcStatusCode(request, null, new IllegalStateException())).isNull();
     assertThat(getter.getRpcStatusCode(request, null, new TProtocolException())).isNull();
+  }
+
+  @Test
+  void responseStatusCodeIsUsedAsErrorType() {
+    ThriftResponse response = ThriftResponse.failedWithRpcStatusCode("6");
+
+    assertThat(getter.getRpcStatusCode(request, response, null)).isEqualTo("6");
+    assertThat(getter.getErrorType(request, response, null)).isEqualTo("6");
   }
 }

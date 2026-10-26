@@ -45,7 +45,10 @@ public final class ServerProcessorDecorator implements TProcessor {
       throw t;
     } finally {
       serverInProtocolDecorator.closeScope();
-      serverInProtocolDecorator.endSpan(error, serverOutProtocolDecorator.hasException());
+      serverInProtocolDecorator.endSpan(
+          error,
+          serverOutProtocolDecorator.hasException(),
+          serverOutProtocolDecorator.getExceptionStatusCode());
     }
   }
 }

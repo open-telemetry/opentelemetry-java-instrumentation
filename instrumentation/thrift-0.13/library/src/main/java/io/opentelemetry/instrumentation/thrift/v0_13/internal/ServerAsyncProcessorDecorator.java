@@ -56,7 +56,10 @@ public final class ServerAsyncProcessorDecorator implements TAsyncProcessor, TPr
       if (serverInProtocolDecorator.isOneway()
           || serverOutProtocolDecorator.hasException()
           || error != null) {
-        serverInProtocolDecorator.endSpan(error, serverOutProtocolDecorator.hasException());
+        serverInProtocolDecorator.endSpan(
+            error,
+            serverOutProtocolDecorator.hasException(),
+            serverOutProtocolDecorator.getExceptionStatusCode());
       }
     }
   }

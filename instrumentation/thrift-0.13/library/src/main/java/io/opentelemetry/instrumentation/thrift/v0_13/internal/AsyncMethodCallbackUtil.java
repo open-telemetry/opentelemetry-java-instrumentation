@@ -59,7 +59,10 @@ public final class AsyncMethodCallbackUtil {
         } catch (Throwable e) {
           error = e;
         }
-        serverInProtocolDecorator.endSpan(error, serverOutProtocolDecorator.hasException());
+        serverInProtocolDecorator.endSpan(
+            error,
+            serverOutProtocolDecorator.hasException(),
+            serverOutProtocolDecorator.getExceptionStatusCode());
       }
 
       @Override
@@ -67,7 +70,10 @@ public final class AsyncMethodCallbackUtil {
         try (Scope ignore = context.makeCurrent()) {
           callback.onError(exception);
         } finally {
-          serverInProtocolDecorator.endSpan(exception, serverOutProtocolDecorator.hasException());
+          serverInProtocolDecorator.endSpan(
+              exception,
+              serverOutProtocolDecorator.hasException(),
+              serverOutProtocolDecorator.getExceptionStatusCode());
         }
       }
     };

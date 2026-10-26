@@ -173,11 +173,19 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
   }
 
   public void endSpan(@Nullable Throwable throwable, boolean failed) {
+    endSpan(throwable, failed, null);
+  }
+
+  public void endSpan(
+      @Nullable Throwable throwable, boolean failed, @Nullable String rpcStatusCode) {
     if (currentContext == null || currentRequest == null) {
       return;
     }
     instrumenter.end(
-        currentContext, currentRequest, failed ? ThriftResponse.FAILED : null, throwable);
+        currentContext,
+        currentRequest,
+        failed ? ThriftResponse.failedWithRpcStatusCode(rpcStatusCode) : null,
+        throwable);
     // Avoid duplicate end invocations from exceptions in asynchronous workflows
     currentContext = null;
     currentRequest = null;
