@@ -40,22 +40,66 @@ class ClientCallbackTest {
     // The baseline Akka 2.4 release has no affinity-pool executor.
     assumeTrue(testLatestDeps())
 
+    assertRelativeUriFailureWhileDispatcherIsBlocked(
+      """
+      akka.actor.default-dispatcher {
+        executor = "affinity-pool-executor"
+        affinity-pool-executor {
+          parallelism-min = 1
+          parallelism-max = 1
+          task-queue-size = 64
+        }
+      }
+      akka.loggers-dispatcher = "callback-logger-dispatcher"
+      callback-logger-dispatcher {
+        type = Dispatcher
+        executor = "fork-join-executor"
+        fork-join-executor {
+          parallelism-min = 1
+          parallelism-max = 1
+          parallelism-factor = 1.0
+        }
+      }
+      """,
+      saturate = true
+    )
+  }
+
+  @Test
+  def completesRelativeUriFailureWhileDispatcherIsBlocked(): Unit = {
+    assertRelativeUriFailureWhileDispatcherIsBlocked(
+      """
+      akka.actor.default-dispatcher {
+        executor = "fork-join-executor"
+        fork-join-executor {
+          parallelism-min = 1
+          parallelism-max = 1
+          parallelism-factor = 1.0
+        }
+      }
+      akka.loggers-dispatcher = "callback-logger-dispatcher"
+      callback-logger-dispatcher {
+        type = Dispatcher
+        executor = "fork-join-executor"
+        fork-join-executor {
+          parallelism-min = 1
+          parallelism-max = 1
+          parallelism-factor = 1.0
+        }
+      }
+      """,
+      saturate = false
+    )
+  }
+
+  private def assertRelativeUriFailureWhileDispatcherIsBlocked(
+      dispatcherConfig: String,
+      saturate: Boolean
+  ): Unit = {
     val system = ActorSystem.create(
       "client-callback",
       ConfigFactory
-        .parseString(
-          """
-          akka.actor.default-dispatcher {
-            executor = "affinity-pool-executor"
-            affinity-pool-executor {
-              parallelism-min = 1
-              parallelism-max = 1
-              task-queue-size = 64
-            }
-          }
-          akka.loggers-dispatcher = "akka.actor.default-blocking-io-dispatcher"
-          """
-        )
+        .parseString(dispatcherConfig)
         .withFallback(ConfigFactory.load())
     )
     cleanup.deferCleanup(new AutoCloseable {
@@ -77,22 +121,26 @@ class ClientCallbackTest {
       })
       assertThat(workerStarted.await(10, SECONDS)).isTrue()
 
-      var saturated = false
-      while (!saturated) {
-        try {
-          dispatcher.execute(new Runnable {
-            override def run(): Unit = ()
-          })
-        } catch {
-          case _: RejectedExecutionException => saturated = true
+      if (saturate) {
+        var saturated = false
+        while (!saturated) {
+          try {
+            dispatcher.execute(new Runnable {
+              override def run(): Unit = ()
+            })
+          } catch {
+            case _: RejectedExecutionException => saturated = true
+          }
         }
       }
 
+      val response = http.singleRequest(HttpRequest(uri = "/relative"))
       val failure = Await.result(
-        http.singleRequest(HttpRequest(uri = "/relative")).failed,
+        response.failed,
         5.seconds
       )
       assertThat(failure).isInstanceOf(classOf[IllegalUriException])
+      assertThat(response.isCompleted).isTrue()
 
       testing.waitAndAssertTraces(new Consumer[TraceAssert] {
         override def accept(trace: TraceAssert): Unit =
