@@ -24,7 +24,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.jar.JarFile;
@@ -40,10 +39,9 @@ class AgentStartupBenchmark {
   private static final Duration TIMEOUT = Duration.ofMinutes(2);
 
   @Test
-  void compareStartup() throws Exception {
-    Path baseline = agent("baseline");
-    Path candidate = agent("candidate");
-    int samples = count("samples", 2);
+  void measureStartup() throws Exception {
+    Path agent = agent();
+    int samples = count("samples", 1);
     int warmups = count("warmups", 0);
     Path directory =
         Path.of(required("output"))
@@ -57,82 +55,41 @@ class AgentStartupBenchmark {
     metadata.setProperty("resources", "cpuset=0,1; quota=2 CPUs; memory=1 GiB; heap=512 MiB");
     metadata.setProperty(
         "exporters", "traces=none, metrics=none, logs=none; instrumentation enabled");
-    for (var entry : Map.of("baseline", baseline, "candidate", candidate).entrySet()) {
-      Path path = entry.getValue();
-      try (JarFile jar = new JarFile(path.toFile())) {
-        metadata.setProperty(
-            entry.getKey() + ".version",
-            jar.getManifest().getMainAttributes().getValue("Implementation-Version"));
-      }
-      MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      try (InputStream input = Files.newInputStream(path)) {
-        byte[] buffer = new byte[8192];
-        int read;
-        while ((read = input.read(buffer)) != -1) {
-          digest.update(buffer, 0, read);
-        }
-      }
-      metadata.setProperty(entry.getKey() + ".sha256", HexFormat.of().formatHex(digest.digest()));
-      metadata.setProperty(entry.getKey() + ".path", path.toString());
-    }
-    for (String variant : List.of("baseline", "candidate", "no-agent")) {
+    try (JarFile jar = new JarFile(agent.toFile())) {
       metadata.setProperty(
-          "command." + variant, "java " + String.join(" ", arguments(variant, false)));
+          "agent.version",
+          jar.getManifest().getMainAttributes().getValue("Implementation-Version"));
     }
+    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+    try (InputStream input = Files.newInputStream(agent)) {
+      byte[] buffer = new byte[8192];
+      int read;
+      while ((read = input.read(buffer)) != -1) {
+        digest.update(buffer, 0, read);
+      }
+    }
+    metadata.setProperty("agent.sha256", HexFormat.of().formatHex(digest.digest()));
+    metadata.setProperty("agent.path", agent.toString());
+    metadata.setProperty("source.revision", System.getProperty("startup.benchmark.sourceRevision"));
+    metadata.setProperty("command.agent", "java " + String.join(" ", arguments(false)));
+    metadata.setProperty("command.profile", "java " + String.join(" ", arguments(true)));
     saveMetadata(directory, metadata);
     DockerClient docker = DockerClientFactory.instance().client();
     String volume = AgentStartupVolume.create(docker);
     List<AgentStartupReport.Sample> observations = new ArrayList<>();
     AgentStartupReport report = new AgentStartupReport(directory);
     try {
-      String image = prepare(docker, volume, baseline, candidate, directory, metadata);
+      String image = prepare(docker, volume, agent, directory, metadata);
       saveMetadata(directory, metadata);
-      for (String phase : List.of("control", "comparison")) {
-        for (int round = 0; round < warmups + samples; round++) {
-          List<String> order =
-              round % 2 == 0 ? List.of("baseline", "candidate") : List.of("candidate", "baseline");
-          for (int index = 0; index < order.size(); index++) {
-            String variant = order.get(index);
-            String artifact = phase.equals("control") ? "baseline" : variant;
-            AgentStartupReport.Sample observation =
-                sample(
-                    image,
-                    volume,
-                    phase,
-                    variant,
-                    artifact,
-                    round,
-                    index,
-                    round < warmups,
-                    false,
-                    directory);
-            observations.add(observation);
-            report.append(observation);
-            assertThat(observation.status()).isEqualTo("ok");
-          }
-          if (phase.equals("comparison")) {
-            AgentStartupReport.Sample observation =
-                sample(
-                    image,
-                    volume,
-                    phase,
-                    "no-agent",
-                    "no-agent",
-                    round,
-                    2,
-                    round < warmups,
-                    false,
-                    directory);
-            observations.add(observation);
-            report.append(observation);
-            assertThat(observation.status()).isEqualTo("ok");
-          }
-        }
+      for (int round = 0; round < warmups + samples; round++) {
+        AgentStartupReport.Sample observation =
+            sample(image, volume, round, round < warmups, false, directory);
+        observations.add(observation);
+        report.append(observation);
+        assertThat(observation.status()).isEqualTo("ok");
       }
       report.summarize(observations);
-      for (String variant : List.of("baseline", "candidate")) {
-        sample(image, volume, "profile", variant, variant, 0, 0, false, true, directory);
-      }
+      sample(image, volume, -1, false, true, directory);
       metadata.setProperty("status", "complete");
       saveMetadata(directory, metadata);
     } finally {
@@ -141,18 +98,11 @@ class AgentStartupBenchmark {
   }
 
   private static String prepare(
-      DockerClient docker,
-      String volume,
-      Path baseline,
-      Path candidate,
-      Path directory,
-      Properties metadata)
+      DockerClient docker, String volume, Path agent, Path directory, Properties metadata)
       throws Exception {
     try (GenericContainer<?> preparation =
         container(AotStartupBenchmark.IMAGE, volume)
-            .withCopyFileToContainer(MountableFile.forHostPath(baseline), "/benchmark/baseline.jar")
-            .withCopyFileToContainer(
-                MountableFile.forHostPath(candidate), "/benchmark/candidate.jar")
+            .withCopyFileToContainer(MountableFile.forHostPath(agent), "/benchmark/agent.jar")
             .withCopyFileToContainer(
                 MountableFile.forHostPath(Path.of(required("recorder"))),
                 "/benchmark/startup-recorder.jar")
@@ -183,23 +133,14 @@ class AgentStartupBenchmark {
   }
 
   private static AgentStartupReport.Sample sample(
-      String image,
-      String volume,
-      String phase,
-      String variant,
-      String artifact,
-      int round,
-      int order,
-      boolean discarded,
-      boolean profile,
-      Path directory)
+      String image, String volume, int round, boolean discarded, boolean profile, Path directory)
       throws Exception {
-    String name = phase + "-" + round + "-" + order + "-" + variant;
+    String name = profile ? "profile-agent" : "sample-" + round;
     double load = ManagementFactory.getOperatingSystemMXBean().getSystemLoadAverage();
     try (GenericContainer<?> application =
             container(image, volume)
                 .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint("java"))
-                .withCommand(arguments(artifact, profile).toArray(String[]::new))
+                .withCommand(arguments(profile).toArray(String[]::new))
                 .withExposedPorts(8080)
                 .withStartupAttempts(1)
                 .waitingFor(
@@ -226,6 +167,8 @@ class AgentStartupBenchmark {
         Instant cutoff = Instant.now();
         assertThat(response.statusCode()).isEqualTo(200);
         assertThat(response.body()).isEqualTo("Hi!");
+        assertThat(Double.isFinite(http)).isTrue();
+        assertThat(http).isPositive();
         String logs = application.getLogs();
         if (profile) {
           assertThat(logs.indexOf("Startup recording active before telemetry agent"))
@@ -233,45 +176,25 @@ class AgentStartupBenchmark {
               .isLessThan(logs.indexOf("opentelemetry-javaagent - version:"));
         }
         StartupTimings timings = StartupTimings.parse(logs);
-        if (!artifact.equals("no-agent")) {
-          assertThat(logs).contains("opentelemetry-javaagent - version:");
-        } else {
-          assertThat(logs).doesNotContain("opentelemetry-javaagent - version:");
-        }
+        assertThat(logs).contains("opentelemetry-javaagent - version:");
         if (profile) {
           var dump =
               application.execInContainer(
                   "jcmd", "1", "JFR.dump", "name=startup", "filename=/benchmark/startup.jfr");
           assertThat(dump.getExitCode()).isZero();
-          Path recording = directory.resolve(variant + ".jfr");
+          Path recording = directory.resolve("agent.jfr");
           application.copyFileFromContainer("/benchmark/startup.jfr", recording.toString());
-          StartupProfile.summarize(recording, cutoff, directory.resolve(variant + "-profile.txt"));
+          StartupProfile.summarize(recording, cutoff, directory.resolve("agent-profile.txt"));
         }
         return new AgentStartupReport.Sample(
-            phase,
-            variant,
-            round,
-            order,
-            discarded,
-            "ok",
-            timings.jvmSeconds(),
-            timings.springSeconds(),
-            http,
-            load);
+            round, discarded, "ok", timings.jvmSeconds(), timings.springSeconds(), http, load);
       } catch (Throwable t) {
-        new AgentStartupReport(directory)
-            .append(
-                new AgentStartupReport.Sample(
-                    phase,
-                    variant,
-                    round,
-                    order,
-                    discarded,
-                    "failed",
-                    Double.NaN,
-                    Double.NaN,
-                    Double.NaN,
-                    load));
+        if (!profile) {
+          new AgentStartupReport(directory)
+              .append(
+                  new AgentStartupReport.Sample(
+                      round, discarded, "failed", Double.NaN, Double.NaN, Double.NaN, load));
+        }
         throw t;
       } finally {
         if (application.getContainerId() != null) {
@@ -281,15 +204,13 @@ class AgentStartupBenchmark {
     }
   }
 
-  static List<String> arguments(String artifact, boolean profile) {
+  static List<String> arguments(boolean profile) {
     List<String> arguments = new ArrayList<>(List.of("-Xmx512m"));
     if (profile) {
       arguments.add("-XX:FlightRecorderOptions=stackdepth=256");
       arguments.add("-javaagent:/benchmark/startup-recorder.jar=/benchmark/startup.jfr");
     }
-    if (!artifact.equals("no-agent")) {
-      arguments.add("-javaagent:/benchmark/" + artifact + ".jar");
-    }
+    arguments.add("-javaagent:/benchmark/agent.jar");
     arguments.addAll(
         List.of("-cp", "/app/resources:/app/classes:/app/libs/*", AotStartupBenchmark.APPLICATION));
     return arguments;
@@ -300,8 +221,8 @@ class AgentStartupBenchmark {
         .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig().withCpusetCpus("0,1"));
   }
 
-  private static Path agent(String name) {
-    Path path = Path.of(required(name)).toAbsolutePath();
+  private static Path agent() {
+    Path path = Path.of(required("agent")).toAbsolutePath();
     if (!Files.isRegularFile(path)) {
       throw new IllegalArgumentException("Agent JAR does not exist: " + path);
     }
@@ -326,7 +247,7 @@ class AgentStartupBenchmark {
 
   private static void saveMetadata(Path directory, Properties metadata) throws Exception {
     try (OutputStream out = Files.newOutputStream(directory.resolve("metadata.properties"))) {
-      metadata.store(out, "Ordinary Java agent startup comparison");
+      metadata.store(out, "Ordinary Java agent startup benchmark");
     }
   }
 }

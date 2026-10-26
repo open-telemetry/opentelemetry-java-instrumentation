@@ -7,7 +7,7 @@
 - [Automation](#automation)
 - [Setup and Usage](#setup-and-usage)
 - [Visualization](#visualization)
-- [Ordinary agent startup comparison](#ordinary-agent-startup-comparison)
+- [Ordinary agent startup benchmark](#ordinary-agent-startup-benchmark)
 - [JDK 25 AOT startup comparison](#jdk-25-aot-startup-comparison)
 
 This directory will contain tools and utilities
@@ -114,13 +114,13 @@ None yet. Help wanted! Our goal is to have the results and a rich UI running in 
 `gh-pages` branch similar to [earlier tools](https://breedx-splk.github.io/iguanodon/web/).
 Please help us make this happen.
 
-## Ordinary agent startup comparison
+## Ordinary agent startup benchmark
 
-The opt-in `agentStartupBenchmark` task compares ordinary `-javaagent` launches
-of the small Spring smoke application with a baseline and a candidate agent JAR.
-It reuses the pinned JDK 25 image and timing parser from the AOT benchmark,
-without AOT or bootstrap-classpath preloading. Instrumentation and the SDK remain
-active; all exporters are `none`.
+The opt-in `agentStartupBenchmark` task measures repeated ordinary `-javaagent`
+launches of the small Spring smoke application using one supplied agent JAR. It
+reuses the pinned JDK 25 image and timing parser from the AOT benchmark, without
+AOT or bootstrap-classpath preloading. Instrumentation and the SDK remain active;
+all exporters are `none`.
 
 Use JDK 25 and Docker with Linux containers. Each application container uses CPUs
 `0,1`, a two-CPU quota, a 1 GiB memory limit, and `-Xmx512m`. The Docker host must
@@ -128,23 +128,18 @@ expose those CPUs as distinct physical cores on the same NUMA node; the workflow
 verifies this before measurement. Do not build artifacts or run other benchmarks
 during measurement.
 
-Build both agents from their respective source revisions with
-`:javaagent:shadowJar`, then run the standalone benchmark:
+Build the agent, then run the standalone benchmark with its exact local JAR:
 
 ```sh
+./gradlew :javaagent:shadowJar
 cd benchmark-overhead
 ./gradlew agentStartupBenchmark \
-  -PstartupBenchmarkBaseline=/absolute/path/to/baseline.jar \
-  -PstartupBenchmarkCandidate=/absolute/path/to/candidate.jar
+  -PstartupBenchmarkAgentJar=/absolute/path/to/opentelemetry-javaagent-VERSION.jar
 ```
 
-The benchmark first runs an A/A control using the same baseline JAR under both
-labels, then compares the baseline and candidate. Each round starts the pair in
-alternating order; comparison rounds also start an uninstrumented application.
-Defaults are two discarded fresh-process starts and twenty measured starts per
-variant and phase. Set
-`-PstartupBenchmarkWarmups=0 -PstartupBenchmarkSamples=2` for a short functional
-run, not a performance conclusion.
+Defaults are two discarded fresh-process starts and twenty measured starts.
+Set `-PstartupBenchmarkWarmups=0 -PstartupBenchmarkSamples=1` for a short
+functional run, not a performance conclusion.
 
 The primary metric is JVM uptime at Spring startup completion, including
 `premain()`. HTTP readiness time includes Docker and harness overhead and is
@@ -153,32 +148,27 @@ abort the benchmark and retain diagnostics; samples are not retried or filtered
 as outliers.
 
 Results under `build/reports/agent-startup/<run-id>/` include raw observations,
-host load averages, agent hashes and versions, exact JVM commands, image/JDK
-identity, medians, interquartile ranges, and paired baseline-minus-candidate
-savings. The reported 95% interval uses a circular moving-block bootstrap over
-consecutive rounds. Read it alongside the A/A control and reproduce improvements
-in an independent run.
+host load averages, agent hash and version, source revision, exact JVM command,
+image/JDK identity, and JVM, Spring, and HTTP timing distributions.
 
-Separate untimed baseline and candidate launches record startup JFR files and
-execution-sample summaries. A diagnostic-only recorder agent starts JFR before
-OpenTelemetry's `premain()`; the JVM's `-XX:StartFlightRecording` option starts
-too late to capture agent initialization. Those launches are excluded from timing
-results. These are fresh JVMs with warm image/filesystem caches, not cold-machine
-starts or throughput measurements.
+One separate untimed launch records a startup JFR file and execution-sample
+summary. A diagnostic-only recorder agent starts JFR before OpenTelemetry's
+`premain()`; the JVM's `-XX:StartFlightRecording` option starts too late to
+capture agent initialization. This launch is excluded from timing results.
+These are fresh JVMs with warm image/filesystem caches, not cold-machine starts
+or throughput measurements.
 
-Manually dispatch `agent-startup-benchmark.yml` from `main` with `baseline` and
-`candidate` set to same-repository branch names or full commit SHAs. For example,
-use `baseline=main` and `candidate=my-startup-change`. Both revisions must be
-reachable from repository branches, not fork-only commits or pull refs. Dispatch
-requires repository write access; only run trusted code, since agent JARs execute
-on a shared host.
+Manually dispatch `agent-startup-benchmark.yml` on the branch or tag to measure.
+For example, run `gh workflow run agent-startup-benchmark.yml --ref my-startup-change`.
+The selected revision must contain the workflow and benchmark. Dispatch requires
+repository write access; only run trusted code, since it executes on a shared host.
 
-The workflow resolves immutable source identities and builds agents on standard
-hosted runners. A common harness from the workflow revision is packaged
-separately from both agents and unpacked under `RUNNER_TEMP`, without checking
-out sources on the bare-metal host. It measures serially on
+The workflow builds the agent and packages the common harness from the selected
+revision on a standard hosted runner. It unpacks the harness and agent under
+`RUNNER_TEMP`, without checking out sources on the bare-metal host, and measures
+serially on
 `oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24` without repository credentials,
-and uploads source identities, host information, complete reports, and profiles
+and uploads source identity, host information, complete reports, and profiles
 as workflow artifacts. Cleanup is limited to the attempt's files and the
 harness's own containers and named volume; it does not prune Docker or tune the
 shared host. This is opt-in tooling, not required PR CI, a scheduled benchmark,

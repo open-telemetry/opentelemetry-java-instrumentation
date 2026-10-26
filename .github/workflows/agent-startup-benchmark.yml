@@ -2,17 +2,6 @@ name: Agent startup benchmark
 
 on:
   workflow_dispatch:
-    inputs:
-      baseline:
-        description: Baseline same-repository branch or full commit SHA
-        required: true
-        default: main
-        type: string
-      candidate:
-        description: Candidate same-repository branch or full commit SHA
-        required: true
-        default: main
-        type: string
 
 permissions:
   contents: read
@@ -22,79 +11,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  prepare:
-    if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    outputs:
-      baseline: ${{ steps.resolve.outputs.baseline }}
-      candidate: ${{ steps.resolve.outputs.candidate }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-
-      - name: Resolve revisions on repository branches
-        id: resolve
-        env:
-          BASELINE: ${{ inputs.baseline }}
-          CANDIDATE: ${{ inputs.candidate }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          for variant in baseline candidate; do
-            if [[ "$variant" == baseline ]]; then ref="$BASELINE"; else ref="$CANDIDATE"; fi
-            if [[ "$ref" =~ ^[0-9a-fA-F]{40}$ ]]; then
-              sha=$(git rev-parse --verify --end-of-options "$ref^{commit}")
-            else
-              git check-ref-format "refs/heads/$ref"
-              sha=$(git rev-parse --verify --end-of-options "refs/remotes/origin/$ref^{commit}")
-            fi
-            # Exclude pull refs and commits reachable only through a fork.
-            branches=$(git for-each-ref --contains="$sha" --format='%(refname)' refs/remotes/origin/)
-            test -n "$branches"
-            printf '%s=%s\n' "$variant" "$sha" >> "$GITHUB_OUTPUT"
-          done
-
-      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
-        with:
-          distribution: temurin
-          java-version-file: .java-version
-
-      - name: Validate and package common standalone benchmark
-        working-directory: benchmark-overhead
-        run: ./gradlew test --tests 'io.opentelemetry.startup.*Test' startupRecorderJar
-
-      - name: Package trusted harness, not candidate sources
-        run: |
-          git rev-parse HEAD > harness-revision.txt
-          tar --exclude=benchmark-overhead/build --exclude=benchmark-overhead/.gradle \
-            -czf startup-harness.tar.gz benchmark-overhead .java-version buildscripts/spotless.license.java harness-revision.txt
-
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: startup-harness
-          path: startup-harness.tar.gz
-          if-no-files-found: error
-          retention-days: 30
-
   build:
-    needs: prepare
+    if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - variant: baseline
-            ref: ${{ needs.prepare.outputs.baseline }}
-          - variant: candidate
-            ref: ${{ needs.prepare.outputs.candidate }}
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ matrix.ref }}
           persist-credentials: false
 
       - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
@@ -106,27 +29,41 @@ jobs:
         with:
           cache-read-only: true
 
-      - name: Build exact agent
+      - name: Build agent from selected revision
         run: ./gradlew :javaagent:shadowJar -PremoveJarVersionNumbers=true "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" --max-workers=2
 
-      - name: Record source and artifact identity
+      - name: Format and validate standalone benchmark
+        working-directory: benchmark-overhead
+        run: ./gradlew spotlessApply test --tests 'io.opentelemetry.startup.*Test' startupRecorderJar
+
+      - name: Package selected revision and agent identity
         run: |
-          git rev-parse HEAD > javaagent/build/libs/revision.txt
-          cd javaagent/build/libs
-          sha256sum opentelemetry-javaagent.jar > sha256.txt
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/startup-agent" "$RUNNER_TEMP/startup-harness"
+          cp javaagent/build/libs/opentelemetry-javaagent.jar "$RUNNER_TEMP/startup-agent/"
+          git rev-parse HEAD > "$RUNNER_TEMP/startup-agent/revision.txt"
+          (cd "$RUNNER_TEMP/startup-agent" && sha256sum opentelemetry-javaagent.jar > sha256.txt)
+          git rev-parse HEAD > "$RUNNER_TEMP/startup-harness/harness-revision.txt"
+          tar --exclude=benchmark-overhead/build --exclude=benchmark-overhead/.gradle \
+            -czf "$RUNNER_TEMP/startup-harness/startup-harness.tar.gz" \
+            benchmark-overhead .java-version buildscripts/spotless.license.java
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: startup-${{ matrix.variant }}
-          path: |
-            javaagent/build/libs/opentelemetry-javaagent.jar
-            javaagent/build/libs/revision.txt
-            javaagent/build/libs/sha256.txt
+          name: startup-agent
+          path: ${{ runner.temp }}/startup-agent
+          if-no-files-found: error
+          retention-days: 30
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: startup-harness
+          path: ${{ runner.temp }}/startup-harness
           if-no-files-found: error
           retention-days: 30
 
   benchmark:
-    needs: [prepare, build]
+    needs: build
     permissions: {}
     runs-on: oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24
     timeout-minutes: 45
@@ -152,15 +89,14 @@ jobs:
           distribution: temurin
           java-version-file: ${{ env.AGENTS }}/startup-harness/.java-version
 
-      - name: Prepare harness and validate report logic
+      - name: Verify artifact and validate report logic
         working-directory: ${{ env.AGENTS }}/startup-harness/benchmark-overhead
         env:
           TMPDIR: ${{ runner.temp }}
           TMP: ${{ runner.temp }}
           TEMP: ${{ runner.temp }}
         run: |
-          (cd "$AGENTS/startup-baseline" && sha256sum --check sha256.txt)
-          (cd "$AGENTS/startup-candidate" && sha256sum --check sha256.txt)
+          (cd "$AGENTS/startup-agent" && sha256sum --check sha256.txt)
           ./gradlew --no-daemon test --tests 'io.opentelemetry.startup.*Test' startupRecorderJar
 
       - name: Verify pinned CPUs are distinct cores on the same NUMA node
@@ -175,7 +111,7 @@ jobs:
           assert cpus["0"][:2] != cpus["1"][:2], "CPUs 0,1 must be distinct cores"
           assert cpus["0"][2] == cpus["1"][2] and cpus["0"][2].isdigit(), "CPUs 0,1 must share a NUMA node"
 
-      - name: Measure startup and collect separate profiles
+      - name: Measure startup and collect separate profile
         working-directory: ${{ env.AGENTS }}/startup-harness/benchmark-overhead
         env:
           TMPDIR: ${{ runner.temp }}
@@ -188,12 +124,12 @@ jobs:
           docker info >> build/reports/agent-startup/host.txt
           cp ../harness-revision.txt build/reports/agent-startup/
           printf '%s/ actions run %s attempt %s\n' "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" > build/reports/agent-startup/workflow.txt
-          mkdir -p build/reports/agent-startup/artifact-identities/{baseline,candidate}
-          cp "$AGENTS/startup-baseline/"*.txt build/reports/agent-startup/artifact-identities/baseline/
-          cp "$AGENTS/startup-candidate/"*.txt build/reports/agent-startup/artifact-identities/candidate/
+          mkdir -p build/reports/agent-startup/artifact-identities/agent
+          cp "$AGENTS/startup-agent/"*.txt build/reports/agent-startup/artifact-identities/agent/
+          source_revision=$(cat "$AGENTS/startup-agent/revision.txt")
           ./gradlew --no-daemon agentStartupBenchmark \
-            "-PstartupBenchmarkBaseline=$AGENTS/startup-baseline/opentelemetry-javaagent.jar" \
-            "-PstartupBenchmarkCandidate=$AGENTS/startup-candidate/opentelemetry-javaagent.jar"
+            "-PstartupBenchmarkAgentJar=$AGENTS/startup-agent/opentelemetry-javaagent.jar" \
+            "-PstartupBenchmarkSourceRevision=$source_revision"
 
       - name: Publish summary
         working-directory: ${{ env.AGENTS }}/startup-harness/benchmark-overhead

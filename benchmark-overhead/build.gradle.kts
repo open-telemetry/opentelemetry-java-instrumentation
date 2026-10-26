@@ -51,7 +51,7 @@ val startupRecorderJar = tasks.register<Jar>("startupRecorderJar") {
 
 tasks.register<Test>("agentStartupBenchmark") {
   dependsOn(startupRecorderJar)
-  description = "Compares ordinary Java agent startup against a fixed baseline."
+  description = "Measures ordinary Java agent startup."
   group = "verification"
   testClassesDirs = sourceSets.test.get().output.classesDirs
   classpath = sourceSets.test.get().runtimeClasspath
@@ -63,8 +63,8 @@ tasks.register<Test>("agentStartupBenchmark") {
   systemProperty("startup.benchmark.enabled", "true")
   systemProperty("startup.benchmark.recorder", startupRecorderJar.get().archiveFile.get().asFile.absolutePath)
   systemProperty("startup.benchmark.output", layout.buildDirectory.dir("reports/agent-startup").get().asFile.absolutePath)
-  systemProperty("startup.benchmark.baseline", providers.gradleProperty("startupBenchmarkBaseline").orElse("").get())
-  systemProperty("startup.benchmark.candidate", providers.gradleProperty("startupBenchmarkCandidate").orElse("").get())
+  systemProperty("startup.benchmark.agent", providers.gradleProperty("startupBenchmarkAgentJar").orElse("").get())
+  systemProperty("startup.benchmark.sourceRevision", providers.gradleProperty("startupBenchmarkSourceRevision").orElse("unknown").get())
   systemProperty("startup.benchmark.samples", providers.gradleProperty("startupBenchmarkSamples").orElse("20").get())
   systemProperty("startup.benchmark.warmups", providers.gradleProperty("startupBenchmarkWarmups").orElse("2").get())
 }
