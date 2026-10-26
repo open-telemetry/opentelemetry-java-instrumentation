@@ -4,6 +4,8 @@
 
 ### ⚠️ Breaking changes
 
+- GenAI error type getters now return the final value. Returning `null` omits `error.type`; overrides
+  should return `error == null ? null : error.getClass().getName()` for the exception-class fallback.
 - HTTP client and server getters now determine `error.type`; their returned value, including `null`,
   is used as-is.
 - Messaging `MessagingAttributesGetter.getErrorType()` overrides now provide the final
