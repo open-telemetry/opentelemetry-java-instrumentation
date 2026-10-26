@@ -92,10 +92,19 @@ class ThriftRpcAttributesGetterTest {
   }
 
   @Test
-  void responseStatusCodeIsUsedAsErrorType() {
+  void responseStatusCodeTakesPrecedenceOverExceptionStatus() {
     ThriftResponse response = ThriftResponse.failedWithRpcStatusCode("6");
+    TApplicationException error = new TApplicationException(TApplicationException.UNKNOWN_METHOD);
 
-    assertThat(getter.getRpcStatusCode(request, response, null)).isEqualTo("6");
-    assertThat(getter.getErrorType(request, response, null)).isEqualTo("6");
+    assertThat(getter.getRpcStatusCode(request, response, error)).isEqualTo("6");
+    assertThat(getter.getErrorType(request, response, error)).isEqualTo("6");
+  }
+
+  @Test
+  void exceptionStatusIsUsedWhenFailedResponseHasNoStatus() {
+    TApplicationException error = new TApplicationException(TApplicationException.UNKNOWN_METHOD);
+
+    assertThat(getter.getRpcStatusCode(request, ThriftResponse.FAILED, error)).isEqualTo("1");
+    assertThat(getter.getErrorType(request, ThriftResponse.FAILED, error)).isEqualTo("1");
   }
 }

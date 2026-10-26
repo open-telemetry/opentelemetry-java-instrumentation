@@ -47,6 +47,10 @@ final class ThriftRpcAttributesGetter
   @Nullable
   public String getRpcStatusCode(
       ThriftRequest request, @Nullable ThriftResponse response, @Nullable Throwable error) {
+    String responseStatusCode = response == null ? null : response.getRpcStatusCode();
+    if (responseStatusCode != null) {
+      return responseStatusCode;
+    }
     // Application exception types are carried in RPC replies; transport exception types are not.
     if (error instanceof TApplicationException) {
       String statusCode = applicationExceptionStatusCode(((TApplicationException) error).getType());
@@ -54,7 +58,7 @@ final class ThriftRpcAttributesGetter
         return statusCode;
       }
     }
-    return response == null ? null : response.getRpcStatusCode();
+    return null;
   }
 
   @Override
