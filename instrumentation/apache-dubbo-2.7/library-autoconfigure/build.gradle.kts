@@ -12,6 +12,9 @@ dependencies {
 
   testLibrary("org.apache.dubbo:dubbo-config-api:2.7.0")
   if (otelProps.testLatestDeps) {
+    testImplementation(
+      "org.apache.dubbo:dubbo-rpc-triple:${baseVersion("2.7.0").orLatest()}"
+    )
     // these dependencies should be optional but when running on jdk25 more classes are loaded than
     // on earlier jdk versions and DubboRegistryTest fails with NoClassDefFoundError
     testImplementation("com.alibaba:fastjson:2.0.65")
@@ -34,6 +37,10 @@ testing {
 
 tasks.withType<Test>().configureEach {
   systemProperty("testLatestDeps", otelProps.testLatestDeps)
+  if (otelProps.testLatestDeps) {
+    // The reflection-based Triple transport serializes Dubbo's status object with the exception.
+    systemProperty("dubbo.application.serialize-check-status", "WARN")
+  }
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   // to suppress non-fatal errors on jdk17
   jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
