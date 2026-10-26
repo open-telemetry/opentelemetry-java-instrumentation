@@ -203,6 +203,106 @@ class RunnerTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             runner.interpolate(samples, "app", 3000)
 
+    def test_disappearing_child_resamples_the_whole_process_tree(self):
+        with (
+            patch.object(
+                runner,
+                "read_process_counters",
+                side_effect=[FileNotFoundError("exited child"), (1.5, 4096)],
+            ) as read,
+            patch.object(Path, "exists", return_value=True),
+            patch.object(runner.time, "sleep") as sleep,
+            patch.object(runner.sys, "stderr"),
+        ):
+            self.assertEqual(runner.process_counters(42), (1.5, 4096))
+            self.assertEqual(read.call_count, 2)
+            read.assert_called_with(42)
+            sleep.assert_called_once_with(0.01)
+
+    def test_sampling_a_disappeared_root_fails_without_retry(self):
+        with (
+            patch.object(
+                runner, "read_process_counters", side_effect=FileNotFoundError
+            ),
+            patch.object(Path, "exists", return_value=False),
+            patch.object(runner.time, "sleep") as sleep,
+            self.assertRaises(FileNotFoundError),
+        ):
+            runner.process_counters(42)
+        sleep.assert_not_called()
+
+    def test_unstable_process_tree_fails_after_bounded_sampling_attempts(self):
+        with (
+            patch.object(
+                runner, "read_process_counters", side_effect=ProcessLookupError
+            ) as read,
+            patch.object(Path, "exists", return_value=True),
+            patch.object(runner.time, "sleep"),
+            patch.object(runner.sys, "stderr"),
+            self.assertRaisesRegex(RuntimeError, "stable process tree"),
+        ):
+            runner.process_counters(42)
+        self.assertEqual(read.call_count, 5)
+
+    def test_reaped_child_cpu_or_changed_children_require_a_new_snapshot(self):
+        stat = ["0"] * 22
+        stat[11:15] = ["100", "50", "20", "10"]
+        stat[21] = "2"
+        for changed_children in (False, True):
+            after = stat.copy()
+            if not changed_children:
+                after[13] = "21"
+            values = [
+                "42 (root) " + " ".join(stat),
+                "",
+                "43" if changed_children else "",
+                "42 (root) " + " ".join(after),
+            ]
+            with (
+                patch.object(Path, "read_text", side_effect=values),
+                patch.object(
+                    runner.os,
+                    "sysconf",
+                    side_effect=lambda name: 100 if name == "SC_CLK_TCK" else 4096,
+                    create=True,
+                ),
+                self.assertRaisesRegex(ProcessLookupError, "changed during sampling"),
+            ):
+                runner.read_process_counters(42)
+
+    def test_active_and_reaped_descendant_cpu_are_counted_once(self):
+        root = ["0"] * 22
+        root[11:15] = ["10", "20", "30", "40"]
+        root[21] = "2"
+        child = ["0"] * 22
+        child[11:15] = ["50", "60", "0", "0"]
+        child[21] = "3"
+        root_stat = "42 (root) " + " ".join(root)
+        child_stat = "43 (child) " + " ".join(child)
+        with (
+            patch.object(
+                Path,
+                "read_text",
+                side_effect=[
+                    root_stat,
+                    "43",
+                    child_stat,
+                    "",
+                    "",
+                    child_stat,
+                    "43",
+                    root_stat,
+                ],
+            ),
+            patch.object(
+                runner.os,
+                "sysconf",
+                side_effect=lambda name: 100 if name == "SC_CLK_TCK" else 4096,
+                create=True,
+            ),
+        ):
+            self.assertEqual(runner.read_process_counters(42), (2.1, 20480))
+
     def test_hyperfoil_does_not_apply_its_cpu_guard_to_other_services(self):
         with (
             tempfile.TemporaryDirectory() as directory,
