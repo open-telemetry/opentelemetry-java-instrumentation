@@ -270,7 +270,7 @@ class DbClientAttributesExtractorTest {
   }
 
   @Test
-  void shouldUseCustomFinalClassification() {
+  void shouldUseCustomClassification() {
     AttributesBuilder attributes = Attributes.builder();
     DbClientAttributesExtractor.create(
             new TestAttributesGetter() {
