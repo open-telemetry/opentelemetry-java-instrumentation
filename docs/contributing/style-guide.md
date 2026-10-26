@@ -191,6 +191,15 @@ Following the reasoning from
 - `Optional` shouldn't appear in public API signatures
 - Avoid `Optional` on the hot path (instrumentation code), unless the instrumented library uses it
 
+### Conditional expressions
+
+Avoid directly nested ternary expressions; prefer `if`/`else` statements or early returns.
+Parentheses do not exempt a directly nested conditional branch, but a ternary inside a separate
+method-call argument is not directly nested into the outer ternary. In tests, directly nested
+ternaries are allowed in attribute-assertion expected values, where seeing the alternatives inline
+is useful. Do not extract helpers solely to hide those expressions; apply the rule normally to
+other test code, including setup and intermediate expected-value calculations.
+
 ## Semantic convention constants
 
 **Library instrumentation**: Copy semantic convention constants directly into library

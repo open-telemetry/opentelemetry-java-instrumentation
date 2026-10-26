@@ -192,6 +192,16 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   equalTo(AttributeKey.stringKey("rpc.status_code"), emitPreviewRpcSemconv() ? "OK" : null);
   ```
 
+- Single ternaries remain appropriate for short expected values. Directly
+  nested ternaries are also allowed in attribute-assertion expected values,
+  such as `equalTo(ERROR_TYPE, condition ? value : otherCondition ? otherValue : null)`;
+  keep the alternatives visible there rather than extracting a helper solely
+  to hide them. Apply the normal no-direct-nesting rule to other test code,
+  including setup, span names, trace counts, and intermediate expected-value
+  calculations. Parentheses do not exempt a directly nested conditional
+  branch; a ternary inside a separate method-call argument is not direct
+  nesting into an outer ternary.
+
 - Do not extract the ternary into a helper such as `spanName(...)`,
   `oldOrExperimental(value)`, or `expectedNamespace()` when no established
   semconv utility applies. Seeing both expected values at the assertion is more

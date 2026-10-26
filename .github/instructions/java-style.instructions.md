@@ -85,3 +85,11 @@ the stated exception before reporting a repository convention.
   Avoid `Optional` in public API signatures and hot-path code. Omit
   explicit type arguments on generic method calls when type inference
   already works; keep them where compilation actually requires them.
+- **Conditional expressions**: avoid directly nested ternaries; prefer
+  `if`/`else` statements or early returns. Parentheses do not exempt a
+  directly nested conditional branch. A ternary inside a separate method-call
+  argument is not directly nested into the outer ternary. In tests, the
+  exception is directly nested ternaries in attribute-assertion expected
+  values; do not extract helpers solely to hide those expressions. Apply the
+  rule normally to other test code, including setup and intermediate expected
+  values.
