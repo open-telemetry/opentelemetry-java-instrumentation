@@ -25,6 +25,15 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
+        implementation(project(":instrumentation-api-incubator"))
+        implementation("redis.clients:jedis:4.0.0")
+      }
+    }
+
     register<JvmTestSuite>("jedis51Test") {
       sources {
         java {
