@@ -13,6 +13,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -317,7 +318,10 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                         ERROR_TYPE,
                                         testLatestDeps()
                                             ? RedisCommandExecutionException.class.getName()
-                                            : "_OTHER")))
+                                            : "_OTHER"),
+                                    equalTo(
+                                        DB_RESPONSE_STATUS_CODE,
+                                        testLatestDeps() ? "WRONGTYPE" : null)))
                             .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
 
     assertCommandMetric(
@@ -357,7 +361,10 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                         ERROR_TYPE,
                                         testLatestDeps()
                                             ? RedisNoScriptException.class.getName()
-                                            : "_OTHER")))));
+                                            : "_OTHER"),
+                                    equalTo(
+                                        DB_RESPONSE_STATUS_CODE,
+                                        testLatestDeps() ? "NOSCRIPT" : null)))));
 
     assertCommandMetric(
         "EVALSHA", testLatestDeps() ? RedisNoScriptException.class.getName() : "_OTHER");
@@ -405,7 +412,10 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                         ERROR_TYPE,
                                         testLatestDeps()
                                             ? RedisCommandExecutionException.class.getName()
-                                            : "_OTHER")))));
+                                            : "_OTHER"),
+                                    equalTo(
+                                        DB_RESPONSE_STATUS_CODE,
+                                        testLatestDeps() ? "ERR" : null)))));
 
     assertCommandMetric(
         "EVAL", testLatestDeps() ? RedisCommandExecutionException.class.getName() : "_OTHER");
@@ -540,6 +550,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 testLatestDeps() && !queuedAcknowledgements
                     ? RedisCommandExecutionException.class.getName()
                     : null,
+                testLatestDeps() && !queuedAcknowledgements ? "ERR" : null,
                 lettuceVersion),
             transactionSpan("EXEC", "EXEC", StatusData.unset(), null, lettuceVersion));
 
@@ -637,6 +648,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 testLatestDeps() && !queuedAcknowledgements
                     ? RedisCommandExecutionException.class.getName()
                     : null,
+                testLatestDeps() && !queuedAcknowledgements ? "ERR" : null,
                 lettuceVersion),
             transactionSpan(
                 "EVALSHA",
@@ -647,6 +659,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 testLatestDeps() && !queuedAcknowledgements
                     ? RedisNoScriptException.class.getName()
                     : null,
+                testLatestDeps() && !queuedAcknowledgements ? "NOSCRIPT" : null,
                 lettuceVersion),
             transactionSpan("EXEC", "EXEC", StatusData.unset(), null, lettuceVersion));
 
@@ -667,6 +680,16 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
   private Consumer<TraceAssert> transactionSpan(
       String operation, String query, StatusData status, String errorType, String lettuceVersion) {
+    return transactionSpan(operation, query, status, errorType, null, lettuceVersion);
+  }
+
+  private Consumer<TraceAssert> transactionSpan(
+      String operation,
+      String query,
+      StatusData status,
+      String errorType,
+      String responseStatusCode,
+      String lettuceVersion) {
     boolean missingEndpoint = "6.0.0.RELEASE".equals(lettuceVersion);
     return trace ->
         trace.hasSpansSatisfyingExactly(
@@ -688,7 +711,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             lettuceVersion != null && lettuceVersion.startsWith("6.5.0.RELEASE")
                                 ? String.valueOf(DB_INDEX)
                                 : null),
-                        equalTo(ERROR_TYPE, errorType)));
+                        equalTo(ERROR_TYPE, errorType),
+                        equalTo(DB_RESPONSE_STATUS_CODE, responseStatusCode)));
   }
 
   @Test
@@ -832,7 +856,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(DB_OPERATION_NAME, "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,
-                                          RedisCommandExecutionException.class.getName())))),
+                                          RedisCommandExecutionException.class.getName()),
+                                      equalTo(DB_RESPONSE_STATUS_CODE, "ERR")))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -851,7 +876,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(DB_OPERATION_NAME, "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,
-                                          RedisCommandExecutionException.class.getName())))),
+                                          RedisCommandExecutionException.class.getName()),
+                                      equalTo(DB_RESPONSE_STATUS_CODE, "ERR")))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -870,7 +896,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(DB_OPERATION_NAME, "CLIENT"),
                                       equalTo(
                                           ERROR_TYPE,
-                                          RedisCommandExecutionException.class.getName())))),
+                                          RedisCommandExecutionException.class.getName()),
+                                      equalTo(DB_RESPONSE_STATUS_CODE, "ERR")))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
