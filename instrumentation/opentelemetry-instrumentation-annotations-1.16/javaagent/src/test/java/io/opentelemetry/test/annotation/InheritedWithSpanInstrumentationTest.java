@@ -16,6 +16,8 @@ import io.opentelemetry.instrumentation.annotations.AddingSpanAttributes;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.test.annotation.packageprivate.PackagePrivateOverride;
+import io.opentelemetry.test.annotation.packageprivate.PublicOverride;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -208,6 +210,61 @@ class InheritedWithSpanInstrumentationTest {
     }
   }
 
+  static class OuterWithGenericBase<T> {
+    class InnerBase {
+      @WithSpan
+      String handle(@SpanAttribute("value") T value) {
+        return "base";
+      }
+    }
+  }
+
+  static class ImplementationOfInnerBase extends OuterWithGenericBase<String>.InnerBase {
+    ImplementationOfInnerBase(OuterWithGenericBase<String> outer) {
+      outer.super();
+    }
+
+    @Override
+    String handle(String value) {
+      return value;
+    }
+  }
+
+  static class OverrideInOtherPackage extends PublicOverride {
+    @Override
+    public String run() {
+      return "other";
+    }
+  }
+
+  static class PublicOverrideOfPackagePrivateOverride extends PackagePrivateOverride {
+    public String run() {
+      return "public";
+    }
+  }
+
+  interface GenericRunner<T> {
+    @WithSpan
+    String run(T value);
+  }
+
+  static class ImplementationWithUnrelatedGenericOverload implements GenericRunner<String> {
+    @Override
+    public String run(String value) {
+      return value;
+    }
+
+    @AddingSpanAttributes
+    public String run(@SpanAttribute("value") Integer value) {
+      return String.valueOf(value);
+    }
+
+    @WithSpan
+    String parent() {
+      return run(1);
+    }
+  }
+
   interface BoundedGenericInterface<T extends Number> {
     @WithSpan
     String bounded(@SpanAttribute("number") T number);
@@ -363,6 +420,56 @@ class InheritedWithSpanInstrumentationTest {
                                 ImplementationWithNonOverridingOverload.class.getName()
                                     + ".parent"),
                             equalTo(stringKey("value"), "a"))));
+  }
+
+  @Test
+  void overrideOfGenericMethodInheritedFromInnerClassOfParameterizedOuter() {
+    new ImplementationOfInnerBase(new OuterWithGenericBase<>()).handle("hello");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("ImplementationOfInnerBase.handle")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                ImplementationOfInnerBase.class.getName() + ".handle"),
+                            equalTo(stringKey("value"), "hello"))));
+  }
+
+  @Test
+  void packagePrivateAnnotatedMethodOverriddenThroughPublicOverrideInOtherPackage() {
+    new OverrideInOtherPackage().run();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("OverrideInOtherPackage.run").hasNoParent()));
+  }
+
+  @Test
+  void packagePrivateOverrideInOtherPackageDoesNotInheritWithSpan() {
+    new PublicOverrideOfPackagePrivateOverride().run();
+
+    testing.waitAndAssertTraces();
+  }
+
+  @Test
+  void unrelatedOverloadOfGenericMethodKeepsAddingSpanAttributes() {
+    new ImplementationWithUnrelatedGenericOverload().parent();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("ImplementationWithUnrelatedGenericOverload.parent")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                ImplementationWithUnrelatedGenericOverload.class.getName()
+                                    + ".parent"),
+                            equalTo(longKey("value"), 1L))));
   }
 
   @Test

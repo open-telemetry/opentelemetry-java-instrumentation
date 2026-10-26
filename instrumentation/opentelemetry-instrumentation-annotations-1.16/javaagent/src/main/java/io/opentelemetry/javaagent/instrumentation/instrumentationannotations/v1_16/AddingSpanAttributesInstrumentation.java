@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16.AnnotationSingletons.attributes;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
@@ -39,14 +38,12 @@ class AddingSpanAttributesInstrumentation implements TypeInstrumentation {
                 isAnnotatedWith(
                     named(
                         "application.io.opentelemetry.instrumentation.annotations.AddingSpanAttributes")))
-            // Avoid repeat extraction if method is already annotated with WithSpan, directly or by
-            // overriding an annotated method
+            // Avoid repeat extraction if method is already annotated with WithSpan
             .and(
                 not(
-                    hasSuperMethod(
-                        isAnnotatedWith(
-                            named(
-                                "application.io.opentelemetry.instrumentation.annotations.WithSpan")))));
+                    isAnnotatedWith(
+                        named(
+                            "application.io.opentelemetry.instrumentation.annotations.WithSpan"))));
     annotatedParametersMatcher =
         hasParameters(
             whereAny(
@@ -77,6 +74,9 @@ class AddingSpanAttributesInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Origin Method method,
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args) {
+      if (MethodAnnotationResolver.findWithSpanOrNull(method) != null) {
+        return;
+      }
       Span otelSpan = Span.current();
       if (otelSpan.isRecording() && otelSpan.getSpanContext().isValid()) {
         otelSpan.setAllAttributes(attributes().extract(method, args));

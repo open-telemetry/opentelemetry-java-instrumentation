@@ -21,6 +21,8 @@ import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.C;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.PackagePrivateBase;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.PackagePrivateOverrideOfPackagePrivateBase;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.PublicOverrideOfPackagePrivateBase;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.SamePackageSubclass;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.Trace;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.TracedClass;
@@ -122,6 +124,17 @@ class HasSuperMethodMatcherTest {
   }
 
   @Test
+  void testPackagePrivateSuperMethodIsOverriddenThroughPublicOverride() throws Exception {
+    assertThat(matches(OverrideOfPublicOverride.class, "run")).isTrue();
+  }
+
+  @Test
+  void testPackagePrivateSuperMethodIsNotOverriddenThroughPackagePrivateOverride()
+      throws Exception {
+    assertThat(matches(OverrideOfPackagePrivateOverride.class, "run")).isFalse();
+  }
+
+  @Test
   void testConstructorNeverMatches() {
     MethodDescription method = mock(MethodDescription.class);
     when(method.isConstructor()).thenReturn(true);
@@ -220,6 +233,15 @@ class HasSuperMethodMatcherTest {
   @SuppressWarnings("OtelPrivateConstructorForUtilityClass")
   static class StaticSubclass extends StaticBase {
     static void run() {}
+  }
+
+  static class OverrideOfPublicOverride extends PublicOverrideOfPackagePrivateBase {
+    @Override
+    public void run() {}
+  }
+
+  static class OverrideOfPackagePrivateOverride extends PackagePrivateOverrideOfPackagePrivateBase {
+    public void run() {}
   }
 
   static class OtherPackageSubclass extends PackagePrivateBase {

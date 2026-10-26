@@ -19,6 +19,7 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
@@ -126,6 +127,11 @@ final class MethodAnnotationResolver {
   private static void bindTypeArguments(
       Type type, Class<?> rawType, Map<TypeVariable<?>, Type> typeArguments) {
     if (type instanceof ParameterizedType) {
+      Type owner = ((ParameterizedType) type).getOwnerType();
+      if (owner instanceof ParameterizedType) {
+        bindTypeArguments(
+            owner, (Class<?>) ((ParameterizedType) owner).getRawType(), typeArguments);
+      }
       TypeVariable<?>[] variables = rawType.getTypeParameters();
       Type[] arguments = ((ParameterizedType) type).getActualTypeArguments();
       for (int i = 0; i < variables.length && i < arguments.length; i++) {
@@ -160,7 +166,8 @@ final class MethodAnnotationResolver {
     return !candidate.isBridge()
         && overridable(candidate)
         && candidate.getName().equals(method.getName())
-        && isVisibleTo(candidate, method.getDeclaringClass())
+        && (isVisibleTo(candidate, method.getDeclaringClass())
+            || isOverriddenViaSamePackageClass(candidate, method))
         && parametersMatch(method, candidate, typeArguments);
   }
 
@@ -169,6 +176,31 @@ final class MethodAnnotationResolver {
     return Modifier.isPublic(modifiers)
         || Modifier.isProtected(modifiers)
         || packageName(candidate.getDeclaringClass()).equals(packageName(type));
+  }
+
+  private static boolean isOverriddenViaSamePackageClass(Method candidate, Method method) {
+    Class<?> candidateType = candidate.getDeclaringClass();
+    for (Class<?> type = method.getDeclaringClass().getSuperclass();
+        type != null && type != candidateType;
+        type = type.getSuperclass()) {
+      if (packageName(type).equals(packageName(candidateType)) && declaresOverride(type, method)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean declaresOverride(Class<?> type, Method method) {
+    for (Method declared : declaredMethods(type)) {
+      if (!declared.isBridge()
+          && overridable(declared)
+          && isVisibleTo(declared, method.getDeclaringClass())
+          && declared.getName().equals(method.getName())
+          && Arrays.equals(declared.getParameterTypes(), method.getParameterTypes())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static String packageName(Class<?> type) {

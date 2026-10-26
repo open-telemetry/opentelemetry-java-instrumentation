@@ -84,10 +84,41 @@ class HasSuperMethodMatcher<T extends MethodDescription>
         || candidate.isStatic()
         || candidate.isPrivate()
         || candidate.isBridge()
-        || !candidate.isVisibleTo(target.getDeclaringType().asErasure())) {
+        || !(candidate.isVisibleTo(target.getDeclaringType().asErasure())
+            || isOverriddenViaSamePackageClass(target, candidate))) {
       return false;
     }
     return hasMatchingSignature(target, candidate) || isBridgedTo(target, candidate);
+  }
+
+  private static boolean isOverriddenViaSamePackageClass(
+      MethodDescription target, MethodDescription candidate) {
+    TypeDescription candidateType = candidate.getDeclaringType().asErasure();
+    for (TypeDefinition type = safeGetSuperClass(target.getDeclaringType());
+        type != null && !type.asErasure().equals(candidateType);
+        type = safeGetSuperClass(type)) {
+      if (type.asErasure().isSamePackage(candidateType)
+          && declaresOverride(type, target, target.getDeclaringType().asErasure())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean declaresOverride(
+      TypeDefinition type, MethodDescription target, TypeDescription targetType) {
+    for (MethodDescription declared : type.getDeclaredMethods()) {
+      if (declared.isMethod()
+          && !declared.isBridge()
+          && !declared.isStatic()
+          && !declared.isPrivate()
+          && declared.isVisibleTo(targetType)
+          && declared.getInternalName().equals(target.getInternalName())
+          && haveSameParameterTypes(declared, target)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static boolean isBridgedTo(MethodDescription target, MethodDescription candidate) {
