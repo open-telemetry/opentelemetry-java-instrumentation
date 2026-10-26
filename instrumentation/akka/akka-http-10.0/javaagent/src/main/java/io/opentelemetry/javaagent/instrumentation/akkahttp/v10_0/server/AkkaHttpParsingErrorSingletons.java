@@ -38,7 +38,7 @@ public final class AkkaHttpParsingErrorSingletons {
       return null;
     }
     PARSING_ERROR.set(info, null);
-    Context parentContext = Context.root();
+    Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, info)) {
       return null;
     }
