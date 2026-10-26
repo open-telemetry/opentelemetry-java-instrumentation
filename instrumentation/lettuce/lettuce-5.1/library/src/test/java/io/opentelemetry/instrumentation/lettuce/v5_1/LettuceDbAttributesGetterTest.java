@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.RedisCommandTimeoutException;
 import io.lettuce.core.RedisNoScriptException;
 import org.junit.jupiter.api.Test;
@@ -62,12 +63,11 @@ class LettuceDbAttributesGetterTest {
 
   @Test
   void preservesExceptionFallback() {
-    assertThat(
-            getter.getErrorType(
-                null,
-                LettuceResponse.unknownFailure(),
-                new RedisCommandTimeoutException("Connection closed")))
-        .isNull();
+    LettuceResponse response = LettuceResponse.fromErrorMessage("WRONGTYPE error");
+    RedisCommandExecutionException error = new RedisCommandExecutionException("WRONGTYPE error");
+
+    assertThat(getter.getDbResponseStatusCode(null, response, error)).isEqualTo("WRONGTYPE");
+    assertThat(getter.getErrorType(null, response, error)).isNull();
   }
 
   @Test
