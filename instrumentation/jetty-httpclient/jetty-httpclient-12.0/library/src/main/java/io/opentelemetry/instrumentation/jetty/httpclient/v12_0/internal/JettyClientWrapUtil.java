@@ -86,13 +86,18 @@ public final class JettyClientWrapUtil {
     return new ContextAwareContentSource(source, context);
   }
 
-  private static final class ContextAwareContentSource implements Content.Source {
+  private static final class ContextAwareContentSource implements Content.Source, Invocable {
     private final Content.Source delegate;
     private final Context context;
 
     private ContextAwareContentSource(Content.Source delegate, Context context) {
       this.delegate = delegate;
       this.context = context;
+    }
+
+    @Override
+    public InvocationType getInvocationType() {
+      return Invocable.getInvocationType(delegate);
     }
 
     @Override

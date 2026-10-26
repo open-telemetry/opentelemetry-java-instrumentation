@@ -21,6 +21,18 @@ class JettyClientWrapUtilTest {
 
   @ParameterizedTest
   @EnumSource(InvocationType.class)
+  void contentSourcePreservesInvocationType(InvocationType invocationType) {
+    InvocableContentSource source = new InvocableContentSource();
+    source.invocationType = invocationType;
+    Content.Source wrappedSource = JettyClientWrapUtil.wrapContentSource(source, Context.root());
+
+    assertThat(Invocable.getInvocationType(wrappedSource)).isEqualTo(invocationType);
+    source.invocationType = InvocationType.BLOCKING;
+    assertThat(Invocable.getInvocationType(wrappedSource)).isEqualTo(InvocationType.BLOCKING);
+  }
+
+  @ParameterizedTest
+  @EnumSource(InvocationType.class)
   void demandPreservesInvocationTypeAndContext(InvocationType invocationType) {
     ContextKey<String> key = ContextKey.named("jetty-demand-test");
     Context callerContext = Context.root().with(key, "caller");
@@ -45,7 +57,9 @@ class JettyClientWrapUtilTest {
         Invocable.from(
             invocationType, () -> assertThat(Context.current().get(key)).isEqualTo("caller"));
 
-    JettyClientWrapUtil.wrapContentSource(source, callerContext).demand(callback);
+    Content.Source wrappedSource = JettyClientWrapUtil.wrapContentSource(source, callerContext);
+    assertThat(Invocable.getInvocationType(wrappedSource)).isEqualTo(InvocationType.BLOCKING);
+    wrappedSource.demand(callback);
 
     Runnable wrappedCallback = delegatedCallback.get();
     assertThat(wrappedCallback).isNotNull();
@@ -54,5 +68,25 @@ class JettyClientWrapUtilTest {
       wrappedCallback.run();
       assertThat(Context.current().get(key)).isEqualTo("delivery");
     }
+  }
+
+  private static final class InvocableContentSource implements Content.Source, Invocable {
+    private InvocationType invocationType = InvocationType.BLOCKING;
+
+    @Override
+    public InvocationType getInvocationType() {
+      return invocationType;
+    }
+
+    @Override
+    public Content.Chunk read() {
+      return null;
+    }
+
+    @Override
+    public void demand(Runnable callback) {}
+
+    @Override
+    public void fail(Throwable failure) {}
   }
 }
