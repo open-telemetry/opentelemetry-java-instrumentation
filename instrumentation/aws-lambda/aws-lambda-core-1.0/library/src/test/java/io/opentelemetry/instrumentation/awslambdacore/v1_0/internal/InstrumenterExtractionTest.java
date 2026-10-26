@@ -16,8 +16,12 @@ import com.amazonaws.services.lambda.runtime.ClientContext;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -27,9 +31,52 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class InstrumenterExtractionTest {
   private static final String AWS_TRACE_HEADER_PROP = "com.amazonaws.xray.traceHeader";
+
+  @ParameterizedTest
+  @CsvSource({"false,false", "true,false", "false,true", "true,true"})
+  void extractPreservesAmbientContext(boolean ambientSpan, boolean remoteParent) {
+    AwsLambdaFunctionInstrumenter instr =
+        AwsLambdaFunctionInstrumenterFactory.createInstrumenter(
+            OpenTelemetry.propagating(
+                ContextPropagators.create(W3CTraceContextPropagator.getInstance())));
+    ContextKey<String> key = ContextKey.named("invocation-value");
+    SpanContext ambient =
+        SpanContext.create(
+            "11111111111111111111111111111111",
+            "2222222222222222",
+            TraceFlags.getSampled(),
+            TraceState.getDefault());
+    Context base = Context.root().with(key, "preserved");
+    if (ambientSpan) {
+      base = base.with(Span.wrap(ambient));
+    }
+    HashMap<String, String> headers = new HashMap<>();
+    if (remoteParent) {
+      headers.put("traceparent", "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01");
+    }
+    AwsLambdaRequest request =
+        AwsLambdaRequest.create(
+            mock(com.amazonaws.services.lambda.runtime.Context.class), new Object(), headers);
+
+    try (Scope ignored = base.makeCurrent()) {
+      Context extracted = instr.extract(request);
+      assertThat(extracted.get(key)).isEqualTo("preserved");
+      SpanContext parent = Span.fromContext(extracted).getSpanContext();
+      if (remoteParent) {
+        assertThat(parent.getTraceId()).isEqualTo("4bf92f3577b34da6a3ce929d0e0e4736");
+        assertThat(parent.getSpanId()).isEqualTo("00f067aa0ba902b7");
+        assertThat(parent.isRemote()).isTrue();
+      } else {
+        assertThat(parent).isEqualTo(ambientSpan ? ambient : SpanContext.getInvalid());
+      }
+      assertThat(Context.current()).isSameAs(base);
+    }
+  }
 
   @Test
   void useCustomContext() {
