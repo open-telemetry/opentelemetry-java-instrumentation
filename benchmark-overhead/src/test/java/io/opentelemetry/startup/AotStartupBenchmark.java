@@ -39,11 +39,10 @@ import org.testcontainers.utility.MountableFile;
 
 @EnabledIfSystemProperty(named = "aot.benchmark.enabled", matches = "true")
 class AotStartupBenchmark {
-  private static final String IMAGE =
+  static final String IMAGE =
       "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/"
           + "smoke-test-spring-boot:jdk25-20251116.19402383847";
-  private static final String APPLICATION =
-      "io.opentelemetry.smoketest.springboot.SpringbootApplication";
+  static final String APPLICATION = "io.opentelemetry.smoketest.springboot.SpringbootApplication";
   private static final long MEMORY_BYTES = 1024L * 1024 * 1024;
   private static final long NANO_CPUS = 2_000_000_000L;
   private static final Duration TIMEOUT = Duration.ofMinutes(2);
@@ -250,7 +249,7 @@ class AotStartupBenchmark {
     }
   }
 
-  private static GenericContainer<?> container(String image, String volume) {
+  static GenericContainer<?> container(String image, String volume) {
     return new GenericContainer<>(DockerImageName.parse(image))
         .withEnv("JAVA_TOOL_OPTIONS", "")
         .withEnv("JDK_JAVA_OPTIONS", "")

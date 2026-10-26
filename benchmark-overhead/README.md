@@ -7,6 +7,7 @@
 - [Automation](#automation)
 - [Setup and Usage](#setup-and-usage)
 - [Visualization](#visualization)
+- [Ordinary agent startup comparison](#ordinary-agent-startup-comparison)
 - [JDK 25 AOT startup comparison](#jdk-25-aot-startup-comparison)
 
 This directory will contain tools and utilities
@@ -112,6 +113,114 @@ cd benchmark-overhead
 None yet. Help wanted! Our goal is to have the results and a rich UI running in the
 `gh-pages` branch similar to [earlier tools](https://breedx-splk.github.io/iguanodon/web/).
 Please help us make this happen.
+
+## Ordinary agent startup comparison
+
+The opt-in `agentStartupBenchmark` task compares ordinary `-javaagent` launches
+of the small Spring smoke application with a baseline and a candidate agent JAR.
+It reuses the pinned JDK 25 image and timing parser from the AOT benchmark,
+without AOT or bootstrap-classpath preloading. Instrumentation and the SDK remain
+active; all exporters are `none`.
+
+Use JDK 25 and Docker with Linux containers. Each application container uses CPUs
+`0,1`, a two-CPU quota, a 1 GiB memory limit, and `-Xmx512m`. The Docker host must
+expose those CPUs as distinct physical cores on the same NUMA node; the workflow
+verifies this before measurement. Do not build artifacts or run other benchmarks
+during measurement.
+
+Build both agents from their respective source revisions with
+`:javaagent:shadowJar`, then run the standalone benchmark:
+
+```sh
+cd benchmark-overhead
+./gradlew agentStartupBenchmark \
+  -PstartupBenchmarkBaseline=/absolute/path/to/baseline.jar \
+  -PstartupBenchmarkCandidate=/absolute/path/to/candidate.jar
+```
+
+The benchmark first runs an A/A control using the same baseline JAR under both
+labels, then compares the baseline and candidate. Each round starts the pair in
+alternating order; comparison rounds also start an uninstrumented application.
+Defaults are two discarded fresh-process starts and twenty measured starts per
+variant and phase. Set
+`-PstartupBenchmarkWarmups=0 -PstartupBenchmarkSamples=2` for a short functional
+run, not a performance conclusion.
+
+The primary metric is JVM uptime at Spring startup completion, including
+`premain()`. HTTP readiness time includes Docker and harness overhead and is
+secondary. Every start must return HTTP 200 and `Hi!` from `/greeting`. Failures
+abort the benchmark and retain diagnostics; samples are not retried or filtered
+as outliers.
+
+Results under `build/reports/agent-startup/<run-id>/` include raw observations,
+host load averages, agent hashes and versions, exact JVM commands, image/JDK
+identity, medians, interquartile ranges, and paired baseline-minus-candidate
+savings. The reported 95% interval uses a circular moving-block bootstrap over
+consecutive rounds. Read it alongside the A/A control and reproduce improvements
+in an independent run.
+
+Separate untimed baseline and candidate launches record startup JFR files and
+execution-sample summaries. A diagnostic-only recorder agent starts JFR before
+OpenTelemetry's `premain()`; the JVM's `-XX:StartFlightRecording` option starts
+too late to capture agent initialization. Those launches are excluded from timing
+results. These are fresh JVMs with warm image/filesystem caches, not cold-machine
+starts or throughput measurements.
+
+Manually dispatch `agent-startup-benchmark.yml` from `main` with `baseline` and
+`candidate` set to same-repository branch names or full commit SHAs. For example,
+use `baseline=main` and `candidate=my-startup-change`. Both revisions must be
+reachable from repository branches, not fork-only commits or pull refs. Dispatch
+requires repository write access; only run trusted code, since agent JARs execute
+on a shared host.
+
+The workflow resolves immutable source identities and builds agents on standard
+hosted runners. A common harness from the workflow revision is packaged
+separately from both agents and unpacked under `RUNNER_TEMP`, without checking
+out sources on the bare-metal host. It measures serially on
+`oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24` without repository credentials,
+and uploads source identities, host information, complete reports, and profiles
+as workflow artifacts. Cleanup is limited to the attempt's files and the
+harness's own containers and named volume; it does not prune Docker or tune the
+shared host. This is opt-in tooling, not required PR CI, a scheduled benchmark,
+or a performance threshold gate.
+
+Rerun only the `benchmark` job to repeat measurements with the same built JARs.
+Each attempt uploads a separate `agent-startup-results-<attempt>` artifact,
+retaining the earlier observations.
+
+### Retained startup evidence
+
+Compact original observations and identities are retained in
+[`results/agent-startup`](results/agent-startup), independently of the 30-day
+workflow artifact retention. These measure a separate optimization whose
+production code is not part of this harness change.
+
+| Workflow run | Harness / candidate source | No-agent median (ms) | Baseline median (ms) | Candidate median (ms) | Paired saving, 95% block-bootstrap interval (ms) |
+| --- | --- | ---: | ---: | ---: | --- |
+| [40232071103](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/runs/40232071103) | `054970304c68a3401c9621b0f37d2b803fe750c4` | 1609 | 4922.5 | 4945 | -22 [-74, 2.1] |
+| [40236263871](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/runs/40236263871) | `85d3e9f4025ea81b46816ad85db754f20f5f712a` | 1589 | 4960.5 | 4318.5 | 597.5 [518, 713] |
+| [40236856886](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/runs/40236856886) | `e723afc149ac6b24d11da112276dcbeceddfaaea` | 1590.5 | 4957.5 | 4316.5 | 614 [536.5, 707] |
+
+All three used baseline source `dba159d210f124447cc9994b29ae64df772d247b`,
+x86-64 bare metal (Intel Xeon Platinum 8358), the pinned Spring/JDK 25 image,
+warm caches, exporters `none`, and the resource limits above. Each completed 110
+ordinary starts, including warmups, with separate diagnostic profiles. The
+initial run compared identical agent bytes even though its source revisions
+differed. Its A/A control reported an apparent 90.5 ms saving with a
+[14.5, 137.5] ms interval, illustrating host noise even with identical artifacts.
+The two optimization runs used identical baseline and candidate artifact hashes
+across runs; see each run's identities file. These are workload- and host-specific
+observations, not a universal speedup claim.
+
+The retained `samples.csv` files are byte-for-byte copies from
+`agent-startup-results` (first two runs) and `agent-startup-results-1` (third run).
+The archives were retrieved through authenticated GitHub artifact download links
+after `gh run download` was blocked by unavailable CLI authentication; their
+SHA-256 digests matched GitHub's artifact metadata. Each `identities.properties`
+records archive provenance and compact source, agent, image, JVM, command, and
+resource identities copied from the original reports, omitting host filesystem
+paths. Agent JARs, JFR binaries, logs, and build reports remain only in workflow
+artifacts.
 
 ## JDK 25 AOT startup comparison
 
