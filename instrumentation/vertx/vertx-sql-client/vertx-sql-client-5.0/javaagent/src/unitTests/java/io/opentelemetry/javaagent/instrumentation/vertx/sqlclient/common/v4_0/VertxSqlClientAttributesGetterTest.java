@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.vertx.sqlclient.DatabaseException;
@@ -13,6 +15,8 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.sql.SQLException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class VertxSqlClientAttributesGetterTest {
 
@@ -67,6 +71,16 @@ class VertxSqlClientAttributesGetterTest {
 
     assertThat(getter.getErrorType(mysqlRequest, null, error)).isEqualTo("42000");
     assertThat(getter.getDbResponseStatusCode(mysqlRequest, null, error)).isEqualTo("42000");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {MICROSOFT_SQL_SERVER, IBM_DB2})
+  void prefersVendorCodeWithoutChangingErrorType(String dbSystemName) {
+    VertxSqlClientRequest request = request(dbSystemName);
+    DatabaseException error = new DatabaseException("Syntax error", 208, "42000") {};
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("208");
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("42000");
   }
 
   @Test

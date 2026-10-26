@@ -78,7 +78,7 @@ class R2dbcSqlAttributesGetterTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"mysql", "mariadb"})
+  @ValueSource(strings = {"mysql", "mariadb", "oracle", "mssql", "db2"})
   void prefersVendorCodeWithoutChangingErrorType(String dbSystemName) {
     DbExecution request = request(dbSystemName);
     Throwable error = new R2dbcBadGrammarException("test", "42000", 1064);
@@ -88,7 +88,7 @@ class R2dbcSqlAttributesGetterTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"mysql", "mariadb"})
+  @ValueSource(strings = {"mysql", "mariadb", "oracle", "mssql", "db2"})
   void usesVendorCodeWhenSqlStateIsUnavailable(String dbSystemName) {
     DbExecution request = request(dbSystemName);
     Throwable error = new R2dbcBadGrammarException("test", null, 1064);
@@ -98,7 +98,7 @@ class R2dbcSqlAttributesGetterTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"mysql", "mariadb"})
+  @ValueSource(strings = {"mysql", "mariadb", "oracle", "mssql", "db2"})
   void fallsBackToSqlStateWhenVendorCodeIsUnavailable(String dbSystemName) {
     DbExecution request = request(dbSystemName);
     Throwable error = new R2dbcBadGrammarException("test", "42000", 0);

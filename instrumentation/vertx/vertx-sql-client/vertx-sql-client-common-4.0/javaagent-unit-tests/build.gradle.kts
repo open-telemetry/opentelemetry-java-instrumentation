@@ -10,6 +10,8 @@ dependencies {
     ),
   )
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
+  testImplementation("io.vertx:vertx-db2-client:4.0.0")
   testImplementation("io.vertx:vertx-mysql-client:4.0.0")
+  testImplementation("io.vertx:vertx-mssql-client:4.0.0")
   testImplementation("io.vertx:vertx-sql-client:4.0.0")
 }
