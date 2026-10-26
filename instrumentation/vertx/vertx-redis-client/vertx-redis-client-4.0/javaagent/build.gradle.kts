@@ -9,7 +9,7 @@ muzzle {
     versions.set("[4.0.0,)")
     assertInverse.set(true)
 
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_4_5.VertxRedisClientInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClient445InstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -19,7 +19,7 @@ muzzle {
     versions.set("[4.4.5,)")
     assertInverse.set(true)
 
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClient40InstrumentationModule")
   }
 }
 
@@ -107,6 +107,7 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
