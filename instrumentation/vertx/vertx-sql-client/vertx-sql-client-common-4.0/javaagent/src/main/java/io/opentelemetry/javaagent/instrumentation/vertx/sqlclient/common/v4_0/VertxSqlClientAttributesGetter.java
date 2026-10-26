@@ -21,10 +21,15 @@ import javax.annotation.Nullable;
 class VertxSqlClientAttributesGetter
     implements SqlClientAttributesGetter<VertxSqlClientRequest, Void> {
 
+  private static final String MYSQL_DATABASE = "mysql.db";
+  private static final String ORACLE_DATABASE = "oracle.db";
+
   private static final Function<Throwable, String> responseStatusExtractor =
       createResponseStatusExtractor(false);
   private static final Function<Throwable, String> dbResponseStatusExtractor =
       createResponseStatusExtractor(true);
+  private static final Function<Throwable, String> dbResponseErrorCodeExtractor =
+      createNonZeroErrorCodeExtractor();
 
   @Override
   public String getDbSystemName(VertxSqlClientRequest request) {
@@ -77,10 +82,17 @@ class VertxSqlClientAttributesGetter
   public String getDbResponseStatusCode(
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
     if (error != null
-        && "oracle.db".equals(request.getDbSystemName())
+        && ORACLE_DATABASE.equals(request.getDbSystemName())
         && CauseUnwrapper.unwrap(error, cause -> !(cause instanceof ConnectException))
             instanceof ConnectException) {
       return null;
+    }
+    if (MYSQL_DATABASE.equals(request.getDbSystemName())
+        || ORACLE_DATABASE.equals(request.getDbSystemName())) {
+      String errorCode = dbResponseErrorCodeExtractor.apply(error);
+      if (errorCode != null) {
+        return errorCode;
+      }
     }
     return dbResponseStatusExtractor.apply(error);
   }
@@ -102,6 +114,29 @@ class VertxSqlClientAttributesGetter
       String status = extractor.apply(error);
       return status != null ? status : fallback.apply(error);
     };
+  }
+
+  private static Function<Throwable, String> createNonZeroErrorCodeExtractor() {
+    try {
+      Class<?> exClass = Class.forName("io.vertx.sqlclient.DatabaseException");
+      Method method = exClass.getDeclaredMethod("getErrorCode");
+
+      return error -> {
+        if (exClass.isInstance(error)) {
+          try {
+            Object errorCode = method.invoke(error);
+            if (errorCode instanceof Number && ((Number) errorCode).intValue() != 0) {
+              return String.valueOf(errorCode);
+            }
+          } catch (IllegalAccessException | InvocationTargetException ignored) {
+            return null;
+          }
+        }
+        return null;
+      };
+    } catch (ClassNotFoundException | NoSuchMethodException ignored) {
+      return error -> null;
+    }
   }
 
   private static Function<Throwable, String> responseStatusExtractor(
