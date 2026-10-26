@@ -186,10 +186,14 @@ class Netty38ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
 
           @Override
           public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent ex) {
-            String message =
-                ex.getCause() == null
-                    ? "<no cause>"
-                    : ex.getCause().getMessage() == null ? "<null>" : ex.getCause().getMessage();
+            String message;
+            if (ex.getCause() == null) {
+              message = "<no cause>";
+            } else if (ex.getCause().getMessage() == null) {
+              message = "<null>";
+            } else {
+              message = ex.getCause().getMessage();
+            }
             ChannelBuffer buffer = ChannelBuffers.copiedBuffer(message, CharsetUtil.UTF_8);
             HttpResponse response =
                 new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR);

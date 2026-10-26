@@ -967,10 +967,14 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                 && isGeneratedQueueName(routingKey))
             || (("receive".equals(operation) || "process".equals(operation))
                 && isGeneratedQueueName(resource)));
-    String spanName =
-        operation != null
-            ? anonymousDestination ? operation : operation + " " + destination
-            : normalizedResource;
+    String spanName;
+    if (operation == null) {
+      spanName = normalizedResource;
+    } else if (anonymousDestination) {
+      spanName = operation;
+    } else {
+      spanName = operation + " " + destination;
+    }
 
     span.hasName(spanName);
 

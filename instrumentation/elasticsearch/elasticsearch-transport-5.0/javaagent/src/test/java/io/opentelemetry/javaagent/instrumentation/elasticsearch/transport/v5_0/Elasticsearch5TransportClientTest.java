@@ -209,8 +209,14 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
 
   private void assertConfiguredTarget(String addressList, Long sharedPort) {
     String serverAddress = addressList == null ? getAddress() : addressList;
-    Long serverPort =
-        addressList == null ? (getPort() == 9300 ? null : Long.valueOf(getPort())) : sharedPort;
+    Long serverPort = sharedPort;
+    if (addressList == null) {
+      if (getPort() == 9300) {
+        serverPort = null;
+      } else {
+        serverPort = Long.valueOf(getPort());
+      }
+    }
     String stableSpanName =
         "cluster:monitor/health " + serverAddress + (serverPort == null ? "" : ":" + serverPort);
     testing.waitAndAssertTraces(

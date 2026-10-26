@@ -204,8 +204,10 @@ class RpcAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("errorType", errorType);
     Throwable error = exception ? new IllegalArgumentException() : null;
-    String expectedErrorType =
-        errorType != null ? errorType : exception ? IllegalArgumentException.class.getName() : null;
+    String expectedErrorType = errorType;
+    if (expectedErrorType == null && exception) {
+      expectedErrorType = IllegalArgumentException.class.getName();
+    }
 
     for (AttributesExtractor<Map<String, String>, Void> extractor :
         asList(

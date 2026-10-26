@@ -244,18 +244,23 @@ class RmiTest {
                                 emitPreviewRpcSemconv()
                                     ? clientService + "/" + methodName
                                     : methodName)),
-                span ->
-                    span.hasName(
-                            emitPreviewRpcSemconv()
-                                ? (rpcMethod == null ? "java_rmi" : rpcMethod)
-                                : "rmi.app.Server/" + methodName)
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "rmi.app.Server" : null),
-                            equalTo(
-                                RPC_METHOD, emitPreviewRpcSemconv() ? rpcMethod : methodName))));
+                span -> {
+                  String expectedSpanName;
+                  if (emitPreviewRpcSemconv()) {
+                    expectedSpanName = rpcMethod == null ? "java_rmi" : rpcMethod;
+                  } else {
+                    expectedSpanName = "rmi.app.Server/" + methodName;
+                  }
+                  span.hasName(expectedSpanName)
+                      .hasKind(SpanKind.SERVER)
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "java_rmi" : null),
+                          equalTo(
+                                  RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "java_rmi" : null),
+                          equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "rmi.app.Server" : null),
+                          equalTo(
+                                  RPC_METHOD, emitPreviewRpcSemconv() ? rpcMethod : methodName));
+                }));
   }
 
   private static Stream<Arguments> remoteMethods() throws NoSuchMethodException {

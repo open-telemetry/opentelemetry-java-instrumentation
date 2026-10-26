@@ -483,10 +483,16 @@ class SpringRabbitMqTest {
                 verifyLink(span, producerSpan);
               });
         },
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    verifySettleSpan(span, fail ? (testLatestDeps() ? "reject" : "nack") : "ack")));
+        trace -> {
+          String settlementOperation;
+          if (fail) {
+            settlementOperation = testLatestDeps() ? "reject" : "nack";
+          } else {
+            settlementOperation = "ack";
+          }
+          trace.hasSpansSatisfyingExactly(
+              span -> verifySettleSpan(span, settlementOperation));
+        });
     assertThat(delivered).hasValue(expectedCount);
     assertProcessMetrics(testing, queue, errorType, expectedCount);
   }

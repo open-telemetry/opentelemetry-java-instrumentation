@@ -376,11 +376,15 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
       Context parentContext = Context.current();
 
       HttpUrl httpUrl = retrofit.baseUrl();
-      String database =
-          (arg0 instanceof BatchPoints)
-              ? ((BatchPoints) arg0).getDatabase()
-              // write data by UDP protocol, in this way, can't get database name.
-              : arg0 instanceof Integer ? null : String.valueOf(arg0);
+      String database;
+      if (arg0 instanceof BatchPoints) {
+        database = ((BatchPoints) arg0).getDatabase();
+      } else if (arg0 instanceof Integer) {
+        // write data by UDP protocol, in this way, can't get database name.
+        database = null;
+      } else {
+        database = String.valueOf(arg0);
+      }
 
       String operationName;
       if ("createDatabase".equals(methodName)) {

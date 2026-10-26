@@ -318,9 +318,13 @@ class MessagingAttributesExtractorTest {
 
     @Override
     public String getErrorType(Map<String, String> request, String response, Throwable error) {
-      return "failure".equals(response)
-          ? response
-          : error == null ? null : error.getClass().getName();
+      if ("failure".equals(response)) {
+        return response;
+      }
+      if (error == null) {
+        return null;
+      }
+      return error.getClass().getName();
     }
 
     @Override

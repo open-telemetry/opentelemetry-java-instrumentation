@@ -147,7 +147,10 @@ class StartupReportTest {
     List<StartupSample> samples = new ArrayList<>();
     for (Variant variant : Variant.values()) {
       double normal = variant.agent() ? 10 : 4;
-      double aot = variant.aot() ? (variant.agent() ? agentAot : 2) : normal;
+      double aot = normal;
+      if (variant.aot()) {
+        aot = variant.agent() ? agentAot : 2;
+      }
       samples.add(new StartupSample(variant, 0, 1, true, "ok", 1, normal, 2));
       samples.add(new StartupSample(variant, 1, 1, false, "ok", 1, aot, 2));
       samples.add(new StartupSample(variant, 2, 1, false, "ok", 1, aot, 2));
