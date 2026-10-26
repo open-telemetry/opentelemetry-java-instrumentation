@@ -50,8 +50,9 @@ class AllowNewAbstractMethodOnAutovalueClasses : AbstractRecordingSeenMembers() 
   }
 
   private fun isAutoValueClass(japiClass: JApiClass): Boolean {
-    return japiClass.newClass.get().getAnnotation(AutoValue::class.java) != null ||
-      japiClass.newClass.get().getAnnotation(AutoValue.Builder::class.java) != null
+    val newClass = japiClass.newClass.orElse(null) ?: return false
+    return newClass.getAnnotation(AutoValue::class.java) != null ||
+      newClass.getAnnotation(AutoValue.Builder::class.java) != null
   }
 }
 
@@ -78,17 +79,16 @@ fun getAllPublishedModules(): List<Project> {
 fun getClasspathForVersion(version: String): List<File> {
   val publishedModules =
     getAllPublishedModules().map {
-      Triple(
+      Pair(
         it.findProperty("mavenGroupId") as String? ?: it.group.toString(),
         it.base.archivesName.get(),
-        it,
       )
     }
   val existingGroup = group
   group = "virtual_group"
   try {
     return publishedModules
-      .map { (moduleGroup, archiveName, _) ->
+      .mapNotNull { (moduleGroup, archiveName) ->
         val depModule = "$moduleGroup:$archiveName:$version@jar"
         val depJar = "$archiveName-$version.jar"
         val configuration: Configuration =
@@ -100,6 +100,7 @@ fun getClasspathForVersion(version: String): List<File> {
             .filter { file -> file.name == depJar }
             .singleFile
         } catch (e: ResolveException) {
+          // Stable artifacts introduced after the baseline have no old jar to contribute.
           if (e.cause is ModuleVersionNotFoundException) {
             null
           } else {
@@ -107,7 +108,6 @@ fun getClasspathForVersion(version: String): List<File> {
           }
         }
       }
-      .filterNotNull()
       .toList()
   } finally {
     group = existingGroup
@@ -144,14 +144,18 @@ if (project.findProperty("otel.stable") == "true" && project.path != ":javaagent
           val newArchive = newModuleClasspath.singleOrNull { it.name.matches(archivePattern) }
           val oldArchive = oldModuleClasspath.singleOrNull { it.name.matches(archivePattern) }
           newClasspath.from(newModuleClasspath)
-          oldClasspath.from(oldModuleClasspath)
+          oldClasspath.from(if (oldArchive == null) emptyList<File>() else oldModuleClasspath)
           newArchives.from(newArchive)
           oldArchives.from(oldArchive)
 
-          // only output changes, not everything
-          onlyModified.set(true)
+          // If this artifact is new, compare against nothing and publish its complete API.
+          onlyModified.set(oldArchive != null)
 
-          // Allow known false positives and adding default implementations to interface methods.
+          // Reproduce defaults from japicmp-gradle-plugin 0.4.6 with compatibility adjustments.
+          // Generics are not detected correctly.
+          // Allow adding default methods on interfaces.
+          // Allow adding default implementations for default methods.
+          // japicmp 0.23.1 does not recognize default methods of superinterfaces.
           compatibilityChangeExcludes.set(
             listOf(
               JApiCompatibilityChangeType.CLASS_GENERIC_TEMPLATE_CHANGED.name,
