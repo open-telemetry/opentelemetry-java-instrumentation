@@ -486,6 +486,12 @@ class JdbcConnectionUrlParserTest {
             .setPort(33)
             .setName("mdbdb")
             .build(),
+        arg("jdbc:mysql://(host=mdb.host,port=33,port)/mdbdb")
+            .setSystem(MYSQL)
+            .setHost("mdb.host")
+            .setPort(3306)
+            .setName("mdbdb")
+            .build(),
         arg("jdbc:mysql://(host=mdb.host,port=)/mdbdb")
             .setSystem(MYSQL)
             .setHost("mdb.host")

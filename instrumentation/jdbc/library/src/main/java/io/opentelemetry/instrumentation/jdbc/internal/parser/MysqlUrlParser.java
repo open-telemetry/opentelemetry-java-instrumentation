@@ -181,21 +181,25 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       if (!isValidKey(rawKey)) {
         return null;
       }
-      if (equals < 0) {
-        // Connector/J skips empty entries and reads a key without a value, e.g. after an
-        // unencoded comma in a password
-        continue;
-      }
       String key = decode(rawKey.trim());
-      String value = decode(keyValue.substring(equals + 1).trim());
-      if (key == null || key.isEmpty() || value == null) {
+      // Connector/J reads a key without a value as null, e.g. after an unencoded comma in a
+      // password
+      String value = equals < 0 ? null : decode(keyValue.substring(equals + 1).trim());
+      if (key == null || (equals >= 0 && value == null)) {
         return null;
+      }
+      if (key.isEmpty()) {
+        // Connector/J skips empty entries and rejects a value without a key
+        if (value != null && !value.isEmpty()) {
+          return null;
+        }
+        continue;
       }
       // later keys win, as in Connector/J
       if (key.equalsIgnoreCase("host")) {
         host = value;
       } else if (key.equalsIgnoreCase("port")) {
-        port = value.isEmpty() ? null : value;
+        port = value == null || value.isEmpty() ? null : value;
       }
     }
     // the decoded host must not contain characters that would break the address block
