@@ -9,6 +9,7 @@ import json
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+from google.protobuf.json_format import MessageToDict
 from google.protobuf.message import DecodeError
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
@@ -45,9 +46,24 @@ class Telemetry:
                                     "name": span.name,
                                     "scope": scope.scope.name,
                                     "attributes": {
-                                        attribute.key: attribute.value.string_value
+                                        attribute.key: MessageToDict(
+                                            attribute.value,
+                                            preserving_proto_field_name=True,
+                                        )
                                         for attribute in span.attributes
                                     },
+                                    "otlp_span": MessageToDict(
+                                        span, preserving_proto_field_name=True
+                                    ),
+                                    "otlp_scope": MessageToDict(
+                                        scope.scope, preserving_proto_field_name=True
+                                    ),
+                                    "otlp_resource": MessageToDict(
+                                        resource.resource,
+                                        preserving_proto_field_name=True,
+                                    ),
+                                    "scope_schema_url": scope.schema_url,
+                                    "resource_schema_url": resource.schema_url,
                                 }
                             )
 

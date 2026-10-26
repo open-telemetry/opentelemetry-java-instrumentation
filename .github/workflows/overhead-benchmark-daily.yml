@@ -29,6 +29,9 @@ on:
       artifact-run-id:
         description: Reuse build artifacts for the selected benchmark from this run
         type: string
+      quarkus-workload-run-id:
+        description: Build a candidate with this run's unchanged Quarkus workload and baseline
+        type: string
       quarkus-rate:
         description: Quarkus offered requests per second (ignored during calibration)
         type: string
@@ -250,6 +253,9 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' &&
       startsWith(inputs.benchmark, 'quarkus') && inputs.artifact-run-id == ''
+    permissions:
+      contents: read
+      actions: read
     runs-on: ubuntu-latest
     timeout-minutes: 60
     defaults:
@@ -261,6 +267,7 @@ jobs:
           path: harness
           persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: inputs.quarkus-workload-run-id == ''
         with:
           repository: brunobat/quarkus-observability-perf
           ref: a6be333266d75520429793f7785b393a9dc4599d
@@ -277,11 +284,13 @@ jobs:
           path: candidate
           persist-credentials: false
       - name: Set up application build JDK
+        if: inputs.quarkus-workload-run-id == ''
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: "21"
       - name: Build fixed Quarkus application and download Hyperfoil
+        if: inputs.quarkus-workload-run-id == ''
         run: |
           export JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")"
           mkdir artifacts
@@ -308,6 +317,19 @@ jobs:
             https://repo.maven.apache.org/maven2/io/hyperfoil/hyperfoil-distribution/0.24/hyperfoil-distribution-0.24.zip \
             --output artifacts/hyperfoil.zip
           echo '99bad48cd87f03904c84fd49f396c0235cb0e6da46b4604ecd8ec64d06c83a6f  artifacts/hyperfoil.zip' | sha256sum --check
+      - name: Download unchanged workload and baseline
+        if: inputs.quarkus-workload-run-id != ''
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: quarkus-benchmark-build
+          path: artifacts
+          run-id: ${{ inputs.quarkus-workload-run-id }}
+          github-token: ${{ github.token }}
+      - name: Verify reused artifacts
+        if: inputs.quarkus-workload-run-id != ''
+        run: |
+          sha256sum --check artifacts/SHA256SUMS
+          cp artifacts/provenance.json artifacts/workload-provenance.json
       - name: Set up agent build JDK
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
@@ -320,12 +342,22 @@ jobs:
         working-directory: harness
         run: .github/scripts/gha-free-disk-space.sh
       - name: Build explicit agent artifacts and record provenance
+        env:
+          WORKLOAD_RUN_ID: ${{ inputs.quarkus-workload-run-id }}
         run: |
           export JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")"
           cd baseline
-          ./gradlew :javaagent:shadowJar -PremoveJarVersionNumbers=true
-          cp javaagent/build/libs/opentelemetry-javaagent.jar ../artifacts/baseline-agent.jar
           baseline_sha="$(git rev-parse HEAD)"
+          if [[ -z "$WORKLOAD_RUN_ID" ]]; then
+            ./gradlew :javaagent:shadowJar -PremoveJarVersionNumbers=true
+            cp javaagent/build/libs/opentelemetry-javaagent.jar ../artifacts/baseline-agent.jar
+          else
+            original_baseline="$(python3 -c 'import json; print(json.load(open("../artifacts/workload-provenance.json"))["baseline"])')"
+            if [[ "$baseline_sha" != "$original_baseline" ]]; then
+              echo "baseline-ref must match the reused baseline: $original_baseline" >&2
+              exit 1
+            fi
+          fi
           cd ../candidate
           candidate_sha="$(git rev-parse HEAD)"
           if [[ "$baseline_sha" == "$candidate_sha" ]]; then
@@ -335,9 +367,10 @@ jobs:
             cp javaagent/build/libs/opentelemetry-javaagent.jar ../artifacts/candidate-agent.jar
           fi
           cd ..
-          printf '{"baseline":"%s","candidate":"%s","harness":"%s","workload":"%s","build_run":"%s"}\n' \
+          printf '{"baseline":"%s","candidate":"%s","harness":"%s","workload":"%s","build_run":"%s","workload_build_run":"%s"}\n' \
             "$baseline_sha" "$candidate_sha" "$(git -C harness rev-parse HEAD)" \
-            "$(git -C workload rev-parse HEAD)" "$GITHUB_RUN_ID" > artifacts/provenance.json
+            "$(cat artifacts/workload-commit.txt)" "$GITHUB_RUN_ID" \
+            "${WORKLOAD_RUN_ID:-$GITHUB_RUN_ID}" > artifacts/provenance.json
           find artifacts -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > artifacts/SHA256SUMS
       - name: Upload Quarkus benchmark build
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7

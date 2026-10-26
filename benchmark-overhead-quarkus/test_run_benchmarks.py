@@ -37,7 +37,7 @@ def exported_spans():
                     "span_id": f"{index + 20:016x}",
                     "parent_id": f"{index + 10:016x}",
                     "kind": 3,
-                    "attributes": {"db.system.name": "postgresql"},
+                    "attributes": {"db.system.name": {"string_value": "postgresql"}},
                 },
             ]
         )
@@ -583,6 +583,55 @@ class ReceiverTest(unittest.TestCase):
         attribute.key = "db.system.name"
         attribute.value.string_value = "postgresql"
         return request
+
+    def test_preflight_preserves_typed_attributes_and_complete_otlp_details(self):
+        request = self.request()
+        resource = request.resource_spans[0]
+        resource.schema_url = "resource-schema"
+        resource.resource.attributes.add(key="service.name").value.string_value = "test"
+        scope = resource.scope_spans[0]
+        scope.schema_url = "scope-schema"
+        scope.scope.version = "1.0"
+        span = scope.spans[0]
+        span.attributes.add(key="http.response.status_code").value.int_value = 200
+        span.attributes.add(key="test.boolean").value.bool_value = True
+        span.attributes.add(key="test.double").value.double_value = 1.5
+        span.attributes.add(key="test.array").value.array_value.values.add(
+            string_value="value"
+        )
+        span.status.code = 2
+        span.status.message = "error"
+        span.events.add(name="exception", time_unix_nano=123)
+        span.links.add(trace_id=span.trace_id, span_id=span.span_id)
+        telemetry = receiver.Telemetry()
+        telemetry.record(request)
+        actual = telemetry.snapshot()["preflight"][0]
+        self.assertEqual(
+            actual["attributes"],
+            {
+                "db.system.name": {"string_value": "postgresql"},
+                "http.response.status_code": {"int_value": "200"},
+                "test.boolean": {"bool_value": True},
+                "test.double": {"double_value": 1.5},
+                "test.array": {"array_value": {"values": [{"string_value": "value"}]}},
+            },
+        )
+        self.assertEqual(
+            actual["otlp_span"]["status"],
+            {"code": "STATUS_CODE_ERROR", "message": "error"},
+        )
+        self.assertEqual(
+            actual["otlp_span"]["events"],
+            [{"name": "exception", "time_unix_nano": "123"}],
+        )
+        self.assertEqual(len(actual["otlp_span"]["links"]), 1)
+        self.assertEqual(actual["otlp_scope"], {"name": "test", "version": "1.0"})
+        self.assertEqual(
+            actual["otlp_resource"]["attributes"],
+            [{"key": "service.name", "value": {"string_value": "test"}}],
+        )
+        self.assertEqual(actual["scope_schema_url"], "scope-schema")
+        self.assertEqual(actual["resource_schema_url"], "resource-schema")
 
     def test_receiver_bounds_retained_trace_details(self):
         telemetry = receiver.Telemetry()

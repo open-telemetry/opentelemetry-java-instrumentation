@@ -367,8 +367,9 @@ def validate_spans(stats, agent):
             for span in trace
             if span["kind"] == 3
             and (
-                span["attributes"].get("db.system") == "postgresql"
-                or span["attributes"].get("db.system.name") == "postgresql"
+                span["attributes"].get("db.system") == {"string_value": "postgresql"}
+                or span["attributes"].get("db.system.name")
+                == {"string_value": "postgresql"}
             )
         ]
         if len(servers) != 1 or servers[0]["parent_id"] != PARENT_ID or not database:

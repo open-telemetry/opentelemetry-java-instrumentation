@@ -30,6 +30,14 @@ Identical commits produce byte-identical agent artifacts for A/A measurements.
 When reusing artifacts, ref inputs are ignored and the original build provenance
 remains authoritative.
 
+To build a new candidate against an existing baseline, set
+`quarkus-workload-run-id` to the original build run and select the new
+`candidate-ref`. Set `baseline-ref` to that build's baseline commit.
+The build verifies the original checksums and preserves the application,
+Hyperfoil, workload, license, toolchain record, and baseline agent bytes.
+It records the source build's provenance alongside the new candidate's.
+This input is ignored when `artifact-run-id` reuses a complete bundle.
+
 `quarkus-rate` defaults to 2,000 requests/s and is ignored during calibration.
 Choose a rate with application and infrastructure headroom before comparing
 agents. `quarkus-repetitions` defaults to five paired repetitions. Each repetition
@@ -81,6 +89,8 @@ deterministically sampled preflight trace, preserve its remote parent, and
 attach PostgreSQL client spans beneath it. A no-agent trial must export no
 spans. The receiver retains bounded preflight details and aggregate counts,
 not all measured spans.
+Preflight details include typed OTLP attributes, full span records, scope and
+resource records, and schema URLs for telemetry comparisons.
 
 The runner also checks approximate 10% server-span counts under load, receiver
 decode errors, and agent export-failure messages. These checks do not replace
