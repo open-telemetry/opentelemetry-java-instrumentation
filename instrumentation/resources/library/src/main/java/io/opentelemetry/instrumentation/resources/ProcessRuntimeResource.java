@@ -48,7 +48,7 @@ public final class ProcessRuntimeResource {
               version,
               PROCESS_RUNTIME_DESCRIPTION,
               description),
-          SchemaUrls.V1_24_0);
+          SchemaUrls.V1_40_0);
     } catch (SecurityException ignored) {
       return Resource.empty();
     }
