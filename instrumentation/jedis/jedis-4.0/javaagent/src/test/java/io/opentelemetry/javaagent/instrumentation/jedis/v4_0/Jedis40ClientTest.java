@@ -481,6 +481,87 @@ class Jedis40ClientTest {
   }
 
   @Test
+  void caughtDirectConnectionServerErrorDoesNotFailSuccessfulOuterPipeline() {
+    jedis.lpush("nested-wrong-type", "value");
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    testing.clearData();
+
+    CommandObject<byte[]> nestedCommand =
+        new CommandObject<>(
+            new CommandArguments(Protocol.Command.GET).add("nested-wrong-type"),
+            BuilderFactory.BINARY);
+    Throwable independentError =
+        catchThrowable(() -> nestedClient.getConnection().executeCommand(nestedCommand));
+    assertThat(independentError).hasMessageStartingWith("WRONGTYPE");
+    assertErrorType("WRONGTYPE");
+    testing.clearData();
+
+    List<JedisDataException> nestedErrors = new ArrayList<>();
+    Pipeline outer = jedis.pipelined();
+    outer.appendCommand(
+        new CommandObject<>(
+            new CommandArguments(Protocol.Command.PING),
+            new Builder<String>() {
+              @Override
+              public String build(Object response) {
+                try {
+                  nestedClient.getConnection().executeCommand(nestedCommand);
+                } catch (JedisDataException error) {
+                  nestedErrors.add(error);
+                }
+                return new String((byte[]) response, UTF_8);
+              }
+            }));
+    outer.set("outer-pipeline", "value");
+
+    assertThat(outer.syncAndReturnAll()).containsExactly("PONG", "OK");
+    assertThat(nestedErrors).hasSize(1);
+    assertThat(nestedErrors.get(0)).hasMessageStartingWith("WRONGTYPE");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasAttributesSatisfying(equalTo(ERROR_TYPE, null))));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-4.0",
+        "db.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .allSatisfy(
+                            point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull())));
+
+    jedis.lpush("outer-wrong-type", "value");
+    testing.clearData();
+    List<JedisDataException> secondNestedErrors = new ArrayList<>();
+    Pipeline failingOuter = jedis.pipelined();
+    failingOuter.appendCommand(
+        new CommandObject<>(
+            new CommandArguments(Protocol.Command.PING),
+            new Builder<String>() {
+              @Override
+              public String build(Object response) {
+                try {
+                  nestedClient.getConnection().executeCommand(nestedCommand);
+                } catch (JedisDataException error) {
+                  secondNestedErrors.add(error);
+                }
+                return new String((byte[]) response, UTF_8);
+              }
+            }));
+    failingOuter.get("outer-wrong-type");
+
+    List<Object> results = failingOuter.syncAndReturnAll();
+    assertThat(secondNestedErrors).hasSize(1);
+    assertThat(results).hasSize(2);
+    assertThat(results.get(0)).isEqualTo("PONG");
+    assertThat(results.get(1)).isInstanceOf(JedisDataException.class);
+    assertErrorType("WRONGTYPE");
+  }
+
+  @Test
   void uncaughtNestedCommandServerErrorFailsOuterPipeline() {
     jedis.lpush("nested-wrong-type", "value");
     Jedis nestedClient = new Jedis(host, port);

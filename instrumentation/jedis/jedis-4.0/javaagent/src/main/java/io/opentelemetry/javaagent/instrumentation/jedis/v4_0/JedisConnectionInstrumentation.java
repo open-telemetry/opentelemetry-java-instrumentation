@@ -51,6 +51,9 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("redis.clients.jedis.commands.ProtocolCommand")))
             .and(takesArgument(1, is(byte[][].class))),
         getClass().getName() + "$SendCommandAdvice");
+
+    transformer.applyAdviceToMethod(
+        named("executeCommand"), getClass().getName() + "$ExecuteCommandAdvice");
   }
 
   public static class AdviceScope {
@@ -147,6 +150,25 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.end(socket, throwable);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ExecuteCommandAdvice {
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static JedisRequestContext<JedisRequest> onEnter() {
+      return JedisRequestContext.attach();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable JedisRequestContext<JedisRequest> requestContext) {
+      if (requestContext != null) {
+        requestContext.detachAndEnd(throwable);
       }
     }
   }
