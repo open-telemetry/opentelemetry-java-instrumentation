@@ -221,11 +221,11 @@ class GrpcTest extends AbstractGrpcTest {
     AttributeKey<List<String>> oldClientAttributeKey =
         AttributeKey.stringArrayKey("rpc.grpc.request.metadata." + CLIENT_REQUEST_METADATA_KEY);
     AttributeKey<List<String>> stableClientAttributeKey =
-        AttributeKey.stringArrayKey("rpc.request.metadata." + CLIENT_REQUEST_METADATA_KEY);
+        AttributeKey.stringArrayKey("rpc.request.header." + CLIENT_REQUEST_METADATA_KEY);
     AttributeKey<List<String>> oldServerAttributeKey =
         AttributeKey.stringArrayKey("rpc.grpc.request.metadata." + SERVER_REQUEST_METADATA_KEY);
     AttributeKey<List<String>> stableServerAttributeKey =
-        AttributeKey.stringArrayKey("rpc.request.metadata." + SERVER_REQUEST_METADATA_KEY);
+        AttributeKey.stringArrayKey("rpc.request.header." + SERVER_REQUEST_METADATA_KEY);
 
     testing()
         .waitAndAssertTraces(

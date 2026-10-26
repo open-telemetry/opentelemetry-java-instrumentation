@@ -20,7 +20,7 @@ final class CapturedGrpcMetadataUtil {
   private static final String RPC_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX =
       "rpc.grpc.request.metadata.";
   private static final String RPC_STABLE_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX =
-      "rpc.request.metadata.";
+      "rpc.request.header.";
 
   static List<String> lowercase(List<String> names) {
     return unmodifiableList(names.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(toList()));

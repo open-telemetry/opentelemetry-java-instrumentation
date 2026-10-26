@@ -34,11 +34,13 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class GrpcAttributesExtractorTest {
 
-  @Test
-  void selectsCanonicalAsciiMetadataKeys() {
+  @ParameterizedTest
+  @ValueSource(strings = {"INCLUDED-KEY", "INCLUDED-*", "INCLUDED-?EY"})
+  void selectsCanonicalAsciiMetadataKeys(String includedPattern) {
     Metadata metadata = new Metadata();
     metadata.put(
         Metadata.Key.of("included-key", Metadata.ASCII_STRING_MARSHALLER), "included-value");
+    metadata.put(Metadata.Key.of("included-key", Metadata.ASCII_STRING_MARSHALLER), "second-value");
     metadata.put(
         Metadata.Key.of("included-excluded", Metadata.ASCII_STRING_MARSHALLER), "excluded-value");
     metadata.put(Metadata.Key.of("other-key", Metadata.ASCII_STRING_MARSHALLER), "other-value");
@@ -49,7 +51,7 @@ class GrpcAttributesExtractorTest {
         GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null);
     IncludeExclude selector =
         IncludeExclude.builder()
-            .setIncluded(asList("INCLUDED-*", "missing-key"))
+            .setIncluded(asList(includedPattern, "missing-key"))
             .setExcluded(singletonList("*-EXCLUDED"))
             .build();
     AttributesBuilder attributes = Attributes.builder();
@@ -58,9 +60,12 @@ class GrpcAttributesExtractorTest {
 
     Attributes result = attributes.build();
     assertThat(result.get(oldMetadataAttributeKey("included-key")))
-        .isEqualTo(emitOldRpcSemconv() ? singletonList("included-value") : null);
+        .isEqualTo(emitOldRpcSemconv() ? asList("included-value", "second-value") : null);
     assertThat(result.get(stableMetadataAttributeKey("included-key")))
-        .isEqualTo(emitPreviewRpcSemconv() ? singletonList("included-value") : null);
+        .isEqualTo(emitPreviewRpcSemconv() ? asList("included-value", "second-value") : null);
+    assertThat(result.get(stringArrayKey("rpc.request.metadata.included-key"))).isNull();
+    assertThat(result.asMap())
+        .hasSize((emitOldRpcSemconv() ? 1 : 0) + (emitPreviewRpcSemconv() ? 1 : 0));
     assertExcludedMetadata(result, "included-excluded");
     assertExcludedMetadata(result, "other-key");
     assertExcludedMetadata(result, "included-bin");
@@ -156,6 +161,6 @@ class GrpcAttributesExtractorTest {
   }
 
   private static AttributeKey<List<String>> stableMetadataAttributeKey(String key) {
-    return stringArrayKey("rpc.request.metadata." + key);
+    return stringArrayKey("rpc.request.header." + key);
   }
 }

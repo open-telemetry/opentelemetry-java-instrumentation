@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
@@ -1728,7 +1729,7 @@ public abstract class AbstractGrpcTest {
   @Test
   void setCapturedRequestMetadata() throws Exception {
     String oldMetadataAttributePrefix = "rpc.grpc.request.metadata.";
-    String stableMetadataAttributePrefix = "rpc.request.metadata.";
+    String stableMetadataAttributePrefix = "rpc.request.header.";
     AttributeKey<List<String>> oldClientAttributeKey =
         AttributeKey.stringArrayKey(oldMetadataAttributePrefix + CLIENT_REQUEST_METADATA_KEY);
     AttributeKey<List<String>> stableClientAttributeKey =
@@ -1794,15 +1795,16 @@ public abstract class AbstractGrpcTest {
                       span.hasName("example.Greeter/SayHello")
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0));
-                      if (emitOldRpcSemconv()) {
-                        span.hasAttribute(
-                            oldClientAttributeKey, singletonList(clientMetadataValue));
-                      }
-                      if (emitPreviewRpcSemconv()) {
-                        span.hasAttribute(
-                            stableClientAttributeKey, singletonList(clientMetadataValue));
-                      }
                       span.hasAttributesSatisfying(
+                          equalTo(
+                              oldClientAttributeKey,
+                              emitOldRpcSemconv() ? singletonList(clientMetadataValue) : null),
+                          equalTo(
+                              stableClientAttributeKey,
+                              emitPreviewRpcSemconv() ? singletonList(clientMetadataValue) : null),
+                          equalTo(
+                              stringArrayKey("rpc.request.metadata." + CLIENT_REQUEST_METADATA_KEY),
+                              null),
                           equalTo(oldExcludedAttributeKey, null),
                           equalTo(stableExcludedAttributeKey, null));
                     },
@@ -1810,15 +1812,16 @@ public abstract class AbstractGrpcTest {
                       span.hasName("example.Greeter/SayHello")
                           .hasKind(SpanKind.SERVER)
                           .hasParent(trace.getSpan(1));
-                      if (emitOldRpcSemconv()) {
-                        span.hasAttribute(
-                            oldServerAttributeKey, singletonList(serverMetadataValue));
-                      }
-                      if (emitPreviewRpcSemconv()) {
-                        span.hasAttribute(
-                            stableServerAttributeKey, singletonList(serverMetadataValue));
-                      }
                       span.hasAttributesSatisfying(
+                          equalTo(
+                              oldServerAttributeKey,
+                              emitOldRpcSemconv() ? singletonList(serverMetadataValue) : null),
+                          equalTo(
+                              stableServerAttributeKey,
+                              emitPreviewRpcSemconv() ? singletonList(serverMetadataValue) : null),
+                          equalTo(
+                              stringArrayKey("rpc.request.metadata." + SERVER_REQUEST_METADATA_KEY),
+                              null),
                           equalTo(oldExcludedAttributeKey, null),
                           equalTo(stableExcludedAttributeKey, null));
                     }));
