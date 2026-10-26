@@ -28,12 +28,14 @@ class JedisErrorTypeTest {
   }
 
   @Test
-  void unconfirmedCauseKeepsExceptionClassFallback() {
+  void unconfirmedCauseKeepsOriginalExceptionClassFallback() {
     JedisDataException serverError = new JedisDataException("WRONGTYPE details");
     JedisRequest request = requestFor(serverError);
-    JedisDataException error = new JedisDataException(new JedisDataException("WRONGTYPE details"));
+    JedisDataException error =
+        new JedisDataException(new JedisConnectionException("client failure"));
 
-    assertThat(new JedisDbAttributesGetter().getErrorType(request, null, error)).isNull();
+    assertThat(new JedisDbAttributesGetter().getErrorType(request, null, error))
+        .isEqualTo(error.getClass().getName());
   }
 
   @Test
@@ -42,17 +44,31 @@ class JedisErrorTypeTest {
     JedisRequest request = requestFor(serverError);
     JedisConnectionException error = new JedisConnectionException(serverError);
 
-    assertThat(new JedisDbAttributesGetter().getErrorType(request, null, error)).isNull();
+    assertThat(new JedisDbAttributesGetter().getErrorType(request, null, error))
+        .isEqualTo(error.getClass().getName());
   }
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  void dedicatedServerErrorKeepsExceptionClassFallback(boolean wrapped) {
+  void dedicatedServerErrorKeepsOriginalExceptionClassFallback(boolean wrapped) {
     JedisDataException serverError = new JedisDataException("WRONGTYPE details") {};
     JedisRequest request = requestFor(serverError);
     Throwable error = wrapped ? new JedisDataException(serverError) : serverError;
 
-    assertThat(new JedisDbAttributesGetter().getErrorType(request, null, error)).isNull();
+    assertThat(JedisServerError.errorType(serverError)).isNull();
+    assertThat(new JedisDbAttributesGetter().getErrorType(request, null, error))
+        .isEqualTo(error.getClass().getName());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"", "WRONGTYPE\u00e9 details"})
+  void unusableServerErrorPrefixKeepsExceptionClassFallback(String message) {
+    JedisDataException serverError = new JedisDataException(message);
+    JedisRequest request = requestFor(serverError);
+
+    assertThat(JedisServerError.errorType(serverError)).isNull();
+    assertThat(new JedisDbAttributesGetter().getErrorType(request, null, serverError))
+        .isEqualTo(serverError.getClass().getName());
   }
 
   @Test
