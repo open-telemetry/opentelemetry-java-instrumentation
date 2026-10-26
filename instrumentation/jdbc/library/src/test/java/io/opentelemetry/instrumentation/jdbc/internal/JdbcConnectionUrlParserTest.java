@@ -475,6 +475,20 @@ class JdbcConnectionUrlParserTest {
             .setName("mdbdb")
             .setNoConfiguredTarget()
             .build(),
+        arg("jdbc:mysql://(host=mdb.host,foo=x#y,port=33)/mdbdb")
+            .setSystem(MYSQL)
+            .setNoConfiguredTarget()
+            .build(),
+        arg("jdbc:mysql://(host=mdb.host,foo=x@y,port=33)/mdbdb")
+            .setSystem(MYSQL)
+            .setName("mdbdb")
+            .setNoConfiguredTarget()
+            .build(),
+        arg("jdbc:mysql://(%48ost=mdb.host,host=mdb.host2)/mdbdb")
+            .setSystem(MYSQL)
+            .setName("mdbdb")
+            .setNoConfiguredTarget()
+            .build(),
         arg("jdbc:mysql://(host=mdb.host,$x=y)/mdbdb")
             .setSystem(MYSQL)
             .setName("mdbdb")

@@ -113,7 +113,7 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       return jdbcUrl;
     }
     int hostsStart = protoLoc + 3;
-    int hostsEnd = indexOf(jdbcUrl, hostsStart, '/', '?');
+    int hostsEnd = indexOf(jdbcUrl, hostsStart, '/', '?', '#');
     if (hostsEnd == -1) {
       hostsEnd = jdbcUrl.length();
     }
@@ -170,10 +170,13 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       return null;
     }
     String keyValues = entry.substring(1, entry.length() - 1);
-    if (keyValues.indexOf('(') >= 0 || keyValues.indexOf(')') >= 0) {
+    // Connector/J reads an unencoded @ as the end of the user info
+    if (keyValues.indexOf('(') >= 0 || keyValues.indexOf(')') >= 0 || keyValues.indexOf('@') >= 0) {
       return null;
     }
+    String hostKey = null;
     String host = null;
+    String portKey = null;
     String port = null;
     for (String keyValue : keyValues.split(",", -1)) {
       int equals = keyValue.indexOf('=');
@@ -195,10 +198,19 @@ public final class MysqlUrlParser implements JdbcUrlParser {
         }
         continue;
       }
-      // later keys win, as in Connector/J
+      // a later key wins, but Connector/J doesn't define which of two keys differing only in case
+      // is used
       if (key.equalsIgnoreCase("host")) {
+        if (hostKey != null && !hostKey.equals(key)) {
+          return null;
+        }
+        hostKey = key;
         host = value;
       } else if (key.equalsIgnoreCase("port")) {
+        if (portKey != null && !portKey.equals(key)) {
+          return null;
+        }
+        portKey = key;
         port = value == null || value.isEmpty() ? null : value;
       }
     }
