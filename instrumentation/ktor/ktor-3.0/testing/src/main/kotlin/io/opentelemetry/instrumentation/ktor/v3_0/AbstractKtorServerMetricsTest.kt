@@ -101,7 +101,7 @@ abstract class AbstractKtorServerMetricsTest : AbstractHttpServerUsingTest<Embed
       metrics.anySatisfy { metric ->
         assertThat(metric)
           .hasDescription("Number of active HTTP server requests.")
-          .hasUnit("{requests}")
+          .hasUnit("{request}")
           .hasLongSumSatisfying { sum ->
             sum.hasPointsSatisfying({ point ->
               point.hasValue(0)

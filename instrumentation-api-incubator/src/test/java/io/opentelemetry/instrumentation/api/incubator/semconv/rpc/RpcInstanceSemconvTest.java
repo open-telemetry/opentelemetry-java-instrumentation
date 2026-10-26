@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -95,6 +96,7 @@ class RpcInstanceSemconvTest {
                           equalTo(PEER_SERVICE, old ? "peer" : null),
                           equalTo(SERVICE_PEER_NAME, preview ? "peer" : null),
                           equalTo(SERVICE_PEER_NAMESPACE, preview ? "namespace" : null),
+                          equalTo(stringKey("rpc.status_code"), preview ? "CANCELLED" : null),
                           equalTo(ERROR_TYPE, preview ? "java.lang.IllegalStateException" : null)));
       assertThat(instance.spanExporter.getFinishedSpanItems().get(0).getInstrumentationScopeInfo())
           .satisfies(scope -> assertThat(scope.getSchemaUrl()).isEqualTo(schemaUrl));
@@ -141,6 +143,7 @@ class RpcInstanceSemconvTest {
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(
                                                     ERROR_TYPE, "java.lang.IllegalStateException"),
+                                                equalTo(stringKey("rpc.status_code"), "CANCELLED"),
                                                 equalTo(RPC_SYSTEM_NAME, "test"),
                                                 equalTo(RPC_METHOD, "Service/Method")))));
       }
@@ -361,6 +364,11 @@ class RpcInstanceSemconvTest {
     @Override
     public String getRpcMethod(String request) {
       return "Service/" + getMethod(request);
+    }
+
+    @Override
+    public String getRpcStatusCode(String request, Void response, Throwable error) {
+      return error != null ? "CANCELLED" : null;
     }
   }
 }

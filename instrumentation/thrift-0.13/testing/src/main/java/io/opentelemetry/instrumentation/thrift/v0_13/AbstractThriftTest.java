@@ -23,6 +23,7 @@
 
 package io.opentelemetry.instrumentation.thrift.v0_13;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
@@ -300,6 +301,11 @@ public abstract class AbstractThriftTest {
             equalTo(NETWORK_TYPE, "ipv4"),
             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
             equalTo(NETWORK_PEER_PORT, port),
+            equalTo(
+                stringKey("rpc.status_code"),
+                hasError && emitPreviewRpcSemconv()
+                    ? Integer.toString(TApplicationException.INTERNAL_ERROR)
+                    : null),
             equalTo(
                 ERROR_TYPE,
                 hasError && emitPreviewRpcSemconv()
@@ -600,6 +606,10 @@ public abstract class AbstractThriftTest {
                                           equalTo(
                                               RPC_METHOD,
                                               CustomService.class.getName() + "/withError"),
+                                          equalTo(
+                                              stringKey("rpc.status_code"),
+                                              Integer.toString(
+                                                  TApplicationException.INTERNAL_ERROR)),
                                           equalTo(
                                               ERROR_TYPE,
                                               TApplicationException.class.getName())))));

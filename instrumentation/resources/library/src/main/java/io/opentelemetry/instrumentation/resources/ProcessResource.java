@@ -107,7 +107,7 @@ public final class ProcessResource {
       }
     }
 
-    return Resource.create(attributes.build(), SchemaUrls.V1_24_0);
+    return Resource.create(attributes.build(), SchemaUrls.V1_40_0);
   }
 
   private static void addCommandAttributes(AttributesBuilder attributes, String executablePath) {
