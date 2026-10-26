@@ -121,7 +121,7 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     if (firstParenthesis < 0 || firstParenthesis >= hostsEnd) {
       return jdbcUrl;
     }
-    StringBuilder hosts = new StringBuilder();
+    StringBuilder hosts = null;
     int entryStart = hostsStart;
     int depth = 0;
     for (int i = hostsStart; i <= hostsEnd; i++) {
@@ -131,57 +131,97 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       } else if (c == ')') {
         depth--;
       } else if (c == ',' && depth <= 0) {
-        if (entryStart > hostsStart) {
-          hosts.append(',');
+        String address = toAddressForm(jdbcUrl, entryStart, i);
+        if (address != null && hosts == null) {
+          hosts = new StringBuilder().append(jdbcUrl, hostsStart, entryStart);
         }
-        hosts.append(toAddressForm(jdbcUrl.substring(entryStart, i)));
+        if (hosts != null) {
+          if (address != null) {
+            hosts.append(address);
+          } else {
+            hosts.append(jdbcUrl, entryStart, i);
+          }
+          if (i < hostsEnd) {
+            hosts.append(',');
+          }
+        }
         entryStart = i + 1;
       }
     }
-    if (depth != 0) {
+    if (depth != 0 || hosts == null) {
       // leave unbalanced parentheses to the parsing below, which rejects them
       return jdbcUrl;
     }
     return jdbcUrl.substring(0, hostsStart) + hosts + jdbcUrl.substring(hostsEnd);
   }
 
-  // Returns the entry unchanged when it is not a valid key-value host.
-  private static String toAddressForm(String entry) {
-    String trimmed = entry.trim();
-    if (!trimmed.startsWith("(") || !trimmed.endsWith(")")) {
-      return entry;
+  // Returns null when the entry is not a valid key-value host.
+  @Nullable
+  private static String toAddressForm(String jdbcUrl, int start, int end) {
+    int first = start;
+    while (first < end && Character.isWhitespace(jdbcUrl.charAt(first))) {
+      first++;
     }
-    String keyValues = trimmed.substring(1, trimmed.length() - 1);
+    if (first == end || jdbcUrl.charAt(first) != '(') {
+      return null;
+    }
+    String entry = jdbcUrl.substring(first, end).trim();
+    if (!entry.endsWith(")")) {
+      return null;
+    }
+    String keyValues = entry.substring(1, entry.length() - 1);
     if (keyValues.indexOf('(') >= 0 || keyValues.indexOf(')') >= 0) {
-      return entry;
+      return null;
     }
     String host = null;
     String port = null;
     for (String keyValue : keyValues.split(",", -1)) {
       int equals = keyValue.indexOf('=');
+      String rawKey = equals < 0 ? keyValue : keyValue.substring(0, equals);
+      if (!isValidKey(rawKey)) {
+        return null;
+      }
       if (equals < 0) {
         // Connector/J skips empty entries and reads a key without a value, e.g. after an
         // unencoded comma in a password
         continue;
       }
-      String key = decode(keyValue.substring(0, equals).trim());
+      String key = decode(rawKey.trim());
       String value = decode(keyValue.substring(equals + 1).trim());
       if (key == null || key.isEmpty() || value == null) {
-        return entry;
+        return null;
       }
       // later keys win, as in Connector/J
-      if (key.equals("host")) {
+      if (key.equalsIgnoreCase("host")) {
         host = value;
-      } else if (key.equals("port")) {
+      } else if (key.equalsIgnoreCase("port")) {
         port = value.isEmpty() ? null : value;
       }
     }
     // the decoded host must not contain characters that would break the address block
     if (!DbServerTargetBuilder.isValidHost(host) || (port != null && !isValidPort(port))) {
-      return entry;
+      return null;
     }
     String address = "address=(host=" + host + ")";
     return port == null ? address : address + "(port=" + port + ")";
+  }
+
+  // the characters Connector/J accepts in a key-value host key
+  private static boolean isValidKey(String key) {
+    for (int i = 0; i < key.length(); i++) {
+      char c = key.charAt(i);
+      if ((c < 'a' || c > 'z')
+          && (c < 'A' || c > 'Z')
+          && (c < '0' || c > '9')
+          && c != '_'
+          && c != '.'
+          && c != '-'
+          && c != '%'
+          && !Character.isWhitespace(c)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   // Connector/J percent-decodes key-value host properties
