@@ -24,27 +24,24 @@ public final class ThriftRequest {
 
   public ThriftRequest(
       @Nullable String methodName, @Nullable String serviceName, @Nullable Socket socket) {
-    this(methodName, serviceName, serviceName, socket, emptyMap());
+    this(
+        methodName,
+        serviceName,
+        serviceName,
+        socket != null ? socket.getLocalSocketAddress() : null,
+        socket != null ? socket.getRemoteSocketAddress() : null,
+        emptyMap());
   }
 
   public ThriftRequest(
       @Nullable String methodName,
       @Nullable String serviceName,
-      @Nullable Socket socket,
-      Map<String, String> headers) {
-    this(methodName, serviceName, serviceName, socket, headers);
-  }
-
-  public ThriftRequest(
-      @Nullable String methodName,
-      @Nullable String serviceName,
-      @Nullable String rpcServiceName,
       @Nullable Socket socket,
       Map<String, String> headers) {
     this(
         methodName,
         serviceName,
-        rpcServiceName,
+        serviceName,
         socket != null ? socket.getLocalSocketAddress() : null,
         socket != null ? socket.getRemoteSocketAddress() : null,
         headers);
