@@ -38,7 +38,6 @@ import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
 import java.io.File;
-import java.nio.file.Files;
 import java.util.stream.Stream;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.jasper.JasperException;
@@ -46,6 +45,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -57,12 +57,10 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   private static JspSpanAssertions spanAsserts;
+  @TempDir private static File baseDir;
 
   @Override
   protected Tomcat setupServer() throws Exception {
-    File baseDir = Files.createTempDirectory("jsp").toFile();
-    baseDir.deleteOnExit();
-
     Tomcat tomcatServer = new Tomcat();
     tomcatServer.setBaseDir(baseDir.getAbsolutePath());
     tomcatServer.setPort(port);

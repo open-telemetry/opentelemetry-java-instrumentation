@@ -57,7 +57,6 @@ import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -109,8 +108,8 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
 
   @BeforeEach
   void setUp() {
-    sqsPort = PortUtils.findOpenPort();
-    sqsRestServer = SQSRestServerBuilder.withPort(sqsPort).withInterface("localhost").start();
+    sqsRestServer = SQSRestServerBuilder.withPort(0).withInterface("localhost").start();
+    sqsPort = sqsRestServer.waitUntilStarted().localAddress().getPort();
 
     sqsClient = configureClient(newClientBuilder()).build();
   }

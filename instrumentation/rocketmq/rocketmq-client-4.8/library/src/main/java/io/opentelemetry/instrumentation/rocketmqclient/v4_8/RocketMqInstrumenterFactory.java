@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -60,6 +61,7 @@ class RocketMqInstrumenterFactory {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, operationType, SEND_OPERATION_NAME, headers))
@@ -85,6 +87,7 @@ class RocketMqInstrumenterFactory {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, operationType, SEND_OPERATION_NAME, headers))
@@ -114,6 +117,7 @@ class RocketMqInstrumenterFactory {
             openTelemetry,
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(getter, operationType, "create"))
+        .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
         .setEnabled(batchSendMessageCreationSpansEnabled)
         .addAttributesExtractor(
             buildMessagingAttributesExtractor(getter, operationType, "create", headers))
@@ -164,6 +168,7 @@ class RocketMqInstrumenterFactory {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, operationType, PROCESS_OPERATION_NAME, headers))
@@ -196,10 +201,11 @@ class RocketMqInstrumenterFactory {
     MessagingOperationType operationType = MessagingOperationType.PROCESS;
 
     InstrumenterBuilder<RocketMqConsumerRequest, ConsumeMessageContext> builder =
-        Instrumenter.builder(
-            openTelemetry,
-            INSTRUMENTATION_NAME,
-            MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME));
+        Instrumenter.<RocketMqConsumerRequest, ConsumeMessageContext>builder(
+                openTelemetry,
+                INSTRUMENTATION_NAME,
+                MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
 
     builder.addAttributesExtractor(
         buildMessagingAttributesExtractor(getter, operationType, PROCESS_OPERATION_NAME, headers));
@@ -243,7 +249,7 @@ class RocketMqInstrumenterFactory {
     return (spanStatusBuilder, request, response, error) -> {
       // the consume return type, and not just the consume status, decides whether the operation
       // failed, so that the span status stays consistent with the reported error.type
-      if (RocketMqConsumerAttributeGetter.getErrorType(response) != null) {
+      if (RocketMqConsumerAttributeGetter.getResponseErrorType(response) != null) {
         spanStatusBuilder.setStatus(StatusCode.ERROR);
       } else {
         SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, response, error);

@@ -41,6 +41,13 @@ final class LettuceDbAttributesGetter
 
   @Nullable
   @Override
+  public String getErrorType(
+      RedisCommand<?, ?, ?> request, @Nullable Void response, @Nullable Throwable error) {
+    return LettuceRedisErrorType.getErrorType(error);
+  }
+
+  @Nullable
+  @Override
   public String getServerAddress(RedisCommand<?, ?, ?> request) {
     RedisServerTarget serverTarget = LettuceServerTargets.get(request);
     return serverTarget != null ? serverTarget.getAddress() : null;

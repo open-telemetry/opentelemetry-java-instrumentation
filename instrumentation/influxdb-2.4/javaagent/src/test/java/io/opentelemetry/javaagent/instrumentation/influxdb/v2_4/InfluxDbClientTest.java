@@ -11,6 +11,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_SUMMARY;
@@ -18,16 +19,19 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.BatchPoints;
@@ -76,6 +80,27 @@ class InfluxDbClientTest {
     cleanup.deferAfterAll(influxDb);
     influxDb.createDatabase(DATABASE_NAME);
     cleanup.deferAfterAll(() -> influxDb.deleteDatabase(DATABASE_NAME));
+  }
+
+  @Test
+  void testNullQueryDoesNotAffectCallDepth() {
+    assertThatThrownBy(() -> influxDb.query(null)).isInstanceOf(NullPointerException.class);
+
+    influxDb.query(new Query("SELECT * FROM cpu_load", DATABASE_NAME));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT cpu_load")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"))));
   }
 
   @Test
@@ -233,6 +258,210 @@ class InfluxDbClientTest {
   }
 
   @Test
+  void testQueryWithThreeArgumentsBiConsumer() throws InterruptedException {
+    CountDownLatch countDownLatch = new CountDownLatch(1);
+    AtomicBoolean callbackInvoked = new AtomicBoolean();
+    Query query = new Query("SELECT * FROM cpu_load", DATABASE_NAME);
+    testing.runWithSpan(
+        "parent",
+        () ->
+            influxDb.query(
+                query,
+                2,
+                (cancellable, result) -> {
+                  if (callbackInvoked.compareAndSet(false, true)) {
+                    testing.runWithSpan("child", () -> {});
+                    countDownLatch.countDown();
+                  }
+                }));
+    assertThat(countDownLatch.await(10, SECONDS)).isTrue();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SELECT cpu_load")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load")),
+                span ->
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void testQueryWithConsumerAndCompletionCallback() throws InterruptedException {
+    CountDownLatch countDownLatch = new CountDownLatch(2);
+    AtomicBoolean callbackInvoked = new AtomicBoolean();
+    Query query = new Query("SELECT * FROM cpu_load", DATABASE_NAME);
+    testing.runWithSpan(
+        "parent",
+        () ->
+            influxDb.query(
+                query,
+                2,
+                result -> {
+                  if (callbackInvoked.compareAndSet(false, true)) {
+                    testing.runWithSpan("callback", () -> {});
+                    countDownLatch.countDown();
+                  }
+                },
+                () -> {
+                  testing.runWithSpan("completion", () -> {});
+                  countDownLatch.countDown();
+                }));
+    assertThat(countDownLatch.await(10, SECONDS)).isTrue();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SELECT cpu_load")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load")),
+                span ->
+                    span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("completion")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void testQueryWithBiConsumerAndCompletionCallback() throws InterruptedException {
+    CountDownLatch countDownLatch = new CountDownLatch(2);
+    AtomicBoolean callbackInvoked = new AtomicBoolean();
+    Query query = new Query("SELECT * FROM cpu_load", DATABASE_NAME);
+    testing.runWithSpan(
+        "parent",
+        () ->
+            influxDb.query(
+                query,
+                2,
+                (cancellable, result) -> {
+                  if (callbackInvoked.compareAndSet(false, true)) {
+                    testing.runWithSpan("callback", () -> {});
+                    countDownLatch.countDown();
+                  }
+                },
+                () -> {
+                  testing.runWithSpan("completion", () -> {});
+                  countDownLatch.countDown();
+                }));
+    assertThat(countDownLatch.await(10, SECONDS)).isTrue();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SELECT cpu_load")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load")),
+                span ->
+                    span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("completion")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void testQueryWithSingleResponseCallback() throws InterruptedException {
+    CountDownLatch countDownLatch = new CountDownLatch(1);
+    Query query = new Query("SELECT * FROM cpu_load", DATABASE_NAME);
+    testing.runWithSpan(
+        "parent",
+        () ->
+            influxDb.query(
+                query,
+                result -> {
+                  testing.runWithSpan("child", () -> {});
+                  countDownLatch.countDown();
+                },
+                throwable -> countDownLatch.countDown()));
+    assertThat(countDownLatch.await(10, SECONDS)).isTrue();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SELECT cpu_load")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load")),
+                span ->
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void testQueryWithSingleResponseFailureCallback() throws InterruptedException {
+    CountDownLatch countDownLatch = new CountDownLatch(1);
+    InfluxDB unavailableInfluxDb = InfluxDBFactory.connect("http://127.0.0.1:1/");
+    cleanup.deferCleanup(unavailableInfluxDb);
+    Query query = new Query("SELECT * FROM cpu_load", DATABASE_NAME);
+    testing.runWithSpan(
+        "parent",
+        () ->
+            unavailableInfluxDb.query(
+                query,
+                result -> {},
+                throwable -> {
+                  testing.runWithSpan("child", () -> {});
+                  countDownLatch.countDown();
+                }));
+    assertThat(countDownLatch.await(10, SECONDS)).isTrue();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SELECT cpu_load")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_PORT, 1),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"),
+                            equalTo(ERROR_TYPE, "java.net.ConnectException"))
+                        .hasStatus(StatusData.error()),
+                span ->
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
   void testQueryWithFiveArguments() throws InterruptedException {
     CountDownLatch countDownLatch = new CountDownLatch(1);
     Query query =
@@ -305,7 +534,9 @@ class InfluxDbClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_QUERY_TEXT, "SELECT MEAN(water_level) FROM;"),
-                            equalTo(DB_QUERY_SUMMARY, "SELECT")),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT"),
+                            equalTo(ERROR_TYPE, "org.influxdb.InfluxDBException"))
+                        .hasStatus(StatusData.error()),
                 span ->
                     span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }

@@ -27,7 +27,8 @@ dependencies {
   compileOnly("org.springframework.integration:spring-integration-amqp:4.1.0.RELEASE")
 
   testInstrumentation(project(":instrumentation:rabbitmq-2.7:javaagent"))
-  testInstrumentation(project(":instrumentation:spring:spring-rabbit-1.0:javaagent"))
+  testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:spring:spring-rabbit-1.1:javaagent"))
 
   testImplementation(project(":instrumentation:spring:spring-integration-4.1:testing"))
 
@@ -43,6 +44,26 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter:2.+") // documented limitation
   latestDepTestLibrary("org.springframework.cloud:spring-cloud-stream:3.+") // documented limitation
   latestDepTestLibrary("org.springframework.cloud:spring-cloud-stream-binder-rabbit:3.+") // documented limitation
+}
+
+testing {
+  suites {
+    register<JvmTestSuite>("version41Test") {
+      dependencies {
+        implementation(project(":instrumentation:spring:spring-integration-4.1:testing"))
+        implementation("org.springframework.integration:spring-integration-core:4.1.0.RELEASE")
+        implementation("org.springframework.integration:spring-integration-amqp:4.1.0.RELEASE")
+      }
+      targets.all {
+        testTask.configure {
+          // Exercise channel propagation independently of executor instrumentation.
+          jvmArgs("-Dotel.instrumentation.executors.enabled=false")
+          jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+          jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
+        }
+      }
+    }
+  }
 }
 
 tasks {
@@ -107,6 +128,7 @@ tasks {
 
   check {
     dependsOn(
+      testing.suites,
       testAmqpHandoffWithRabbitInstrumentation,
       testWithRabbitInstrumentation,
       testWithProducerInstrumentation,
@@ -115,8 +137,8 @@ tasks {
   }
 
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 }
 

@@ -6,10 +6,19 @@ behind the shorter Java test instructions.
 
 ## Javaagent integration coverage versus unit coverage
 
-Unit suites and legacy `javaagent-unit-tests` projects exercise helper or instrumentation classes
-directly without installing the javaagent against a live target library. They do not verify agent
-loading, class transformation, or runtime behavior of clients, pools, clusters, sentinels, and
-other integrations.
+Choose the test harness before writing the test. Use installed-agent integration tests to verify
+agent loading, class transformation, and application-integration behavior. Unit suites and legacy
+`javaagent-unit-tests` projects exercise helper or instrumentation classes directly without
+installing the javaagent against a live target library; they do not replace that integration coverage.
+
+For javaagent helper tests that do not require installed-agent behavior, use a `JvmTestSuite` named
+`unitTests` under `src/unitTests/java`, with direct same-package access. See the
+[Gradle unit-suite setup](gradle-conventions.md#javaagent-unit-test-suites).
+Telemetry assertions alone do not require an installed agent.
+
+If a test needs `AgentClassLoaderAccess` or reflection solely to reach a helper across integration-test
+classloader isolation, reconsider the suite instead of adding access workarounds. Reflection and
+classloader access remain appropriate when that behavior is itself under test.
 
 When a change must support multiple runtime versions, retain real agent-backed integration tests
 for each required version. Keep tests that run on the baseline in the default `test` suite and
@@ -178,11 +187,15 @@ private static Stream<Arguments> testCases() {
 
 ## Test Port Allocation
 
+Prefer binding the test server to port `0` when it exposes the actual bound port. Wait for
+binding to complete before reading that port and connecting clients. The server keeps the
+socket bound, so there is no gap between choosing the port and binding it.
+
 When a test needs an available TCP port that another server or container will bind later, use
 `PortUtils.findOpenPort()` or `PortUtils.findOpenPorts(count)`. Do not implement a local probe by
 opening `new ServerSocket(0)`, reading its port, and closing it; that bypasses the repository
-allocator's coordination between parallel test processes. Keep port `0` when the same socket
-remains bound and becomes the test server.
+allocator's coordination between parallel test processes. Use `findOpenPorts(count)` when a
+service requires consecutive ports instead of assuming adjacent ports are available.
 
 ## Abstract Test Base Classes — Per-Class State Goes On Instance Fields
 

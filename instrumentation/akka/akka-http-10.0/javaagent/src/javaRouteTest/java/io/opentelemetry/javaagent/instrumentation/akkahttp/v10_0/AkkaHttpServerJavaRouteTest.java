@@ -13,7 +13,6 @@ import akka.http.javadsl.Http;
 import akka.http.javadsl.ServerBinding;
 import akka.http.javadsl.server.AllDirectives;
 import akka.http.javadsl.server.Route;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
@@ -33,7 +32,6 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
   @Test
   void testRoute() {
     ActorSystem system = ActorSystem.create("my-system");
-    int port = PortUtils.findOpenPort();
     Http http = Http.get(system);
 
     Route route =
@@ -46,8 +44,10 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
                         pathSingleSlash(() -> complete("test")),
                         path(integerSegment(), (i) -> complete("ok")))));
 
-    CompletionStage<ServerBinding> binding = http.newServerAt("localhost", port).bind(route);
+    CompletionStage<ServerBinding> binding = http.newServerAt("localhost", 0).bind(route);
     try {
+      ServerBinding serverBinding = binding.toCompletableFuture().join();
+      int port = serverBinding.localAddress().getPort();
       AggregatedHttpRequest request =
           AggregatedHttpRequest.of(HttpMethod.GET, "h1c://localhost:" + port + "/test/1");
       AggregatedHttpResponse response = client.execute(request).aggregate().join();
