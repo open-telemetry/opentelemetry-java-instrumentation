@@ -23,9 +23,11 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
+import net.spy.memcached.internal.GetFuture;
 import net.spy.memcached.internal.OperationFuture;
 import net.spy.memcached.ops.OperationStatus;
 import net.spy.memcached.ops.StatusCode;
@@ -37,8 +39,34 @@ class SpymemcachedAttributesGetterTest {
 
   private final SpymemcachedAttributesGetter getter = new SpymemcachedAttributesGetter();
 
+  @ParameterizedTest
+  @EnumSource(
+      value = StatusCode.class,
+      names = {
+        "SUCCESS",
+        "ERR_NOT_FOUND",
+        "ERR_EXISTS",
+        "ERR_2BIG",
+        "ERR_INVAL",
+        "ERR_NOT_STORED",
+        "ERR_DELTA_BADVAL",
+        "ERR_NOT_MY_VBUCKET",
+        "ERR_UNKNOWN_COMMAND",
+        "ERR_NO_MEM",
+        "ERR_NOT_SUPPORTED",
+        "ERR_INTERNAL",
+        "ERR_BUSY",
+        "ERR_TEMP_FAIL"
+      })
+  void databaseOutcomeStatusesAreReportedRegardlessOfSuccess(StatusCode code) {
+    OperationFuture<?> future = mock(OperationFuture.class);
+    when(future.getStatus()).thenReturn(new OperationStatus(true, "status", code));
+
+    assertThat(getter.getDbResponseStatusCode(null, future, null)).isEqualTo(code.name());
+  }
+
   @Test
-  void responseStatusUsesOnlyExistingServerFailureClassification() {
+  void responseStatusDoesNotChangeErrorTypeClassification() {
     OperationFuture<?> future = mock(OperationFuture.class);
     when(future.getStatus())
         .thenReturn(new OperationStatus(false, "too large", StatusCode.ERR_2BIG));
@@ -46,13 +74,36 @@ class SpymemcachedAttributesGetterTest {
     assertThat(getter.getErrorType(null, future, null)).isEqualTo("ERR_2BIG");
 
     when(future.getStatus()).thenReturn(new OperationStatus(true, "stored", StatusCode.SUCCESS));
-    assertThat(getter.getDbResponseStatusCode(null, future, null)).isNull();
+    assertThat(getter.getDbResponseStatusCode(null, future, null)).isEqualTo("SUCCESS");
     when(future.getStatus())
         .thenReturn(new OperationStatus(false, "cancelled", StatusCode.CANCELLED));
     assertThat(getter.getDbResponseStatusCode(null, future, null)).isNull();
     assertThat(getter.getDbResponseStatusCode(null, null, new IllegalStateException("failed")))
         .isNull();
     assertThat(getter.getDbResponseStatusCode(null, null, null)).isNull();
+  }
+
+  @Test
+  void operationFutureStatusIsAvailableWhenResultRetrievalFails() {
+    OperationFuture<?> future = mock(OperationFuture.class);
+    when(future.getStatus())
+        .thenReturn(new OperationStatus(false, "too large", StatusCode.ERR_2BIG));
+    Throwable error = new ExecutionException(new IllegalStateException());
+
+    assertThat(getter.getDbResponseStatusCode(null, future, error)).isEqualTo("ERR_2BIG");
+    assertThat(getter.getErrorType(null, future, error)).isNull();
+  }
+
+  @Test
+  void getFutureStatusIsAvailableWhenResultRetrievalFails() {
+    GetFuture<?> future = mock(GetFuture.class);
+    when(future.getStatus())
+        .thenReturn(new OperationStatus(false, "too large", StatusCode.ERR_2BIG));
+    Throwable error = new ExecutionException(new IllegalStateException());
+
+    assertThat(getter.getDbResponseStatusCode(null, future, error)).isEqualTo("ERR_2BIG");
+    assertThat(getter.getErrorType(null, future, error)).isNull();
+    assertThat(getter.getErrorType(null, future, null)).isNull();
   }
 
   @ParameterizedTest
