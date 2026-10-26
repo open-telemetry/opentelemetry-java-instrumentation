@@ -98,6 +98,8 @@ class ThriftTest extends AbstractThriftTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   void serviceNameAloneDoesNotEstablishRecognition() throws Exception {
     TProcessor generated = new CustomService.Processor<>(new CustomHandler());
+    @SuppressWarnings(
+        "UnnecessaryMethodReference") // Intentionally hide the generated dispatch map.
     TProcessor opaque = generated::process;
     int port = startSimpleServer(telemetry.wrapServerProcessor(opaque, "explicit-service"), null);
     CustomService.Iface client = createClient(port, false);

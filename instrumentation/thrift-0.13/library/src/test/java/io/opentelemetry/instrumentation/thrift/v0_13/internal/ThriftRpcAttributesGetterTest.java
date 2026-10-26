@@ -55,8 +55,7 @@ class ThriftRpcAttributesGetterTest {
 
   @Test
   void originalNameIsOmittedWhenIdenticalToOther() {
-    ThriftRequest request =
-        new ThriftRequest("_OTHER", null, null, null, null, emptyMap(), false);
+    ThriftRequest request = new ThriftRequest("_OTHER", null, null, null, null, emptyMap(), false);
 
     assertThat(getter.getRpcMethod(request)).isEqualTo("_OTHER");
     assertThat(getter.getRpcMethodOriginal(request)).isNull();

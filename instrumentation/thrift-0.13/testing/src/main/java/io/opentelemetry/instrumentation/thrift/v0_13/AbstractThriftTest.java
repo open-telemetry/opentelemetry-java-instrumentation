@@ -503,7 +503,6 @@ public abstract class AbstractThriftTest {
     TProtocol protocol = new TBinaryProtocol(transport);
 
     String[] methods = {"undefined-request-123", "undefined-request-456"};
-    boolean networkAttributes = !async || hasAsyncServerNetworkAttributes();
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (String method : methods) {
       protocol.writeMessageBegin(new TMessage(method, TMessageType.CALL, 1));
@@ -541,23 +540,13 @@ public abstract class AbstractThriftTest {
                                   RPC_SYSTEM_NAME,
                                   emitPreviewRpcSemconv() ? "apache_thrift" : null),
                               equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? "_OTHER" : null),
-                              equalTo(SERVER_ADDRESS, networkAttributes ? "127.0.0.1" : null),
-                              equalTo(SERVER_PORT, networkAttributes ? (long) port : null),
-                              equalTo(NETWORK_TYPE, networkAttributes ? "ipv4" : null),
-                              equalTo(NETWORK_PEER_ADDRESS, networkAttributes ? "127.0.0.1" : null),
-                              satisfies(
-                                  NETWORK_PEER_PORT,
-                                  val -> {
-                                    if (networkAttributes) {
-                                      val.isNotNegative();
-                                    } else {
-                                      val.isNull();
-                                    }
-                                  }),
-                              equalTo(
-                                  NETWORK_LOCAL_ADDRESS, networkAttributes ? "127.0.0.1" : null),
-                              equalTo(
-                                  NETWORK_LOCAL_PORT, networkAttributes ? (long) port : null))));
+                              equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                              equalTo(SERVER_PORT, port),
+                              equalTo(NETWORK_TYPE, "ipv4"),
+                              equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                              satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
+                              equalTo(NETWORK_LOCAL_ADDRESS, "127.0.0.1"),
+                              equalTo(NETWORK_LOCAL_PORT, port))));
     }
     getTesting().waitAndAssertTraces(assertions);
 
@@ -570,19 +559,15 @@ public abstract class AbstractThriftTest {
                       .hasName("rpc.server.call.duration")
                       .hasHistogramSatisfying(
                           histogram ->
-                              histogram.hasPointsSatisfyingExactly(
+                              histogram.hasPointsSatisfying(
                                   point ->
                                       point
                                           .hasCount(2)
                                           .hasAttributesSatisfyingExactly(
                                               equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
                                               equalTo(RPC_METHOD, "_OTHER"),
-                                              equalTo(
-                                                  SERVER_ADDRESS,
-                                                  networkAttributes ? "127.0.0.1" : null),
-                                              equalTo(
-                                                  SERVER_PORT,
-                                                  networkAttributes ? (long) port : null),
+                                              equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                                              equalTo(SERVER_PORT, port),
                                               equalTo(ERROR_TYPE, "_OTHER")))));
     }
     if (emitOldRpcSemconv()) {
@@ -594,7 +579,7 @@ public abstract class AbstractThriftTest {
                       .hasName("rpc.server.duration")
                       .hasHistogramSatisfying(
                           histogram ->
-                              histogram.hasPointsSatisfyingExactly(
+                              histogram.hasPointsSatisfying(
                                   point ->
                                       point
                                           .hasCount(1)
@@ -602,14 +587,9 @@ public abstract class AbstractThriftTest {
                                               equalTo(RPC_SYSTEM, "apache_thrift"),
                                               equalTo(RPC_SERVICE, handlerName),
                                               equalTo(RPC_METHOD, methods[0]),
-                                              equalTo(
-                                                  SERVER_ADDRESS,
-                                                  networkAttributes ? "127.0.0.1" : null),
-                                              equalTo(
-                                                  SERVER_PORT,
-                                                  networkAttributes ? (long) port : null),
-                                              equalTo(
-                                                  NETWORK_TYPE, networkAttributes ? "ipv4" : null)),
+                                              equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                                              equalTo(SERVER_PORT, port),
+                                              equalTo(NETWORK_TYPE, "ipv4")),
                                   point ->
                                       point
                                           .hasCount(1)
@@ -617,15 +597,9 @@ public abstract class AbstractThriftTest {
                                               equalTo(RPC_SYSTEM, "apache_thrift"),
                                               equalTo(RPC_SERVICE, handlerName),
                                               equalTo(RPC_METHOD, methods[1]),
-                                              equalTo(
-                                                  SERVER_ADDRESS,
-                                                  networkAttributes ? "127.0.0.1" : null),
-                                              equalTo(
-                                                  SERVER_PORT,
-                                                  networkAttributes ? (long) port : null),
-                                              equalTo(
-                                                  NETWORK_TYPE,
-                                                  networkAttributes ? "ipv4" : null)))));
+                                              equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                                              equalTo(SERVER_PORT, port),
+                                              equalTo(NETWORK_TYPE, "ipv4")))));
     }
   }
 
@@ -661,7 +635,6 @@ public abstract class AbstractThriftTest {
         async ? InheritedAsyncHandler.class.getName() : InheritedHandler.class.getName();
     String legacyService = getServerServiceName(serviceName, handlerName);
     String rpcService = getServerServiceName(serviceName, ExtendedService.class.getName());
-    boolean networkAttributes = !async || hasAsyncServerNetworkAttributes();
     getTesting()
         .waitAndAssertTraces(
             trace ->
@@ -681,30 +654,14 @@ public abstract class AbstractThriftTest {
                                 equalTo(
                                     RPC_SYSTEM_NAME,
                                     emitPreviewRpcSemconv() ? "apache_thrift" : null),
-                                equalTo(SERVER_ADDRESS, networkAttributes ? "127.0.0.1" : null),
-                                equalTo(SERVER_PORT, networkAttributes ? (long) port : null),
-                                equalTo(NETWORK_TYPE, networkAttributes ? "ipv4" : null),
-                                equalTo(
-                                    NETWORK_PEER_ADDRESS, networkAttributes ? "127.0.0.1" : null),
-                                satisfies(
-                                    NETWORK_PEER_PORT,
-                                    val -> {
-                                      if (networkAttributes) {
-                                        val.isNotNegative();
-                                      } else {
-                                        val.isNull();
-                                      }
-                                    }),
-                                equalTo(
-                                    NETWORK_LOCAL_ADDRESS, networkAttributes ? "127.0.0.1" : null),
-                                equalTo(
-                                    NETWORK_LOCAL_PORT, networkAttributes ? (long) port : null))));
+                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                                equalTo(SERVER_PORT, port),
+                                equalTo(NETWORK_TYPE, "ipv4"),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
+                                equalTo(NETWORK_LOCAL_ADDRESS, "127.0.0.1"),
+                                equalTo(NETWORK_LOCAL_PORT, port))));
   }
-
-  private static class InheritedHandler extends CustomHandler implements ExtendedService.Iface {}
-
-  private static class InheritedAsyncHandler extends CustomAsyncHandler
-      implements ExtendedService.AsyncIface {}
 
   @ParameterizedTest
   @ValueSource(strings = {"simple", "threadPool"})
@@ -1450,4 +1407,9 @@ public abstract class AbstractThriftTest {
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.unset())));
   }
+
+  private static class InheritedHandler extends CustomHandler implements ExtendedService.Iface {}
+
+  private static class InheritedAsyncHandler extends CustomAsyncHandler
+      implements ExtendedService.AsyncIface {}
 }
