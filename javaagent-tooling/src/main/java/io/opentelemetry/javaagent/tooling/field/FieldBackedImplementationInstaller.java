@@ -259,13 +259,14 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
     };
   }
 
-  AgentBuilder.Transformer getTransformerForAsmVisitor(
+  private AgentBuilder.Transformer getTransformerForAsmVisitor(
       Function<GeneratedClasses, AsmVisitorWrapper> visitor) {
     return (builder, typeDescription, classLoader, javaModule, protectionDomain) ->
         builder.visit(visitor.apply(getGeneratedClasses()));
   }
 
-  private GeneratedClasses getGeneratedClasses() {
+  // visible for testing
+  GeneratedClasses getGeneratedClasses() {
     GeneratedClasses classes = generatedClasses.get();
     if (classes != null) {
       return classes;

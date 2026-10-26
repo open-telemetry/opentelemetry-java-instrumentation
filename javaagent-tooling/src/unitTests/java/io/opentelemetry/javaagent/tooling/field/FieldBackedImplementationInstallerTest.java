@@ -9,6 +9,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.javaagent.tooling.field.FieldBackedImplementationInstaller.GeneratedClasses;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappingsBuilderImpl;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
@@ -20,10 +21,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicReference;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
-import net.bytebuddy.asm.AsmVisitorWrapper;
 import org.junit.jupiter.api.Test;
 
 class FieldBackedImplementationInstallerTest {
@@ -45,43 +44,24 @@ class FieldBackedImplementationInstallerTest {
   }
 
   @Test
-  void concurrentTransformationsUseTheSameHelpers()
+  void concurrentInitializationUsesTheSameHelpers()
       throws ExecutionException, InterruptedException, TimeoutException {
     FieldBackedImplementationInstaller installer = installer();
 
     ExecutorService executor = Executors.newFixedThreadPool(4);
     CyclicBarrier barrier = new CyclicBarrier(4);
     try {
-      List<Future<FieldBackedImplementationInstaller.GeneratedClasses>> results = new ArrayList<>();
+      List<Future<GeneratedClasses>> results = new ArrayList<>();
       for (int i = 0; i < 4; i++) {
         results.add(
             executor.submit(
                 () -> {
-                  AtomicReference<FieldBackedImplementationInstaller.GeneratedClasses> usedHelpers =
-                      new AtomicReference<>();
-                  ClassFileTransformer transformer =
-                      builder()
-                          .transform(
-                              installer.getTransformerForAsmVisitor(
-                                  classes -> {
-                                    usedHelpers.set(classes);
-                                    return new AsmVisitorWrapper.ForDeclaredMethods();
-                                  }))
-                          .makeRaw();
                   barrier.await(30, SECONDS);
-                  transform(transformer);
-                  return usedHelpers.get();
+                  return installer.getGeneratedClasses();
                 }));
       }
-      List<FieldBackedImplementationInstaller.GeneratedClasses> usedHelpers = new ArrayList<>();
-      for (Future<FieldBackedImplementationInstaller.GeneratedClasses> result : results) {
-        usedHelpers.add(result.get(30, SECONDS));
-      }
-      FieldBackedImplementationInstaller.GeneratedClasses published =
-          installer.generatedClasses.get();
-      assertThat(published).isNotNull();
-      for (FieldBackedImplementationInstaller.GeneratedClasses used : usedHelpers) {
-        assertThat(used).isSameAs(published);
+      for (Future<GeneratedClasses> result : results) {
+        assertThat(result.get(30, SECONDS)).isNotNull().isSameAs(installer.generatedClasses.get());
       }
     } finally {
       executor.shutdownNow();
