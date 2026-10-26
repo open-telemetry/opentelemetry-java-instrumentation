@@ -71,7 +71,7 @@ final class OpenSearchRestAttributesGetter
     } else if (error != null) {
       statusCode = exceptionStatusCodeExtractor.getStatusCode(error);
     }
-    if (statusCode == null || statusCode < 400) {
+    if (statusCode == null || statusCode < 100) {
       return null;
     }
     return Integer.toString(statusCode);

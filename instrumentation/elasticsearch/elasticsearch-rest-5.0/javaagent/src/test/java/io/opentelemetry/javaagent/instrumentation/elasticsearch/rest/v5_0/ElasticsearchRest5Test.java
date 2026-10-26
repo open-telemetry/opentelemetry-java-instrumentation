@@ -203,6 +203,7 @@ class ElasticsearchRest5Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "200"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -249,6 +250,7 @@ class ElasticsearchRest5Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "200"),
                             equalTo(DB_QUERY_TEXT, "{\"query\":{\"match\":{\"title\":\"?\"}}}"),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
@@ -318,6 +320,7 @@ class ElasticsearchRest5Test {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "200"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -387,6 +390,7 @@ class ElasticsearchRest5Test {
                 .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfyingExactly(
                     equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                    equalTo(DB_RESPONSE_STATUS_CODE, "200"),
                     equalTo(HTTP_REQUEST_METHOD, "GET"),
                     equalTo(SERVER_ADDRESS, hostList),
                     equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")));

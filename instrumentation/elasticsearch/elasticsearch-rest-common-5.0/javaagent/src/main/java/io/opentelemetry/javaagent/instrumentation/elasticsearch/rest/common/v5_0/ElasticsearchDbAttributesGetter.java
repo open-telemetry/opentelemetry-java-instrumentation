@@ -160,7 +160,7 @@ final class ElasticsearchDbAttributesGetter
       return null;
     }
     int statusCode = response.getStatusLine().getStatusCode();
-    return statusCode >= 400 ? Integer.toString(statusCode) : null;
+    return statusCode >= 100 ? Integer.toString(statusCode) : null;
   }
 
   @Override

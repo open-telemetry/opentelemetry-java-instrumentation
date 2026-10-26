@@ -191,6 +191,7 @@ public abstract class AbstractOpenSearchRestTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(DB_SYSTEM_NAME, OPENSEARCH),
                                 equalTo(DB_OPERATION_NAME, "GET"),
+                                equalTo(DB_RESPONSE_STATUS_CODE, "200"),
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
                     span ->
@@ -264,6 +265,7 @@ public abstract class AbstractOpenSearchRestTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(DB_SYSTEM_NAME, OPENSEARCH),
                                 equalTo(DB_OPERATION_NAME, "GET"),
+                                equalTo(DB_RESPONSE_STATUS_CODE, "200"),
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
                     span ->
@@ -343,6 +345,7 @@ public abstract class AbstractOpenSearchRestTest {
                     .hasAttributesSatisfyingExactly(
                         equalTo(DB_SYSTEM_NAME, OPENSEARCH),
                         equalTo(DB_OPERATION_NAME, "GET"),
+                        equalTo(DB_RESPONSE_STATUS_CODE, "200"),
                         equalTo(SERVER_ADDRESS, serverAddress),
                         equalTo(SERVER_PORT, serverPort)));
   }

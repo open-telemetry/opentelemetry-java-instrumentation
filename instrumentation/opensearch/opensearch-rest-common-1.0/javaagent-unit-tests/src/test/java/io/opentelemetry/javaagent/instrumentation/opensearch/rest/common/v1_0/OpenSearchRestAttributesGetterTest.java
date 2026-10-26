@@ -18,12 +18,12 @@ class OpenSearchRestAttributesGetterTest {
   private final OpenSearchRestRequest request = OpenSearchRestRequest.create("GET", null);
 
   @ParameterizedTest
-  @ValueSource(ints = {-1, 0, 99, 200, 302, 404, 503})
-  void responseStatusExcludesSentinelsAndSuccesses(int statusCode) {
+  @ValueSource(ints = {-1, 0, 99, 100, 200, 201, 302, 404, 503})
+  void responseStatusExcludesOnlyInvalidCodes(int statusCode) {
     OpenSearchRestResponse response = () -> statusCode;
 
     assertThat(getter.getDbResponseStatusCode(request, response, null))
-        .isEqualTo(statusCode >= 400 ? Integer.toString(statusCode) : null);
+        .isEqualTo(statusCode >= 100 ? Integer.toString(statusCode) : null);
     assertThat(getter.getErrorType(request, response, null))
         .isEqualTo(statusCode >= 400 || statusCode < 100 ? Integer.toString(statusCode) : null);
   }
@@ -47,10 +47,10 @@ class OpenSearchRestAttributesGetterTest {
 
   @Test
   void responseStatusCanBeExtractedFromErrorIndependentlyOfErrorType() {
-    OpenSearchRestAttributesGetter getter = new OpenSearchRestAttributesGetter(error -> 503);
+    OpenSearchRestAttributesGetter getter = new OpenSearchRestAttributesGetter(error -> 200);
     IllegalStateException error = new IllegalStateException("test");
 
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("503");
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("200");
     assertThat(getter.getErrorType(request, null, error)).isNull();
   }
 }
