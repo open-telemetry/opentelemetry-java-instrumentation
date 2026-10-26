@@ -34,6 +34,8 @@ jobs:
 
       - name: Format and validate standalone benchmark
         working-directory: benchmark-overhead
+        env:
+          STARTUP_VOLUME_CLEANUP_ENABLED: true
         run: ./gradlew spotlessApply test --tests 'io.opentelemetry.startup.*Test' startupRecorderJar
 
       - name: Package selected revision and agent identity
