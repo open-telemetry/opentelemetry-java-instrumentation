@@ -28,11 +28,11 @@ import io.opentelemetry.sdk.trace.SpanProcessor
 import io.opentelemetry.sdk.trace.data.SpanData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.net.HttpURLConnection
+import java.net.ServerSocket
 import java.net.URI
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
@@ -74,8 +74,9 @@ class KtorServerContextPropagationTest {
       .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
       .build()
 
+    val port = ServerSocket(0).use { it.localPort }
     val server = embeddedServer(Netty, configure = {
-      connector { port = 0 }
+      connector { this.port = port }
       callGroupSize = 1 // Sequential requests share one call thread.
     }) {
       install(KtorServerTelemetry) { openTelemetry(openTelemetry) }
@@ -95,7 +96,6 @@ class KtorServerContextPropagationTest {
       }
     }.start(wait = false)
     val sent = (1..5).map { "%032x".format(it) }
-    val port = runBlocking { server.engine.resolvedConnectors().single().port }
     fun request(traceId: String?): ObservedSpan {
       val connection = URI("http://localhost:$port/").toURL().openConnection() as HttpURLConnection
       try {
