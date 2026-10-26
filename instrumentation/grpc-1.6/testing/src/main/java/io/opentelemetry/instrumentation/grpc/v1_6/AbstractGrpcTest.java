@@ -1813,10 +1813,11 @@ public abstract class AbstractGrpcTest {
     String serverErrorType;
     if (emitPreviewRpcSemconv() && isServerErrorCode(statusCode)) {
       serverErrorType = statusCode.name();
-    } else if (emitPreviewRpcSemconv() && status.getCause() != null) {
-      serverErrorType = status.getCause().getClass().getName();
     } else {
-      serverErrorType = null;
+      serverErrorType =
+          emitPreviewRpcSemconv() && status.getCause() != null
+              ? status.getCause().getClass().getName()
+              : null;
     }
     if (emitOldRpcSemconv()) {
       testing()

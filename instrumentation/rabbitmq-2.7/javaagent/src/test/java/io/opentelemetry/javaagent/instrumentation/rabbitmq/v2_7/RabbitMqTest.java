@@ -970,10 +970,8 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     String spanName;
     if (operation == null) {
       spanName = normalizedResource;
-    } else if (anonymousDestination) {
-      spanName = operation;
     } else {
-      spanName = operation + " " + destination;
+      spanName = anonymousDestination ? operation : operation + " " + destination;
     }
 
     span.hasName(spanName);

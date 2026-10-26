@@ -211,11 +211,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
     String serverAddress = addressList == null ? getAddress() : addressList;
     Long serverPort;
     if (addressList == null) {
-      if (getPort() == 9300) {
-        serverPort = null;
-      } else {
-        serverPort = Long.valueOf(getPort());
-      }
+      serverPort = getPort() == 9300 ? null : Long.valueOf(getPort());
     } else {
       serverPort = sharedPort;
     }

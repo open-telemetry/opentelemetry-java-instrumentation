@@ -459,12 +459,10 @@ class SpringRabbitMqTest {
     assertThat(completed.await(10, SECONDS)).isTrue();
     String errorType = null;
     if (fail) {
-      if (testLatestDeps()) {
-        errorType = "org.springframework.amqp.rabbit.support.ListenerExecutionFailedException";
-      } else {
-        errorType =
-            "org.springframework.amqp.rabbit.listener.exception.ListenerExecutionFailedException";
-      }
+      errorType =
+          testLatestDeps()
+              ? "org.springframework.amqp.rabbit.support.ListenerExecutionFailedException"
+              : "org.springframework.amqp.rabbit.listener.exception.ListenerExecutionFailedException";
     }
     List<AttributeAssertion> processAssertions =
         getAssertions(queue, "process", ip, true, true, false, (long) expectedCount);

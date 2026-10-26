@@ -189,10 +189,8 @@ class Netty38ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
             String message;
             if (ex.getCause() == null) {
               message = "<no cause>";
-            } else if (ex.getCause().getMessage() == null) {
-              message = "<null>";
             } else {
-              message = ex.getCause().getMessage();
+              message = ex.getCause().getMessage() == null ? "<null>" : ex.getCause().getMessage();
             }
             ChannelBuffer buffer = ChannelBuffers.copiedBuffer(message, CharsetUtil.UTF_8);
             HttpResponse response =

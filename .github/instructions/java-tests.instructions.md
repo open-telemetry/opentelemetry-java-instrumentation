@@ -200,7 +200,10 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   including setup, span names, trace counts, and intermediate expected-value
   calculations. Parentheses do not exempt a directly nested conditional
   branch; a ternary inside a separate method-call argument is not direct
-  nesting into an outer ternary.
+  nesting into an outer ternary. When splitting a nested ternary, retain a
+  simple ternary within a branch when it clearly expresses a two-value choice.
+  Remove only enough nesting to make the decisions easy to follow; do not
+  mechanically expand every ternary into `if`/`else`.
 
 - Do not extract the ternary into a helper such as `spanName(...)`,
   `oldOrExperimental(value)`, or `expectedNamespace()` when no established

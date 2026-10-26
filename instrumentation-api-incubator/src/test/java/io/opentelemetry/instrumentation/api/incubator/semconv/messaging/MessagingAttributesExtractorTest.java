@@ -321,10 +321,7 @@ class MessagingAttributesExtractorTest {
       if ("failure".equals(response)) {
         return response;
       }
-      if (error == null) {
-        return null;
-      }
-      return error.getClass().getName();
+      return error == null ? null : error.getClass().getName();
     }
 
     @Override

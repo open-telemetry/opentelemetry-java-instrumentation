@@ -496,13 +496,9 @@ abstract class AbstractRocketMqClientTest {
             trace -> {
               messageCreationContexts.clear();
               boolean hasBatchCreateSpans = hasBatchCreateSpans();
-              int size;
-              if (!hasBatchCreateSpans) {
-                size = 2;
-              } else if (existingCreationContext) {
-                size = 3;
-              } else {
-                size = 4;
+              int size = 2;
+              if (hasBatchCreateSpans) {
+                size = existingCreationContext ? 3 : 4;
               }
               trace.hasSize(size);
               SpanContext spanContext =

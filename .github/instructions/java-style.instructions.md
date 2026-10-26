@@ -88,8 +88,11 @@ the stated exception before reporting a repository convention.
 - **Conditional expressions**: avoid directly nested ternaries; prefer
   `if`/`else` statements or early returns. Parentheses do not exempt a
   directly nested conditional branch. A ternary inside a separate method-call
-  argument is not directly nested into the outer ternary. In tests, the
-  exception is directly nested ternaries in attribute-assertion expected
-  values; do not extract helpers solely to hide those expressions. Apply the
-  rule normally to other test code, including setup and intermediate expected
-  values.
+  argument is not directly nested into the outer ternary. When splitting a
+  nested ternary, retain a simple ternary within a branch when it clearly
+  expresses a two-value choice; remove only enough nesting to make the
+  decisions easy to follow. Do not mechanically expand every ternary into
+  `if`/`else`. In tests, the exception is directly nested ternaries in
+  attribute-assertion expected values; do not extract helpers solely to hide
+  those expressions. Apply the rule normally to other test code, including
+  setup and intermediate expected values.
