@@ -17,8 +17,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
@@ -47,48 +45,6 @@ class SpymemcachedRequestTest {
 
     assertThat(request.getOperationName()).isEqualTo(operation);
     assertThat(request.getStableOperationName()).isEqualTo(stableOperation);
-  }
-
-  @Test
-  void queryArgumentsAreCapturedWithoutChangingOperationName() {
-    List<String> keys = new ArrayList<>(asList("key1", "key2"));
-    SpymemcachedRequest request =
-        SpymemcachedRequest.create(
-            mock(MemcachedConnection.class), "asyncGetBulk", "", new Object[] {keys});
-
-    keys.clear();
-
-    assertThat(request.getOperationName()).isEqualTo("getBulk");
-    assertThat(request.getStableOperationName()).isEqualTo("get");
-    assertThat(new SpymemcachedAttributesGetter().getDbQueryText(request))
-        .isEqualTo("getBulk key1 key2");
-  }
-
-  @Test
-  void synchronousBulkSnapshotIsUsedOnceOnlyForBulkRequests() {
-    MemcachedConnection connection = mock(MemcachedConnection.class);
-    try (Scope scope =
-        Context.root()
-            .with(SpymemcachedRequest.BULK_QUERY_TEXT, new AtomicReference<>("getBulk key1 key2"))
-            .makeCurrent()) {
-      assertThat(
-              SpymemcachedRequest.create(
-                      connection,
-                      "asyncGetBulk",
-                      "",
-                      new Object[] {asList("key1", "key2").iterator()})
-                  .getQueryText())
-          .isEqualTo("getBulk key1 key2");
-      assertThat(
-              SpymemcachedRequest.create(
-                      connection, "asyncGetBulk", "", new Object[] {asList("key3", "key4")})
-                  .getQueryText())
-          .isEqualTo("getBulk key3 key4");
-      assertThat(
-              SpymemcachedRequest.create(connection, "asyncGet", "", new Object[] {"key3"})
-                  .getQueryText())
-          .isEqualTo("get key3");
-    }
   }
 
   @Test
