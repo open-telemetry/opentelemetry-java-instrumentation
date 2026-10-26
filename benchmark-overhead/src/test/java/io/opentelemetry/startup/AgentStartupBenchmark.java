@@ -60,7 +60,7 @@ class AgentStartupBenchmark {
     Files.createDirectories(directory);
     Properties metadata = new Properties();
     metadata.setProperty("status", "incomplete");
-    metadata.setProperty("image.reference", AotStartupBenchmark.IMAGE);
+    metadata.setProperty("image.reference", StartupFixture.IMAGE);
     metadata.setProperty("samples", Integer.toString(samples));
     metadata.setProperty("warmups", Integer.toString(warmups));
     metadata.setProperty("resources", "quota=2 CPUs; memory=1 GiB; heap=512 MiB");
@@ -242,12 +242,12 @@ class AgentStartupBenchmark {
     }
     arguments.add("-javaagent:/tmp/agent.jar");
     arguments.addAll(
-        List.of("-cp", "/app/resources:/app/classes:/app/libs/*", AotStartupBenchmark.APPLICATION));
+        List.of("-cp", "/app/resources:/app/classes:/app/libs/*", StartupFixture.APPLICATION));
     return arguments;
   }
 
   private static GenericContainer<?> container() {
-    return new GenericContainer<>(DockerImageName.parse(AotStartupBenchmark.IMAGE))
+    return new GenericContainer<>(DockerImageName.parse(StartupFixture.IMAGE))
         .withEnv("JAVA_TOOL_OPTIONS", "")
         .withEnv("JDK_JAVA_OPTIONS", "")
         .withEnv("_JAVA_OPTIONS", "")
