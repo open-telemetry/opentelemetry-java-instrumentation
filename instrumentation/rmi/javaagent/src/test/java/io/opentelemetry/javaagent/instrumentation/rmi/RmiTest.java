@@ -47,6 +47,10 @@ import rmi.app.Server;
 @SuppressWarnings("deprecation") // using deprecated semconv
 class RmiTest {
 
+  private static final double[] DURATION_BUCKETS = {
+    0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0
+  };
+
   @RegisterExtension
   private static final AgentInstrumentationExtension testing =
       AgentInstrumentationExtension.create();
@@ -108,6 +112,8 @@ class RmiTest {
                             equalTo(
                                 RPC_METHOD,
                                 emitPreviewRpcSemconv() ? "rmi.app.Greeter/hello" : "hello"))));
+
+    assertDurationMetrics("rmi.app.Greeter/hello", "rmi.app.Greeter/hello", null);
   }
 
   @Test
@@ -201,6 +207,9 @@ class RmiTest {
                             equalTo(
                                 ERROR_TYPE,
                                 emitPreviewRpcSemconv() ? thrown.getClass().getName() : null))));
+
+    assertDurationMetrics(
+        "rmi.app.Greeter/exceptional", "rmi.app.Greeter/exceptional", thrown.getClass().getName());
   }
 
   @ParameterizedTest
@@ -256,6 +265,46 @@ class RmiTest {
                             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "rmi.app.Server" : null),
                             equalTo(
                                 RPC_METHOD, emitPreviewRpcSemconv() ? rpcMethod : methodName))));
+
+    assertDurationMetrics(clientService + "/" + methodName, rpcMethod, null);
+  }
+
+  private static void assertDurationMetrics(
+      String clientMethod, String serverMethod, String errorType) {
+    if (!emitPreviewRpcSemconv()) {
+      assertThat(testing.metrics())
+          .filteredOn(
+              metric ->
+                  metric.getInstrumentationScopeInfo().getName().equals("io.opentelemetry.rmi"))
+          .isEmpty();
+      return;
+    }
+
+    assertDurationMetric("rpc.client.call.duration", clientMethod, errorType);
+    assertDurationMetric("rpc.server.call.duration", serverMethod, errorType);
+  }
+
+  private static void assertDurationMetric(String metricName, String rpcMethod, String errorType) {
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.rmi",
+        metricName,
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasName(metricName)
+                        .hasUnit("s")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasCount(1)
+                                            .hasBucketBoundaries(DURATION_BUCKETS)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(RPC_SYSTEM_NAME, "java_rmi"),
+                                                equalTo(RPC_METHOD, rpcMethod),
+                                                equalTo(ERROR_TYPE, errorType))))));
   }
 
   private static Stream<Arguments> remoteMethods() throws NoSuchMethodException {
