@@ -113,6 +113,10 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     if (hostsEnd == -1) {
       hostsEnd = jdbcUrl.length();
     }
+    int firstParenthesis = jdbcUrl.indexOf('(', hostsStart);
+    if (firstParenthesis < 0 || firstParenthesis >= hostsEnd) {
+      return jdbcUrl;
+    }
     StringBuilder hosts = new StringBuilder();
     int entryStart = hostsStart;
     int depth = 0;
