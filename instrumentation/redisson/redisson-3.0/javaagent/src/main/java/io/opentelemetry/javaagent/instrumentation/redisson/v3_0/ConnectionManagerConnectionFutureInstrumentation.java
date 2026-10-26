@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -52,7 +51,7 @@ class ConnectionManagerConnectionFutureInstrumentation implements TypeInstrument
     @Nullable
     public static Object onExit(
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object future) {
-      Context context = currentContext();
+      Context context = Context.current();
       if (future instanceof RFuture) {
         return ContextPropagatingRFuture.wrap((RFuture<?>) future, context);
       }

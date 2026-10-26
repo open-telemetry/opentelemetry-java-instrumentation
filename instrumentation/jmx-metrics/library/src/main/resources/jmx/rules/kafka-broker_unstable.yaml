@@ -1,166 +1,188 @@
 ---
 rules:
+  # Using JMX domain as prefix for all metrics helps to provide a consistent naming
+  # scheme and also helps prevent name collisions.
+
   # Broker metrics
 
-  - bean: kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec
+  - bean: kafka.server:type=BrokerTopicMetrics,name=MessagesInPerSec,topic=*
+    metricAttribute:
+      kafka.topic.name: param(topic)
     mapping:
       Count:
-        metric: kafka.message.count
+        metric: kafka.server.messages
         type: counter
         desc: The number of messages received by the broker
-        unit: "{messages}"
+        unit: "{message}"
 
-  - bean: kafka.server:type=BrokerTopicMetrics,name=TotalFetchRequestsPerSec
+  - bean: kafka.server:type=BrokerTopicMetrics,name=TotalFetchRequestsPerSec,topic=*
     metricAttribute:
-      type: const(fetch)
+      kafka.request.type: const(fetch)
+      kafka.topic.name: param(topic)
     mapping:
       Count:
-        metric: kafka.request.count
+        metric: kafka.server.requests
         type: counter
-        desc: The number of requests received by the broker
-        unit: "{requests}"
+        desc: &desc The number of requests received by the broker
+        unit: "{request}"
 
-  - bean: kafka.server:type=BrokerTopicMetrics,name=TotalProduceRequestsPerSec
+  - bean: kafka.server:type=BrokerTopicMetrics,name=TotalProduceRequestsPerSec,topic=*
     metricAttribute:
-      type: const(produce)
+      kafka.request.type: const(produce)
+      kafka.topic.name: param(topic)
     mapping:
       Count:
-        metric: kafka.request.count
+        metric: kafka.server.requests
         type: counter
-        desc: The number of requests received by the broker
-        unit: "{requests}"
+        desc: *desc
+        unit: "{request}"
 
-  - bean: kafka.server:type=BrokerTopicMetrics,name=FailedFetchRequestsPerSec
+  - bean: kafka.server:type=BrokerTopicMetrics,name=FailedFetchRequestsPerSec,topic=*
     metricAttribute:
-      type: const(fetch)
+      kafka.request.type: const(fetch)
+      kafka.topic.name: param(topic)
     mapping:
       Count:
-        metric: kafka.request.failed
+        metric: kafka.server.failed_requests
         type: counter
-        desc: The number of requests to the broker resulting in a failure
-        unit: "{requests}"
+        desc: &desc The number of requests to the broker resulting in a failure
+        unit: "{request}"
 
-  - bean: kafka.server:type=BrokerTopicMetrics,name=FailedProduceRequestsPerSec
+  - bean: kafka.server:type=BrokerTopicMetrics,name=FailedProduceRequestsPerSec,topic=*
     metricAttribute:
-      type: const(produce)
+      kafka.request.type: const(produce)
+      kafka.topic.name: param(topic)
     mapping:
       Count:
-        metric: kafka.request.failed
+        metric: kafka.server.failed_requests
         type: counter
-        desc: The number of requests to the broker resulting in a failure
-        unit: "{requests}"
+        desc: *desc
+        unit: "{request}"
 
-  - beans:
-      - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Produce
-      - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=FetchConsumer
-      - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=FetchFollower
+  - bean: kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec,topic=*
     metricAttribute:
-      type: param(request)
-    unit: ms
+      network.io.direction: const(receive)
+      kafka.topic.name: param(topic)
     mapping:
       Count:
-        metric: kafka.request.time.total
+        metric: kafka.server.network.io
         type: counter
-        desc: The total time the broker has taken to service requests
-      50thPercentile:
-        metric: kafka.request.time.50p
-        type: gauge
-        desc: The 50th percentile time the broker has taken to service requests
-      99thPercentile:
-        metric: kafka.request.time.99p
-        type: gauge
-        desc: The 99th percentile time the broker has taken to service requests
-
-  - bean: kafka.network:type=RequestChannel,name=RequestQueueSize
-    mapping:
-      Value:
-        metric: kafka.request.queue
-        type: updowncounter
-        desc: Size of the request queue
-        unit: "{requests}"
-
-  - bean: kafka.server:type=BrokerTopicMetrics,name=BytesInPerSec
-    metricAttribute:
-      direction: const(in)
-    mapping:
-      Count:
-        metric: kafka.network.io
-        type: counter
-        desc: The bytes received or sent by the broker
+        desc: &desc The bytes received or sent by the broker
         unit: By
 
-  - bean: kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec
+  - bean: kafka.server:type=BrokerTopicMetrics,name=BytesOutPerSec,topic=*
     metricAttribute:
-      direction: const(out)
+      network.io.direction: const(transmit)
+      kafka.topic.name: param(topic)
     mapping:
       Count:
-        metric: kafka.network.io
+        metric: kafka.server.network.io
         type: counter
-        desc: The bytes received or sent by the broker
+        desc: *desc
         unit: By
 
   - beans:
       - kafka.server:type=DelayedOperationPurgatory,name=PurgatorySize,delayedOperation=Produce
       - kafka.server:type=DelayedOperationPurgatory,name=PurgatorySize,delayedOperation=Fetch
     metricAttribute:
-      type: param(delayedOperation)
+      kafka.request.type: lowercase(param(delayedOperation))
     mapping:
       Value:
-        metric: kafka.purgatory.size
+        metric: kafka.server.purgatory.size
         type: updowncounter
         desc: The number of requests waiting in purgatory
-        unit: "{requests}"
+        unit: "{request}"
+
+  # Network metrics
+
+  - beans:
+      - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=Produce
+      - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=FetchConsumer
+      - kafka.network:type=RequestMetrics,name=TotalTimeMs,request=FetchFollower
+    metricAttribute:
+      kafka.request.type: lowercase(param(request))
+    mapping:
+      # This is not redundant with kafka.server.requests because a single network request can trigger
+      # multiple increments to 'kafka.server.requests'. It also provides an additional breakdown of
+      # fetch requests with 'fetchconsumer' and 'fetchfollower' request types.
+      Count:
+        metric: kafka.network.requests
+        type: counter
+        desc: The number of network requests received by the broker
+        unit: "{request}"
+      50thPercentile:
+        metric: kafka.network.request.duration.p50
+        type: gauge
+        desc: The 50th percentile duration the broker has taken to service network requests
+        sourceUnit: ms
+        unit: s
+      99thPercentile:
+        metric: kafka.network.request.duration.p99
+        type: gauge
+        desc: The 99th percentile duration the broker has taken to service network requests
+        sourceUnit: ms
+        unit: s
+
+  - bean: kafka.network:type=RequestChannel,name=RequestQueueSize
+    mapping:
+      Value:
+        metric: kafka.network.request.queue
+        type: updowncounter
+        desc: Size of the network request queue
+        unit: "{request}"
+
+  # Controller and replica metrics
 
   - bean: kafka.server:type=ReplicaManager,name=PartitionCount
     mapping:
       Value:
-        metric: kafka.partition.count
+        metric: kafka.server.partition.count
         type: updowncounter
         desc: The number of partitions on the broker
-        unit: "{partitions}"
+        unit: "{partition}"
 
   - bean: kafka.controller:type=KafkaController,name=OfflinePartitionsCount
     mapping:
       Value:
-        metric: kafka.partition.offline
+        metric: kafka.controller.partition.offline
         type: updowncounter
         desc: The number of partitions offline
-        unit: "{partitions}"
+        unit: "{partition}"
 
   - bean: kafka.server:type=ReplicaManager,name=UnderReplicatedPartitions
     mapping:
       Value:
-        metric: kafka.partition.underReplicated
+        metric: kafka.server.partition.under_replicated
         type: updowncounter
-        desc: The number of under replicated partitions
-        unit: "{partitions}"
+        desc: The number of under-replicated partitions
+        unit: "{partition}"
 
   - bean: kafka.server:type=ReplicaManager,name=IsrShrinksPerSec
     metricAttribute:
-      operation: const(shrink)
+      kafka.server.isr.operation: const(shrink)
     mapping:
       Count:
-        metric: kafka.isr.operation.count
-        type: updowncounter
-        desc: The number of in-sync replica shrink and expand operations
-        unit: "{operations}"
+        metric: kafka.server.isr.operations
+        type: counter
+        desc: &desc The number of in-sync replica operations
+        unit: "{operation}"
 
   - bean: kafka.server:type=ReplicaManager,name=IsrExpandsPerSec
     metricAttribute:
-      operation: const(expand)
+      kafka.server.isr.operation: const(expand)
     mapping:
       Count:
-        metric: kafka.isr.operation.count
-        type: updowncounter
-        desc: The number of in-sync replica shrink and expand operations
-        unit: "{operations}"
+        metric: kafka.server.isr.operations
+        type: counter
+        desc: *desc
+        unit: "{operation}"
 
   - bean: kafka.server:type=ReplicaFetcherManager,name=MaxLag,clientId=Replica
     mapping:
       Value:
-        metric: kafka.lag.max
+        metric: kafka.server.lag.max
         desc: The max lag in messages between follower and leader replicas
-        unit: "{messages}"
+        unit: "{message}"
 
   - bean: kafka.controller:type=KafkaController,name=ActiveControllerCount
     mapping:
@@ -168,37 +190,41 @@ rules:
         metric: kafka.controller.active.count
         type: updowncounter
         desc: The number of controllers active on the broker
-        unit: "{controllers}"
+        unit: "{controller}"
 
   - bean: kafka.controller:type=ControllerStats,name=LeaderElectionRateAndTimeMs
     mapping:
       Count:
-        metric: kafka.leaderElection.count
+        metric: kafka.controller.leader_elections
         type: counter
         desc: The leader election count
-        unit: "{elections}"
+        unit: "{election}"
 
   - bean: kafka.controller:type=ControllerStats,name=UncleanLeaderElectionsPerSec
     mapping:
       Count:
-        metric: kafka.leaderElection.unclean.count
+        metric: kafka.controller.unclean_leader_elections
         type: counter
-        desc: Unclean leader election count - increasing indicates broker failures
-        unit: "{elections}"
+        desc: Unclean leader election count
+        unit: "{election}"
 
   # Log metrics
 
   - bean: kafka.log:type=LogFlushStats,name=LogFlushRateAndTimeMs
-    unit: ms
     type: gauge
-    prefix: kafka.logs.flush.
     mapping:
       Count:
+        metric: kafka.log.flushes
         type: counter
+        unit: "{flush}"
         desc: Log flush count
       50thPercentile:
-        metric: time.50p
-        desc: Log flush time - 50th percentile
+        metric: kafka.log.flush.duration.p50
+        desc: Log flush duration 50th percentile
+        sourceUnit: ms
+        unit: s
       99thPercentile:
-        metric: time.99p
-        desc: Log flush time - 99th percentile
+        metric: kafka.log.flush.duration.p99
+        desc: Log flush duration 99th percentile
+        sourceUnit: ms
+        unit: s

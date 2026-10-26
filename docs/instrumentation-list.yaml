@@ -89,14 +89,6 @@ definitions:
         attributes are not captured by default.
       type: boolean
       default: false
-    common.v3-preview:
-      name: otel.instrumentation.common.v3-preview
-      declarative_name: java.common.v3_preview
-      description: Enables a preview of the behavior planned for version 3.0 of the
-        agent, such as ignoring deprecated settings. The set of changes it enables
-        can grow in any release.
-      type: boolean
-      default: false
     http.client.capture-request-headers:
       name: otel.instrumentation.http.client.capture-request-headers
       declarative_name: general.http.client.request_captured_headers
@@ -1428,15 +1420,6 @@ definitions:
         suppression.'
       type: string
       default: semconv
-    span-suppression-strategy.deprecated:
-      name: otel.instrumentation.experimental.span-suppression-strategy
-      declarative_name: java.common.span_suppression_strategy/development
-      description: 'Deprecated: use `otel.instrumentation.common.span-suppression-strategy`
-        or `java.common.span_suppression_strategy` instead. This setting will be removed
-        in 3.0.'
-      type: string
-      deprecated: true
-      replaced_by: otel.instrumentation.common.span-suppression-strategy
   metrics:
     apache_commons_pool.object.count-0fb5f06e:
       name: apache_commons_pool.object.count
@@ -1487,10 +1470,10 @@ definitions:
       attributes:
       - name: apache_commons_pool.pool.name
         type: STRING
-    db.client.connection.count-255e75e8:
+    db.client.connection.count-3cbbc5cf:
       name: db.client.connection.count
       description: The number of connections that are currently in state described
-        by the state attribute.
+        by the `state` attribute.
       instrument: updowncounter
       data_type: LONG_SUM
       unit: '{connection}'
@@ -1507,10 +1490,10 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    db.client.connection.count-f1e2cae3:
+    db.client.connection.count-b5017d66:
       name: db.client.connection.count
       description: The number of connections that are currently in state described
-        by the state attribute.
+        by the `state` attribute.
       instrument: updowncounter
       data_type: LONG_SUM
       unit: '{connection}'
@@ -1838,6 +1821,25 @@ definitions:
         type: STRING
       - name: server.address
         type: STRING
+    db.client.operation.duration-691e5fa4:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     db.client.operation.duration-6dc4ed81:
       name: db.client.operation.duration
       description: Duration of database client operations.
@@ -1958,6 +1960,29 @@ definitions:
         type: STRING
       - name: db.system.name
         type: STRING
+    db.client.operation.duration-d183b382:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     db.client.operation.duration-d4212042:
       name: db.client.operation.duration
       description: Duration of database client operations.
@@ -2017,23 +2042,6 @@ definitions:
         type: STRING
       - name: network.peer.port
         type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    db.client.operation.duration-fce1854c:
-      name: db.client.operation.duration
-      description: Duration of database client operations.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.name
-        type: STRING
-      - name: db.system.name
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
@@ -2128,9 +2136,9 @@ definitions:
         type: STRING
       - name: gen_ai.request.model
         type: STRING
-    gen_ai.client.token.usage-9c41606c:
+    gen_ai.client.token.usage-03c2baed:
       name: gen_ai.client.token.usage
-      description: Measures number of input and output tokens used.
+      description: Number of input and output tokens used.
       instrument: histogram
       data_type: HISTOGRAM
       unit: '{token}'
@@ -2143,9 +2151,9 @@ definitions:
         type: STRING
       - name: gen_ai.token.type
         type: STRING
-    gen_ai.client.token.usage-c5ff244f:
+    gen_ai.client.token.usage-669e5ee6:
       name: gen_ai.client.token.usage
-      description: Measures number of input and output tokens used.
+      description: Number of input and output tokens used.
       instrument: histogram
       data_type: HISTOGRAM
       unit: '{token}'
@@ -2192,12 +2200,12 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    http.server.active_requests-2c1402e2:
+    http.server.active_requests-ac5f9a7f:
       name: http.server.active_requests
       description: Number of active HTTP server requests.
       instrument: updowncounter
       data_type: LONG_SUM
-      unit: '{requests}'
+      unit: '{request}'
       attributes:
       - name: http.request.method
         type: STRING
@@ -2220,13 +2228,15 @@ definitions:
         type: STRING
       - name: url.scheme
         type: STRING
-    http.server.request.duration-2311bdb1:
+    http.server.request.duration-4e1d0d72:
       name: http.server.request.duration
       description: Duration of HTTP server requests.
       instrument: histogram
       data_type: HISTOGRAM
       unit: s
       attributes:
+      - name: error.type
+        type: STRING
       - name: http.request.method
         type: STRING
       - name: http.response.status_code
@@ -5238,9 +5248,9 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.client.call.duration-019ae5d4:
+    rpc.client.call.duration-23f3e1cb:
       name: rpc.client.call.duration
-      description: Measures the duration of outbound remote procedure calls (RPC).
+      description: Measures the duration of an outgoing Remote Procedure Call (RPC).
       instrument: histogram
       data_type: HISTOGRAM
       unit: s
@@ -5249,7 +5259,7 @@ definitions:
         type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -5257,9 +5267,9 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.client.call.duration-620a9e42:
+    rpc.client.call.duration-a776e0a5:
       name: rpc.client.call.duration
-      description: Measures the duration of outbound remote procedure calls (RPC).
+      description: Measures the duration of an outgoing Remote Procedure Call (RPC).
       instrument: histogram
       data_type: HISTOGRAM
       unit: s
@@ -5274,24 +5284,9 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.client.call.duration-c22f308d:
-      name: rpc.client.call.duration
-      description: Measures the duration of outbound remote procedure calls (RPC).
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: rpc.method
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    rpc.client.duration-29bce004:
+    rpc.client.duration-69e5f261:
       name: rpc.client.duration
-      description: The duration of an outbound RPC invocation.
+      description: Measures the duration of outbound RPC.
       instrument: histogram
       data_type: HISTOGRAM
       unit: ms
@@ -5308,9 +5303,9 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.client.duration-599bf562:
+    rpc.client.duration-bd919f7d:
       name: rpc.client.duration
-      description: The duration of an outbound RPC invocation.
+      description: Measures the duration of outbound RPC.
       instrument: histogram
       data_type: HISTOGRAM
       unit: ms
@@ -5327,9 +5322,9 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.client.duration-8ed5ac0d:
+    rpc.client.duration-c6925f70:
       name: rpc.client.duration
-      description: The duration of an outbound RPC invocation.
+      description: Measures the duration of outbound RPC.
       instrument: histogram
       data_type: HISTOGRAM
       unit: ms
@@ -5382,9 +5377,28 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.server.call.duration-a87cce7a:
+    rpc.server.call.duration-09bb76fd:
       name: rpc.server.call.duration
-      description: Measures the duration of inbound remote procedure calls (RPC).
+      description: Measures the duration of an incoming Remote Procedure Call (RPC).
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.status_code
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    rpc.server.call.duration-4a9fd153:
+      name: rpc.server.call.duration
+      description: Measures the duration of an incoming Remote Procedure Call (RPC).
       instrument: histogram
       data_type: HISTOGRAM
       unit: s
@@ -5395,9 +5409,9 @@ definitions:
         type: STRING
       - name: rpc.system.name
         type: STRING
-    rpc.server.call.duration-ae232d87:
+    rpc.server.call.duration-cfaf5409:
       name: rpc.server.call.duration
-      description: Measures the duration of inbound remote procedure calls (RPC).
+      description: Measures the duration of an incoming Remote Procedure Call (RPC).
       instrument: histogram
       data_type: HISTOGRAM
       unit: s
@@ -5412,39 +5426,9 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.server.call.duration-b95d8012:
-      name: rpc.server.call.duration
-      description: Measures the duration of inbound remote procedure calls (RPC).
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: rpc.method
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-    rpc.server.call.duration-f7f75ef6:
-      name: rpc.server.call.duration
-      description: Measures the duration of inbound remote procedure calls (RPC).
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.response.status_code
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    rpc.server.duration-026d346c:
+    rpc.server.duration-4b5b404d:
       name: rpc.server.duration
-      description: The duration of an inbound RPC invocation.
+      description: Measures the duration of inbound RPC.
       instrument: histogram
       data_type: HISTOGRAM
       unit: ms
@@ -5461,9 +5445,9 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.server.duration-3caa4b9d:
+    rpc.server.duration-6ea1f0bd:
       name: rpc.server.duration
-      description: The duration of an inbound RPC invocation.
+      description: Measures the duration of inbound RPC.
       instrument: histogram
       data_type: HISTOGRAM
       unit: ms
@@ -5474,9 +5458,9 @@ definitions:
         type: STRING
       - name: rpc.system
         type: STRING
-    rpc.server.duration-83a39fb3:
+    rpc.server.duration-aa764f4b:
       name: rpc.server.duration
-      description: The duration of an inbound RPC invocation.
+      description: Measures the duration of inbound RPC.
       instrument: histogram
       data_type: HISTOGRAM
       unit: ms
@@ -5735,12 +5719,10 @@ definitions:
       - name: exception.type
         type: STRING
 global_configuration_refs:
-- common.v3-preview
 - semconv-stability.opt-in
 - semconv-stability.preview
 - semconv-exception.signal.preview
 - span-suppression-strategy
-- span-suppression-strategy.deprecated
 - rpc.semconv.version
 - rpc.semconv.experimental
 - rpc.semconv.dual_emit
@@ -5971,7 +5953,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-255e75e8
+    - db.client.connection.count-3cbbc5cf
     - db.client.connection.idle.max-50075a96
     - db.client.connection.idle.min-a027c25a
     - db.client.connection.limit-a51cb0ee
@@ -6017,7 +5999,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-255e75e8
+    - db.client.connection.count-3cbbc5cf
     - db.client.connection.idle.max-50075a96
     - db.client.connection.idle.min-a027c25a
     - db.client.connection.limit-a51cb0ee
@@ -6043,8 +6025,8 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - rpc.client.duration-8ed5ac0d
-    - rpc.server.duration-3caa4b9d
+    - rpc.client.duration-c6925f70
+    - rpc.server.duration-6ea1f0bd
     spans:
     - span_kind: CLIENT
       attributes:
@@ -6074,8 +6056,8 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.preview=rpc,service.peer
     metric_refs:
-    - rpc.client.call.duration-c22f308d
-    - rpc.server.call.duration-b95d8012
+    - rpc.client.call.duration-a776e0a5
+    - rpc.server.call.duration-4a9fd153
     spans:
     - span_kind: CLIENT
       attributes:
@@ -6109,10 +6091,10 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.preview=rpc/dup,service.peer
     metric_refs:
-    - rpc.client.call.duration-c22f308d
-    - rpc.client.duration-8ed5ac0d
-    - rpc.server.call.duration-b95d8012
-    - rpc.server.duration-3caa4b9d
+    - rpc.client.call.duration-a776e0a5
+    - rpc.client.duration-c6925f70
+    - rpc.server.call.duration-4a9fd153
+    - rpc.server.duration-6ea1f0bd
     spans:
     - span_kind: CLIENT
       attributes:
@@ -6761,7 +6743,7 @@ libraries:
       attributes:
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -6773,7 +6755,7 @@ libraries:
       attributes:
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -6789,9 +6771,9 @@ libraries:
         type: LONG
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
-        type: STRING
       - name: rpc.service
+        type: STRING
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system
         type: STRING
@@ -6807,9 +6789,9 @@ libraries:
         type: LONG
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
-        type: STRING
       - name: rpc.service
+        type: STRING
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system
         type: STRING
@@ -7120,6 +7102,8 @@ libraries:
         type: STRING
     - span_kind: SERVER
       attributes:
+      - name: error.type
+        type: STRING
       - name: faas.invocation_id
         type: STRING
       - name: faas.trigger
@@ -7182,6 +7166,8 @@ libraries:
       - name: cloud.account.id
         type: STRING
       - name: cloud.resource_id
+        type: STRING
+      - name: error.type
         type: STRING
       - name: faas.invocation_id
         type: STRING
@@ -7543,7 +7529,6 @@ libraries:
         type: STRING
     event_refs:
     - messaging.settle.exception-b39bdaf3
-    - rpc.client.call.exception-fadee4e0
   - when: default
     metric_refs:
     - db.client.operation.duration-5d89ffb2
@@ -8337,7 +8322,6 @@ libraries:
         type: STRING
     event_refs:
     - messaging.settle.exception-b39bdaf3
-    - rpc.client.call.exception-fadee4e0
   - when: AwsSdkTelemetryBuilder.setRecordIndividualHttpError(true)
     spans:
     - span_kind: CLIENT
@@ -8372,7 +8356,7 @@ libraries:
     metric_refs:
     - db.client.operation.duration-c5800c2e
     - gen_ai.client.operation.duration-d420df10
-    - gen_ai.client.token.usage-9c41606c
+    - gen_ai.client.token.usage-03c2baed
     - messaging.client.consumed.messages-471caf5c
     - messaging.client.operation.duration-dab7c60a
     - messaging.client.sent.messages-38a90199
@@ -8857,7 +8841,7 @@ libraries:
   - when: otel.instrumentation.genai.capture-message-content=true
     metric_refs:
     - gen_ai.client.operation.duration-d420df10
-    - gen_ai.client.token.usage-9c41606c
+    - gen_ai.client.token.usage-03c2baed
     spans:
     - span_kind: CLIENT
       attributes:
@@ -8982,7 +8966,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-255e75e8
+    - db.client.connection.count-3cbbc5cf
     - db.client.connection.pending_requests-42efb2dd
 - name: camel-2.20
   display_name: Apache Camel
@@ -10022,8 +10006,6 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033
@@ -10074,6 +10056,8 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
+      - name: server.port
+        type: LONG
 - name: elasticsearch-transport-6.0
   display_name: Elasticsearch Transport Client
   description: |
@@ -10543,10 +10527,10 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - rpc.client.duration-599bf562
+    - rpc.client.duration-bd919f7d
     - rpc.client.request.size-0d8f967b
     - rpc.client.response.size-d0124e0e
-    - rpc.server.duration-83a39fb3
+    - rpc.server.duration-aa764f4b
     - rpc.server.request.size-75ef4f8e
     - rpc.server.response.size-fb45af0b
     spans:
@@ -10586,10 +10570,10 @@ libraries:
         type: LONG
   - when: otel.instrumentation.grpc.experimental-span-attributes=true
     metric_refs:
-    - rpc.client.duration-599bf562
+    - rpc.client.duration-bd919f7d
     - rpc.client.request.size-0d8f967b
     - rpc.client.response.size-d0124e0e
-    - rpc.server.duration-83a39fb3
+    - rpc.server.duration-aa764f4b
     - rpc.server.request.size-75ef4f8e
     - rpc.server.response.size-fb45af0b
     spans:
@@ -10637,8 +10621,8 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.preview=rpc
     metric_refs:
-    - rpc.client.call.duration-019ae5d4
-    - rpc.server.call.duration-f7f75ef6
+    - rpc.client.call.duration-23f3e1cb
+    - rpc.server.call.duration-09bb76fd
     spans:
     - span_kind: CLIENT
       attributes:
@@ -10646,7 +10630,7 @@ libraries:
         type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -10666,7 +10650,7 @@ libraries:
         type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.response.status_code
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -10676,10 +10660,10 @@ libraries:
         type: LONG
   - when: otel.semconv.exception.signal.preview=logs
     metric_refs:
-    - rpc.client.duration-599bf562
+    - rpc.client.duration-bd919f7d
     - rpc.client.request.size-0d8f967b
     - rpc.client.response.size-d0124e0e
-    - rpc.server.duration-83a39fb3
+    - rpc.server.duration-aa764f4b
     - rpc.server.request.size-75ef4f8e
     - rpc.server.response.size-fb45af0b
     spans:
@@ -10745,7 +10729,7 @@ libraries:
   source_path: instrumentation/gwt-2.0
   scope:
     name: io.opentelemetry.gwt-2.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - com.google.gwt:gwt-servlet:[2.0.0,)
@@ -10760,6 +10744,30 @@ libraries:
       - name: rpc.service
         type: STRING
       - name: rpc.system
+        type: STRING
+  - when: otel.semconv-stability.preview=rpc
+    spans:
+    - span_kind: SERVER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+  - when: otel.semconv-stability.preview=rpc/dup
+    spans:
+    - span_kind: SERVER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: rpc.system.name
         type: STRING
   - when: otel.semconv.exception.signal.preview=logs
     spans:
@@ -11103,7 +11111,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-255e75e8
+    - db.client.connection.count-3cbbc5cf
     - db.client.connection.create_time-23c73da1
     - db.client.connection.idle.min-a027c25a
     - db.client.connection.limit-a51cb0ee
@@ -12557,9 +12565,8 @@ libraries:
   configuration_refs:
   - messaging.headers.excluded
   - messaging.headers.included
-  - otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
   telemetry:
-  - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true
+  - when: default
     metric_refs:
     - messaging.client.consumed.messages-e8268bc3
     - messaging.client.operation.duration-68138657
@@ -12628,9 +12635,8 @@ libraries:
   configuration_refs:
   - messaging.headers.excluded
   - messaging.headers.included
-  - otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
   telemetry:
-  - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true
+  - when: default
     metric_refs:
     - messaging.client.consumed.messages-e8268bc3
     - messaging.client.operation.duration-d165a8db
@@ -14649,7 +14655,7 @@ libraries:
   - when: otel.instrumentation.http.server.emit-experimental-telemetry=true
     metric_refs:
     - http.client.request.duration-a64b5297
-    - http.server.active_requests-2c1402e2
+    - http.server.active_requests-ac5f9a7f
     - http.server.request.duration-b6723875
     - http.server.response.body.size-9ece7062
     spans:
@@ -14814,7 +14820,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-8ae2b8ce
+    - db.client.operation.duration-d183b382
     spans:
     - span_kind: CLIENT
       attributes:
@@ -14838,7 +14844,7 @@ libraries:
         type: LONG
   - when: otel.instrumentation.lettuce.connection-telemetry.enabled=true
     metric_refs:
-    - db.client.operation.duration-8ae2b8ce
+    - db.client.operation.duration-d183b382
     spans:
     - span_kind: CLIENT
       attributes:
@@ -14864,7 +14870,7 @@ libraries:
         type: LONG
   - when: otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.preview=service.peer
     metric_refs:
-    - db.client.operation.duration-8ae2b8ce
+    - db.client.operation.duration-d183b382
     spans:
     - span_kind: CLIENT
       attributes:
@@ -14890,7 +14896,7 @@ libraries:
         type: STRING
   - when: otel.instrumentation.lettuce.experimental-span-attributes=true
     metric_refs:
-    - db.client.operation.duration-8ae2b8ce
+    - db.client.operation.duration-d183b382
     spans:
     - span_kind: CLIENT
       attributes:
@@ -14916,7 +14922,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.preview=service.peer
     metric_refs:
-    - db.client.operation.duration-8ae2b8ce
+    - db.client.operation.duration-d183b382
     spans:
     - span_kind: CLIENT
       attributes:
@@ -14962,7 +14968,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-8ae2b8ce
+    - db.client.operation.duration-d183b382
     spans:
     - span_kind: CLIENT
       attributes:
@@ -14988,7 +14994,7 @@ libraries:
         type: LONG
   - when: otel.instrumentation.lettuce.connection-telemetry.enabled=true
     metric_refs:
-    - db.client.operation.duration-8ae2b8ce
+    - db.client.operation.duration-d183b382
     spans:
     - span_kind: CLIENT
       attributes:
@@ -15016,7 +15022,7 @@ libraries:
         type: LONG
   - when: otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.preview=service.peer
     metric_refs:
-    - db.client.operation.duration-8ae2b8ce
+    - db.client.operation.duration-d183b382
     spans:
     - span_kind: CLIENT
       attributes:
@@ -15044,7 +15050,7 @@ libraries:
         type: STRING
   - when: otel.instrumentation.lettuce.experimental-span-attributes=true
     metric_refs:
-    - db.client.operation.duration-8ae2b8ce
+    - db.client.operation.duration-d183b382
     spans:
     - span_kind: CLIENT
       attributes:
@@ -15074,7 +15080,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.preview=service.peer
     metric_refs:
-    - db.client.operation.duration-8ae2b8ce
+    - db.client.operation.duration-d183b382
     spans:
     - span_kind: CLIENT
       attributes:
@@ -16181,6 +16187,7 @@ libraries:
   source_path: instrumentation/openai/openai-java-1.1
   scope:
     name: io.opentelemetry.openai-java-1.1
+    schema_url: https://opentelemetry.io/schemas/1.37.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -16191,7 +16198,7 @@ libraries:
   - when: default
     metric_refs:
     - gen_ai.client.operation.duration-7139fb88
-    - gen_ai.client.token.usage-c5ff244f
+    - gen_ai.client.token.usage-669e5ee6
     spans:
     - span_kind: CLIENT
       attributes:
@@ -16244,7 +16251,7 @@ libraries:
   - when: otel.semconv.exception.signal.preview=logs
     metric_refs:
     - gen_ai.client.operation.duration-7139fb88
-    - gen_ai.client.token.usage-c5ff244f
+    - gen_ai.client.token.usage-669e5ee6
     spans:
     - span_kind: CLIENT
       attributes:
@@ -16413,7 +16420,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-255e75e8
+    - db.client.connection.count-3cbbc5cf
     - db.client.connection.limit-a51cb0ee
     - db.client.connection.pending_requests-42efb2dd
 - name: oshi-5.0
@@ -17084,93 +17091,6 @@ libraries:
   - messaging.headers.included
   - otel.instrumentation.rabbitmq.experimental-span-attributes
   telemetry:
-  - when: default
-    metric_refs:
-    - messaging.client.consumed.messages-f3bb81cb
-    - messaging.client.operation.duration-2dcc8fe4
-    - messaging.client.sent.messages-90cfa605
-    - messaging.process.duration-049f91c8
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: messaging.destination.anonymous
-        type: BOOLEAN
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.operation.name
-        type: STRING
-      - name: messaging.operation.type
-        type: STRING
-      - name: messaging.rabbitmq.destination.routing_key
-        type: STRING
-      - name: messaging.rabbitmq.message.delivery_tag
-        type: LONG
-      - name: messaging.system
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.type
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    - span_kind: CONSUMER
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: messaging.destination.anonymous
-        type: BOOLEAN
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.operation.name
-        type: STRING
-      - name: messaging.operation.type
-        type: STRING
-      - name: messaging.rabbitmq.destination.routing_key
-        type: STRING
-      - name: messaging.rabbitmq.message.delivery_tag
-        type: LONG
-      - name: messaging.system
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.type
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    - span_kind: PRODUCER
-      attributes:
-      - name: messaging.destination.anonymous
-        type: BOOLEAN
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.operation.name
-        type: STRING
-      - name: messaging.operation.type
-        type: STRING
-      - name: messaging.rabbitmq.destination.routing_key
-        type: STRING
-      - name: messaging.system
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.type
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
   - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false
     metric_refs:
     - messaging.client.consumed.messages-f3bb81cb
@@ -17258,7 +17178,94 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.instrumentation.rabbitmq.experimental-span-attributes=true
+  - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true
+    metric_refs:
+    - messaging.client.consumed.messages-f3bb81cb
+    - messaging.client.operation.duration-2dcc8fe4
+    - messaging.client.sent.messages-90cfa605
+    - messaging.process.duration-049f91c8
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.anonymous
+        type: BOOLEAN
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rabbitmq.destination.routing_key
+        type: STRING
+      - name: messaging.rabbitmq.message.delivery_tag
+        type: LONG
+      - name: messaging.system
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - span_kind: CONSUMER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.destination.anonymous
+        type: BOOLEAN
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rabbitmq.destination.routing_key
+        type: STRING
+      - name: messaging.rabbitmq.message.delivery_tag
+        type: LONG
+      - name: messaging.system
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.destination.anonymous
+        type: BOOLEAN
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.rabbitmq.destination.routing_key
+        type: STRING
+      - name: messaging.system
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: network.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+  - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.rabbitmq.experimental-span-attributes=true
     metric_refs:
     - messaging.client.consumed.messages-f3bb81cb
     - messaging.client.operation.duration-2dcc8fe4
@@ -17746,7 +17753,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-fce1854c
+    - db.client.operation.duration-691e5fa4
     spans:
     - span_kind: CLIENT
       attributes:
@@ -17757,6 +17764,8 @@ libraries:
       - name: db.operation.name
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: server.address
         type: STRING
@@ -17862,7 +17871,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-f1e2cae3
+    - db.client.connection.count-b5017d66
     - db.client.connection.idle.min-fa38020f
     - db.client.connection.limit-12eb182f
     - db.client.connection.pending_requests-68c56df0
@@ -17882,7 +17891,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-f1e2cae3
+    - db.client.connection.count-b5017d66
     - db.client.connection.idle.min-fa38020f
     - db.client.connection.limit-12eb182f
     - db.client.connection.pending_requests-68c56df0
@@ -17902,7 +17911,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-f1e2cae3
+    - db.client.connection.count-b5017d66
     - db.client.connection.idle.min-fa38020f
     - db.client.connection.limit-12eb182f
     - db.client.connection.pending_requests-68c56df0
@@ -18050,7 +18059,7 @@ libraries:
   source_path: instrumentation/rmi
   scope:
     name: io.opentelemetry.rmi
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - Java 8+
@@ -18072,6 +18081,50 @@ libraries:
       - name: rpc.service
         type: STRING
       - name: rpc.system
+        type: STRING
+  - when: otel.semconv-stability.preview=rpc
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+  - when: otel.semconv-stability.preview=rpc/dup
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: rpc.system.name
         type: STRING
 - name: rocketmq-client-4.8
   display_name: Apache RocketMQ Client - Remoting Protocol
@@ -18769,8 +18822,8 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - rpc.client.duration-8ed5ac0d
-    - rpc.server.duration-3caa4b9d
+    - rpc.client.duration-c6925f70
+    - rpc.server.duration-6ea1f0bd
     spans:
     - span_kind: CLIENT
       attributes:
@@ -18796,8 +18849,8 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.preview=rpc,service.peer
     metric_refs:
-    - rpc.client.call.duration-620a9e42
-    - rpc.server.call.duration-a87cce7a
+    - rpc.client.call.duration-a776e0a5
+    - rpc.server.call.duration-4a9fd153
     spans:
     - span_kind: CLIENT
       attributes:
@@ -18823,10 +18876,10 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.preview=rpc/dup,service.peer
     metric_refs:
-    - rpc.client.call.duration-620a9e42
-    - rpc.client.duration-8ed5ac0d
-    - rpc.server.call.duration-a87cce7a
-    - rpc.server.duration-3caa4b9d
+    - rpc.client.call.duration-a776e0a5
+    - rpc.client.duration-c6925f70
+    - rpc.server.call.duration-4a9fd153
+    - rpc.server.duration-6ea1f0bd
     spans:
     - span_kind: CLIENT
       attributes:
@@ -18860,8 +18913,8 @@ libraries:
         type: STRING
   - when: otel.semconv.exception.signal.preview=logs
     metric_refs:
-    - rpc.client.duration-8ed5ac0d
-    - rpc.server.duration-3caa4b9d
+    - rpc.client.duration-c6925f70
+    - rpc.server.duration-6ea1f0bd
     spans:
     - span_kind: CLIENT
       attributes:
@@ -18888,19 +18941,19 @@ libraries:
     event_refs:
     - rpc.client.call.exception-fadee4e0
     - rpc.server.call.exception-738e89fe
-- name: spark-2.3
+- name: spark-2.4
   display_name: Spark Web Framework
   description: |
     This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and attaches it to HTTP server spans and HTTP server metrics.
   library_link: https://sparkjava.com/
   features:
   - HTTP_ROUTE
-  source_path: instrumentation/spark-2.3
+  source_path: instrumentation/spark-2.4
   scope:
-    name: io.opentelemetry.spark-2.3
+    name: io.opentelemetry.spark-2.4
   has_javaagent: true
   javaagent_target_versions:
-  - com.sparkjava:spark-core:[2.3,)
+  - com.sparkjava:spark-core:[2.4,)
 - name: spring-ai-1.0
   display_name: Spring AI
   description: |
@@ -18913,6 +18966,7 @@ libraries:
   minimum_java_version: 17
   scope:
     name: io.opentelemetry.spring-ai-1.0
+    schema_url: https://opentelemetry.io/schemas/1.37.0
   has_javaagent: true
   javaagent_target_versions:
   - org.springframework.ai:spring-ai-model:[1.0.0,)
@@ -18922,7 +18976,7 @@ libraries:
   - when: default
     metric_refs:
     - gen_ai.client.operation.duration-32ef946d
-    - gen_ai.client.token.usage-c5ff244f
+    - gen_ai.client.token.usage-669e5ee6
     spans:
     - span_kind: CLIENT
       attributes:
@@ -18968,7 +19022,7 @@ libraries:
   - when: otel.instrumentation.genai.capture-message-content=true
     metric_refs:
     - gen_ai.client.operation.duration-32ef946d
-    - gen_ai.client.token.usage-c5ff244f
+    - gen_ai.client.token.usage-669e5ee6
     spans:
     - span_kind: CLIENT
       attributes:
@@ -19406,20 +19460,20 @@ libraries:
         type: STRING
       - name: messaging.system
         type: STRING
-- name: spring-rabbit-1.0
+- name: spring-rabbit-1.1
   display_name: Spring Rabbit
   description: This instrumentation enables consumer messaging spans for Spring RabbitMQ
     listeners.
   semantic_conventions:
   - MESSAGING_SPANS
   library_link: https://spring.io/projects/spring-amqp
-  source_path: instrumentation/spring/spring-rabbit-1.0
+  source_path: instrumentation/spring/spring-rabbit-1.1
   scope:
-    name: io.opentelemetry.spring-rabbit-1.0
+    name: io.opentelemetry.spring-rabbit-1.1
     schema_url: https://opentelemetry.io/schemas/1.43.0
   has_javaagent: true
   javaagent_target_versions:
-  - org.springframework.amqp:spring-rabbit:(,)
+  - org.springframework.amqp:spring-rabbit:[1.1.0.RELEASE,)
   configuration_refs:
   - messaging.headers.excluded
   - messaging.headers.included
@@ -19433,6 +19487,8 @@ libraries:
       attributes:
       - name: error.type
         type: STRING
+      - name: messaging.batch.message_count
+        type: LONG
       - name: messaging.destination.name
         type: STRING
       - name: messaging.operation.name
@@ -19466,7 +19522,7 @@ libraries:
   source_path: instrumentation/spring/spring-rmi-4.0
   scope:
     name: io.opentelemetry.spring-rmi-4.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_javaagent: true
   javaagent_target_versions:
   - org.springframework:spring-context:[4.0.0.RELEASE,6)
@@ -19488,6 +19544,50 @@ libraries:
       - name: rpc.service
         type: STRING
       - name: rpc.system
+        type: STRING
+  - when: otel.semconv-stability.preview=rpc
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+  - when: otel.semconv-stability.preview=rpc/dup
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+    - span_kind: SERVER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
+      - name: rpc.system.name
         type: STRING
 - name: spring-scheduling-3.1
   display_name: Spring Scheduling
@@ -19723,7 +19823,7 @@ libraries:
   - when: default
     metric_refs:
     - http.client.request.duration-98bb5f3b
-    - http.server.request.duration-2311bdb1
+    - http.server.request.duration-4e1d0d72
     spans:
     - span_kind: CLIENT
       attributes:
@@ -19770,7 +19870,7 @@ libraries:
   - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-98bb5f3b
-    - http.server.request.duration-2311bdb1
+    - http.server.request.duration-4e1d0d72
     spans:
     - span_kind: CLIENT
       attributes:
@@ -20110,8 +20210,8 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - rpc.client.duration-29bce004
-    - rpc.server.duration-026d346c
+    - rpc.client.duration-69e5f261
+    - rpc.server.duration-4b5b404d
     spans:
     - span_kind: CLIENT
       attributes:
@@ -20155,8 +20255,8 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.preview=rpc
     metric_refs:
-    - rpc.client.call.duration-620a9e42
-    - rpc.server.call.duration-ae232d87
+    - rpc.client.call.duration-a776e0a5
+    - rpc.server.call.duration-cfaf5409
     spans:
     - span_kind: CLIENT
       attributes:
@@ -20200,10 +20300,10 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.preview=rpc/dup
     metric_refs:
-    - rpc.client.call.duration-620a9e42
-    - rpc.client.duration-29bce004
-    - rpc.server.call.duration-ae232d87
-    - rpc.server.duration-026d346c
+    - rpc.client.call.duration-a776e0a5
+    - rpc.client.duration-69e5f261
+    - rpc.server.call.duration-cfaf5409
+    - rpc.server.duration-4b5b404d
     spans:
     - span_kind: CLIENT
       attributes:
@@ -20504,7 +20604,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-255e75e8
+    - db.client.connection.count-3cbbc5cf
     - db.client.connection.idle.max-50075a96
     - db.client.connection.idle.min-a027c25a
     - db.client.connection.limit-a51cb0ee
@@ -20525,7 +20625,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-255e75e8
+    - db.client.connection.count-3cbbc5cf
     - db.client.connection.idle.max-50075a96
     - db.client.connection.idle.min-a027c25a
     - db.client.connection.limit-a51cb0ee
@@ -20997,7 +21097,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-8ae2b8ce
+    - db.client.operation.duration-d183b382
     spans:
     - span_kind: CLIENT
       attributes:
@@ -21010,6 +21110,8 @@ libraries:
       - name: db.query.text
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: network.peer.address
         type: STRING
@@ -21023,7 +21125,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.preview=service.peer
     metric_refs:
-    - db.client.operation.duration-8ae2b8ce
+    - db.client.operation.duration-d183b382
     spans:
     - span_kind: CLIENT
       attributes:
@@ -21036,6 +21138,8 @@ libraries:
       - name: db.query.text
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: network.peer.address
         type: STRING
@@ -21226,7 +21330,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.connection.count-255e75e8
+    - db.client.connection.count-3cbbc5cf
     - db.client.connection.limit-a51cb0ee
 - name: wicket-8.0
   display_name: Apache Wicket

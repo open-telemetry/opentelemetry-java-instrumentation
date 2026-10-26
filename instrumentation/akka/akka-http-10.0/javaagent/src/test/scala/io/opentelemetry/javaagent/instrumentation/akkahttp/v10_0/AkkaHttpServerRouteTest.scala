@@ -10,7 +10,6 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
-import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.testing.internal.armeria.client.WebClient
@@ -265,10 +264,9 @@ class AkkaHttpServerRouteTest {
       expectedStatus: Int = 200,
       expectedMsg: String = "ok"
   ): Unit = {
-    val port = PortUtils.findOpenPort
-    val address: URI = buildAddress(port)
     val binding =
-      Await.result(Http().bindAndHandle(route, "localhost", port), 10.seconds)
+      Await.result(Http().bindAndHandle(route, "localhost", 0), 10.seconds)
+    val address: URI = buildAddress(binding.localAddress.getPort)
     try {
       val request = AggregatedHttpRequest.of(
         HttpMethod.GET,

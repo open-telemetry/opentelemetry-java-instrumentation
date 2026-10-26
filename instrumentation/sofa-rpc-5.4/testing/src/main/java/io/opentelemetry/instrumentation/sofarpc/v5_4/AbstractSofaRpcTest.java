@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
@@ -598,7 +599,10 @@ public abstract class AbstractSofaRpcTest {
                                 satisfies(
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
                                 satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType),
-                                equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? "160" : null))
+                                equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? "160" : null),
+                                equalTo(
+                                    stringKey("rpc.status_code"),
+                                    emitPreviewRpcSemconv() ? "160" : null))
                             .hasException(emitExceptionAsSpanEvents() ? clientException : null),
                     span ->
                         span.hasName(
@@ -625,7 +629,10 @@ public abstract class AbstractSofaRpcTest {
                                     AbstractSofaRpcTest::assertNetworkPeerAddress),
                                 satisfies(
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
-                                equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? "160" : null))
+                                equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? "160" : null),
+                                equalTo(
+                                    stringKey("rpc.status_code"),
+                                    emitPreviewRpcSemconv() ? "160" : null))
                             .hasException(emitExceptionAsSpanEvents() ? serverException : null)));
 
     assertExceptionLogs(clientException, serverException);
@@ -698,7 +705,8 @@ public abstract class AbstractSofaRpcTest {
                                                   equalTo(
                                                       RPC_METHOD,
                                                       "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
-                                                  equalTo(ERROR_TYPE, "160"))))));
+                                                  equalTo(ERROR_TYPE, "160"),
+                                                  equalTo(stringKey("rpc.status_code"), "160"))))));
 
       testing()
           .waitAndAssertMetrics(
@@ -719,6 +727,7 @@ public abstract class AbstractSofaRpcTest {
                                                       RPC_METHOD,
                                                       "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
                                                   equalTo(ERROR_TYPE, "160"),
+                                                  equalTo(stringKey("rpc.status_code"), "160"),
                                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                                   satisfies(
                                                       SERVER_PORT,
@@ -869,7 +878,10 @@ public abstract class AbstractSofaRpcTest {
                                 satisfies(
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
                                 satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType),
-                                equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? "200" : null))
+                                equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? "200" : null),
+                                equalTo(
+                                    stringKey("rpc.status_code"),
+                                    emitPreviewRpcSemconv() ? "200" : null))
                             .hasException(emitExceptionAsSpanEvents() ? clientException : null),
                     // Server span: server completes normally (after 2s), so no error status
                     span ->
@@ -918,6 +930,7 @@ public abstract class AbstractSofaRpcTest {
                                                       RPC_METHOD,
                                                       "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/timeout"),
                                                   equalTo(ERROR_TYPE, "200"),
+                                                  equalTo(stringKey("rpc.status_code"), "200"),
                                                   equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                                   satisfies(
                                                       SERVER_PORT,

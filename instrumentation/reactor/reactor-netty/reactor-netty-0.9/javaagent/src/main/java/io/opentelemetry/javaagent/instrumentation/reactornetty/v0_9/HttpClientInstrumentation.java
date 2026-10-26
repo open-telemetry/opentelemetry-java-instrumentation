@@ -165,15 +165,9 @@ class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0)
-            BiConsumer<? super HttpClientRequest, ? super Throwable> originalRequestCallback,
+            BiConsumer<? super HttpClientRequest, ? super Throwable> requestCallback,
         @Advice.Argument(1)
-            BiConsumer<? super HttpClientResponse, ? super Throwable> originalResponseCallback) {
-
-      // intermediate variables needed for inlined instrumentation
-      BiConsumer<? super HttpClientRequest, ? super Throwable> requestCallback =
-          originalRequestCallback;
-      BiConsumer<? super HttpClientResponse, ? super Throwable> responseCallback =
-          originalResponseCallback;
+            BiConsumer<? super HttpClientResponse, ? super Throwable> responseCallback) {
 
       if (DecoratorFunctions.shouldDecorate(requestCallback.getClass())) {
         requestCallback = new DecoratorFunctions.OnRequestErrorDecorator(requestCallback);

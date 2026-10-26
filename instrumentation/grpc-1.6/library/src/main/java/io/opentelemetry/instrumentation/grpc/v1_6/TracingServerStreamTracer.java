@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 final class TracingServerStreamTracer extends ServerStreamTracer {
 
-  private static final String UNKNOWN_METHOD_SPAN_NAME = "_OTHER";
+  private static final String UNKNOWN_METHOD_NAME = "_OTHER";
   private static final io.grpc.Context.Key<AtomicBoolean> STREAM_TRACER_STATE_KEY =
       io.grpc.Context.key("otel-grpc-stream-tracer-state");
 
@@ -77,7 +77,7 @@ final class TracingServerStreamTracer extends ServerStreamTracer {
     if (!isUnknownMethod(status) || handledOrSpanStarted.get()) {
       return;
     }
-    GrpcRequest request = new GrpcRequest(UNKNOWN_METHOD_SPAN_NAME, fullMethodName, headers);
+    GrpcRequest request = new GrpcRequest(UNKNOWN_METHOD_NAME, fullMethodName, headers);
     Context extracted =
         propagators
             .getTextMapPropagator()
