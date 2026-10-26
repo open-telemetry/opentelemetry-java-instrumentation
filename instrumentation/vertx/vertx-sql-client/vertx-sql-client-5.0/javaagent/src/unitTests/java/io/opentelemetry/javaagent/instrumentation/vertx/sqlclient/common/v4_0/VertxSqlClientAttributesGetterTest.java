@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.vertx.sqlclient.DatabaseException;
@@ -21,7 +22,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 class VertxSqlClientAttributesGetterTest {
 
   private final VertxSqlClientAttributesGetter getter = new VertxSqlClientAttributesGetter();
-  private final VertxSqlClientRequest request = request("oracle.db");
+  private final VertxSqlClientRequest request = request(ORACLE_DB);
 
   @Test
   void omitsClientConnectionStatusWithoutChangingErrorType() {

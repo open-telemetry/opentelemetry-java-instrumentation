@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.H2DATABASE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.SAP_HANA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -151,6 +152,27 @@ class JdbcAttributesGetterTest {
     SQLException error = new SQLException("Server failure", "90007", 90007);
 
     assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isEqualTo("90007");
+  }
+
+  @ParameterizedTest
+  @MethodSource("otherSqlResponseStatuses")
+  void formatsGenericSqlResponseStatus(
+      String sqlState, int errorCode, String expectedStatus, String expectedErrorType) {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(OTHER_SQL).build(), "SELECT 1", false);
+    SQLException error = new SQLException("test", sqlState, errorCode);
+
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error))
+        .isEqualTo(expectedStatus);
+    assertThat(attributesGetter.getErrorType(request, null, error)).isEqualTo(expectedErrorType);
+  }
+
+  private static Stream<Arguments> otherSqlResponseStatuses() {
+    return Stream.of(
+        argumentSet("both codes", "42000", 1071, "42000/1071", "1071"),
+        argumentSet("SQLSTATE only", "42000", 0, "42000", "42000"),
+        argumentSet("vendor code only", null, 1071, "1071", "1071"),
+        argumentSet("neither code", null, 0, null, null));
   }
 
   @Test
