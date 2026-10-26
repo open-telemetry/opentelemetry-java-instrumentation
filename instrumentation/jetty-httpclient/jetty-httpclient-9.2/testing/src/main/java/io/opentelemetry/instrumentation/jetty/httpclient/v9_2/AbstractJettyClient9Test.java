@@ -12,9 +12,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
@@ -36,8 +33,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Request> {
-
-  private static final ContextKey<String> CALLER_KEY = ContextKey.named("caller");
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
@@ -64,91 +59,81 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
   }
 
   @Test
-  void requestListenerUsesCallerContext()
-      throws ExecutionException, InterruptedException, TimeoutException {
-    AtomicReference<Context> requestListenerContext = new AtomicReference<>();
-
-    Span callerSpan =
-        testing.getOpenTelemetry().getTracer("test").spanBuilder("caller").startSpan();
-    Context callerContext = Context.current().with(callerSpan).with(CALLER_KEY, "caller");
+  void requestListenerUsesCallerContext() throws Exception {
     Request request =
         client
             .newRequest(resolveAddress("/success"))
-            .onRequestBegin(
-                ignored -> {
-                  requestListenerContext.set(Context.current());
-                  testing.runWithSpan("request-callback", () -> {});
-                });
+            .onRequestBegin(ignored -> testing.runWithSpan("request-callback", () -> {}));
 
-    try {
-      try (Scope ignored = callerContext.makeCurrent()) {
-        assertThat(request.send().getStatus()).isEqualTo(200);
-        assertCallerContext(Context.current(), callerContext);
-      }
-      assertCallerContext(requestListenerContext.get(), callerContext);
-    } finally {
-      callerSpan.end();
-    }
+    testing.runWithSpan(
+        "caller",
+        () -> {
+          Span callerSpan = Span.current();
+          assertThat(request.send().getStatus()).isEqualTo(200);
+          assertThat(Span.current().getSpanContext()).isEqualTo(callerSpan.getSpanContext());
+        });
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
+            trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("caller").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1)),
                 span ->
                     span.hasName("request-callback")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0)),
-                span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1))));
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
   void asynchronousRequestListenerUsesCallerContextWithoutParent() throws InterruptedException {
-    Context enteringContext = Context.current();
-    Context callerContext = enteringContext.with(CALLER_KEY, "caller");
-    AtomicReference<Context> requestListenerContext = new AtomicReference<>();
-    AtomicReference<Context> responseContext = new AtomicReference<>();
+    Span enteringSpan = Span.current();
+    AtomicReference<Span> requestSpanAfterCallback = new AtomicReference<>();
+    AtomicReference<Span> responseSpanAfterCallback = new AtomicReference<>();
     AtomicReference<Throwable> failure = new AtomicReference<>();
     AtomicReference<Integer> responseStatus = new AtomicReference<>();
     CountDownLatch completed = new CountDownLatch(1);
     Request request =
         client
             .newRequest(resolveAddress("/success"))
-            .onRequestBegin(ignored -> requestListenerContext.set(Context.current()));
+            .onRequestBegin(
+                ignored -> {
+                  testing.runWithSpan("request-callback", () -> {});
+                  requestSpanAfterCallback.set(Span.current());
+                });
 
-    try (Scope ignored = callerContext.makeCurrent()) {
-      request.send(
-          result -> {
-            failure.set(result.getFailure());
-            if (result.getResponse() != null) {
-              responseStatus.set(result.getResponse().getStatus());
-            }
-            responseContext.set(Context.current());
-            completed.countDown();
-          });
-      assertCallerContext(Context.current(), callerContext);
-      assertThat(completed.await(10, SECONDS)).isTrue();
-      assertCallerContext(Context.current(), callerContext);
-    }
+    request.send(
+        result -> {
+          failure.set(result.getFailure());
+          if (result.getResponse() != null) {
+            responseStatus.set(result.getResponse().getStatus());
+          }
+          testing.runWithSpan("response-callback", () -> {});
+          responseSpanAfterCallback.set(Span.current());
+          completed.countDown();
+        });
+    assertThat(Span.current().getSpanContext()).isEqualTo(enteringSpan.getSpanContext());
+    assertThat(completed.await(10, SECONDS)).isTrue();
+    assertThat(Span.current().getSpanContext()).isEqualTo(enteringSpan.getSpanContext());
 
     assertThat(failure.get()).isNull();
     assertThat(responseStatus.get()).isEqualTo(200);
-    assertCallerContext(requestListenerContext.get(), callerContext);
-    assertCallerContext(responseContext.get(), callerContext);
-    assertThat(Context.current()).isSameAs(enteringContext);
+    assertThat(requestSpanAfterCallback.get().getSpanContext().isValid()).isFalse();
+    assertThat(responseSpanAfterCallback.get().getSpanContext().isValid()).isFalse();
 
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("GET"),
+        orderByRootSpanName("GET", "request-callback", "response-callback"),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasNoParent(),
-                span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(0))));
-  }
-
-  private static void assertCallerContext(Context actual, Context callerContext) {
-    assertThat(actual.get(CALLER_KEY)).isEqualTo("caller");
-    assertThat(Span.fromContext(actual).getSpanContext())
-        .isEqualTo(Span.fromContext(callerContext).getSpanContext());
+                span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("request-callback").hasKind(SpanKind.INTERNAL).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("response-callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Override
