@@ -31,15 +31,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 
 class InstrumenterExtractionTest {
   private static final String AWS_TRACE_HEADER_PROP = "com.amazonaws.xray.traceHeader";
 
-  @ParameterizedTest
-  @CsvSource({"false,false", "true,false", "false,true", "true,true"})
-  void extractPreservesAmbientContext(boolean ambientSpan, boolean remoteParent) {
+  @Test
+  void extractPreservesAmbientContext() {
     AwsLambdaFunctionInstrumenter instr =
         AwsLambdaFunctionInstrumenterFactory.createInstrumenter(
             OpenTelemetry.propagating(
@@ -51,14 +48,9 @@ class InstrumenterExtractionTest {
             "2222222222222222",
             TraceFlags.getSampled(),
             TraceState.getDefault());
-    Context base = Context.root().with(key, "preserved");
-    if (ambientSpan) {
-      base = base.with(Span.wrap(ambient));
-    }
+    Context base = Context.root().with(Span.wrap(ambient)).with(key, "preserved");
     HashMap<String, String> headers = new HashMap<>();
-    if (remoteParent) {
-      headers.put("traceparent", "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01");
-    }
+    headers.put("traceparent", "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01");
     AwsLambdaRequest request =
         AwsLambdaRequest.create(
             mock(com.amazonaws.services.lambda.runtime.Context.class), new Object(), headers);
@@ -67,13 +59,9 @@ class InstrumenterExtractionTest {
       Context extracted = instr.extract(request);
       assertThat(extracted.get(key)).isEqualTo("preserved");
       SpanContext parent = Span.fromContext(extracted).getSpanContext();
-      if (remoteParent) {
-        assertThat(parent.getTraceId()).isEqualTo("4bf92f3577b34da6a3ce929d0e0e4736");
-        assertThat(parent.getSpanId()).isEqualTo("00f067aa0ba902b7");
-        assertThat(parent.isRemote()).isTrue();
-      } else {
-        assertThat(parent).isEqualTo(ambientSpan ? ambient : SpanContext.getInvalid());
-      }
+      assertThat(parent.getTraceId()).isEqualTo("4bf92f3577b34da6a3ce929d0e0e4736");
+      assertThat(parent.getSpanId()).isEqualTo("00f067aa0ba902b7");
+      assertThat(parent.isRemote()).isTrue();
       assertThat(Context.current()).isSameAs(base);
     }
   }

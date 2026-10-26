@@ -14,16 +14,19 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.AbstractDubboTest;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,9 +35,7 @@ import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.ServiceLoader;
-import java.util.function.Consumer;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.remoting.Channel;
 import org.apache.dubbo.remoting.RemotingException;
@@ -61,6 +62,15 @@ class DubboAgentTest extends AbstractDubboTest {
   private static final String REMOTE_TRACE_ID = "4bf92f3577b34da6a3ce929d0e0e4736";
   private static final String REMOTE_SPAN_ID = "00f067aa0ba902b7";
   private static final String TRACEPARENT = "00-" + REMOTE_TRACE_ID + "-" + REMOTE_SPAN_ID + "-01";
+  private static final String AMBIENT_TRACE_ID = "11111111111111111111111111111111";
+  private static final String AMBIENT_SPAN_ID = "2222222222222222";
+  private static final Span AMBIENT_PARENT =
+      Span.wrap(
+          SpanContext.create(
+              AMBIENT_TRACE_ID,
+              AMBIENT_SPAN_ID,
+              TraceFlags.getSampled(),
+              TraceState.getDefault()));
 
   @Override
   protected InstrumentationExtension testing() {
@@ -87,21 +97,16 @@ class DubboAgentTest extends AbstractDubboTest {
         DubboProtocol.class.getDeclaredMethod("getInvoker", Channel.class, Invocation.class);
     getInvoker.setAccessible(true);
 
-    Span remote = createSpan(remoteParent, "remote");
     if (remoteParent) {
-      invocation.setAttachment("traceparent", traceparent(remote));
+      invocation.setAttachment("traceparent", TRACEPARENT);
     }
-    Span parent = createSpan(ambientSpan, "ambient");
-    try (Scope ignored = parentContext(parent).makeCurrent()) {
+    try (Scope ignored = parentContext(ambientSpan).makeCurrent()) {
       assertThatThrownBy(() -> getInvoker.invoke(protocol, channel, invocation))
           .isInstanceOf(InvocationTargetException.class)
           .hasCauseInstanceOf(RemotingException.class);
-    } finally {
-      parent.end();
-      remote.end();
     }
 
-    assertParent(parent, remote);
+    assertParent(ambientSpan, remoteParent);
   }
 
   @ParameterizedTest
@@ -110,7 +115,6 @@ class DubboAgentTest extends AbstractDubboTest {
     assumeTrue(emitPreviewRpcSemconv());
     assumeTrue(testLatestDeps(), "Triple requires Dubbo 3.x");
     Class<?> requestClass = Class.forName("org.apache.dubbo.remoting.http12.HttpRequest");
-    Span remote = createSpan(remoteParent, "remote");
     Object request =
         mock(
             requestClass,
@@ -123,7 +127,7 @@ class DubboAgentTest extends AbstractDubboTest {
                 case "header":
                   return remoteParent
                           && "traceparent".contentEquals((CharSequence) invocation.getArgument(0))
-                      ? traceparent(remote)
+                      ? TRACEPARENT
                       : null;
                 case "remoteAddr":
                   return "127.0.0.1";
@@ -144,8 +148,7 @@ class DubboAgentTest extends AbstractDubboTest {
             .findFirst()
             .get();
 
-    Span parent = createSpan(ambientSpan, "ambient");
-    try (Scope ignored = parentContext(parent).makeCurrent()) {
+    try (Scope ignored = parentContext(ambientSpan).makeCurrent()) {
       assertThatThrownBy(
               () ->
                   getRequestHandler.invoke(
@@ -153,12 +156,9 @@ class DubboAgentTest extends AbstractDubboTest {
           .isInstanceOf(InvocationTargetException.class)
           .cause()
           .hasFieldOrPropertyWithValue("statusCode", 404);
-    } finally {
-      parent.end();
-      remote.end();
     }
 
-    assertParent(parent, remote);
+    assertParent(ambientSpan, remoteParent);
   }
 
   @ParameterizedTest
@@ -180,16 +180,13 @@ class DubboAgentTest extends AbstractDubboTest {
         };
     DecodeableRpcInvocation invocation = decodeableInvocation(channel, unreadable);
 
-    Span parent = createSpan(ambientSpan, "ambient");
-    try (Scope ignored = parentContext(parent).makeCurrent()) {
+    try (Scope ignored = parentContext(ambientSpan).makeCurrent()) {
       assertThatThrownBy(() -> invocation.decode(channel, unreadable))
           .isInstanceOf(IOException.class)
           .hasMessageContaining("invocation rejected");
-    } finally {
-      parent.end();
     }
 
-    assertParent(parent, Span.getInvalid());
+    assertParent(ambientSpan, false);
   }
 
   @Test
@@ -270,57 +267,28 @@ class DubboAgentTest extends AbstractDubboTest {
     return channel;
   }
 
-  private static Span createSpan(boolean enabled, String name) {
-    return enabled
-        ? GlobalOpenTelemetry.getTracer("test").spanBuilder(name).setNoParent().startSpan()
-        : Span.getInvalid();
-  }
-
-  private static String traceparent(Span span) {
-    return "00-"
-        + span.getSpanContext().getTraceId()
-        + "-"
-        + span.getSpanContext().getSpanId()
-        + "-01";
-  }
-
-  private static Context parentContext(Span parent) {
+  private static Context parentContext(boolean ambientSpan) {
     return Context.root()
-        .with(parent)
+        .with(ambientSpan ? AMBIENT_PARENT : Span.getInvalid())
         .with(Baggage.builder().put("test-baggage-key-1", "preserved").build());
   }
 
-  private static void assertParent(Span parent, Span remote) {
-    boolean ambientSpan = parent.getSpanContext().isValid();
-    boolean remoteParent = remote.getSpanContext().isValid();
-    Consumer<SpanDataAssert> serverSpan =
-        span -> {
-          span.hasName("dubbo").hasKind(SpanKind.SERVER);
-          if (remoteParent) {
-            span.hasTraceId(remote.getSpanContext().getTraceId())
-                .hasParentSpanId(remote.getSpanContext().getSpanId());
-          } else if (ambientSpan) {
-            span.hasTraceId(parent.getSpanContext().getTraceId())
-                .hasParentSpanId(parent.getSpanContext().getSpanId());
-          } else {
-            span.hasNoParent();
-          }
-          // BaggageSpanProcessor.onStart reads the non-span baggage ContextKey from parentContext.
-          span.hasAttribute(stringKey("test-baggage-key-1"), "preserved");
-        };
-    Consumer<SpanDataAssert> ambient = span -> span.hasName("ambient").hasNoParent();
-    Consumer<SpanDataAssert> remoteSpan = span -> span.hasName("remote").hasNoParent();
-    if (ambientSpan && remoteParent) {
-      testing.waitAndAssertSortedTraces(
-          Comparator.comparing(trace -> trace.get(0).getName()),
-          trace -> trace.hasSpansSatisfyingExactly(ambient),
-          trace -> trace.hasSpansSatisfyingExactly(remoteSpan, serverSpan));
-    } else if (remoteParent) {
-      testing.waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(remoteSpan, serverSpan));
-    } else if (ambientSpan) {
-      testing.waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(ambient, serverSpan));
-    } else {
-      testing.waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(serverSpan));
-    }
+  private static void assertParent(boolean ambientSpan, boolean remoteParent) {
+    assertThat(testing.spans())
+        .singleElement()
+        .satisfies(
+            spanData -> {
+              SpanDataAssert span = OpenTelemetryAssertions.assertThat(spanData);
+              span.hasName("dubbo").hasKind(SpanKind.SERVER);
+              if (remoteParent) {
+                span.hasTraceId(REMOTE_TRACE_ID).hasParentSpanId(REMOTE_SPAN_ID);
+              } else if (ambientSpan) {
+                span.hasTraceId(AMBIENT_TRACE_ID).hasParentSpanId(AMBIENT_SPAN_ID);
+              } else {
+                span.hasNoParent();
+              }
+              // BaggageSpanProcessor.onStart reads the non-span baggage ContextKey from parentContext.
+              span.hasAttribute(stringKey("test-baggage-key-1"), "preserved");
+            });
   }
 }
