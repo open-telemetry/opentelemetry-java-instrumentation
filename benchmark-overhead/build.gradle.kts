@@ -50,9 +50,9 @@ val startupRecorderJar = tasks.register<Jar>("startupRecorderJar") {
 }
 
 tasks.register<Test>("agentStartupBenchmark") {
-  dependsOn(startupRecorderJar)
   description = "Measures ordinary Java agent startup."
   group = "verification"
+  dependsOn(tasks.testClasses)
   testClassesDirs = sourceSets.test.get().output.classesDirs
   classpath = sourceSets.test.get().runtimeClasspath
   useJUnitPlatform()
@@ -61,10 +61,25 @@ tasks.register<Test>("agentStartupBenchmark") {
   outputs.upToDateWhen { false }
   outputs.cacheIf { false }
   systemProperty("startup.benchmark.enabled", "true")
-  systemProperty("startup.benchmark.recorder", startupRecorderJar.get().archiveFile.get().asFile.absolutePath)
   systemProperty("startup.benchmark.output", layout.buildDirectory.dir("reports/agent-startup").get().asFile.absolutePath)
   systemProperty("startup.benchmark.agent", providers.gradleProperty("startupBenchmarkAgentJar").orElse("").get())
-  systemProperty("startup.benchmark.sourceRevision", providers.gradleProperty("startupBenchmarkSourceRevision").orElse("unknown").get())
+  systemProperty("startup.benchmark.revision", providers.gradleProperty("startupBenchmarkRevision").orElse("unknown").get())
+  val suppliedRecorder = providers.gradleProperty("startupBenchmarkRecorderJar")
+  if (suppliedRecorder.isPresent) {
+    systemProperty("startup.benchmark.recorder", suppliedRecorder.get())
+  } else {
+    dependsOn(startupRecorderJar)
+    systemProperty(
+      "startup.benchmark.recorder",
+      startupRecorderJar.get().archiveFile.get().asFile.absolutePath
+    )
+  }
+  systemProperty(
+    "startup.benchmark.fixtureClass",
+    providers.gradleProperty("startupBenchmarkFixtureClass")
+      .orElse("../smoke-tests/images/spring-boot/build/classes/java/main/io/opentelemetry/smoketest/springboot/controller/WebController.class")
+      .get()
+  )
   systemProperty("startup.benchmark.samples", providers.gradleProperty("startupBenchmarkSamples").orElse("20").get())
   systemProperty("startup.benchmark.warmups", providers.gradleProperty("startupBenchmarkWarmups").orElse("2").get())
 }

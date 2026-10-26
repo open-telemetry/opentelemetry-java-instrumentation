@@ -20,7 +20,7 @@ class AgentStartupReportTest {
   @Test
   void launchesOnlyTheSuppliedAgentAndKeepsProfilingSeparate() {
     assertThat(AgentStartupBenchmark.arguments(false))
-        .contains("-Xmx512m", "-javaagent:/benchmark/agent.jar")
+        .contains("-Xmx512m", "-javaagent:/tmp/agent.jar")
         .noneMatch(
             value ->
                 value.contains("bootclasspath")
@@ -32,51 +32,62 @@ class AgentStartupReportTest {
     assertThat(AgentStartupBenchmark.arguments(true))
         .contains(
             "-XX:FlightRecorderOptions=stackdepth=256",
-            "-javaagent:/benchmark/agent.jar",
-            "-javaagent:/benchmark/startup-recorder.jar=/benchmark/startup.jfr");
+            "-javaagent:/tmp/agent.jar",
+            "-javaagent:/tmp/startup-recorder.jar=/tmp/startup.jfr");
     assertThat(AgentStartupBenchmark.arguments(true))
         .containsSubsequence(
-            "-javaagent:/benchmark/startup-recorder.jar=/benchmark/startup.jfr",
-            "-javaagent:/benchmark/agent.jar");
+            "-javaagent:/tmp/startup-recorder.jar=/tmp/startup.jfr", "-javaagent:/tmp/agent.jar");
+  }
+
+  @Test
+  void acceptsOnlyTheSuccessfulReadinessResponseAndJVMUptime() {
+    assertThat(AgentStartupBenchmark.startupSeconds(200, "Hi!", "1250")).isEqualTo(1.25);
+    assertThatThrownBy(() -> AgentStartupBenchmark.startupSeconds(503, "Hi!", "1250"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> AgentStartupBenchmark.startupSeconds(200, "Not ready", "1250"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> AgentStartupBenchmark.startupSeconds(200, "Hi!", null))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> AgentStartupBenchmark.startupSeconds(200, "Hi!", "invalid"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> AgentStartupBenchmark.startupSeconds(200, "Hi!", "0"))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void retainsWarmupsButExcludesThemFromSingleSampleDistributions() throws Exception {
     AgentStartupReport report = new AgentStartupReport(directory);
-    var warmup = new AgentStartupReport.Sample(0, true, "ok", 3, 1, 4, 0);
-    var measured = new AgentStartupReport.Sample(1, false, "ok", 2, 1.5, 5, 0);
+    var warmup = new AgentStartupReport.Sample(0, true, "ok", 3, 0);
+    var measured = new AgentStartupReport.Sample(1, false, "ok", 2, 0);
     List<AgentStartupReport.Sample> samples = List.of(warmup, measured);
     report.append(warmup);
     report.append(measured);
     report.summarize(samples);
     assertThat(Files.readString(directory.resolve("summary.md")))
-        .contains("| JVM uptime | 1 | 2000.0 | 2000.0 | 2000.0 | 2000.0 |")
-        .contains("| Spring startup | 1 | 1500.0 | 1500.0 | 1500.0 | 1500.0 |")
+        .contains("| JVM startup to `/greeting` | 1 | 2000.0 | 2000.0 | 2000.0 | 2000.0 |")
+        .doesNotContain("Spring startup", "HTTP readiness")
         .doesNotContain("paired", "baseline", "candidate");
     assertThat(Files.readAllLines(directory.resolve("samples.csv")))
         .containsExactly(
-            "round,discarded,status,jvm_seconds,spring_seconds,http_seconds,host_load_average",
-            "0,true,ok,3.0,1.0,4.0,0.0",
-            "1,false,ok,2.0,1.5,5.0,0.0");
+            "round,discarded,status,startup_seconds,host_load_average",
+            "0,true,ok,3.0,0.0",
+            "1,false,ok,2.0,0.0");
   }
 
   @Test
   void retainsFailedAndInvalidObservationsWithoutSummarizing() throws Exception {
     AgentStartupReport report = new AgentStartupReport(directory);
-    var failed =
-        new AgentStartupReport.Sample(0, false, "failed", Double.NaN, Double.NaN, Double.NaN, 0);
+    var failed = new AgentStartupReport.Sample(0, false, "failed", Double.NaN, 0);
     report.append(failed);
     assertThatThrownBy(() -> report.summarize(List.of(failed)))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThat(Files.readString(directory.resolve("samples.csv")))
-        .contains("false,failed,NaN,NaN,NaN");
+    assertThat(Files.readString(directory.resolve("samples.csv"))).contains("false,failed,NaN,0.0");
     assertThat(directory.resolve("summary.md")).doesNotExist();
 
-    var invalid = new AgentStartupReport.Sample(1, false, "ok", Double.NaN, 1, 2, 0);
+    var invalid = new AgentStartupReport.Sample(1, false, "ok", Double.NaN, 0);
     report.append(invalid);
     assertThatThrownBy(() -> report.summarize(List.of(invalid)))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThat(Files.readString(directory.resolve("samples.csv")))
-        .contains("1,false,ok,NaN,1.0,2.0");
+    assertThat(Files.readString(directory.resolve("samples.csv"))).contains("1,false,ok,NaN,0.0");
   }
 }
