@@ -137,7 +137,7 @@ class RpcServerMetricsTest {
                   assertThat(metric)
                       .hasName("rpc.server.duration")
                       .hasUnit("ms")
-                      .hasDescription("The duration of an inbound RPC invocation.")
+                      .hasDescription("Measures the duration of inbound RPC.")
                       .hasHistogramSatisfying(
                           histogram ->
                               histogram.hasPointsSatisfying(
@@ -221,7 +221,7 @@ class RpcServerMetricsTest {
                       .hasName("rpc.server.call.duration")
                       .hasUnit("s")
                       .hasDescription(
-                          "Measures the duration of inbound remote procedure calls (RPC).")
+                          "Measures the duration of an incoming Remote Procedure Call (RPC).")
                       .hasHistogramSatisfying(
                           histogram ->
                               histogram.hasPointsSatisfying(

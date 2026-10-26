@@ -50,18 +50,6 @@ testing {
         implementation("org.hornetq:hornetq-jms-client:2.4.7.Final")
         implementation("org.hornetq:hornetq-jms-server:2.4.7.Final")
       }
-
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-            systemProperty(
-              "metadataConfig",
-              "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-            )
-          }
-        }
-      }
     }
   }
 }
@@ -71,32 +59,8 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
-  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("Jms1SuppressReceiveSpansTest")
-    }
-    include("**/Jms1SuppressReceiveSpansTest.*")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("Jms1SuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-    )
-  }
-
   check {
-    dependsOn(
-      testing.suites,
-      testReceiveSpansDisabled,
-    )
+    dependsOn(testing.suites)
   }
 }
 
