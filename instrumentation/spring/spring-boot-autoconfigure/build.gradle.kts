@@ -244,6 +244,7 @@ testing {
         val springKafkaVersion = baseVersion("2.9.0").orLatest("3.+")
         implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
         implementation("javax.servlet:javax.servlet-api:3.1.0")
+        runtimeOnly("io.lettuce:lettuce-core:6.1.10.RELEASE")
         runtimeOnly("com.h2database:h2:1.4.197")
         runtimeOnly("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
       }

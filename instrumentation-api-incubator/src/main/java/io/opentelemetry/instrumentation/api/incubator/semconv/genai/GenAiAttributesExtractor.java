@@ -118,12 +118,7 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(
         GEN_AI_USAGE_REASONING_OUTPUT_TOKENS,
         getter.getUsageReasoningOutputTokens(request, response));
-    String errorType = getter.getErrorType(request, response, error);
-    // fall back to exception class name
-    if (errorType == null && error != null) {
-      errorType = error.getClass().getName();
-    }
-    attributes.put(ERROR_TYPE, errorType);
+    attributes.put(ERROR_TYPE, getter.getErrorType(request, response, error));
   }
 
   /**

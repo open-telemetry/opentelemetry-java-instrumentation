@@ -178,6 +178,7 @@ include(":smoke-tests:images:servlet")
 include(":smoke-tests:images:servlet:servlet-3.0")
 include(":smoke-tests:images:servlet:servlet-5.0")
 include(":smoke-tests:images:spring-boot")
+include(":smoke-tests:images:spring-boot-1.3")
 include(":smoke-tests:extensions:testapp")
 include(":smoke-tests:extensions:extension")
 

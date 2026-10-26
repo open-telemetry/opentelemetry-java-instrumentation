@@ -96,13 +96,21 @@ tasks {
     val extensionTestAppTask = project(":smoke-tests:extensions:testapp").tasks.named<Jar>("jar")
     val extensionTestAppJarPath = extensionTestAppTask.flatMap { it.archiveFile }
 
-    dependsOn(shadowTask, extensionTestAppTask, extensionTask)
+    val legacySpringBootTask = project(":smoke-tests:images:spring-boot-1.3").tasks.named<Jar>("jar")
+    val legacySpringBootJarPath = legacySpringBootTask.flatMap { it.archiveFile }
+    inputs.files(extensionJarPath).withPropertyName("smokeTestExtension")
+    inputs.files(legacySpringBootJarPath)
+      .withPropertyName("legacySpringBootLogCorrelationFixture")
+      .withNormalizer(ClasspathNormalizer::class)
+
+    dependsOn(shadowTask, extensionTestAppTask, extensionTask, legacySpringBootTask)
 
     doFirst {
       jvmArgs(
         "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${agentJarPath.get()}",
         "-Dio.opentelemetry.smoketest.extension.path=${extensionJarPath.get()}",
-        "-Dio.opentelemetry.smoketest.extension.testapp.path=${extensionTestAppJarPath.get()}"
+        "-Dio.opentelemetry.smoketest.extension.testapp.path=${extensionTestAppJarPath.get()}",
+        "-Dio.opentelemetry.smoketest.springboot13.path=${legacySpringBootJarPath.get()}"
       )
     }
   }

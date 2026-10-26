@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpErrorType;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
@@ -120,6 +121,6 @@ public class WebClientHttpAttributesGetter
     if (response == null && error == null) {
       return "cancelled";
     }
-    return null;
+    return HttpErrorType.forClient(this, request, response, error);
   }
 }
