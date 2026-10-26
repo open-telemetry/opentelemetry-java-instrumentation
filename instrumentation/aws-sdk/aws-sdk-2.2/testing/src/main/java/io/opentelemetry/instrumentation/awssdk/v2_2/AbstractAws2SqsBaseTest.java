@@ -28,7 +28,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.net.URI;
@@ -82,10 +81,7 @@ public abstract class AbstractAws2SqsBaseTest extends AbstractAwsSdkTest {
   protected SendMessageBatchRequest sendMessageBatchRequest;
 
   protected boolean receiveTelemetryEnabled() {
-    return getTesting() instanceof AgentInstrumentationExtension
-        ? Boolean.getBoolean(
-            "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled")
-        : Boolean.getBoolean("test.messagingReceiveTelemetryEnabled");
+    return Boolean.getBoolean("test.messagingReceiveTelemetryEnabled");
   }
 
   protected abstract SqsClient configureSqsClient(SqsClient sqsClient);

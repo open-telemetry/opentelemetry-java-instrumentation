@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_SUMMARY;
@@ -21,6 +22,10 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.StatusData;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.BatchPoints;
@@ -65,7 +70,25 @@ class InfluxDbClient24Test {
     String serverUrl = "http://" + host + ":" + port + "/";
     String username = "root";
     String password = "root";
-    influxDb = InfluxDBFactory.connect(serverUrl, username, password);
+    influxDb =
+        InfluxDBFactory.connect(
+            serverUrl,
+            username,
+            password,
+            new OkHttpClient.Builder()
+                .addInterceptor(
+                    chain -> {
+                      Request request = chain.request();
+                      HttpUrl url = request.url();
+                      String encodedQuery = url.encodedQuery();
+                      if (encodedQuery != null && encodedQuery.contains(";")) {
+                        // Retrofit leaves semicolons raw, so InfluxDB's Go form parser truncates q.
+                        url =
+                            url.newBuilder().encodedQuery(encodedQuery.replace(";", "%3B")).build();
+                        request = request.newBuilder().url(url).build();
+                      }
+                      return chain.proceed(request);
+                    }));
     influxDb.createDatabase(DATABASE_NAME);
     cleanup.deferAfterAll(() -> influxDb.deleteDatabase(DATABASE_NAME));
   }
@@ -162,5 +185,41 @@ class InfluxDbClient24Test {
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load where test1 = ?"),
                             equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"))));
+  }
+
+  @Test
+  void testStatementErrorResponse() {
+    Query query =
+        new Query(
+            "SHOW DATABASES; SHOW RETENTION POLICIES ON \"nonexistent_database\"", DATABASE_NAME);
+    QueryResult result = influxDb.query(query);
+
+    assertThat(result.getResults()).hasSize(2);
+    assertThat(result.getResults().get(0).getError()).isNull();
+    assertThat(result.getResults().get(1).getError()).isNotEmpty();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.error())
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getAttributes().get(ERROR_TYPE))
+                                    .isEqualTo("_OTHER"))));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.influxdb-2.4",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.satisfies(
+                                    pointData ->
+                                        assertThat(pointData.getAttributes().get(ERROR_TYPE))
+                                            .isEqualTo("_OTHER")))));
   }
 }

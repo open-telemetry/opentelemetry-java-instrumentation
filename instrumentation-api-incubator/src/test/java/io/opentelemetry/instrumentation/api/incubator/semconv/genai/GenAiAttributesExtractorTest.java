@@ -84,7 +84,7 @@ class GenAiAttributesExtractorTest {
   }
 
   @Test
-  void fallsBackToExceptionClassForErrorType() {
+  void usesDefaultExceptionClassForErrorType() {
     AttributesExtractor<Request, Response> extractor =
         GenAiAttributesExtractor.create(new TestGetter());
     AttributesBuilder attributes = Attributes.builder();
@@ -96,7 +96,18 @@ class GenAiAttributesExtractorTest {
   }
 
   @Test
-  void usesGetterErrorTypeBeforeExceptionClass() {
+  void omitsErrorTypeWhenThereIsNoError() {
+    AttributesExtractor<Request, Response> extractor =
+        GenAiAttributesExtractor.create(new TestGetter());
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(attributes, Context.root(), new Request(false), null, null);
+
+    assertThat(attributes.build().get(ERROR_TYPE)).isNull();
+  }
+
+  @Test
+  void usesCustomFinalErrorType() {
     AttributesExtractor<Request, Response> extractor =
         GenAiAttributesExtractor.create(
             new TestGetter() {
@@ -111,6 +122,24 @@ class GenAiAttributesExtractorTest {
         attributes, Context.root(), new Request(false), null, new IllegalStateException("failure"));
 
     assertThat(attributes.build()).containsEntry(ERROR_TYPE, "provider_error");
+  }
+
+  @Test
+  void explicitNullOmitsErrorTypeEvenWhenThereIsAnError() {
+    AttributesExtractor<Request, Response> extractor =
+        GenAiAttributesExtractor.create(
+            new TestGetter() {
+              @Override
+              public String getErrorType(Request request, Response response, Throwable error) {
+                return null;
+              }
+            });
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(
+        attributes, Context.root(), new Request(false), null, new IllegalStateException("failure"));
+
+    assertThat(attributes.build().get(ERROR_TYPE)).isNull();
   }
 
   @Test

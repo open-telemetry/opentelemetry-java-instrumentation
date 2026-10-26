@@ -41,4 +41,18 @@ public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
   @Nullable
   @Override
   Integer getServerPort(REQUEST request);
+
+  /**
+   * Returns the {@code error.type} value for the HTTP client operation, or {@code null} when no
+   * error type applies.
+   *
+   * <p>The default implementation uses {@link HttpErrorType#forClient(HttpClientAttributesGetter,
+   * Object, Object, Throwable)}.
+   */
+  @Nullable
+  @Override
+  default String getErrorType(
+      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
+    return HttpErrorType.forClient(this, request, response, error);
+  }
 }
