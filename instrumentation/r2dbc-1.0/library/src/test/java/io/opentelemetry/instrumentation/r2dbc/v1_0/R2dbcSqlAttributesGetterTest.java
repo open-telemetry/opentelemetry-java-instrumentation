@@ -77,6 +77,36 @@ class R2dbcSqlAttributesGetterTest {
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("08006");
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {"mysql", "mariadb"})
+  void prefersVendorCodeWithoutChangingErrorType(String dbSystemName) {
+    DbExecution request = request(dbSystemName);
+    Throwable error = new R2dbcBadGrammarException("test", "42000", 1064);
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("42000");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"mysql", "mariadb"})
+  void usesVendorCodeWhenSqlStateIsUnavailable(String dbSystemName) {
+    DbExecution request = request(dbSystemName);
+    Throwable error = new R2dbcBadGrammarException("test", null, 1064);
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
+    assertThat(getter.getErrorType(request, null, error)).isNull();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"mysql", "mariadb"})
+  void fallsBackToSqlStateWhenVendorCodeIsUnavailable(String dbSystemName) {
+    DbExecution request = request(dbSystemName);
+    Throwable error = new R2dbcBadGrammarException("test", "42000", 0);
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("42000");
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("42000");
+  }
+
   private static Throwable postgresqlConnectionClosedException()
       throws ReflectiveOperationException {
     Class<?> exceptionClass =
@@ -308,5 +338,11 @@ class R2dbcSqlAttributesGetterTest {
         .queryInfo(new QueryInfo("SELECT 1"))
         .connectionInfo(MockConnectionInfo.builder().build())
         .build();
+  }
+
+  private static DbExecution request(String dbSystemName) {
+    return new DbExecution(
+        queryExecutionInfo(),
+        ConnectionFactoryOptions.parse("r2dbc:" + dbSystemName + "://localhost/db"));
   }
 }

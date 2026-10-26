@@ -16,9 +16,7 @@ import org.junit.jupiter.api.Test;
 class VertxSqlClientAttributesGetterTest {
 
   private final VertxSqlClientAttributesGetter getter = new VertxSqlClientAttributesGetter();
-  private final VertxSqlClientRequest request =
-      new VertxSqlClientRequest(
-          "select 1", VertxSqlClientInfo.createUnknown("oracle.db"), false, null);
+  private final VertxSqlClientRequest request = request("oracle.db");
 
   @Test
   void omitsClientConnectionStatusWithoutChangingErrorType() {
@@ -40,7 +38,34 @@ class VertxSqlClientAttributesGetterTest {
     DatabaseException error = new DatabaseException("Server failure", 12541, "66000", cause) {};
 
     assertThat(getter.getErrorType(request, null, error)).isEqualTo("66000");
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("66000");
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("12541");
+  }
+
+  @Test
+  void prefersMysqlVendorCodeWithoutChangingErrorType() {
+    VertxSqlClientRequest mysqlRequest = request("mysql.db");
+    DatabaseException error = new DatabaseException("Syntax error", 1064, "42000") {};
+
+    assertThat(getter.getErrorType(mysqlRequest, null, error)).isEqualTo("42000");
+    assertThat(getter.getDbResponseStatusCode(mysqlRequest, null, error)).isEqualTo("1064");
+  }
+
+  @Test
+  void usesMysqlVendorCodeWhenSqlStateIsUnavailable() {
+    VertxSqlClientRequest mysqlRequest = request("mysql.db");
+    DatabaseException error = new DatabaseException("Syntax error", 1064, null) {};
+
+    assertThat(getter.getErrorType(mysqlRequest, null, error)).isEqualTo("null");
+    assertThat(getter.getDbResponseStatusCode(mysqlRequest, null, error)).isEqualTo("1064");
+  }
+
+  @Test
+  void fallsBackToSqlStateWhenVendorCodeIsUnavailable() {
+    VertxSqlClientRequest mysqlRequest = request("mysql.db");
+    DatabaseException error = new DatabaseException("Syntax error", 0, "42000") {};
+
+    assertThat(getter.getErrorType(mysqlRequest, null, error)).isEqualTo("42000");
+    assertThat(getter.getDbResponseStatusCode(mysqlRequest, null, error)).isEqualTo("42000");
   }
 
   @Test
@@ -57,6 +82,11 @@ class VertxSqlClientAttributesGetterTest {
     DatabaseException error = new DatabaseException("Server failure", 12541, "66000", cause) {};
     cause.initCause(error);
 
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("66000");
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("12541");
+  }
+
+  private static VertxSqlClientRequest request(String dbSystemName) {
+    return new VertxSqlClientRequest(
+        "select 1", VertxSqlClientInfo.createUnknown(dbSystemName), false, null);
   }
 }

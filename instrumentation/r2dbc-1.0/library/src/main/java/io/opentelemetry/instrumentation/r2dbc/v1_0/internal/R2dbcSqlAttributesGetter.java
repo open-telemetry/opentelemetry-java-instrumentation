@@ -21,6 +21,8 @@ public final class R2dbcSqlAttributesGetter
     implements SqlClientAttributesGetter<DbExecution, Void> {
 
   private static final String POSTGRESQL_DATABASE = "postgresql";
+  private static final String MYSQL_DATABASE = "mysql";
+  private static final String MARIADB_DATABASE = "mariadb";
   private static final String POSTGRESQL_CLOSED_CONNECTION_EXCEPTION =
       "io.r2dbc.postgresql.client.ReactorNettyClient$PostgresConnectionClosedException";
   private static final String POSTGRESQL_CONNECTION_FAILURE = "08006";
@@ -63,13 +65,24 @@ public final class R2dbcSqlAttributesGetter
   @Override
   public String getDbResponseStatusCode(
       DbExecution request, @Nullable Void response, @Nullable Throwable error) {
-    if (POSTGRESQL_DATABASE.equals(getDbSystemName(request))
+    String dbSystemName = getDbSystemName(request);
+    if (POSTGRESQL_DATABASE.equals(dbSystemName)
         && error != null
         && POSTGRESQL_CLOSED_CONNECTION_EXCEPTION.equals(error.getClass().getName())
         && POSTGRESQL_CONNECTION_FAILURE.equals(getSqlState(error))) {
       return null;
     }
+    if (MYSQL_DATABASE.equals(dbSystemName) || MARIADB_DATABASE.equals(dbSystemName)) {
+      int errorCode = getErrorCode(error);
+      if (errorCode != 0) {
+        return Integer.toString(errorCode);
+      }
+    }
     return getSqlState(error);
+  }
+
+  private static int getErrorCode(@Nullable Throwable error) {
+    return error instanceof R2dbcException ? ((R2dbcException) error).getErrorCode() : 0;
   }
 
   @Nullable
