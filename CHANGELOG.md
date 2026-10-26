@@ -4,9 +4,8 @@
 
 ### ⚠️ Breaking changes
 
-- HTTP client and server getters now own the final `error.type`: overrides returning `null` omit it
-  even for error statuses, and direct `HttpCommonAttributesGetter` implementations must provide
-  `getErrorType()`.
+- HTTP client and server getters now determine `error.type`; their returned value, including `null`,
+  is used as-is.
 - Rename the Spark Java instrumentation selector from `spark-2.3` to `spark-2.4`.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to
