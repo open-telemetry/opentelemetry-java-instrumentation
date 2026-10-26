@@ -126,13 +126,8 @@ class AgentStartupBenchmark {
         HttpClient client = HttpClient.newBuilder().connectTimeout(TIMEOUT).build()) {
       try {
         application.start();
-        var image = docker.inspectImageCmd(application.getContainerInfo().getImageId()).exec();
-        metadata.setProperty("image.id", image.getId());
-        metadata.setProperty("image.digests", String.valueOf(image.getRepoDigests()));
-        metadata.setProperty("image.architecture", image.getArch());
-        metadata.setProperty("image.os", image.getOs());
-
         HttpResponse<String> response = awaitReadiness(application, client);
+        Instant cutoff = Instant.now();
         double startupSeconds =
             startupSeconds(
                 response.statusCode(),
@@ -142,9 +137,14 @@ class AgentStartupBenchmark {
         if (jvmVersion == null || jvmVersion.isBlank()) {
           throw new IllegalArgumentException("Missing application JVM version response header");
         }
+
+        var image = docker.inspectImageCmd(application.getContainerInfo().getImageId()).exec();
+        metadata.setProperty("image.id", image.getId());
+        metadata.setProperty("image.digests", String.valueOf(image.getRepoDigests()));
+        metadata.setProperty("image.architecture", image.getArch());
+        metadata.setProperty("image.os", image.getOs());
         metadata.setProperty("jvm.version", jvmVersion);
         saveMetadata(directory, metadata);
-        Instant cutoff = Instant.now();
         String logs = application.getLogs();
         assertThat(logs).contains("opentelemetry-javaagent - version:");
         if (profile) {
