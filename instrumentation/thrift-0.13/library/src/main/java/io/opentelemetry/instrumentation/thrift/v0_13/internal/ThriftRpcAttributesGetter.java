@@ -35,8 +35,20 @@ final class ThriftRpcAttributesGetter
   @Override
   @Nullable
   public String getRpcMethod(ThriftRequest request) {
+    return request.isMethodRecognized() ? getLogicalMethod(request) : "_OTHER";
+  }
+
+  @Override
+  @Nullable
+  public String getRpcMethodOriginal(ThriftRequest request) {
+    String original = request.isMethodRecognized() ? null : getLogicalMethod(request);
+    return "_OTHER".equals(original) ? null : original;
+  }
+
+  @Nullable
+  private static String getLogicalMethod(ThriftRequest request) {
     String service = request.getRpcServiceName();
-    String method = getMethod(request);
+    String method = request.getMethodName();
     if (service != null && method != null) {
       return service + "/" + method;
     }

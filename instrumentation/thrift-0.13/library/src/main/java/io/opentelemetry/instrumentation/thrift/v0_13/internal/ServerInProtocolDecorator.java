@@ -38,6 +38,7 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
   private boolean isOneway;
   @Nullable private String serviceName;
   @Nullable private String rpcServiceName;
+  @Nullable private Map<String, ?> processMap;
   @Nullable private String methodName;
   @Nullable private ThriftRequest currentRequest;
   @Nullable private Context currentContext;
@@ -162,7 +163,8 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
         rpcServiceName,
         socket != null ? socket.getLocalSocketAddress() : null,
         socket != null ? socket.getRemoteSocketAddress() : null,
-        headers);
+        headers,
+        processMap != null && processMap.get(methodName) != null);
   }
 
   public void closeScope() {
@@ -196,6 +198,10 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
   public void setServiceNames(String serviceName, String rpcServiceName) {
     this.serviceName = serviceName;
     this.rpcServiceName = rpcServiceName;
+  }
+
+  public void setProcessMap(@Nullable Map<String, ?> processMap) {
+    this.processMap = processMap;
   }
 
   public boolean isOneway() {

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.thrift.v0_13.internal;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.thrift.v0_13.ThriftRequest;
 import io.opentelemetry.instrumentation.thrift.v0_13.ThriftResponse;
+import org.apache.thrift.TBaseProcessor;
 import org.apache.thrift.TException;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TProtocol;
@@ -36,6 +37,9 @@ public final class ServerProcessorDecorator implements TProcessor {
     Throwable error = null;
     ServerInProtocolDecorator serverInProtocolDecorator =
         new ServerInProtocolDecorator(inProtocol, serviceName, instrumenter);
+    if (processor instanceof TBaseProcessor) {
+      serverInProtocolDecorator.setProcessMap(((TBaseProcessor<?>) processor).getProcessMapView());
+    }
     ServerOutProtocolDecorator serverOutProtocolDecorator =
         new ServerOutProtocolDecorator(outProtocol);
     try {

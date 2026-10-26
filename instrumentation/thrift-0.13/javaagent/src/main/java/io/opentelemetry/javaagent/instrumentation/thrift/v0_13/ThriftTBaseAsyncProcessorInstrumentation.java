@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.thrift.v0_13.internal.ServerInProtocolDe
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ServerOutProtocolDecorator;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -41,15 +42,18 @@ class ThriftTBaseAsyncProcessorInstrumentation implements TypeInstrumentation {
     public static void methodEnter(
         @Advice.This Object processor,
         @Advice.Argument(0) AbstractNonblockingServer.AsyncFrameBuffer fb,
-        @Advice.FieldValue("iface") Object iface) {
+        @Advice.FieldValue("iface") Object iface,
+        @Advice.FieldValue("processMap") Map<String, ?> processMap) {
       ServerOutProtocolDecorator serverOutProtocolDecorator =
           (ServerOutProtocolDecorator) fb.getOutputProtocol();
       serverOutProtocolDecorator.resetExceptionState();
 
       String serviceName = ThriftSingletons.getServerServiceName(processor, iface);
       String rpcServiceName = ThriftSingletons.getServerRpcServiceName(processor, iface);
-      ((ServerInProtocolDecorator) fb.getInputProtocol())
-          .setServiceNames(serviceName, rpcServiceName);
+      ServerInProtocolDecorator serverInProtocolDecorator =
+          (ServerInProtocolDecorator) fb.getInputProtocol();
+      serverInProtocolDecorator.setServiceNames(serviceName, rpcServiceName);
+      serverInProtocolDecorator.setProcessMap(processMap);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

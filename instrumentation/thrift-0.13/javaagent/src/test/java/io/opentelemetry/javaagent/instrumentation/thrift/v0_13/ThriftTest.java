@@ -77,6 +77,11 @@ class ThriftTest extends AbstractThriftTest {
     return CustomService.class.getName();
   }
 
+  @Override
+  protected String getServerServiceName(String explicitServiceName, String discoveredServiceName) {
+    return discoveredServiceName;
+  }
+
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void serviceIdentityDoesNotDependOnSyncHandler(boolean inherited) throws Exception {

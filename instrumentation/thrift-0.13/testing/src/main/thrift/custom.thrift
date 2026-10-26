@@ -34,3 +34,6 @@ service CustomService {
 
         UserWithAddress save(1:User user, 2:Address address)
 }
+
+service ExtendedService extends CustomService {
+}

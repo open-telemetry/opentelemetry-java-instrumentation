@@ -18,6 +18,7 @@ public final class ThriftRequest {
   @Nullable private final String methodName;
   @Nullable private final String serviceName;
   @Nullable private final String rpcServiceName;
+  private final boolean methodRecognized;
   private final Map<String, String> headers;
   @Nullable private final SocketAddress localAddress;
   @Nullable private final SocketAddress remoteAddress;
@@ -63,9 +64,21 @@ public final class ThriftRequest {
       @Nullable SocketAddress localAddress,
       @Nullable SocketAddress remoteAddress,
       Map<String, String> headers) {
+    this(methodName, serviceName, rpcServiceName, localAddress, remoteAddress, headers, true);
+  }
+
+  public ThriftRequest(
+      @Nullable String methodName,
+      @Nullable String serviceName,
+      @Nullable String rpcServiceName,
+      @Nullable SocketAddress localAddress,
+      @Nullable SocketAddress remoteAddress,
+      Map<String, String> headers,
+      boolean methodRecognized) {
     this.methodName = methodName;
     this.serviceName = serviceName;
     this.rpcServiceName = rpcServiceName;
+    this.methodRecognized = methodRecognized;
     this.headers = requireNonNull(headers);
     this.localAddress = localAddress;
     this.remoteAddress = remoteAddress;
@@ -84,6 +97,10 @@ public final class ThriftRequest {
   @Nullable
   public String getRpcServiceName() {
     return rpcServiceName;
+  }
+
+  public boolean isMethodRecognized() {
+    return methodRecognized;
   }
 
   public Map<String, String> getHeaders() {

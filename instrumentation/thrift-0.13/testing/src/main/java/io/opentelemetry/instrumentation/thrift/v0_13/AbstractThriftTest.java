@@ -50,6 +50,7 @@ import static org.junit.jupiter.api.Named.named;
 
 import custom.Address;
 import custom.CustomService;
+import custom.ExtendedService;
 import custom.User;
 import custom.UserWithAddress;
 import io.opentelemetry.api.trace.SpanKind;
@@ -74,8 +75,11 @@ import org.apache.thrift.TProcessorFactory;
 import org.apache.thrift.async.AsyncMethodCallback;
 import org.apache.thrift.async.TAsyncClientManager;
 import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.protocol.TMessage;
+import org.apache.thrift.protocol.TMessageType;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolFactory;
+import org.apache.thrift.protocol.TStruct;
 import org.apache.thrift.server.TNonblockingServer;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TSimpleServer;
@@ -105,6 +109,10 @@ public abstract class AbstractThriftTest {
 
   protected String getServerRpcServiceName(String handlerClassName) {
     return handlerClassName;
+  }
+
+  protected String getServerServiceName(String explicitServiceName, String discoveredServiceName) {
+    return explicitServiceName;
   }
 
   protected abstract TProcessor configure(TProcessor processor, String serviceName);
@@ -147,7 +155,11 @@ public abstract class AbstractThriftTest {
     if (configure) {
       processor = configure(processor, handler.getClass().getName());
     }
+    return startSimpleServer(processor, transportFactory);
+  }
 
+  protected int startSimpleServer(TProcessor processor, TTransportFactory transportFactory)
+      throws Exception {
     TServerSocket transport = new TServerSocket(0);
     TServer.Args serverArgs = new TServer.Args(transport).processor(processor);
     if (transportFactory != null) {
@@ -223,7 +235,10 @@ public abstract class AbstractThriftTest {
     if (configure) {
       processor = configure(processor, handler.getClass().getName());
     }
+    return startAsyncServer(processor);
+  }
 
+  protected int startAsyncServer(TProcessor processor) throws Exception {
     TNonblockingServerSocket transport = new TNonblockingServerSocket(0, 30000);
     TNonblockingServer.Args tnbArgs = new TNonblockingServer.Args(transport);
     tnbArgs.processor(processor);
@@ -472,6 +487,224 @@ public abstract class AbstractThriftTest {
                                               CustomService.class.getName() + "/say")))));
     }
   }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  void unrecognizedWireMethods(boolean async) throws Exception {
+    int port = async ? startAsyncServer() : startSimpleServer();
+    String handlerName = async ? CustomAsyncHandler.class.getName() : CustomHandler.class.getName();
+    TTransport transport = new TSocket("localhost", port, 15000);
+    if (async) {
+      transport = framedTransportFactory().getTransport(transport);
+    }
+    cleanup.deferCleanup(transport);
+    transport.open();
+    TProtocol protocol = new TBinaryProtocol(transport);
+
+    String[] methods = {"undefined-request-123", "undefined-request-456"};
+    boolean networkAttributes = !async || hasAsyncServerNetworkAttributes();
+    List<Consumer<TraceAssert>> assertions = new ArrayList<>();
+    for (String method : methods) {
+      protocol.writeMessageBegin(new TMessage(method, TMessageType.CALL, 1));
+      protocol.writeStructBegin(new TStruct());
+      protocol.writeFieldStop();
+      protocol.writeStructEnd();
+      protocol.writeMessageEnd();
+      transport.flush();
+
+      assertThat(protocol.readMessageBegin().type).isEqualTo(TMessageType.EXCEPTION);
+      TApplicationException error = new TApplicationException();
+      error.read(protocol);
+      protocol.readMessageEnd();
+      assertThat(error.getType()).isEqualTo(TApplicationException.UNKNOWN_METHOD);
+      assertions.add(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName(
+                              emitPreviewRpcSemconv()
+                                  ? "apache_thrift"
+                                  : handlerName + "/" + method)
+                          .hasKind(SpanKind.SERVER)
+                          .hasNoParent()
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? "_OTHER" : method),
+                              equalTo(
+                                  stringKey("rpc.method_original"),
+                                  emitPreviewRpcSemconv()
+                                      ? getServerRpcServiceName(handlerName) + "/" + method
+                                      : null),
+                              equalTo(RPC_SERVICE, emitOldRpcSemconv() ? handlerName : null),
+                              equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
+                              equalTo(
+                                  RPC_SYSTEM_NAME,
+                                  emitPreviewRpcSemconv() ? "apache_thrift" : null),
+                              equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? "_OTHER" : null),
+                              equalTo(SERVER_ADDRESS, networkAttributes ? "127.0.0.1" : null),
+                              equalTo(SERVER_PORT, networkAttributes ? (long) port : null),
+                              equalTo(NETWORK_TYPE, networkAttributes ? "ipv4" : null),
+                              equalTo(NETWORK_PEER_ADDRESS, networkAttributes ? "127.0.0.1" : null),
+                              satisfies(
+                                  NETWORK_PEER_PORT,
+                                  val -> {
+                                    if (networkAttributes) {
+                                      val.isNotNegative();
+                                    } else {
+                                      val.isNull();
+                                    }
+                                  }),
+                              equalTo(
+                                  NETWORK_LOCAL_ADDRESS, networkAttributes ? "127.0.0.1" : null),
+                              equalTo(
+                                  NETWORK_LOCAL_PORT, networkAttributes ? (long) port : null))));
+    }
+    getTesting().waitAndAssertTraces(assertions);
+
+    if (emitPreviewRpcSemconv()) {
+      getTesting()
+          .waitAndAssertMetrics(
+              "io.opentelemetry.thrift-0.13",
+              metric ->
+                  metric
+                      .hasName("rpc.server.call.duration")
+                      .hasHistogramSatisfying(
+                          histogram ->
+                              histogram.hasPointsSatisfyingExactly(
+                                  point ->
+                                      point
+                                          .hasCount(2)
+                                          .hasAttributesSatisfyingExactly(
+                                              equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                                              equalTo(RPC_METHOD, "_OTHER"),
+                                              equalTo(
+                                                  SERVER_ADDRESS,
+                                                  networkAttributes ? "127.0.0.1" : null),
+                                              equalTo(
+                                                  SERVER_PORT,
+                                                  networkAttributes ? (long) port : null),
+                                              equalTo(ERROR_TYPE, "_OTHER")))));
+    }
+    if (emitOldRpcSemconv()) {
+      getTesting()
+          .waitAndAssertMetrics(
+              "io.opentelemetry.thrift-0.13",
+              metric ->
+                  metric
+                      .hasName("rpc.server.duration")
+                      .hasHistogramSatisfying(
+                          histogram ->
+                              histogram.hasPointsSatisfyingExactly(
+                                  point ->
+                                      point
+                                          .hasCount(1)
+                                          .hasAttributesSatisfyingExactly(
+                                              equalTo(RPC_SYSTEM, "apache_thrift"),
+                                              equalTo(RPC_SERVICE, handlerName),
+                                              equalTo(RPC_METHOD, methods[0]),
+                                              equalTo(
+                                                  SERVER_ADDRESS,
+                                                  networkAttributes ? "127.0.0.1" : null),
+                                              equalTo(
+                                                  SERVER_PORT,
+                                                  networkAttributes ? (long) port : null),
+                                              equalTo(
+                                                  NETWORK_TYPE, networkAttributes ? "ipv4" : null)),
+                                  point ->
+                                      point
+                                          .hasCount(1)
+                                          .hasAttributesSatisfyingExactly(
+                                              equalTo(RPC_SYSTEM, "apache_thrift"),
+                                              equalTo(RPC_SERVICE, handlerName),
+                                              equalTo(RPC_METHOD, methods[1]),
+                                              equalTo(
+                                                  SERVER_ADDRESS,
+                                                  networkAttributes ? "127.0.0.1" : null),
+                                              equalTo(
+                                                  SERVER_PORT,
+                                                  networkAttributes ? (long) port : null),
+                                              equalTo(
+                                                  NETWORK_TYPE,
+                                                  networkAttributes ? "ipv4" : null)))));
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  void inheritedMethodDispatch(boolean async) throws Exception {
+    String serviceName = "explicit-service";
+    TProcessor processor =
+        async
+            ? new ExtendedService.AsyncProcessor<>(new InheritedAsyncHandler())
+            : new ExtendedService.Processor<>(new InheritedHandler());
+    processor = configure(processor, serviceName);
+    int port = async ? startAsyncServer(processor) : startSimpleServer(processor, null);
+    TTransport transport = new TSocket("localhost", port, 15000);
+    if (async) {
+      transport = framedTransportFactory().getTransport(transport);
+    }
+    cleanup.deferCleanup(transport);
+    transport.open();
+    TProtocol protocol = new TBinaryProtocol(transport);
+    protocol.writeMessageBegin(new TMessage("say", TMessageType.CALL, 1));
+    new CustomService.say_args("Hello", "World").write(protocol);
+    protocol.writeMessageEnd();
+    transport.flush();
+    assertThat(protocol.readMessageBegin().type).isEqualTo(TMessageType.REPLY);
+    CustomService.say_result result = new CustomService.say_result();
+    result.read(protocol);
+    protocol.readMessageEnd();
+    assertThat(result.getSuccess()).isEqualTo("Say Hello World");
+
+    String handlerName =
+        async ? InheritedAsyncHandler.class.getName() : InheritedHandler.class.getName();
+    String legacyService = getServerServiceName(serviceName, handlerName);
+    String rpcService = getServerServiceName(serviceName, ExtendedService.class.getName());
+    boolean networkAttributes = !async || hasAsyncServerNetworkAttributes();
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(
+                                (emitPreviewRpcSemconv() ? rpcService : legacyService) + "/say")
+                            .hasKind(SpanKind.SERVER)
+                            .hasNoParent()
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    RPC_METHOD,
+                                    emitPreviewRpcSemconv() ? rpcService + "/say" : "say"),
+                                equalTo(RPC_SERVICE, emitOldRpcSemconv() ? legacyService : null),
+                                equalTo(stringKey("rpc.method_original"), null),
+                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
+                                equalTo(
+                                    RPC_SYSTEM_NAME,
+                                    emitPreviewRpcSemconv() ? "apache_thrift" : null),
+                                equalTo(SERVER_ADDRESS, networkAttributes ? "127.0.0.1" : null),
+                                equalTo(SERVER_PORT, networkAttributes ? (long) port : null),
+                                equalTo(NETWORK_TYPE, networkAttributes ? "ipv4" : null),
+                                equalTo(
+                                    NETWORK_PEER_ADDRESS, networkAttributes ? "127.0.0.1" : null),
+                                satisfies(
+                                    NETWORK_PEER_PORT,
+                                    val -> {
+                                      if (networkAttributes) {
+                                        val.isNotNegative();
+                                      } else {
+                                        val.isNull();
+                                      }
+                                    }),
+                                equalTo(
+                                    NETWORK_LOCAL_ADDRESS, networkAttributes ? "127.0.0.1" : null),
+                                equalTo(
+                                    NETWORK_LOCAL_PORT, networkAttributes ? (long) port : null))));
+  }
+
+  private static class InheritedHandler extends CustomHandler implements ExtendedService.Iface {}
+
+  private static class InheritedAsyncHandler extends CustomAsyncHandler
+      implements ExtendedService.AsyncIface {}
 
   @ParameterizedTest
   @ValueSource(strings = {"simple", "threadPool"})

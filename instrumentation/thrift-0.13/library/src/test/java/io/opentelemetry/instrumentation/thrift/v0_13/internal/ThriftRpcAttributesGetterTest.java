@@ -29,6 +29,37 @@ class ThriftRpcAttributesGetterTest {
 
     assertThat(getter.getService(request)).isEqualTo("handler");
     assertThat(getter.getRpcMethod(request)).isEqualTo("idl/method");
+    assertThat(getter.getRpcMethodOriginal(request)).isNull();
+  }
+
+  @ParameterizedTest
+  @CsvSource({"idl,idl/method", ",method"})
+  void unrecognizedMethodRetainsOriginalName(String serviceName, String originalMethod) {
+    ThriftRequest request =
+        new ThriftRequest("method", "handler", serviceName, null, null, emptyMap(), false);
+
+    assertThat(getter.getMethod(request)).isEqualTo("method");
+    assertThat(getter.getService(request)).isEqualTo("handler");
+    assertThat(getter.getRpcMethod(request)).isEqualTo("_OTHER");
+    assertThat(getter.getRpcMethodOriginal(request)).isEqualTo(originalMethod);
+  }
+
+  @Test
+  void unrecognizedMethodWithoutOriginalName() {
+    ThriftRequest request =
+        new ThriftRequest(null, "handler", "idl", null, null, emptyMap(), false);
+
+    assertThat(getter.getRpcMethod(request)).isEqualTo("_OTHER");
+    assertThat(getter.getRpcMethodOriginal(request)).isNull();
+  }
+
+  @Test
+  void originalNameIsOmittedWhenIdenticalToOther() {
+    ThriftRequest request =
+        new ThriftRequest("_OTHER", null, null, null, null, emptyMap(), false);
+
+    assertThat(getter.getRpcMethod(request)).isEqualTo("_OTHER");
+    assertThat(getter.getRpcMethodOriginal(request)).isNull();
   }
 
   @Test

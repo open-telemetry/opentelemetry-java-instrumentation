@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.thrift.v0_13.internal.ServerInProtocolDe
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ServerOutProtocolDecorator;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
@@ -48,13 +49,15 @@ class ThriftTBaseProcessorInstrumentation implements TypeInstrumentation {
         @Advice.This Object processor,
         @Advice.Argument(0) TProtocol inProtocol,
         @Advice.Argument(1) TProtocol outProtocol,
-        @Advice.FieldValue("iface") Object iface) {
+        @Advice.FieldValue("iface") Object iface,
+        @Advice.FieldValue("processMap") Map<String, ?> processMap) {
       String serviceName = ThriftSingletons.getServerServiceName(processor, iface);
       String rpcServiceName = ThriftSingletons.getServerRpcServiceName(processor, iface);
 
       ServerInProtocolDecorator serverInProtocolDecorator =
           new ServerInProtocolDecorator(
               inProtocol, serviceName, rpcServiceName, serverInstrumenter());
+      serverInProtocolDecorator.setProcessMap(processMap);
       ServerOutProtocolDecorator serverOutProtocolDecorator =
           new ServerOutProtocolDecorator(outProtocol);
 

@@ -43,6 +43,7 @@ public final class ServerAsyncProcessorDecorator implements TAsyncProcessor, TPr
 
     serverOutProtocolDecorator.resetExceptionState();
     serverInProtocolDecorator.setServiceName(serviceName);
+    serverInProtocolDecorator.setProcessMap(processor.getProcessMapView());
     ServerCallContext serverCallContext = ServerCallContext.start(transport);
     Throwable error = null;
     try {

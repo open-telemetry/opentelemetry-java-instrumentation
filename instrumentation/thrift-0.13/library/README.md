@@ -79,4 +79,6 @@ To opt in to the RPC preview conventions, set `otel.semconv-stability.preview=rp
 property is read from JVM system properties or environment variables; custom programmatic
 OpenTelemetry configuration may require configuring the preview setting through its own
 configuration mechanism. These modes do not replace the `serviceName` supplied to the library
-wrapper: preview `rpc.method` combines that name and the method as `<service>/<method>`.
+wrapper: for methods in the generated processor's dispatch map, preview `rpc.method` combines
+that name and the method as `<service>/<method>`. Undefined methods, or processors whose dispatch
+definition is unavailable, use `_OTHER`; spans retain the requested name in `rpc.method_original`.
