@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -16,13 +18,16 @@ import static java.util.Collections.singletonList;
 
 import com.alipay.sofa.rpc.common.RemotingConstants;
 import com.alipay.sofa.rpc.common.RpcConstants;
+import com.alipay.sofa.rpc.config.AbstractInterfaceConfig;
 import com.alipay.sofa.rpc.config.ConsumerConfig;
+import com.alipay.sofa.rpc.config.ProviderConfig;
 import com.alipay.sofa.rpc.core.exception.RpcErrorType;
 import com.alipay.sofa.rpc.core.exception.SofaRpcException;
 import com.alipay.sofa.rpc.core.request.SofaRequest;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import com.alipay.sofa.rpc.filter.Filter;
 import com.alipay.sofa.rpc.filter.FilterInvoker;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -58,19 +63,25 @@ class SofaRpcTest extends AbstractSofaRpcTest {
 
   @ParameterizedTest
   @CsvSource({
-    "false, SUCCESS",
-    "true, SUCCESS",
-    "false, ERROR_FLAG",
-    "true, ERROR_FLAG",
-    "false, ERROR_MESSAGE",
-    "true, ERROR_MESSAGE",
-    "false, RPC_EXCEPTION",
-    "true, RPC_EXCEPTION",
-    "false, APPLICATION_EXCEPTION",
-    "true, APPLICATION_EXCEPTION",
-    "true, CALLBACK_EXCEPTION"
+    "false, CLIENT, SUCCESS",
+    "true, CLIENT, SUCCESS",
+    "false, CLIENT, ERROR_FLAG",
+    "true, CLIENT, ERROR_FLAG",
+    "false, CLIENT, ERROR_MESSAGE",
+    "true, CLIENT, ERROR_MESSAGE",
+    "false, CLIENT, RPC_EXCEPTION",
+    "true, CLIENT, RPC_EXCEPTION",
+    "false, CLIENT, APPLICATION_EXCEPTION",
+    "true, CLIENT, APPLICATION_EXCEPTION",
+    "true, CLIENT, CALLBACK_EXCEPTION",
+    "false, SERVER, SUCCESS",
+    "false, SERVER, ERROR_FLAG",
+    "false, SERVER, ERROR_MESSAGE",
+    "false, SERVER, RPC_EXCEPTION",
+    "false, SERVER, APPLICATION_EXCEPTION"
   })
-  void responseOutcome(boolean async, ResponseType responseType) {
+  @SuppressWarnings("rawtypes")
+  void responseOutcome(boolean async, Side side, ResponseType responseType) {
     String service = ErrorService.class.getName();
     String method = "throwException";
     SofaRequest request = new SofaRequest();
@@ -83,8 +94,11 @@ class SofaRpcTest extends AbstractSofaRpcTest {
     SofaResponse response = new SofaResponse();
     response.addResponseProp(
         RemotingConstants.HEAD_RESPONSE_ERROR,
-        responseType == ResponseType.SUCCESS ? "false" : "true");
+        responseType == ResponseType.SUCCESS || responseType == ResponseType.ERROR_MESSAGE
+            ? "false"
+            : "true");
     Throwable callbackException = null;
+    Throwable actualException = null;
     String errorType = null;
     String statusCode = null;
     switch (responseType) {
@@ -99,23 +113,29 @@ class SofaRpcTest extends AbstractSofaRpcTest {
         errorType = Integer.toString(RpcErrorType.SERVER_UNDECLARED_ERROR);
         break;
       case RPC_EXCEPTION:
-        response.setAppResponse(new SofaRpcException(RpcErrorType.SERVER_BUSY, "RPC error"));
+        actualException = new SofaRpcException(RpcErrorType.SERVER_BUSY, "RPC error");
+        response.setAppResponse(actualException);
         errorType = Integer.toString(RpcErrorType.SERVER_BUSY);
         statusCode = errorType;
         break;
       case APPLICATION_EXCEPTION:
-        response.setAppResponse(new IllegalStateException("application error"));
+        actualException = new IllegalStateException("application error");
+        response.setAppResponse(actualException);
         errorType = IllegalStateException.class.getName();
         break;
       case CALLBACK_EXCEPTION:
-        response.setAppResponse(new IllegalStateException("application error"));
+        response.setAppResponse(new IllegalStateException("response error"));
         callbackException = new SofaRpcException(RpcErrorType.CLIENT_TIMEOUT, "callback error");
+        actualException = callbackException;
         errorType = Integer.toString(RpcErrorType.CLIENT_TIMEOUT);
         statusCode = errorType;
         break;
     }
 
-    ConsumerConfig<?> config = new ConsumerConfig<>().setInterfaceId(service).setInJVM(false);
+    AbstractInterfaceConfig<?, ?> config =
+        side == Side.CLIENT
+            ? new ConsumerConfig<>().setInterfaceId(service).setInJVM(false)
+            : new ProviderConfig<>().setInterfaceId(service);
     FilterInvoker invoker =
         new FilterInvoker(null, null, config) {
           @Override
@@ -123,14 +143,15 @@ class SofaRpcTest extends AbstractSofaRpcTest {
             return response;
           }
         };
-    Filter filter = telemetry.newClientFilter();
+    Filter filter = side == Side.CLIENT ? telemetry.newClientFilter() : telemetry.newServerFilter();
     assertThat(filter.invoke(invoker, request)).isSameAs(response);
     if (async) {
-      filter.onAsyncResponse(config, request, response, callbackException);
+      filter.onAsyncResponse((ConsumerConfig) config, request, response, callbackException);
     }
 
     String rpcMethod = service + "/" + method;
     String expectedErrorType = errorType;
+    Throwable expectedException = actualException;
     String expectedStatusCode = statusCode;
     testing()
         .waitAndAssertTraces(
@@ -138,10 +159,11 @@ class SofaRpcTest extends AbstractSofaRpcTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName(rpcMethod)
-                            .hasKind(SpanKind.CLIENT)
+                            .hasKind(side == Side.CLIENT ? SpanKind.CLIENT : SpanKind.SERVER)
                             .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasStatus(
                                 expectedErrorType == null ? StatusData.unset() : StatusData.error())
+                            .hasException(emitExceptionAsSpanEvents() ? expectedException : null)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                 equalTo(RPC_METHOD, rpcMethod),
@@ -151,12 +173,15 @@ class SofaRpcTest extends AbstractSofaRpcTest {
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.sofa-rpc-5.4",
-            "rpc.client.call.duration",
+            side == Side.CLIENT ? "rpc.client.call.duration" : "rpc.server.call.duration",
             metrics ->
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasName("rpc.client.call.duration")
+                            .hasName(
+                                side == Side.CLIENT
+                                    ? "rpc.client.call.duration"
+                                    : "rpc.server.call.duration")
                             .hasUnit("s")
                             .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasHistogramSatisfying(
@@ -174,6 +199,27 @@ class SofaRpcTest extends AbstractSofaRpcTest {
                                                     equalTo(
                                                         stringKey("rpc.status_code"),
                                                         expectedStatusCode))))));
+    if (emitExceptionAsLogs()) {
+      if (expectedException == null) {
+        testing().waitAndAssertLogRecords();
+      } else {
+        testing()
+            .waitAndAssertLogRecords(
+                logRecord ->
+                    logRecord
+                        .hasSeverity(side == Side.CLIENT ? Severity.WARN : Severity.ERROR)
+                        .hasEventName(
+                            side == Side.CLIENT
+                                ? "rpc.client.call.exception"
+                                : "rpc.server.call.exception")
+                        .hasException(expectedException));
+      }
+    }
+  }
+
+  private enum Side {
+    CLIENT,
+    SERVER
   }
 
   private enum ResponseType {

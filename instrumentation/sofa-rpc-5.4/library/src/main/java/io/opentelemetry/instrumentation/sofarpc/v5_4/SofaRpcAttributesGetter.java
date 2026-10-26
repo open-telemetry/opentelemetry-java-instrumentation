@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
+import com.alipay.sofa.rpc.common.RemotingConstants;
+import com.alipay.sofa.rpc.core.exception.RpcErrorType;
 import com.alipay.sofa.rpc.core.exception.SofaRpcException;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
@@ -37,20 +39,23 @@ final class SofaRpcAttributesGetter implements RpcAttributesGetter<SofaRpcReques
   @Nullable
   public String getErrorType(
       SofaRpcRequest request, @Nullable SofaResponse response, @Nullable Throwable error) {
-    String rpcCode = getSofaRpcCode(error);
-    if (rpcCode != null) {
-      return rpcCode;
+    if (error != null) {
+      String sofaRpcCode = getSofaRpcCode(error);
+      return sofaRpcCode != null ? sofaRpcCode : error.getClass().getName();
     }
-    return error == null ? null : error.getClass().getName();
+
+    if (response != null
+        && (response.isError()
+            || "true".equals(response.getResponseProp(RemotingConstants.HEAD_RESPONSE_ERROR)))) {
+      return Integer.toString(RpcErrorType.SERVER_UNDECLARED_ERROR);
+    }
+    return null;
   }
 
   @Override
   @Nullable
   public String getRpcStatusCode(
       SofaRpcRequest request, @Nullable SofaResponse response, @Nullable Throwable error) {
-    if (request.isSyntheticFallbackError()) {
-      return null;
-    }
     return getSofaRpcCode(error);
   }
 

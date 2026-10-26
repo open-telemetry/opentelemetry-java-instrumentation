@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.alipay.sofa.rpc.common.RemotingConstants;
+import com.alipay.sofa.rpc.core.exception.RpcErrorType;
 import com.alipay.sofa.rpc.core.exception.SofaRpcException;
 import com.alipay.sofa.rpc.core.request.SofaRequest;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
@@ -39,7 +41,7 @@ class SofaRpcAttributesGetterTest {
   }
 
   @Test
-  void noStatusForSuccessOrApplicationException() {
+  void errorTypeForNonSofaException() {
     SofaResponse response = new SofaResponse();
     assertThat(getter.getRpcStatusCode(request, response, null)).isNull();
     assertThat(getter.getErrorType(request, response, null)).isNull();
@@ -48,5 +50,34 @@ class SofaRpcAttributesGetterTest {
     assertThat(getter.getRpcStatusCode(request, response, error)).isNull();
     assertThat(getter.getErrorType(request, response, error))
         .isEqualTo(IllegalStateException.class.getName());
+  }
+
+  @Test
+  void responseOnlyError() {
+    SofaResponse response = new SofaResponse();
+    response.addResponseProp(RemotingConstants.HEAD_RESPONSE_ERROR, "true");
+
+    assertThat(getter.getRpcStatusCode(request, response, null)).isNull();
+    assertThat(getter.getErrorType(request, response, null))
+        .isEqualTo(Integer.toString(RpcErrorType.SERVER_UNDECLARED_ERROR));
+
+    SofaRpcException error = new SofaRpcException(160, "RPC error");
+    assertThat(getter.getRpcStatusCode(request, response, error)).isEqualTo("160");
+    assertThat(getter.getErrorType(request, response, error)).isEqualTo("160");
+
+    IllegalStateException applicationError = new IllegalStateException();
+    assertThat(getter.getErrorType(request, response, applicationError))
+        .isEqualTo(IllegalStateException.class.getName());
+  }
+
+  @Test
+  void errorMessageIndicatesResponseError() {
+    SofaResponse response = new SofaResponse();
+    response.setErrorMsg("RPC error");
+
+    assertThat(response.isError()).isTrue();
+    assertThat(getter.getRpcStatusCode(request, response, null)).isNull();
+    assertThat(getter.getErrorType(request, response, null))
+        .isEqualTo(Integer.toString(RpcErrorType.SERVER_UNDECLARED_ERROR));
   }
 }
