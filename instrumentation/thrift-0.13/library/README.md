@@ -75,18 +75,8 @@ than the handler implementation class. The name is used as provided and is not d
 either synchronous or asynchronous processors.
 
 To opt in to the RPC preview conventions, set `otel.semconv-stability.preview=rpc`; use
-`otel.semconv-stability.preview=rpc/dup` to emit both legacy and preview conventions. For an
-OpenTelemetry instance configured declaratively, the equivalent is:
-
-```yaml
-java:
-  common:
-    semconv_stability:
-      preview: [rpc]
-```
-
-Use `[rpc/dup]` for dual emission. The flat property is read from JVM system properties or
-environment variables; custom programmatic OpenTelemetry configuration may require configuring the
-preview setting through its own configuration mechanism. These modes do not replace the
-`serviceName` supplied to the library wrapper: preview `rpc.method` combines that name and the
-method as `<service>/<method>`.
+`otel.semconv-stability.preview=rpc/dup` to emit both legacy and preview conventions. The flat
+property is read from JVM system properties or environment variables; custom programmatic
+OpenTelemetry configuration may require configuring the preview setting through its own
+configuration mechanism. These modes do not replace the `serviceName` supplied to the library
+wrapper: preview `rpc.method` combines that name and the method as `<service>/<method>`.
