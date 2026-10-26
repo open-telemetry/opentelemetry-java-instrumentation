@@ -226,6 +226,21 @@ def interpolate(samples, name, timestamp):
     )
 
 
+def persisted_result(output, run_id, processes):
+    """Wait for the asynchronous statistics write that follows phase termination."""
+    path = output / "hyperfoil" / "run" / run_id / "all.json"
+    deadline = time.monotonic() + 30
+    while time.monotonic() < deadline:
+        processes.check()
+        if path.is_file():
+            try:
+                return json.loads(path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                pass
+        time.sleep(0.1)
+    raise TimeoutError(f"Hyperfoil did not finish persisting its statistics: {path}")
+
+
 def analyze(result, samples, cpus, rate, duration):
     groups = [entry for entry in result["stats"] if entry["phase"] == "mainPhase"]
     if {entry["fork"] for entry in groups} != {"createFork", "gettersFork"}:
@@ -252,7 +267,9 @@ def analyze(result, samples, cpus, rate, duration):
             errors.append("Hyperfoil waited for a free connection")
     if completed != requests:
         errors.append("Some issued requests did not receive a response")
-    if not 0.97 * rate * duration <= requests <= 1.03 * rate * duration:
+    expected = rate * duration
+    tolerance = max(0.03 * expected, 6 * math.sqrt(expected))
+    if abs(requests - expected) > tolerance:
         errors.append("Offered request count differs from the requested rate")
     if not 0.95 * duration <= seconds <= 1.1 * duration:
         errors.append("Unexpected measurement duration or excessive drain time")
@@ -457,7 +474,7 @@ def execute(artifacts, output, cpus, java, agent, rate, warmup, duration, mode):
                         "-p",
                         "15432",
                         "-c",
-                        f"unix_socket_directories={data}",
+                        "unix_socket_directories=",
                         "-c",
                         "shared_buffers=256MB",
                         "-c",
@@ -570,7 +587,7 @@ def execute(artifacts, output, cpus, java, agent, rate, warmup, duration, mode):
                             )
                         time.sleep(0.5)
                 save(output / "run.json", run_info)
-                result = get_json(run_url + "/stats/all/json")
+                result = persisted_result(output, run_info["id"], processes)
                 save(output / "hyperfoil.json", result)
                 metrics = analyze(result, samples, cpus, rate, duration)
                 if (
@@ -628,13 +645,19 @@ def execute(artifacts, output, cpus, java, agent, rate, warmup, duration, mode):
         active_agent.unlink(missing_ok=True)
 
 
-def summarize(rows, same_agent):
+def summarize(rows, same_agent, mode="measure"):
     lines = [
         "# Quarkus database benchmark",
         "",
         "A/A comparison with byte-identical agents."
         if same_agent
         else "Baseline/candidate comparison.",
+        "",
+        (
+            "Steady-state measurement trials."
+            if mode == "measure"
+            else f"{mode.capitalize()} diagnostics, not a steady-state performance comparison."
+        ),
         "",
         "Application CPU time per successful request includes SDK processing and OTLP export.",
         "PostgreSQL, the load generator, and the non-persisting OTLP receiver have separate CPU sets.",
@@ -745,6 +768,7 @@ def main():
     metadata = {
         "provenance": json.loads((artifacts / "provenance.json").read_text()),
         "workflow_run": os.environ.get("GITHUB_RUN_ID"),
+        "harness_commit": os.environ.get("GITHUB_SHA"),
         "platform": platform.platform(),
         "java": run([java, "-version"], capture_output=True, text=True).stderr,
         "postgres": run(
@@ -803,7 +827,9 @@ def main():
             save(output / "trials.json", rows)
             (output / "summary.md").write_text(
                 summarize(
-                    rows, hashes["baseline-agent.jar"] == hashes["candidate-agent.jar"]
+                    rows,
+                    hashes["baseline-agent.jar"] == hashes["candidate-agent.jar"],
+                    args.mode,
                 ),
                 encoding="utf-8",
             )

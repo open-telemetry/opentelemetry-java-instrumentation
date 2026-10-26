@@ -37,7 +37,7 @@ also includes a fresh no-agent trial.
 
 Builds run on hosted runners. Measurements run serially on
 `oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24`, using a digest-pinned Java 21
-container. PostgreSQL 16, Hyperfoil, the application, and a small OTLP receiver
+container. PostgreSQL 16.15, Hyperfoil, the application, and a small OTLP receiver
 run inside the container without host services, SSH, privileged profiling,
 or nested Docker.
 
@@ -97,6 +97,7 @@ Trials with failed requests, connection blocking, insufficient offered load,
 excessive drain time, export failures, or infrastructure saturation cannot be
 used as overhead comparisons. Calibration retains invalid trials as diagnostics.
 Other modes stop on an invalid trial. No observations are retried or discarded.
+The offered-load guard allows variation in Hyperfoil's random arrivals.
 
 Use fresh trials as statistical observations, not individual requests.
 Establish repeatability with at least five A/A pairs before interpreting small

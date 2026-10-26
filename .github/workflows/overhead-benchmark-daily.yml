@@ -373,7 +373,8 @@ jobs:
       - name: Install isolated benchmark dependencies
         run: |
           apt-get update -qq
-          apt-get install -y --no-install-recommends python3 python3-venv postgresql-16 util-linux unzip
+          apt-get install -y --no-install-recommends python3 python3-venv \
+            postgresql-16=16.15-0ubuntu0.24.04.1 postgresql-client-16=16.15-0ubuntu0.24.04.1 util-linux unzip
           python3 -m venv /opt/quarkus-benchmark-python
           /opt/quarkus-benchmark-python/bin/python -m pip install \
             --disable-pip-version-check -r benchmark-overhead-quarkus/requirements.txt

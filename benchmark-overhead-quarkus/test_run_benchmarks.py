@@ -173,6 +173,24 @@ class RunnerTest(unittest.TestCase):
             kill.assert_called_once_with(123, runner.signal.SIGTERM)
             self.assertTrue(processes.logs[0].closed)
 
+    def test_postgres_uses_tcp_even_in_a_long_workspace_path(self):
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.object(runner.shutil, "chown", create=True),
+            patch.object(runner, "run"),
+            patch.object(runner, "Processes") as process_class,
+        ):
+            output = Path(directory) / ("long-workspace-name-" * 7)
+            processes = process_class.return_value.__enter__.return_value
+            processes.check.side_effect = RuntimeError("stop after database launch")
+            with self.assertRaisesRegex(RuntimeError, "stop after database launch"):
+                runner.execute(
+                    Path(directory), output, {}, "java", "no-agent", 10, 5, 10, "smoke"
+                )
+            command = processes.start.call_args.args[1]
+            self.assertIn("unix_socket_directories=", command)
+            self.assertEqual(list(output.glob("postgres-*")), [])
+
     def test_cpu_interpolation_uses_exact_measurement_boundaries(self):
         samples = [
             {"time_ms": 0, "processes": {"app": [0, 1]}},
@@ -183,6 +201,31 @@ class RunnerTest(unittest.TestCase):
         self.assertEqual(runner.interpolate(samples, "app", 1500), 2.5)
         with self.assertRaises(ValueError):
             runner.interpolate(samples, "app", 3000)
+
+    def test_waits_for_hyperfoil_statistics_to_finish_persisting(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            path = output / "hyperfoil" / "run" / "0000" / "all.json"
+            path.parent.mkdir(parents=True)
+            path.write_text('{"stats":', encoding="utf-8")
+
+            def finish_writing(_seconds):
+                path.write_text('{"stats": []}', encoding="utf-8")
+
+            processes = Mock()
+            with patch.object(runner.time, "sleep", side_effect=finish_writing):
+                self.assertEqual(
+                    runner.persisted_result(output, "0000", processes), {"stats": []}
+                )
+            self.assertEqual(processes.check.call_count, 2)
+
+    def test_missing_persisted_statistics_fail_explicitly(self):
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.object(runner.time, "monotonic", side_effect=[0, 31]),
+            self.assertRaisesRegex(TimeoutError, "did not finish persisting"),
+        ):
+            runner.persisted_result(Path(directory), "0000", Mock())
 
     def measurement(self):
         summaries = []
@@ -273,6 +316,16 @@ class RunnerTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Missing Hyperfoil"):
             self.analyze(result, samples)
 
+    def test_short_trials_allow_stochastic_arrival_variance_but_reject_underload(self):
+        result, samples = self.measurement()
+        result["stats"][0]["total"]["summary"]["requestCount"] += 72
+        result["stats"][0]["total"]["summary"]["responseCount"] += 72
+        self.assertTrue(self.analyze(result, samples)["valid"])
+        for entry in result["stats"]:
+            entry["total"]["summary"]["requestCount"] //= 2
+            entry["total"]["summary"]["responseCount"] //= 2
+        self.assertFalse(self.analyze(result, samples)["valid"])
+
     def test_validates_propagated_database_trace(self):
         runner.validate_spans(exported_spans(), "baseline")
         runner.validate_spans({"errors": 0, "kinds": {}}, "no-agent")
@@ -344,6 +397,10 @@ class RunnerTest(unittest.TestCase):
         self.assertIn("invalid observation", summary)
         self.assertNotIn("9999", summary)
         self.assertIn("0/1 | invalid", summary)
+        self.assertIn(
+            "not a steady-state performance comparison",
+            runner.summarize(rows, False, "smoke"),
+        )
 
 
 class ReceiverTest(unittest.TestCase):
