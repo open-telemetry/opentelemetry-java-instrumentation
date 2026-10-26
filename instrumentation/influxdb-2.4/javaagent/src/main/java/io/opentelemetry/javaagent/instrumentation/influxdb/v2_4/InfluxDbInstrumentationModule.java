@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -21,6 +21,9 @@ public class InfluxDbInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new InfluxDbImplInstrumentation());
+    return asList(
+        new InfluxDbImplInstrumentation(),
+        new InfluxDbCallbackInstrumentation(),
+        new InfluxDbExecutorCallbackInstrumentation());
   }
 }

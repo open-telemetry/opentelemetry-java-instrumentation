@@ -23,7 +23,6 @@ import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
@@ -64,7 +63,7 @@ public abstract class AbstractRatpackRoutesTest {
             ratpackServerSpec -> {
               ratpackServerSpec.serverConfig(
                   serverConfigBuilder -> {
-                    serverConfigBuilder.port(PortUtils.findOpenPort());
+                    serverConfigBuilder.port(0);
                     serverConfigBuilder.address(InetAddress.getByName("localhost"));
                   });
 

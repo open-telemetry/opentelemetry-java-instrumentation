@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -14,7 +15,6 @@ import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.ME
 import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
@@ -30,6 +30,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import java.net.URI;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -65,8 +66,9 @@ class ArmeriaGrpcTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void grpcInstrumentation() {
+    URI uri = URI.create("http://user@localhost:" + server.httpPort());
     GreeterGrpc.GreeterBlockingStub client =
-        GrpcClients.builder(server.httpUri()).build(GreeterGrpc.GreeterBlockingStub.class);
+        GrpcClients.builder(uri).build(GreeterGrpc.GreeterBlockingStub.class);
 
     Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
     Helloworld.Response response = testing.runWithSpan("parent", () -> client.sayHello(request));
@@ -92,9 +94,9 @@ class ArmeriaGrpcTest {
                                 RPC_GRPC_STATUS_CODE,
                                 emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
                             equalTo(
-                                RPC_RESPONSE_STATUS_CODE,
+                                stringKey("rpc.status_code"),
                                 emitPreviewRpcSemconv() ? Status.Code.OK.name() : null),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpPort()))
                         .hasEventsSatisfyingExactly(
                             event ->
@@ -123,9 +125,9 @@ class ArmeriaGrpcTest {
                                 RPC_GRPC_STATUS_CODE,
                                 emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
                             equalTo(
-                                RPC_RESPONSE_STATUS_CODE,
+                                stringKey("rpc.status_code"),
                                 emitPreviewRpcSemconv() ? Status.Code.OK.name() : null),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpPort()))
                         .hasEventsSatisfyingExactly(
                             event ->

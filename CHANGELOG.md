@@ -5,6 +5,14 @@
 ### ⚠️ Breaking changes
 
 - Configured service mappings now emit `server.service.name` and `server.service.namespace`, and no longer emit `peer.service`, `service.peer.name`, or `service.peer.namespace`. Rename `otel.instrumentation.common.peer-service-mapping` to `otel.instrumentation.common.server-service-mapping`; in YAML, use `java.common.server_service_mapping` with `target` instead of `peer`.
+- GenAI error type getters now return the final value. Returning `null` omits `error.type`; overrides
+  should return `error == null ? null : error.getClass().getName()` for the exception-class fallback.
+- HTTP client and server getters now determine `error.type`; their returned value, including `null`,
+  is used as-is.
+- Messaging `MessagingAttributesGetter.getErrorType()` overrides now provide the final
+  `error.type` value. Return `null` to omit it, or return `error == null ? null :
+  error.getClass().getName()` for exception-class fallback.
+- Require R2DBC SPI 1.0 or later.
 - Rename the Spark Java instrumentation selector from `spark-2.3` to `spark-2.4`.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to
@@ -303,9 +311,39 @@
   `otel.instrumentation.elasticsearch.query-sanitization.enabled` or
   `otel.instrumentation.opensearch.query-sanitization.enabled`, which override
   `otel.instrumentation.common.db.query-sanitization.enabled`.
+- The experimental Kafka broker JMX metrics now start with the JMX domain of their MBean, use
+  singular count units (for example `{message}` instead of `{messages}`), and report durations in
+  seconds. Update dashboards and alerts that use the old names:
+  - `kafka.network.io`, `kafka.purgatory.size`, `kafka.partition.count` and
+    `kafka.lag.max` are prefixed with `kafka.server.`.
+  - `kafka.message.count` becomes `kafka.server.messages`.
+  - `kafka.request.count` becomes `kafka.server.requests`.
+  - `kafka.request.failed` becomes `kafka.server.failed_requests`.
+  - `kafka.isr.operation.count` becomes `kafka.server.isr.operations`.
+  - `kafka.partition.underReplicated` becomes `kafka.server.partition.under_replicated`.
+  - `kafka.partition.offline` becomes `kafka.controller.partition.offline`, and
+    `kafka.leaderElection.count` and `kafka.leaderElection.unclean.count` become
+    `kafka.controller.leader_elections` and `kafka.controller.unclean_leader_elections`.
+  - `kafka.request.queue` becomes `kafka.network.request.queue`.
+  - `kafka.request.time.total` becomes `kafka.network.requests`: it reported a request count,
+    not a time. `kafka.request.time.50p` and `kafka.request.time.99p` become
+    `kafka.network.request.duration.p50` and `kafka.network.request.duration.p99`, in seconds
+    instead of milliseconds.
+  - `kafka.logs.flush.Count` becomes `kafka.log.flushes`, and `kafka.logs.flush.time.50p` and
+    `kafka.logs.flush.time.99p` become `kafka.log.flush.duration.p50` and
+    `kafka.log.flush.duration.p99`, in seconds instead of milliseconds.
+  - The attributes `type`, `direction` and `operation` become `kafka.request.type`,
+    `network.io.direction` (`in` and `out` become `receive` and `transmit`) and
+    `kafka.server.isr.operation`. Request type values are now lowercase.
+  - `kafka.server.messages`, `kafka.server.requests`, `kafka.server.failed_requests` and
+    `kafka.server.network.io` now have a `kafka.topic.name` attribute instead of a broker-wide value.
+  - `kafka.server.isr.operations` is now a counter instead of an updowncounter.
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Replace `GrpcRequest.getLogicalHost()` and `getLogicalPort()` with `getServerAddress()` and
+  `getServerPort()`. Unavailable ports are now `null` instead of `-1`.
+  ([#16161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16161))
 - `TracedOnSubscribe.perSubscription(...)` now returns `Observable.OnSubscribe<T>` instead of
   `TracedOnSubscribe<T, REQUEST>`. Recompile consumers.
 - Make the Netty 4.1 library's `NettyRequest` final; use it only as an opaque request view.

@@ -52,10 +52,13 @@ or test failure that CI will report.
   of the same coordinate does not test both versions: Gradle resolves one dependency graph,
   normally selecting the higher version. Exercise the newer runtime in a wired version-specific
   test suite.
-- Inspect test sources before requiring `testcontainersBuildService`: declare `usesService`
-  on tasks that really use containers, not every task with a transitive dependency. Use
-  `withType<Test>().configureEach` for configuration shared by multiple explicitly declared
-  test tasks; not for a module with only `tasks.test` (implicit `latestDepTest` does not count).
+- Inspect test sources before requiring `testcontainersBuildService`; a transitive dependency
+  alone is not enough. In projects that use Testcontainers, register it once for all test tasks,
+  including container-free variants. Narrower registration requires a demonstrated scheduling
+  problem.
+- Prefer `tasks.test` for single-test-task projects. Use `withType<Test>().configureEach` for
+  configuration shared by multiple explicitly declared test tasks or JVM test suites.
+  Implicit `latestDepTest` does not count. Keep unrelated JVM settings and properties scoped.
 - Check metadata collection when its wiring or collected telemetry changes, not as unrelated
   cleanup. Collect default telemetry and supported non-default telemetry modes. Register
   representative tasks in `.github/scripts/instrumentations.sh` covering each profile's

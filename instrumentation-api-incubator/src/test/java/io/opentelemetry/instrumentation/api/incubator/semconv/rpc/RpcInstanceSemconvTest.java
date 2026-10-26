@@ -91,6 +91,7 @@ class RpcInstanceSemconvTest {
                           equalTo(RPC_METHOD, preview ? "Service/Method" : "Method"),
                           equalTo(stringKey("server.service.name"), "payments"),
                           equalTo(stringKey("server.service.namespace"), "checkout"),
+                          equalTo(stringKey("rpc.status_code"), preview ? "CANCELLED" : null),
                           equalTo(ERROR_TYPE, preview ? "java.lang.IllegalStateException" : null)));
       assertThat(instance.spanExporter.getFinishedSpanItems().get(0).getInstrumentationScopeInfo())
           .satisfies(scope -> assertThat(scope.getSchemaUrl()).isEqualTo(schemaUrl));
@@ -137,6 +138,7 @@ class RpcInstanceSemconvTest {
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(
                                                     ERROR_TYPE, "java.lang.IllegalStateException"),
+                                                equalTo(stringKey("rpc.status_code"), "CANCELLED"),
                                                 equalTo(RPC_SYSTEM_NAME, "test"),
                                                 equalTo(RPC_METHOD, "Service/Method")))));
       }
@@ -350,6 +352,11 @@ class RpcInstanceSemconvTest {
     @Override
     public String getRpcMethod(String request) {
       return "Service/" + getMethod(request);
+    }
+
+    @Override
+    public String getRpcStatusCode(String request, Void response, Throwable error) {
+      return error != null ? "CANCELLED" : null;
     }
   }
 }

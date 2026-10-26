@@ -30,7 +30,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -466,8 +465,8 @@ class VertxRedisClientErrorTest {
 
     private ReplyServer(List<byte[]> replies) throws IOException {
       this.replies = replies;
-      port = PortUtils.findOpenPort();
-      listener = new ServerSocket(port, 1, InetAddress.getAllByName(HOST)[0]);
+      listener = new ServerSocket(0, 1, InetAddress.getAllByName(HOST)[0]);
+      port = listener.getLocalPort();
       thread = new Thread(this::run, "test-vertx-redis-error-replies");
       thread.setDaemon(true);
       thread.start();

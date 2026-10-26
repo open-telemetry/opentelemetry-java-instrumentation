@@ -61,12 +61,10 @@ testing {
 }
 
 tasks {
-  withType<Test>()
-    .matching { it.name != "unitTests" }
-    .configureEach {
-      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-      systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    }
+  withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+  }
 
   check {
     dependsOn(testing.suites)

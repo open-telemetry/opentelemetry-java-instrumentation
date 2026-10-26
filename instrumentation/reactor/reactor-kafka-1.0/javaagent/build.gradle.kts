@@ -121,9 +121,7 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    if (!name.endsWith("unitTests", ignoreCase = true)) {
-      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    }
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
   val agentTestSuites = testing.suites.withType(JvmTestSuite::class)

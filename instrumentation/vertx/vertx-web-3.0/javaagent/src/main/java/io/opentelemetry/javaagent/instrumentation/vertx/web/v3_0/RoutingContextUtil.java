@@ -14,7 +14,8 @@ public class RoutingContextUtil {
       VirtualField.find(RoutingContext.class, String.class);
 
   static void setRoute(RoutingContext routingContext, @Nullable String route) {
-    ROUTE_FIELD.set(routingContext, route);
+    // Distinguish an empty parent route from a context whose route has not been saved yet.
+    ROUTE_FIELD.set(routingContext, route == null ? "" : route);
   }
 
   @Nullable

@@ -551,7 +551,8 @@ public abstract class AbstractDubboTest {
       // Dubbo protocol (binary) with newer Dubbo versions (3.x / latest):
       // DecodeableRpcInvocation.decode() fails at PermittedSerializationKeeper before attachments
       // (which carry traceparent) are read from the wire. The server span cannot extract
-      // trace context, so it becomes a root span in a separate (disconnected) trace.
+      // trace context. There is no current span on the server thread in this test either, so the
+      // server span becomes a root span in a separate trace.
       testing()
           .waitAndAssertTraces(
               trace -> trace.hasSpansSatisfyingExactly(clientSpanAssert),
