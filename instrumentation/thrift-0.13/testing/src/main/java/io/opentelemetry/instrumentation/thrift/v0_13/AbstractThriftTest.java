@@ -103,7 +103,7 @@ public abstract class AbstractThriftTest {
 
   protected abstract boolean hasAsyncServerNetworkAttributes();
 
-  protected String getServerServiceName(String handlerClassName) {
+  protected String getServerRpcServiceName(String handlerClassName) {
     return handlerClassName;
   }
 
@@ -332,13 +332,14 @@ public abstract class AbstractThriftTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   protected SpanDataAssert assertServerSpan(
       SpanDataAssert span, String className, String method, int port, String errorType) {
-    className = getServerServiceName(className);
-    return span.hasName(className + "/" + method)
+    String rpcServiceName =
+        emitPreviewRpcSemconv() ? getServerRpcServiceName(className) : className;
+    return span.hasName(rpcServiceName + "/" + method)
         .satisfies(
             hasScopeSchemaUrl(emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
         .hasKind(SpanKind.SERVER)
         .hasAttributesSatisfyingExactly(
-            equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? className + "/" + method : method),
+            equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? rpcServiceName + "/" + method : method),
             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? className : null),
             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
             equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "apache_thrift" : null),
@@ -360,13 +361,14 @@ public abstract class AbstractThriftTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   protected SpanDataAssert assertServerSpan(
       SpanDataAssert span, String className, String method, String errorType) {
-    className = getServerServiceName(className);
-    return span.hasName(className + "/" + method)
+    String rpcServiceName =
+        emitPreviewRpcSemconv() ? getServerRpcServiceName(className) : className;
+    return span.hasName(rpcServiceName + "/" + method)
         .satisfies(
             hasScopeSchemaUrl(emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
         .hasKind(SpanKind.SERVER)
         .hasAttributesSatisfyingExactly(
-            equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? className + "/" + method : method),
+            equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? rpcServiceName + "/" + method : method),
             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? className : null),
             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
             equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "apache_thrift" : null),
@@ -403,8 +405,7 @@ public abstract class AbstractThriftTest {
                                               SERVER_PORT,
                                               emitPreviewRpcSemconv() ? null : (long) serverPort),
                                           equalTo(RPC_METHOD, "say"),
-                                          equalTo(
-                                              RPC_SERVICE, getServerServiceName(handlerClassName)),
+                                          equalTo(RPC_SERVICE, handlerClassName),
                                           equalTo(RPC_SYSTEM, "apache_thrift"),
                                           equalTo(NETWORK_TYPE, "ipv4")))));
       getTesting()
@@ -448,7 +449,8 @@ public abstract class AbstractThriftTest {
                                           equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
                                           equalTo(
                                               RPC_METHOD,
-                                              getServerServiceName(handlerClassName) + "/say")))));
+                                              getServerRpcServiceName(handlerClassName)
+                                                  + "/say")))));
       getTesting()
           .waitAndAssertMetrics(
               "io.opentelemetry.thrift-0.13",
@@ -598,7 +600,7 @@ public abstract class AbstractThriftTest {
                                           equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
                                           equalTo(
                                               RPC_METHOD,
-                                              getServerServiceName(CustomHandler.class.getName())
+                                              getServerRpcServiceName(CustomHandler.class.getName())
                                                   + "/withError"),
                                           equalTo(ERROR_TYPE, "_OTHER")))));
       getTesting()

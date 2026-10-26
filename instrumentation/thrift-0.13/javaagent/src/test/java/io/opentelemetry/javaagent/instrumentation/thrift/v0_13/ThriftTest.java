@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.thrift.v0_13;
 
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -74,8 +73,8 @@ class ThriftTest extends AbstractThriftTest {
   }
 
   @Override
-  protected String getServerServiceName(String handlerClassName) {
-    return emitPreviewRpcSemconv() ? CustomService.class.getName() : handlerClassName;
+  protected String getServerRpcServiceName(String handlerClassName) {
+    return CustomService.class.getName();
   }
 
   @ParameterizedTest

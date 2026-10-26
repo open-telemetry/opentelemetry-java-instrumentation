@@ -17,13 +17,14 @@ public final class ThriftRequest {
 
   @Nullable private final String methodName;
   @Nullable private final String serviceName;
+  @Nullable private final String rpcServiceName;
   private final Map<String, String> headers;
   @Nullable private final SocketAddress localAddress;
   @Nullable private final SocketAddress remoteAddress;
 
   public ThriftRequest(
       @Nullable String methodName, @Nullable String serviceName, @Nullable Socket socket) {
-    this(methodName, serviceName, socket, emptyMap());
+    this(methodName, serviceName, serviceName, socket, emptyMap());
   }
 
   public ThriftRequest(
@@ -31,9 +32,19 @@ public final class ThriftRequest {
       @Nullable String serviceName,
       @Nullable Socket socket,
       Map<String, String> headers) {
+    this(methodName, serviceName, serviceName, socket, headers);
+  }
+
+  public ThriftRequest(
+      @Nullable String methodName,
+      @Nullable String serviceName,
+      @Nullable String rpcServiceName,
+      @Nullable Socket socket,
+      Map<String, String> headers) {
     this(
         methodName,
         serviceName,
+        rpcServiceName,
         socket != null ? socket.getLocalSocketAddress() : null,
         socket != null ? socket.getRemoteSocketAddress() : null,
         headers);
@@ -45,8 +56,19 @@ public final class ThriftRequest {
       @Nullable SocketAddress localAddress,
       @Nullable SocketAddress remoteAddress,
       Map<String, String> headers) {
+    this(methodName, serviceName, serviceName, localAddress, remoteAddress, headers);
+  }
+
+  public ThriftRequest(
+      @Nullable String methodName,
+      @Nullable String serviceName,
+      @Nullable String rpcServiceName,
+      @Nullable SocketAddress localAddress,
+      @Nullable SocketAddress remoteAddress,
+      Map<String, String> headers) {
     this.methodName = methodName;
     this.serviceName = serviceName;
+    this.rpcServiceName = rpcServiceName;
     this.headers = requireNonNull(headers);
     this.localAddress = localAddress;
     this.remoteAddress = remoteAddress;
@@ -60,6 +82,11 @@ public final class ThriftRequest {
   @Nullable
   public String getServiceName() {
     return serviceName;
+  }
+
+  @Nullable
+  public String getRpcServiceName() {
+    return rpcServiceName;
   }
 
   public Map<String, String> getHeaders() {

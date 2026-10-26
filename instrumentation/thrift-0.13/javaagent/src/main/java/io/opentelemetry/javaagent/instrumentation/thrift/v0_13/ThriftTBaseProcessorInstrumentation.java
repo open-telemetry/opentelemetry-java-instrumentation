@@ -50,9 +50,11 @@ class ThriftTBaseProcessorInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) TProtocol outProtocol,
         @Advice.FieldValue("iface") Object iface) {
       String serviceName = ThriftSingletons.getServerServiceName(processor, iface);
+      String rpcServiceName = ThriftSingletons.getServerRpcServiceName(processor, iface);
 
       ServerInProtocolDecorator serverInProtocolDecorator =
-          new ServerInProtocolDecorator(inProtocol, serviceName, serverInstrumenter());
+          new ServerInProtocolDecorator(
+              inProtocol, serviceName, rpcServiceName, serverInstrumenter());
       ServerOutProtocolDecorator serverOutProtocolDecorator =
           new ServerOutProtocolDecorator(outProtocol);
 

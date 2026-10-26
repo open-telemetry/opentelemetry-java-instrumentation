@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.thrift.v0_13.internal;
 
+import static java.util.Collections.emptyMap;
+
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -35,6 +37,7 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
   private final Instrumenter<ThriftRequest, ThriftResponse> instrumenter;
   private boolean isOneway;
   @Nullable private String serviceName;
+  @Nullable private String rpcServiceName;
   @Nullable private String methodName;
   @Nullable private ThriftRequest currentRequest;
   @Nullable private Context currentContext;
@@ -45,9 +48,18 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
       TProtocol protocol,
       @Nullable String serviceName,
       Instrumenter<ThriftRequest, ThriftResponse> instrumenter) {
+    this(protocol, serviceName, serviceName, instrumenter);
+  }
+
+  public ServerInProtocolDecorator(
+      TProtocol protocol,
+      @Nullable String serviceName,
+      @Nullable String rpcServiceName,
+      Instrumenter<ThriftRequest, ThriftResponse> instrumenter) {
     super(protocol);
     this.protocol = protocol;
     this.serviceName = serviceName;
+    this.rpcServiceName = rpcServiceName;
     this.instrumenter = instrumenter;
   }
 
@@ -90,7 +102,8 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
       Map<String, String> headers = ContextPropagationUtil.readHeaders(protocol);
       super.readFieldEnd();
 
-      ThriftRequest request = new ThriftRequest(methodName, serviceName, getSocket(), headers);
+      ThriftRequest request =
+          new ThriftRequest(methodName, serviceName, rpcServiceName, getSocket(), headers);
       Context parentContext = Context.current();
       if (!instrumenter.shouldStart(parentContext, request)) {
         return readNextField();
@@ -119,7 +132,9 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
     super.readMessageEnd();
     // message didn't include context propagation field
     if (currentContext == null) {
-      ThriftRequest request = new ThriftRequest(this.methodName, this.serviceName, getSocket());
+      ThriftRequest request =
+          new ThriftRequest(
+              this.methodName, this.serviceName, this.rpcServiceName, getSocket(), emptyMap());
       Context parentContext = Context.current();
       if (!instrumenter.shouldStart(parentContext, request)) {
         return;
@@ -167,7 +182,12 @@ public final class ServerInProtocolDecorator extends TProtocolDecorator {
   }
 
   public void setServiceName(String serviceName) {
+    setServiceNames(serviceName, serviceName);
+  }
+
+  public void setServiceNames(String serviceName, String rpcServiceName) {
     this.serviceName = serviceName;
+    this.rpcServiceName = rpcServiceName;
   }
 
   public boolean isOneway() {

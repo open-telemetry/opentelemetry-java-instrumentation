@@ -47,7 +47,9 @@ class ThriftTBaseAsyncProcessorInstrumentation implements TypeInstrumentation {
       serverOutProtocolDecorator.resetExceptionState();
 
       String serviceName = ThriftSingletons.getServerServiceName(processor, iface);
-      ((ServerInProtocolDecorator) fb.getInputProtocol()).setServiceName(serviceName);
+      String rpcServiceName = ThriftSingletons.getServerRpcServiceName(processor, iface);
+      ((ServerInProtocolDecorator) fb.getInputProtocol())
+          .setServiceNames(serviceName, rpcServiceName);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
