@@ -70,8 +70,7 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
   private final Class<?> instrumenterClass;
   private final VirtualFieldMappings virtualFieldMappings;
 
-  // visible for testing
-  final AtomicReference<GeneratedClasses> generatedClasses = new AtomicReference<>();
+  private final AtomicReference<GeneratedClasses> generatedClasses = new AtomicReference<>();
 
   @Nullable private final Instrumentation instrumentation;
 
@@ -265,8 +264,7 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
         builder.visit(visitor.apply(getGeneratedClasses()));
   }
 
-  // visible for testing
-  GeneratedClasses getGeneratedClasses() {
+  private GeneratedClasses getGeneratedClasses() {
     GeneratedClasses classes = generatedClasses.get();
     if (classes != null) {
       return classes;
@@ -279,8 +277,7 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
     return requireNonNull(generatedClasses.get());
   }
 
-  // visible for testing
-  final class GeneratedClasses {
+  private final class GeneratedClasses {
     final FieldAccessorInterfaces fieldAccessorInterfaces;
     final AgentBuilder.Transformer fieldAccessorInterfacesInjector;
     final VirtualFieldImplementations virtualFieldImplementations;
