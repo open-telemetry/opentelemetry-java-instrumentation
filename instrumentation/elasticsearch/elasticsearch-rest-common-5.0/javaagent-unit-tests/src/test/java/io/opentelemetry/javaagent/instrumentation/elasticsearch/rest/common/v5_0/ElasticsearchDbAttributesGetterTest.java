@@ -39,8 +39,8 @@ class ElasticsearchDbAttributesGetterTest {
   private static final String SANITIZED_BODY = "{\"query\":{\"match\":{\"title\":\"?\"}}}";
 
   @ParameterizedTest
-  @ValueSource(ints = {0, 99, 200, 302, 404, 503})
-  void recordsResponseStatusOnlyForFailureCodes(int statusCode) {
+  @ValueSource(ints = {0, 99, 100, 200, 201, 302, 404, 503})
+  void recordsValidResponseStatusCodes(int statusCode) {
     ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(null);
     ElasticsearchRestRequest request = searchRequest(null);
     Response response = mock(Response.class);
@@ -48,7 +48,7 @@ class ElasticsearchDbAttributesGetterTest {
         .thenReturn(new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), statusCode, ""));
 
     assertThat(getter.getDbResponseStatusCode(request, response, null))
-        .isEqualTo(statusCode >= 400 ? Integer.toString(statusCode) : null);
+        .isEqualTo(statusCode >= 100 ? Integer.toString(statusCode) : null);
     assertThat(getter.getErrorType(request, response, null))
         .isEqualTo(statusCode >= 400 || statusCode < 100 ? Integer.toString(statusCode) : null);
   }

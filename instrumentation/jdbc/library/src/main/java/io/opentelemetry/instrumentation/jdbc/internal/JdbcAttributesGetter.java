@@ -69,6 +69,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
         && error instanceof SQLException
         && ((SQLException) error).getErrorCode() == H2_OBJECT_CLOSED_ERROR_CODE
         && "90007".equals(((SQLException) error).getSQLState())) {
+      // H2 generates this object-closed error locally before sending a database request.
       return null;
     }
     if ("oracle.db".equals(getDbSystemName(request)) && error instanceof SQLException) {
