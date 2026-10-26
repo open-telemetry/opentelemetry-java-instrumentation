@@ -56,7 +56,14 @@ public final class ThriftTelemetry {
     this.propagators = propagators;
   }
 
-  /** Returns a {@link TProcessor} that instruments Thrift server requests. */
+  /**
+   * Returns a {@link TProcessor} that instruments Thrift server requests.
+   *
+   * <p>{@code serviceName} identifies the Thrift RPC service, not the application's resource {@code
+   * service.name}. It is used as-is for both synchronous and asynchronous processors and is not
+   * discovered from the processor. Prefer the generated service class name, such as {@code
+   * CustomService.class.getName()}, rather than the handler implementation class.
+   */
   public TProcessor wrapServerProcessor(TProcessor delegate, String serviceName) {
     if (delegate instanceof TBaseAsyncProcessor) {
       TBaseAsyncProcessor<?> asyncProcessor = (TBaseAsyncProcessor<?>) delegate;

@@ -31,10 +31,11 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-thrift-0.13:OPENT
 The instrumentation library provides wrappers for thrift servers and clients that provide OpenTelemetry-based spans and context propagation.
 
 ```java
-// For server-side, decorate processor with a tracing wrapper.
-TProcessor configureServer(OpenTelemetry openTelemetry, TProcessor processor, String serviceName) {
+// For server-side, decorate the generated processor with a tracing wrapper.
+TProcessor configureServer(OpenTelemetry openTelemetry, CustomService.Iface handler) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
-  return thriftTelemetry.wrapServerProcessor(processor, serviceName);
+  return thriftTelemetry.wrapServerProcessor(
+      new CustomService.Processor<>(handler), CustomService.class.getName());
 }
 
 // When using AsyncProcessor also wrap input and output protocol factories.
@@ -67,3 +68,25 @@ CustomService.AsyncIface configureClient(OpenTelemetry openTelemetry, CustomServ
   return thriftTelemetry.wrapAsyncClient(asyncClient, CustomService.AsyncIface.class);
 }
 ```
+
+The `serviceName` passed to `wrapServerProcessor` identifies the Thrift RPC service, not the
+application's resource `service.name`. Supply the generated service class name, as above, rather
+than the handler implementation class. The name is used as provided and is not discovered from
+either synchronous or asynchronous processors.
+
+To opt in to the RPC preview conventions, set `otel.semconv-stability.preview=rpc`; use
+`otel.semconv-stability.preview=rpc/dup` to emit both legacy and preview conventions. For an
+OpenTelemetry instance configured declaratively, the equivalent is:
+
+```yaml
+java:
+  common:
+    semconv_stability:
+      preview: [rpc]
+```
+
+Use `[rpc/dup]` for dual emission. The flat property is read from JVM system properties or
+environment variables; custom programmatic OpenTelemetry configuration may require configuring the
+preview setting through its own configuration mechanism. These modes do not replace the
+`serviceName` supplied to the library wrapper: preview `rpc.method` combines that name and the
+method as `<service>/<method>`.
