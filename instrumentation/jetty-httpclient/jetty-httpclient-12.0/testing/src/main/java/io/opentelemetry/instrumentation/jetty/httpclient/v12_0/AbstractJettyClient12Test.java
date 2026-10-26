@@ -312,10 +312,7 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
     "false, inlineFailure, true"
   })
   void responseLifecycleContexts(boolean withParent, String outcome, boolean throwingListeners)
-      throws ReflectiveOperationException,
-          InterruptedException,
-          ExecutionException,
-          TimeoutException {
+      throws Exception {
     CompletableFuture<Result> completed = new CompletableFuture<>();
     CompletableFuture<Void> aggregateCompleted = new CompletableFuture<>();
     IOException failure = new IOException("request failed");
