@@ -457,12 +457,15 @@ class SpringRabbitMqTest {
         "parent", () -> applicationContext.getBean(AmqpTemplate.class).send(queue, batch));
 
     assertThat(completed.await(10, SECONDS)).isTrue();
-    String errorType =
-        fail
-            ? (testLatestDeps()
-                ? "org.springframework.amqp.rabbit.support.ListenerExecutionFailedException"
-                : "org.springframework.amqp.rabbit.listener.exception.ListenerExecutionFailedException")
-            : null;
+    String errorType = null;
+    if (fail) {
+      if (testLatestDeps()) {
+        errorType = "org.springframework.amqp.rabbit.support.ListenerExecutionFailedException";
+      } else {
+        errorType =
+            "org.springframework.amqp.rabbit.listener.exception.ListenerExecutionFailedException";
+      }
+    }
     List<AttributeAssertion> processAssertions =
         getAssertions(queue, "process", ip, true, true, false, (long) expectedCount);
     processAssertions.add(equalTo(ERROR_TYPE, errorType));
@@ -490,8 +493,7 @@ class SpringRabbitMqTest {
           } else {
             settlementOperation = "ack";
           }
-          trace.hasSpansSatisfyingExactly(
-              span -> verifySettleSpan(span, settlementOperation));
+          trace.hasSpansSatisfyingExactly(span -> verifySettleSpan(span, settlementOperation));
         });
     assertThat(delivered).hasValue(expectedCount);
     assertProcessMetrics(testing, queue, errorType, expectedCount);

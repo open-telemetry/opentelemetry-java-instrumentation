@@ -1810,11 +1810,13 @@ public abstract class AbstractGrpcTest {
     Status.Code statusCode = status.getCode();
     boolean hasSizeMetric = statusCode == Status.Code.OK;
     String clientErrorType = emitPreviewRpcSemconv() && !status.isOk() ? statusCode.name() : null;
-    String serverErrorType = null;
+    String serverErrorType;
     if (emitPreviewRpcSemconv() && isServerErrorCode(statusCode)) {
       serverErrorType = statusCode.name();
     } else if (emitPreviewRpcSemconv() && status.getCause() != null) {
       serverErrorType = status.getCause().getClass().getName();
+    } else {
+      serverErrorType = null;
     }
     if (emitOldRpcSemconv()) {
       testing()

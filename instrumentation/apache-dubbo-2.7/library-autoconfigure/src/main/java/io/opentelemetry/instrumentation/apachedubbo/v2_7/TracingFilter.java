@@ -139,11 +139,7 @@ final class TracingFilter implements Filter {
       if (actualError == null && response != null) {
         actualError = response.getException();
       }
-      instrumenter.end(
-          context,
-          request,
-          response,
-          actualError);
+      instrumenter.end(context, request, response, actualError);
     } catch (Throwable t) {
       logger.log(FINE, "Failed to end Dubbo provider span", t);
     }

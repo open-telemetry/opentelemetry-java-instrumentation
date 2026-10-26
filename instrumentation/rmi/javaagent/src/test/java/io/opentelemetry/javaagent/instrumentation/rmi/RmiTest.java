@@ -255,11 +255,9 @@ class RmiTest {
                       .hasKind(SpanKind.SERVER)
                       .hasAttributesSatisfyingExactly(
                           equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "java_rmi" : null),
-                          equalTo(
-                                  RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "java_rmi" : null),
+                          equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "java_rmi" : null),
                           equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "rmi.app.Server" : null),
-                          equalTo(
-                                  RPC_METHOD, emitPreviewRpcSemconv() ? rpcMethod : methodName));
+                          equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? rpcMethod : methodName));
                 }));
   }
 
