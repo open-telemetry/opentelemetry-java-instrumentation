@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.vertx.sqlclient.DatabaseException;
@@ -43,7 +44,7 @@ class VertxSqlClientAttributesGetterTest {
 
   @Test
   void prefersMysqlVendorCodeWithoutChangingErrorType() {
-    VertxSqlClientRequest mysqlRequest = request("mysql.db");
+    VertxSqlClientRequest mysqlRequest = request(MYSQL);
     DatabaseException error = new DatabaseException("Syntax error", 1064, "42000") {};
 
     assertThat(getter.getErrorType(mysqlRequest, null, error)).isEqualTo("42000");
@@ -52,7 +53,7 @@ class VertxSqlClientAttributesGetterTest {
 
   @Test
   void usesMysqlVendorCodeWhenSqlStateIsUnavailable() {
-    VertxSqlClientRequest mysqlRequest = request("mysql.db");
+    VertxSqlClientRequest mysqlRequest = request(MYSQL);
     DatabaseException error = new DatabaseException("Syntax error", 1064, null) {};
 
     assertThat(getter.getErrorType(mysqlRequest, null, error)).isEqualTo("null");
@@ -61,7 +62,7 @@ class VertxSqlClientAttributesGetterTest {
 
   @Test
   void fallsBackToSqlStateWhenVendorCodeIsUnavailable() {
-    VertxSqlClientRequest mysqlRequest = request("mysql.db");
+    VertxSqlClientRequest mysqlRequest = request(MYSQL);
     DatabaseException error = new DatabaseException("Syntax error", 0, "42000") {};
 
     assertThat(getter.getErrorType(mysqlRequest, null, error)).isEqualTo("42000");
