@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.client;
 
-import static java.util.logging.Level.WARNING;
+import static java.util.logging.Level.FINE;
 
 import java.util.logging.Logger;
 import scala.concurrent.ExecutionContext;
@@ -25,7 +25,7 @@ final class DirectExecutionContext implements ExecutionContext {
 
   @Override
   public void reportFailure(Throwable cause) {
-    logger.log(WARNING, "Error in Akka HTTP client callback", cause);
+    logger.log(FINE, "Error in Akka HTTP client callback", cause);
   }
 
   @Override
