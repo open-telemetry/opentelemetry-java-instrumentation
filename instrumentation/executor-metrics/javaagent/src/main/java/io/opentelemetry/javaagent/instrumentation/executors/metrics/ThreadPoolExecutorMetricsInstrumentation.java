@@ -59,7 +59,7 @@ public class ThreadPoolExecutorMetricsInstrumentation implements TypeInstrumenta
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This ThreadPoolExecutor executor,
         @Advice.Argument(4) BlockingQueue<Runnable> queue) {
@@ -74,7 +74,7 @@ public class ThreadPoolExecutorMetricsInstrumentation implements TypeInstrumenta
   @SuppressWarnings("unused")
   public static class RunWorkerAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This ThreadPoolExecutor executor) {
       if (!(executor instanceof ScheduledThreadPoolExecutor)) {
         JdkExecutorMetrics.onWorkerThreadStarted(executor, Thread.currentThread().getName());
@@ -85,7 +85,7 @@ public class ThreadPoolExecutorMetricsInstrumentation implements TypeInstrumenta
   @SuppressWarnings("unused")
   public static class RejectAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This ThreadPoolExecutor executor) {
       if (!(executor instanceof ScheduledThreadPoolExecutor)) {
         ExecutorMetricsRegistry.recordRejectedTask(executor);
@@ -96,7 +96,7 @@ public class ThreadPoolExecutorMetricsInstrumentation implements TypeInstrumenta
   @SuppressWarnings("unused")
   public static class TerminationAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This ExecutorService executor) {
       if (!(executor instanceof ScheduledThreadPoolExecutor) && executor.isTerminated()) {
         ExecutorMetricsRegistry.unregister(executor);

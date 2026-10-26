@@ -51,21 +51,21 @@ public class ThreadPerTaskExecutorMetricsInstrumentation implements TypeInstrume
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.AssignReturned.ToFields(@Advice.AssignReturned.ToFields.ToField("factory"))
+    public static ThreadFactory onExit(
         @Advice.This Executor executor,
-        @Advice.FieldValue(value = "factory", readOnly = false) ThreadFactory threadFactory,
+        @Advice.FieldValue("factory") ThreadFactory threadFactory,
         @Advice.FieldValue("threads") Set<Thread> threads) {
-      threadFactory =
-          ExecutorMetricsRegistry.preRegister(
-              executor, threadFactory, threads, JdkExecutorMetrics.DEFAULT_NAME_NORMALIZATION);
+      return ExecutorMetricsRegistry.preRegister(
+          executor, threadFactory, threads, JdkExecutorMetrics.DEFAULT_NAME_NORMALIZATION);
     }
   }
 
   @SuppressWarnings("unused")
   public static class StartAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Executor executor,
         @Advice.FieldValue("factory") ThreadFactory threadFactory,
@@ -78,7 +78,7 @@ public class ThreadPerTaskExecutorMetricsInstrumentation implements TypeInstrume
   @SuppressWarnings("unused")
   public static class TerminationAdvice {
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This ExecutorService executor,
         @Advice.FieldValue("factory") ThreadFactory threadFactory) {
