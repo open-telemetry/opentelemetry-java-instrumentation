@@ -24,4 +24,15 @@ class Aws2ClientRecordHttpErrorTest extends AbstractAws2ClientRecordHttpErrorTes
   protected InstrumentationExtension getTesting() {
     return testing;
   }
+
+  @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return EXPERIMENTAL_ATTRIBUTES;
+  }
+
+  @Override
+  protected boolean isRecordIndividualHttpErrorEnabled() {
+    return Boolean.getBoolean(
+        "otel.instrumentation.aws-sdk.experimental-record-individual-http-error");
+  }
 }
