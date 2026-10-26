@@ -115,6 +115,7 @@ public final class SofaRpcTelemetryBuilder {
 
     return new SofaRpcTelemetry(
         serverInstrumenterBuilder.buildServerInstrumenter(new SofaRpcHeadersGetter()),
-        clientInstrumenterBuilder.buildClientInstrumenter(new SofaRpcHeadersSetter()));
+        clientInstrumenterBuilder.buildClientInstrumenter(new SofaRpcHeadersSetter()),
+        RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry).emitPreview());
   }
 }

@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static java.util.Collections.singletonList;
 
+import com.alipay.sofa.rpc.common.RemotingConstants;
 import com.alipay.sofa.rpc.common.RpcConstants;
 import com.alipay.sofa.rpc.config.ConsumerConfig;
 import com.alipay.sofa.rpc.core.exception.RpcErrorType;
@@ -56,11 +57,22 @@ class SofaRpcTest extends AbstractSofaRpcTest {
   }
 
   @ParameterizedTest
-  @CsvSource({"false, false", "false, true", "true, false", "true, true"})
-  void statusCodeIsEmitted(boolean async, boolean syntheticFallback) {
+  @CsvSource({
+    "false, SUCCESS",
+    "true, SUCCESS",
+    "false, ERROR_FLAG",
+    "true, ERROR_FLAG",
+    "false, ERROR_MESSAGE",
+    "true, ERROR_MESSAGE",
+    "false, RPC_EXCEPTION",
+    "true, RPC_EXCEPTION",
+    "false, APPLICATION_EXCEPTION",
+    "true, APPLICATION_EXCEPTION",
+    "true, CALLBACK_EXCEPTION"
+  })
+  void responseOutcome(boolean async, ResponseType responseType) {
     String service = ErrorService.class.getName();
-    String method = syntheticFallback ? "throwBusinessException" : "throwException";
-    String errorType = Integer.toString(RpcErrorType.SERVER_UNDECLARED_ERROR);
+    String method = "throwException";
     SofaRequest request = new SofaRequest();
     request.setInterfaceName(service);
     request.setMethodName(method);
@@ -69,11 +81,38 @@ class SofaRpcTest extends AbstractSofaRpcTest {
     }
 
     SofaResponse response = new SofaResponse();
-    Throwable exception = new SofaRpcException(RpcErrorType.SERVER_UNDECLARED_ERROR, "RPC error");
-    if (syntheticFallback) {
-      response.setErrorMsg("RPC error");
-    } else if (!async) {
-      response.setAppResponse(exception);
+    response.addResponseProp(
+        RemotingConstants.HEAD_RESPONSE_ERROR,
+        responseType == ResponseType.SUCCESS ? "false" : "true");
+    Throwable callbackException = null;
+    String errorType = null;
+    String statusCode = null;
+    switch (responseType) {
+      case SUCCESS:
+        response.setAppResponse("success");
+        break;
+      case ERROR_FLAG:
+        errorType = Integer.toString(RpcErrorType.SERVER_UNDECLARED_ERROR);
+        break;
+      case ERROR_MESSAGE:
+        response.setErrorMsg("RPC error");
+        errorType = Integer.toString(RpcErrorType.SERVER_UNDECLARED_ERROR);
+        break;
+      case RPC_EXCEPTION:
+        response.setAppResponse(new SofaRpcException(RpcErrorType.SERVER_BUSY, "RPC error"));
+        errorType = Integer.toString(RpcErrorType.SERVER_BUSY);
+        statusCode = errorType;
+        break;
+      case APPLICATION_EXCEPTION:
+        response.setAppResponse(new IllegalStateException("application error"));
+        errorType = IllegalStateException.class.getName();
+        break;
+      case CALLBACK_EXCEPTION:
+        response.setAppResponse(new IllegalStateException("application error"));
+        callbackException = new SofaRpcException(RpcErrorType.CLIENT_TIMEOUT, "callback error");
+        errorType = Integer.toString(RpcErrorType.CLIENT_TIMEOUT);
+        statusCode = errorType;
+        break;
     }
 
     ConsumerConfig<?> config = new ConsumerConfig<>().setInterfaceId(service).setInJVM(false);
@@ -85,12 +124,14 @@ class SofaRpcTest extends AbstractSofaRpcTest {
           }
         };
     Filter filter = telemetry.newClientFilter();
-    filter.invoke(invoker, request);
+    assertThat(filter.invoke(invoker, request)).isSameAs(response);
     if (async) {
-      filter.onAsyncResponse(config, request, response, syntheticFallback ? null : exception);
+      filter.onAsyncResponse(config, request, response, callbackException);
     }
 
     String rpcMethod = service + "/" + method;
+    String expectedErrorType = errorType;
+    String expectedStatusCode = statusCode;
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -99,14 +140,13 @@ class SofaRpcTest extends AbstractSofaRpcTest {
                         span.hasName(rpcMethod)
                             .hasKind(SpanKind.CLIENT)
                             .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
-                            .hasStatus(StatusData.error())
+                            .hasStatus(
+                                expectedErrorType == null ? StatusData.unset() : StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                 equalTo(RPC_METHOD, rpcMethod),
-                                equalTo(ERROR_TYPE, errorType),
-                                equalTo(
-                                    stringKey("rpc.status_code"),
-                                    !syntheticFallback ? errorType : null))));
+                                equalTo(ERROR_TYPE, expectedErrorType),
+                                equalTo(stringKey("rpc.status_code"), expectedStatusCode))));
 
     testing()
         .waitAndAssertMetrics(
@@ -130,9 +170,18 @@ class SofaRpcTest extends AbstractSofaRpcTest {
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                                     equalTo(RPC_METHOD, rpcMethod),
-                                                    equalTo(ERROR_TYPE, errorType),
+                                                    equalTo(ERROR_TYPE, expectedErrorType),
                                                     equalTo(
                                                         stringKey("rpc.status_code"),
-                                                        syntheticFallback ? null : errorType))))));
+                                                        expectedStatusCode))))));
+  }
+
+  private enum ResponseType {
+    SUCCESS,
+    ERROR_FLAG,
+    ERROR_MESSAGE,
+    RPC_EXCEPTION,
+    APPLICATION_EXCEPTION,
+    CALLBACK_EXCEPTION
   }
 }

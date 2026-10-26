@@ -27,10 +27,15 @@ final class TracingFilter extends Filter {
 
   private final Instrumenter<SofaRpcRequest, SofaResponse> instrumenter;
   private final boolean isClientSide;
+  private final boolean emitPreview;
 
-  TracingFilter(Instrumenter<SofaRpcRequest, SofaResponse> instrumenter, boolean isClientSide) {
+  TracingFilter(
+      Instrumenter<SofaRpcRequest, SofaResponse> instrumenter,
+      boolean isClientSide,
+      boolean emitPreview) {
     this.instrumenter = instrumenter;
     this.isClientSide = isClientSide;
+    this.emitPreview = emitPreview;
   }
 
   @Override
@@ -94,7 +99,7 @@ final class TracingFilter extends Filter {
   }
 
   @Nullable
-  private static Throwable extractException(
+  private Throwable extractException(
       SofaRpcRequest sofaRpcRequest, @Nullable SofaResponse response) {
     if (response == null) {
       return null;
@@ -108,7 +113,7 @@ final class TracingFilter extends Filter {
     if (response.isError()
         || "true".equals(response.getResponseProp(RemotingConstants.HEAD_RESPONSE_ERROR))) {
       String errorMsg = response.getErrorMsg();
-      if (errorMsg != null) {
+      if (errorMsg != null || emitPreview) {
         sofaRpcRequest.markSyntheticFallbackError();
         return new SofaRpcException(SERVER_UNDECLARED_ERROR, errorMsg);
       }

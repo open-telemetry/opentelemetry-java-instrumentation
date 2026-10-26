@@ -15,6 +15,7 @@ public final class SofaRpcTelemetry {
 
   private final Instrumenter<SofaRpcRequest, SofaResponse> serverInstrumenter;
   private final Instrumenter<SofaRpcRequest, SofaResponse> clientInstrumenter;
+  private final boolean emitPreview;
 
   /** Returns a new {@link SofaRpcTelemetry} configured with the given {@link OpenTelemetry}. */
   public static SofaRpcTelemetry create(OpenTelemetry openTelemetry) {
@@ -30,9 +31,11 @@ public final class SofaRpcTelemetry {
 
   SofaRpcTelemetry(
       Instrumenter<SofaRpcRequest, SofaResponse> serverInstrumenter,
-      Instrumenter<SofaRpcRequest, SofaResponse> clientInstrumenter) {
+      Instrumenter<SofaRpcRequest, SofaResponse> clientInstrumenter,
+      boolean emitPreview) {
     this.serverInstrumenter = serverInstrumenter;
     this.clientInstrumenter = clientInstrumenter;
+    this.emitPreview = emitPreview;
   }
 
   /**
@@ -40,7 +43,7 @@ public final class SofaRpcTelemetry {
    * outgoing RPC calls.
    */
   public Filter newClientFilter() {
-    return new TracingFilter(clientInstrumenter, true);
+    return new TracingFilter(clientInstrumenter, true, emitPreview);
   }
 
   /**
@@ -48,6 +51,6 @@ public final class SofaRpcTelemetry {
    * incoming RPC calls.
    */
   public Filter newServerFilter() {
-    return new TracingFilter(serverInstrumenter, false);
+    return new TracingFilter(serverInstrumenter, false, emitPreview);
   }
 }
