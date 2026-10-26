@@ -6,13 +6,17 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterProvider;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
@@ -25,23 +29,74 @@ class OperationMetricsUtilTest {
   @Test
   void noWarning() {
     AtomicBoolean warning = new AtomicBoolean(false);
+    AtomicBoolean factoryInvoked = new AtomicBoolean(false);
     OperationMetrics operationMetrics =
         OperationMetricsUtil.create(
-            "test metrics", meter -> null, (s, doubleHistogramBuilder) -> warning.set(true));
+            "test metrics",
+            meter -> {
+              factoryInvoked.set(true);
+              return OperationMetricsUtil.NOOP_OPERATION_LISTENER;
+            },
+            (s, doubleHistogramBuilder) -> warning.set(true));
     operationMetrics.create(testing.getOpenTelemetry().getMeter("test"));
 
     assertThat(warning).isFalse();
+    assertThat(factoryInvoked).isTrue();
   }
 
   @Test
   void noWarningWithNoopMetrics() {
     AtomicBoolean warning = new AtomicBoolean(false);
+    AtomicBoolean factoryInvoked = new AtomicBoolean(false);
     OperationMetrics operationMetrics =
         OperationMetricsUtil.create(
-            "test metrics", meter -> null, (s, doubleHistogramBuilder) -> warning.set(true));
-    operationMetrics.create(MeterProvider.noop().get("test"));
+            "test metrics",
+            meter -> {
+              factoryInvoked.set(true);
+              return OperationMetricsUtil.NOOP_OPERATION_LISTENER;
+            },
+            (s, doubleHistogramBuilder) -> warning.set(true));
+    OperationListener listener = operationMetrics.create(MeterProvider.noop().get("test"));
 
+    assertThat(listener).isSameAs(OperationMetricsUtil.NOOP_OPERATION_LISTENER);
     assertThat(warning).isFalse();
+    assertThat(factoryInvoked).isFalse();
+  }
+
+  @Test
+  void noMetricsWithSdkWithoutReaders() {
+    AtomicBoolean factoryInvoked = new AtomicBoolean(false);
+    OperationMetrics operationMetrics =
+        OperationMetricsUtil.create(
+            "test metrics",
+            meter -> {
+              factoryInvoked.set(true);
+              return OperationMetricsUtil.NOOP_OPERATION_LISTENER;
+            });
+    try (SdkMeterProvider meterProvider = SdkMeterProvider.builder().build()) {
+      assertThat(operationMetrics.create(meterProvider.get("test")))
+          .isSameAs(OperationMetricsUtil.NOOP_OPERATION_LISTENER);
+    }
+    assertThat(factoryInvoked).isFalse();
+  }
+
+  @Test
+  void noopHistogramDoesNotDisableCustomMeter() {
+    AtomicBoolean factoryInvoked = new AtomicBoolean(false);
+    Meter customMeter = mock(Meter.class);
+    when(customMeter.histogramBuilder("compatibility-test"))
+        .thenReturn(MeterProvider.noop().get("test").histogramBuilder("compatibility-test"));
+    OperationMetrics operationMetrics =
+        OperationMetricsUtil.create(
+            "test metrics",
+            meter -> {
+              factoryInvoked.set(true);
+              return OperationMetricsUtil.NOOP_OPERATION_LISTENER;
+            });
+
+    operationMetrics.create(customMeter);
+
+    assertThat(factoryInvoked).isTrue();
   }
 
   @Test

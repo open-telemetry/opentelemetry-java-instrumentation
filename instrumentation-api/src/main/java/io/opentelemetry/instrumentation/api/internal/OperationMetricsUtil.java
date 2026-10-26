@@ -11,6 +11,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
@@ -60,6 +61,9 @@ public class OperationMetricsUtil {
       Function<Meter, OperationListener> factory,
       BiConsumer<String, DoubleHistogramBuilder> warningEmitter) {
     return meter -> {
+      if (meter == MeterProvider.noop().get("noop")) {
+        return NOOP_OPERATION_LISTENER;
+      }
       DoubleHistogramBuilder histogramBuilder = meter.histogramBuilder("compatibility-test");
       if (!(histogramBuilder instanceof ExtendedDoubleHistogramBuilder)
           && !histogramBuilder.getClass().getName().contains("NoopDoubleHistogram")) {

@@ -33,6 +33,7 @@ import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomi
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerProvider;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerUtil;
 import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
+import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
@@ -361,7 +362,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     }
     Meter meter = meterBuilder.build();
     for (OperationMetrics factory : operationMetrics) {
-      listeners.add(factory.create(meter));
+      OperationListener listener = factory.create(meter);
+      if (listener != OperationMetricsUtil.NOOP_OPERATION_LISTENER) {
+        listeners.add(listener);
+      }
     }
 
     return listeners;

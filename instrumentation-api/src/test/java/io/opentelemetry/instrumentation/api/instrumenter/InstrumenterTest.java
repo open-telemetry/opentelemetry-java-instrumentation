@@ -38,6 +38,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
@@ -676,6 +677,31 @@ class InstrumenterTest {
 
     assertThat(Span.fromContext(startContext.get()).getSpanContext().isValid()).isTrue();
     assertThat(Span.fromContext(endContext.get()).getSpanContext().isValid()).isTrue();
+  }
+
+  @Test
+  void noopOperationMetricsDoNotRegisterListeners() {
+    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addOperationMetrics(meter -> OperationMetricsUtil.NOOP_OPERATION_LISTENER);
+
+    assertThat(builder.buildOperationListeners()).isEmpty();
+  }
+
+  @Test
+  void noopOperationMetricsPreserveCustomListeners() {
+    RecordingOperationListener explicitListener = new RecordingOperationListener();
+    RecordingOperationListener metricsListener = new RecordingOperationListener();
+    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addOperationListener(explicitListener)
+            .addOperationMetrics(meter -> OperationMetricsUtil.NOOP_OPERATION_LISTENER)
+            .addOperationMetrics(meter -> metricsListener);
+
+    assertThat(builder.buildOperationListeners())
+        .containsExactly(explicitListener, metricsListener);
   }
 
   @Test
