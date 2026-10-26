@@ -179,6 +179,7 @@ class GwtTest {
                                     ? "test.gwt.shared.MessageService/sendMessage"
                                     : "sendMessage"))));
 
+    assertDurationMetrics(null);
     testing.clearData();
 
     // click a button to trigger calling java code
@@ -213,6 +214,7 @@ class GwtTest {
                                 ERROR_TYPE,
                                 emitPreviewRpcSemconv() ? IOException.class.getName() : null))));
 
+    assertDurationMetrics(IOException.class.getName());
     if (emitExceptionAsLogs()) {
       SpanData rpcSpan =
           testing.spans().stream()
@@ -226,6 +228,50 @@ class GwtTest {
                   .hasEventName("rpc.server.call.exception")
                   .hasSpanContext(rpcSpan.getSpanContext())
                   .hasException(new IOException()));
+    }
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private static void assertDurationMetrics(String errorType) {
+    if (emitOldRpcSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.gwt-2.0",
+          metric ->
+              metric
+                  .hasName("rpc.server.duration")
+                  .hasUnit("ms")
+                  .hasHistogramSatisfying(
+                      histogram ->
+                          histogram.hasPointsSatisfying(
+                              point ->
+                                  point
+                                      .hasCount(1)
+                                      .hasSumGreaterThan(0)
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(RPC_SYSTEM, "gwt"),
+                                          equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
+                                          equalTo(RPC_METHOD, "sendMessage")))));
+    }
+    if (emitPreviewRpcSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.gwt-2.0",
+          metric ->
+              metric
+                  .hasName("rpc.server.call.duration")
+                  .hasUnit("s")
+                  .hasHistogramSatisfying(
+                      histogram ->
+                          histogram.hasPointsSatisfying(
+                              point ->
+                                  point
+                                      .hasCount(1)
+                                      .hasSumGreaterThan(0)
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(RPC_SYSTEM_NAME, "gwt"),
+                                          equalTo(
+                                              RPC_METHOD,
+                                              "test.gwt.shared.MessageService/sendMessage"),
+                                          equalTo(ERROR_TYPE, errorType)))));
     }
   }
 }
