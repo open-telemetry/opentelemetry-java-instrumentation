@@ -8,27 +8,22 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import java.io.Closeable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.eclipse.jetty.client.AsyncContentProvider;
 import org.eclipse.jetty.client.HttpRequest;
-import org.eclipse.jetty.client.api.ContentProvider;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.util.Callback;
 
 /**
  * JettyClientTracingListener performs three actions when {@link #handleRequest(Context,
  * HttpRequest, Instrumenter)} is called 1. Start the CLIENT span 2. Set the listener callbacks for
- * each lifecycle action that signal end of the request 3. Wrap application request callbacks and
- * content providers with the caller context
+ * each lifecycle action that signal end of the request 3. Wrap application request callbacks with
+ * the caller context
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
@@ -46,21 +41,6 @@ public final class JettyClientTracingListener
     Request.ContentListener.class,
     Request.CommitListener.class,
     Request.QueuedListener.class
-  };
-
-  private static final Class<?> SYNCHRONIZABLE = findSynchronizable();
-
-  private static final Class<?>[] CONTENT_PROVIDER_INTERFACES = {
-    ContentProvider.class,
-    ContentProvider.Typed.class,
-    AsyncContentProvider.class,
-    SYNCHRONIZABLE,
-    Callback.class,
-    Closeable.class
-  };
-
-  private static final Class<?>[] CONTENT_ITERATOR_INTERFACES = {
-    Iterator.class, SYNCHRONIZABLE, Callback.class, Closeable.class
   };
 
   private final Context context;
@@ -88,10 +68,9 @@ public final class JettyClientTracingListener
 
     Context context = instrumenter.start(parentContext, request);
 
-    // wrap all important request-based listeners and request content that may already be attached
+    // wrap all important request-based listeners
     List<Request.RequestListener> existingListeners = request.getRequestListeners(null);
     wrapRequestListeners(existingListeners, parentContext);
-    wrapContentProvider(request, parentContext);
 
     JettyClientTracingListener listener = new JettyClientTracingListener(context, instrumenter);
     request.onRequestFailure(listener).onResponseFailure(listener).onResponseSuccess(listener);
@@ -133,60 +112,6 @@ public final class JettyClientTracingListener
                   });
 
       iterator.set(proxiedListener);
-    }
-  }
-
-  private static void wrapContentProvider(HttpRequest request, Context context) {
-    ContentProvider contentProvider = request.getContent();
-    if (contentProvider == null) {
-      return;
-    }
-
-    request.content((ContentProvider) wrapContentProviderWithContext(contentProvider, context));
-  }
-
-  private static Object wrapContentProviderWithContext(
-      ContentProvider contentProvider, Context context) {
-    return wrapWithContext(contentProvider, context, CONTENT_PROVIDER_INTERFACES, true);
-  }
-
-  private static Object wrapContentIteratorWithContext(Object iterator, Context context) {
-    return wrapWithContext(iterator, context, CONTENT_ITERATOR_INTERFACES, false);
-  }
-
-  private static Object wrapWithContext(
-      Object target, Context context, Class<?>[] supportedInterfaces, boolean wrapIterator) {
-    List<Class<?>> interfaces = new ArrayList<>(supportedInterfaces.length);
-    for (Class<?> type : supportedInterfaces) {
-      if (type != null && type.isInstance(target)) {
-        interfaces.add(type);
-      }
-    }
-    return Proxy.newProxyInstance(
-        target.getClass().getClassLoader(),
-        interfaces.toArray(new Class<?>[0]),
-        (proxy, method, args) -> {
-          try (Scope ignored = context.makeCurrent()) {
-            Object result = method.invoke(target, args);
-            if (wrapIterator && result instanceof Iterator) {
-              return wrapContentIteratorWithContext(result, context);
-            }
-            return result;
-          } catch (InvocationTargetException e) {
-            throw e.getCause();
-          }
-        });
-  }
-
-  @Nullable
-  private static Class<?> findSynchronizable() {
-    try {
-      return Class.forName(
-          "org.eclipse.jetty.client.Synchronizable",
-          false,
-          JettyClientTracingListener.class.getClassLoader());
-    } catch (ClassNotFoundException ignored) {
-      return null;
     }
   }
 

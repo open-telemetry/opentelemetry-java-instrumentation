@@ -49,13 +49,6 @@ class TracingHttpClient extends HttpClient {
     if (context != null) {
       listeners = wrapResponseListeners(parentContext, listeners);
     }
-    try {
-      super.send(request, listeners);
-    } catch (RuntimeException | Error e) {
-      if (context != null) {
-        instrumenter.end(context, request, null, e);
-      }
-      throw e;
-    }
+    super.send(request, listeners);
   }
 }

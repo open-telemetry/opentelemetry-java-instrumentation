@@ -8,25 +8,14 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v9_2;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.sun.net.httpserver.HttpServer;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.util.concurrent.atomic.AtomicReference;
 import org.eclipse.jetty.client.HttpClient;
-import org.eclipse.jetty.client.HttpProxy;
-import org.eclipse.jetty.client.Origin;
 import org.eclipse.jetty.client.api.ContentResponse;
-import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.util.InputStreamResponseListener;
 import org.junit.jupiter.api.AfterEach;
@@ -47,7 +36,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class JettyHttpClient9HttpCallTest {
 
   private static final String EXPECTED_BODY = "Hello World";
-  private static final ContextKey<String> CALLER_KEY = ContextKey.named("caller");
 
   @RegisterExtension
   static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -85,87 +73,11 @@ class JettyHttpClient9HttpCallTest {
   @Test
   void contentResponseBodyIsDelivered() throws Exception {
     String url = "http://localhost:" + server.getAddress().getPort() + "/";
-    AtomicReference<Context> preparationContext = new AtomicReference<>();
-    observePreparation(() -> preparationContext.set(Context.current()));
 
-    Context enteringContext = Context.current();
-    Span callerSpan =
-        testing.getOpenTelemetry().getTracer("test").spanBuilder("caller").startSpan();
-    Context callerContext = enteringContext.with(callerSpan).with(CALLER_KEY, "caller");
-    try {
-      ContentResponse response;
-      try (Scope ignored = callerContext.makeCurrent()) {
-        response = client.newRequest(url).send();
-        assertThat(Context.current()).isSameAs(callerContext);
-      }
-      assertThat(Context.current()).isSameAs(enteringContext);
+    ContentResponse response = client.newRequest(url).send();
 
-      assertThat(response.getStatus()).isEqualTo(200);
-      assertThat(response.getContentAsString()).isEqualTo(EXPECTED_BODY);
-      Context preparedContext = preparationContext.get();
-      assertThat(preparedContext).isSameAs(callerContext);
-    } finally {
-      callerSpan.end();
-    }
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("caller"),
-                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
-  }
-
-  @Test
-  void exceptionalSendRestoresCallerContext() {
-    RuntimeException failure = new IllegalStateException("send preparation failed");
-    AtomicReference<Context> preparationContext = new AtomicReference<>();
-    observePreparation(
-        () -> {
-          preparationContext.set(Context.current());
-          throw failure;
-        });
-
-    Context enteringContext = Context.current();
-    Context callerContext = enteringContext.with(CALLER_KEY, "caller");
-    try {
-      try (Scope ignored = callerContext.makeCurrent()) {
-        assertThatThrownBy(() -> client.newRequest(url()).send(result -> {})).isSameAs(failure);
-        assertThat(Context.current()).isSameAs(callerContext);
-      }
-      assertThat(Context.current()).isSameAs(enteringContext);
-    } finally {
-      assertThat(preparationContext.get()).isSameAs(callerContext);
-    }
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(span -> span.hasName("GET").hasKind(SpanKind.CLIENT)));
-  }
-
-  @Test
-  void sendWithoutStartedSpanPreservesContext() throws Exception {
-    client.stop();
-    Instrumenter<Request, Response> instrumenter =
-        Instrumenter.<Request, Response>builder(
-                testing.getOpenTelemetry(), "test", request -> "unused")
-            .setEnabled(false)
-            .buildInstrumenter();
-    client = new TracingHttpClient(instrumenter);
-    AtomicReference<Context> preparationContext = new AtomicReference<>();
-    observePreparation(() -> preparationContext.set(Context.current()));
-    client.start();
-
-    testing.runWithSpan(
-        "caller",
-        () -> {
-          Context callerContext = Context.current();
-          assertThat(client.newRequest(url()).send().getStatus()).isEqualTo(200);
-          assertThat(preparationContext.get()).isSameAs(callerContext);
-          assertThat(Context.current()).isSameAs(callerContext);
-        });
-
-    testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("caller")));
+    assertThat(response.getStatus()).isEqualTo(200);
+    assertThat(response.getContentAsString()).isEqualTo(EXPECTED_BODY);
   }
 
   @Test
@@ -191,23 +103,5 @@ class JettyHttpClient9HttpCallTest {
 
     assertThat(body).isNotEmpty();
     assertThat(new String(body, UTF_8)).isEqualTo(EXPECTED_BODY);
-  }
-
-  private void observePreparation(Runnable observer) {
-    client
-        .getProxyConfiguration()
-        .getProxies()
-        .add(
-            new HttpProxy("localhost", 1) {
-              @Override
-              public boolean matches(Origin origin) {
-                observer.run();
-                return false;
-              }
-            });
-  }
-
-  private String url() {
-    return "http://localhost:" + server.getAddress().getPort() + "/";
   }
 }
