@@ -98,6 +98,39 @@ class R2dbcSqlAttributesGetterTest {
   }
 
   @ParameterizedTest
+  @MethodSource("otherSqlResponseStatuses")
+  void formatsGenericSqlResponseStatus(
+      Throwable error, String expectedStatus, String expectedErrorType) {
+    DbExecution request = request("unknown");
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo(expectedStatus);
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo(expectedErrorType);
+  }
+
+  private static Stream<Arguments> otherSqlResponseStatuses() {
+    return Stream.of(
+        argumentSet(
+            "both codes",
+            new R2dbcBadGrammarException("test", "42000", 1071),
+            "42000/1071",
+            "42000"),
+        argumentSet(
+            "SQLSTATE only", new R2dbcBadGrammarException("test", "42000", 0), "42000", "42000"),
+        argumentSet(
+            "vendor code only", new R2dbcBadGrammarException("test", null, 1071), "1071", null),
+        argumentSet("neither code", new R2dbcBadGrammarException("test"), null, null));
+  }
+
+  @Test
+  void keepsVendorCodeWithoutSqlStateForMappedNonPreferredSystem() {
+    DbExecution request = request("clickhouse");
+    Throwable error = new R2dbcBadGrammarException("test", null, 1071);
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1071");
+    assertThat(getter.getErrorType(request, null, error)).isNull();
+  }
+
+  @ParameterizedTest
   @ValueSource(strings = {"mysql", "mariadb", "oracle", "mssql", "db2"})
   void fallsBackToSqlStateWhenVendorCodeIsUnavailable(String dbSystemName) {
     DbExecution request = request(dbSystemName);

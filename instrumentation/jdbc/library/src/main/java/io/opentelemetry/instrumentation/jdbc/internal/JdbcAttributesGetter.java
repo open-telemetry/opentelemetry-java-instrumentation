@@ -22,6 +22,10 @@ import javax.annotation.Nullable;
  */
 public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
 
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
+  private static final String ORACLE_DB = "oracle.db";
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
+  private static final String OTHER_SQL = "other_sql";
   private static final String H2_DATABASE = "h2database";
   private static final int H2_OBJECT_CLOSED_ERROR_CODE = 90007;
   private static final String POSTGRESQL_DATABASE = "postgresql";
@@ -72,7 +76,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
       // H2 generates this object-closed error locally before sending a database request.
       return null;
     }
-    if ("oracle.db".equals(getDbSystemName(request)) && error instanceof SQLException) {
+    if (ORACLE_DB.equals(getDbSystemName(request)) && error instanceof SQLException) {
       int errorCode = ((SQLException) error).getErrorCode();
       // Oracle Statement.ensureOpen() generates these locally, before any server request.
       if (errorCode == 17008 || errorCode == 17009) {
@@ -82,6 +86,22 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
     if (POSTGRESQL_DATABASE.equals(getDbSystemName(request))
         && error instanceof SQLException
         && isPostgresqlConnectionClosed((SQLException) error)) {
+      return null;
+    }
+    if (OTHER_SQL.equals(getDbSystemName(request)) && error instanceof SQLException) {
+      SQLException sqlException = (SQLException) error;
+      int errorCode = sqlException.getErrorCode();
+      String sqlState = sqlException.getSQLState();
+      boolean hasSqlState = sqlState != null && !sqlState.isEmpty() && !sqlState.equals("00000");
+      if (hasSqlState && errorCode != 0) {
+        return sqlState + "/" + errorCode;
+      }
+      if (hasSqlState) {
+        return sqlState;
+      }
+      if (errorCode != 0) {
+        return Integer.toString(errorCode);
+      }
       return null;
     }
     return getSqlExceptionCode(error);

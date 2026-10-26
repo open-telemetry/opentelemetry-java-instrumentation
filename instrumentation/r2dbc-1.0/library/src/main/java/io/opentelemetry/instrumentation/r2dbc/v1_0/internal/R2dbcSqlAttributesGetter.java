@@ -23,9 +23,12 @@ public final class R2dbcSqlAttributesGetter
   private static final String POSTGRESQL_DATABASE = "postgresql";
   private static final String MYSQL_DATABASE = "mysql";
   private static final String MARIADB_DATABASE = "mariadb";
-  private static final String ORACLE_DATABASE = "oracle.db";
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
+  private static final String ORACLE_DB = "oracle.db";
   private static final String SQL_SERVER_DATABASE = "microsoft.sql_server";
   private static final String DB2_DATABASE = "ibm.db2";
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
+  private static final String OTHER_SQL_DATABASE = "other_sql";
   private static final String POSTGRESQL_CLOSED_CONNECTION_EXCEPTION =
       "io.r2dbc.postgresql.client.ReactorNettyClient$PostgresConnectionClosedException";
   private static final String POSTGRESQL_CONNECTION_FAILURE = "08006";
@@ -77,7 +80,7 @@ public final class R2dbcSqlAttributesGetter
     }
     if (MYSQL_DATABASE.equals(dbSystemName)
         || MARIADB_DATABASE.equals(dbSystemName)
-        || ORACLE_DATABASE.equals(dbSystemName)
+        || ORACLE_DB.equals(dbSystemName)
         || SQL_SERVER_DATABASE.equals(dbSystemName)
         || DB2_DATABASE.equals(dbSystemName)) {
       int errorCode = getErrorCode(error);
@@ -85,7 +88,18 @@ public final class R2dbcSqlAttributesGetter
         return Integer.toString(errorCode);
       }
     }
-    return getSqlState(error);
+    String sqlState = getSqlState(error);
+    int errorCode = getErrorCode(error);
+    if (OTHER_SQL_DATABASE.equals(dbSystemName)
+        && sqlState != null
+        && !sqlState.isEmpty()
+        && errorCode != 0) {
+      return sqlState + "/" + errorCode;
+    }
+    if (sqlState != null) {
+      return sqlState;
+    }
+    return errorCode == 0 ? null : Integer.toString(errorCode);
   }
 
   private static int getErrorCode(@Nullable Throwable error) {

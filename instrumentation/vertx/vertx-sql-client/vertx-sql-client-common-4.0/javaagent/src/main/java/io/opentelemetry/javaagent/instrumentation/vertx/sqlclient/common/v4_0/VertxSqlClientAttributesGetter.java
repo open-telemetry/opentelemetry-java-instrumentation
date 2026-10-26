@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -23,8 +24,6 @@ import javax.annotation.Nullable;
 
 class VertxSqlClientAttributesGetter
     implements SqlClientAttributesGetter<VertxSqlClientRequest, Void> {
-
-  private static final String ORACLE_DATABASE = "oracle.db";
 
   private static final Function<Throwable, String> responseStatusExtractor =
       createResponseStatusExtractor(false);
@@ -88,13 +87,13 @@ class VertxSqlClientAttributesGetter
   public String getDbResponseStatusCode(
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
     if (error != null
-        && ORACLE_DATABASE.equals(request.getDbSystemName())
+        && ORACLE_DB.equals(request.getDbSystemName())
         && CauseUnwrapper.unwrap(error, cause -> !(cause instanceof ConnectException))
             instanceof ConnectException) {
       return null;
     }
     if (MYSQL.equals(request.getDbSystemName())
-        || ORACLE_DATABASE.equals(request.getDbSystemName())
+        || ORACLE_DB.equals(request.getDbSystemName())
         || MICROSOFT_SQL_SERVER.equals(request.getDbSystemName())
         || IBM_DB2.equals(request.getDbSystemName())) {
       String errorCode = dbResponseErrorCodeExtractor.apply(error);
