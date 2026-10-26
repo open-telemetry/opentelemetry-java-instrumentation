@@ -91,7 +91,7 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Returns the {@code error.type} value for the operation.
+   * Returns the final {@code error.type} value for the operation, or {@code null} to omit it.
    *
    * <p>The default implementation returns the exception class name, or {@code null} if there is no
    * exception.
