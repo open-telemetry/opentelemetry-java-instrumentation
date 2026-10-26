@@ -94,7 +94,7 @@ class ProcessResourceTest {
 
   private static void assertResource(boolean windows) {
     Resource resource = ProcessResource.create();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
     Attributes attributes = resource.getAttributes();
 
     assertThat(attributes.get(PROCESS_PID)).isGreaterThan(1);
