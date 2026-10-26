@@ -107,7 +107,10 @@ candidate differences, and independently confirm promising changes.
 
 ## Artifacts and driver tests
 
-The `quarkus-benchmark-results` artifact includes `metadata.json`, `trials.json`,
+The `quarkus-benchmark-results` artifact contains `quarkus-results.tar.gz`.
+The archive preserves Hyperfoil filenames that GitHub's artifact service
+does not accept directly. Extract it on a filesystem that supports colons.
+It includes `metadata.json`, `trials.json`,
 `summary.md`, commands, logs, generated workloads, process CPU/RSS samples, raw
 Hyperfoil JSON, preflight traces, and telemetry counts. Profile jobs also
 include JFR recordings. Build provenance and hashes identify the application,
