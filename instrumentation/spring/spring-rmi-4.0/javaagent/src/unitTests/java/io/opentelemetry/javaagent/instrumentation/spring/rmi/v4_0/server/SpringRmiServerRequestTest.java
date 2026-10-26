@@ -53,9 +53,9 @@ class SpringRmiServerRequestTest {
   void handlesNullParameterTypesAndMissingLookups() throws Exception {
     assertThat(rpcMethod(DuplicateService.class, "noArguments", (Class<?>[]) null))
         .isEqualTo(FirstService.class.getName() + "/noArguments");
-    assertThat(rpcMethod(DuplicateService.class, "missing")).isNull();
-    assertThat(rpcMethod(DuplicateService.class, "duplicate", Integer.class)).isNull();
-    assertThat(rpcMethod(null, "missing", (Class<?>[]) null)).isNull();
+    assertThat(rpcMethod(DuplicateService.class, "missing")).isEqualTo("_OTHER");
+    assertThat(rpcMethod(DuplicateService.class, "duplicate", Integer.class)).isEqualTo("_OTHER");
+    assertThat(rpcMethod(null, "missing", (Class<?>[]) null)).isEqualTo("_OTHER");
   }
 
   private static String rpcMethod(
