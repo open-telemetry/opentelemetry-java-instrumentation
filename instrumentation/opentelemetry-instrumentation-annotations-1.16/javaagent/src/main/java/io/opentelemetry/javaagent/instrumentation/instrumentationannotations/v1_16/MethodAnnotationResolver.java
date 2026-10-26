@@ -59,12 +59,7 @@ final class MethodAnnotationResolver {
   private static ResolvedMethod resolve(Method method) {
     return RESOLVED_METHOD_CACHE
         .get(method.getDeclaringClass())
-        .computeIfAbsent(method, MethodAnnotationResolver::load);
-  }
-
-  private static ResolvedMethod load(Method method) {
-    List<Method> methodAndOverridden = methodAndOverridden(method);
-    return new ResolvedMethod(methodAndOverridden, firstWithSpanOrNull(methodAndOverridden));
+        .computeIfAbsent(method, m -> new ResolvedMethod(methodAndOverridden(m)));
   }
 
   @Nullable
@@ -84,7 +79,7 @@ final class MethodAnnotationResolver {
   private static List<Method> methodAndOverridden(Method method) {
     List<Method> result = new ArrayList<>();
     result.add(method);
-    if (overridable(method)) {
+    if (isOverridable(method)) {
       try {
         collectOverridden(method, result);
       } catch (Throwable t) {
@@ -135,7 +130,9 @@ final class MethodAnnotationResolver {
       TypeVariable<?>[] variables = rawType.getTypeParameters();
       Type[] arguments = ((ParameterizedType) type).getActualTypeArguments();
       for (int i = 0; i < variables.length && i < arguments.length; i++) {
-        typeArguments.put(variables[i], arguments[i]);
+        if (!variables[i].equals(arguments[i])) {
+          typeArguments.put(variables[i], arguments[i]);
+        }
       }
     }
   }
@@ -156,15 +153,14 @@ final class MethodAnnotationResolver {
     }
   }
 
-  private static boolean overridable(Method method) {
+  private static boolean isOverridable(Method method) {
     int modifiers = method.getModifiers();
-    return !Modifier.isStatic(modifiers) && !Modifier.isPrivate(modifiers);
+    return !Modifier.isStatic(modifiers) && !Modifier.isPrivate(modifiers) && !method.isBridge();
   }
 
   private static boolean overrides(
       Method method, Method candidate, Map<TypeVariable<?>, Type> typeArguments) {
-    return !candidate.isBridge()
-        && overridable(candidate)
+    return isOverridable(candidate)
         && candidate.getName().equals(method.getName())
         && (isVisibleTo(candidate, method.getDeclaringClass())
             || isOverriddenViaSamePackageClass(candidate, method))
@@ -183,17 +179,17 @@ final class MethodAnnotationResolver {
     for (Class<?> type = method.getDeclaringClass().getSuperclass();
         type != null && type != candidateType;
         type = type.getSuperclass()) {
-      if (packageName(type).equals(packageName(candidateType)) && declaresOverride(type, method)) {
+      if (packageName(type).equals(packageName(candidateType))
+          && declaresVisibleOverride(type, method)) {
         return true;
       }
     }
     return false;
   }
 
-  private static boolean declaresOverride(Class<?> type, Method method) {
+  private static boolean declaresVisibleOverride(Class<?> type, Method method) {
     for (Method declared : declaredMethods(type)) {
-      if (!declared.isBridge()
-          && overridable(declared)
+      if (isOverridable(declared)
           && isVisibleTo(declared, method.getDeclaringClass())
           && declared.getName().equals(method.getName())
           && Arrays.equals(declared.getParameterTypes(), method.getParameterTypes())) {
@@ -258,11 +254,9 @@ final class MethodAnnotationResolver {
     @Nullable
     private final application.io.opentelemetry.instrumentation.annotations.WithSpan withSpan;
 
-    private ResolvedMethod(
-        List<Method> methodAndOverridden,
-        @Nullable application.io.opentelemetry.instrumentation.annotations.WithSpan withSpan) {
+    private ResolvedMethod(List<Method> methodAndOverridden) {
       this.methodAndOverridden = methodAndOverridden;
-      this.withSpan = withSpan;
+      this.withSpan = firstWithSpanOrNull(methodAndOverridden);
     }
 
     @Nullable

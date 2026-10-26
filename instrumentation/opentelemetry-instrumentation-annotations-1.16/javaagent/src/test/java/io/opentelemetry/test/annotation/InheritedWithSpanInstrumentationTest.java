@@ -230,6 +230,22 @@ class InheritedWithSpanInstrumentationTest {
     }
   }
 
+  static class OuterWithUnboundBase<T> {
+    class Base {
+      @WithSpan
+      String handle(@SpanAttribute("value") T value) {
+        return "unbound base";
+      }
+    }
+
+    class Child extends Base {
+      @Override
+      String handle(T value) {
+        return "unbound child";
+      }
+    }
+  }
+
   static class OverrideInOtherPackage extends PublicOverride {
     @Override
     public String run() {
@@ -435,6 +451,22 @@ class InheritedWithSpanInstrumentationTest {
                             equalTo(
                                 CODE_FUNCTION_NAME,
                                 ImplementationOfInnerBase.class.getName() + ".handle"),
+                            equalTo(stringKey("value"), "hello"))));
+  }
+
+  @Test
+  void overrideOfGenericMethodInheritedFromInnerClassOfUnboundOuter() {
+    new OuterWithUnboundBase<String>().new Child().handle("hello");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("Child.handle")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                OuterWithUnboundBase.Child.class.getName() + ".handle"),
                             equalTo(stringKey("value"), "hello"))));
   }
 
