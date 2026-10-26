@@ -283,6 +283,7 @@ jobs:
           java-version: "21"
       - name: Build fixed Quarkus application and download Hyperfoil
         run: |
+          export JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")"
           mkdir artifacts
           curl --fail --silent --show-error --location \
             https://archive.apache.org/dist/maven/maven-3/3.9.11/binaries/apache-maven-3.9.11-bin.tar.gz \
@@ -356,7 +357,7 @@ jobs:
       contents: read
       actions: read
     runs-on: oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24
-    timeout-minutes: 150
+    timeout-minutes: 190
     concurrency:
       group: servlet-benchmark
       cancel-in-progress: false
