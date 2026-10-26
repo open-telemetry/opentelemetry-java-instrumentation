@@ -6,7 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -30,6 +32,8 @@ class VertxSqlClientAttributesGetter
       createResponseStatusExtractor(true);
   private static final Function<Throwable, String> mysqlDbResponseStatusExtractor =
       responseStatusExtractor("io.vertx.mysqlclient.MySQLException", "getSqlState", true);
+  private static final Function<Throwable, String> db2DbResponseStatusExtractor =
+      responseStatusExtractor("io.vertx.db2client.DB2Exception", "getSqlState", true);
   private static final Function<Throwable, String> dbResponseErrorCodeExtractor =
       createNonZeroErrorCodeExtractor();
 
@@ -90,17 +94,25 @@ class VertxSqlClientAttributesGetter
       return null;
     }
     if (MYSQL.equals(request.getDbSystemName())
-        || ORACLE_DATABASE.equals(request.getDbSystemName())) {
+        || ORACLE_DATABASE.equals(request.getDbSystemName())
+        || MICROSOFT_SQL_SERVER.equals(request.getDbSystemName())
+        || IBM_DB2.equals(request.getDbSystemName())) {
       String errorCode = dbResponseErrorCodeExtractor.apply(error);
       if (errorCode != null) {
         return errorCode;
       }
     }
     String status = dbResponseStatusExtractor.apply(error);
-    if (status != null || !MYSQL.equals(request.getDbSystemName())) {
+    if (status != null) {
       return status;
     }
-    return mysqlDbResponseStatusExtractor.apply(error);
+    if (MYSQL.equals(request.getDbSystemName())) {
+      return mysqlDbResponseStatusExtractor.apply(error);
+    }
+    if (IBM_DB2.equals(request.getDbSystemName())) {
+      return db2DbResponseStatusExtractor.apply(error);
+    }
+    return null;
   }
 
   @Override
@@ -127,16 +139,34 @@ class VertxSqlClientAttributesGetter
         nonZeroErrorCodeExtractor("io.vertx.sqlclient.DatabaseException");
     Function<Throwable, String> mysqlExceptionExtractor =
         nonZeroErrorCodeExtractor("io.vertx.mysqlclient.MySQLException");
+    Function<Throwable, String> db2ExceptionExtractor =
+        nonZeroErrorCodeExtractor("io.vertx.db2client.DB2Exception");
+    Function<Throwable, String> mssqlExceptionExtractor =
+        nonZeroErrorCodeExtractor("io.vertx.mssqlclient.MSSQLException", "number");
     return error -> {
       String errorCode = databaseExceptionExtractor.apply(error);
-      return errorCode != null ? errorCode : mysqlExceptionExtractor.apply(error);
+      if (errorCode == null) {
+        errorCode = mysqlExceptionExtractor.apply(error);
+      }
+      if (errorCode == null) {
+        errorCode = db2ExceptionExtractor.apply(error);
+      }
+      if (errorCode == null) {
+        errorCode = mssqlExceptionExtractor.apply(error);
+      }
+      return errorCode;
     };
   }
 
   private static Function<Throwable, String> nonZeroErrorCodeExtractor(String className) {
+    return nonZeroErrorCodeExtractor(className, "getErrorCode");
+  }
+
+  private static Function<Throwable, String> nonZeroErrorCodeExtractor(
+      String className, String methodName) {
     try {
       Class<?> exClass = Class.forName(className);
-      Method method = exClass.getDeclaredMethod("getErrorCode");
+      Method method = exClass.getDeclaredMethod(methodName);
 
       return error -> {
         if (exClass.isInstance(error)) {

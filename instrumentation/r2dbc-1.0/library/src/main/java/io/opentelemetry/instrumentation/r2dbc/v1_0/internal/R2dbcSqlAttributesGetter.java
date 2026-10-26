@@ -23,6 +23,9 @@ public final class R2dbcSqlAttributesGetter
   private static final String POSTGRESQL_DATABASE = "postgresql";
   private static final String MYSQL_DATABASE = "mysql";
   private static final String MARIADB_DATABASE = "mariadb";
+  private static final String ORACLE_DATABASE = "oracle.db";
+  private static final String SQL_SERVER_DATABASE = "microsoft.sql_server";
+  private static final String DB2_DATABASE = "ibm.db2";
   private static final String POSTGRESQL_CLOSED_CONNECTION_EXCEPTION =
       "io.r2dbc.postgresql.client.ReactorNettyClient$PostgresConnectionClosedException";
   private static final String POSTGRESQL_CONNECTION_FAILURE = "08006";
@@ -72,7 +75,11 @@ public final class R2dbcSqlAttributesGetter
         && POSTGRESQL_CONNECTION_FAILURE.equals(getSqlState(error))) {
       return null;
     }
-    if (MYSQL_DATABASE.equals(dbSystemName) || MARIADB_DATABASE.equals(dbSystemName)) {
+    if (MYSQL_DATABASE.equals(dbSystemName)
+        || MARIADB_DATABASE.equals(dbSystemName)
+        || ORACLE_DATABASE.equals(dbSystemName)
+        || SQL_SERVER_DATABASE.equals(dbSystemName)
+        || DB2_DATABASE.equals(dbSystemName)) {
       int errorCode = getErrorCode(error);
       if (errorCode != 0) {
         return Integer.toString(errorCode);
