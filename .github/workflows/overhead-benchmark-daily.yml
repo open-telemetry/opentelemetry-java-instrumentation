@@ -15,6 +15,11 @@ on:
           - servlet-smoke
           - servlet
           - servlet-profile
+          - quarkus-build
+          - quarkus-smoke
+          - quarkus-calibrate
+          - quarkus
+          - quarkus-profile
       baseline-ref:
         description: Baseline agent ref (empty uses the workflow commit)
         type: string
@@ -22,8 +27,16 @@ on:
         description: Candidate agent ref (empty uses the workflow commit)
         type: string
       artifact-run-id:
-        description: Reuse servlet build artifacts from this workflow run instead of rebuilding
+        description: Reuse build artifacts for the selected benchmark from this run
         type: string
+      quarkus-rate:
+        description: Quarkus offered requests per second (ignored during calibration)
+        type: string
+        default: "2000"
+      quarkus-repetitions:
+        description: Quarkus comparison pairs (smoke, calibration, and profiles use one)
+        type: string
+        default: "5"
 
 permissions:
   contents: read
@@ -230,6 +243,169 @@ jobs:
         with:
           name: servlet-benchmark-results
           path: benchmark-overhead-jmh/build/reports/servlet/
+          if-no-files-found: warn
+          retention-days: 14
+
+  quarkus-build:
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      startsWith(inputs.benchmark, 'quarkus') && inputs.artifact-run-id == ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: harness
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: brunobat/quarkus-observability-perf
+          ref: a6be333266d75520429793f7785b393a9dc4599d
+          path: workload
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.baseline-ref || github.sha }}
+          path: baseline
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.candidate-ref || github.sha }}
+          path: candidate
+          persist-credentials: false
+      - name: Set up application build JDK
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Build fixed Quarkus application and download Hyperfoil
+        run: |
+          mkdir artifacts
+          curl --fail --silent --show-error --location \
+            https://archive.apache.org/dist/maven/maven-3/3.9.11/binaries/apache-maven-3.9.11-bin.tar.gz \
+            --output maven.tar.gz
+          curl --fail --silent --show-error --location \
+            https://archive.apache.org/dist/maven/maven-3/3.9.11/binaries/apache-maven-3.9.11-bin.tar.gz.sha512 \
+            --output maven.sha512
+          printf '%s  maven.tar.gz\n' "$(cat maven.sha512)" | sha512sum --check
+          tar -xzf maven.tar.gz
+          ./apache-maven-3.9.11/bin/mvn --version > artifacts/application-toolchain.txt
+          cd workload
+          ../apache-maven-3.9.11/bin/mvn --batch-mode --no-transfer-progress \
+            --projects quarkus-otel-db-perf --also-make package \
+            -Dquarkus.otel.enabled=false -Dquarkus.micrometer.enabled=false \
+            -Dquarkus.datasource.jdbc.telemetry=false
+          cp -r quarkus-otel-db-perf/target/quarkus-app ../artifacts/
+          cp hyperfoil-scripts/quarkus-otel-perf.hf.yaml ../artifacts/upstream-workload.yaml
+          cp LICENSE ../artifacts/workload-LICENSE
+          git rev-parse HEAD > ../artifacts/workload-commit.txt
+          cd ..
+          curl --fail --silent --show-error --location \
+            https://repo.maven.apache.org/maven2/io/hyperfoil/hyperfoil-distribution/0.24/hyperfoil-distribution-0.24.zip \
+            --output artifacts/hyperfoil.zip
+          echo '99bad48cd87f03904c84fd49f396c0235cb0e6da46b4604ecd8ec64d06c83a6f  artifacts/hyperfoil.zip' | sha256sum --check
+      - name: Set up agent build JDK
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 25.0.5+8
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: true
+      - name: Free hosted build disk space
+        working-directory: harness
+        run: .github/scripts/gha-free-disk-space.sh
+      - name: Build explicit agent artifacts and record provenance
+        run: |
+          export JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")"
+          cd baseline
+          ./gradlew :javaagent:shadowJar -PremoveJarVersionNumbers=true
+          cp javaagent/build/libs/opentelemetry-javaagent.jar ../artifacts/baseline-agent.jar
+          baseline_sha="$(git rev-parse HEAD)"
+          cd ../candidate
+          candidate_sha="$(git rev-parse HEAD)"
+          if [[ "$baseline_sha" == "$candidate_sha" ]]; then
+            cp ../artifacts/baseline-agent.jar ../artifacts/candidate-agent.jar
+          else
+            ./gradlew :javaagent:shadowJar -PremoveJarVersionNumbers=true
+            cp javaagent/build/libs/opentelemetry-javaagent.jar ../artifacts/candidate-agent.jar
+          fi
+          cd ..
+          printf '{"baseline":"%s","candidate":"%s","harness":"%s","workload":"%s","build_run":"%s"}\n' \
+            "$baseline_sha" "$candidate_sha" "$(git -C harness rev-parse HEAD)" \
+            "$(git -C workload rev-parse HEAD)" "$GITHUB_RUN_ID" > artifacts/provenance.json
+          find artifacts -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > artifacts/SHA256SUMS
+      - name: Upload Quarkus benchmark build
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: quarkus-benchmark-build
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 14
+
+  quarkus-run:
+    needs: quarkus-build
+    if: >-
+      always() && !cancelled() && github.event_name == 'workflow_dispatch' &&
+      startsWith(inputs.benchmark, 'quarkus') && inputs.benchmark != 'quarkus-build' &&
+      (needs.quarkus-build.result == 'success' || inputs.artifact-run-id != '')
+    permissions:
+      contents: read
+      actions: read
+    runs-on: oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24
+    timeout-minutes: 150
+    concurrency:
+      group: servlet-benchmark
+      cancel-in-progress: false
+    container:
+      image: eclipse-temurin:21-jdk-noble@sha256:85b018ff9a266c6bc3251da2c8125078afca3bf64bc035dfee32ad49a11cba10
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install isolated benchmark dependencies
+        run: |
+          apt-get update -qq
+          apt-get install -y --no-install-recommends python3 python3-venv postgresql-16 util-linux unzip
+          python3 -m venv /opt/quarkus-benchmark-python
+          /opt/quarkus-benchmark-python/bin/python -m pip install \
+            --disable-pip-version-check -r benchmark-overhead-quarkus/requirements.txt
+          /opt/quarkus-benchmark-python/bin/python -B -m unittest \
+            discover -s benchmark-overhead-quarkus -p 'test_*.py'
+      - name: Download fixed artifacts
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: quarkus-benchmark-build
+          path: artifacts
+          run-id: ${{ inputs.artifact-run-id || github.run_id }}
+          github-token: ${{ github.token }}
+      - name: Run Quarkus benchmark
+        env:
+          BENCHMARK: ${{ inputs.benchmark }}
+          RATE: ${{ inputs.quarkus-rate }}
+          REPETITIONS: ${{ inputs.quarkus-repetitions }}
+        run: |
+          unzip -q artifacts/hyperfoil.zip -d artifacts/hyperfoil
+          mode=measure
+          if [[ "$BENCHMARK" == quarkus-smoke ]]; then mode=smoke; fi
+          if [[ "$BENCHMARK" == quarkus-calibrate ]]; then mode=calibrate; fi
+          if [[ "$BENCHMARK" == quarkus-profile ]]; then mode=profile; fi
+          /opt/quarkus-benchmark-python/bin/python -B benchmark-overhead-quarkus/run_benchmarks.py \
+            --artifacts artifacts --output benchmark-overhead-quarkus/build/reports/quarkus \
+            --mode "$mode" --rate "$RATE" --repetitions "$REPETITIONS"
+          cat benchmark-overhead-quarkus/build/reports/quarkus/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload Quarkus measurements and diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: quarkus-benchmark-results
+          path: benchmark-overhead-quarkus/build/reports/quarkus/
           if-no-files-found: warn
           retention-days: 14
 
