@@ -64,12 +64,6 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
-  if (!otelProps.testLatestDeps) {
-    check {
-      dependsOn(testing.suites)
-    }
-  }
-
   test {
     filter {
       excludeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
@@ -118,6 +112,6 @@ tasks {
   }
 
   check {
-    dependsOn("unitTests", testQuerySanitizationDisabled, test213, test225, test29)
+    dependsOn(testing.suites, testQuerySanitizationDisabled, test213, test225, test29)
   }
 }
