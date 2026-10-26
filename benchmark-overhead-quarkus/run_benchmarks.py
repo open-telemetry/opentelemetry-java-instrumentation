@@ -545,6 +545,7 @@ def execute(artifacts, output, cpus, java, agent, rate, warmup, duration, mode):
                         "-Xms1g",
                         "-Xmx1g",
                         "-XX:ActiveProcessorCount=4",
+                        "-Dio.hyperfoil.cpu.watchdog.idle.threshold=0",
                         "--add-opens=java.base/java.lang=ALL-UNNAMED",
                         f"-Dio.hyperfoil.rootdir={output / 'hyperfoil'}",
                         "-Dio.hyperfoil.controller.host=127.0.0.1",

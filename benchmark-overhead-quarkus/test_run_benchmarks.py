@@ -203,6 +203,38 @@ class RunnerTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             runner.interpolate(samples, "app", 3000)
 
+    def test_hyperfoil_does_not_apply_its_cpu_guard_to_other_services(self):
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.object(runner.shutil, "chown", create=True),
+            patch.object(runner, "run", return_value=Mock(returncode=0)),
+            patch.object(runner, "preflight", return_value={}),
+            patch.object(
+                runner,
+                "wait_ready",
+                side_effect=[None, None, RuntimeError("stop after load launch")],
+            ),
+            patch.object(runner, "Processes") as process_class,
+        ):
+            artifacts = Path(directory)
+            (artifacts / "hyperfoil" / "hyperfoil-0.24" / "lib").mkdir(parents=True)
+            with self.assertRaisesRegex(RuntimeError, "stop after load launch"):
+                runner.execute(
+                    artifacts,
+                    artifacts / "trial",
+                    {},
+                    "java",
+                    "no-agent",
+                    10,
+                    5,
+                    10,
+                    "smoke",
+                )
+            processes = process_class.return_value.__enter__.return_value
+            name, command = processes.start.call_args.args
+            self.assertEqual(name, "load")
+            self.assertIn("-Dio.hyperfoil.cpu.watchdog.idle.threshold=0", command)
+
     def test_waits_for_hyperfoil_statistics_to_finish_persisting(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)

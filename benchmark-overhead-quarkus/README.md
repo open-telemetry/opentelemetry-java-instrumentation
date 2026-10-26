@@ -47,6 +47,10 @@ receiver, and one to the driver. SMT siblings are excluded. Affinity does not
 reserve cores or bind memory. The application's G1 heap is fixed at 512 MiB,
 and its active processor count is two.
 
+Hyperfoil's host-wide CPU watchdog is disabled because it also monitors the
+application, database, and unassigned host cores. The driver's measurement CPU
+guards use each process's assigned cores instead.
+
 Each trial starts a fresh database cluster and JVMs. Application records,
 database statistics, and caches are not carried between trials. This does not
 flush the shared operating system's filesystem cache. Database durability
