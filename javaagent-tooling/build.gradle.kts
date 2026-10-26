@@ -68,6 +68,13 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":muzzle"))
+      }
+    }
+
     register<JvmTestSuite>("testExceptionHandler") {
       dependencies {
         implementation(project(":javaagent-bootstrap"))
@@ -160,6 +167,11 @@ tasks {
 // classpath. Disable inline mocking to prevent conflicts.
 // TODO: Find a better solution
 configurations {
+  named("unitTestsRuntimeClasspath") {
+    exclude(group = "org.mockito", module = "mockito-inline")
+    exclude(group = "net.bytebuddy", module = "byte-buddy")
+  }
+
   testRuntimeClasspath {
     dependencies {
       exclude("org.mockito", "mockito-inline")
