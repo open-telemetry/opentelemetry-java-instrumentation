@@ -24,7 +24,6 @@ import io.dropwizard.setup.Environment;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
@@ -54,8 +53,7 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
             testApp(),
             null,
             ConfigOverride.config("server.applicationConnectors[0].port", String.valueOf(port)),
-            ConfigOverride.config(
-                "server.adminConnectors[0].port", String.valueOf(PortUtils.findOpenPort())));
+            ConfigOverride.config("server.adminConnectors[0].port", "0"));
     testSupport.before();
     return testSupport;
   }

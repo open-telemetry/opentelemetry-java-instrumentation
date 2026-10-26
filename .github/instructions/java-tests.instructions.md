@@ -81,10 +81,12 @@ convention not caught by CI.
 - Test methods do not need `throws Exception` clauses unless actually required.
 - Prefer the nearest common parent in `catch` (including `Exception` /
   `Throwable`) over multi-catch.
-- Allocate test ports through `PortUtils` so allocations are coordinated across
-  the test process. Use `findOpenPorts(count)` when a service needs a consecutive
-  range instead of assuming ports adjacent to a separately allocated port are
-  available.
+- Prefer binding test servers to port `0` when they expose the actual bound port.
+  Wait for binding to complete before reading the port and connecting clients;
+  keep the server bound rather than probing and releasing a port.
+  When ports must be chosen before the server starts, use `PortUtils` to coordinate
+  allocations across test processes. Use `findOpenPorts(count)` for a consecutive
+  range instead of assuming adjacent ports are available.
 - Prefer plain `@AfterEach` or `@AfterAll` teardown when direct cleanup is
   safe. Introduce `AutoCleanupExtension` when deferred cleanup improves
   clarity or protects partially completed setup. Register it with the

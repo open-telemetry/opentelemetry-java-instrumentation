@@ -24,6 +24,17 @@ class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest {
   }
 
   @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return EXPERIMENTAL_ATTRIBUTES;
+  }
+
+  @Override
+  protected boolean receiveTelemetryEnabled() {
+    return Boolean.getBoolean(
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
+  }
+
+  @Override
   protected ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
     return ClientOverrideConfiguration.builder();
   }

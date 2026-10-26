@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -14,6 +15,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -27,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class RpcAttributesExtractorTest {
@@ -183,5 +187,44 @@ class RpcAttributesExtractorTest {
     if (emitPreviewRpcSemconv()) {
       assertThat(attributes.build()).doesNotContainKey(ERROR_TYPE);
     }
+  }
+
+  @ParameterizedTest
+  @CsvSource({"OK,,false", "CANCELLED,CANCELLED,true", ",_OTHER,false", ",,true", ",,false"})
+  void shouldExtractStatusSeparatelyFromErrorType(
+      String statusCode, String errorType, boolean exception) {
+    TestGetter getter =
+        new TestGetter() {
+          @Override
+          public String getRpcStatusCode(
+              Map<String, String> request, Void response, Throwable error) {
+            return statusCode;
+          }
+        };
+    Map<String, String> request = new HashMap<>();
+    request.put("errorType", errorType);
+    Throwable error = exception ? new IllegalArgumentException() : null;
+    String expectedErrorType =
+        errorType != null ? errorType : exception ? IllegalArgumentException.class.getName() : null;
+
+    for (AttributesExtractor<Map<String, String>, Void> extractor :
+        asList(
+            RpcClientAttributesExtractor.create(getter),
+            RpcServerAttributesExtractor.create(getter))) {
+      AttributesBuilder attributes = Attributes.builder();
+      extractor.onEnd(attributes, Context.root(), request, null, error);
+
+      assertThat(attributes.build())
+          .isEqualTo(
+              Attributes.builder()
+                  .put(stringKey("rpc.status_code"), emitPreviewRpcSemconv() ? statusCode : null)
+                  .put(ERROR_TYPE, emitPreviewRpcSemconv() ? expectedErrorType : null)
+                  .build());
+    }
+  }
+
+  @Test
+  void statusCodeIsUnavailableByDefault() {
+    assertThat(new TestGetter().getRpcStatusCode(new HashMap<>(), null, null)).isNull();
   }
 }
