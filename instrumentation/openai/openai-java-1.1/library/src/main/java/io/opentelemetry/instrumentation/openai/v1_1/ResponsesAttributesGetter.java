@@ -36,6 +36,13 @@ final class ResponsesAttributesGetter
 
   @Nullable
   @Override
+  public String getErrorType(
+      ResponseCreateRequest request, @Nullable Response response, @Nullable Throwable error) {
+    return OpenAiErrorType.getErrorType(error);
+  }
+
+  @Nullable
+  @Override
   public String getRequestModel(ResponseCreateRequest request) {
     return request
         .getRequest()
