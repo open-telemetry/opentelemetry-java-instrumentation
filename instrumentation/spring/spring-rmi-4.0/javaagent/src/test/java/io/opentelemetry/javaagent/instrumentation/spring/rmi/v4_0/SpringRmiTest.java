@@ -21,11 +21,13 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.HistogramPointAssert;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.File;
@@ -203,6 +205,7 @@ class SpringRmiTest {
 
           trace.hasSpansSatisfyingExactly(assertions);
         });
+    assertMetrics(testSource == TestSource.RMI, null, "springrmi.app.SpringRmiGreeter/hello");
   }
 
   @Test
@@ -286,6 +289,12 @@ class SpringRmiTest {
                                 emitPreviewRpcSemconv()
                                     ? "springrmi.app.SpringRmiGreeterIntegerOverload/overloaded"
                                     : "overloaded"))));
+    assertMetrics(
+        true,
+        null,
+        "springrmi.app.SpringRmiGreeterParent/inherited",
+        "springrmi.app.SpringRmiGreeterParent/overloaded",
+        "springrmi.app.SpringRmiGreeterIntegerOverload/overloaded");
   }
 
   @ParameterizedTest(autoCloseArguments = false)
@@ -385,5 +394,79 @@ class SpringRmiTest {
 
           trace.hasSpansSatisfyingExactly(assertions);
         });
+    assertMetrics(
+        testSource == TestSource.RMI,
+        error.getClass().getName(),
+        "springrmi.app.SpringRmiGreeter/exceptional");
+  }
+
+  private static void assertMetrics(boolean hasServer, String errorType, String... methods) {
+    if (!emitPreviewRpcSemconv()) {
+      assertThat(testing.metrics())
+          .noneMatch(
+              metric ->
+                  metric
+                      .getInstrumentationScopeInfo()
+                      .getName()
+                      .equals("io.opentelemetry.spring-rmi-4.0"));
+      return;
+    }
+
+    assertDurationMetrics("client", errorType, methods);
+    if (hasServer) {
+      assertDurationMetrics("server", errorType, methods);
+    }
+  }
+
+  private static void assertDurationMetrics(String role, String errorType, String... methods) {
+    List<Consumer<HistogramPointAssert>> points = new ArrayList<>();
+    for (String method : methods) {
+      points.add(
+          point ->
+              point
+                  .hasCount(1)
+                  .hasSumGreaterThan(0)
+                  .hasBucketBoundaries(
+                      0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5, 10, 50, 100)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                      equalTo(RPC_METHOD, method),
+                      equalTo(ERROR_TYPE, errorType)));
+    }
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.spring-rmi-4.0",
+        metric ->
+            metric
+                .hasName("rpc." + role + ".call.duration")
+                .hasUnit("s")
+                .hasHistogramSatisfying(histogram -> histogram.hasPointsSatisfying(points)));
+
+    if (emitOldRpcSemconv()) {
+      Map<Attributes, Long> counts = new HashMap<>();
+      for (String method : methods) {
+        Attributes attributes =
+            Attributes.builder()
+                .put(RPC_SYSTEM, "spring_rmi")
+                .put(
+                    RPC_SERVICE,
+                    role.equals("client")
+                        ? method.substring(0, method.indexOf('/'))
+                        : "springrmi.app.SpringRmiGreeterImpl")
+                .put(RPC_METHOD, method.substring(method.indexOf('/') + 1))
+                .build();
+        counts.merge(attributes, 1L, Long::sum);
+      }
+      List<Consumer<HistogramPointAssert>> oldPoints = new ArrayList<>();
+      counts.forEach(
+          (attributes, count) ->
+              oldPoints.add(point -> point.hasCount(count).hasAttributes(attributes)));
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.spring-rmi-4.0",
+          metric ->
+              metric
+                  .hasName("rpc." + role + ".duration")
+                  .hasUnit("ms")
+                  .hasHistogramSatisfying(histogram -> histogram.hasPointsSatisfying(oldPoints)));
+    }
   }
 }

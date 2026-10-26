@@ -1,5 +1,5 @@
 display_name: Spring RMI
-description: This instrumentation enables RPC client and RPC server spans for Spring RMI applications.
+description: This instrumentation enables RPC client and RPC server spans for Spring RMI applications, and duration metrics when RPC preview semantic conventions are enabled.
 library_link: https://docs.spring.io/spring-framework/docs/4.0.x/javadoc-api/org/springframework/remoting/rmi/package-summary.html
 semantic_conventions:
   - RPC_CLIENT_SPANS
