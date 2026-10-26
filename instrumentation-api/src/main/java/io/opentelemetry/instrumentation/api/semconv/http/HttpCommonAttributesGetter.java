@@ -109,5 +109,8 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
    * server_certificate_invalid}, {@code 500}, {@code _OTHER}.
    */
   @Nullable
-  String getErrorType(REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error);
+  default String getErrorType(
+      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
+    return error == null ? null : error.getClass().getName();
+  }
 }
