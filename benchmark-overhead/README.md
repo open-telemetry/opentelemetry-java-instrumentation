@@ -188,40 +188,6 @@ Rerun only the `benchmark` job to repeat measurements with the same built JARs.
 Each attempt uploads a separate `agent-startup-results-<attempt>` artifact,
 retaining the earlier observations.
 
-### Retained startup evidence
-
-Compact original observations and identities are retained in
-[`results/agent-startup`](results/agent-startup), independently of the 30-day
-workflow artifact retention. These measure a separate optimization whose
-production code is not part of this harness change.
-
-| Workflow run | Harness / candidate source | No-agent median (ms) | Baseline median (ms) | Candidate median (ms) | Paired saving, 95% block-bootstrap interval (ms) |
-| --- | --- | ---: | ---: | ---: | --- |
-| [40232071103](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/runs/40232071103) | `054970304c68a3401c9621b0f37d2b803fe750c4` | 1609 | 4922.5 | 4945 | -22 [-74, 2.1] |
-| [40236263871](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/runs/40236263871) | `85d3e9f4025ea81b46816ad85db754f20f5f712a` | 1589 | 4960.5 | 4318.5 | 597.5 [518, 713] |
-| [40236856886](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/runs/40236856886) | `e723afc149ac6b24d11da112276dcbeceddfaaea` | 1590.5 | 4957.5 | 4316.5 | 614 [536.5, 707] |
-
-All three used baseline source `dba159d210f124447cc9994b29ae64df772d247b`,
-x86-64 bare metal (Intel Xeon Platinum 8358), the pinned Spring/JDK 25 image,
-warm caches, exporters `none`, and the resource limits above. Each completed 110
-ordinary starts, including warmups, with separate diagnostic profiles. The
-initial run compared identical agent bytes even though its source revisions
-differed. Its A/A control reported an apparent 90.5 ms saving with a
-[14.5, 137.5] ms interval, illustrating host noise even with identical artifacts.
-The two optimization runs used identical baseline and candidate artifact hashes
-across runs; see each run's identities file. These are workload- and host-specific
-observations, not a universal speedup claim.
-
-The retained `samples.csv` files are byte-for-byte copies from
-`agent-startup-results` (first two runs) and `agent-startup-results-1` (third run).
-The archives were retrieved through authenticated GitHub artifact download links
-after `gh run download` was blocked by unavailable CLI authentication; their
-SHA-256 digests matched GitHub's artifact metadata. Each `identities.properties`
-records archive provenance and compact source, agent, image, JVM, command, and
-resource identities copied from the original reports, omitting host filesystem
-paths. Agent JARs, JFR binaries, logs, and build reports remain only in workflow
-artifacts.
-
 ## JDK 25 AOT startup comparison
 
 The opt-in `aotStartupBenchmark` task compares the existing small Spring smoke application on HotSpot JDK 25 in four configurations: normal and AOT, each with and without the Java agent. It does not run in ordinary tests or the nightly overhead workflow, and has no performance pass/fail thresholds.
