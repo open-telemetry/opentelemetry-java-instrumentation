@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import copy
+import http.client
 import json
 import tempfile
 import threading
@@ -462,6 +463,36 @@ class ReceiverTest(unittest.TestCase):
                 error.exception.close()
                 self.assertEqual(telemetry.snapshot()["errors"], 1)
             finally:
+                server.shutdown()
+                thread.join()
+
+    def test_receiver_keeps_the_export_connection_alive_between_batches(self):
+        telemetry = receiver.Telemetry()
+        with ThreadingHTTPServer(
+            ("127.0.0.1", 0), receiver.handler(telemetry)
+        ) as server:
+            thread = threading.Thread(target=server.serve_forever)
+            thread.start()
+            connection = http.client.HTTPConnection("127.0.0.1", server.server_port)
+            try:
+                sockets = []
+                for _ in range(2):
+                    connection.request(
+                        "POST",
+                        "/v1/traces",
+                        self.request().SerializeToString(),
+                        {"Content-Type": "application/x-protobuf"},
+                    )
+                    response = connection.getresponse()
+                    self.assertEqual(response.version, 11)
+                    self.assertEqual(response.status, 200)
+                    self.assertEqual(response.read(), b"")
+                    sockets.append(connection.sock)
+                self.assertIsNotNone(sockets[0])
+                self.assertIs(sockets[0], sockets[1])
+                self.assertEqual(telemetry.snapshot()["batches"], 2)
+            finally:
+                connection.close()
                 server.shutdown()
                 thread.join()
 
