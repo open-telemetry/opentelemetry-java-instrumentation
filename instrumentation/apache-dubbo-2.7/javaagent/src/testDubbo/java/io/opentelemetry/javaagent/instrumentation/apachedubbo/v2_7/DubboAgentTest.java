@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -16,8 +17,8 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
@@ -26,7 +27,6 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.AbstractDubboTest;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,10 +67,7 @@ class DubboAgentTest extends AbstractDubboTest {
   private static final Span AMBIENT_PARENT =
       Span.wrap(
           SpanContext.create(
-              AMBIENT_TRACE_ID,
-              AMBIENT_SPAN_ID,
-              TraceFlags.getSampled(),
-              TraceState.getDefault()));
+              AMBIENT_TRACE_ID, AMBIENT_SPAN_ID, TraceFlags.getSampled(), TraceState.getDefault()));
 
   @Override
   protected InstrumentationExtension testing() {
@@ -278,7 +275,7 @@ class DubboAgentTest extends AbstractDubboTest {
         .singleElement()
         .satisfies(
             spanData -> {
-              SpanDataAssert span = OpenTelemetryAssertions.assertThat(spanData);
+              SpanDataAssert span = assertThat(spanData);
               span.hasName("dubbo").hasKind(SpanKind.SERVER);
               if (remoteParent) {
                 span.hasTraceId(REMOTE_TRACE_ID).hasParentSpanId(REMOTE_SPAN_ID);
@@ -287,7 +284,8 @@ class DubboAgentTest extends AbstractDubboTest {
               } else {
                 span.hasNoParent();
               }
-              // BaggageSpanProcessor.onStart reads the non-span baggage ContextKey from parentContext.
+              // BaggageSpanProcessor.onStart reads the non-span baggage ContextKey from
+              // parentContext.
               span.hasAttribute(stringKey("test-baggage-key-1"), "preserved");
             });
   }
