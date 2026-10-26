@@ -231,18 +231,34 @@ class RunnerTest(unittest.TestCase):
             runner.process_counters(42)
         sleep.assert_not_called()
 
-    def test_unstable_process_tree_fails_after_bounded_sampling_attempts(self):
+    def test_unstable_process_tree_fails_after_its_sampling_deadline(self):
         with (
             patch.object(
                 runner, "read_process_counters", side_effect=ProcessLookupError
             ) as read,
             patch.object(Path, "exists", return_value=True),
             patch.object(runner.time, "sleep"),
+            patch.object(runner.time, "monotonic", side_effect=[0, 0, 0.2, 1, 2.1]),
             patch.object(runner.sys, "stderr"),
             self.assertRaisesRegex(RuntimeError, "stable process tree"),
         ):
             runner.process_counters(42)
-        self.assertEqual(read.call_count, 5)
+        self.assertEqual(read.call_count, 4)
+
+    def test_process_churn_can_span_more_than_five_sampling_attempts(self):
+        with (
+            patch.object(
+                runner,
+                "read_process_counters",
+                side_effect=[ProcessLookupError] * 7 + [(1.5, 4096)],
+            ) as read,
+            patch.object(Path, "exists", return_value=True),
+            patch.object(runner.time, "monotonic", return_value=0),
+            patch.object(runner.time, "sleep"),
+            patch.object(runner.sys, "stderr"),
+        ):
+            self.assertEqual(runner.process_counters(42), (1.5, 4096))
+            self.assertEqual(read.call_count, 8)
 
     def test_reaped_child_cpu_or_changed_children_require_a_new_snapshot(self):
         stat = ["0"] * 22

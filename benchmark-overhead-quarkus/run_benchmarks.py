@@ -196,18 +196,19 @@ class Processes:
 
 
 def process_counters(pid):
-    for attempt in range(5):
+    deadline = time.monotonic() + 2
+    while True:
         try:
             return read_process_counters(pid)
         except (FileNotFoundError, ProcessLookupError) as error:
             if not Path(f"/proc/{pid}").exists():
                 raise
-            if attempt == 4:
+            if time.monotonic() >= deadline:
                 raise RuntimeError(
                     f"Could not read a stable process tree for PID {pid}"
                 ) from error
             print(
-                f"Resampling CPU counters after PID {pid}'s process tree changed",
+                f"Resampling CPU counters for PID {pid}: {error}",
                 file=sys.stderr,
                 flush=True,
             )
@@ -225,8 +226,12 @@ def read_process_counters(pid):
         rss += child_rss
     after_children = Path(f"/proc/{pid}/task/{pid}/children").read_text().split()
     after_stat = Path(f"/proc/{pid}/stat").read_text().split(") ", 1)[1].split()
-    if children != after_children or stat[13:15] != after_stat[13:15]:
-        raise ProcessLookupError(f"PID {pid}'s child processes changed during sampling")
+    if set(children) != set(after_children) or stat[13:15] != after_stat[13:15]:
+        raise ProcessLookupError(
+            f"PID {pid}'s child processes changed during sampling: "
+            f"children {children} -> {after_children}, "
+            f"reaped CPU ticks {stat[13:15]} -> {after_stat[13:15]}"
+        )
     return cpu, rss
 
 
