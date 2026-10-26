@@ -65,9 +65,9 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
     // error prefix; a missing prefix preserves the shared exception-class fallback.
     // https://redis.io/docs/latest/develop/reference/protocol-spec/#resp-errors
     if (error instanceof ReplyErrorException) {
-      String errorType = RedisErrorPrefix.extract(error.getMessage());
-      if (errorType != null) {
-        return errorType;
+      String errorPrefix = RedisErrorPrefix.extract(error.getMessage());
+      if (errorPrefix != null) {
+        return errorPrefix;
       }
     }
     return error == null ? null : error.getClass().getName();
