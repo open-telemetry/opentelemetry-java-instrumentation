@@ -35,7 +35,7 @@ final class ThriftRpcAttributesGetter
   @Override
   @Nullable
   public String getRpcMethod(ThriftRequest request) {
-    String service = getService(request);
+    String service = request.getRpcServiceName();
     String method = getMethod(request);
     if (service != null && method != null) {
       return service + "/" + method;

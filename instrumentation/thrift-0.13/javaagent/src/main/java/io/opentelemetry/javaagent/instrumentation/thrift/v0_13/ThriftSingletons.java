@@ -63,13 +63,17 @@ public final class ThriftSingletons {
       };
 
   public static String getServerServiceName(Object processor, Object iface) {
+    return iface.getClass().getName();
+  }
+
+  public static String getServerRpcServiceName(Object processor, Object iface) {
     if (useIdlServiceName) {
       String serviceName = serviceNames.get(processor.getClass());
       if (!serviceName.isEmpty()) {
         return serviceName;
       }
     }
-    return iface.getClass().getName();
+    return getServerServiceName(processor, iface);
   }
 
   public static Instrumenter<ThriftRequest, ThriftResponse> clientInstrumenter() {

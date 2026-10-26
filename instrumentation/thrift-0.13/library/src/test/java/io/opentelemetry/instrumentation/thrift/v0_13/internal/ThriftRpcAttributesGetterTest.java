@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.thrift.v0_13.internal;
 
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.thrift.v0_13.ThriftRequest;
@@ -21,6 +22,14 @@ class ThriftRpcAttributesGetterTest {
 
   private final ThriftRpcAttributesGetter getter = new ThriftRpcAttributesGetter();
   private final ThriftRequest request = new ThriftRequest("method", "service", null);
+
+  @Test
+  void rpcMethodUsesRpcServiceName() {
+    ThriftRequest request = new ThriftRequest("method", "handler", "idl", null, emptyMap());
+
+    assertThat(getter.getService(request)).isEqualTo("handler");
+    assertThat(getter.getRpcMethod(request)).isEqualTo("idl/method");
+  }
 
   @ParameterizedTest
   @ValueSource(
