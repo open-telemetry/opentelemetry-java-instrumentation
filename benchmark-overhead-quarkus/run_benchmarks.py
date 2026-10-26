@@ -293,6 +293,12 @@ def analyze(result, samples, cpus, rate, duration):
         "errors": errors,
         "successful_requests": completed,
         "issued_requests": requests,
+        "expected_database_rows": 4
+        + sum(
+            entry["total"]["summary"]["responseCount"]
+            for entry in result["stats"]
+            if entry["fork"] == "createFork" or entry["phase"] == "firstReq"
+        ),
         "measurement_seconds": seconds,
         "cpu_us_per_request": cpu_seconds["app"] * 1_000_000 / completed,
         "cpu_seconds": cpu_seconds,
@@ -617,25 +623,35 @@ def execute(artifacts, output, cpus, java, agent, rate, warmup, duration, mode):
                 if "Failed to export" in log or "Unable to export" in log:
                     metrics["errors"].append("The agent reported export failures")
                     metrics["valid"] = False
-                save(output / "metrics.json", metrics)
-                with (output / "database-count.txt").open("w", encoding="utf-8") as log:
-                    run(
-                        [
-                            PG_BIN / "psql",
-                            "-h",
-                            "127.0.0.1",
-                            "-p",
-                            "15432",
-                            "-U",
-                            "pguser",
-                            "-d",
-                            "test",
-                            "-c",
-                            "SELECT count(*) FROM legume;",
-                        ],
-                        stdout=log,
-                        stderr=subprocess.STDOUT,
+                database_count = run(
+                    [
+                        PG_BIN / "psql",
+                        "-h",
+                        "127.0.0.1",
+                        "-p",
+                        "15432",
+                        "-U",
+                        "pguser",
+                        "-d",
+                        "test",
+                        "--no-align",
+                        "--tuples-only",
+                        "-c",
+                        "SELECT count(*) FROM legume;",
+                    ],
+                    capture_output=True,
+                    text=True,
+                ).stdout
+                (output / "database-count.txt").write_text(
+                    database_count, encoding="utf-8"
+                )
+                metrics["database_rows"] = int(database_count.strip())
+                if metrics["database_rows"] != metrics["expected_database_rows"]:
+                    metrics["errors"].append(
+                        "Database row count does not match successful inserts"
                     )
+                    metrics["valid"] = False
+                save(output / "metrics.json", metrics)
                 print(
                     f"Finished {output.name}: {metrics['cpu_us_per_request']:.3f} CPU us/request, valid={metrics['valid']}",
                     flush=True,

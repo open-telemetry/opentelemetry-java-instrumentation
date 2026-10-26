@@ -286,6 +286,24 @@ class RunnerTest(unittest.TestCase):
         self.assertAlmostEqual(actual["cpu_utilization"]["app"], 0.05)
         self.assertEqual(actual["latency"]["gettersFork"]["p99.0_us"], 200)
 
+    def test_database_expectation_includes_preflight_first_request_and_warmup(self):
+        result, samples = self.measurement()
+        result["stats"].extend(
+            [
+                {
+                    "phase": "firstReq",
+                    "fork": "",
+                    "total": {"summary": {"responseCount": 1}},
+                },
+                {
+                    "phase": "rampup",
+                    "fork": "createFork",
+                    "total": {"summary": {"responseCount": 20}},
+                },
+            ]
+        )
+        self.assertEqual(self.analyze(result, samples)["expected_database_rows"], 225)
+
     def test_errors_blocking_and_missed_load_invalidate_comparison(self):
         for field in (
             "invalid",

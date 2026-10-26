@@ -70,6 +70,8 @@ receiver. Unlike an exporters-disabled test, this includes SDK span-data
 conversion, serialization, batching, and export.
 
 Before load generation, each trial inserts records and reads them back.
+After load generation, its database row count must match the successful inserts,
+including the preflight and warmup.
 Instrumented trials must export exactly one HTTP server span for each
 deterministically sampled preflight trace, preserve its remote parent, and
 attach PostgreSQL client spans beneath it. A no-agent trial must export no
