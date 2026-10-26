@@ -68,6 +68,10 @@ describe selectable behavior, not Muzzle implementation identities.
   signature matchers may use accessible `java.base` types available at the minimum
   supported Java version; keep `named(...)` for instrumented-library types.
   With dynamic advice typing, match only signatures that guarantee assignability.
+- Omit explicit `typing = Assigner.Typing.DYNAMIC` on `@Advice.AssignReturned` mappings,
+  including nested argument and field mappings, when using the standard transformation pipeline;
+  its postprocessor supplies dynamic typing. This does not apply to advice parameter bindings.
+  Verify custom pipelines separately.
 - For a fixed signature consisting of primitive types or accessible `java.base` types available
   at the minimum supported Java version, use `takesArguments(Type...)`, including parameters
   the advice does not use. Do not expand it into positional matchers to remove unused checks.

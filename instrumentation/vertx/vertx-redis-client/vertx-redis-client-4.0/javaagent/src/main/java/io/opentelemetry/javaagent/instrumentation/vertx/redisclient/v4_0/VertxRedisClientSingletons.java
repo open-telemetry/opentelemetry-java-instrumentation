@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -25,10 +26,12 @@ import io.vertx.redis.client.Command;
 import io.vertx.redis.client.impl.RedisStandaloneConnection;
 import io.vertx.redis.client.impl.RedisURI;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 public class VertxRedisClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-redis-client-4.0";
+  private static final Logger logger = Logger.getLogger(VertxRedisClientSingletons.class.getName());
   private static final Instrumenter<VertxRedisClientRequest, Void> instrumenter;
 
   private static final ScopedThreadValue<RedisURI> currentRedisUri = new ScopedThreadValue<>();
@@ -67,12 +70,19 @@ public class VertxRedisClientSingletons {
         .toCompletionStage()
         .whenComplete(
             (value, throwable) -> {
-              instrumenter().end(context, request, null, throwable);
-              try (Scope ignore = parentContext.makeCurrent()) {
-                if (throwable != null) {
-                  result.completeExceptionally(throwable);
-                } else {
-                  result.complete(value);
+              try {
+                Throwable error =
+                    throwable != null ? throwable : VertxRedisClientError.findResponseError(value);
+                instrumenter().end(context, request, null, error);
+              } catch (Throwable t) {
+                logger.log(WARNING, "Failed to end the Vert.x Redis span", t);
+              } finally {
+                try (Scope ignore = parentContext.makeCurrent()) {
+                  if (throwable != null) {
+                    result.completeExceptionally(throwable);
+                  } else {
+                    result.complete(value);
+                  }
                 }
               }
             });

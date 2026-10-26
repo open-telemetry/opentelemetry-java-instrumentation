@@ -26,6 +26,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -50,14 +53,18 @@ public final class RpcClientMetrics implements OperationListener {
   @Nullable private final LongHistogram oldClientResponseSize;
   private final boolean dualEmit;
 
-  private RpcClientMetrics(Meter meter, boolean emitOldRpcSemconv, boolean emitPreviewRpcSemconv) {
+  private RpcClientMetrics(
+      Meter meter,
+      boolean emitOldRpcSemconv,
+      boolean emitPreviewRpcSemconv,
+      List<Double> durationSecondsBucketBoundaries) {
     dualEmit = emitOldRpcSemconv && emitPreviewRpcSemconv;
     // Old metric (milliseconds)
     if (emitOldRpcSemconv) {
       DoubleHistogramBuilder oldDurationBuilder =
           meter
               .histogramBuilder("rpc.client.duration")
-              .setDescription("The duration of an outbound RPC invocation.")
+              .setDescription("Measures the duration of outbound RPC.")
               .setUnit("ms");
       RpcMetricsAdvice.applyClientDurationAdvice(oldDurationBuilder, false);
       oldClientDurationHistogram = oldDurationBuilder.build();
@@ -70,8 +77,9 @@ public final class RpcClientMetrics implements OperationListener {
       DoubleHistogramBuilder stableDurationBuilder =
           meter
               .histogramBuilder("rpc.client.call.duration")
-              .setDescription("Measures the duration of outbound remote procedure calls (RPC).")
-              .setUnit("s");
+              .setDescription("Measures the duration of an outgoing Remote Procedure Call (RPC).")
+              .setUnit("s")
+              .setExplicitBucketBoundariesAdvice(durationSecondsBucketBoundaries);
       RpcMetricsAdvice.applyClientDurationAdvice(stableDurationBuilder, true);
       stableClientDurationHistogram = stableDurationBuilder.build();
     } else {
@@ -108,7 +116,17 @@ public final class RpcClientMetrics implements OperationListener {
    * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
    */
   public static OperationMetrics get() {
-    return new Factory();
+    return get(RpcMetricsAdvice.DURATION_SECONDS_BUCKETS);
+  }
+
+  /**
+   * Returns a {@link OperationMetrics} which uses the given bucket boundaries for the duration
+   * metric.
+   *
+   * @param durationSecondsBucketBoundaries the duration histogram bucket boundaries in seconds
+   */
+  public static OperationMetrics get(List<Double> durationSecondsBucketBoundaries) {
+    return new Factory(durationSecondsBucketBoundaries);
   }
 
   @Override
@@ -177,6 +195,12 @@ public final class RpcClientMetrics implements OperationListener {
 
   private static final class Factory implements OperationMetrics, OpenTelemetryConfigurable {
     private final RpcSemconvSelection selection = new RpcSemconvSelection();
+    private final List<Double> durationSecondsBucketBoundaries;
+
+    private Factory(List<Double> durationSecondsBucketBoundaries) {
+      this.durationSecondsBucketBoundaries =
+          Collections.unmodifiableList(new ArrayList<>(durationSecondsBucketBoundaries));
+    }
 
     @Override
     public void internalInitialize(OpenTelemetry openTelemetry) {
@@ -188,7 +212,12 @@ public final class RpcClientMetrics implements OperationListener {
       RpcSemconvSelection.Selection current = selection.get();
       return OperationMetricsUtil.create(
               "rpc client",
-              ignored -> new RpcClientMetrics(meter, current.emitOld(), current.emitPreview()))
+              ignored ->
+                  new RpcClientMetrics(
+                      meter,
+                      current.emitOld(),
+                      current.emitPreview(),
+                      durationSecondsBucketBoundaries))
           .create(meter);
     }
   }

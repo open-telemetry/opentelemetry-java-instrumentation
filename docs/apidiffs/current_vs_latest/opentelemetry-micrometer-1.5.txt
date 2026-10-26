@@ -1,0 +1,12 @@
+Comparing source compatibility of opentelemetry-micrometer-1.5-3.0.0-SNAPSHOT.jar against 
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	===  UNCHANGED SUPERCLASS: n.a.
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistryBuilder builder(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.micrometer.core.instrument.MeterRegistry create(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) java.util.List<io.micrometer.core.instrument.Meter> getMeters()
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistryBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.micrometer.core.instrument.MeterRegistry build()
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistryBuilder setClock(io.micrometer.core.instrument.Clock)
