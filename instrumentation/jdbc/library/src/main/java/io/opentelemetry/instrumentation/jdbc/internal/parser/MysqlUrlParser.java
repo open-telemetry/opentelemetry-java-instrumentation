@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.isValidPort;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerTargetGroup;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.stripIpv6Brackets;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
@@ -216,6 +217,11 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     }
     // the decoded host must not contain characters that would break the address block
     if (!DbServerTargetBuilder.isValidHost(host) || (port != null && !isValidPort(port))) {
+      return null;
+    }
+    // brackets and an IPv6 zone id would make the rewritten URL an invalid URI
+    host = stripIpv6Brackets(host);
+    if (host.indexOf('%') >= 0) {
       return null;
     }
     String address = "address=(host=" + host + ")";
