@@ -17,6 +17,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSche
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import retrofit2.Callback;
 
 public class InfluxDbSingletons {
 
@@ -24,6 +26,8 @@ public class InfluxDbSingletons {
 
   private static final Instrumenter<InfluxDbQuery, Void> queryInstrumenter;
   private static final Instrumenter<InfluxDbOperation, Void> requestInstrumenter;
+  public static final VirtualField<Callback<?>, InfluxDbQueryState> CALLBACK_QUERY_STATE =
+      VirtualField.find(Callback.class, InfluxDbQueryState.class);
 
   static {
     InfluxDbQueryAttributesGetter queryAttributesGetter = new InfluxDbQueryAttributesGetter();
