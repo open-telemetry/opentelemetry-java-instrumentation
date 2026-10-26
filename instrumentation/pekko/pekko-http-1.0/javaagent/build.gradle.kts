@@ -75,8 +75,7 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":javaagent-extension-api"))
-        implementation("io.opentelemetry:opentelemetry-sdk")
-        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
         implementation("org.apache.pekko:pekko-http_2.12:1.0.0")
         implementation("org.apache.pekko:pekko-stream_2.12:1.0.1")
       }
