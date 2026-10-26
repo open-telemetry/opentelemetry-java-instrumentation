@@ -48,19 +48,20 @@ class JettyHttpClient12AgentTest extends AbstractJettyClient12Test {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  void libraryClientKeepsCallerContextForRequestHooks(boolean withParent) throws Exception {
+  void libraryClientKeepsCallerContextForResponseListeners(boolean withParent) throws Exception {
     ContextKey<String> key = ContextKey.named("jetty-test");
-    CompletableFuture<Context> hookContext = new CompletableFuture<>();
+    CompletableFuture<Context> responseContext = new CompletableFuture<>();
+    CompletableFuture<Context> completionContext = new CompletableFuture<>();
     CompletableFuture<Result> completed = new CompletableFuture<>();
     AtomicReference<SpanContext> callerSpanContext = new AtomicReference<>();
     HttpClient client = JettyClientTelemetry.create(testing.getOpenTelemetry()).createHttpClient();
     client.start();
     try {
       Request request = client.newRequest(resolveAddress("/success")).method("POST");
-      request.onRequestBegin(
+      request.onResponseHeaders(
           ignored -> {
-            hookContext.complete(Context.current());
-            testing.runWithSpan("request-hook", () -> {});
+            responseContext.complete(Context.current());
+            testing.runWithSpan("response-headers", () -> {});
           });
       Runnable send =
           () -> {
@@ -71,7 +72,12 @@ class JettyHttpClient12AgentTest extends AbstractJettyClient12Test {
                     .storeInContext(Context.current().with(key, "caller"));
             callerSpanContext.set(Span.fromContext(caller).getSpanContext());
             try (Scope ignored = caller.makeCurrent()) {
-              request.send(completed::complete);
+              request.send(
+                  result -> {
+                    completionContext.complete(Context.current());
+                    testing.runWithSpan("response-complete", () -> {});
+                    completed.complete(result);
+                  });
               assertThat(Context.current().get(key)).isEqualTo("caller");
               assertThat(Baggage.current().getEntryValue("jetty-test")).isEqualTo("caller");
             }
@@ -85,12 +91,14 @@ class JettyHttpClient12AgentTest extends AbstractJettyClient12Test {
       Result result = completed.get(10, SECONDS);
       assertThat(result.isSucceeded()).isTrue();
       assertThat(result.getResponse().getStatus()).isEqualTo(200);
-      Context observedContext = hookContext.get(10, SECONDS);
-      assertThat(observedContext.get(key)).isEqualTo("caller");
-      assertThat(Baggage.fromContext(observedContext).getEntryValue("jetty-test"))
-          .isEqualTo("caller");
-      assertThat(Span.fromContext(observedContext).getSpanContext())
-          .isEqualTo(callerSpanContext.get());
+      for (Context observedContext :
+          new Context[] {responseContext.get(10, SECONDS), completionContext.get(10, SECONDS)}) {
+        assertThat(observedContext.get(key)).isEqualTo("caller");
+        assertThat(Baggage.fromContext(observedContext).getEntryValue("jetty-test"))
+            .isEqualTo("caller");
+        assertThat(Span.fromContext(observedContext).getSpanContext())
+            .isEqualTo(callerSpanContext.get());
+      }
 
       if (withParent) {
         testing.waitAndAssertTraces(
@@ -102,20 +110,33 @@ class JettyHttpClient12AgentTest extends AbstractJettyClient12Test {
                             .hasKind(SpanKind.CLIENT)
                             .hasParentSpanId(callerSpanContext.get().getSpanId()),
                     span ->
-                        span.hasName("request-hook")
+                        span.hasName("POST")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParentSpanId(callerSpanContext.get().getSpanId()),
+                    span ->
+                        span.hasName("response-headers")
+                            .hasParentSpanId(callerSpanContext.get().getSpanId()),
+                    span ->
+                        span.hasName("response-complete")
                             .hasParentSpanId(callerSpanContext.get().getSpanId()),
                     span ->
                         span.hasName("test-http-server")
-                            .hasParentSpanId(trace.getSpan(1).getSpanContext().getSpanId())));
+                            .hasParentSpanId(trace.getSpan(2).getSpanContext().getSpanId())));
       } else {
         testing.waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasNoParent()),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasNoParent(),
                     span -> span.hasName("test-http-server").hasParent(trace.getSpan(0))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("request-hook").hasNoParent()));
+                    span -> span.hasName("response-headers").hasNoParent()),
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("response-complete").hasNoParent()));
       }
     } finally {
       client.stop();

@@ -15,8 +15,6 @@ import org.eclipse.jetty.client.Response;
 public class JettyHttpClientSingletons {
 
   static final String JETTY_CLIENT_CONTEXT_KEY = "otel-jetty-client-context";
-  static final String JETTY_CLIENT_LIBRARY_CONTEXT_BOUNDARY_KEY =
-      "otel-jetty-httpclient-library-context-boundary";
 
   private static final Instrumenter<Request, Response> instrumenter =
       JavaagentHttpClientInstrumenters.create(
