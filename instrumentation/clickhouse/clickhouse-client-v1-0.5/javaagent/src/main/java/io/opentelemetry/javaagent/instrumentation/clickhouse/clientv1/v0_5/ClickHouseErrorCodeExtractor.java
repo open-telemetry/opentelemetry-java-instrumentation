@@ -12,21 +12,21 @@ final class ClickHouseErrorCodeExtractor {
 
   @Nullable
   static String getErrorType(@Nullable Throwable error) {
-    return getNumericErrorCode(error);
+    String errorCode = getErrorCode(error);
+    return "0".equals(errorCode) ? null : errorCode;
   }
 
   @Nullable
-  private static String getNumericErrorCode(@Nullable Throwable error) {
+  private static String getErrorCode(@Nullable Throwable error) {
     if (error instanceof ClickHouseException) {
-      int errorCode = ((ClickHouseException) error).getErrorCode();
-      return errorCode == 0 ? null : Integer.toString(errorCode);
+      return Integer.toString(((ClickHouseException) error).getErrorCode());
     }
     return null;
   }
 
   @Nullable
   static String getDbResponseStatusCode(@Nullable Throwable error) {
-    return getNumericErrorCode(error);
+    return getErrorCode(error);
   }
 
   private ClickHouseErrorCodeExtractor() {}

@@ -19,11 +19,11 @@ class OpenSearchRestAttributesGetterTest {
 
   @ParameterizedTest
   @ValueSource(ints = {-1, 0, 99, 100, 200, 201, 302, 404, 503})
-  void responseStatusExcludesOnlyInvalidCodes(int statusCode) {
+  void recordsAvailableResponseStatuses(int statusCode) {
     OpenSearchRestResponse response = () -> statusCode;
 
     assertThat(getter.getDbResponseStatusCode(request, response, null))
-        .isEqualTo(statusCode >= 100 ? Integer.toString(statusCode) : null);
+        .isEqualTo(Integer.toString(statusCode));
     assertThat(getter.getErrorType(request, response, null))
         .isEqualTo(statusCode >= 400 || statusCode < 100 ? Integer.toString(statusCode) : null);
   }

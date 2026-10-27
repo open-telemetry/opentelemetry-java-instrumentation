@@ -139,7 +139,8 @@ class JdbcTelemetryTest {
 
   @ParameterizedTest
   @MethodSource("errorCodes")
-  void error(int errorCode, String sqlState, String expectedErrorType) throws SQLException {
+  void error(int errorCode, String sqlState, String expectedErrorType, String expectedStatusCode)
+      throws SQLException {
 
     JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
     DataSource source = spy(new TestDataSource());
@@ -172,11 +173,7 @@ class JdbcTelemetryTest {
                             equalTo(DB_QUERY_SUMMARY, "SELECT"),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(ERROR_TYPE, expectedErrorType),
-                            equalTo(
-                                DB_RESPONSE_STATUS_CODE,
-                                expectedErrorType.equals(SQLException.class.getName())
-                                    ? null
-                                    : expectedErrorType))));
+                            equalTo(DB_RESPONSE_STATUS_CODE, expectedStatusCode))));
 
     assertDurationMetric(
         testing,
@@ -199,18 +196,27 @@ class JdbcTelemetryTest {
 
   private static Stream<Arguments> errorCodes() {
     return Stream.of(
-        argumentSet("positive vendor code takes precedence", 42, "42601", "42"),
-        argumentSet("negative vendor code", -42, null, "-42"),
-        argumentSet("SQLSTATE with zero vendor code", 0, "42601", "42601"),
+        argumentSet("positive vendor code", 42, "42601", "42", "42601"),
+        argumentSet("negative vendor code", -42, null, "-42", "-42"),
+        argumentSet("SQLSTATE with zero vendor code", 0, "42601", "42601", "42601"),
         argumentSet(
-            "null SQLSTATE falls back to exception class", 0, null, SQLException.class.getName()),
+            "null SQLSTATE falls back to exception class",
+            0,
+            null,
+            SQLException.class.getName(),
+            null),
         argumentSet(
-            "empty SQLSTATE falls back to exception class", 0, "", SQLException.class.getName()),
+            "empty SQLSTATE falls back to exception class",
+            0,
+            "",
+            SQLException.class.getName(),
+            null),
         argumentSet(
-            "successful completion SQLSTATE falls back to exception class",
+            "successful completion SQLSTATE is captured independently of error type",
             0,
             "00000",
-            SQLException.class.getName()));
+            SQLException.class.getName(),
+            "00000"));
   }
 
   @Test

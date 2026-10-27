@@ -22,12 +22,11 @@ public final class R2dbcSqlAttributesGetter
 
   private static final String MYSQL_DATABASE = "mysql";
   private static final String MARIADB_DATABASE = "mariadb";
+  private static final String POSTGRESQL_DATABASE = "postgresql";
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String ORACLE_DB = "oracle.db";
   private static final String SQL_SERVER_DATABASE = "microsoft.sql_server";
   private static final String DB2_DATABASE = "ibm.db2";
-  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
-  private static final String OTHER_SQL_DATABASE = "other_sql";
 
   @Override
   public String getDbSystemName(DbExecution request) {
@@ -68,28 +67,31 @@ public final class R2dbcSqlAttributesGetter
   public String getDbResponseStatusCode(
       DbExecution request, @Nullable Void response, @Nullable Throwable error) {
     String dbSystemName = getDbSystemName(request);
-    if (MYSQL_DATABASE.equals(dbSystemName)
-        || MARIADB_DATABASE.equals(dbSystemName)
-        || ORACLE_DB.equals(dbSystemName)
-        || SQL_SERVER_DATABASE.equals(dbSystemName)
-        || DB2_DATABASE.equals(dbSystemName)) {
-      int errorCode = getErrorCode(error);
-      if (errorCode != 0) {
-        return Integer.toString(errorCode);
-      }
-    }
-    String sqlState = getSqlState(error);
     int errorCode = getErrorCode(error);
-    if (OTHER_SQL_DATABASE.equals(dbSystemName)
-        && sqlState != null
-        && !sqlState.isEmpty()
-        && errorCode != 0) {
+    String sqlState = getAvailableSqlState(error);
+    boolean hasErrorCode = errorCode != 0;
+
+    if (prefersVendorCode(dbSystemName) && hasErrorCode) {
+      return Integer.toString(errorCode);
+    }
+    if (POSTGRESQL_DATABASE.equals(dbSystemName) && sqlState != null) {
+      return sqlState;
+    }
+    if (sqlState != null && hasErrorCode) {
       return sqlState + "/" + errorCode;
     }
     if (sqlState != null) {
       return sqlState;
     }
-    return errorCode == 0 ? null : Integer.toString(errorCode);
+    return hasErrorCode ? Integer.toString(errorCode) : null;
+  }
+
+  private static boolean prefersVendorCode(String dbSystemName) {
+    return MYSQL_DATABASE.equals(dbSystemName)
+        || MARIADB_DATABASE.equals(dbSystemName)
+        || ORACLE_DB.equals(dbSystemName)
+        || SQL_SERVER_DATABASE.equals(dbSystemName)
+        || DB2_DATABASE.equals(dbSystemName);
   }
 
   private static int getErrorCode(@Nullable Throwable error) {
@@ -102,6 +104,12 @@ public final class R2dbcSqlAttributesGetter
       return ((R2dbcException) error).getSqlState();
     }
     return null;
+  }
+
+  @Nullable
+  private static String getAvailableSqlState(@Nullable Throwable error) {
+    String sqlState = getSqlState(error);
+    return sqlState == null || sqlState.isEmpty() ? null : sqlState;
   }
 
   @Nullable

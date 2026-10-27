@@ -395,6 +395,7 @@ class SpymemcachedTest {
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
                             equalTo(DB_QUERY_TEXT, "get test-get"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "CANCELLED"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -460,6 +461,7 @@ class SpymemcachedTest {
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
                             equalTo(DB_QUERY_TEXT, "get test-get"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "TIMEDOUT"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -529,6 +531,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_QUERY_TEXT,
                                 capturesKeys ? "getBulk test-get test-get-2" : "getBulk"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "SUCCESS"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -789,6 +792,7 @@ class SpymemcachedTest {
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "set"),
                             equalTo(DB_QUERY_TEXT, "set test-set-cancel 3600 ?"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "CANCELLED"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,

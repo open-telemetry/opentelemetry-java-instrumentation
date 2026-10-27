@@ -37,7 +37,6 @@ import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 class MongoDbAttributesGetterTest {
 
@@ -155,13 +154,8 @@ class MongoDbAttributesGetterTest {
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "{\"ok\": 1}",
-        "{\"ok\": 1, \"writeErrors\": [{\"code\": -3}]}",
-        "{\"ok\": 1, \"writeConcernError\": {\"code\": 0}}"
-      })
-  void omitsResponseStatusWithoutServerErrorCode(String document) {
+  @MethodSource("writeErrorStatuses")
+  void capturesAvailableWriteErrorStatusCodes(String document, String expectedStatus) {
     MongoDbAttributesGetter getter =
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
     CommandSucceededEvent response =
@@ -172,7 +166,26 @@ class MongoDbAttributesGetterTest {
             BsonDocument.parse(document),
             1);
 
-    assertThat(getter.getDbResponseStatusCode(null, response, null)).isNull();
+    assertThat(getter.getDbResponseStatusCode(null, response, null)).isEqualTo(expectedStatus);
+  }
+
+  private static Stream<Arguments> writeErrorStatuses() {
+    return Stream.of(
+        argumentSet("no error code", "{\"ok\": 1}", null),
+        argumentSet(
+            "negative write error code", "{\"ok\": 1, \"writeErrors\": [{\"code\": -3}]}", null),
+        argumentSet(
+            "zero write concern error code",
+            "{\"ok\": 1, \"writeConcernError\": {\"code\": 0}}",
+            null),
+        argumentSet(
+            "string code is unavailable",
+            "{\"ok\": 1, \"writeErrors\": [{\"code\": \"3\"}]}",
+            null),
+        argumentSet(
+            "out-of-range code is unavailable",
+            "{\"ok\": 1, \"writeErrors\": [{\"code\": 2147483648}]}",
+            null));
   }
 
   @Test
@@ -244,8 +257,8 @@ class MongoDbAttributesGetterTest {
     return Stream.of(
         argumentSet(
             "server error code", new MongoException(11000, "duplicate key"), "11000", "11000"),
-        argumentSet("zero code falls back", new MongoException(0, "boom"), null, null),
-        argumentSet("unavailable code", new MongoException(-1, "boom"), null, null),
+        argumentSet("zero code is unavailable", new MongoException(0, "boom"), null, null),
+        argumentSet("missing code sentinel", new MongoException(-1, "boom"), null, null),
         argumentSet("client message sentinel (-3)", new MongoException("boom"), null, "-3"),
         argumentSet(
             "client message-and-cause sentinel (-4)",

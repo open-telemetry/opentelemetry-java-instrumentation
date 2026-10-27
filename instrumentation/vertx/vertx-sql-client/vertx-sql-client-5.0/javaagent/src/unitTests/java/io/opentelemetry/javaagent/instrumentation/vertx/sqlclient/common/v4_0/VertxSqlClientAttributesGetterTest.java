@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -72,6 +73,26 @@ class VertxSqlClientAttributesGetterTest {
 
     assertThat(getter.getErrorType(mysqlRequest, null, error)).isEqualTo("42000");
     assertThat(getter.getDbResponseStatusCode(mysqlRequest, null, error)).isEqualTo("42000");
+  }
+
+  @Test
+  void capturesSqlStateSuccessAndPrefersPostgresqlSqlState() {
+    VertxSqlClientRequest mysqlRequest = request(MYSQL);
+    DatabaseException successful = new DatabaseException("Success", 0, "00000") {};
+    VertxSqlClientRequest postgresRequest = request(POSTGRESQL);
+    DatabaseException postgresError = new DatabaseException("Syntax error", 42, "42601") {};
+
+    assertThat(getter.getDbResponseStatusCode(mysqlRequest, null, successful)).isEqualTo("00000");
+    assertThat(getter.getDbResponseStatusCode(postgresRequest, null, postgresError))
+        .isEqualTo("42601");
+  }
+
+  @Test
+  void combinesCodesForUnknownSystem() {
+    VertxSqlClientRequest unknownRequest = request("unknown");
+    DatabaseException error = new DatabaseException("Syntax error", 208, "42000") {};
+
+    assertThat(getter.getDbResponseStatusCode(unknownRequest, null, error)).isEqualTo("42000/208");
   }
 
   @ParameterizedTest
