@@ -243,44 +243,7 @@ class SpringRmiTest {
                                                 "springrmi.app.SpringRmiGreeter/hello")))));
       }
 
-      if (emitOldRpcSemconv()) {
-        testing.waitAndAssertMetrics(
-            "io.opentelemetry.spring-rmi-4.0",
-            metric ->
-                metric
-                    .hasName("rpc.client.duration")
-                    .hasUnit("ms")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(RPC_SYSTEM, "spring_rmi"),
-                                            equalTo(RPC_SERVICE, "springrmi.app.SpringRmiGreeter"),
-                                            equalTo(RPC_METHOD, "hello")))));
-        if (testSource == TestSource.RMI) {
-          testing.waitAndAssertMetrics(
-              "io.opentelemetry.spring-rmi-4.0",
-              metric ->
-                  metric
-                      .hasName("rpc.server.duration")
-                      .hasUnit("ms")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point
-                                          .hasCount(1)
-                                          .hasAttributesSatisfyingExactly(
-                                              equalTo(RPC_SYSTEM, "spring_rmi"),
-                                              equalTo(
-                                                  RPC_SERVICE,
-                                                  "springrmi.app.SpringRmiGreeterImpl"),
-                                              equalTo(RPC_METHOD, "hello")))));
-        }
-      }
+      assertNoLegacyRpcMetrics();
     } else {
       assertThat(testing.metrics())
           .noneMatch(
@@ -447,69 +410,7 @@ class SpringRmiTest {
                                               RPC_METHOD,
                                               "springrmi.app.SpringRmiGreeterIntegerOverload/overloaded")))));
 
-      if (emitOldRpcSemconv()) {
-        testing.waitAndAssertMetrics(
-            "io.opentelemetry.spring-rmi-4.0",
-            metric ->
-                metric
-                    .hasName("rpc.client.duration")
-                    .hasUnit("ms")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(RPC_SYSTEM, "spring_rmi"),
-                                            equalTo(
-                                                RPC_SERVICE,
-                                                "springrmi.app.SpringRmiGreeterParent"),
-                                            equalTo(RPC_METHOD, "inherited")),
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(RPC_SYSTEM, "spring_rmi"),
-                                            equalTo(
-                                                RPC_SERVICE,
-                                                "springrmi.app.SpringRmiGreeterParent"),
-                                            equalTo(RPC_METHOD, "overloaded")),
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(RPC_SYSTEM, "spring_rmi"),
-                                            equalTo(
-                                                RPC_SERVICE,
-                                                "springrmi.app.SpringRmiGreeterIntegerOverload"),
-                                            equalTo(RPC_METHOD, "overloaded")))));
-        testing.waitAndAssertMetrics(
-            "io.opentelemetry.spring-rmi-4.0",
-            metric ->
-                metric
-                    .hasName("rpc.server.duration")
-                    .hasUnit("ms")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(RPC_SYSTEM, "spring_rmi"),
-                                            equalTo(
-                                                RPC_SERVICE, "springrmi.app.SpringRmiGreeterImpl"),
-                                            equalTo(RPC_METHOD, "inherited")),
-                                point ->
-                                    point
-                                        .hasCount(2)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(RPC_SYSTEM, "spring_rmi"),
-                                            equalTo(
-                                                RPC_SERVICE, "springrmi.app.SpringRmiGreeterImpl"),
-                                            equalTo(RPC_METHOD, "overloaded")))));
-      }
+      assertNoLegacyRpcMetrics();
     } else {
       assertThat(testing.metrics())
           .noneMatch(
@@ -660,44 +561,7 @@ class SpringRmiTest {
                                             equalTo(ERROR_TYPE, error.getClass().getName())))));
       }
 
-      if (emitOldRpcSemconv()) {
-        testing.waitAndAssertMetrics(
-            "io.opentelemetry.spring-rmi-4.0",
-            metric ->
-                metric
-                    .hasName("rpc.client.duration")
-                    .hasUnit("ms")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(RPC_SYSTEM, "spring_rmi"),
-                                            equalTo(RPC_SERVICE, "springrmi.app.SpringRmiGreeter"),
-                                            equalTo(RPC_METHOD, "exceptional")))));
-        if (testSource == TestSource.RMI) {
-          testing.waitAndAssertMetrics(
-              "io.opentelemetry.spring-rmi-4.0",
-              metric ->
-                  metric
-                      .hasName("rpc.server.duration")
-                      .hasUnit("ms")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point
-                                          .hasCount(1)
-                                          .hasAttributesSatisfyingExactly(
-                                              equalTo(RPC_SYSTEM, "spring_rmi"),
-                                              equalTo(
-                                                  RPC_SERVICE,
-                                                  "springrmi.app.SpringRmiGreeterImpl"),
-                                              equalTo(RPC_METHOD, "exceptional")))));
-        }
-      }
+      assertNoLegacyRpcMetrics();
     } else {
       assertThat(testing.metrics())
           .noneMatch(
@@ -707,5 +571,23 @@ class SpringRmiTest {
                       .getName()
                       .equals("io.opentelemetry.spring-rmi-4.0"));
     }
+  }
+
+  private static void assertNoLegacyRpcMetrics() {
+    assertThat(testing.metrics())
+        .noneMatch(
+            metric ->
+                metric
+                        .getInstrumentationScopeInfo()
+                        .getName()
+                        .equals("io.opentelemetry.spring-rmi-4.0")
+                    && asList(
+                            "rpc.client.duration",
+                            "rpc.client.request.size",
+                            "rpc.client.response.size",
+                            "rpc.server.duration",
+                            "rpc.server.request.size",
+                            "rpc.server.response.size")
+                        .contains(metric.getName()));
   }
 }

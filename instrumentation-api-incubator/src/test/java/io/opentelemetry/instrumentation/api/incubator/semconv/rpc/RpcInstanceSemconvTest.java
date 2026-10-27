@@ -157,6 +157,19 @@ class RpcInstanceSemconvTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
+  void canDisableLegacyMetricsForOneRegistration(boolean client) {
+    ConfiguredInstrumenter instance = new ConfiguredInstrumenter(client, true, true, false);
+    Context context = instance.instrumenter.start(Context.root(), "request");
+    instance.instrumenter.end(context, "request", null, null);
+
+    String prefix = client ? "rpc.client" : "rpc.server";
+    assertThat(instance.metricReader.collectAllMetrics())
+        .extracting(MetricData::getName)
+        .containsExactly(prefix + ".call.duration");
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
   void nestedOldOnlyOperationDoesNotInheritParentMethod(boolean client) {
     ConfiguredInstrumenter parent = new ConfiguredInstrumenter(!client, true, true);
     ConfiguredInstrumenter child = new ConfiguredInstrumenter(client, false, false);
@@ -272,6 +285,11 @@ class RpcInstanceSemconvTest {
     final RpcSemconvSelection.Selection selection;
 
     ConfiguredInstrumenter(boolean client, boolean preview, boolean dualEmit) {
+      this(client, preview, dualEmit, true);
+    }
+
+    ConfiguredInstrumenter(
+        boolean client, boolean preview, boolean dualEmit, boolean emitOldMetrics) {
       OpenTelemetrySdk sdk =
           OpenTelemetrySdk.builder()
               .setTracerProvider(
@@ -325,7 +343,10 @@ class RpcInstanceSemconvTest {
                       ? RpcClientAttributesExtractor.create(getter)
                       : RpcServerAttributesExtractor.create(getter))
               .addContextCustomizer(RpcMetricsContextCustomizers.dualEmitContextCustomizer(getter))
-              .addOperationMetrics(client ? RpcClientMetrics.get() : RpcServerMetrics.get())
+              .addOperationMetrics(
+                  client
+                      ? RpcClientMetrics.get(emitOldMetrics)
+                      : RpcServerMetrics.get(emitOldMetrics))
               .addAttributesExtractor(
                   ServicePeerAttributesExtractor.create(
                       new ServerAttributesGetter<String>() {
