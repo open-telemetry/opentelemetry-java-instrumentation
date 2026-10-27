@@ -16,9 +16,13 @@ import io.opentelemetry.javaagent.tooling.DefineClassHandler;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -76,23 +80,25 @@ public class AgentBuilderUtil {
   }
 
   private static void optimize(AgentBuilder.Default agentBuilder) throws Exception {
-    // class names that have a matcher that matches by name
-    Set<String> classNames = new HashSet<>();
-    // class names that have a matcher that matches subtypes
-    Set<String> superTypeNames = new HashSet<>();
-    List<Transformation> unoptimizedTransformations = new ArrayList<>();
+    Map<String, BitSet> classNames = new HashMap<>();
+    Map<String, BitSet> superTypeNames = new HashMap<>();
+    BitSet unoptimizedTransformations = new BitSet();
     List<Transformation> transformations = agentBuilder.transformations;
-    for (Transformation transformation : transformations) {
+    for (int i = 0; i < transformations.size(); i++) {
+      Transformation transformation = transformations.get(i);
       AgentBuilder.RawMatcher matcher = transformation.getMatcher();
       // attempt to decompose the matcher and find if it applies to a named class or a subclass
       Result result = inspect(matcher);
       if (result == null) {
         // we were not able to decompose the matcher
-        unoptimizedTransformations.add(transformation);
-      } else if (result.subtype) {
-        superTypeNames.addAll(result.names);
+        unoptimizedTransformations.set(i);
       } else {
-        classNames.addAll(result.names);
+        for (String name : result.names) {
+          classNames.computeIfAbsent(name, unused -> new BitSet()).set(i);
+          if (result.subtype) {
+            superTypeNames.computeIfAbsent(name, unused -> new BitSet()).set(i);
+          }
+        }
       }
     }
 
@@ -105,13 +111,9 @@ public class AgentBuilderUtil {
                   String name = TransformContext.getTransformedClassName();
                   // iterator() is the only method we expect to be called on this List
                   if (name != null && "iterator".equals(method.getName())) {
-                    // we know that this class is going to be transformed
-                    if (classNames.contains(name) || superTypeNames.contains(name)) {
-                      return transformations.iterator();
-                    }
                     // we already know that loading this class is going to fail, no need to
                     // transform it
-                    if (DefineClassHandler.isFailedClass(name)) {
+                    if (!classNames.containsKey(name) && DefineClassHandler.isFailedClass(name)) {
                       return emptyIterator();
                     }
                     Set<String> loadingSuperTypes = DefineClassHandler.getSuperTypes();
@@ -120,15 +122,37 @@ public class AgentBuilderUtil {
                     if (loadingSuperTypes.isEmpty()) {
                       return transformations.iterator();
                     }
-                    for (String className : loadingSuperTypes) {
-                      // we know that this class is going to be transformed
-                      if (superTypeNames.contains(className)) {
-                        return transformations.iterator();
+                    BitSet candidates = (BitSet) unoptimizedTransformations.clone();
+                    BitSet namedCandidates = classNames.get(name);
+                    if (namedCandidates != null) {
+                      candidates.or(namedCandidates);
+                    }
+                    for (String superType : loadingSuperTypes) {
+                      BitSet superTypeCandidates = superTypeNames.get(superType);
+                      if (superTypeCandidates != null) {
+                        candidates.or(superTypeCandidates);
                       }
                     }
 
-                    // apply only the transformations that we can't decompose
-                    return unoptimizedTransformations.iterator();
+                    // Retain registration order and include transformations we can't decompose.
+                    return new Iterator<Transformation>() {
+                      private int index = candidates.nextSetBit(0);
+
+                      @Override
+                      public boolean hasNext() {
+                        return index >= 0;
+                      }
+
+                      @Override
+                      public Transformation next() {
+                        if (index < 0) {
+                          throw new NoSuchElementException();
+                        }
+                        Transformation transformation = transformations.get(index);
+                        index = candidates.nextSetBit(index + 1);
+                        return transformation;
+                      }
+                    };
                   }
 
                   return method.invoke(transformations, args);
