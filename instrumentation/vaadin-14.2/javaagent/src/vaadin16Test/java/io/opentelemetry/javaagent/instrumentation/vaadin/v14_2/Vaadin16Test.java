@@ -38,8 +38,7 @@ class Vaadin16Test extends AbstractVaadin14Test {
             RequestHeaders.builder(HttpMethod.GET, h1Address.resolve("main?v-r=init").toString())
                 .set(HttpHeaderNames.COOKIE, sessionCookie)
                 .build());
-    AggregatedHttpResponse initResponse =
-        client.execute(initRequest).aggregate().join();
+    AggregatedHttpResponse initResponse = client.execute(initRequest).aggregate().join();
     assertThat(initResponse.status().code()).isEqualTo(200);
     JsonNode appConfig = parseJson(initResponse.contentUtf8()).path("appConfig");
     JsonNode initialUidl = appConfig.path("uidl");
@@ -67,8 +66,7 @@ class Vaadin16Test extends AbstractVaadin14Test {
     AggregatedHttpRequest connectClientRequest =
         AggregatedHttpRequest.of(
             RequestHeaders.builder(
-                    HttpMethod.POST,
-                    h1Address.resolve("main?v-r=uidl&v-uiId=" + uiId).toString())
+                    HttpMethod.POST, h1Address.resolve("main?v-r=uidl&v-uiId=" + uiId).toString())
                 .set(HttpHeaderNames.COOKIE, sessionCookie)
                 .contentType(MediaType.JSON_UTF_8)
                 .build(),
