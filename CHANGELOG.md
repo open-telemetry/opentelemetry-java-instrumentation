@@ -340,6 +340,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Replace `GrpcRequest.getLogicalHost()` and `getLogicalPort()` with `getServerAddress()` and
+  `getServerPort()`. Unavailable ports are now `null` instead of `-1`.
+  ([#16161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16161))
 - `TracedOnSubscribe.perSubscription(...)` now returns `Observable.OnSubscribe<T>` instead of
   `TracedOnSubscribe<T, REQUEST>`. Recompile consumers.
 - Make the Netty 4.1 library's `NettyRequest` final; use it only as an opaque request view.
