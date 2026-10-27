@@ -12,25 +12,16 @@ final class WebClientUriTemplateParser {
   @Nullable
   static String extractPathTemplate(String template) {
     int length = template.length();
-    if (length == 0 || !hasUriVariable(template)) {
+    if (length == 0 || !isValidParameterizedTemplate(template)) {
       return null;
     }
 
-    int authorityStart;
-    if (template.charAt(0) == '/') {
-      if (length == 1 || template.charAt(1) != '/') {
-        return template;
-      }
-      authorityStart = 2;
-    } else {
-      int schemeDelimiter = findSchemeDelimiter(template);
-      if (schemeDelimiter == -1) {
-        return null;
-      }
-      authorityStart = schemeDelimiter + 3;
+    if (template.startsWith("/") && !template.startsWith("//")) {
+      return template;
     }
 
-    if (authorityStart >= length) {
+    int authorityStart = findAuthorityStart(template);
+    if (authorityStart == -1 || authorityStart >= length) {
       return null;
     }
 
@@ -38,13 +29,13 @@ final class WebClientUriTemplateParser {
     if (pathStart == -1
         || template.charAt(pathStart) != '/'
         || pathStart == authorityStart
-        || (pathStart + 1 < length && template.charAt(pathStart + 1) == '/')) {
+        || template.startsWith("//", pathStart)) {
       return null;
     }
     return template.substring(pathStart);
   }
 
-  private static boolean hasUriVariable(String template) {
+  private static boolean isValidParameterizedTemplate(String template) {
     boolean hasUriVariable = false;
     for (int i = 0; i < template.length(); i++) {
       char c = template.charAt(i);
@@ -57,7 +48,7 @@ final class WebClientUriTemplateParser {
           return false;
         }
         hasUriVariable = true;
-        i = end - 1;
+        i = end;
       }
     }
     return hasUriVariable;
@@ -66,68 +57,51 @@ final class WebClientUriTemplateParser {
   private static boolean isUriVariable(String template, int start, int end) {
     int nameStart = start + 1;
     int nameEnd = nameStart;
-    while (nameEnd < end - 1 && isUriVariableNameCharacter(template.charAt(nameEnd))) {
+    while (nameEnd < end && isUriVariableNameCharacter(template.charAt(nameEnd))) {
       nameEnd++;
     }
     if (nameEnd == nameStart) {
       return false;
     }
-    if (nameEnd == end - 1) {
+    if (nameEnd == end) {
       return true;
     }
-    return template.charAt(nameEnd) == ':' && nameEnd + 1 < end - 1;
+    return template.charAt(nameEnd) == ':' && nameEnd + 1 < end;
   }
 
   private static boolean isUriVariableNameCharacter(char c) {
     return isAsciiLetter(c) || (c >= '0' && c <= '9') || c == '_' || c == '.' || c == '-';
   }
 
-  private static int findSchemeDelimiter(String template) {
+  private static int findAuthorityStart(String template) {
+    if (template.startsWith("//")) {
+      return 2;
+    }
+    if (!(isAsciiLetter(template.charAt(0)) || template.charAt(0) == '{')) {
+      return -1;
+    }
     for (int i = 0; i < template.length(); i++) {
       char c = template.charAt(i);
       if (c == '{') {
-        i = findExpressionEnd(template, i) - 1;
-      } else if (c == '/' || c == '?' || c == '#') {
-        return -1;
-      } else if (c == ':'
-          && i + 2 < template.length()
-          && template.charAt(i + 1) == '/'
-          && template.charAt(i + 2) == '/'
-          && isValidScheme(template, i)) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  private static boolean isValidScheme(String template, int end) {
-    if (end == 0 || !(isAsciiLetter(template.charAt(0)) || template.charAt(0) == '{')) {
-      return false;
-    }
-    for (int i = 0; i < end; i++) {
-      char c = template.charAt(i);
-      if (c == '{') {
-        int expressionEnd = findExpressionEnd(template, i);
-        if (expressionEnd == -1 || expressionEnd > end) {
-          return false;
-        }
-        i = expressionEnd - 1;
+        i = findExpressionEnd(template, i);
+      } else if (c == ':') {
+        return template.startsWith("://", i) ? i + 3 : -1;
       } else if (!(isAsciiLetter(c)
           || (c >= '0' && c <= '9')
           || c == '+'
           || c == '-'
           || c == '.')) {
-        return false;
+        return -1;
       }
     }
-    return true;
+    return -1;
   }
 
   private static int findAuthorityEnd(String template, int start) {
     for (int i = start; i < template.length(); i++) {
       char c = template.charAt(i);
       if (c == '{') {
-        i = findExpressionEnd(template, i) - 1;
+        i = findExpressionEnd(template, i);
       } else if (c == '/' || c == '?' || c == '#') {
         return i;
       }
@@ -146,7 +120,7 @@ final class WebClientUriTemplateParser {
           return -1;
         }
         if (--depth == 0) {
-          return i + 1;
+          return i;
         }
       }
     }

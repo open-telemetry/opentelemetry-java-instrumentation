@@ -44,6 +44,35 @@ class WebClientUriTemplateParserTest {
   }
 
   @Test
+  void validatesSchemeWhileFindingAuthority() {
+    assertThat(
+            WebClientUriTemplateParser.extractPathTemplate(
+                "a1+.-{scheme}://example.com/accounts/{id}"))
+        .isEqualTo("/accounts/{id}");
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("1https://example.com/{id}"))
+        .isNull();
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("://example.com/{id}")).isNull();
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("ht_tps://example.com/{id}"))
+        .isNull();
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("https:other://example.com/{id}"))
+        .isNull();
+  }
+
+  @Test
+  void rejectsParameterizedTemplatesWithoutAnAbsolutePathReference() {
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("https://{host}")).isNull();
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("//{host}")).isNull();
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("https://{host}?next=/path"))
+        .isNull();
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("https://{host}#fragment/path"))
+        .isNull();
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("https://{host}//path")).isNull();
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("//{host}//path")).isNull();
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("https:///{id}")).isNull();
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("///{id}")).isNull();
+  }
+
+  @Test
   void requiresAtLeastOneUriVariable() {
     assertThat(WebClientUriTemplateParser.extractPathTemplate("/health")).isNull();
     assertThat(WebClientUriTemplateParser.extractPathTemplate("/accounts/123?sig=secret")).isNull();
