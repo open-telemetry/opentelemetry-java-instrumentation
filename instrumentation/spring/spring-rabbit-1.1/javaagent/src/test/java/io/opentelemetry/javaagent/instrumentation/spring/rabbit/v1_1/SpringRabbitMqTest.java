@@ -457,12 +457,13 @@ class SpringRabbitMqTest {
         "parent", () -> applicationContext.getBean(AmqpTemplate.class).send(queue, batch));
 
     assertThat(completed.await(10, SECONDS)).isTrue();
-    String errorType =
-        fail
-            ? (testLatestDeps()
-                ? "org.springframework.amqp.rabbit.support.ListenerExecutionFailedException"
-                : "org.springframework.amqp.rabbit.listener.exception.ListenerExecutionFailedException")
-            : null;
+    String errorType = null;
+    if (fail) {
+      errorType =
+          testLatestDeps()
+              ? "org.springframework.amqp.rabbit.support.ListenerExecutionFailedException"
+              : "org.springframework.amqp.rabbit.listener.exception.ListenerExecutionFailedException";
+    }
     List<AttributeAssertion> processAssertions =
         getAssertions(queue, "process", ip, true, true, false, (long) expectedCount);
     processAssertions.add(equalTo(ERROR_TYPE, errorType));
@@ -483,8 +484,15 @@ class SpringRabbitMqTest {
                 verifyLink(span, producerSpan);
               });
         },
-        trace ->
-            trace.hasSpansSatisfyingExactly(span -> verifySettleSpan(span, fail ? "nack" : "ack")));
+        trace -> {
+          String settlementOperation;
+          if (fail) {
+            settlementOperation = testLatestDeps() ? "reject" : "nack";
+          } else {
+            settlementOperation = "ack";
+          }
+          trace.hasSpansSatisfyingExactly(span -> verifySettleSpan(span, settlementOperation));
+        });
     assertThat(delivered).hasValue(expectedCount);
     assertProcessMetrics(testing, queue, errorType, expectedCount);
   }
@@ -654,7 +662,9 @@ class SpringRabbitMqTest {
             trace.hasSpansSatisfyingExactlyInAnyOrder(
                 span -> span.hasKind(SpanKind.PRODUCER),
                 span -> span.hasKind(SpanKind.CONSUMER).hasStatus(StatusData.error())),
-        trace -> trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyNackSpan));
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> verifySettleSpan(span, testLatestDeps() ? "reject" : "nack")));
     assertProcessMetrics(
         testing,
         queue,
@@ -696,10 +706,6 @@ class SpringRabbitMqTest {
 
   private static void verifyAckSpan(SpanDataAssert span) {
     verifySettleSpan(span, "ack");
-  }
-
-  private static void verifyNackSpan(SpanDataAssert span) {
-    verifySettleSpan(span, "nack");
   }
 
   private static void verifySettleSpan(SpanDataAssert span, String operation) {

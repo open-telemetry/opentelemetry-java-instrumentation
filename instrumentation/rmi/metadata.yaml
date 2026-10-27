@@ -1,8 +1,10 @@
 description: >
   This instrumentation enables RPC client spans and RPC server spans for Java RMI
-  (Remote Method Invocation).
+  (Remote Method Invocation), with duration metrics when RPC semantic convention preview is enabled.
 display_name: RMI (Remote Method Invocation)
 semantic_conventions:
   - RPC_CLIENT_SPANS
+  - RPC_CLIENT_METRICS
   - RPC_SERVER_SPANS
+  - RPC_SERVER_METRICS
 library_link: https://docs.oracle.com/en/java/javase/17/docs/api/java.rmi/java/rmi/package-summary.html

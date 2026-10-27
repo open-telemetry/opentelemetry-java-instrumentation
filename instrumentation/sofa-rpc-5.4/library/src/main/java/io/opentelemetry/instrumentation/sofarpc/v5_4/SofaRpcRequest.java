@@ -15,6 +15,8 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class SofaRpcRequest {
 
+  private boolean syntheticFallbackError;
+
   public static SofaRpcRequest create(SofaRequest request) {
     RpcInternalContext context = RpcInternalContext.peekContext();
 
@@ -35,4 +37,12 @@ public abstract class SofaRpcRequest {
 
   @Nullable
   public abstract ProviderInfo providerInfo();
+
+  void markSyntheticFallbackError() {
+    syntheticFallbackError = true;
+  }
+
+  boolean isSyntheticFallbackError() {
+    return syntheticFallbackError;
+  }
 }

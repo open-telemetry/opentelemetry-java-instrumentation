@@ -25,6 +25,7 @@ dependencies {
   testLibrary("org.apache.derby:derby:10.6.1.0")
   testLibrary("org.hsqldb:hsqldb:2.0.0")
   testLibrary("org.xerial:sqlite-jdbc:3.53.1.0")
+  testLibrary("com.mysql:mysql-connector-j:9.3.0")
 
   testLibrary("org.apache.tomcat:tomcat-jdbc:7.0.19")
   testLibrary("org.apache.tomcat:tomcat-juli:7.0.19") // tomcat jdbc needs this
@@ -156,5 +157,6 @@ tasks {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }

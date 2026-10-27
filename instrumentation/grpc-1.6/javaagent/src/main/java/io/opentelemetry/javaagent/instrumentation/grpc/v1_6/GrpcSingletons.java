@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 
-import io.grpc.ClientInterceptor;
 import io.grpc.Context;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.ServerBuilder;
@@ -19,6 +18,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetryBuilder;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.Experimental;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcConfig;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
@@ -33,7 +33,7 @@ public class GrpcSingletons {
   public static final VirtualField<ServerBuilder<?>, Boolean> SERVER_BUILDER_INSTRUMENTED =
       VirtualField.find(ServerBuilder.class, Boolean.class);
 
-  private static final ClientInterceptor clientInterceptor;
+  private static final GrpcTelemetry telemetry;
 
   private static final ServerInterceptor serverInterceptor;
 
@@ -61,14 +61,10 @@ public class GrpcSingletons {
     if (serverRequestMetadata != null) {
       telemetryBuilder.setServerRequestMetadata(serverRequestMetadata);
     }
-    GrpcTelemetry telemetry = telemetryBuilder.build();
+    GrpcTelemetry configuredTelemetry = telemetryBuilder.build();
 
-    clientInterceptor = telemetry.createClientInterceptor();
-    serverInterceptor = telemetry.createServerInterceptor();
-  }
-
-  public static ClientInterceptor clientInterceptor() {
-    return clientInterceptor;
+    telemetry = configuredTelemetry;
+    serverInterceptor = configuredTelemetry.createServerInterceptor();
   }
 
   public static ServerInterceptor serverInterceptor() {
@@ -78,6 +74,10 @@ public class GrpcSingletons {
   @Nullable
   public static Context.Storage storage() {
     return storageReference.get();
+  }
+
+  public static void addClientInterceptor(ManagedChannelBuilder<?> builder) {
+    Experimental.addClientInterceptor(telemetry, builder);
   }
 
   public static Context.Storage setStorage(Context.Storage storage) {

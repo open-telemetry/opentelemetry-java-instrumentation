@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -62,8 +61,7 @@ class GwtTest {
   private static URI address;
 
   private static void startServer() throws Exception {
-    port = PortUtils.findOpenPort();
-    server = new Server(port);
+    server = new Server(0);
     for (Connector connector : server.getConnectors()) {
       ((ServerConnector) connector).setHost("localhost");
     }
@@ -74,6 +72,7 @@ class GwtTest {
 
     server.setHandler(webAppContext);
     server.start();
+    port = ((ServerConnector) server.getConnectors()[0]).getLocalPort();
   }
 
   private static void stopServer() throws Exception {
@@ -180,6 +179,7 @@ class GwtTest {
                                     ? "test.gwt.shared.MessageService/sendMessage"
                                     : "sendMessage"))));
 
+    assertDurationMetrics(null);
     testing.clearData();
 
     // click a button to trigger calling java code
@@ -214,6 +214,7 @@ class GwtTest {
                                 ERROR_TYPE,
                                 emitPreviewRpcSemconv() ? IOException.class.getName() : null))));
 
+    assertDurationMetrics(IOException.class.getName());
     if (emitExceptionAsLogs()) {
       SpanData rpcSpan =
           testing.spans().stream()
@@ -227,6 +228,60 @@ class GwtTest {
                   .hasEventName("rpc.server.call.exception")
                   .hasSpanContext(rpcSpan.getSpanContext())
                   .hasException(new IOException()));
+    }
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private static void assertDurationMetrics(String errorType) {
+    if (!emitPreviewRpcSemconv()) {
+      assertThat(testing.metrics())
+          .noneMatch(
+              metric ->
+                  metric
+                      .getInstrumentationScopeInfo()
+                      .getName()
+                      .equals("io.opentelemetry.gwt-2.0"));
+      return;
+    }
+    if (emitOldRpcSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.gwt-2.0",
+          metric ->
+              metric
+                  .hasName("rpc.server.duration")
+                  .hasUnit("ms")
+                  .hasHistogramSatisfying(
+                      histogram ->
+                          histogram.hasPointsSatisfying(
+                              point ->
+                                  point
+                                      .hasCount(1)
+                                      .hasSumGreaterThan(0)
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(RPC_SYSTEM, "gwt"),
+                                          equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
+                                          equalTo(RPC_METHOD, "sendMessage")))));
+    }
+    if (emitPreviewRpcSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.gwt-2.0",
+          metric ->
+              metric
+                  .hasName("rpc.server.call.duration")
+                  .hasUnit("s")
+                  .hasHistogramSatisfying(
+                      histogram ->
+                          histogram.hasPointsSatisfying(
+                              point ->
+                                  point
+                                      .hasCount(1)
+                                      .hasSumGreaterThan(0)
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(RPC_SYSTEM_NAME, "gwt"),
+                                          equalTo(
+                                              RPC_METHOD,
+                                              "test.gwt.shared.MessageService/sendMessage"),
+                                          equalTo(ERROR_TYPE, errorType)))));
     }
   }
 }

@@ -8,10 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 import static net.bytebuddy.matcher.ElementMatchers.isTypeInitializer;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -31,21 +29,29 @@ class HooksInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isTypeInitializer().or(named("resetOnEachOperator")),
+        isTypeInitializer().or(named("resetOnEachOperator").and(takesArguments(1))),
+        getClass().getName() + "$RegisterOnEachOperatorAdvice");
+    // The operator itself resets its hook by key, so only the reset of all hooks re-registers.
+    transformer.applyAdviceToMethod(
+        named("resetOnEachOperator").and(takesArguments(0)),
         getClass().getName() + "$ResetOnEachOperatorAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class RegisterOnEachOperatorAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void postStaticInitializer() {
+      ReactorSingletons.registerOnEachOperator();
+    }
   }
 
   @SuppressWarnings("unused")
   public static class ResetOnEachOperatorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void postStaticInitializer() {
-      ContextPropagationOperator.builder()
-          .setCaptureExperimentalSpanAttributes(
-              DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "reactor")
-                  .getBoolean("experimental_span_attributes/development", false))
-          .build()
-          .registerOnEachOperator();
+    public static void postReset() {
+      ReactorSingletons.reregisterOnEachOperator();
     }
   }
 }
