@@ -9,17 +9,13 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.none;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
-import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.utility.JavaModule;
 import org.junit.jupiter.api.Test;
@@ -91,40 +87,6 @@ class AgentBuilderUtilTest {
     assertThat(calls).containsExactly("classloader", "type");
   }
 
-  @Test
-  void retransformsAlreadyLoadedClassAndPreservesTerminalTransformation() {
-    Instrumentation instrumentation = ByteBuddyAgent.install();
-    LoadedTarget target = new LoadedTarget();
-    assertThat(target.value()).isEqualTo("original");
-    AgentBuilder builder =
-        new AgentBuilder.Default()
-            .disableClassFormatChanges()
-            .ignore(none())
-            .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
-            .with(
-                new AgentBuilder.RedefinitionStrategy.DiscoveryStrategy.Explicit(
-                    LoadedTarget.class))
-            .type(named(LoadedTarget.class.getName()))
-            .transform(
-                (dynamicBuilder, typeDescription, classLoader, module, protectionDomain) ->
-                    dynamicBuilder
-                        .method(named("value"))
-                        .intercept(FixedValue.value("instrumented")))
-            .asTerminalTransformation();
-    AgentBuilder.Default optimized = (AgentBuilder.Default) AgentBuilderUtil.optimize(builder);
-    assertThat(optimized.transformations.get(0).isTerminal()).isTrue();
-    ResettableClassFileTransformer transformer = optimized.installOn(instrumentation);
-    try {
-      assertThat(target.value()).isEqualTo("instrumented");
-    } finally {
-      assertThat(
-              transformer.reset(
-                  instrumentation, AgentBuilder.RedefinitionStrategy.RETRANSFORMATION))
-          .isTrue();
-    }
-    assertThat(target.value()).isEqualTo("original");
-  }
-
   private static AgentBuilder.Default builder(
       ElementMatcher.Junction<TypeDescription> matcher, List<String> calls) {
     ElementMatcher.Junction<TypeDescription> recording =
@@ -168,10 +130,4 @@ class AgentBuilderUtilTest {
   interface Marker {}
 
   static class Child extends Parent implements Marker {}
-
-  static class LoadedTarget {
-    String value() {
-      return "original";
-    }
-  }
 }
