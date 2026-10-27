@@ -80,6 +80,7 @@ class Vaadin16Test extends AbstractVaadin14Test {
         parseJson(connectClientContent.substring("for(;;);".length())).path(0);
     syncId = connectClientUidl.path("syncId").asInt();
     clientId = connectClientUidl.path("clientId").asInt();
+    testing.waitForTraces(3);
   }
 
   private JsonNode parseJson(String json) {
