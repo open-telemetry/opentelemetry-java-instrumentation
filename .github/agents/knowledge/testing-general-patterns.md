@@ -286,20 +286,38 @@ intentionally ad hoc or cross-trace filtering that the trace DSL cannot express.
   possible metric name. Do not add an exporter-interval sleep before or after `clearData()` solely
   to wait for metrics; the test runners force-flush metrics when reading them.
 
-## Trace Clearing After Asynchronous Operations
+## Discarding setup and cleanup telemetry
 
-- When test setup or cleanup performs an operation that can complete or export spans
-  asynchronously, call `testing.waitForTraces(expectedTraceCount)` before its captured telemetry
-  is cleared, whether by `testing.clearData()` or an `InstrumentationExtension` lifecycle clear.
-  Keep the wait at the end of setup or cleanup even when removing a redundant explicit clear. The
-  expected count is the total number of traces that should be captured at that point. Waiting
-  prevents spans exported after the clear from leaking into the next assertion or test.
-- Add the wait only when the exact trace count is deterministic. Do not guess a count when it can
-  vary because of retries, concurrent/background work, timing, or external-system behavior.
-- `InstrumentationExtension` already clears captured telemetry before each test. Do not add or keep
-  a setup/cleanup `clearData()` solely for per-test isolation when that lifecycle clear is
-  sufficient; keep explicit clears only when the test needs a mid-test reset, including to discard
-  telemetry from a preceding asynchronous operation after its exports have been drained.
+Setup and cleanup operations can produce telemetry even when their telemetry is not part of the
+behavior under test. Before clearing that data, wait for the expected traces to arrive so late
+exports cannot leak into subsequent assertions or tests.
+
+- When changing a test, inspect setup and cleanup operations before each `testing.clearData()` and
+  before an `InstrumentationExtension` lifecycle clear. If an operation can complete or export
+  spans asynchronously, wait for its traces before clearing. Do not assume that returning from a
+  synchronous client call guarantees that all telemetry has been captured.
+- For telemetry that is only being discarded, use `testing.waitForTraces(expectedTraceCount)`.
+  Do not introduce span-name or attribute assertions, `waitAndAssertTraces(...)`, or assertion
+  helpers solely to wait for setup telemetry. Assert that telemetry only when its contents are
+  themselves part of the behavior under test.
+
+```java
+jedis.lpush("wrong-type", "value");
+testing.waitForTraces(1);
+testing.clearData();
+```
+
+- Use the total trace count expected in captured data at that point, not just the count produced
+  by the most recent operation. Wait for all setup traces before clearing, not only the first one.
+- Add a count-based wait only when the count is deterministic. If retries, background work, or
+  external-system behavior can vary it, identify an appropriate completion signal rather than
+  guessing a count or adding a sleep.
+- `InstrumentationExtension` already clears captured telemetry before each test. Keep any necessary
+  wait at the end of setup or cleanup even when removing a redundant explicit clear. Do not add or
+  keep an explicit clear solely for per-test isolation; keep explicit clears for required mid-test
+  resets.
+- Do not wait for spans that intentionally remain open until the operation under test completes,
+  such as an unfinished pipeline or transaction.
 
 ## Attribute Assertion `satisfies()` Lambda Parameters
 
