@@ -194,9 +194,7 @@ class MongoDbAttributesGetter
     }
     if (error instanceof MongoException) {
       int code = ((MongoException) error).getCode();
-      if (code != 0 && code != -1) {
-        return Integer.toString(code);
-      }
+      return Integer.toString(code);
     }
     return null;
   }
@@ -248,7 +246,7 @@ class MongoDbAttributesGetter
       return null;
     }
     long value = code.asNumber().longValue();
-    return value > 0 && value <= Integer.MAX_VALUE ? (int) value : null;
+    return value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE ? (int) value : null;
   }
 
   String sanitizeQuery(BsonDocument command) {
