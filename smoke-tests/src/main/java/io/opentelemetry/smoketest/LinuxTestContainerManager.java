@@ -155,9 +155,4 @@ public class LinuxTestContainerManager extends AbstractTestContainerManager {
     }
   }
 
-  @Override
-  public Container.ExecResult execTarget(String... command)
-      throws IOException, InterruptedException {
-    return target.execInContainer(command);
-  }
 }

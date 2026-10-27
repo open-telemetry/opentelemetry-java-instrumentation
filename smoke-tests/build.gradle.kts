@@ -1,6 +1,3 @@
-import org.gradle.api.tasks.bundling.Tar
-import org.gradle.api.tasks.bundling.War
-import org.gradle.api.tasks.bundling.Zip
 import java.time.Duration
 
 plugins {
@@ -40,21 +37,6 @@ tasks {
   // DeclarativeConfigurationExampleSmokeTest can verify that the agent starts up with it
   processTestResources {
     from(rootProject.file("docs/declarative-configuration-example.yaml"))
-
-    val springWarProject = project(":smoke-tests:images:servlet:spring-war")
-    val probeWar = springWarProject.tasks.named<War>("probeWar")
-    val sharedWar = springWarProject.tasks.named<Zip>("sharedWar")
-    val commonSpringLibs = springWarProject.tasks.named<Tar>("commonSpringLibs")
-    dependsOn(probeWar, sharedWar, commonSpringLibs)
-    from(probeWar) {
-      into("spring-war")
-    }
-    from(sharedWar) {
-      into("spring-war")
-    }
-    from(commonSpringLibs) {
-      into("spring-war")
-    }
   }
 
   test {

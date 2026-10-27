@@ -191,6 +191,10 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
     try {
       Class<?> pathUtilsClass =
           Class.forName("org.springframework.web.util.ServletRequestPathUtils");
+      // Resolve the method's actual return type through its declaring class. With mixed Spring
+      // versions in parent and child class loaders, independently loading RequestPath can select
+      // a different class. A findStatic lookup with that type can establish conflicting loader
+      // constraints and cause a later application startup to fail.
       return MethodHandles.lookup()
           .unreflect(pathUtilsClass.getMethod("parseAndCache", HttpServletRequest.class));
     } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException ignored) {

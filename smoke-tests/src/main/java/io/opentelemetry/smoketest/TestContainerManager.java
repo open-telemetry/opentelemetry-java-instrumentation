@@ -5,12 +5,10 @@
 
 package io.opentelemetry.smoketest;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
-import org.testcontainers.containers.Container;
 import org.testcontainers.containers.output.OutputFrame;
 
 public interface TestContainerManager {
@@ -36,12 +34,6 @@ public interface TestContainerManager {
       String[] command);
 
   void stopTarget();
-
-  default Container.ExecResult execTarget(String... command)
-      throws IOException, InterruptedException {
-    throw new UnsupportedOperationException(
-        "Executing commands in the target container is not supported");
-  }
 
   static boolean useWindowsContainers() {
     return !"1".equals(System.getenv("USE_LINUX_CONTAINERS"))
