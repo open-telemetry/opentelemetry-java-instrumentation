@@ -118,6 +118,5 @@ public class ContextStorageCloser {
       field.setAccessible(true);
       return field.get(strictContextStorage);
     }
-
   }
 }

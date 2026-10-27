@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -17,7 +18,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -59,14 +59,14 @@ class AgentTestingDependencyTest {
               return null;
             });
     try {
-      assertThat(attached.await(10, TimeUnit.SECONDS)).isTrue();
+      assertThat(attached.await(10, SECONDS)).isTrue();
       assertThatThrownBy(() -> AgentTestRunner.instance().closeContextStorage())
           .isInstanceOf(ConditionTimeoutException.class)
           .hasCauseInstanceOf(AssertionError.class);
     } finally {
       release.countDown();
       try {
-        worker.get(10, TimeUnit.SECONDS);
+        worker.get(10, SECONDS);
       } finally {
         executor.shutdownNow();
       }

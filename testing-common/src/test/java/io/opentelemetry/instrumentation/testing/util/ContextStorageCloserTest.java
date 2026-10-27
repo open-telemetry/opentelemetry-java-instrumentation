@@ -13,6 +13,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.context.Scope;
 import java.util.concurrent.ConcurrentHashMap;
+import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.Test;
 
 class ContextStorageCloserTest {
@@ -38,7 +39,7 @@ class ContextStorageCloserTest {
   void doesNotHidePersistentLeaks() {
     TestStrictContextStorage storage = new TestStrictContextStorage(Integer.MAX_VALUE);
     assertThatThrownBy(() -> ContextStorageCloser.close(storage))
-        .isInstanceOf(org.awaitility.core.ConditionTimeoutException.class)
+        .isInstanceOf(ConditionTimeoutException.class)
         .hasCauseInstanceOf(AssertionError.class);
     assertThat(storage.pendingScopes.map).containsEntry("scope", "unclosed");
   }

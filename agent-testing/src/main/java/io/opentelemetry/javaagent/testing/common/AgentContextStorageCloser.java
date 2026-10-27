@@ -35,7 +35,8 @@ public final class AgentContextStorageCloser {
   private static Object getAgentContextStorage() {
     try {
       Class<?> contextStorageClass =
-          Class.forName("io.opentelemetry.javaagent.shaded.io.opentelemetry.context.ContextStorage");
+          Class.forName(
+              "io.opentelemetry.javaagent.shaded.io.opentelemetry.context.ContextStorage");
       Method method = contextStorageClass.getDeclaredMethod("get");
       return method.invoke(null);
     } catch (Exception ignored) {

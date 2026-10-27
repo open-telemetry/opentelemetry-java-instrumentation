@@ -23,9 +23,7 @@ class LibraryTestingDependencyTest {
     ClassLoader loader = getClass().getClassLoader();
     assertThat(loader.getResource("io/opentelemetry/instrumentation/testing/AgentTestRunner.class"))
         .isNull();
-    assertThat(
-            loader.getResource(
-                "io/opentelemetry/javaagent/bootstrap/AgentInitializer.class"))
+    assertThat(loader.getResource("io/opentelemetry/javaagent/bootstrap/AgentInitializer.class"))
         .isNull();
     assertThat(ContextStorage.get().getClass().getName()).contains("StrictContextStorage");
     assertThat(Context.current()).isEqualTo(Context.root());
