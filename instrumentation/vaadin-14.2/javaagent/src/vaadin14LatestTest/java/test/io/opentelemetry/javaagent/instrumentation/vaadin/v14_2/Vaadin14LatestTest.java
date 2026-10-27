@@ -7,10 +7,4 @@ package test.io.opentelemetry.javaagent.instrumentation.vaadin.v14_2;
 
 import io.opentelemetry.javaagent.instrumentation.vaadin.v14_2.AbstractVaadin14Test;
 
-class Vaadin14LatestTest extends AbstractVaadin14Test {
-
-  @Override
-  protected boolean isCompatibilityMode() {
-    return true;
-  }
-}
+class Vaadin14LatestTest extends AbstractVaadin14Test {}

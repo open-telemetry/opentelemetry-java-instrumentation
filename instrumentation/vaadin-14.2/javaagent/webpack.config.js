@@ -2,7 +2,3 @@
 // this webpack.config.js must contain a reference to ./webpack.generated.js
 // to pass check in FrontendUtils.isWebpackConfigFile. This file is just a
 // placeholder; the real webpack.config.js is generated under build/vaadin-*
-{
-  "assetsByChunkName": {
-  }
-}

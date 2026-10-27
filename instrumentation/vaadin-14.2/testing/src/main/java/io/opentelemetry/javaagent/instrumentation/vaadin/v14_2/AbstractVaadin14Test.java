@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.vaadin.v14_2;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -42,7 +44,11 @@ public abstract class AbstractVaadin14Test extends AbstractVaadinTest {
             + MainView.getCsrfToken()
             + "\",\"rpc\":[{\"type\":\"event\",\"node\":"
             + MainView.getButtonNodeId()
-            + ",\"event\":\"click\"}],\"syncId\":0,\"clientId\":0}";
+            + ",\"event\":\"click\"}],\"syncId\":"
+            + getSyncId()
+            + ",\"clientId\":"
+            + getClientId()
+            + "}";
     AggregatedHttpRequest uidlRequest =
         AggregatedHttpRequest.of(
             RequestHeaders.builder(
@@ -59,6 +65,14 @@ public abstract class AbstractVaadin14Test extends AbstractVaadinTest {
   }
 
   protected void initializeUi(String sessionCookie) {}
+
+  protected int getSyncId() {
+    return 0;
+  }
+
+  protected int getClientId() {
+    return 0;
+  }
 
   @Override
   void assertFirstRequest() {
@@ -113,7 +127,11 @@ public abstract class AbstractVaadin14Test extends AbstractVaadinTest {
                 assertThat(spans.get(spans.size() - 1))
                     .hasName("EventRpcHandler.handle/click")
                     .hasParent(spans.get(spans.size() - 2))
-                    .hasKind(SpanKind.INTERNAL);
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            CODE_FUNCTION_NAME,
+                            "com.vaadin.flow.server.communication.rpc.EventRpcHandler.handle"));
               } else {
                 assertNoControllerSpans(spans);
               }
