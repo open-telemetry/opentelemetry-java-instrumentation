@@ -39,6 +39,7 @@ import java.time.Duration;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.reactive.ClientHttpConnector;
@@ -112,10 +113,33 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   void shouldCaptureUriTemplateFromVarargs() {
     WebClient client = createWebClient();
 
-    assertTemplateRequest(
-        client.get().uri("/hello/{id}", "some-account"),
-        resolveAddress("/hello/some-account"),
-        expectedTemplate("/hello/{id}"));
+    URI uri = resolveAddress("/hello/some-account");
+    String template = expectedTemplate("/hello/{id}");
+    String instrumentationName =
+        assertTemplateRequest(client.get().uri("/hello/{id}", "some-account"), uri, template);
+
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        metric ->
+            metric
+                .hasName("http.client.request.duration")
+                .hasDescription("Duration of HTTP client requests.")
+                .hasUnit("s")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasSumGreaterThan(0.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                        equalTo(SERVER_ADDRESS, "localhost"),
+                                        equalTo(SERVER_PORT, uri.getPort()),
+                                        satisfies(
+                                            NETWORK_PROTOCOL_VERSION, val -> val.isIn(null, "1.1")),
+                                        equalTo(URL_TEMPLATE, template)))));
   }
 
   @Test
@@ -323,12 +347,14 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
     return template;
   }
 
-  protected void assertTemplateRequest(
+  protected String assertTemplateRequest(
       WebClient.RequestHeadersSpec<?> request, URI uri, String template) {
     request.retrieve().bodyToMono(String.class).block();
 
+    AtomicReference<String> instrumentationName = new AtomicReference<>();
     testing.waitAndAssertTraces(
         trace -> {
+          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
           trace.hasSpansSatisfyingExactly(
               span ->
                   span.hasName(template == null ? "GET" : "GET " + template)
@@ -350,6 +376,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
                       .hasKind(SpanKind.SERVER)
                       .hasParent(trace.getSpan(0)));
         });
+    return instrumentationName.get();
   }
 
   @Override
