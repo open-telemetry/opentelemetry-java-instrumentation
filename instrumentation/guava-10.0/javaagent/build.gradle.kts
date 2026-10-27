@@ -28,6 +28,16 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("version19Test") {
+      dependencies {
+        implementation("com.google.guava:guava:${baseVersion("19.0").orLatest()}")
+      }
+    }
+  }
+}
+
 tasks {
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -38,5 +48,6 @@ tasks {
 
   check {
     dependsOn(testExperimental)
+    dependsOn(testing.suites.named("version19Test"))
   }
 }
