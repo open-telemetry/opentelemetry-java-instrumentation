@@ -339,8 +339,7 @@ class SpymemcachedTest {
     testing.runWithSpan(
         "parent",
         () ->
-            assertThat(memcached.asyncGet("test-ascii-get-key-that-doesn't-exist").get())
-                .isNull());
+            assertThat(memcached.asyncGet("test-ascii-get-key-that-doesn't-exist").get()).isNull());
 
     testing.waitAndAssertTraces(
         trace ->
@@ -561,6 +560,7 @@ class SpymemcachedTest {
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
                             equalTo(DB_QUERY_TEXT, "getBulk"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "SUCCESS"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -611,6 +611,7 @@ class SpymemcachedTest {
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
                             equalTo(DB_QUERY_TEXT, "getBulk test-get"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "SUCCESS"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -625,6 +626,7 @@ class SpymemcachedTest {
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
                             equalTo(DB_QUERY_TEXT, "get test-get"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "SUCCESS"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -664,6 +666,7 @@ class SpymemcachedTest {
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
                             equalTo(DB_QUERY_TEXT, "getBulk " + outerKey),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "SUCCESS"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -678,6 +681,7 @@ class SpymemcachedTest {
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
                             equalTo(DB_QUERY_TEXT, "getBulk " + nestedKey),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "SUCCESS"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -721,6 +725,7 @@ class SpymemcachedTest {
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
                             equalTo(DB_QUERY_TEXT, "getBulk cancel-bulk"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "CANCELLED"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()),
                             equalTo(
