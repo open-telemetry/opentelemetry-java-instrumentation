@@ -76,12 +76,7 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
     if (selection.get().emitPreview()) {
       attributes.put(RPC_STATUS_CODE, getter.getRpcStatusCode(request, response, error));
-      String errorType = getter.getErrorType(request, response, error);
-      // fall back to exception class name
-      if (errorType == null && error != null) {
-        errorType = error.getClass().getName();
-      }
-      attributes.put(ERROR_TYPE, errorType);
+      attributes.put(ERROR_TYPE, getter.getErrorType(request, response, error));
     }
   }
 }
