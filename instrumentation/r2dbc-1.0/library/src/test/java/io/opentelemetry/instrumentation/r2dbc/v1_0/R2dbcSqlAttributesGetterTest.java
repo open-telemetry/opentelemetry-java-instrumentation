@@ -63,14 +63,23 @@ class R2dbcSqlAttributesGetterTest {
             new R2dbcException("test", "08006", 0) {},
             "08006",
             "08006"),
-        argumentSet("no SQLSTATE", "postgresql", new R2dbcBadGrammarException("test"), null, null),
         argumentSet(
-            "non-database failure", "postgresql", new IllegalStateException("test"), null, null),
+            "no SQLSTATE",
+            "postgresql",
+            new R2dbcBadGrammarException("test"),
+            R2dbcBadGrammarException.class.getName(),
+            null),
+        argumentSet(
+            "non-database failure",
+            "postgresql",
+            new IllegalStateException("test"),
+            IllegalStateException.class.getName(),
+            null),
         argumentSet(
             "success SQLSTATE",
             "postgresql",
             new R2dbcBadGrammarException("test", "00000", 42),
-            null,
+            R2dbcBadGrammarException.class.getName(),
             "00000"));
   }
 
