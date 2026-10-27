@@ -59,8 +59,6 @@ tasks {
         disable("AutoValueImmutableFields")
         // Suggests using Guava types for fields but we don't use Guava
         disable("ImmutableMemberCollection")
-        // We don't use guava
-        disable("PreferPreconditions")
 
         // The built-in UnnecessarilyFullyQualified check is replaced by the custom
         // OtelUnnecessarilyFullyQualified check which handles application.* and
@@ -135,9 +133,6 @@ tasks {
         disable("AddNullMarkedToPackageInfo")
 
         disable("ReferenceEquality")
-
-        disable("TraditionalJavadocToMarkdown")
-        disable("MissingJavadoc")
 
         if (otelProps.testLatestDeps) {
           // Some latest dep tests are compiled for java 17 although the base version uses an older

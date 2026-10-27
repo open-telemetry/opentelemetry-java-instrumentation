@@ -78,7 +78,6 @@ public final class UrlParsingUtils {
    * @return a map of key-value pairs
    */
   // Source: https://stackoverflow.com/a/13592567
-  @SuppressWarnings("PreferCharsetOverload") // URLDecoder.decode accepts Charset since 10
   public static Map<String, String> splitQuery(String query, String separator) {
     if (query == null || query.isEmpty()) {
       return emptyMap();

@@ -27,7 +27,6 @@ import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.Test;
 
 /** Tests for {@link OtelUnnecessarilyFullyQualified}. */
-@SuppressWarnings("MisformattedTestData")
 class OtelUnnecessarilyFullyQualifiedTest {
   private final BugCheckerRefactoringTestHelper helper =
       BugCheckerRefactoringTestHelper.newInstance(

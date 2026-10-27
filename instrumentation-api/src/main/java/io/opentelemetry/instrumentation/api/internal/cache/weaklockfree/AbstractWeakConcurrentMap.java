@@ -53,8 +53,7 @@ import javax.annotation.Nullable;
   "MissingSummary",
   "EqualsBrokenForNull",
   "FieldMissingNullable",
-  "ReferenceEquality",
-  "RequireNonNullRefactoring"
+  "ReferenceEquality"
 })
 abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<K, V>> {
 

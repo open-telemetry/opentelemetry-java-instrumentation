@@ -49,6 +49,6 @@ class MethodDeclaringTypeMatcher<T extends MethodDescription>
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(matcher);
+    return Objects.hash(matcher);
   }
 }
