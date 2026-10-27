@@ -12,6 +12,37 @@ import org.junit.jupiter.api.Test;
 class WebClientHttpAttributesGetterTest {
 
   @Test
+  void extractsPathFromRelativeAndAbsoluteTemplates() {
+    assertThat(WebClientHttpAttributesGetter.extractPathTemplate("/accounts/{id}"))
+        .isEqualTo("/accounts/{id}");
+    assertThat(
+            WebClientHttpAttributesGetter.extractPathTemplate("https://example.com/accounts/{id}"))
+        .isEqualTo("/accounts/{id}");
+  }
+
+  @Test
+  void excludesAuthorityWithTemplatedScheme() {
+    assertThat(
+            WebClientHttpAttributesGetter.extractPathTemplate(
+                "{scheme}://user:secret@example.com/accounts/{id}"))
+        .isEqualTo("/accounts/{id}");
+  }
+
+  @Test
+  void doesNotCaptureOpaqueTemplateWithSchemeDelimiterInVariable() {
+    assertThat(
+            WebClientHttpAttributesGetter.extractPathTemplate(
+                "{scheme}user:secret@example.com/accounts/{id}"))
+        .isNull();
+  }
+
+  @Test
+  void doesNotCaptureEmptyOrInvalidTemplate() {
+    assertThat(WebClientHttpAttributesGetter.extractPathTemplate("")).isNull();
+    assertThat(WebClientHttpAttributesGetter.extractPathTemplate("https://")).isNull();
+  }
+
+  @Test
   void stripsQueryAndFragmentFromRelativeAndAbsoluteTemplates() {
     assertThat(WebClientHttpAttributesGetter.extractPathTemplate("/accounts/{id}?sig=secret"))
         .isEqualTo("/accounts/{id}");

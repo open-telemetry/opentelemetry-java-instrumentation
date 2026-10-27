@@ -22,7 +22,9 @@ import static io.opentelemetry.semconv.incubating.UrlIncubatingAttributes.URL_TE
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -41,6 +43,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.SpringVersion;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -130,6 +133,71 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
         client.get().uri(resolveAddress("/hello/") + "{id}", "some-account"),
         resolveAddress("/hello/some-account"),
         expectedTemplate("/hello/{id}"));
+  }
+
+  @Test
+  void shouldCapturePathTemplateWithTemplatedSchemeAndUserInfo() {
+    assertTemplateWithUserInfo(
+        "{scheme}://user:secret@example.com/accounts/{id}",
+        "https",
+        expectedTemplate("/accounts/{id}"));
+  }
+
+  @Test
+  void shouldNotCaptureOpaqueTemplateWithSchemeDelimiterInVariable() {
+    // Older Spring defaults cannot expand opaque URI templates.
+    assumeTrue(springVersionAtLeast(5, 1, 0));
+    assertTemplateWithUserInfo(
+        "{scheme}user:secret@example.com/accounts/{id}", "https://", expectedTemplate(null));
+  }
+
+  private void assertTemplateWithUserInfo(
+      String template, String scheme, String expectedPathTemplate) {
+    ClientHttpConnector connector = ClientHttpConnectorFactory.create();
+    WebClient client =
+        createWebClient()
+            .mutate()
+            // Older connectors cannot handle URI userinfo; route to the existing test server.
+            .clientConnector(
+                (method, uri, callback) ->
+                    connector.connect(method, resolveAddress("/hello/some-account"), callback))
+            .filter(
+                (request, next) -> {
+                  assertThat(
+                          request
+                              .attributes()
+                              .get(
+                                  "org.springframework.web.reactive.function.client.WebClient.uriTemplate"))
+                      .isEqualTo(springVersionAtLeast(5, 0, 5) ? template : null);
+                  return next.exchange(request);
+                })
+            .build();
+    client.get().uri(template, scheme, "some-account").retrieve().bodyToMono(String.class).block();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            expectedPathTemplate == null ? "GET" : "GET " + expectedPathTemplate)
+                        .hasKind(CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(
+                                HTTP_RESPONSE_BODY_SIZE, emitExperimentalTelemetry() ? 20L : null),
+                            equalTo(
+                                URL_FULL,
+                                "https://REDACTED:REDACTED" + "@example.com/accounts/some-account"),
+                            equalTo(URL_TEMPLATE, expectedPathTemplate),
+                            equalTo(SERVER_ADDRESS, "example.com"),
+                            equalTo(SERVER_PORT, 443),
+                            satisfies(NETWORK_PROTOCOL_VERSION, val -> val.isIn(null, "1.1"))),
+                span ->
+                    span.hasName("test-http-server")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test

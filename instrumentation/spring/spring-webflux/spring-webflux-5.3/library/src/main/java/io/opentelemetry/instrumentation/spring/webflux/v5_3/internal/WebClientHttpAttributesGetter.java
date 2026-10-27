@@ -5,16 +5,19 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpErrorType;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -22,6 +25,9 @@ import org.springframework.web.reactive.function.client.ClientResponse;
  */
 public class WebClientHttpAttributesGetter
     implements HttpClientExperimentalAttributesGetter<ClientRequest, ClientResponse> {
+  private static final Logger logger =
+      Logger.getLogger(WebClientHttpAttributesGetter.class.getName());
+
   @Nullable
   @Override
   public String getUrlTemplate(ClientRequest request) {
@@ -36,28 +42,16 @@ public class WebClientHttpAttributesGetter
     return extractPathTemplate((String) template);
   }
 
+  // visible for testing
   @Nullable
   static String extractPathTemplate(String template) {
-    // Strip first so slashes in query or fragment values cannot be mistaken for a path.
-    String urlTemplate = stripQueryAndFragment(template);
-    if (urlTemplate.isEmpty()) {
+    try {
+      String path = UriComponentsBuilder.fromUriString(template).build().getPath();
+      return path == null || path.isEmpty() ? null : path;
+    } catch (IllegalArgumentException e) {
+      logger.log(FINE, "Unable to parse WebClient URI template", e);
       return null;
     }
-    if (urlTemplate.regionMatches(true, 0, "http://", 0, 7)
-        || urlTemplate.regionMatches(true, 0, "https://", 0, 8)) {
-      return UrlParser.getPath(urlTemplate);
-    }
-    return urlTemplate;
-  }
-
-  private static String stripQueryAndFragment(String template) {
-    for (int i = 0; i < template.length(); i++) {
-      char c = template.charAt(i);
-      if (c == '?' || c == '#') {
-        return template.substring(0, i);
-      }
-    }
-    return template;
   }
 
   @Override
