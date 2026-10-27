@@ -2007,21 +2007,24 @@ class JdbcConnectionUrlParserTest {
       this.properties = builder.properties;
 
       String namespace = builder.namespace != null ? builder.namespace : builder.name;
+      DbServerTarget configuredServerTarget;
+      if (builder.noConfiguredTarget || builder.multiTarget) {
+        configuredServerTarget = null;
+      } else if (builder.configuredServerTarget != null) {
+        configuredServerTarget = builder.configuredServerTarget;
+      } else if (builder.serverAddressGroup == null && builder.host == null) {
+        configuredServerTarget = null;
+      } else if (builder.serverAddressGroup != null) {
+        configuredServerTarget = DbServerTarget.create(builder.serverAddressGroup, null);
+      } else {
+        configuredServerTarget = DbServerTarget.create(builder.host, builder.port);
+      }
 
       this.dbInfo =
           DbInfo.builder()
               .dbSystemName(builder.system)
               .dbNamespace(namespace)
-              .configuredServerTarget(
-                  builder.noConfiguredTarget || builder.multiTarget
-                      ? null
-                      : builder.configuredServerTarget != null
-                          ? builder.configuredServerTarget
-                          : builder.serverAddressGroup == null && builder.host == null
-                              ? null
-                              : builder.serverAddressGroup != null
-                                  ? DbServerTarget.create(builder.serverAddressGroup, null)
-                                  : DbServerTarget.create(builder.host, builder.port))
+              .configuredServerTarget(configuredServerTarget)
               .build();
     }
 
