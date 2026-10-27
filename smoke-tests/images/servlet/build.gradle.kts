@@ -327,7 +327,7 @@ fun configureImage(
         "17" -> "eclipse-temurin:17.0.20_8-jdk@sha256:bc033b57e11b773c3043babfd664e7a5ef110805548b921cbfc3e8c67a0725d6"
         "21" -> "eclipse-temurin:21.0.12_8-jdk@sha256:92a2a4d7a928d057e7bd999c418d66c26a34eb9a0442f3ab67721c3f88110b2d"
         "25" -> "eclipse-temurin:25.0.4_7-jdk@sha256:97014c4b396021f9ddb7d592a7dbedb0c4e4215c29e03dc01c393558aefb71c2"
-        "27" -> "eclipse-temurin:27_35-jdk@sha256:6ed6d04f0957826b5ed6423356ec464f2622f60768b2a42e9232738fd416f292"
+        "27" -> "eclipse-temurin:27_35-jdk@sha256:7f24f2e8c3c134db8cfd81f670d218f08a71dfa20cc3da700f9686f7b13192c5"
         else -> throw GradleException("Unexpected jdk version for Linux: $jdk")
       }
     }
