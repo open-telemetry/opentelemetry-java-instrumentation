@@ -329,6 +329,7 @@ class OtelUnnecessarilyFullyQualifiedTest {
   }
 
   @Test
+  @SuppressWarnings("MisformattedTestData") // Unused imports are part of the test input and output.
   void exemptedEnclosingTypes() {
     helper
         .setArgs("-XepOpt:BadImport:BadEnclosingTypes=org.immutables.value.Value")

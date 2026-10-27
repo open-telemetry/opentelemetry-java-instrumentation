@@ -93,7 +93,7 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
   // org.springframework.aop.support.AopUtils.isAopProxy(). This proxy can be unwrapped with
   // ((Advised) dataSource).getTargetSource().getTarget() and it unwraps to the original data
   // source.
-  @SuppressWarnings("checkstyle:TypeName")
+  @SuppressWarnings({"checkstyle:TypeName", "IdentifierName"})
   private static class DataSource$$Wrapper extends AdvisedSupport
       implements SpringProxy, DataSource {
     private final DataSource delegate;

@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.test.utils;
 
+import static java.util.Objects.requireNonNull;
+
 public class ExceptionUtils {
 
   static RuntimeException sneakyThrow(Throwable t) {
-    if (t == null) {
-      throw new NullPointerException("t");
-    }
+    requireNonNull(t, "t");
     return ExceptionUtils.sneakyThrow0(t);
   }
 

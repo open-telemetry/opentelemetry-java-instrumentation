@@ -48,6 +48,7 @@ class MethodDeclaringTypeMatcher<T extends MethodDescription>
   }
 
   @Override
+  @SuppressWarnings("HashCodeInObjectsHash") // Preserve the existing hash code.
   public int hashCode() {
     return Objects.hash(matcher);
   }
