@@ -41,10 +41,20 @@ class LettuceAttributesGetterTest {
 
     assertThat(getter.getDbResponseStatusCode(null, null, serverError)).isEqualTo("WRONGTYPE");
     assertThat(batchGetter.getDbResponseStatusCode(null, null, serverError)).isEqualTo("WRONGTYPE");
+    assertThat(getter.getErrorType(null, null, serverError)).isEqualTo("WRONGTYPE");
+    assertThat(batchGetter.getErrorType(null, null, serverError)).isEqualTo("WRONGTYPE");
     for (Throwable error : new Throwable[] {null, clientError, blankError}) {
       assertThat(getter.getDbResponseStatusCode(null, null, error)).isNull();
       assertThat(batchGetter.getDbResponseStatusCode(null, null, error)).isNull();
     }
+    assertThat(getter.getErrorType(null, null, clientError))
+        .isEqualTo(RedisCommandTimeoutException.class.getName());
+    assertThat(batchGetter.getErrorType(null, null, clientError))
+        .isEqualTo(RedisCommandTimeoutException.class.getName());
+    assertThat(getter.getErrorType(null, null, blankError))
+        .isEqualTo(RedisCommandExecutionException.class.getName());
+    assertThat(batchGetter.getErrorType(null, null, blankError))
+        .isEqualTo(RedisCommandExecutionException.class.getName());
   }
 
   @Test

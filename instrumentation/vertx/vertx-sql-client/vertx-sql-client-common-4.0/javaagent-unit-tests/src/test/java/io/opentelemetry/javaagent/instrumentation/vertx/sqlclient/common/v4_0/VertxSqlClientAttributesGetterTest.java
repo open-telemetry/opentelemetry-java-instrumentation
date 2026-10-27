@@ -26,7 +26,7 @@ class VertxSqlClientAttributesGetterTest {
     MySQLException error = new MySQLException("Syntax error", 1064, "42000");
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo(MySQLException.class.getName());
   }
 
   @Test
@@ -34,7 +34,7 @@ class VertxSqlClientAttributesGetterTest {
     MySQLException error = new MySQLException("Syntax error", 0, "42000");
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("42000");
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo(MySQLException.class.getName());
   }
 
   @Test
@@ -66,7 +66,7 @@ class VertxSqlClientAttributesGetterTest {
         new MSSQLException(208, (byte) 1, (byte) 16, "Invalid object", null, null, 1);
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("208");
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo(MSSQLException.class.getName());
   }
 
   @Test
@@ -79,6 +79,6 @@ class VertxSqlClientAttributesGetterTest {
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("-204");
     assertThat(getter.getDbResponseStatusCode(request, null, errorWithoutCode)).isEqualTo("42704");
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo(DB2Exception.class.getName());
   }
 }

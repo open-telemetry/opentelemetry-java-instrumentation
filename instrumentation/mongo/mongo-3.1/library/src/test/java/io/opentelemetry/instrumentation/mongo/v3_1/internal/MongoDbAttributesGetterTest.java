@@ -290,9 +290,18 @@ class MongoDbAttributesGetterTest {
     return Stream.of(
         argumentSet(
             "server error code", new MongoException(11000, "duplicate key"), "11000", "11000"),
-        argumentSet("zero code", new MongoException(0, "boom"), MongoException.class.getName(), "0"),
-        argumentSet("missing code sentinel", new MongoException(-1, "boom"), MongoException.class.getName(), "-1"),
-        argumentSet("client message sentinel (-3)", new MongoException("boom"), MongoException.class.getName(), "-3"),
+        argumentSet(
+            "zero code", new MongoException(0, "boom"), MongoException.class.getName(), "0"),
+        argumentSet(
+            "missing code sentinel",
+            new MongoException(-1, "boom"),
+            MongoException.class.getName(),
+            "-1"),
+        argumentSet(
+            "client message sentinel (-3)",
+            new MongoException("boom"),
+            MongoException.class.getName(),
+            "-3"),
         argumentSet(
             "client message-and-cause sentinel (-4)",
             new MongoException("boom", new RuntimeException()),
@@ -303,7 +312,11 @@ class MongoDbAttributesGetterTest {
             new MongoSocketException("boom", new ServerAddress()),
             MongoSocketException.class.getName(),
             "-2"),
-        argumentSet("non-mongo exception", new IllegalStateException("boom"), IllegalStateException.class.getName(), null),
+        argumentSet(
+            "non-mongo exception",
+            new IllegalStateException("boom"),
+            IllegalStateException.class.getName(),
+            null),
         argumentSet("no error", null, null, null));
   }
 

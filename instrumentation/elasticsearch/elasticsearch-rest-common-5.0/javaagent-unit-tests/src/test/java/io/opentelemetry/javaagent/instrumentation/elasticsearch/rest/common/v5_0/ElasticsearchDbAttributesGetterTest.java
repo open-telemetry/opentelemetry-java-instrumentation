@@ -76,7 +76,8 @@ class ElasticsearchDbAttributesGetterTest {
     when(error.getResponse()).thenReturn(response);
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("404");
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error))
+        .isEqualTo(ResponseException.class.getName());
   }
 
   /** Records the bodies it is given and returns whatever it was configured to return. */

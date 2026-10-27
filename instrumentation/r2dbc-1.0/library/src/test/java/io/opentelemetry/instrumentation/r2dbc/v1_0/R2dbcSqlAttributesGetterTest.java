@@ -51,8 +51,16 @@ class R2dbcSqlAttributesGetterTest {
             new R2dbcBadGrammarException("test", "42601", 42),
             "42601",
             "42601"),
-        argumentSet("no SQLSTATE", new R2dbcBadGrammarException("test"), null, null),
-        argumentSet("non-database failure", new IllegalStateException("test"), null, null),
+        argumentSet(
+            "no SQLSTATE",
+            new R2dbcBadGrammarException("test"),
+            R2dbcBadGrammarException.class.getName(),
+            null),
+        argumentSet(
+            "non-database failure",
+            new IllegalStateException("test"),
+            IllegalStateException.class.getName(),
+            null),
         argumentSet("success", null, null, null));
   }
 
@@ -98,7 +106,8 @@ class R2dbcSqlAttributesGetterTest {
     Throwable error = new R2dbcBadGrammarException("test", null, 1064);
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error))
+        .isEqualTo(R2dbcBadGrammarException.class.getName());
   }
 
   @ParameterizedTest
@@ -121,8 +130,15 @@ class R2dbcSqlAttributesGetterTest {
         argumentSet(
             "SQLSTATE only", new R2dbcBadGrammarException("test", "42000", 0), "42000", "42000"),
         argumentSet(
-            "vendor code only", new R2dbcBadGrammarException("test", null, 1071), "1071", null),
-        argumentSet("neither code", new R2dbcBadGrammarException("test"), null, null));
+            "vendor code only",
+            new R2dbcBadGrammarException("test", null, 1071),
+            "1071",
+            R2dbcBadGrammarException.class.getName()),
+        argumentSet(
+            "neither code",
+            new R2dbcBadGrammarException("test"),
+            null,
+            R2dbcBadGrammarException.class.getName()));
   }
 
   @Test
@@ -131,7 +147,8 @@ class R2dbcSqlAttributesGetterTest {
     Throwable error = new R2dbcBadGrammarException("test", null, 1071);
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1071");
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error))
+        .isEqualTo(R2dbcBadGrammarException.class.getName());
   }
 
   @Test

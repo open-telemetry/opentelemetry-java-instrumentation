@@ -97,7 +97,8 @@ class SpymemcachedAttributesGetterTest {
     Throwable error = new ExecutionException(new IllegalStateException());
 
     assertThat(getter.getDbResponseStatusCode(null, future, error)).isEqualTo("ERR_2BIG");
-    assertThat(getter.getErrorType(null, future, error)).isNull();
+    assertThat(getter.getErrorType(null, future, error))
+        .isEqualTo(ExecutionException.class.getName());
   }
 
   @Test
@@ -108,7 +109,8 @@ class SpymemcachedAttributesGetterTest {
     Throwable error = new ExecutionException(new IllegalStateException());
 
     assertThat(getter.getDbResponseStatusCode(null, future, error)).isEqualTo("ERR_2BIG");
-    assertThat(getter.getErrorType(null, future, error)).isNull();
+    assertThat(getter.getErrorType(null, future, error))
+        .isEqualTo(ExecutionException.class.getName());
     assertThat(getter.getErrorType(null, future, null)).isNull();
   }
 
