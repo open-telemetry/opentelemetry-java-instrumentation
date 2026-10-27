@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 final class LettuceResponse {
 
   private final boolean failed;
-  @Nullable private final String redisStatusCode;
+  @Nullable private final String redisErrorCode;
 
   static LettuceResponse fromErrorMessage(@Nullable String errorMessage) {
     return new LettuceResponse(errorMessage != null, RedisErrorPrefix.extract(errorMessage));
@@ -26,9 +26,9 @@ final class LettuceResponse {
     return new LettuceResponse(true, null);
   }
 
-  private LettuceResponse(boolean failed, @Nullable String redisStatusCode) {
+  private LettuceResponse(boolean failed, @Nullable String redisErrorCode) {
     this.failed = failed;
-    this.redisStatusCode = redisStatusCode;
+    this.redisErrorCode = redisErrorCode;
   }
 
   boolean isFailed() {
@@ -36,7 +36,7 @@ final class LettuceResponse {
   }
 
   @Nullable
-  String getRedisStatusCode() {
-    return redisStatusCode;
+  String getRedisErrorCode() {
+    return redisErrorCode;
   }
 }
