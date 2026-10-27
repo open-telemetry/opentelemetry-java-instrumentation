@@ -6,8 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.thrift.v0_13;
 
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import custom.CustomService;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -100,6 +102,10 @@ class ThriftTest extends AbstractThriftTest {
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void serviceIdentityDoesNotDependOnAsyncHandler(boolean inherited) throws Exception {
+    // with thrift 0.13 fails on Java 8 due to java.lang.NoSuchMethodError:
+    // java.nio.ByteBuffer.rewind()Ljava/nio/ByteBuffer;
+    assumeTrue(!"1.8".equals(System.getProperty("java.specification.version")) || testLatestDeps());
+
     CustomAsyncHandler handler = inherited ? new RenamedAsyncHandler() : new CustomAsyncHandler();
     int port = startAsyncServer(true, handler);
     CustomService.AsyncIface client = createAsyncClient(port);
