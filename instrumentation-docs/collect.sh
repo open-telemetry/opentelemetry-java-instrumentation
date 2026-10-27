@@ -73,20 +73,6 @@ delete_existing_telemetry() {
   fi
 }
 
-# Clear each selected module before any collection pass writes new profiles.
-prepare_telemetry() {
-  local module_path
-  while IFS= read -r module_path; do
-    delete_existing_telemetry "$module_path"
-  done < <(
-    for descriptor in "$@"; do
-      if read -r module_path task_type task_suffix < <(parse_descriptor "$descriptor"); then
-        echo "$module_path"
-      fi
-    done | sort -u
-  )
-}
-
 # Converts the three parsed parts into a Gradle task name.
 # ex: instrumentation:foo:bar:javaagent:test
 build_gradle_task() {
@@ -115,6 +101,9 @@ process_descriptors() {
           < <(parse_descriptor "$descriptor"); then
       continue   # skip any badly formed descriptors
     fi
+
+    # Make sure we're starting fresh for this instrumentation
+    delete_existing_telemetry "$module_path"
 
     # Build the Gradle task string and add to array
     tasks+=( "$(build_gradle_task "$module_path" "$task_type" "$task_suffix")" )
@@ -173,11 +162,6 @@ find_and_remove_all_telemetry() {
 # Main execution
 main() {
   colima stop
-
-  prepare_telemetry \
-    "${INSTRUMENTATIONS[@]}" \
-    "${TEST_LATEST_DEPS_INSTRUMENTATIONS[@]}" \
-    "${COLIMA_INSTRUMENTATIONS[@]}"
 
   # Process regular instrumentations
   echo "Processing standard instrumentations..."
