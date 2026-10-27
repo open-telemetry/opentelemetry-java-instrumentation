@@ -15,6 +15,7 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
+import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.trace.ReadWriteSpan
 import io.opentelemetry.sdk.trace.ReadableSpan
@@ -50,7 +51,7 @@ class KtorServerContextPropagationTest {
       .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
       .build()
 
-    val port = java.net.ServerSocket(0).use { it.localPort }
+    val port = PortUtils.findOpenPort()
     val server = embeddedServer(Netty, port = port, configure = {
       callGroupSize = 1 // Sequential requests share one call thread.
     }) {

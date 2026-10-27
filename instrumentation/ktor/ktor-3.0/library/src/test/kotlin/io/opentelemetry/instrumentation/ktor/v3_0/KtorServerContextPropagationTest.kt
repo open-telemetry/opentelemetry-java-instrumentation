@@ -20,6 +20,7 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
+import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.trace.ReadWriteSpan
 import io.opentelemetry.sdk.trace.ReadableSpan
@@ -32,7 +33,6 @@ import kotlinx.coroutines.withContext
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.net.HttpURLConnection
-import java.net.ServerSocket
 import java.net.URI
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
@@ -74,7 +74,7 @@ class KtorServerContextPropagationTest {
       .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
       .build()
 
-    val port = ServerSocket(0).use { it.localPort }
+    val port = PortUtils.findOpenPort()
     val server = embeddedServer(Netty, configure = {
       connector { this.port = port }
       callGroupSize = 1 // Sequential requests share one call thread.
