@@ -140,10 +140,13 @@ class SpringRabbitProcessTest {
         outer,
         () -> {
           SpanContext outerSpan = Span.current().getSpanContext();
-          assertThat(
+          AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.AdviceScope
+              nestedScope =
                   AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onEnter(
-                      container, channel, inner))
-              .isNull();
+                      container, channel, inner);
+          assertThat(nestedScope).isNotNull();
+          AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onExit(
+              null, nestedScope);
           assertThat(Span.current().getSpanContext()).isEqualTo(outerSpan);
         });
     process(inner, () -> assertThat(Span.current().getSpanContext().isValid()).isTrue());
@@ -182,10 +185,13 @@ class SpringRabbitProcessTest {
           Context outerContext = Context.current();
           assertThat(PROCESSING_CONTEXT.get(message)).isSameAs(outerContext);
 
-          assertThat(
+          AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.AdviceScope
+              nestedScope =
                   AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onEnter(
-                      container, channel, message))
-              .isNull();
+                      container, channel, message);
+          assertThat(nestedScope).isNotNull();
+          AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onExit(
+              null, nestedScope);
           assertThat(PROCESSING_CONTEXT.get(message)).isSameAs(outerContext);
         });
 
@@ -197,11 +203,57 @@ class SpringRabbitProcessTest {
   @Test
   void skippedProcessingDoesNotInstallContext() {
     Message message = message();
-    assertThat(
-            AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onEnter(
-                new SimpleMessageListenerContainer(), channel, message))
-        .isNull();
+    AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.AdviceScope adviceScope =
+        AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onEnter(
+            new SimpleMessageListenerContainer(), channel, message);
+    assertThat(adviceScope).isNotNull();
     assertThat(PROCESSING_CONTEXT.get(message)).isNull();
+    AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onExit(null, adviceScope);
+  }
+
+  @Test
+  void nestedDeliveryDoesNotInflateProducerBatchCount() {
+    Message packed = message();
+    process(
+        packed,
+        () -> {
+          AbstractMessageListenerContainerInstrumentation.InvokeListenerAdvice.onEnter(message());
+          AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.AdviceScope
+              nestedScope =
+                  AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onEnter(
+                      container, channel, packed);
+          assertThat(nestedScope).isNotNull();
+          Throwable nestedFailure = null;
+          try {
+            AbstractMessageListenerContainerInstrumentation.InvokeListenerAdvice.onEnter(message());
+            throw new IllegalStateException("nested failure");
+          } catch (IllegalStateException e) {
+            nestedFailure = e;
+          } finally {
+            AbstractMessageListenerContainerInstrumentation.ExecuteListenerAdvice.onExit(
+                nestedFailure, nestedScope);
+          }
+          AbstractMessageListenerContainerInstrumentation.InvokeListenerAdvice.onEnter(message());
+        });
+    process(
+        packed,
+        () -> AbstractMessageListenerContainerInstrumentation.InvokeListenerAdvice.onEnter(packed));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasAttribute(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.satisfies(
+                        spanData ->
+                            assertThat(spanData.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT))
+                                .isNull())));
+    assertConsumedMessages(3);
+    assertProcessAttempts(2);
+    assertThat(PROCESSING_CONTEXT.get(packed)).isNull();
+    assertThat(Context.current()).isSameAs(Context.root());
   }
 
   private void process(Object message, Runnable callback) {

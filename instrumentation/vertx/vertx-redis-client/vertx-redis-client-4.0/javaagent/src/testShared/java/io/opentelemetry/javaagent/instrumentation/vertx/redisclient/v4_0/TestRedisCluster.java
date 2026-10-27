@@ -151,7 +151,7 @@ class TestRedisCluster implements AutoCloseable {
     return serverSocket.getLocalPort();
   }
 
-  private static List<String> readCommand(DataInputStream input) throws IOException {
+  static List<String> readCommand(DataInputStream input) throws IOException {
     int first = input.read();
     if (first == -1) {
       return emptyList();
@@ -191,7 +191,7 @@ class TestRedisCluster implements AutoCloseable {
     return new String(line.toByteArray(), US_ASCII);
   }
 
-  private static void write(OutputStream output, String value) throws IOException {
+  static void write(OutputStream output, String value) throws IOException {
     output.write(value.getBytes(UTF_8));
     output.flush();
   }

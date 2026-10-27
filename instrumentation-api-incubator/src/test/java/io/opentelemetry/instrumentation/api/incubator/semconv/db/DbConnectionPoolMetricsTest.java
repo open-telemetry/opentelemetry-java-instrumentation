@@ -11,9 +11,12 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CLIENT_CONNECTION_POOL_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CLIENT_CONNECTION_STATE;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.BatchCallback;
+import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
@@ -70,9 +73,33 @@ class DbConnectionPoolMetricsTest {
             openTelemetry, "test", "test-pool", Attributes.of(DB_NAMESPACE, "potatoes"));
     metrics.connectionTimeouts().add(1, metrics.getAttributes());
     metrics.connectionCreateTime().record(0.025, metrics.getAttributes());
+    ObservableLongMeasurement connections = metrics.connections();
+    BatchCallback callback =
+        metrics.batchCallback(
+            () -> connections.record(3, metrics.getUsedConnectionsAttributes()), connections);
+    cleanup.deferCleanup(callback);
 
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
+            metric ->
+                assertThat(metric)
+                    .hasName("db.client.connection.count")
+                    .hasUnit("{connection}")
+                    .hasDescription(
+                        "The number of connections that are currently in state described by the `state` attribute.")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.isNotMonotonic()
+                                .hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(3)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(
+                                                    DB_CLIENT_CONNECTION_POOL_NAME, "test-pool"),
+                                                equalTo(DB_NAMESPACE, "potatoes"),
+                                                equalTo(DB_CLIENT_CONNECTION_STATE, "used")))),
             metric ->
                 assertThat(metric)
                     .hasName("db.client.connection.timeouts")

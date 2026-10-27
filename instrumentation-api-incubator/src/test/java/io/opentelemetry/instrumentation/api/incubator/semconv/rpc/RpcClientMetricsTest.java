@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.RPC_SYSTEM_NAME;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
@@ -87,6 +88,7 @@ class RpcClientMetricsTest {
             .put(SERVER_ADDRESS, "example.com")
             .put(SERVER_PORT, 8080)
             .put(ERROR_TYPE, "INTERNAL")
+            .put(stringKey("rpc.status_code"), emitPreviewRpcSemconv() ? "INTERNAL" : null)
             .put(NETWORK_TRANSPORT, "tcp")
             .put(NETWORK_TYPE, "ipv4")
             .put(RpcSizeAttributesExtractor.RPC_RESPONSE_SIZE, 20)
@@ -181,7 +183,7 @@ class RpcClientMetricsTest {
                   assertThat(metric)
                       .hasName("rpc.client.duration")
                       .hasUnit("ms")
-                      .hasDescription("The duration of an outbound RPC invocation.")
+                      .hasDescription("Measures the duration of outbound RPC.")
                       .hasHistogramSatisfying(
                           histogram ->
                               histogram.hasPointsSatisfying(
@@ -213,7 +215,7 @@ class RpcClientMetricsTest {
                       .hasName("rpc.client.call.duration")
                       .hasUnit("s")
                       .hasDescription(
-                          "Measures the duration of outbound remote procedure calls (RPC).")
+                          "Measures the duration of an outgoing Remote Procedure Call (RPC).")
                       .hasHistogramSatisfying(
                           histogram ->
                               histogram.hasPointsSatisfying(
@@ -227,6 +229,7 @@ class RpcClientMetricsTest {
                                                   "myservice.EchoService/exampleMethod"),
                                               equalTo(RPC_SYSTEM_NAME, "grpc"),
                                               equalTo(ERROR_TYPE, "INTERNAL"),
+                                              equalTo(stringKey("rpc.status_code"), "INTERNAL"),
                                               equalTo(SERVER_ADDRESS, "example.com"),
                                               equalTo(SERVER_PORT, 8080))
                                           .hasExemplarsSatisfying(

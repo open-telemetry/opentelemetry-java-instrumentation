@@ -202,10 +202,10 @@
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**48** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.18.14`
+**48** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.18.15`
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [byte-buddy-dep-1.18.14.jar/META-INF/LICENSE](byte-buddy-dep-1.18.14.jar/META-INF/LICENSE)
-    - [byte-buddy-dep-1.18.14.jar/META-INF/NOTICE](byte-buddy-dep-1.18.14.jar/META-INF/NOTICE)
+> - **Embedded license files**: [byte-buddy-dep-1.18.15.jar/META-INF/LICENSE](byte-buddy-dep-1.18.15.jar/META-INF/LICENSE)
+    - [byte-buddy-dep-1.18.15.jar/META-INF/NOTICE](byte-buddy-dep-1.18.15.jar/META-INF/NOTICE)
 
 **49** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0`
 > - **POM Project URL**: [http://www.jetbrains.org](http://www.jetbrains.org)

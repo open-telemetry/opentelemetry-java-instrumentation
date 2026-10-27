@@ -5,11 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
-import static java.util.Collections.emptyList;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
@@ -45,7 +42,7 @@ public class PekkoHttpParsingErrorSingletons {
       JavaagentHttpServerInstrumenters.create(
           PekkoHttpUtil.instrumentationName(),
           new PekkoHttpParsingErrorAttributesGetter(),
-          new NoopTextMapGetter());
+          (carrier, key) -> null);
 
   /** Marks a rejection that was made before the request was delivered. */
   public static void markParsingError(ErrorInfo info) {
@@ -103,20 +100,6 @@ public class PekkoHttpParsingErrorSingletons {
     instrumenter.end(context, info, response, error);
 
     return response;
-  }
-
-  private static class NoopTextMapGetter implements TextMapGetter<ErrorInfo> {
-
-    @Override
-    public Iterable<String> keys(ErrorInfo carrier) {
-      return emptyList();
-    }
-
-    @Nullable
-    @Override
-    public String get(@Nullable ErrorInfo carrier, String key) {
-      return null;
-    }
   }
 
   private PekkoHttpParsingErrorSingletons() {}

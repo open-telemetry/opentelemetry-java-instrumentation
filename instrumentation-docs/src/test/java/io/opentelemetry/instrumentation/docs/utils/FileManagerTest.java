@@ -86,6 +86,14 @@ class FileManagerTest {
         .isTrue();
     assertThat(FileManager.isValidInstrumentationPath("invalid/test/javaagent")).isFalse();
     assertThat(FileManager.isValidInstrumentationPath("/instrumentation/test/javaagent")).isFalse();
+    assertThat(
+            FileManager.isValidInstrumentationPath(
+                "instrumentation/spring/spring-integration-4.1/library/src/version41Test/java/io/opentelemetry/javaagent"))
+        .isFalse();
+    assertThat(
+            FileManager.isValidInstrumentationPath(
+                "instrumentation\\spring\\spring-integration-4.1\\library\\src\\version41Test\\java\\io\\opentelemetry\\javaagent"))
+        .isFalse();
   }
 
   @Test

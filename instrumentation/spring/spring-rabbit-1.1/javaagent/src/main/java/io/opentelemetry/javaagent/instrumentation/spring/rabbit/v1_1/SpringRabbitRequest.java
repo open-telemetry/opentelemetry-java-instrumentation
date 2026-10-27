@@ -22,6 +22,7 @@ public class SpringRabbitRequest {
   private final Channel channel;
   private final List<Message> messages;
   private final int batchMessageCount;
+  private int deliveredMessageCount;
   @Nullable private ProcessingContextInstallation processingContextInstallation;
 
   public SpringRabbitRequest(Channel channel, Message message) {
@@ -49,11 +50,18 @@ public class SpringRabbitRequest {
   }
 
   boolean isBatch() {
-    return batchMessageCount > 0;
+    return batchMessageCount > 0 || deliveredMessageCount > 1;
   }
 
   int getBatchMessageCount() {
-    return batchMessageCount;
+    return batchMessageCount > 0 ? batchMessageCount : deliveredMessageCount;
+  }
+
+  void recordDelivery(Object data) {
+    if (batchMessageCount == 0 && data instanceof Message) {
+      // Producer batches are debatched inside executeListener, once per invokeListener call.
+      deliveredMessageCount++;
+    }
   }
 
   void installProcessingContext(Context context) {

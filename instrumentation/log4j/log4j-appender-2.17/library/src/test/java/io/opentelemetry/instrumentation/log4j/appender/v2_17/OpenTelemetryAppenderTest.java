@@ -5,14 +5,25 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.doubleKey;
+import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.api.common.AttributeKey.valueKey;
 import static io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataKeys.OTEL_CONTEXT_DATA_KEY;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.api.common.KeyValue;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -27,7 +38,12 @@ import io.opentelemetry.sdk.logs.ReadWriteLogRecord;
 import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -338,6 +354,234 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             .build());
 
     testing.waitAndAssertLogRecords(logRecord -> logRecord.hasTotalAttributeCount(0));
+  }
+
+  @Test
+  void carriedContextIsNotCapturedAsContextDataAttribute() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setContextDataAttributes(
+                IncludeExclude.builder().setIncluded(singletonList("*")).build())
+            .build();
+    appender.start();
+
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue("key", "value");
+    contextData.putValue(
+        OTEL_CONTEXT_DATA_KEY, Context.root().with(TEST_CONTEXT_KEY, "context-value"));
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord -> logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key"), "value")));
+  }
+
+  @Test
+  void stringUnderCarriedContextKeyIsCapturedAsContextDataAttribute() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setContextDataAttributes(
+                IncludeExclude.builder().setIncluded(singletonList("*")).build())
+            .build();
+    appender.start();
+
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue(OTEL_CONTEXT_DATA_KEY, "value");
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey(OTEL_CONTEXT_DATA_KEY), "value")));
+  }
+
+  @Test
+  void contextDataWithNullKeyIsCaptured() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setContextDataAttributes(
+                IncludeExclude.builder().setIncluded(singletonList("*")).build())
+            .build();
+    appender.start();
+
+    for (Object nullKeyValue : asList(42, "value")) {
+      StringMap contextData = ContextDataFactory.createContextData();
+      contextData.putValue(null, nullKeyValue);
+      contextData.putValue("key", "value");
+      appender.append(
+          Log4jLogEvent.newBuilder()
+              .setLoggerName("TestLogger")
+              .setLevel(Level.INFO)
+              .setMessage(new FormattedMessage("log message", (Object) null))
+              .setContextData(contextData)
+              .build());
+    }
+
+    testing.waitAndAssertLogRecords(
+        logRecord -> logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key"), "value")),
+        logRecord -> logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key"), "value")));
+  }
+
+  @Test
+  void nonStringContextDataValuesKeepTheirType() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setContextDataAttributes(
+                IncludeExclude.builder().setIncluded(singletonList("*")).build())
+            .build();
+    appender.start();
+
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue("string", "value");
+    contextData.putValue("boolean", true);
+    contextData.putValue("short", (short) 7);
+    contextData.putValue("int", 25);
+    contextData.putValue("float", 0.5f);
+    contextData.putValue("double", 1.5);
+    contextData.putValue("string-array", new String[] {"one", "two"});
+    contextData.putValue("int-array", new int[] {1, 2});
+    contextData.putValue("long-list", asList(1L, 2L));
+    contextData.putValue("boolean-list", asList(true, false));
+    contextData.putValue("uuid", UUID.fromString("123e4567-e89b-12d3-a456-426614174000"));
+    contextData.putValue(
+        "uuid-list", singletonList(UUID.fromString("123e4567-e89b-12d3-a456-426614174000")));
+    contextData.putValue("big-decimal", new BigDecimal("1.10"));
+    contextData.putValue("null", null);
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("string"), "value"),
+                equalTo(booleanKey("boolean"), true),
+                equalTo(longKey("short"), 7),
+                equalTo(longKey("int"), 25),
+                equalTo(doubleKey("float"), 0.5),
+                equalTo(doubleKey("double"), 1.5),
+                equalTo(stringArrayKey("string-array"), asList("one", "two")),
+                equalTo(longArrayKey("int-array"), asList(1L, 2L)),
+                equalTo(longArrayKey("long-list"), asList(1L, 2L)),
+                equalTo(booleanArrayKey("boolean-list"), asList(true, false)),
+                equalTo(stringKey("uuid"), "123e4567-e89b-12d3-a456-426614174000"),
+                equalTo(
+                    stringArrayKey("uuid-list"),
+                    singletonList("123e4567-e89b-12d3-a456-426614174000")),
+                equalTo(stringKey("big-decimal"), "1.10")));
+  }
+
+  @Test
+  void structuredContextDataValuesAreCapturedAsComplexAttributes() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setContextDataAttributes(
+                IncludeExclude.builder().setIncluded(singletonList("*")).build())
+            .build();
+    appender.start();
+
+    Map<Object, Object> map = new LinkedHashMap<>();
+    map.put("fn", "firstname");
+    map.put("age", 25);
+    map.put("numbers", asList(1, 2));
+    map.put(null, "ignored");
+    map.put(1, "first");
+    map.put("1", "last");
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue("map", map);
+    contextData.putValue("mixed-list", asList("one", 2));
+    contextData.putValue("null-element", asList("one", null));
+    contextData.putValue("empty-array", new String[0]);
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(
+                    valueKey("map"),
+                    Value.of(
+                        KeyValue.of("fn", Value.of("firstname")),
+                        KeyValue.of("age", Value.of(25L)),
+                        KeyValue.of("numbers", Value.of(Value.of(1L), Value.of(2L))),
+                        KeyValue.of("1", Value.of("last")))),
+                equalTo(valueKey("mixed-list"), Value.of(Value.of("one"), Value.of(2L))),
+                equalTo(valueKey("null-element"), Value.of(Value.of("one"), Value.empty())),
+                equalTo(valueKey("empty-array"), Value.of(emptyList()))));
+  }
+
+  @Test
+  void selfReferencingContextDataValuesAreCaptured() {
+    OpenTelemetryAppender appender =
+        OpenTelemetryAppender.builder()
+            .setName("OpenTelemetryAppender")
+            .setOpenTelemetry(testing.getOpenTelemetry())
+            .setContextDataAttributes(
+                IncludeExclude.builder().setIncluded(singletonList("*")).build())
+            .build();
+    appender.start();
+
+    List<Object> list = new ArrayList<>();
+    list.add("one");
+    list.add(list);
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("self", map);
+    List<Object> outer = new ArrayList<>();
+    outer.add(singletonMap("outer", outer));
+    List<String> shared = singletonList("value");
+    StringMap contextData = ContextDataFactory.createContextData();
+    contextData.putValue("list", list);
+    contextData.putValue("map", map);
+    contextData.putValue("indirect", outer);
+    contextData.putValue("shared", asList(shared, shared));
+    appender.append(
+        Log4jLogEvent.newBuilder()
+            .setLoggerName("TestLogger")
+            .setLevel(Level.INFO)
+            .setMessage(new FormattedMessage("log message", (Object) null))
+            .setContextData(contextData)
+            .build());
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(valueKey("list"), Value.of(Value.of("one"), Value.empty())),
+                equalTo(valueKey("map"), Value.of(KeyValue.of("self", Value.empty()))),
+                equalTo(
+                    valueKey("indirect"), Value.of(Value.of(KeyValue.of("outer", Value.empty())))),
+                equalTo(
+                    valueKey("shared"),
+                    Value.of(Value.of(Value.of("value")), Value.of(Value.of("value"))))));
   }
 
   @Test

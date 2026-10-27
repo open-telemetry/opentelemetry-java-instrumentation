@@ -33,8 +33,8 @@ final class GrpcAttributesExtractor
   // copied from RpcIncubatingAttributes
   private static final AttributeKey<Long> RPC_GRPC_STATUS_CODE =
       AttributeKey.longKey("rpc.grpc.status_code");
-  private static final AttributeKey<String> RPC_RESPONSE_STATUS_CODE =
-      AttributeKey.stringKey("rpc.response.status_code");
+  private static final AttributeKey<String> RPC_STATUS_CODE =
+      AttributeKey.stringKey("rpc.status_code");
   private final GrpcRpcAttributesGetter getter;
   @Nullable private final IncludeExclude requestMetadata;
 
@@ -85,7 +85,7 @@ final class GrpcAttributesExtractor
         attributes.put(RPC_GRPC_STATUS_CODE, status.getCode().value());
       }
       if (selection.emitPreview()) {
-        attributes.put(RPC_RESPONSE_STATUS_CODE, status.getCode().name());
+        attributes.put(RPC_STATUS_CODE, status.getCode().name());
       }
     }
     if (requestMetadata == null || request.getMetadata() == null) {
