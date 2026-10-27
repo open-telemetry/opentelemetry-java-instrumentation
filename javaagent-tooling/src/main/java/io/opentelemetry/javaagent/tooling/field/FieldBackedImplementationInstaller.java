@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.field;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldNames.getFieldAccessorInterfaceName;
+import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINEST;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -27,6 +28,8 @@ import java.security.ProtectionDomain;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -67,11 +70,7 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
   private final Class<?> instrumenterClass;
   private final VirtualFieldMappings virtualFieldMappings;
 
-  private final FieldAccessorInterfaces fieldAccessorInterfaces;
-  private final AgentBuilder.Transformer fieldAccessorInterfacesInjector;
-
-  private final VirtualFieldImplementations virtualFieldImplementations;
-  private final AgentBuilder.Transformer virtualFieldImplementationsInjector;
+  private final AtomicReference<GeneratedClasses> generatedClasses = new AtomicReference<>();
 
   @Nullable private final Instrumentation instrumentation;
 
@@ -80,18 +79,6 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
     this.instrumenterClass = instrumenterClass;
     this.virtualFieldMappings = virtualFieldMappings;
     this.instrumentation = InstrumentationHolder.getInstrumentation();
-
-    ByteBuddy byteBuddy = new ByteBuddy();
-    fieldAccessorInterfaces =
-        new FieldAccessorInterfacesGenerator(byteBuddy)
-            .generateFieldAccessorInterfaces(virtualFieldMappings);
-    fieldAccessorInterfacesInjector =
-        bootstrapHelperInjector(fieldAccessorInterfaces.getAllInterfaces());
-    virtualFieldImplementations =
-        new VirtualFieldImplementationsGenerator(byteBuddy)
-            .generateClasses(virtualFieldMappings, fieldAccessorInterfaces);
-    virtualFieldImplementationsInjector =
-        bootstrapHelperInjector(virtualFieldImplementations.getAllClasses());
   }
 
   @Override
@@ -105,8 +92,11 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
       builder =
           builder.transform(
               getTransformerForAsmVisitor(
-                  new VirtualFieldFindRewriter(
-                      instrumenterClass, virtualFieldMappings, virtualFieldImplementations)));
+                  classes ->
+                      new VirtualFieldFindRewriter(
+                          instrumenterClass,
+                          virtualFieldMappings,
+                          classes.virtualFieldImplementations)));
     }
     return builder;
   }
@@ -127,14 +117,20 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
      * virtual field implementations. Unfortunately this forces us to remove stored type checking
      * because actual classes may not be available at this point.
      */
-    builder = builder.transform(fieldAccessorInterfacesInjector);
-
-    /*
-     * We inject virtual field implementations into the bootstrap class loader because same
-     * implementation may be used by different instrumentations and it has to use same static map in
-     * case of fallback to map-backed storage.
-     */
-    builder = builder.transform(virtualFieldImplementationsInjector);
+    builder =
+        builder.transform(
+            (dynamicBuilder, typeDescription, classLoader, javaModule, protectionDomain) -> {
+              GeneratedClasses classes = getGeneratedClasses();
+              dynamicBuilder =
+                  classes.fieldAccessorInterfacesInjector.transform(
+                      dynamicBuilder, typeDescription, classLoader, javaModule, protectionDomain);
+              /*
+               * Shared virtual field implementations belong in the bootstrap class loader so
+               * instrumentations use the same fallback map.
+               */
+              return classes.virtualFieldImplementationsInjector.transform(
+                  dynamicBuilder, typeDescription, classLoader, javaModule, protectionDomain);
+            });
     return builder;
   }
 
@@ -235,11 +231,12 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
           builder =
               builder.transform(
                   getTransformerForAsmVisitor(
-                      new RealFieldInjector(
-                          fieldAccessorInterfaces,
-                          mapping.getTypeName(),
-                          mapping.getFieldTypeName(),
-                          mapping.getFieldName())));
+                      classes ->
+                          new RealFieldInjector(
+                              classes.fieldAccessorInterfaces,
+                              mapping.getTypeName(),
+                              mapping.getFieldTypeName(),
+                              mapping.getFieldName())));
         }
       }
     }
@@ -261,9 +258,44 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
     };
   }
 
-  private static AgentBuilder.Transformer getTransformerForAsmVisitor(AsmVisitorWrapper visitor) {
+  private AgentBuilder.Transformer getTransformerForAsmVisitor(
+      Function<GeneratedClasses, AsmVisitorWrapper> visitor) {
     return (builder, typeDescription, classLoader, javaModule, protectionDomain) ->
-        builder.visit(visitor);
+        builder.visit(visitor.apply(getGeneratedClasses()));
+  }
+
+  private GeneratedClasses getGeneratedClasses() {
+    GeneratedClasses classes = generatedClasses.get();
+    if (classes != null) {
+      return classes;
+    }
+    // Generating helpers can load classes, so do not hold an initialization lock.
+    classes = new GeneratedClasses();
+    if (generatedClasses.compareAndSet(null, classes)) {
+      return classes;
+    }
+    return requireNonNull(generatedClasses.get());
+  }
+
+  private final class GeneratedClasses {
+    final FieldAccessorInterfaces fieldAccessorInterfaces;
+    final AgentBuilder.Transformer fieldAccessorInterfacesInjector;
+    final VirtualFieldImplementations virtualFieldImplementations;
+    final AgentBuilder.Transformer virtualFieldImplementationsInjector;
+
+    GeneratedClasses() {
+      ByteBuddy byteBuddy = new ByteBuddy();
+      fieldAccessorInterfaces =
+          new FieldAccessorInterfacesGenerator(byteBuddy)
+              .generateFieldAccessorInterfaces(virtualFieldMappings);
+      fieldAccessorInterfacesInjector =
+          bootstrapHelperInjector(fieldAccessorInterfaces.getAllInterfaces());
+      virtualFieldImplementations =
+          new VirtualFieldImplementationsGenerator(byteBuddy)
+              .generateClasses(virtualFieldMappings, fieldAccessorInterfaces);
+      virtualFieldImplementationsInjector =
+          bootstrapHelperInjector(virtualFieldImplementations.getAllClasses());
+    }
   }
 
   // Originally found in AgentBuilder.Transformer.NoOp, but removed in 1.10.7

@@ -484,7 +484,7 @@ class LogEventMapperTest {
     }
 
     @Override
-    public void forEach(Map<String, String> contextData, BiConsumer<String, String> action) {
+    public void forEach(Map<String, String> contextData, BiConsumer<String, Object> action) {
       contextData.forEach(action);
     }
   }

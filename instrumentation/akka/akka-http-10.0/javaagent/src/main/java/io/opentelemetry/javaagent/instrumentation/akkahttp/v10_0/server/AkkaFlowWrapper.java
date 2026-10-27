@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server;
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server.AkkaHttpServerSingletons.errorResponse;
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server.AkkaHttpServerSingletons.instrumenter;
 
-import akka.http.javadsl.model.HttpHeader;
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
 import akka.stream.Attributes;
@@ -24,12 +23,10 @@ import akka.stream.stage.OutHandler;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server.route.AkkaRouteHolder;
 import java.net.InetSocketAddress;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.List;
 import javax.annotation.Nullable;
 
 public class AkkaFlowWrapper
@@ -171,15 +168,8 @@ public class AkkaFlowWrapper
 
               TracingRequest tracingRequest = requests.poll();
               if (tracingRequest != null && tracingRequest != TracingRequest.EMPTY) {
-                // akka response is immutable so the customizer just captures the added headers
-                AkkaHttpResponseMutator responseMutator = new AkkaHttpResponseMutator();
-                HttpServerResponseCustomizerHolder.getCustomizer()
-                    .customize(tracingRequest.context, response, responseMutator);
-                // build a new response with the added headers
-                List<HttpHeader> headers = responseMutator.getHeaders();
-                if (!headers.isEmpty()) {
-                  response = (HttpResponse) response.addHeaders(headers);
-                }
+                response =
+                    AkkaHttpResponseMutator.customizeResponse(tracingRequest.context, response);
 
                 AkkaRouteHolder routeHolder = AkkaRouteHolder.get(tracingRequest.context);
                 if (routeHolder != null) {
