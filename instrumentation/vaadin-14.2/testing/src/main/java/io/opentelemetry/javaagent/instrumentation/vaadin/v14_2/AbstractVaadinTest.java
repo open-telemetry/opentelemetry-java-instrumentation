@@ -42,7 +42,8 @@ public abstract class AbstractVaadinTest
   static class TestApplication {
     public TestApplication() {}
 
-    static ConfigurableApplicationContext start(int port, String contextPath, boolean productionMode) {
+    static ConfigurableApplicationContext start(
+        int port, String contextPath, boolean productionMode) {
       SpringApplication app = new SpringApplication(TestApplication.class);
       Map<String, Object> properties = new HashMap<>();
       properties.put("server.port", port);
