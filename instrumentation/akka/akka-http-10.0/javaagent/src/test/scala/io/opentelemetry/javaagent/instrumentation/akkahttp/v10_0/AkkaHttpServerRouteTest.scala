@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
@@ -50,6 +51,14 @@ class AkkaHttpServerRouteTest {
     }
 
     test(route, "/test", "GET /test")
+  }
+
+  @Test def testApplicationBadRequest(): Unit = {
+    val route = path("test") {
+      complete(StatusCodes.BadRequest, "bad request")
+    }
+
+    test(route, "/test", "GET /test", 400, "bad request")
   }
 
   @Test def testPathPrefix(): Unit = {

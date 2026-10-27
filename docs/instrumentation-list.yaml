@@ -1787,6 +1787,25 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    db.client.operation.duration-5ff81b22:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.namespace
+        type: STRING
+      - name: db.query.summary
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     db.client.operation.duration-64e6fadd:
       name: db.client.operation.duration
       description: Duration of database client operations.
@@ -1912,25 +1931,6 @@ definitions:
       attributes:
       - name: db.namespace
         type: STRING
-      - name: db.operation.name
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    db.client.operation.duration-bfd9d23c:
-      name: db.client.operation.duration
-      description: Duration of database client operations.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
       - name: db.operation.name
         type: STRING
       - name: db.system.name
@@ -5406,6 +5406,21 @@ definitions:
       - name: error.type
         type: STRING
       - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
+    rpc.server.call.duration-8600ccb1:
+      name: rpc.server.call.duration
+      description: Measures the duration of an incoming Remote Procedure Call (RPC).
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -9927,6 +9942,8 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033
@@ -9967,8 +9984,6 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
 - name: elasticsearch-transport-5.3
   display_name: Elasticsearch Transport Client
   description: |
@@ -11256,7 +11271,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-d4212042
+    - db.client.operation.duration-5ff81b22
     spans:
     - span_kind: CLIENT
       attributes:
@@ -11269,6 +11284,8 @@ libraries:
       - name: db.query.text
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: server.address
         type: STRING
@@ -17792,7 +17809,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-bfd9d23c
+    - db.client.operation.duration-6dc4ed81
     spans:
     - span_kind: CLIENT
       attributes:
@@ -17803,6 +17820,8 @@ libraries:
       - name: db.query.text
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: network.peer.address
         type: STRING
@@ -17833,7 +17852,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-8ae2b8ce
+    - db.client.operation.duration-d183b382
     spans:
     - span_kind: CLIENT
       attributes:
@@ -17846,6 +17865,8 @@ libraries:
       - name: db.query.text
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: network.peer.address
         type: STRING
@@ -18849,14 +18870,16 @@ libraries:
         type: STRING
   - when: otel.semconv-stability.preview=rpc,service.peer
     metric_refs:
-    - rpc.client.call.duration-a776e0a5
-    - rpc.server.call.duration-4a9fd153
+    - rpc.client.call.duration-23f3e1cb
+    - rpc.server.call.duration-8600ccb1
     spans:
     - span_kind: CLIENT
       attributes:
       - name: error.type
         type: STRING
       - name: rpc.method
+        type: STRING
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -18872,13 +18895,15 @@ libraries:
         type: STRING
       - name: rpc.method
         type: STRING
+      - name: rpc.status_code
+        type: STRING
       - name: rpc.system.name
         type: STRING
   - when: otel.semconv-stability.preview=rpc/dup,service.peer
     metric_refs:
-    - rpc.client.call.duration-a776e0a5
+    - rpc.client.call.duration-23f3e1cb
     - rpc.client.duration-c6925f70
-    - rpc.server.call.duration-4a9fd153
+    - rpc.server.call.duration-8600ccb1
     - rpc.server.duration-6ea1f0bd
     spans:
     - span_kind: CLIENT
@@ -18888,6 +18913,8 @@ libraries:
       - name: rpc.method
         type: STRING
       - name: rpc.service
+        type: STRING
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system
         type: STRING
@@ -18906,6 +18933,8 @@ libraries:
       - name: rpc.method
         type: STRING
       - name: rpc.service
+        type: STRING
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system
         type: STRING
@@ -20255,7 +20284,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.preview=rpc
     metric_refs:
-    - rpc.client.call.duration-a776e0a5
+    - rpc.client.call.duration-23f3e1cb
     - rpc.server.call.duration-cfaf5409
     spans:
     - span_kind: CLIENT
@@ -20269,6 +20298,8 @@ libraries:
       - name: network.type
         type: STRING
       - name: rpc.method
+        type: STRING
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -20300,7 +20331,7 @@ libraries:
         type: LONG
   - when: otel.semconv-stability.preview=rpc/dup
     metric_refs:
-    - rpc.client.call.duration-a776e0a5
+    - rpc.client.call.duration-23f3e1cb
     - rpc.client.duration-69e5f261
     - rpc.server.call.duration-cfaf5409
     - rpc.server.duration-4b5b404d
@@ -20318,6 +20349,8 @@ libraries:
       - name: rpc.method
         type: STRING
       - name: rpc.service
+        type: STRING
+      - name: rpc.status_code
         type: STRING
       - name: rpc.system
         type: STRING

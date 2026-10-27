@@ -7,6 +7,7 @@
 - [Automation](#automation)
 - [Setup and Usage](#setup-and-usage)
 - [Visualization](#visualization)
+- [Ordinary agent startup benchmark](#ordinary-agent-startup-benchmark)
 - [JDK 25 AOT startup comparison](#jdk-25-aot-startup-comparison)
 
 This directory will contain tools and utilities
@@ -112,6 +113,76 @@ cd benchmark-overhead
 None yet. Help wanted! Our goal is to have the results and a rich UI running in the
 `gh-pages` branch similar to [earlier tools](https://breedx-splk.github.io/iguanodon/web/).
 Please help us make this happen.
+
+## Ordinary agent startup benchmark
+
+The opt-in `agentStartupBenchmark` task measures repeated ordinary `-javaagent`
+launches of the small Spring smoke application using one supplied agent JAR. It
+reuses the pinned JDK 25 smoke image from the AOT benchmark, without
+AOT or bootstrap-classpath preloading. Instrumentation and the SDK remain active;
+all exporters are `none`.
+
+Use JDK 25 and Docker with Linux containers. Each application container has a
+two-CPU quota, a 1 GiB memory limit, and `-Xmx512m`. Do not build artifacts or run
+other benchmarks during measurement.
+
+Build the agent and the smoke application's startup fixture, then run the
+standalone benchmark with its exact local JAR:
+
+```sh
+./gradlew :javaagent:shadowJar :smoke-tests:images:spring-boot:classes
+cd benchmark-overhead
+./gradlew agentStartupBenchmark \
+  -PstartupBenchmarkAgentJar=/absolute/path/to/opentelemetry-javaagent-VERSION.jar \
+  -PstartupBenchmarkFixtureClass=/absolute/path/to/WebController.class
+```
+
+The workflow also packages the recorder JAR with the agent and fixture so a
+measurement-only rerun reuses the same built inputs.
+
+Defaults are two discarded fresh-process starts and twenty measured starts.
+Set `-PstartupBenchmarkWarmups=0 -PstartupBenchmarkSamples=1` for a short
+functional run, not a performance conclusion.
+
+The sole metric is JVM uptime sampled by the `/greeting` handler while producing
+the first successful HTTP 200 response with body `Hi!`. The application reports
+its own JVM-relative uptime, sampled immediately before returning the response;
+this includes JVM startup and `premain()` but excludes container setup and
+host-side request timing. Uptime is reported with millisecond resolution.
+Readiness polling waits for that response; failed starts abort the benchmark and
+retain diagnostics, and measured starts are not retried or filtered as outliers.
+
+Results under `build/reports/agent-startup/<run-id>/` include raw observations,
+host load averages, agent hash and version, the selected source revision, exact
+JVM command, image/JDK identity, and the startup-to-readiness timing distribution.
+
+One separate untimed launch records a startup JFR file and execution-sample
+summary. A diagnostic-only recorder agent starts JFR before OpenTelemetry's
+`premain()`; the JVM's `-XX:StartFlightRecording` option starts too late to
+capture agent initialization. This launch is excluded from timing results.
+These are fresh JVMs with warm image/filesystem caches, not cold-machine starts
+or throughput measurements.
+
+Manually dispatch `agent-startup-benchmark.yml` on the branch or tag to measure.
+For example, run `gh workflow run agent-startup-benchmark.yml --ref my-startup-change`.
+The selected revision must contain the workflow and benchmark. Dispatch requires
+repository write access; only run trusted code, since it executes on a shared host.
+
+The workflow builds the agent and startup fixture and packages them with the
+harness as one artifact from the selected revision on a standard hosted runner.
+It unpacks the inputs under `RUNNER_TEMP`, without checking out sources on the
+bare-metal host, and measures serially on
+`oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24` without repository credentials,
+and uploads source identity, host information, complete reports, and profiles
+as workflow artifacts. The benchmark copies its files into each application
+container and relies on Testcontainers to clean up those containers; workflow
+cleanup removes only the attempt's files. It does not prune Docker or tune the
+shared host. This is opt-in tooling, not required PR CI, a scheduled benchmark,
+or a performance threshold gate.
+
+Rerun only the `benchmark` job to repeat measurements with the same built inputs.
+Each attempt uploads a separate `agent-startup-results-<attempt>` artifact,
+retaining the earlier observations.
 
 ## JDK 25 AOT startup comparison
 

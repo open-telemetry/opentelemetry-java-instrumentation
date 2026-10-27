@@ -192,6 +192,8 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   equalTo(AttributeKey.stringKey("rpc.status_code"), emitPreviewRpcSemconv() ? "OK" : null);
   ```
 
+- Nested ternaries are allowed directly in attribute-assertion expected values. Other test code follows
+  the normal conditional-expression rule.
 - Do not extract the ternary into a helper such as `spanName(...)`,
   `oldOrExperimental(value)`, or `expectedNamespace()` when no established
   semconv utility applies. Seeing both expected values at the assertion is more

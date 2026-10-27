@@ -20,6 +20,17 @@ dependencies {
   testImplementation("com.google.guava:guava")
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation("net.spy:spymemcached:2.12.0")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
@@ -35,6 +46,6 @@ tasks {
   }
 
   check {
-    dependsOn(testExperimental)
+    dependsOn(testing.suites, testExperimental)
   }
 }
