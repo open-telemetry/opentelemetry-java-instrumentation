@@ -23,6 +23,7 @@ import akka.http.javadsl.server.Route;
 import akka.http.javadsl.settings.ServerSettings;
 import akka.stream.javadsl.Flow;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -36,7 +37,6 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.CompletionStage;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -48,51 +48,50 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
   private final WebClient client = WebClient.of();
 
   @ParameterizedTest
   @MethodSource("malformedRequestTargetCases")
   void testMalformedRequestTarget(String parsingErrorHandler, int expectedStatus) throws Exception {
     ActorSystem system = ActorSystem.create("malformed-request");
-    try {
-      ServerSettings settings = ServerSettings.create(system);
-      if (parsingErrorHandler != null) {
-        settings = settings.withParsingErrorHandler(parsingErrorHandler);
-      }
-      ServerBinding binding =
-          Http.get(system)
-              .newServerAt("localhost", 0)
-              .withSettings(settings)
-              .bind(complete("ok"))
-              .toCompletableFuture()
-              .get(10, SECONDS);
-      try {
-        int port = binding.localAddress().getPort();
-        Map<String, String> responseHeaders =
-            assertResponse(
-                port,
-                "GET /%% HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n",
-                expectedStatus);
-        assertThat(responseHeaders).containsKeys("X-Test-TraceId", "X-Test-SpanId");
+    cleanup.deferCleanup(system::terminate);
 
-        testing.waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("HTTP")
-                            .hasKind(SpanKind.SERVER)
-                            .hasNoParent()
-                            .hasStatus(StatusData.unset())
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, expectedStatus))
-                            .hasTraceId(responseHeaders.get("X-Test-TraceId"))
-                            .hasSpanId(responseHeaders.get("X-Test-SpanId"))));
-      } finally {
-        binding.unbind().toCompletableFuture().get(10, SECONDS);
-      }
-    } finally {
-      system.terminate();
+    ServerSettings settings = ServerSettings.create(system);
+    if (parsingErrorHandler != null) {
+      settings = settings.withParsingErrorHandler(parsingErrorHandler);
     }
+    ServerBinding binding =
+        Http.get(system)
+            .newServerAt("localhost", 0)
+            .withSettings(settings)
+            .bind(complete("ok"))
+            .toCompletableFuture()
+            .get(10, SECONDS);
+    cleanup.deferCleanup(() -> binding.unbind().toCompletableFuture().get(10, SECONDS));
+
+    int port = binding.localAddress().getPort();
+    Map<String, String> responseHeaders =
+        assertResponse(
+            port,
+            "GET /%% HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n",
+            expectedStatus);
+    assertThat(responseHeaders).containsKeys("X-Test-TraceId", "X-Test-SpanId");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("HTTP")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent()
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, expectedStatus))
+                        .hasTraceId(responseHeaders.get("X-Test-TraceId"))
+                        .hasSpanId(responseHeaders.get("X-Test-SpanId"))));
   }
 
   private static Stream<Arguments> malformedRequestTargetCases() {
@@ -104,35 +103,31 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
   @Test
   void testMalformedRequestEntityDoesNotCreateExtraSpan() throws Exception {
     ActorSystem system = ActorSystem.create("malformed-entity");
-    try {
-      ServerBinding binding =
-          Http.get(system)
-              .newServerAt("localhost", 0)
-              .bindFlow(
-                  Flow.of(HttpRequest.class)
-                      .flatMapConcat(
-                          request ->
-                              request.entity().getDataBytes().map(bytes -> HttpResponse.create())))
-              .toCompletableFuture()
-              .get(10, SECONDS);
-      try {
-        int port = binding.localAddress().getPort();
-        assertResponse(
-            port,
-            "POST / HTTP/1.1\r\nHost: localhost\r\nTransfer-Encoding: chunked\r\n"
-                + "Connection: close\r\n\r\ninvalid-chunk-size\r\n",
-            400);
+    cleanup.deferCleanup(system::terminate);
 
-        testing.waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("POST").hasKind(SpanKind.SERVER).hasNoParent()));
-      } finally {
-        binding.unbind().toCompletableFuture().get(10, SECONDS);
-      }
-    } finally {
-      system.terminate();
-    }
+    ServerBinding binding =
+        Http.get(system)
+            .newServerAt("localhost", 0)
+            .bindFlow(
+                Flow.of(HttpRequest.class)
+                    .flatMapConcat(
+                        request ->
+                            request.entity().getDataBytes().map(bytes -> HttpResponse.create())))
+            .toCompletableFuture()
+            .get(10, SECONDS);
+    cleanup.deferCleanup(() -> binding.unbind().toCompletableFuture().get(10, SECONDS));
+
+    int port = binding.localAddress().getPort();
+    assertResponse(
+        port,
+        "POST / HTTP/1.1\r\nHost: localhost\r\nTransfer-Encoding: chunked\r\n"
+            + "Connection: close\r\n\r\ninvalid-chunk-size\r\n",
+        400);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("POST").hasKind(SpanKind.SERVER).hasNoParent()));
   }
 
   private static Map<String, String> assertResponse(int port, String request, int status)
@@ -155,8 +150,10 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
   }
 
   @Test
-  void testRoute() {
+  void testRoute() throws Exception {
     ActorSystem system = ActorSystem.create("my-system");
+    cleanup.deferCleanup(system::terminate);
+
     Http http = Http.get(system);
 
     Route route =
@@ -169,21 +166,19 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
                         pathSingleSlash(() -> complete("test")),
                         path(integerSegment(), (i) -> complete("ok")))));
 
-    CompletionStage<ServerBinding> binding = http.newServerAt("localhost", 0).bind(route);
-    try {
-      ServerBinding serverBinding = binding.toCompletableFuture().join();
-      int port = serverBinding.localAddress().getPort();
-      AggregatedHttpRequest request =
-          AggregatedHttpRequest.of(HttpMethod.GET, "h1c://localhost:" + port + "/test/1");
-      AggregatedHttpResponse response = client.execute(request).aggregate().join();
+    ServerBinding binding =
+        http.newServerAt("localhost", 0).bind(route).toCompletableFuture().get(10, SECONDS);
+    cleanup.deferCleanup(() -> binding.unbind().toCompletableFuture().get(10, SECONDS));
 
-      assertThat(response.status().code()).isEqualTo(200);
-      assertThat(response.contentUtf8()).isEqualTo("ok");
+    int port = binding.localAddress().getPort();
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(HttpMethod.GET, "h1c://localhost:" + port + "/test/1");
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
 
-      testing.waitAndAssertTraces(
-          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("GET /test/*")));
-    } finally {
-      binding.thenCompose(ServerBinding::unbind).thenAccept(unbound -> system.terminate());
-    }
+    assertThat(response.status().code()).isEqualTo(200);
+    assertThat(response.contentUtf8()).isEqualTo("ok");
+
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("GET /test/*")));
   }
 }
