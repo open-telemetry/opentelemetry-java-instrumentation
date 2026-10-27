@@ -3,6 +3,6 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.instrumentation:opentelemetry-instrumentation-testing")
   compileOnly("com.openai:openai-java:3.0.0")
 }

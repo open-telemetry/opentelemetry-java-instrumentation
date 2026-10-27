@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.instrumentation:opentelemetry-instrumentation-testing")
 
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("org.slf4j:slf4j-api")

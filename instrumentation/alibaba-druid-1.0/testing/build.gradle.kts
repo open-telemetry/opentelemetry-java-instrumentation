@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.instrumentation:opentelemetry-instrumentation-testing")
 
   compileOnly("com.alibaba:druid:1.0.0")
 }

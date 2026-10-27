@@ -9,7 +9,7 @@ plugins {
 val ktorVersion = "3.0.0"
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.instrumentation:opentelemetry-instrumentation-testing")
 
   implementation("io.ktor:ktor-client-core:$ktorVersion")
   implementation("io.ktor:ktor-server-core:$ktorVersion")

@@ -10,6 +10,6 @@ otelJava {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.instrumentation:opentelemetry-instrumentation-testing")
   implementation("io.helidon.webserver:helidon-webserver:4.3.0")
 }

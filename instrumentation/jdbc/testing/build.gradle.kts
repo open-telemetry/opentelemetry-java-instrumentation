@@ -8,7 +8,7 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.instrumentation:opentelemetry-instrumentation-testing")
 
   compileOnly("com.h2database:h2:1.3.169")
   compileOnly("org.apache.derby:derby:10.6.1.0")

@@ -162,11 +162,11 @@ include(":agent-testing:library-for-integration-tests")
 include(":agent-testing:with-shaded-dependencies")
 include(":dependencyManagement")
 include(":instrumentation-docs")
+include(":instrumentation-testing")
+include(":instrumentation-testing:with-shaded-dependencies")
 include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
 include(":testing:dependencies-shaded-for-testing")
-include(":testing-common")
-include(":testing-common:with-shaded-dependencies")
 
 // smoke tests
 include(":smoke-tests")

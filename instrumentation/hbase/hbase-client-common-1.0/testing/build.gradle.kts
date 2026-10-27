@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.instrumentation:opentelemetry-instrumentation-testing")
 
   compileOnly("org.apache.hbase:hbase-client:1.0.0")
   implementation("org.testcontainers:testcontainers")

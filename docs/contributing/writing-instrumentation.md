@@ -211,7 +211,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api(project(":instrumentation-testing"))
 
   // ...
 }
@@ -239,7 +239,7 @@ pass, the library instrumentation is working.
 
 ### JUnit
 
-The `testing-common` and `agent-testing` modules expose JUnit extensions for library and javaagent
+The `instrumentation-testing` and `agent-testing` modules expose JUnit extensions for library and javaagent
 instrumentation tests, respectively. In particular, we'll take a look at `LibraryInstrumentationExtension`
 , `AgentInstrumentationExtension`, and their parent class `InstrumentationExtension`. The extension
 class implements several useful methods, such as `waitAndAssertTraces` and `waitAndAssertMetrics`,

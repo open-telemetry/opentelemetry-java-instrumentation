@@ -9,7 +9,7 @@ repositories {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.instrumentation:opentelemetry-instrumentation-testing")
 
   implementation("org.restlet:org.restlet:1.1.5")
   implementation("com.noelios.restlet:com.noelios.restlet:1.1.5")

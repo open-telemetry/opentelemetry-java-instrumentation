@@ -363,7 +363,7 @@ tasks.withType<Test>().configureEach {
   // Disable default resource providers since they cause lots of output we don't need.
   jvmArgs("-Dotel.java.disabled.resource.providers=$resourceClassesCsv")
 
-  val trustStore = project(":testing-common").file("src/misc/testing-keystore.p12")
+  val trustStore = project(":instrumentation-testing").file("src/misc/testing-keystore.p12")
   // Work around payara not working when this is set for some reason.
   // Don't set for:
   // - aws-sdk as we have tests that interact with AWS and need normal trustStore
@@ -485,7 +485,7 @@ configurations.configureEach {
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")).using(project(":javaagent-extension-api"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")).using(project(":javaagent-tooling"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-agent-for-testing")).using(project(":testing:agent-for-testing"))
-      substitute(module("io.opentelemetry.javaagent:opentelemetry-testing-common")).using(project(":testing-common:with-shaded-dependencies"))
+      substitute(module("io.opentelemetry.instrumentation:opentelemetry-instrumentation-testing")).using(project(":instrumentation-testing:with-shaded-dependencies"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing")).using(project(":agent-testing:with-shaded-dependencies"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-muzzle")).using(project(":muzzle"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent")).using(project(":javaagent"))

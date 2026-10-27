@@ -24,6 +24,9 @@ targets:
       target: ':instrumentation-api-incubator'
     - type: gradle
       path: ./
+      target: ':instrumentation-testing'
+    - type: gradle
+      path: ./
       target: ':javaagent'
     - type: gradle
       path: ./
@@ -46,9 +49,6 @@ targets:
     - type: gradle
       path: ./
       target: ':sdk-autoconfigure-support'
-    - type: gradle
-      path: ./
-      target: ':testing-common'
     - type: gradle
       path: ./
       target: ':javaagent-tooling:javaagent-tooling-java9'

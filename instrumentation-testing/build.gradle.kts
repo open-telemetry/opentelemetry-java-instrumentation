@@ -3,8 +3,8 @@ plugins {
   id("otel.publish-conventions")
 }
 
-description = "OpenTelemetry instrumentation testing commons"
-group = "io.opentelemetry.javaagent"
+description = "OpenTelemetry instrumentation testing"
+group = "io.opentelemetry.instrumentation"
 
 sourceSets {
   main {

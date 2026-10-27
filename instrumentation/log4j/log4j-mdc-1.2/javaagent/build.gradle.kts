@@ -18,7 +18,7 @@ dependencies {
 
 configurations {
   // In order to test the real log4j library we need to remove the log4j transitive
-  // dependency 'log4j-over-slf4j' brought in by :testing-common which would shadow
+  // dependency 'log4j-over-slf4j' brought in by :instrumentation-testing which would shadow
   // the log4j module under test using a proxy to slf4j instead.
   testImplementation {
     exclude("org.slf4j", "log4j-over-slf4j")

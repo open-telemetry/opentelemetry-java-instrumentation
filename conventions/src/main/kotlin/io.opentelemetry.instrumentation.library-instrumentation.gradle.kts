@@ -9,13 +9,13 @@ dependencies {
 
   api("io.opentelemetry:opentelemetry-api")
 
-  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  testImplementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-testing")
 }
 
 testing {
   suites.withType(JvmTestSuite::class).configureEach {
     dependencies {
-      implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+      implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-testing")
     }
   }
 }

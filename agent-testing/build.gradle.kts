@@ -8,7 +8,7 @@ group = "io.opentelemetry.javaagent"
 base.archivesName.set("opentelemetry-javaagent-instrumentation-testing")
 
 dependencies {
-  api(project(":testing-common"))
+  api(project(":instrumentation-testing"))
 
   compileOnly(project(":javaagent-bootstrap"))
   compileOnly(project(":testing:dependencies-shaded-for-testing", configuration = "shadow"))
