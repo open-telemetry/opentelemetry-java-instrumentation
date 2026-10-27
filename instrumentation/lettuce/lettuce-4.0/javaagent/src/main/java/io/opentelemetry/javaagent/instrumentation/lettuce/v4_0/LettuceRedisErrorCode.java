@@ -9,10 +9,10 @@ import com.lambdaworks.redis.RedisCommandExecutionException;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisErrorPrefix;
 import javax.annotation.Nullable;
 
-public final class LettuceRedisErrorType {
+public final class LettuceRedisErrorCode {
 
   @Nullable
-  static String getResponseStatusCode(@Nullable Throwable error) {
+  static String getErrorCode(@Nullable Throwable error) {
     if (!(error instanceof RedisCommandExecutionException)) {
       return null;
     }
@@ -23,5 +23,5 @@ public final class LettuceRedisErrorType {
     return RedisErrorPrefix.extractAscii(error.getMessage());
   }
 
-  private LettuceRedisErrorType() {}
+  private LettuceRedisErrorCode() {}
 }

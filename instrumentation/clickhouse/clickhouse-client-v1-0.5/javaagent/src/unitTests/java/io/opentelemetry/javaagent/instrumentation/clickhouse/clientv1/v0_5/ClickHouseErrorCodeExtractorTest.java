@@ -40,9 +40,9 @@ class ClickHouseErrorCodeExtractorTest {
   @ParameterizedTest
   @MethodSource("clientFailures")
   void retainsClientCodesWithoutChangingErrorType(
-      ClickHouseException error, String expectedErrorType) {
-    assertThat(ClickHouseErrorCodeExtractor.getErrorType(error)).isEqualTo(expectedErrorType);
-    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(error)).isEqualTo(expectedErrorType);
+      ClickHouseException error, String expectedErrorCode) {
+    assertThat(ClickHouseErrorCodeExtractor.getErrorType(error)).isEqualTo(expectedErrorCode);
+    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(error)).isEqualTo(expectedErrorCode);
   }
 
   private static Stream<Arguments> clientFailures() {
@@ -84,7 +84,8 @@ class ClickHouseErrorCodeExtractorTest {
   @Test
   void omitsUnavailableCodes() {
     assertThat(ClickHouseErrorCodeExtractor.getErrorCode(null)).isNull();
-    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(new IllegalStateException("test"))).isNull();
+    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(new IllegalStateException("test")))
+        .isNull();
   }
 
   @Test

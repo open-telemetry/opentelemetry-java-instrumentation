@@ -46,14 +46,14 @@ final class LettuceBatchAttributesGetter
   @Override
   public String getDbResponseStatusCode(
       LettuceBatchRequest request, @Nullable Void response, @Nullable Throwable error) {
-    return LettuceRedisErrorType.getResponseStatusCode(error);
+    return LettuceRedisErrorCode.getErrorCode(error);
   }
 
   @Nullable
   @Override
   public String getErrorType(
       LettuceBatchRequest request, @Nullable Void response, @Nullable Throwable error) {
-    return LettuceRedisErrorType.getResponseStatusCode(error);
+    return LettuceRedisErrorCode.getErrorCode(error);
   }
 
   @Nullable

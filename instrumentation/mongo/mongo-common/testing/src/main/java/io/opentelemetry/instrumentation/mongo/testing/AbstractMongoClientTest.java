@@ -157,7 +157,7 @@ public abstract class AbstractMongoClientTest<T> {
     assertWriteResult(collectionName, "insert", "121");
   }
 
-  private void assertWriteResult(String collectionName, String operation, String statusCode) {
+  private void assertWriteResult(String collectionName, String operation, String errorCode) {
     AtomicReference<String> scopeName = new AtomicReference<>();
     testing()
         .waitAndAssertTraces(
@@ -168,7 +168,7 @@ public abstract class AbstractMongoClientTest<T> {
                       span.hasName(operation + " " + collectionName)
                           .hasKind(CLIENT)
                           .hasNoParent()
-                          .hasStatus(statusCode == null ? StatusData.unset() : StatusData.error())
+                          .hasStatus(errorCode == null ? StatusData.unset() : StatusData.error())
                           .hasEventsSatisfyingExactly()
                           .hasAttributesSatisfyingExactly(
                               equalTo(DB_SYSTEM_NAME, MONGODB),
@@ -184,8 +184,8 @@ public abstract class AbstractMongoClientTest<T> {
                               equalTo(
                                   NETWORK_PEER_PORT,
                                   supportsNetworkPeer() ? Long.valueOf(port) : null),
-                              equalTo(ERROR_TYPE, statusCode),
-                              equalTo(DB_RESPONSE_STATUS_CODE, statusCode));
+                              equalTo(ERROR_TYPE, errorCode),
+                              equalTo(DB_RESPONSE_STATUS_CODE, errorCode));
                     }));
     List<AttributeKey<?>> expectedMetricKeys =
         new ArrayList<>(
@@ -200,7 +200,7 @@ public abstract class AbstractMongoClientTest<T> {
       expectedMetricKeys.add(NETWORK_PEER_ADDRESS);
       expectedMetricKeys.add(NETWORK_PEER_PORT);
     }
-    if (statusCode != null) {
+    if (errorCode != null) {
       expectedMetricKeys.add(ERROR_TYPE);
     }
     assertDurationMetric(

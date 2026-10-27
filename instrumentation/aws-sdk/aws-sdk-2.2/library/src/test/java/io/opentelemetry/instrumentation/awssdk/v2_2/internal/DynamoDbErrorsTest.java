@@ -123,7 +123,7 @@ class DynamoDbErrorsTest {
               .isInstanceOf(ResourceNotFoundException.class);
         }
       }
-      String statusCode = missingItem ? null : "ResourceNotFoundException";
+      String errorCode = missingItem ? null : "ResourceNotFoundException";
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -137,8 +137,8 @@ class DynamoDbErrorsTest {
                               equalTo(DB_COLLECTION_NAME, "items"),
                               equalTo(DB_OPERATION_NAME, "GetItem"),
                               equalTo(HTTP_RESPONSE_STATUS_CODE, missingItem ? 200L : null),
-                              equalTo(DB_RESPONSE_STATUS_CODE, statusCode),
-                              equalTo(ERROR_TYPE, statusCode),
+                              equalTo(DB_RESPONSE_STATUS_CODE, errorCode),
+                              equalTo(ERROR_TYPE, errorCode),
                               equalTo(SERVER_ADDRESS, "127.0.0.1"),
                               equalTo(SERVER_PORT, server.httpPort()),
                               equalTo(HTTP_REQUEST_METHOD, "POST"),
@@ -175,7 +175,7 @@ class DynamoDbErrorsTest {
                                                 .put(DB_SYSTEM_NAME, "aws.dynamodb")
                                                 .put(DB_COLLECTION_NAME, "items")
                                                 .put(DB_OPERATION_NAME, "GetItem")
-                                                .put(ERROR_TYPE, statusCode)
+                                                .put(ERROR_TYPE, errorCode)
                                                 .build()
                                                 .asMap());
                                   })));

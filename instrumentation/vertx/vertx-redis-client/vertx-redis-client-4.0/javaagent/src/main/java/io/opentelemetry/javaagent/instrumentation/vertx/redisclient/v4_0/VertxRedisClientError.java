@@ -39,7 +39,7 @@ public final class VertxRedisClientError {
   }
 
   @Nullable
-  static String getResponseStatusCode(@Nullable Throwable error) {
+  static String getErrorCode(@Nullable Throwable error) {
     return error instanceof ErrorType ? SERVER_ERROR.get((ErrorType) error) : null;
   }
 
