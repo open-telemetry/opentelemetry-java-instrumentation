@@ -125,7 +125,9 @@ tasks {
   val testKtor300 = register<Test>("testKtor300") {
     systemProperty("collectMetadata", false)
     description = "Runs the Ktor context propagation compatibility test against Ktor $ktorVersion."
-    systemProperty("otel.test.ktor.regularJarVersion", ktorVersion)
+    if (providers.gradleProperty("testLatestDeps").orNull != "true") {
+      systemProperty("otel.test.ktor.regularJarVersion", ktorVersion)
+    }
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.main.get().output + sourceSets.test.get().output + configurations.testRuntimeClasspath.get()
     filter {
@@ -148,7 +150,9 @@ tasks {
   val testKtor343 = register<Test>("testKtor343") {
     systemProperty("collectMetadata", false)
     description = "Runs the Ktor context propagation regression against Ktor $ktor343TestVersion on ordinary dependency JARs."
-    systemProperty("otel.test.ktor.regularJarVersion", ktor343TestVersion)
+    if (providers.gradleProperty("testLatestDeps").orNull != "true") {
+      systemProperty("otel.test.ktor.regularJarVersion", ktor343TestVersion)
+    }
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.main.get().output + sourceSets.test.get().output + ktor343TestRuntimeClasspath
     filter {
