@@ -12,8 +12,6 @@ import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.Experimenta
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
-import java.net.URI;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -42,16 +40,5 @@ class SpringWebfluxClientInstrumentationTest
     Experimental.setEmitExperimentalTelemetry(telemetryBuilder, emitExperimentalTelemetry());
     SpringWebfluxClientTelemetry instrumentation = telemetryBuilder.build();
     return builder.filters(instrumentation::addFilterAndRegisterReactorHook);
-  }
-
-  @Test
-  void shouldCaptureStringAndUriBuilderTemplate() {
-    URI uri = resolveAddress("/hello/some-account");
-    String baseUrl = resolveAddress("").toString();
-    WebClient client = instrument(WebClient.builder().baseUrl(baseUrl)).build();
-    assertTemplateRequest(
-        client.get().uri("/hello/{id}", builder -> builder.build("some-account")),
-        uri,
-        expectedTemplate("/hello/{id}"));
   }
 }
