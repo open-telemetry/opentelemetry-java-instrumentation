@@ -37,6 +37,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import com.google.common.base.Function;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -332,10 +333,11 @@ public abstract class AbstractGrpcTest {
               ListenableFuture<Helloworld.Response> future =
                   Futures.transform(
                       client.sayHello(request),
-                      resp -> {
-                        testing().runWithSpan("child", () -> {});
-                        return resp;
-                      },
+                      (Function<Helloworld.Response, Helloworld.Response>)
+                          resp -> {
+                            testing().runWithSpan("child", () -> {});
+                            return resp;
+                          },
                       MoreExecutors.directExecutor());
               try {
                 response.set(Futures.getUnchecked(future));
