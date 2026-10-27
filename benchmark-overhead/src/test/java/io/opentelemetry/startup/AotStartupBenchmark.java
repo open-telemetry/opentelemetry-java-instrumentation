@@ -39,11 +39,6 @@ import org.testcontainers.utility.MountableFile;
 
 @EnabledIfSystemProperty(named = "aot.benchmark.enabled", matches = "true")
 class AotStartupBenchmark {
-  private static final String IMAGE =
-      "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/"
-          + "smoke-test-spring-boot:jdk25-20251116.19402383847";
-  private static final String APPLICATION =
-      "io.opentelemetry.smoketest.springboot.SpringbootApplication";
   private static final long MEMORY_BYTES = 1024L * 1024 * 1024;
   private static final long NANO_CPUS = 2_000_000_000L;
   private static final Duration TIMEOUT = Duration.ofMinutes(2);
@@ -103,7 +98,7 @@ class AotStartupBenchmark {
       DockerClient docker, String volume, Path agent, Path directory, Properties metadata)
       throws Exception {
     try (GenericContainer<?> preparation =
-        container(IMAGE, volume)
+        container(StartupFixture.IMAGE, volume)
             .withCopyFileToContainer(MountableFile.forHostPath(agent), "/tmp/agent.jar")
             .withCopyFileToContainer(
                 MountableFile.forClasspathResource("aot-startup/prepare.sh"), "/tmp/prepare.sh")
@@ -207,7 +202,7 @@ class AotStartupBenchmark {
           assertThat(logs)
               .contains("Opened AOT cache")
               .contains("Using AOT-linked classes: true")
-              .contains(APPLICATION + " source: shared objects file");
+              .contains(StartupFixture.APPLICATION + " source: shared objects file");
           if (variant.agent()) {
             assertThat(logs)
                 .contains(
@@ -250,7 +245,7 @@ class AotStartupBenchmark {
     }
   }
 
-  private static GenericContainer<?> container(String image, String volume) {
+  static GenericContainer<?> container(String image, String volume) {
     return new GenericContainer<>(DockerImageName.parse(image))
         .withEnv("JAVA_TOOL_OPTIONS", "")
         .withEnv("JDK_JAVA_OPTIONS", "")
@@ -288,13 +283,13 @@ class AotStartupBenchmark {
     }
     arguments.add("-cp");
     arguments.add("/benchmark/application.jar:/app/libs/*");
-    arguments.add(APPLICATION);
+    arguments.add(StartupFixture.APPLICATION);
     return arguments;
   }
 
   private static Properties metadata(Path agent, int samples, int warmups) throws Exception {
     Properties metadata = new Properties();
-    metadata.setProperty("image.reference", IMAGE);
+    metadata.setProperty("image.reference", StartupFixture.IMAGE);
     metadata.setProperty("agent.path", agent.toString());
     try (JarFile jar = new JarFile(agent.toFile())) {
       String version = jar.getManifest().getMainAttributes().getValue("Implementation-Version");
