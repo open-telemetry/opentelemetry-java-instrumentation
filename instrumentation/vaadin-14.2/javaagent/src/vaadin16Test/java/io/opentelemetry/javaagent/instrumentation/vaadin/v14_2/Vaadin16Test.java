@@ -11,20 +11,24 @@ import static org.awaitility.Awaitility.await;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
+import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames;
+import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
+import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
 import java.util.List;
 
-class Vaadin16Test extends AbstractVaadinTest {
+class Vaadin16Test extends AbstractVaadin14Test {
 
   @Override
-  protected void prepareVaadinBaseDir(File baseDir) {
-    Path basePath = Paths.get(baseDir.toURI());
-    // underscore "_" prefix is used to hide these files from renovate
-    // (they are only used for tests ok for them to have outdated dependencies)
-    copyClasspathResource("/pnpm/_package.json", basePath.resolve("package.json"));
-    copyClasspathResource("/pnpm/_pnpm-lock.yaml", basePath.resolve("pnpm-lock.yaml"));
+  protected void initializeUi(String sessionCookie) {
+    AggregatedHttpRequest initRequest =
+        AggregatedHttpRequest.of(
+            RequestHeaders.builder(HttpMethod.POST, h1Address.resolve("main?v-r=init").toString())
+                .set(HttpHeaderNames.COOKIE, sessionCookie)
+                .build());
+    AggregatedHttpResponse initResponse = client.execute(initRequest).aggregate().join();
+    assertThat(initResponse.status().code()).isEqualTo(200);
   }
 
   @Override

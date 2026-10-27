@@ -74,6 +74,8 @@ testing {
         implementation(project(":instrumentation:vaadin-14.2:testing"))
         // tests fail with 24.4.1
         implementation("com.vaadin:vaadin-spring-boot-starter:24.3.13")
+        implementation("org.testcontainers:testcontainers-selenium")
+        implementation("org.seleniumhq.selenium:selenium-java:4.8.3")
       }
     }
   }
@@ -92,10 +94,13 @@ val vaadinBuildService =
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    usesService(vaadinBuildService)
 
-    // Enable legacy OpenSSL provider for Node.js 17+ compatibility with webpack 4
-    environment("NODE_OPTIONS", "--openssl-legacy-provider")
+    if (name.startsWith("vaadinLatestTest")) {
+      usesService(vaadinBuildService)
+
+      // Enable legacy OpenSSL provider for Node.js 17+ compatibility with webpack 4
+      environment("NODE_OPTIONS", "--openssl-legacy-provider")
+    }
   }
 
   val controllerTelemetrySuites =
