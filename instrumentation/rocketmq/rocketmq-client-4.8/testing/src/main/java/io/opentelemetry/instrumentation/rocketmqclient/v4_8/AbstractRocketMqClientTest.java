@@ -496,7 +496,10 @@ abstract class AbstractRocketMqClientTest {
             trace -> {
               messageCreationContexts.clear();
               boolean hasBatchCreateSpans = hasBatchCreateSpans();
-              int size = hasBatchCreateSpans ? (existingCreationContext ? 3 : 4) : 2;
+              int size = 2;
+              if (hasBatchCreateSpans) {
+                size = existingCreationContext ? 3 : 4;
+              }
               trace.hasSize(size);
               SpanContext spanContext =
                   spanNamed(trace, size, "send " + sharedTopic).getSpanContext();

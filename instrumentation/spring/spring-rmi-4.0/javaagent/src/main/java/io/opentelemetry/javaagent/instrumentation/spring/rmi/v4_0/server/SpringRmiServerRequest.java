@@ -59,12 +59,20 @@ public final class SpringRmiServerRequest {
     return legacyRequest;
   }
 
-  @Nullable
   String rpcMethod() {
-    if (serviceInterface == null) {
+    String method =
+        serviceInterface == null ? null : rpcMethods.get(serviceInterface).get(methodSignature);
+    return method == null ? "_OTHER" : method;
+  }
+
+  @Nullable
+  String rpcMethodOriginal() {
+    if (!rpcMethod().equals("_OTHER")) {
       return null;
     }
-    return rpcMethods.get(serviceInterface).get(methodSignature);
+    return serviceInterface == null
+        ? methodSignature.name
+        : serviceInterface.getName() + "/" + methodSignature.name;
   }
 
   private static final class MethodSignature {
