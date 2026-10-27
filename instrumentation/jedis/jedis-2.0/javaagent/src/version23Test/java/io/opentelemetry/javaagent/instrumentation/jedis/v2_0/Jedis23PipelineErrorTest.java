@@ -9,7 +9,6 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -32,7 +31,7 @@ class Jedis23PipelineErrorTest {
 
   @Test
   void wrappedPipelineServerErrorUsesPrefixAndDoesNotLeak() throws IOException {
-    try (ServerSocket server = new ServerSocket(PortUtils.findOpenPort())) {
+    try (ServerSocket server = new ServerSocket(0)) {
       server.setSoTimeout(10_000);
       Jedis jedis = new Jedis("127.0.0.1", server.getLocalPort());
       cleanup.deferCleanup(jedis::disconnect);
