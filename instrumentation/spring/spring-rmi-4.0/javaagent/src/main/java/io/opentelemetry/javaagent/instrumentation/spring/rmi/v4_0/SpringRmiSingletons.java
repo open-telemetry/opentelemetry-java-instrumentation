@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.interna
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcMetricsContextCustomizers;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
@@ -30,6 +31,7 @@ public class SpringRmiSingletons {
   private static final Instrumenter<SpringRmiServerRequest, Void> serverInstrumenter =
       buildServerInstrumenter();
 
+  @SuppressWarnings("deprecation") // RpcMetricsContextCustomizers is deprecated for removal in 3.0
   private static Instrumenter<Method, Void> buildClientInstrumenter() {
     ClientAttributesGetter rpcAttributesGetter = new ClientAttributesGetter();
 
@@ -43,12 +45,16 @@ public class SpringRmiSingletons {
                     .schemaUrl())
             .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter));
     if (RpcSemconvSelection.Selection.forOpenTelemetry(GlobalOpenTelemetry.get()).emitPreview()) {
-      builder.addOperationMetrics(RpcClientMetrics.get(false));
+      builder
+          .addOperationMetrics(RpcClientMetrics.get())
+          .addContextCustomizer(
+              RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
     }
     setRpcClientExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
+  @SuppressWarnings("deprecation") // RpcMetricsContextCustomizers is deprecated for removal in 3.0
   private static Instrumenter<SpringRmiServerRequest, Void> buildServerInstrumenter() {
     ServerAttributesGetter rpcAttributesGetter = new ServerAttributesGetter();
 
@@ -62,7 +68,10 @@ public class SpringRmiSingletons {
                     .schemaUrl())
             .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter));
     if (RpcSemconvSelection.Selection.forOpenTelemetry(GlobalOpenTelemetry.get()).emitPreview()) {
-      builder.addOperationMetrics(RpcServerMetrics.get(false));
+      builder
+          .addOperationMetrics(RpcServerMetrics.get())
+          .addContextCustomizer(
+              RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
     }
     setRpcServerExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysServer());

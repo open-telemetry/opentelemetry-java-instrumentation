@@ -120,23 +120,13 @@ public final class RpcClientMetrics implements OperationListener {
   }
 
   /**
-   * Returns a {@link OperationMetrics} which uses the default duration bucket boundaries and
-   * optionally emits legacy RPC metrics when legacy RPC semantic conventions are enabled.
-   *
-   * @param emitOldMetrics whether to emit legacy RPC metrics
-   */
-  public static OperationMetrics get(boolean emitOldMetrics) {
-    return new Factory(RpcMetricsAdvice.DURATION_SECONDS_BUCKETS, emitOldMetrics);
-  }
-
-  /**
    * Returns a {@link OperationMetrics} which uses the given bucket boundaries for the duration
    * metric.
    *
    * @param durationSecondsBucketBoundaries the duration histogram bucket boundaries in seconds
    */
   public static OperationMetrics get(List<Double> durationSecondsBucketBoundaries) {
-    return new Factory(durationSecondsBucketBoundaries, true);
+    return new Factory(durationSecondsBucketBoundaries);
   }
 
   @Override
@@ -206,12 +196,10 @@ public final class RpcClientMetrics implements OperationListener {
   private static final class Factory implements OperationMetrics, OpenTelemetryConfigurable {
     private final RpcSemconvSelection selection = new RpcSemconvSelection();
     private final List<Double> durationSecondsBucketBoundaries;
-    private final boolean emitOldMetrics;
 
-    private Factory(List<Double> durationSecondsBucketBoundaries, boolean emitOldMetrics) {
+    private Factory(List<Double> durationSecondsBucketBoundaries) {
       this.durationSecondsBucketBoundaries =
           Collections.unmodifiableList(new ArrayList<>(durationSecondsBucketBoundaries));
-      this.emitOldMetrics = emitOldMetrics;
     }
 
     @Override
@@ -227,7 +215,7 @@ public final class RpcClientMetrics implements OperationListener {
               ignored ->
                   new RpcClientMetrics(
                       meter,
-                      current.emitOld() && emitOldMetrics,
+                      current.emitOld(),
                       current.emitPreview(),
                       durationSecondsBucketBoundaries))
           .create(meter);

@@ -243,7 +243,6 @@ class SpringRmiTest {
                                                 "springrmi.app.SpringRmiGreeter/hello")))));
       }
 
-      assertNoLegacyRpcMetrics();
     } else {
       assertThat(testing.metrics())
           .noneMatch(
@@ -410,7 +409,6 @@ class SpringRmiTest {
                                               RPC_METHOD,
                                               "springrmi.app.SpringRmiGreeterIntegerOverload/overloaded")))));
 
-      assertNoLegacyRpcMetrics();
     } else {
       assertThat(testing.metrics())
           .noneMatch(
@@ -561,7 +559,6 @@ class SpringRmiTest {
                                             equalTo(ERROR_TYPE, error.getClass().getName())))));
       }
 
-      assertNoLegacyRpcMetrics();
     } else {
       assertThat(testing.metrics())
           .noneMatch(
@@ -571,23 +568,5 @@ class SpringRmiTest {
                       .getName()
                       .equals("io.opentelemetry.spring-rmi-4.0"));
     }
-  }
-
-  private static void assertNoLegacyRpcMetrics() {
-    assertThat(testing.metrics())
-        .noneMatch(
-            metric ->
-                metric
-                        .getInstrumentationScopeInfo()
-                        .getName()
-                        .equals("io.opentelemetry.spring-rmi-4.0")
-                    && asList(
-                            "rpc.client.duration",
-                            "rpc.client.request.size",
-                            "rpc.client.response.size",
-                            "rpc.server.duration",
-                            "rpc.server.request.size",
-                            "rpc.server.response.size")
-                        .contains(metric.getName()));
   }
 }
