@@ -31,9 +31,9 @@ class ClickHouseErrorCodeExtractorTest {
     ClickHouseException response = ClickHouseException.of(message, null);
     ClickHouseException wrappedResponse = ClickHouseException.of(new IOException(message), null);
 
-    assertThat(ClickHouseErrorCodeExtractor.getDbResponseStatusCode(response))
+    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(response))
         .isEqualTo(Integer.toString(code));
-    assertThat(ClickHouseErrorCodeExtractor.getDbResponseStatusCode(wrappedResponse))
+    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(wrappedResponse))
         .isEqualTo(Integer.toString(code));
   }
 
@@ -42,8 +42,7 @@ class ClickHouseErrorCodeExtractorTest {
   void retainsClientCodesWithoutChangingErrorType(
       ClickHouseException error, String expectedErrorType) {
     assertThat(ClickHouseErrorCodeExtractor.getErrorType(error)).isEqualTo(expectedErrorType);
-    assertThat(ClickHouseErrorCodeExtractor.getDbResponseStatusCode(error))
-        .isEqualTo(expectedErrorType);
+    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(error)).isEqualTo(expectedErrorType);
   }
 
   private static Stream<Arguments> clientFailures() {
@@ -84,17 +83,15 @@ class ClickHouseErrorCodeExtractorTest {
 
   @Test
   void omitsUnavailableCodes() {
-    assertThat(ClickHouseErrorCodeExtractor.getDbResponseStatusCode(null)).isNull();
-    assertThat(
-            ClickHouseErrorCodeExtractor.getDbResponseStatusCode(new IllegalStateException("test")))
-        .isNull();
+    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(null)).isNull();
+    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(new IllegalStateException("test"))).isNull();
   }
 
   @Test
   void keepsZeroStatusWithoutChangingErrorType() {
     ClickHouseException error = new ClickHouseException(0, "test", null);
 
-    assertThat(ClickHouseErrorCodeExtractor.getDbResponseStatusCode(error)).isEqualTo("0");
+    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(error)).isEqualTo("0");
     assertThat(ClickHouseErrorCodeExtractor.getErrorType(error)).isNull();
   }
 }

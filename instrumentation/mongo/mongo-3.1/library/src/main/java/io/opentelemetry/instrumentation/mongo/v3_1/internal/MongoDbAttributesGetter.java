@@ -202,7 +202,7 @@ class MongoDbAttributesGetter
   @Nullable
   private static String getServerErrorCode(
       @Nullable CommandSucceededEvent response, @Nullable Throwable error) {
-    Integer writeErrorCode = getWriteErrorCode(response);
+    Integer writeErrorCode = getServerWriteErrorCode(response);
     if (writeErrorCode != null) {
       return writeErrorCode.toString();
     }
@@ -234,6 +234,25 @@ class MongoDbAttributesGetter
       }
     }
     return errorCode(document.get("writeConcernError"));
+  }
+
+  @Nullable
+  private static Integer getServerWriteErrorCode(@Nullable CommandSucceededEvent response) {
+    if (response == null) {
+      return null;
+    }
+    BsonDocument document = response.getResponse();
+    BsonValue writeErrors = document.get("writeErrors");
+    if (writeErrors != null && writeErrors.isArray()) {
+      for (BsonValue writeError : writeErrors.asArray()) {
+        Integer code = errorCode(writeError);
+        if (code != null && code > 0) {
+          return code;
+        }
+      }
+    }
+    Integer code = errorCode(document.get("writeConcernError"));
+    return code != null && code > 0 ? code : null;
   }
 
   @Nullable

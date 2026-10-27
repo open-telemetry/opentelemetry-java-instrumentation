@@ -337,7 +337,7 @@ class ClickHouseClientV1Test {
   }
 
   @Test
-  void testClientConnectionFailureOmitsResponseStatus() {
+  void testClientConnectionFailureCapturesResponseStatus() {
     int unavailablePort = PortUtils.findOpenPort();
     ClickHouseNode unavailableServer =
         ClickHouseNode.of("http://127.0.0.1:" + unavailablePort + "/default?compress=0");

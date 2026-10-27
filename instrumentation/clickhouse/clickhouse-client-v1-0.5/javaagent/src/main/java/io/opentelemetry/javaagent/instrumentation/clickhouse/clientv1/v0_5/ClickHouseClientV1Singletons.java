@@ -39,7 +39,7 @@ public class ClickHouseClientV1Singletons {
         ClickHouseInstrumenterFactory.createInstrumenter(
             INSTRUMENTER_NAME,
             ClickHouseErrorCodeExtractor::getErrorType,
-            ClickHouseErrorCodeExtractor::getDbResponseStatusCode);
+            ClickHouseErrorCodeExtractor::getErrorCode);
   }
 
   public static Instrumenter<ClickHouseDbRequest, Void> instrumenter() {

@@ -17,16 +17,11 @@ final class ClickHouseErrorCodeExtractor {
   }
 
   @Nullable
-  private static String getErrorCode(@Nullable Throwable error) {
+  static String getErrorCode(@Nullable Throwable error) {
     if (error instanceof ClickHouseException) {
       return Integer.toString(((ClickHouseException) error).getErrorCode());
     }
     return null;
-  }
-
-  @Nullable
-  static String getDbResponseStatusCode(@Nullable Throwable error) {
-    return getErrorCode(error);
   }
 
   private ClickHouseErrorCodeExtractor() {}
