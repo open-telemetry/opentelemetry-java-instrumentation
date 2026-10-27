@@ -44,6 +44,33 @@ class WebClientUriTemplateParserTest {
   }
 
   @Test
+  void requiresAtLeastOneUriVariable() {
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("/health")).isNull();
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("/accounts/123?sig=secret")).isNull();
+    assertThat(
+            WebClientUriTemplateParser.extractPathTemplate(
+                "https://example.com/accounts/123?sig=secret"))
+        .isNull();
+    assertThat(
+            WebClientUriTemplateParser.extractPathTemplate("//example.com/accounts/123?sig=secret"))
+        .isNull();
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("/accounts/%7Bid%7D")).isNull();
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("/accounts/{id}"))
+        .isEqualTo("/accounts/{id}");
+  }
+
+  @Test
+  void recognizesVariablesOutsideThePath() {
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("/accounts/123?filter={filter}"))
+        .isEqualTo("/accounts/123?filter={filter}");
+    assertThat(
+            WebClientUriTemplateParser.extractPathTemplate("{scheme}://example.com/accounts/123"))
+        .isEqualTo("/accounts/123");
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("https://{host}/accounts/123"))
+        .isEqualTo("/accounts/123");
+  }
+
+  @Test
   void doesNotCaptureAmbiguousOrPathlessTemplates() {
     assertThat(WebClientUriTemplateParser.extractPathTemplate("")).isNull();
     assertThat(WebClientUriTemplateParser.extractPathTemplate("{url}")).isNull();
@@ -69,6 +96,8 @@ class WebClientUriTemplateParserTest {
   void rejectsMalformedExpressionsAndOpaqueTemplatedSchemes() {
     assertThat(WebClientUriTemplateParser.extractPathTemplate("/accounts/{id")).isNull();
     assertThat(WebClientUriTemplateParser.extractPathTemplate("/accounts/{}")).isNull();
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("/accounts/{id:}")).isNull();
+    assertThat(WebClientUriTemplateParser.extractPathTemplate("/accounts/{id name}")).isNull();
     assertThat(WebClientUriTemplateParser.extractPathTemplate("https://example.com/{id}}"))
         .isNull();
     assertThat(

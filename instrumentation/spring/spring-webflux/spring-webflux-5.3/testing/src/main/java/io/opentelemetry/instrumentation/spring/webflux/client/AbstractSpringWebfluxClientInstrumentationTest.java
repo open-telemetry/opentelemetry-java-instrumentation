@@ -252,6 +252,16 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   }
 
   @Test
+  void shouldNotCaptureUriTemplateFromStringWithoutVariables() {
+    WebClient client = createWebClient();
+
+    assertTemplateRequest(
+        client.get().uri("/hello/some-account?sig=secret"),
+        resolveAddress("/hello/some-account?sig=REDACTED"),
+        expectedTemplate(null));
+  }
+
+  @Test
   void shouldCaptureUriTemplateWithQueryAndFragment() {
     WebClient client = createWebClient();
 

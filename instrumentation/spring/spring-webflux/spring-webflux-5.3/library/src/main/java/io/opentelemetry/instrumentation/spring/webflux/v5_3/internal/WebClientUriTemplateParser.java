@@ -12,7 +12,7 @@ final class WebClientUriTemplateParser {
   @Nullable
   static String extractPathTemplate(String template) {
     int length = template.length();
-    if (length == 0 || !hasBalancedExpressions(template)) {
+    if (length == 0 || !hasUriVariable(template)) {
       return null;
     }
 
@@ -44,7 +44,8 @@ final class WebClientUriTemplateParser {
     return template.substring(pathStart);
   }
 
-  private static boolean hasBalancedExpressions(String template) {
+  private static boolean hasUriVariable(String template) {
+    boolean hasUriVariable = false;
     for (int i = 0; i < template.length(); i++) {
       char c = template.charAt(i);
       if (c == '}') {
@@ -52,13 +53,33 @@ final class WebClientUriTemplateParser {
       }
       if (c == '{') {
         int end = findExpressionEnd(template, i);
-        if (end == -1) {
+        if (end == -1 || !isUriVariable(template, i, end)) {
           return false;
         }
+        hasUriVariable = true;
         i = end - 1;
       }
     }
-    return true;
+    return hasUriVariable;
+  }
+
+  private static boolean isUriVariable(String template, int start, int end) {
+    int nameStart = start + 1;
+    int nameEnd = nameStart;
+    while (nameEnd < end - 1 && isUriVariableNameCharacter(template.charAt(nameEnd))) {
+      nameEnd++;
+    }
+    if (nameEnd == nameStart) {
+      return false;
+    }
+    if (nameEnd == end - 1) {
+      return true;
+    }
+    return template.charAt(nameEnd) == ':' && nameEnd + 1 < end - 1;
+  }
+
+  private static boolean isUriVariableNameCharacter(char c) {
+    return isAsciiLetter(c) || (c >= '0' && c <= '9') || c == '_' || c == '.' || c == '-';
   }
 
   private static int findSchemeDelimiter(String template) {
