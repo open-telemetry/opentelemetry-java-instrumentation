@@ -173,10 +173,18 @@ class MongoDbAttributesGetterTest {
     return Stream.of(
         argumentSet("no error code", "{\"ok\": 1}", null),
         argumentSet(
-            "negative write error code", "{\"ok\": 1, \"writeErrors\": [{\"code\": -3}]}", null),
+            "negative write error code", "{\"ok\": 1, \"writeErrors\": [{\"code\": -3}]}", "-3"),
         argumentSet(
             "zero write concern error code",
             "{\"ok\": 1, \"writeConcernError\": {\"code\": 0}}",
+            "0"),
+        argumentSet(
+            "minimum int64 write error code",
+            "{\"ok\": 1, \"writeErrors\": [{\"code\": {\"$numberLong\": \"-2147483648\"}}]}",
+            "-2147483648"),
+        argumentSet(
+            "below minimum int64 write error code",
+            "{\"ok\": 1, \"writeErrors\": [{\"code\": {\"$numberLong\": \"-2147483649\"}}]}",
             null),
         argumentSet(
             "string code is unavailable",
@@ -257,8 +265,8 @@ class MongoDbAttributesGetterTest {
     return Stream.of(
         argumentSet(
             "server error code", new MongoException(11000, "duplicate key"), "11000", "11000"),
-        argumentSet("zero code is unavailable", new MongoException(0, "boom"), null, null),
-        argumentSet("missing code sentinel", new MongoException(-1, "boom"), null, null),
+        argumentSet("zero code", new MongoException(0, "boom"), null, "0"),
+        argumentSet("missing code sentinel", new MongoException(-1, "boom"), null, "-1"),
         argumentSet("client message sentinel (-3)", new MongoException("boom"), null, "-3"),
         argumentSet(
             "client message-and-cause sentinel (-4)",
