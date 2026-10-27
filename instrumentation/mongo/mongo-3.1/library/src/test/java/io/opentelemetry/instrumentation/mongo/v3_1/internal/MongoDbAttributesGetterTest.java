@@ -155,7 +155,8 @@ class MongoDbAttributesGetterTest {
 
   @ParameterizedTest
   @MethodSource("writeErrorStatuses")
-  void capturesAvailableWriteErrorStatusCodes(String document, String expectedStatus) {
+  void keepsWriteErrorStatusAndErrorTypePoliciesDistinct(
+      String document, String expectedStatus, String expectedErrorType) {
     MongoDbAttributesGetter getter =
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
     CommandSucceededEvent response =
@@ -167,32 +168,56 @@ class MongoDbAttributesGetterTest {
             1);
 
     assertThat(getter.getDbResponseStatusCode(null, response, null)).isEqualTo(expectedStatus);
+    assertThat(getter.getErrorType(null, response, null)).isEqualTo(expectedErrorType);
   }
 
   private static Stream<Arguments> writeErrorStatuses() {
     return Stream.of(
-        argumentSet("no error code", "{\"ok\": 1}", null),
+        argumentSet("no error code", "{\"ok\": 1}", null, null),
         argumentSet(
-            "negative write error code", "{\"ok\": 1, \"writeErrors\": [{\"code\": -3}]}", "-3"),
+            "negative write error code",
+            "{\"ok\": 1, \"writeErrors\": [{\"code\": -3}]}",
+            "-3",
+            null),
         argumentSet(
             "zero write concern error code",
             "{\"ok\": 1, \"writeConcernError\": {\"code\": 0}}",
-            "0"),
+            "0",
+            null),
+        argumentSet(
+            "negative write error before positive write error",
+            "{\"ok\": 1, \"writeErrors\": [{\"code\": -3}, {\"code\": 11000}]}",
+            "-3",
+            "11000"),
+        argumentSet(
+            "zero write error before positive write error",
+            "{\"ok\": 1, \"writeErrors\": [{\"code\": 0}, {\"code\": 11000}]}",
+            "0",
+            "11000"),
+        argumentSet(
+            "nonpositive write error before positive write concern error",
+            "{\"ok\": 1, \"writeErrors\": [{\"code\": -3}], \"writeConcernError\": {\"code\": 64}}",
+            "-3",
+            "64"),
         argumentSet(
             "minimum int64 write error code",
             "{\"ok\": 1, \"writeErrors\": [{\"code\": {\"$numberLong\": \"-2147483648\"}}]}",
-            "-2147483648"),
+            "-2147483648",
+            null),
         argumentSet(
             "below minimum int64 write error code",
             "{\"ok\": 1, \"writeErrors\": [{\"code\": {\"$numberLong\": \"-2147483649\"}}]}",
+            null,
             null),
         argumentSet(
             "string code is unavailable",
             "{\"ok\": 1, \"writeErrors\": [{\"code\": \"3\"}]}",
+            null,
             null),
         argumentSet(
             "out-of-range code is unavailable",
             "{\"ok\": 1, \"writeErrors\": [{\"code\": 2147483648}]}",
+            null,
             null));
   }
 
