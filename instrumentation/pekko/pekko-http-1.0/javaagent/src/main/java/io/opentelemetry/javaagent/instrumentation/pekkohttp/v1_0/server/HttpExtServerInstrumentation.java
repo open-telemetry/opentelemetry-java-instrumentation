@@ -14,9 +14,12 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.pekko.http.scaladsl.HttpExt;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import org.apache.pekko.stream.scaladsl.Flow;
+import scala.Function1;
+import scala.concurrent.Future;
 
 class HttpExtServerInstrumentation implements TypeInstrumentation {
   @Override
@@ -30,6 +33,9 @@ class HttpExtServerInstrumentation implements TypeInstrumentation {
         named("bindAndHandle")
             .and(takesArgument(0, named("org.apache.pekko.stream.scaladsl.Flow"))),
         getClass().getName() + "$PekkoBindAndHandleAdvice");
+    transformer.applyAdviceToMethod(
+        named("bindAndHandleAsync").and(takesArgument(0, named("scala.Function1"))),
+        getClass().getName() + "$PekkoBindAndHandleAsyncAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -40,6 +46,18 @@ class HttpExtServerInstrumentation implements TypeInstrumentation {
     public static Flow<HttpRequest, HttpResponse, ?> wrapHandler(
         @Advice.Argument(value = 0) Flow<HttpRequest, HttpResponse, ?> handler) {
       return PekkoFlowWrapper.wrap(handler);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class PekkoBindAndHandleAsyncAdvice {
+
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Function1<HttpRequest, Future<HttpResponse>> wrapHandler(
+        @Advice.Argument(0) Function1<HttpRequest, Future<HttpResponse>> handler,
+        @Advice.This HttpExt thiz) {
+      return PekkoHttpServerHandlerWrapper.wrap(handler, thiz.system().dispatcher());
     }
   }
 }
