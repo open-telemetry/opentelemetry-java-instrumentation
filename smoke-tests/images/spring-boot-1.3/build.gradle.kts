@@ -7,7 +7,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath("org.springframework.boot:spring-boot-loader-tools:1.3.8.RELEASE")
+    classpath("org.springframework.boot:spring-boot-loader-tools:1.5.22.RELEASE")
   }
 }
 
@@ -17,8 +17,8 @@ plugins {
 
 dependencies {
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("org.apache.logging.log4j:log4j-api:2.17.2")
-  implementation("org.apache.logging.log4j:log4j-core:2.17.2")
+  implementation("org.apache.logging.log4j:log4j-api:2.26.1")
+  implementation("org.apache.logging.log4j:log4j-core:2.26.1")
 }
 
 tasks.jar {
