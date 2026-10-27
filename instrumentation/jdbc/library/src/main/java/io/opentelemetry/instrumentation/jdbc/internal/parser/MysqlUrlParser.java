@@ -239,7 +239,8 @@ public final class MysqlUrlParser implements JdbcUrlParser {
           && c != '.'
           && c != '-'
           && c != '%'
-          && !Character.isWhitespace(c)) {
+          && c != ' '
+          && (c < '\t' || c > '\r')) {
         return false;
       }
     }

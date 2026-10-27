@@ -505,6 +505,10 @@ class JdbcConnectionUrlParserTest {
             .setName("mdbdb")
             .setNoConfiguredTarget()
             .build(),
+        arg("jdbc:mysql://(host=mdb.host,\u2003x=y)/mdbdb")
+            .setSystem(MYSQL)
+            .setNoConfiguredTarget()
+            .build(),
         arg("jdbc:mysql://(%48ost=mdb.host,port=33)/mdbdb")
             .setSystem(MYSQL)
             .setHost("mdb.host")
