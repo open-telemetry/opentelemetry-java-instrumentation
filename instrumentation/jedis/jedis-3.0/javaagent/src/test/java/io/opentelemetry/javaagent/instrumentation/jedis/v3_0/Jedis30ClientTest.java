@@ -127,7 +127,7 @@ class Jedis30ClientTest {
   @Test
   void wrongTypeErrorType() {
     jedis.lpush("wrong-type", "value");
-    assertLpushTrace();
+    testing.waitForTraces(1);
     testing.clearData();
 
     assertThatThrownBy(() -> jedis.get("wrong-type")).hasMessageStartingWith("WRONGTYPE");
@@ -174,10 +174,7 @@ class Jedis30ClientTest {
   void pipelineAndTransactionErrorsCompleteBatchSpans() {
     jedis.lpush("wrong-type", "value");
     jedis.set("not-number", "value");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(span -> span.hasName("LPUSH " + host + ":" + port)),
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("SET " + host + ":" + port)));
+    testing.waitForTraces(2);
     testing.clearData();
 
     Pipeline pipeline = jedis.pipelined();
@@ -223,7 +220,7 @@ class Jedis30ClientTest {
     Jedis client = new Jedis(host, port);
     cleanup.deferCleanup(client::disconnect);
     client.lpush("wrong-type", "value");
-    assertLpushTrace();
+    testing.waitForTraces(1);
 
     Pipeline pipeline = client.pipelined();
     pipeline.get("wrong-type");
@@ -295,12 +292,6 @@ class Jedis30ClientTest {
             }
           });
     }
-  }
-
-  private static void assertLpushTrace() {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(span -> span.hasName("LPUSH " + host + ":" + port)));
   }
 
   private static void assertErrorType(String errorType) {

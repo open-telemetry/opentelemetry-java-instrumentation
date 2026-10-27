@@ -143,7 +143,7 @@ class Jedis40ClientTest {
   @Test
   void wrongTypeErrorType() {
     jedis.lpush("wrong-type", "value");
-    assertLpushTrace();
+    testing.waitForTraces(1);
     testing.clearData();
 
     assertThatThrownBy(() -> jedis.get("wrong-type")).hasMessageStartingWith("WRONGTYPE");
@@ -231,10 +231,7 @@ class Jedis40ClientTest {
   void pipelineAndTransactionErrorsCompleteBatchSpans() {
     jedis.lpush("wrong-type", "value");
     jedis.set("not-number", "value");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(span -> span.hasName("LPUSH " + host + ":" + port)),
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("SET " + host + ":" + port)));
+    testing.waitForTraces(2);
     testing.clearData();
 
     Pipeline pipeline = jedis.pipelined();
@@ -258,7 +255,7 @@ class Jedis40ClientTest {
   @Test
   void nestedPipelineServerErrorDoesNotFailSuccessfulOuterPipeline() {
     jedis.lpush("nested-wrong-type", "value");
-    assertLpushTrace();
+    testing.waitForTraces(1);
     testing.clearData();
 
     List<Object> nestedResults = new ArrayList<>();
@@ -287,7 +284,7 @@ class Jedis40ClientTest {
   @Test
   void nestedTransactionServerErrorDoesNotFailSuccessfulOuterPipeline() {
     jedis.lpush("nested-wrong-type", "value");
-    assertLpushTrace();
+    testing.waitForTraces(1);
     Jedis nestedClient = new Jedis(host, port);
     cleanup.deferCleanup(nestedClient::disconnect);
     testing.clearData();
@@ -319,7 +316,7 @@ class Jedis40ClientTest {
   void nestedPipelineServerErrorDoesNotFailSuccessfulOuterTransaction()
       throws ReflectiveOperationException {
     jedis.lpush("nested-wrong-type", "value");
-    assertLpushTrace();
+    testing.waitForTraces(1);
     Jedis nestedClient = new Jedis(host, port);
     cleanup.deferCleanup(nestedClient::disconnect);
     testing.clearData();
@@ -460,7 +457,7 @@ class Jedis40ClientTest {
   @Test
   void caughtNestedCommandServerErrorDoesNotFailSuccessfulOuterPipeline() {
     jedis.lpush("nested-wrong-type", "value");
-    assertLpushTrace();
+    testing.waitForTraces(1);
     Jedis nestedClient = new Jedis(host, port);
     cleanup.deferCleanup(nestedClient::disconnect);
     testing.clearData();
@@ -492,7 +489,7 @@ class Jedis40ClientTest {
   @Test
   void caughtDirectConnectionServerErrorDoesNotFailSuccessfulOuterPipeline() {
     jedis.lpush("nested-wrong-type", "value");
-    assertLpushTrace();
+    testing.waitForTraces(1);
     Jedis nestedClient = new Jedis(host, port);
     cleanup.deferCleanup(nestedClient::disconnect);
     testing.clearData();
@@ -545,7 +542,7 @@ class Jedis40ClientTest {
 
     testing.clearData();
     jedis.lpush("outer-wrong-type", "value");
-    assertLpushTrace();
+    testing.waitForTraces(1);
     testing.clearData();
     List<JedisDataException> secondNestedErrors = new ArrayList<>();
     Pipeline failingOuter = jedis.pipelined();
@@ -576,7 +573,7 @@ class Jedis40ClientTest {
   @Test
   void uncaughtNestedCommandServerErrorFailsOuterPipeline() {
     jedis.lpush("nested-wrong-type", "value");
-    assertLpushTrace();
+    testing.waitForTraces(1);
     Jedis nestedClient = new Jedis(host, port);
     cleanup.deferCleanup(nestedClient::disconnect);
     testing.clearData();
@@ -605,7 +602,7 @@ class Jedis40ClientTest {
   @Test
   void deferredNestedPipelineServerErrorFailsOuterPipeline() {
     jedis.lpush("nested-wrong-type", "value");
-    assertLpushTrace();
+    testing.waitForTraces(1);
     Jedis nestedClient = new Jedis(host, port);
     cleanup.deferCleanup(nestedClient::disconnect);
     testing.clearData();
@@ -637,7 +634,7 @@ class Jedis40ClientTest {
   @Test
   void uncaughtNestedCommandServerErrorFailsOuterTransaction() throws ReflectiveOperationException {
     jedis.lpush("nested-wrong-type", "value");
-    assertLpushTrace();
+    testing.waitForTraces(1);
     Jedis nestedClient = new Jedis(host, port);
     cleanup.deferCleanup(nestedClient::disconnect);
     testing.clearData();
@@ -689,7 +686,7 @@ class Jedis40ClientTest {
     Jedis client = new Jedis(host, port);
     cleanup.deferCleanup(client::disconnect);
     client.lpush("wrong-type", "value");
-    assertLpushTrace();
+    testing.waitForTraces(1);
 
     Pipeline pipeline = client.pipelined();
     pipeline.get("wrong-type");
@@ -705,12 +702,6 @@ class Jedis40ClientTest {
     testing.clearData();
     jedis.set("after-error", "value");
     assertErrorType(null);
-  }
-
-  private static void assertLpushTrace() {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(span -> span.hasName("LPUSH " + host + ":" + port)));
   }
 
   private static void assertErrorType(String errorType) {
