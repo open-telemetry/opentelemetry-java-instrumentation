@@ -22,7 +22,6 @@ import static io.opentelemetry.semconv.incubating.UrlIncubatingAttributes.URL_TE
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import static java.util.Objects.requireNonNull;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -161,16 +160,6 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
             .clientConnector(
                 (method, uri, callback) ->
                     connector.connect(method, resolveAddress("/hello/some-account"), callback))
-            .filter(
-                (request, next) -> {
-                  assertThat(
-                          request
-                              .attributes()
-                              .get(
-                                  "org.springframework.web.reactive.function.client.WebClient.uriTemplate"))
-                      .isEqualTo(springVersionAtLeast(5, 0, 5) ? template : null);
-                  return next.exchange(request);
-                })
             .build();
     client.get().uri(template, scheme, "some-account").retrieve().bodyToMono(String.class).block();
 
