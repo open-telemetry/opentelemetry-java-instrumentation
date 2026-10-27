@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -62,8 +61,7 @@ class GwtTest {
   private static URI address;
 
   private static void startServer() throws Exception {
-    port = PortUtils.findOpenPort();
-    server = new Server(port);
+    server = new Server(0);
     for (Connector connector : server.getConnectors()) {
       ((ServerConnector) connector).setHost("localhost");
     }
@@ -74,6 +72,7 @@ class GwtTest {
 
     server.setHandler(webAppContext);
     server.start();
+    port = ((ServerConnector) server.getConnectors()[0]).getLocalPort();
   }
 
   private static void stopServer() throws Exception {

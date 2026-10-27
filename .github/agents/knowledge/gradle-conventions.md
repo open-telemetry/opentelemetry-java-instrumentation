@@ -296,6 +296,11 @@ tasks {
 Put the tests under `src/unitTests`. Declare test-only dependencies inside the suite's
 `dependencies` block.
 
+Prefer unconditional `dependsOn(testing.suites)`, including in `testLatestDeps` builds. If existing
+wiring is conditional, prefer removing the condition over adding a `unitTests` exception. Repeating
+unit or fixed-version tests is acceptable; select suites individually only for a concrete
+compatibility or resource constraint.
+
 ### Variant tasks in modules with custom `JvmTestSuite`s
 
 `testing.suites` includes the built-in `test` suite alongside any suite the module registers

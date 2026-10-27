@@ -18,6 +18,7 @@ import com.alipay.sofa.rpc.filter.FilterInvoker;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import javax.annotation.Nullable;
 
 final class TracingFilter extends Filter {
 
@@ -61,8 +62,8 @@ final class TracingFilter extends Filter {
     }
 
     if (isSynchronous) {
-      Throwable exception = extractException(response);
-      instrumenter.end(context, sofaRpcRequest, response, exception);
+      instrumenter.end(
+          context, sofaRpcRequest, response, extractException(sofaRpcRequest, response));
     }
 
     return response;
@@ -92,7 +93,9 @@ final class TracingFilter extends Filter {
     return false;
   }
 
-  private static Throwable extractException(SofaResponse response) {
+  @Nullable
+  private static Throwable extractException(
+      SofaRpcRequest sofaRpcRequest, @Nullable SofaResponse response) {
     if (response == null) {
       return null;
     }
@@ -106,6 +109,7 @@ final class TracingFilter extends Filter {
         || "true".equals(response.getResponseProp(RemotingConstants.HEAD_RESPONSE_ERROR))) {
       String errorMsg = response.getErrorMsg();
       if (errorMsg != null) {
+        sofaRpcRequest.markSyntheticFallbackError();
         return new SofaRpcException(SERVER_UNDECLARED_ERROR, errorMsg);
       }
     }
@@ -126,7 +130,7 @@ final class TracingFilter extends Filter {
     if (context == null || sofaRpcRequest == null) {
       return;
     }
-    Throwable error = exception != null ? exception : extractException(response);
+    Throwable error = exception != null ? exception : extractException(sofaRpcRequest, response);
     instrumenter.end(context, sofaRpcRequest, response, error);
   }
 }

@@ -70,7 +70,6 @@ tasks {
   val testJmsDisabled = register<Test>("testJmsDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     filter {
       includeTestsMatching("*.testSpringJmsListenerWithJmsDisabled")
     }
