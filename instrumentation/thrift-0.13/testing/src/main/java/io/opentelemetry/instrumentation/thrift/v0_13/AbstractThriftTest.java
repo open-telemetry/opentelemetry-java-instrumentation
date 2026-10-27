@@ -329,8 +329,8 @@ public abstract class AbstractThriftTest {
             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? className : null),
             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
             equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "apache_thrift" : null),
-            equalTo(SERVER_PORT, port),
-            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+            equalTo(SERVER_PORT, emitPreviewRpcSemconv() ? null : (long) port),
+            equalTo(SERVER_ADDRESS, emitPreviewRpcSemconv() ? null : "127.0.0.1"),
             equalTo(NETWORK_TYPE, "ipv4"),
             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
@@ -382,8 +382,12 @@ public abstract class AbstractThriftTest {
                               histogram.hasPointsSatisfying(
                                   point ->
                                       point.hasAttributesSatisfyingExactly(
-                                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                          equalTo(SERVER_PORT, serverPort),
+                                          equalTo(
+                                              SERVER_ADDRESS,
+                                              emitPreviewRpcSemconv() ? null : "127.0.0.1"),
+                                          equalTo(
+                                              SERVER_PORT,
+                                              emitPreviewRpcSemconv() ? null : (long) serverPort),
                                           equalTo(RPC_METHOD, "say"),
                                           equalTo(RPC_SERVICE, CustomHandler.class.getName()),
                                           equalTo(RPC_SYSTEM, "apache_thrift"),
@@ -427,8 +431,6 @@ public abstract class AbstractThriftTest {
                                   point ->
                                       point.hasAttributesSatisfyingExactly(
                                           equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                          equalTo(SERVER_PORT, serverPort),
                                           equalTo(
                                               RPC_METHOD,
                                               CustomHandler.class.getName() + "/say")))));
@@ -579,8 +581,6 @@ public abstract class AbstractThriftTest {
                                   point ->
                                       point.hasAttributesSatisfyingExactly(
                                           equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                          equalTo(SERVER_PORT, port),
                                           equalTo(
                                               RPC_METHOD,
                                               CustomHandler.class.getName() + "/withError"),
