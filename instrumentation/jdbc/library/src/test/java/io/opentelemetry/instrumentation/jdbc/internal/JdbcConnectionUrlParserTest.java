@@ -437,9 +437,28 @@ class JdbcConnectionUrlParserTest {
             .build(),
         arg("jdbc:mysql://(host=mdb.host,%68ost=mdb.host2,port=33)/mdbdb")
             .setSystem(MYSQL)
-            .setHost("mdb.host2")
-            .setPort(33)
             .setName("mdbdb")
+            .setNoConfiguredTarget()
+            .build(),
+        arg("jdbc:mysql://(Host=mdb.host,host=mdb.host2)/mdbdb")
+            .setSystem(MYSQL)
+            .setName("mdbdb")
+            .setNoConfiguredTarget()
+            .build(),
+        arg("jdbc:mysql://(host=mdb.host%20)/mdbdb")
+            .setSystem(MYSQL)
+            .setName("mdbdb")
+            .setNoConfiguredTarget()
+            .build(),
+        arg("jdbc:mysql:loadbalance://(host=mdb.host%20,port=33)/mdbdb")
+            .setSystem(MYSQL)
+            .setName("mdbdb")
+            .setNoConfiguredTarget()
+            .build(),
+        arg("jdbc:mysql://(host=%09mdb.host)/mdbdb")
+            .setSystem(MYSQL)
+            .setName("mdbdb")
+            .setNoConfiguredTarget()
             .build(),
         arg("jdbc:mysql://(host=mdb.host,)/mdbdb")
             .setSystem(MYSQL)
@@ -517,9 +536,8 @@ class JdbcConnectionUrlParserTest {
             .build(),
         arg("jdbc:mysql://(host=mdb.host,port=33,port)/mdbdb")
             .setSystem(MYSQL)
-            .setHost("mdb.host")
-            .setPort(3306)
             .setName("mdbdb")
+            .setNoConfiguredTarget()
             .build(),
         arg("jdbc:mysql://(host=mdb.host,port=)/mdbdb")
             .setSystem(MYSQL)

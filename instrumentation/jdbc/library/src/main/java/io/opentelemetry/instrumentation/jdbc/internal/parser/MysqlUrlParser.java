@@ -175,10 +175,10 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     if (keyValues.indexOf('(') >= 0 || keyValues.indexOf(')') >= 0 || keyValues.indexOf('@') >= 0) {
       return null;
     }
-    String hostKey = null;
     String host = null;
-    String portKey = null;
     String port = null;
+    boolean hasHost = false;
+    boolean hasPort = false;
     for (String keyValue : keyValues.split(",", -1)) {
       int equals = keyValue.indexOf('=');
       String rawKey = equals < 0 ? keyValue : keyValue.substring(0, equals);
@@ -199,24 +199,28 @@ public final class MysqlUrlParser implements JdbcUrlParser {
         }
         continue;
       }
-      // a later key wins, but Connector/J doesn't define which of two keys differing only in case
-      // is used
+      // the URL has been lowercased, so a repeated key may have differed only in case, for which
+      // Connector/J doesn't define the value it uses
       if (key.equalsIgnoreCase("host")) {
-        if (hostKey != null && !hostKey.equals(key)) {
+        if (hasHost) {
           return null;
         }
-        hostKey = key;
+        hasHost = true;
         host = value;
       } else if (key.equalsIgnoreCase("port")) {
-        if (portKey != null && !portKey.equals(key)) {
+        if (hasPort) {
           return null;
         }
-        portKey = key;
+        hasPort = true;
         port = value == null || value.isEmpty() ? null : value;
       }
     }
     // the decoded host must not contain characters that would break the address block
-    if (!DbServerTargetBuilder.isValidHost(host) || (port != null && !isValidPort(port))) {
+    // a decoded space around the host would make the rewritten URL an invalid URI
+    if (host == null
+        || !host.equals(host.trim())
+        || !DbServerTargetBuilder.isValidHost(host)
+        || (port != null && !isValidPort(port))) {
       return null;
     }
     // brackets and an IPv6 zone id would make the rewritten URL an invalid URI
@@ -360,6 +364,12 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       // Apply query params first so address fields can override them
       ctx.applyCommonParams(jdbcUrl, "?", "&");
       parseMariaAddress(jdbcUrl, ctx);
+      return;
+    }
+
+    if (jdbcUrl.startsWith("(")) {
+      // a key-value host that rewriteKeyValueHosts left as it is, not a host name
+      ctx.applyCommonParams(jdbcUrl, "?", "&");
       return;
     }
 
