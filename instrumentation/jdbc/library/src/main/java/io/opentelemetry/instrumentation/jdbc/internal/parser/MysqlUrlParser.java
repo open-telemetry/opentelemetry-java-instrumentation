@@ -171,8 +171,9 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       return null;
     }
     String keyValues = entry.substring(1, entry.length() - 1);
-    // Connector/J reads an unencoded @ as the end of the user info
-    if (keyValues.indexOf('(') >= 0 || keyValues.indexOf(')') >= 0 || keyValues.indexOf('@') >= 0) {
+    // Connector/J reads an unencoded @ as the end of the user info. Parentheses are allowed in
+    // values, a key or host containing them is rejected below.
+    if (keyValues.indexOf('@') >= 0) {
       return null;
     }
     String host = null;
