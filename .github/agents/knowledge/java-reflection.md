@@ -99,6 +99,23 @@ advantage. Use the design criteria above instead.
 Mixed use of reflection objects and method handles does not itself require
 conversion.
 
+### Avoid independently resolved signature types
+
+For runtime compatibility lookups, avoid resolving library-specific return types independently to
+build a `findStatic` or `findVirtual` signature. Classes with the same binary name but different
+defining class loaders are different types. Mixing a declaring class with independently resolved
+signature types can introduce conflicting loader constraints.
+
+Use `getMethod` or `getDeclaredMethod` to obtain the actual `Method`, then `lookup.unreflect(method)`
+when a method handle is needed. Derive follow-on accessors from `method.getReturnType()` instead of
+loading that type again by name. If a `Method` is already available, prefer `unreflect` over
+reconstructing its signature to look up the same method again.
+
+Parameter `Class` identities and access permissions must still be correct; this does not guarantee
+class-loader compatibility. Keep direct Java calls when appropriate, and use other lookup APIs when
+exact return-type selection or special dispatch is required. Other `findStatic` and `findVirtual`
+uses remain valid under the criteria above; this is not a performance recommendation.
+
 ## Separate access from invocation
 
 First determine how the code may access the member. Then choose how to invoke it. Use a
