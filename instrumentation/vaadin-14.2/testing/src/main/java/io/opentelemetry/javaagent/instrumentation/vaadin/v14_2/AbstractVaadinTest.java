@@ -42,8 +42,7 @@ public abstract class AbstractVaadinTest
   static class TestApplication {
     public TestApplication() {}
 
-    static ConfigurableApplicationContext start(
-        int port, String contextPath, boolean productionMode, boolean compatibilityMode) {
+    static ConfigurableApplicationContext start(int port, String contextPath, boolean productionMode) {
       SpringApplication app = new SpringApplication(TestApplication.class);
       Map<String, Object> properties = new HashMap<>();
       properties.put("server.port", port);
@@ -52,7 +51,7 @@ public abstract class AbstractVaadinTest
           "server.servlet.context-parameters.original.frontend.resources", productionMode);
       properties.put("server.error.include-message", "always");
       properties.put("vaadin.productionMode", productionMode);
-      properties.put("vaadin.compatibilityMode", compatibilityMode);
+      properties.put("vaadin.compatibilityMode", false);
       app.setDefaultProperties(properties);
       return app.run();
     }
@@ -69,10 +68,6 @@ public abstract class AbstractVaadinTest
     return true;
   }
 
-  protected boolean isCompatibilityMode() {
-    return false;
-  }
-
   @Override
   protected ConfigurableApplicationContext setupServer() {
     File baseDir = new File("build/vaadin-" + Version.getFullVersion());
@@ -80,7 +75,7 @@ public abstract class AbstractVaadinTest
       throw new IllegalStateException("Could not create directory: " + baseDir);
     }
     System.setProperty("vaadin.project.basedir", baseDir.getAbsolutePath());
-    return TestApplication.start(port, getContextPath(), isProductionMode(), isCompatibilityMode());
+    return TestApplication.start(port, getContextPath(), isProductionMode());
   }
 
   @Override
