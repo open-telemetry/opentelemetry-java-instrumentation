@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   prepare:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
       tag: ${{ steps.set-tag.outputs.TAG }}
@@ -37,7 +37,7 @@ jobs:
       matrix:
         os:
           - windows-latest
-          - ubuntu-latest
+          - ubuntu-24.04
         smoke-test-server:
           - jetty
           - liberty

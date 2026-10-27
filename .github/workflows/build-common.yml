@@ -28,7 +28,7 @@ permissions:
 
 jobs:
   spotless:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -57,7 +57,7 @@ jobs:
           ./gradlew -p conventions spotlessCheck ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
 
   license-check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -101,7 +101,7 @@ jobs:
           fi
 
   fossa-configuration-check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -194,10 +194,10 @@ jobs:
         if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
         run: .github/scripts/check-package-names.sh
 
-  # kept on ubuntu-latest: `gh aw validate` checks container images with `docker pull` and silently
+  # A full VM is required: `gh aw validate` checks container images with `docker pull` and silently
   # skips that when no Docker daemon is available, as on ubuntu-slim
   check-gh-aw-lockfiles:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -215,7 +215,7 @@ jobs:
             .github/aw/actions-lock.json
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 75
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -283,7 +283,7 @@ jobs:
 
   test:
     name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 135
     strategy:
       matrix:
@@ -413,7 +413,7 @@ jobs:
       matrix:
         os:
           - windows-latest
-          - ubuntu-latest
+          - ubuntu-24.04
         smoke-test-suite:
           - jetty
           - liberty
@@ -508,7 +508,7 @@ jobs:
           if-no-files-found: ignore
 
   gradle-plugins-and-conventions:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -537,7 +537,7 @@ jobs:
         run: ./gradlew -p conventions test -Pkotlin.daemon.jvmargs=-Xmx2g ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
 
   examples:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

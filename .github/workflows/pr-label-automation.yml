@@ -10,7 +10,7 @@ jobs:
   auto-label:
     # Only run on pull request comments
     if: github.event.issue.pull_request != null
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Add breaking change label
         if: github.event.comment.body == '/breaking-change'

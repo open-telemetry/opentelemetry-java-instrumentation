@@ -27,7 +27,7 @@ jobs:
       contents: write # for creating the release
       id-token: write # for signing artifacts with Sigstore
       attestations: write # for uploading attestations
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - common
     outputs:
@@ -204,7 +204,7 @@ jobs:
     uses: $/.github/workflows/documentation-synchronization-audit.yml
 
   post-release-updates:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - release
     env:

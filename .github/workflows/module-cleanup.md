@@ -44,6 +44,8 @@ concurrency:
 
 timeout-minutes: 30
 
+runs-on: ubuntu-24.04
+
 environment: protected
 
 engine:
@@ -76,7 +78,7 @@ safe-outputs:
     report-as-issue: false
   jobs:
     suppress_default_create_issue:
-      runs-on: ubuntu-latest
+      runs-on: ubuntu-24.04
       steps:
         - run: 'true'
 
@@ -86,7 +88,7 @@ imports:
 jobs:
   dispatch:
     if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       pull-requests: read
@@ -120,7 +122,7 @@ jobs:
       - dispatch
       - agent
     if: always() && needs.dispatch.outputs.has_work == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       actions: write # to trigger next iteration

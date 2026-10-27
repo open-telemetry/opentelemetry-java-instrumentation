@@ -36,6 +36,8 @@ concurrency:
 
 timeout-minutes: 30
 
+runs-on: ubuntu-24.04
+
 environment: protected
 
 strict: false
@@ -72,7 +74,7 @@ safe-outputs:
     report-as-issue: false
   jobs:
     suppress_default_create_issue:
-      runs-on: ubuntu-latest
+      runs-on: ubuntu-24.04
       steps:
         - run: 'true'
 
@@ -85,7 +87,7 @@ jobs:
       github.event_name != 'issue_comment' ||
       (github.event.issue.pull_request != null &&
        startsWith(github.event.comment.body, '/review'))
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       pull-requests: write  # for reactions on the triggering PR comment
@@ -129,7 +131,7 @@ jobs:
       - dispatch
       - agent
     if: always() && needs.dispatch.outputs.should_run == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       pull-requests: write

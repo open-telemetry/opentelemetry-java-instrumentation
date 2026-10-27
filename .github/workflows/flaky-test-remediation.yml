@@ -13,7 +13,7 @@ concurrency:
 jobs:
   analyze:
     if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       has_candidate: ${{ steps.select.outputs.has_candidate }}
       selected_json: ${{ steps.select.outputs.selected_json }}
@@ -67,7 +67,7 @@ jobs:
   fix:
     needs: analyze
     if: needs.analyze.outputs.has_candidate == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       copilot-requests: write

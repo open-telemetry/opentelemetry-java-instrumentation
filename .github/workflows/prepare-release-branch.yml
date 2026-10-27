@@ -7,7 +7,7 @@ permissions:
 
 jobs:
   prereqs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -23,7 +23,7 @@ jobs:
           fi
 
   create-pull-request-against-release-branch:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - prereqs
     steps:
@@ -80,7 +80,7 @@ jobs:
             --base $RELEASE_BRANCH_NAME
 
   create-pull-request-against-development-branch:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - prereqs
     steps:

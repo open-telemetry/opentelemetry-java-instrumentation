@@ -53,6 +53,13 @@
       groupName: 'weekly update',
     },
     {
+      matchDatasources: [
+        'github-runners',
+      ],
+      groupName: 'github runners',
+      automerge: false,
+    },
+    {
       // keep the Gradle semconv dep and manifest.yaml updates in the same group,
       // without the weekly schedule inherited from the custom.regex rule above
       matchPackageNames: [
@@ -75,6 +82,7 @@
       // do not update these workflow lockfiles
       matchManagers: [
         'github-actions',
+        'custom.regex',
       ],
       matchFileNames: [
         '.github/workflows/module-cleanup.lock.yml',
@@ -457,6 +465,31 @@
     },
   },
   customManagers: [
+    {
+      // The GitHub Actions manager does not read gh-aw Markdown sources or documentation.
+      customType: 'regex',
+      datasourceTemplate: 'github-runners',
+      depNameTemplate: 'ubuntu',
+      managerFilePatterns: [
+        '.github/workflows/*.md',
+        'docs/supported-libraries.md',
+      ],
+      matchStrings: [
+        'ubuntu-(?<currentValue>\\d+\\.\\d+)',
+      ],
+    },
+    {
+      // The GitHub Actions manager does not resolve runners selected through a matrix.
+      customType: 'regex',
+      datasourceTemplate: 'github-runners',
+      depNameTemplate: 'ubuntu',
+      managerFilePatterns: [
+        '.github/workflows/*.yml',
+      ],
+      matchStrings: [
+        '\\n[ \\t]+- ubuntu-(?<currentValue>\\d+\\.\\d+)',
+      ],
+    },
     {
       customType: 'regex',
       datasourceTemplate: 'github-releases',

@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   generate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -54,7 +54,7 @@ jobs:
 
   # separate job is just to isolate the OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY usage a bit
   apply:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: generate
     steps:
       - name: Download patch

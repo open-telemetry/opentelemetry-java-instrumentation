@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   update:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write # for git push to PR branch
       pull-requests: write # for adding label and assignee to PR
