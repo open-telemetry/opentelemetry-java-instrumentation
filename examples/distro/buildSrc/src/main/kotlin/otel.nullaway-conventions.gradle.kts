@@ -18,11 +18,6 @@ nullaway {
 
 tasks {
   withType<JavaCompile>().configureEach {
-    options.errorprone {
-      // Avoid TypeToString's SafeRE regex, which can exhaust compiler memory in 2.51.0.
-      disable("TypeToString")
-    }
-
     options.errorprone.nullaway {
       if (name.contains("test", ignoreCase = true)) {
         disable()

@@ -136,9 +136,6 @@ tasks {
 
         disable("ReferenceEquality")
 
-        // Avoid TypeToString's SafeRE regex, which can exhaust compiler memory in 2.51.0.
-        disable("TypeToString")
-
         // Javadoc requirements are enforced by Checkstyle and our custom checks.
         disable("MissingJavadoc")
         // Keep traditional Javadoc, including for projects targeting Java 8.
