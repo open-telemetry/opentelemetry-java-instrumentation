@@ -7,6 +7,9 @@
 - Replace `SpringWebfluxClientTelemetry.addFilter(list)` and
   `addFilterAndRegisterReactorHook(list)` with `createFilter()` and
   `createFilterAndRegisterReactorHook()`, used with `WebClient.Builder.filter(...)`.
+- Agent test support is now in
+  `io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing` instead of
+  `io.opentelemetry.javaagent:opentelemetry-testing-common`.
 - RPC telemetry now uses only the conventions with schema version 1.44.0: `rpc.system.name`,
   fully qualified `rpc.method`, `rpc.status_code`, and `error.type`, with updated span names.
   RPC duration metrics use `rpc.client.call.duration` and `rpc.server.call.duration` in seconds.

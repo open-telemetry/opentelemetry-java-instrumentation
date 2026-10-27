@@ -6,10 +6,8 @@
 package io.opentelemetry.instrumentation.testing.junit;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.instrumentation.testing.LibraryTestRunner;
-import io.opentelemetry.instrumentation.testing.util.ContextStorageCloser;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -56,8 +54,7 @@ public abstract class InstrumentationExtension
     // is cleared in beforeEach, so everything emitted by this test is still available.
     testRunner.collectEmittedEventsIfEnabled();
 
-    ContextStorage storage = ContextStorage.get();
-    ContextStorageCloser.close(storage);
+    testRunner.closeContextStorage();
   }
 
   @Override

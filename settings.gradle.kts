@@ -156,15 +156,18 @@ include(":instrumentation-annotations-support")
 include(":instrumentation-annotations-support-testing")
 
 // misc
+include(":agent-testing")
+include(":agent-testing:integration-tests")
+include(":agent-testing:library-for-integration-tests")
+include(":agent-testing:with-shaded-dependencies")
 include(":dependencyManagement")
 include(":instrumentation-docs")
 include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
 include(":testing:dependencies-shaded-for-testing")
 include(":testing-common")
-include(":testing-common:with-shaded-dependencies")
 include(":testing-common:integration-tests")
-include(":testing-common:library-for-integration-tests")
+include(":testing-common:with-shaded-dependencies")
 
 // smoke tests
 include(":smoke-tests")

@@ -25,14 +25,28 @@ These exporters and the in-memory data live in the `AgentClassLoader`, so tests 
 using reflection. To simplify this, they store the in-memory data using the OTLP protobuf objects,
 so that they can be serialized into byte arrays inside the `AgentClassLoader`, then passed back
 to the tests and deserialized inside their class loader where they can be verified. The
-`:testing-common` module (described below) hides this complexity from instrumentation test authors.
+`:agent-testing` module (described below) hides this complexity from instrumentation test authors.
 
-## :agent-for-testing
+## :testing:agent-for-testing
 
 This is a custom distro of the javaagent that embeds the `:testing:agent-exporter`.
 
+## :agent-testing
+
+This module provides the agent test runner, agent JUnit extensions (including the HTTP extensions),
+and bridges to the in-memory exporters and listeners that live in the `AgentClassLoader`.
+Tests using it must launch with `agent-for-testing`.
+
+External agent tests use `io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing`,
+which transitively supplies the shared testing APIs:
+
+```kotlin
+testImplementation("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing:3.0.0-alpha-SNAPSHOT")
+```
+
 ## :testing-common
 
-This module provides methods to help verify the span and metric data produced by the
-instrumentation, hiding the complexity of accessing the in-memory exporters that live in the
-`AgentClassLoader`.
+This module provides the shared test runner, library JUnit extensions, assertions, HTTP fixtures,
+metadata collection, and utilities. Library tests use
+`io.opentelemetry.javaagent:opentelemetry-testing-common` and do not need agent testing support
+or a javaagent. The dependency direction is `agent-testing` to `testing-common`, not the reverse.

@@ -9,11 +9,11 @@ import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.context.ContextStorage;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.Nullable;
 
 /**
  * Helper class for closing context storage with retry in case there are strict context check
@@ -24,13 +24,23 @@ public class ContextStorageCloser {
   private ContextStorageCloser() {}
 
   public static void close(ContextStorage storage) throws Exception {
+    close(storage, storage);
+  }
+
+  /**
+   * Closes storage with leak-check retries using the supplied underlying strict storage, which may
+   * live in a different class loader.
+   */
+  public static void close(ContextStorage storage, @Nullable Object strictContextStorage)
+      throws Exception {
     if (storage instanceof AutoCloseable) {
-      cleanup((AutoCloseable) storage);
+      cleanup((AutoCloseable) storage, strictContextStorage);
     }
   }
 
-  private static void cleanup(AutoCloseable storage) throws Exception {
-    ContextRestorer restorer = ContextRestorer.create((ContextStorage) storage);
+  private static void cleanup(AutoCloseable storage, @Nullable Object strictContextStorage)
+      throws Exception {
+    ContextRestorer restorer = ContextRestorer.create(strictContextStorage);
     if (restorer == null) {
       storage.close();
       return;
@@ -78,10 +88,11 @@ public class ContextStorageCloser {
       }
     }
 
-    static ContextRestorer create(ContextStorage storage)
+    @Nullable
+    static ContextRestorer create(@Nullable Object strictContextStorage)
         throws NoSuchFieldException, IllegalAccessException {
-      Object strictContextStorage = getStrictContextStorage(storage);
-      if (strictContextStorage == null) {
+      if (strictContextStorage == null
+          || !strictContextStorage.getClass().getName().contains("StrictContextStorage")) {
         return null;
       }
 
@@ -108,47 +119,5 @@ public class ContextStorageCloser {
       return field.get(strictContextStorage);
     }
 
-    private static Object getStrictContextStorage(ContextStorage storage)
-        throws NoSuchFieldException, IllegalAccessException {
-      // in library instrumentation tests we already have access to StrictContextStorage
-      if (storage.getClass().getName().contains("StrictContextStorage")) {
-        return storage;
-      }
-      // in javaagent tests the storage we get is wrapped by opentelemetry api bridge, find the
-      // actual storage
-      Object contextStorage = getAgentContextStorage();
-      if (contextStorage == null) {
-        return null;
-      }
-      contextStorage = unwrapStrictContextStressor(contextStorage);
-      Class<?> contextStorageClass = contextStorage.getClass();
-      if (contextStorageClass.getName().contains("StrictContextStorage")) {
-        return contextStorage;
-      }
-      return null;
-    }
-
-    private static Object getAgentContextStorage() {
-      try {
-        Class<?> contextStorageClass =
-            Class.forName(
-                "io.opentelemetry.javaagent.shaded.io.opentelemetry.context.ContextStorage");
-        Method method = contextStorageClass.getDeclaredMethod("get");
-        return method.invoke(null);
-      } catch (Exception ignored) {
-        return null;
-      }
-    }
-
-    private static Object unwrapStrictContextStressor(Object contextStorage)
-        throws NoSuchFieldException, IllegalAccessException {
-      Class<?> contextStorageClass = contextStorage.getClass();
-      if (contextStorageClass.getName().contains("StrictContextStressor")) {
-        Field field = contextStorageClass.getDeclaredField("contextStorage");
-        field.setAccessible(true);
-        return field.get(contextStorage);
-      }
-      return contextStorage;
-    }
   }
 }

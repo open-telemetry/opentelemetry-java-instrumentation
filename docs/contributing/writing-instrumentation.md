@@ -239,8 +239,8 @@ pass, the library instrumentation is working.
 
 ### JUnit
 
-The `testing-common` module exposes several JUnit extensions that facilitate writing instrumentation
-tests. In particular, we'll take a look at `LibraryInstrumentationExtension`
+The `testing-common` and `agent-testing` modules expose JUnit extensions for library and javaagent
+instrumentation tests, respectively. In particular, we'll take a look at `LibraryInstrumentationExtension`
 , `AgentInstrumentationExtension`, and their parent class `InstrumentationExtension`. The extension
 class implements several useful methods, such as `waitAndAssertTraces` and `waitAndAssertMetrics`,
 that you can use in your test cases to verify that the correct telemetry has been produced.

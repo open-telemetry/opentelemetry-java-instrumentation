@@ -17,8 +17,10 @@ import io.opentelemetry.api.common.AttributeType;
 import io.opentelemetry.api.internal.InternalAttributeKeyImpl;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.instrumentation.testing.internal.CollectedEvent;
 import io.opentelemetry.instrumentation.testing.internal.CollectedMetric;
+import io.opentelemetry.instrumentation.testing.util.ContextStorageCloser;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
@@ -53,7 +55,6 @@ import org.awaitility.core.ConditionTimeoutException;
  * traces & metrics exporters.
  *
  * @see LibraryTestRunner
- * @see AgentTestRunner
  */
 public abstract class InstrumentationTestRunner {
 
@@ -95,6 +96,11 @@ public abstract class InstrumentationTestRunner {
   public abstract void afterTestClass() throws IOException;
 
   public abstract void clearAllExportedData();
+
+  /** Closes context storage after a test, checking for leaked scopes. */
+  public void closeContextStorage() throws Exception {
+    ContextStorageCloser.close(ContextStorage.get());
+  }
 
   public abstract OpenTelemetry getOpenTelemetry();
 

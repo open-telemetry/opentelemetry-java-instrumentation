@@ -3,7 +3,7 @@ plugins {
   id("otel.publish-conventions")
 }
 
-description = "OpenTelemetry Javaagent testing commons"
+description = "OpenTelemetry instrumentation testing commons"
 group = "io.opentelemetry.javaagent"
 
 sourceSets {
@@ -33,12 +33,10 @@ dependencies {
   api("com.google.code.findbugs:annotations")
 
   compileOnly(project(":testing:dependencies-shaded-for-testing", configuration = "shadow"))
-  compileOnly(project(":javaagent-bootstrap"))
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  implementation("net.bytebuddy:byte-buddy")
   implementation("ch.qos.logback:logback-classic")
   implementation("org.slf4j:log4j-over-slf4j")
   implementation("org.slf4j:jcl-over-slf4j")
@@ -52,15 +50,7 @@ dependencies {
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
 
-  testImplementation(project(":javaagent-tooling"))
-  testImplementation(project(":javaagent-bootstrap"))
-  testImplementation(project(":javaagent-extension-api"))
-  testImplementation(project(":instrumentation:external-annotations:javaagent"))
   testImplementation("io.opentelemetry:opentelemetry-exporter-otlp-common")
-
-  // We have autoservices defined in test subtree, looks like we need this to be able to properly rebuild this
-  testAnnotationProcessor("com.google.auto.service:auto-service")
-  testCompileOnly("com.google.auto.service:auto-service-annotations")
 }
 
 tasks {

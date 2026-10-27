@@ -11,6 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.test.utils.LoggerUtils;
 import io.opentelemetry.instrumentation.testing.internal.MetaDataCollector;
+import io.opentelemetry.javaagent.testing.common.AgentContextStorageCloser;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
@@ -86,6 +87,11 @@ public class AgentTestRunner extends InstrumentationTestRunner {
     assert TestAgentListenerAccess.getIgnoredButTransformedClassNames().isEmpty()
         : "Transformed classes match global libraries ignore matcher: "
             + TestAgentListenerAccess.getIgnoredButTransformedClassNames();
+  }
+
+  @Override
+  public void closeContextStorage() throws Exception {
+    AgentContextStorageCloser.close();
   }
 
   @Override

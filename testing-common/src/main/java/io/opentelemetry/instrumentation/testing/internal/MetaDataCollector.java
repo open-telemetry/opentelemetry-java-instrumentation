@@ -32,9 +32,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Used in the {@link io.opentelemetry.instrumentation.testing.AgentTestRunner} to write telemetry
- * to metadata files within a .telemetry directory in each instrumentation module. This information
- * is then parsed and used to generate the instrumentation-list.yaml file.
+ * Used by agent and library test runners to write telemetry to metadata files within a .telemetry
+ * directory in each instrumentation module. This information is then parsed and used to generate
+ * the instrumentation-list.yaml file.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.

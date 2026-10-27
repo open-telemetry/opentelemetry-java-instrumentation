@@ -5,5 +5,5 @@ plugins {
 dependencies {
   compileOnly("com.vaadin:vaadin-spring-boot-starter:14.2.0")
 
-  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  implementation("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing")
 }
