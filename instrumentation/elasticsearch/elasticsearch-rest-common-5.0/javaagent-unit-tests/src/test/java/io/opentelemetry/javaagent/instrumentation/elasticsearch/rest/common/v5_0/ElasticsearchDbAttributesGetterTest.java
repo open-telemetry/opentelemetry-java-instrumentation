@@ -20,6 +20,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 import org.apache.http.HttpEntity;
 import org.apache.http.ProtocolVersion;
+import org.apache.http.StatusLine;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
@@ -39,16 +40,17 @@ class ElasticsearchDbAttributesGetterTest {
   private static final String SANITIZED_BODY = "{\"query\":{\"match\":{\"title\":\"?\"}}}";
 
   @ParameterizedTest
-  @ValueSource(ints = {0, 99, 100, 200, 201, 302, 404, 503})
-  void recordsValidResponseStatusCodes(int statusCode) {
+  @ValueSource(ints = {-1, 0, 99, 100, 200, 201, 302, 404, 503})
+  void recordsAvailableResponseStatusCodes(int statusCode) {
     ElasticsearchDbAttributesGetter getter = new ElasticsearchDbAttributesGetter(null);
     ElasticsearchRestRequest request = searchRequest(null);
     Response response = mock(Response.class);
-    when(response.getStatusLine())
-        .thenReturn(new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), statusCode, ""));
+    StatusLine statusLine = mock(StatusLine.class);
+    when(statusLine.getStatusCode()).thenReturn(statusCode);
+    when(response.getStatusLine()).thenReturn(statusLine);
 
     assertThat(getter.getDbResponseStatusCode(request, response, null))
-        .isEqualTo(statusCode >= 100 ? Integer.toString(statusCode) : null);
+        .isEqualTo(Integer.toString(statusCode));
     assertThat(getter.getErrorType(request, response, null))
         .isEqualTo(statusCode >= 400 || statusCode < 100 ? Integer.toString(statusCode) : null);
   }

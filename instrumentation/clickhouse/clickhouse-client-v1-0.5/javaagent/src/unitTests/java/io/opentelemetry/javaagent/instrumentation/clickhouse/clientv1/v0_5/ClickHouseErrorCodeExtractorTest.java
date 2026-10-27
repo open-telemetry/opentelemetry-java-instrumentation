@@ -88,9 +88,13 @@ class ClickHouseErrorCodeExtractorTest {
     assertThat(
             ClickHouseErrorCodeExtractor.getDbResponseStatusCode(new IllegalStateException("test")))
         .isNull();
-    assertThat(
-            ClickHouseErrorCodeExtractor.getDbResponseStatusCode(
-                new ClickHouseException(0, "test", null)))
-        .isNull();
+  }
+
+  @Test
+  void keepsZeroStatusWithoutChangingErrorType() {
+    ClickHouseException error = new ClickHouseException(0, "test", null);
+
+    assertThat(ClickHouseErrorCodeExtractor.getDbResponseStatusCode(error)).isEqualTo("0");
+    assertThat(ClickHouseErrorCodeExtractor.getErrorType(error)).isNull();
   }
 }

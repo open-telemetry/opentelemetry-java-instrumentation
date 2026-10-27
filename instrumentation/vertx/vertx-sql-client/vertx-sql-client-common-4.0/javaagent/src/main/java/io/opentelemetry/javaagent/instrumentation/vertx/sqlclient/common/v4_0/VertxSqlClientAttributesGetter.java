@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
 import static java.util.Collections.singleton;
@@ -84,26 +85,39 @@ class VertxSqlClientAttributesGetter
   @Override
   public String getDbResponseStatusCode(
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
-    if (MYSQL.equals(request.getDbSystemName())
-        || ORACLE_DB.equals(request.getDbSystemName())
-        || MICROSOFT_SQL_SERVER.equals(request.getDbSystemName())
-        || IBM_DB2.equals(request.getDbSystemName())) {
-      String errorCode = dbResponseErrorCodeExtractor.apply(error);
-      if (errorCode != null) {
-        return errorCode;
-      }
+    String dbSystemName = request.getDbSystemName();
+    String sqlState = getAvailableSqlState(error);
+    String errorCode = dbResponseErrorCodeExtractor.apply(error);
+
+    if (prefersVendorCode(dbSystemName) && errorCode != null) {
+      return errorCode;
     }
-    String status = dbResponseStatusExtractor.apply(error);
-    if (status != null) {
-      return status;
+    if (POSTGRESQL.equals(dbSystemName) && sqlState != null) {
+      return sqlState;
     }
-    if (MYSQL.equals(request.getDbSystemName())) {
-      return mysqlDbResponseStatusExtractor.apply(error);
+    if (sqlState != null && errorCode != null) {
+      return sqlState + "/" + errorCode;
     }
-    if (IBM_DB2.equals(request.getDbSystemName())) {
-      return db2DbResponseStatusExtractor.apply(error);
+    return sqlState != null ? sqlState : errorCode;
+  }
+
+  private static boolean prefersVendorCode(String dbSystemName) {
+    return MYSQL.equals(dbSystemName)
+        || ORACLE_DB.equals(dbSystemName)
+        || MICROSOFT_SQL_SERVER.equals(dbSystemName)
+        || IBM_DB2.equals(dbSystemName);
+  }
+
+  @Nullable
+  private static String getAvailableSqlState(@Nullable Throwable error) {
+    String sqlState = dbResponseStatusExtractor.apply(error);
+    if (sqlState == null || sqlState.isEmpty()) {
+      sqlState = mysqlDbResponseStatusExtractor.apply(error);
     }
-    return null;
+    if (sqlState == null || sqlState.isEmpty()) {
+      sqlState = db2DbResponseStatusExtractor.apply(error);
+    }
+    return sqlState == null || sqlState.isEmpty() ? null : sqlState;
   }
 
   @Override

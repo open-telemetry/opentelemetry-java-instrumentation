@@ -53,7 +53,7 @@ final class OpenSearchAttributesGetter
   public String getDbResponseStatusCode(
       OpenSearchRequest request, @Nullable Void response, @Nullable Throwable error) {
     Integer statusCode = getResponseStatusCode(error);
-    return statusCode != null && statusCode >= 400 ? statusCode.toString() : null;
+    return statusCode != null ? statusCode.toString() : null;
   }
 
   @Override

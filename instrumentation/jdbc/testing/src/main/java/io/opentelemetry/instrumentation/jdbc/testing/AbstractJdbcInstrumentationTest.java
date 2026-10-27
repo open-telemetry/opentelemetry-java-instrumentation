@@ -2155,7 +2155,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(ERROR_TYPE, Integer.toString(error.getErrorCode())),
                                 equalTo(
                                     DB_RESPONSE_STATUS_CODE,
-                                    Integer.toString(error.getErrorCode())))));
+                                    error.getSQLState() + "/" + error.getErrorCode()))));
 
     if (emitExceptionAsLogs()) {
       testing()

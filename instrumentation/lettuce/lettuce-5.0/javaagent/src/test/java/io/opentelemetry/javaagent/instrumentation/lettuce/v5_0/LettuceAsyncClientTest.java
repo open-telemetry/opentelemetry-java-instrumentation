@@ -754,10 +754,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_QUERY_TEXT, scenario.queryText),
                             equalTo(DB_OPERATION_NAME, scenario.operationName),
                             equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                            equalTo(DB_RESPONSE_STATUS_CODE, scenario.errorType),
-                            equalTo(ERROR_TYPE, scenario.errorType))));
+                            equalTo(DB_RESPONSE_STATUS_CODE, scenario.statusCode),
+                            equalTo(ERROR_TYPE, scenario.statusCode))));
 
-    assertErrorTypeMetric("io.opentelemetry.lettuce-5.0", scenario.errorType, 1);
+    assertErrorTypeMetric("io.opentelemetry.lettuce-5.0", scenario.statusCode, 1);
   }
 
   private static void assertErrorTypeMetric(
@@ -915,7 +915,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 .queryText("CONFIG SET not-a-real-config ?; SET batch-after-error ?")
                 .batchSize(2)
                 .exceptionType("io.lettuce.core.RedisCommandExecutionException")
-                .errorType("ERR")
+                .statusCode("ERR")
                 .build()));
   }
 
@@ -925,7 +925,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     private final String queryText;
     private final Long batchSize;
     private final String exceptionType;
-    private final String errorType;
+    private final String statusCode;
 
     private BatchScenario(Builder builder) {
       this.commands = builder.commands;
@@ -933,7 +933,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
       this.queryText = builder.queryText;
       this.batchSize = builder.batchSize;
       this.exceptionType = builder.exceptionType;
-      this.errorType = builder.errorType;
+      this.statusCode = builder.statusCode;
     }
 
     private static Builder builder() {
@@ -950,7 +950,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
       private String queryText;
       private Long batchSize;
       private String exceptionType;
-      private String errorType;
+      private String statusCode;
 
       private Builder addCommand(BatchCommand command) {
         commands.add(command);
@@ -972,8 +972,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
         return this;
       }
 
-      private Builder errorType(String errorType) {
-        this.errorType = errorType;
+      private Builder statusCode(String statusCode) {
+        this.statusCode = statusCode;
         return this;
       }
 

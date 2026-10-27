@@ -34,22 +34,26 @@ class R2dbcSqlAttributesGetterTest {
 
   @ParameterizedTest
   @MethodSource("responseStatuses")
-  void responseStatus(Throwable error, String expectedStatus) {
+  void responseStatus(Throwable error, String expectedErrorType, String expectedStatus) {
     DbExecution request =
         new DbExecution(
             queryExecutionInfo(),
             ConnectionFactoryOptions.parse("r2dbc:postgresql://localhost/db"));
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo(expectedStatus);
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo(expectedStatus);
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo(expectedErrorType);
   }
 
   private static Stream<Arguments> responseStatuses() {
     return Stream.of(
-        argumentSet("SQLSTATE", new R2dbcBadGrammarException("test", "42601", 42), "42601"),
-        argumentSet("no SQLSTATE", new R2dbcBadGrammarException("test"), null),
-        argumentSet("non-database failure", new IllegalStateException("test"), null),
-        argumentSet("success", null, null));
+        argumentSet(
+            "SQLSTATE takes precedence for PostgreSQL",
+            new R2dbcBadGrammarException("test", "42601", 42),
+            "42601",
+            "42601"),
+        argumentSet("no SQLSTATE", new R2dbcBadGrammarException("test"), null, null),
+        argumentSet("non-database failure", new IllegalStateException("test"), null, null),
+        argumentSet("success", null, null, null));
   }
 
   @Test
@@ -130,6 +134,15 @@ class R2dbcSqlAttributesGetterTest {
     assertThat(getter.getErrorType(request, null, error)).isNull();
   }
 
+  @Test
+  void combinesCodesForUnknownSystem() {
+    DbExecution request = request("clickhouse");
+    Throwable error = new R2dbcBadGrammarException("test", "42000", 1071);
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("42000/1071");
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("42000");
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {"mysql", "mariadb", "oracle", "mssql", "db2"})
   void fallsBackToSqlStateWhenVendorCodeIsUnavailable(String dbSystemName) {
@@ -138,6 +151,15 @@ class R2dbcSqlAttributesGetterTest {
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("42000");
     assertThat(getter.getErrorType(request, null, error)).isEqualTo("42000");
+  }
+
+  @Test
+  void capturesSuccessfulSqlStateWithoutChangingErrorType() {
+    DbExecution request = request("mysql");
+    Throwable error = new R2dbcBadGrammarException("test", "00000", 0);
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("00000");
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("00000");
   }
 
   private static Throwable postgresqlConnectionClosedException()

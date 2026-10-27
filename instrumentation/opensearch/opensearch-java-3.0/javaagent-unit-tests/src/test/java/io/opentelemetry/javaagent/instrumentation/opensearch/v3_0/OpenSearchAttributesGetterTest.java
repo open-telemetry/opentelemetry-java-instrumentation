@@ -21,7 +21,7 @@ class OpenSearchAttributesGetterTest {
 
   @ParameterizedTest
   @ValueSource(ints = {-1, 0, 99, 200, 302, 404, 503})
-  void responseStatusExcludesSentinelsAndSuccesses(int statusCode) {
+  void recordsAvailableResponseStatuses(int statusCode) {
     OpenSearchException error =
         new OpenSearchException(
             ErrorResponse.of(
@@ -34,7 +34,7 @@ class OpenSearchAttributesGetterTest {
 
   private void assertStatus(Throwable error, int statusCode) {
     assertThat(getter.getDbResponseStatusCode(request, null, error))
-        .isEqualTo(statusCode >= 400 ? Integer.toString(statusCode) : null);
+        .isEqualTo(Integer.toString(statusCode));
     assertThat(getter.getErrorType(request, null, error))
         .isEqualTo(statusCode >= 400 || statusCode < 100 ? Integer.toString(statusCode) : null);
   }
