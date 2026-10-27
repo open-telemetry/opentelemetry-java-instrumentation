@@ -5,19 +5,15 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
-import static java.util.logging.Level.FINE;
-
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalAttributesGetter;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpErrorType;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
-import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -25,9 +21,6 @@ import org.springframework.web.util.UriComponentsBuilder;
  */
 public class WebClientHttpAttributesGetter
     implements HttpClientExperimentalAttributesGetter<ClientRequest, ClientResponse> {
-  private static final Logger logger =
-      Logger.getLogger(WebClientHttpAttributesGetter.class.getName());
-
   @Nullable
   @Override
   public String getUrlTemplate(ClientRequest request) {
@@ -39,19 +32,7 @@ public class WebClientHttpAttributesGetter
     if (!(template instanceof String)) {
       return null;
     }
-    return extractPathTemplate((String) template);
-  }
-
-  // visible for testing
-  @Nullable
-  static String extractPathTemplate(String template) {
-    try {
-      String path = UriComponentsBuilder.fromUriString(template).build().getPath();
-      return path == null || path.isEmpty() ? null : path;
-    } catch (IllegalArgumentException e) {
-      logger.log(FINE, "Unable to parse WebClient URI template", e);
-      return null;
-    }
+    return WebClientUriTemplateParser.extractPathTemplate((String) template);
   }
 
   @Override

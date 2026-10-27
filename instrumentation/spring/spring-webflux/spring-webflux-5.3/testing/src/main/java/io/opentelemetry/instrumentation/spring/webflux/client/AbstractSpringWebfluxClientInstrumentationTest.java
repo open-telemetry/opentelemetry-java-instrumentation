@@ -44,6 +44,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 import reactor.core.publisher.Mono;
 
 public abstract class AbstractSpringWebfluxClientInstrumentationTest
@@ -153,6 +154,54 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
         "{scheme}user:secret@example.com/accounts/{id}", "https://", expectedTemplate(null));
   }
 
+  @Test
+  void shouldNotCaptureAmbiguousUsernameOnlyUserInfoTemplate() {
+    assumeTrue(supportsUriTemplates());
+    DefaultUriBuilderFactory uriBuilderFactory = new DefaultUriBuilderFactory();
+    uriBuilderFactory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
+    ClientHttpConnector connector = ClientHttpConnectorFactory.create();
+    WebClient client =
+        instrument(
+                WebClient.builder()
+                    .uriBuilderFactory(uriBuilderFactory)
+                    .clientConnector(
+                        (method, uri, callback) ->
+                            connector.connect(
+                                method, resolveAddress("/hello/some-account"), callback)))
+            .build();
+
+    client
+        .get()
+        .uri("{scheme}api-token@example.com/accounts/{id}", "https://", "some-account")
+        .retrieve()
+        .bodyToMono(String.class)
+        .block();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET")
+                        .hasKind(CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(
+                                HTTP_RESPONSE_BODY_SIZE, emitExperimentalTelemetry() ? 20L : null),
+                            equalTo(
+                                URL_FULL,
+                                "https://REDACTED:REDACTED@example.com/accounts/some-account"),
+                            equalTo(URL_TEMPLATE, null),
+                            equalTo(SERVER_ADDRESS, "example.com"),
+                            equalTo(SERVER_PORT, 443),
+                            satisfies(NETWORK_PROTOCOL_VERSION, val -> val.isIn(null, "1.1"))),
+                span ->
+                    span.hasName("test-http-server")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(0))));
+  }
+
   private void assertTemplateWithUserInfo(
       String template, String scheme, String expectedPathTemplate) {
     ClientHttpConnector connector = ClientHttpConnectorFactory.create();
@@ -199,7 +248,21 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
     assertTemplateRequest(
         client.get().uri("/hello/{id}?sig=secret", "some-account"),
         resolveAddress("/hello/some-account?sig=REDACTED"),
-        expectedTemplate("/hello/{id}"));
+        expectedTemplate("/hello/{id}?sig=secret"));
+  }
+
+  @Test
+  void shouldCaptureUriTemplateWithQueryAndFragment() {
+    WebClient client = createWebClient();
+
+    assertTemplateRequest(
+        client
+            .get()
+            .uri(
+                "/hello/{id}?first=one&second={id}#section/{id}",
+                singletonMap("id", "some-account")),
+        resolveAddress("/hello/some-account?first=one&second=some-account#section/some-account"),
+        expectedTemplate("/hello/{id}?first=one&second={id}#section/{id}"));
   }
 
   @Test
