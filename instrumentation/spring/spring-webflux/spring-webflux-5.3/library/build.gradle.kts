@@ -34,6 +34,10 @@ if (!otelProps.testLatestDeps) {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+  }
+
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath

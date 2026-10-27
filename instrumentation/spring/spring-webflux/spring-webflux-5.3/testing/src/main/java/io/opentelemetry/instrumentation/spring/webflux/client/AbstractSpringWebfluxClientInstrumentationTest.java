@@ -40,7 +40,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.SpringVersion;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -100,6 +99,10 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
 
   protected abstract WebClient.Builder instrument(WebClient.Builder builder);
 
+  protected abstract boolean supportsUriTemplates();
+
+  protected abstract boolean includesBasePathInUriTemplate();
+
   protected static boolean emitExperimentalTelemetry() {
     return Boolean.getBoolean("otel.instrumentation.http.client.emit-experimental-telemetry");
   }
@@ -145,7 +148,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   @Test
   void shouldNotCaptureOpaqueTemplateWithSchemeDelimiterInVariable() {
     // Older Spring defaults cannot expand opaque URI templates.
-    assumeTrue(springVersionAtLeast(5, 1, 0));
+    assumeTrue(supportsUriTemplates());
     assertTemplateWithUserInfo(
         "{scheme}user:secret@example.com/accounts/{id}", "https://", expectedTemplate(null));
   }
@@ -178,7 +181,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
                                 HTTP_RESPONSE_BODY_SIZE, emitExperimentalTelemetry() ? 20L : null),
                             equalTo(
                                 URL_FULL,
-                                "https://REDACTED:REDACTED" + "@example.com/accounts/some-account"),
+                                "https://REDACTED:REDACTED@example.com/accounts/some-account"),
                             equalTo(URL_TEMPLATE, expectedPathTemplate),
                             equalTo(SERVER_ADDRESS, "example.com"),
                             equalTo(SERVER_PORT, 443),
@@ -237,26 +240,14 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
     assertTemplateRequest(
         client.get().uri("/{id}", "some-account"),
         resolveAddress("/hello/some-account"),
-        expectedTemplate(springVersionAtLeast(6, 1, 2) ? "/hello/{id}" : "/{id}"));
+        expectedTemplate(includesBasePathInUriTemplate() ? "/hello/{id}" : "/{id}"));
   }
 
-  protected static String expectedTemplate(String template) {
-    if (template == null || !emitExperimentalTelemetry() || !springVersionAtLeast(5, 0, 5)) {
+  protected String expectedTemplate(String template) {
+    if (template == null || !emitExperimentalTelemetry() || !supportsUriTemplates()) {
       return null;
     }
     return template;
-  }
-
-  private static boolean springVersionAtLeast(int major, int minor, int patch) {
-    String[] version = requireNonNull(SpringVersion.getVersion()).split("[.-]");
-    int[] minimum = {major, minor, patch};
-    for (int i = 0; i < minimum.length; i++) {
-      int part = Integer.parseInt(version[i]);
-      if (part != minimum[i]) {
-        return part > minimum[i];
-      }
-    }
-    return true;
   }
 
   protected void assertTemplateRequest(
