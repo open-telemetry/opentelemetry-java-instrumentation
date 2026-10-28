@@ -4,6 +4,13 @@
 
 ### ⚠️ Breaking changes
 
+- Rename `otel.instrumentation.grpc.{client,server}.request-metadata.{included,excluded}` to
+  `otel.instrumentation.grpc.{client,server}.request-headers.{included,excluded}`, and rename
+  `java.grpc.{client,server}.request_metadata.{included,excluded}` to
+  `java.grpc.{client,server}.request_headers.{included,excluded}`.
+- Rename `GrpcTelemetryBuilder.setClientRequestMetadata` and
+  `GrpcTelemetryBuilder.setServerRequestMetadata` to their `RequestHeaders` forms. Remove
+  `setCapturedClientRequestMetadata` and `setCapturedServerRequestMetadata`.
 - GenAI error type getters now return the final value. Returning `null` omits `error.type`; overrides
   should return `error == null ? null : error.getClass().getName()` for the exception-class fallback.
 - HTTP client and server getters now determine `error.type`; their returned value, including `null`,

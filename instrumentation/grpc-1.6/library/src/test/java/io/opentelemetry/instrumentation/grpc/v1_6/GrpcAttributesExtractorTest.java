@@ -36,7 +36,7 @@ class GrpcAttributesExtractorTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"INCLUDED-KEY", "INCLUDED-*", "INCLUDED-?EY"})
-  void selectsCanonicalAsciiMetadataKeys(String includedPattern) {
+  void capturesSelectedRequestHeaders(String includedPattern) {
     Metadata metadata = new Metadata();
     metadata.put(
         Metadata.Key.of("included-key", Metadata.ASCII_STRING_MARSHALLER), "included-value");
@@ -59,16 +59,16 @@ class GrpcAttributesExtractorTest {
     createExtractor(selector).onEnd(attributes, Context.root(), request, null, null);
 
     Attributes result = attributes.build();
-    assertThat(result.get(oldMetadataAttributeKey("included-key")))
+    assertThat(result.get(legacyHeaderAttributeKey("included-key")))
         .isEqualTo(emitOldRpcSemconv() ? asList("included-value", "second-value") : null);
-    assertThat(result.get(stableMetadataAttributeKey("included-key")))
+    assertThat(result.get(stableHeaderAttributeKey("included-key")))
         .isEqualTo(emitPreviewRpcSemconv() ? asList("included-value", "second-value") : null);
     assertThat(result.get(stringArrayKey("rpc.request.metadata.included-key"))).isNull();
     assertThat(result.asMap())
         .hasSize((emitOldRpcSemconv() ? 1 : 0) + (emitPreviewRpcSemconv() ? 1 : 0));
-    assertExcludedMetadata(result, "included-excluded");
-    assertExcludedMetadata(result, "other-key");
-    assertExcludedMetadata(result, "included-bin");
+    assertExcludedHeader(result, "included-excluded");
+    assertExcludedHeader(result, "other-key");
+    assertExcludedHeader(result, "included-bin");
   }
 
   @Test
@@ -81,7 +81,7 @@ class GrpcAttributesExtractorTest {
 
     createExtractor(null).onEnd(attributes, Context.root(), request, null, null);
 
-    assertExcludedMetadata(attributes.build(), "some-key");
+    assertExcludedHeader(attributes.build(), "some-key");
   }
 
   @Test
@@ -95,11 +95,11 @@ class GrpcAttributesExtractorTest {
     createExtractor(IncludeExclude.builder().build())
         .onEnd(attributes, Context.root(), request, null, null);
 
-    assertExcludedMetadata(attributes.build(), "some-key");
+    assertExcludedHeader(attributes.build(), "some-key");
   }
 
   @Test
-  void matchesMetadataKeysCaseInsensitively() {
+  void matchesRequestHeadersCaseInsensitively() {
     Metadata delegate = new Metadata();
     delegate.put(
         Metadata.Key.of("included-key", Metadata.ASCII_STRING_MARSHALLER), "included-value");
@@ -120,13 +120,13 @@ class GrpcAttributesExtractorTest {
     createExtractor(selector).onEnd(attributes, Context.root(), request, null, null);
 
     Attributes result = attributes.build();
-    assertThat(result.get(oldMetadataAttributeKey("included-key")))
+    assertThat(result.get(legacyHeaderAttributeKey("included-key")))
         .isEqualTo(emitOldRpcSemconv() ? singletonList("included-value") : null);
-    assertThat(result.get(stableMetadataAttributeKey("included-key")))
+    assertThat(result.get(stableHeaderAttributeKey("included-key")))
         .isEqualTo(emitPreviewRpcSemconv() ? singletonList("included-value") : null);
-    assertExcludedMetadata(result, "Included-Key");
-    assertExcludedMetadata(result, "excluded-key");
-    assertExcludedMetadata(result, "Excluded-Key");
+    assertExcludedHeader(result, "Included-Key");
+    assertExcludedHeader(result, "excluded-key");
+    assertExcludedHeader(result, "Excluded-Key");
   }
 
   @ParameterizedTest
@@ -144,9 +144,9 @@ class GrpcAttributesExtractorTest {
     assertThat(attributes.build()).isEqualTo(Attributes.empty());
   }
 
-  private static void assertExcludedMetadata(Attributes attributes, String key) {
-    assertThat(attributes.get(oldMetadataAttributeKey(key))).isNull();
-    assertThat(attributes.get(stableMetadataAttributeKey(key))).isNull();
+  private static void assertExcludedHeader(Attributes attributes, String key) {
+    assertThat(attributes.get(legacyHeaderAttributeKey(key))).isNull();
+    assertThat(attributes.get(stableHeaderAttributeKey(key))).isNull();
   }
 
   private static GrpcAttributesExtractor createExtractor(@Nullable IncludeExclude selector) {
@@ -156,11 +156,11 @@ class GrpcAttributesExtractorTest {
     return extractor;
   }
 
-  private static AttributeKey<List<String>> oldMetadataAttributeKey(String key) {
+  private static AttributeKey<List<String>> legacyHeaderAttributeKey(String key) {
     return stringArrayKey("rpc.grpc.request.metadata." + key);
   }
 
-  private static AttributeKey<List<String>> stableMetadataAttributeKey(String key) {
+  private static AttributeKey<List<String>> stableHeaderAttributeKey(String key) {
     return stringArrayKey("rpc.request.header." + key);
   }
 }

@@ -26,7 +26,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.internal.DeprecatedCaptureNames;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
@@ -63,8 +62,8 @@ public final class GrpcTelemetryBuilder {
 
   private boolean captureExperimentalSpanAttributes;
   private boolean emitMessageEvents = true;
-  @Nullable private IncludeExclude clientRequestMetadata;
-  @Nullable private IncludeExclude serverRequestMetadata;
+  @Nullable private IncludeExclude clientRequestHeaders;
+  @Nullable private IncludeExclude serverRequestHeaders;
 
   GrpcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -150,74 +149,32 @@ public final class GrpcTelemetryBuilder {
   }
 
   /**
-   * Sets which ASCII request metadata should be captured as span attributes on client spans.
+   * Sets which ASCII request headers should be captured as span attributes on client spans.
    *
-   * <p>Metadata keys and selector patterns are matched case-insensitively. {@code ?} matches any
+   * <p>Header keys and selector patterns are matched case-insensitively. {@code ?} matches any
    * single character and {@code *} matches any number of characters, including none. Excluded
-   * patterns take precedence over included patterns. No metadata is captured unless a selector is
-   * configured; a selector with only excluded patterns captures every ASCII metadata key that it
-   * does not exclude.
+   * patterns take precedence over included patterns. No headers are captured unless a selector is
+   * configured; a selector with only excluded patterns captures every ASCII header key that it does
+   * not exclude.
    */
   @CanIgnoreReturnValue
-  public GrpcTelemetryBuilder setClientRequestMetadata(IncludeExclude clientRequestMetadata) {
-    this.clientRequestMetadata = clientRequestMetadata;
+  public GrpcTelemetryBuilder setClientRequestHeaders(IncludeExclude clientRequestHeaders) {
+    this.clientRequestHeaders = clientRequestHeaders;
     return this;
   }
 
   /**
-   * Sets which metadata request values should be captured as span attributes on client spans.
+   * Sets which ASCII request headers should be captured as span attributes on server spans.
    *
-   * <p>The metadata keys are matched literally. Keys containing {@code *} or {@code ?} are ignored
-   * and logged, since this setting never supported wildcards.
-   *
-   * @deprecated Use {@link #setClientRequestMetadata(IncludeExclude)} instead. May be removed in
-   *     the next minor release.
-   */
-  @Deprecated // may be removed in the next minor release
-  @CanIgnoreReturnValue
-  public GrpcTelemetryBuilder setCapturedClientRequestMetadata(
-      List<String> capturedClientRequestMetadata) {
-    clientRequestMetadata =
-        DeprecatedCaptureNames.toSelector(
-            capturedClientRequestMetadata,
-            "GrpcTelemetryBuilder.setCapturedClientRequestMetadata()",
-            "setClientRequestMetadata(IncludeExclude)");
-    return this;
-  }
-
-  /**
-   * Sets which ASCII request metadata should be captured as span attributes on server spans.
-   *
-   * <p>Metadata keys and selector patterns are matched case-insensitively. {@code ?} matches any
+   * <p>Header keys and selector patterns are matched case-insensitively. {@code ?} matches any
    * single character and {@code *} matches any number of characters, including none. Excluded
-   * patterns take precedence over included patterns. No metadata is captured unless a selector is
-   * configured; a selector with only excluded patterns captures every ASCII metadata key that it
-   * does not exclude.
+   * patterns take precedence over included patterns. No headers are captured unless a selector is
+   * configured; a selector with only excluded patterns captures every ASCII header key that it does
+   * not exclude.
    */
   @CanIgnoreReturnValue
-  public GrpcTelemetryBuilder setServerRequestMetadata(IncludeExclude serverRequestMetadata) {
-    this.serverRequestMetadata = serverRequestMetadata;
-    return this;
-  }
-
-  /**
-   * Sets which metadata request values should be captured as span attributes on server spans.
-   *
-   * <p>The metadata keys are matched literally. Keys containing {@code *} or {@code ?} are ignored
-   * and logged, since this setting never supported wildcards.
-   *
-   * @deprecated Use {@link #setServerRequestMetadata(IncludeExclude)} instead. May be removed in
-   *     the next minor release.
-   */
-  @Deprecated // may be removed in the next minor release
-  @CanIgnoreReturnValue
-  public GrpcTelemetryBuilder setCapturedServerRequestMetadata(
-      List<String> capturedServerRequestMetadata) {
-    serverRequestMetadata =
-        DeprecatedCaptureNames.toSelector(
-            capturedServerRequestMetadata,
-            "GrpcTelemetryBuilder.setCapturedServerRequestMetadata()",
-            "setServerRequestMetadata(IncludeExclude)");
+  public GrpcTelemetryBuilder setServerRequestHeaders(IncludeExclude serverRequestHeaders) {
+    this.serverRequestHeaders = serverRequestHeaders;
     return this;
   }
 
@@ -251,7 +208,7 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractors(additionalClientExtractors)
         .addAttributesExtractor(
-            new GrpcAttributesExtractor(clientRpcAttributesGetter, clientRequestMetadata))
+            new GrpcAttributesExtractor(clientRpcAttributesGetter, clientRequestHeaders))
         .addOperationMetrics(RpcClientMetrics.get(GRPC_DURATION_SECONDS_BUCKETS))
         .addContextCustomizer(
             RpcMetricsContextCustomizers.dualEmitContextCustomizer(clientRpcAttributesGetter));
@@ -266,7 +223,7 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(ServerAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(
-            new GrpcAttributesExtractor(serverRpcAttributesGetter, serverRequestMetadata))
+            new GrpcAttributesExtractor(serverRpcAttributesGetter, serverRequestHeaders))
         .addAttributesExtractors(additionalServerExtractors)
         .addOperationMetrics(RpcServerMetrics.get(GRPC_DURATION_SECONDS_BUCKETS))
         .addContextCustomizer(

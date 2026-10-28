@@ -20,22 +20,22 @@ import org.junit.jupiter.api.Test;
 class GrpcConfigTest {
 
   @Test
-  void readsNewSelectors() {
+  void readsRequestHeaderSelectors() {
     DeclarativeConfigProperties config = mockConfig();
-    when(config.get("client").get("request_metadata").getScalarList("included", String.class))
+    when(config.get("client").get("request_headers").getScalarList("included", String.class))
         .thenReturn(asList("client-*", "other"));
-    when(config.get("client").get("request_metadata").getScalarList("excluded", String.class))
+    when(config.get("client").get("request_headers").getScalarList("excluded", String.class))
         .thenReturn(singletonList("*-secret"));
-    when(config.get("server").get("request_metadata").getScalarList("excluded", String.class))
+    when(config.get("server").get("request_headers").getScalarList("excluded", String.class))
         .thenReturn(singletonList("server-secret"));
 
     GrpcConfig grpcConfig = new GrpcConfig(config);
 
-    IncludeExclude client = grpcConfig.getClientRequestMetadata();
+    IncludeExclude client = grpcConfig.getClientRequestHeaders();
     assertThat(client).isNotNull();
     assertThat(client.getIncluded()).containsExactly("client-*", "other");
     assertThat(client.getExcluded()).containsExactly("*-secret");
-    IncludeExclude server = grpcConfig.getServerRequestMetadata();
+    IncludeExclude server = grpcConfig.getServerRequestHeaders();
     assertThat(server).isNotNull();
     assertThat(server.getIncluded()).isEmpty();
     assertThat(server.getExcluded()).containsExactly("server-secret");
@@ -44,23 +44,23 @@ class GrpcConfigTest {
   @Test
   void emptySelectorCapturesNothing() {
     DeclarativeConfigProperties config = mockConfig();
-    when(config.get("client").get("request_metadata").getScalarList("included", String.class))
+    when(config.get("client").get("request_headers").getScalarList("included", String.class))
         .thenReturn(emptyList());
-    when(config.get("client").get("request_metadata").getScalarList("excluded", String.class))
+    when(config.get("client").get("request_headers").getScalarList("excluded", String.class))
         .thenReturn(emptyList());
 
     GrpcConfig grpcConfig = new GrpcConfig(config);
 
-    assertThat(grpcConfig.getClientRequestMetadata()).isNull();
+    assertThat(grpcConfig.getClientRequestHeaders()).isNull();
   }
 
   private static DeclarativeConfigProperties mockConfig() {
     DeclarativeConfigProperties config =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
     for (String side : asList("client", "server")) {
-      when(config.get(side).get("request_metadata").getScalarList("included", String.class))
+      when(config.get(side).get("request_headers").getScalarList("included", String.class))
           .thenReturn(null);
-      when(config.get(side).get("request_metadata").getScalarList("excluded", String.class))
+      when(config.get(side).get("request_headers").getScalarList("excluded", String.class))
           .thenReturn(null);
     }
     return config;

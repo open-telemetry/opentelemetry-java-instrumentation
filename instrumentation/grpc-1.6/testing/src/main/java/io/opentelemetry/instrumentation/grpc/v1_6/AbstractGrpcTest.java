@@ -106,11 +106,11 @@ public abstract class AbstractGrpcTest {
     0.25, 0.3, 0.4, 0.5, 0.65, 0.8, 1, 2, 5, 10, 20, 50, 100
   };
 
-  protected static final String CLIENT_REQUEST_METADATA_KEY = "some-client-key";
+  protected static final String CLIENT_REQUEST_HEADER_KEY = "some-client-key";
 
-  protected static final String SERVER_REQUEST_METADATA_KEY = "some-server-key";
+  protected static final String SERVER_REQUEST_HEADER_KEY = "some-server-key";
 
-  private static final String EXCLUDED_REQUEST_METADATA_KEY = "some-excluded-key";
+  private static final String EXCLUDED_REQUEST_HEADER_KEY = "some-excluded-key";
 
   protected abstract ServerBuilder<?> configureServer(ServerBuilder<?> server);
 
@@ -1729,23 +1729,23 @@ public abstract class AbstractGrpcTest {
   }
 
   @Test
-  void setCapturedRequestMetadata() throws Exception {
-    String oldMetadataAttributePrefix = "rpc.grpc.request.metadata.";
-    String stableMetadataAttributePrefix = "rpc.request.header.";
+  void setCapturedRequestHeaders() throws Exception {
+    String legacyMetadataAttributePrefix = "rpc.grpc.request.metadata.";
+    String stableHeaderAttributePrefix = "rpc.request.header.";
     AttributeKey<List<String>> oldClientAttributeKey =
-        AttributeKey.stringArrayKey(oldMetadataAttributePrefix + CLIENT_REQUEST_METADATA_KEY);
+        AttributeKey.stringArrayKey(legacyMetadataAttributePrefix + CLIENT_REQUEST_HEADER_KEY);
     AttributeKey<List<String>> stableClientAttributeKey =
-        AttributeKey.stringArrayKey(stableMetadataAttributePrefix + CLIENT_REQUEST_METADATA_KEY);
+        AttributeKey.stringArrayKey(stableHeaderAttributePrefix + CLIENT_REQUEST_HEADER_KEY);
     AttributeKey<List<String>> oldServerAttributeKey =
-        AttributeKey.stringArrayKey(oldMetadataAttributePrefix + SERVER_REQUEST_METADATA_KEY);
+        AttributeKey.stringArrayKey(legacyMetadataAttributePrefix + SERVER_REQUEST_HEADER_KEY);
     AttributeKey<List<String>> stableServerAttributeKey =
-        AttributeKey.stringArrayKey(stableMetadataAttributePrefix + SERVER_REQUEST_METADATA_KEY);
+        AttributeKey.stringArrayKey(stableHeaderAttributePrefix + SERVER_REQUEST_HEADER_KEY);
     AttributeKey<List<String>> oldExcludedAttributeKey =
-        AttributeKey.stringArrayKey(oldMetadataAttributePrefix + EXCLUDED_REQUEST_METADATA_KEY);
+        AttributeKey.stringArrayKey(legacyMetadataAttributePrefix + EXCLUDED_REQUEST_HEADER_KEY);
     AttributeKey<List<String>> stableExcludedAttributeKey =
-        AttributeKey.stringArrayKey(stableMetadataAttributePrefix + EXCLUDED_REQUEST_METADATA_KEY);
-    String serverMetadataValue = "server-value";
-    String clientMetadataValue = "client-value";
+        AttributeKey.stringArrayKey(stableHeaderAttributePrefix + EXCLUDED_REQUEST_HEADER_KEY);
+    String serverHeaderValue = "server-value";
+    String clientHeaderValue = "client-value";
 
     BindableService greeter =
         new GreeterGrpc.GreeterImplBase() {
@@ -1767,13 +1767,13 @@ public abstract class AbstractGrpcTest {
 
     Metadata extraMetadata = new Metadata();
     extraMetadata.put(
-        Metadata.Key.of(SERVER_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
-        serverMetadataValue);
+        Metadata.Key.of(SERVER_REQUEST_HEADER_KEY, Metadata.ASCII_STRING_MARSHALLER),
+        serverHeaderValue);
     extraMetadata.put(
-        Metadata.Key.of(CLIENT_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
-        clientMetadataValue);
+        Metadata.Key.of(CLIENT_REQUEST_HEADER_KEY, Metadata.ASCII_STRING_MARSHALLER),
+        clientHeaderValue);
     extraMetadata.put(
-        Metadata.Key.of(EXCLUDED_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
+        Metadata.Key.of(EXCLUDED_REQUEST_HEADER_KEY, Metadata.ASCII_STRING_MARSHALLER),
         "excluded-value");
 
     GreeterGrpc.GreeterBlockingStub client =
@@ -1800,12 +1800,12 @@ public abstract class AbstractGrpcTest {
                       span.hasAttributesSatisfying(
                           equalTo(
                               oldClientAttributeKey,
-                              emitOldRpcSemconv() ? singletonList(clientMetadataValue) : null),
+                              emitOldRpcSemconv() ? singletonList(clientHeaderValue) : null),
                           equalTo(
                               stableClientAttributeKey,
-                              emitPreviewRpcSemconv() ? singletonList(clientMetadataValue) : null),
+                              emitPreviewRpcSemconv() ? singletonList(clientHeaderValue) : null),
                           equalTo(
-                              stringArrayKey("rpc.request.metadata." + CLIENT_REQUEST_METADATA_KEY),
+                              stringArrayKey("rpc.request.metadata." + CLIENT_REQUEST_HEADER_KEY),
                               null),
                           equalTo(oldExcludedAttributeKey, null),
                           equalTo(stableExcludedAttributeKey, null));
@@ -1817,12 +1817,12 @@ public abstract class AbstractGrpcTest {
                       span.hasAttributesSatisfying(
                           equalTo(
                               oldServerAttributeKey,
-                              emitOldRpcSemconv() ? singletonList(serverMetadataValue) : null),
+                              emitOldRpcSemconv() ? singletonList(serverHeaderValue) : null),
                           equalTo(
                               stableServerAttributeKey,
-                              emitPreviewRpcSemconv() ? singletonList(serverMetadataValue) : null),
+                              emitPreviewRpcSemconv() ? singletonList(serverHeaderValue) : null),
                           equalTo(
-                              stringArrayKey("rpc.request.metadata." + SERVER_REQUEST_METADATA_KEY),
+                              stringArrayKey("rpc.request.metadata." + SERVER_REQUEST_HEADER_KEY),
                               null),
                           equalTo(oldExcludedAttributeKey, null),
                           equalTo(stableExcludedAttributeKey, null));
