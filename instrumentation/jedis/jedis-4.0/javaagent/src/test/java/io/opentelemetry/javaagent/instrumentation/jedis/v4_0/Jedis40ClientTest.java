@@ -307,6 +307,8 @@ class Jedis40ClientTest {
     boolean jedis51OrLater = Boolean.getBoolean("testJedis51OrLater");
     testing.waitForTraces(jedis51OrLater ? 5 : 4);
     String authenticationOperation = testLatestDeps() ? "HELLO" : "AUTH";
+    // Latest Jedis also attempts connection initialization in the UnifiedJedis constructor.
+    int initializationAttempts = testLatestDeps() ? 2 : 1;
     assertThat(testing.spans())
         .filteredOn(
             span -> authenticationOperation.equals(span.getAttributes().get(DB_OPERATION_NAME)))
@@ -315,7 +317,7 @@ class Jedis40ClientTest {
     assertThat(testing.spans())
         .filteredOn(span -> "SELECT".equals(span.getAttributes().get(DB_OPERATION_NAME)))
         .filteredOn(span -> "ERR".equals(span.getAttributes().get(ERROR_TYPE)))
-        .hasSize(1);
+        .hasSize(initializationAttempts);
     assertThat(testing.spans())
         .filteredOn(span -> "SET".equals(span.getAttributes().get(DB_OPERATION_NAME)))
         .singleElement()
@@ -340,7 +342,8 @@ class Jedis40ClientTest {
                           point -> "SELECT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
                       .filteredOn(point -> "ERR".equals(point.getAttributes().get(ERROR_TYPE)))
                       .singleElement()
-                      .satisfies(point -> assertThat(point.getCount()).isEqualTo(1));
+                      .satisfies(
+                          point -> assertThat(point.getCount()).isEqualTo(initializationAttempts));
                   assertThat(metric.getHistogramData().getPoints())
                       .filteredOn(
                           point -> "SET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
