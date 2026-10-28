@@ -36,6 +36,22 @@ released that breaks our instrumentation tests.
 
 To run these tests locally, add `-PtestLatestDeps=true` to your existing `gradlew` command line.
 
+### Thrift fixtures
+
+Thrift fixture generation automatically downloads a native compiler and verifies its pinned SHA-256.
+No Docker or manual Thrift installation is needed. The compiler is cached by Gradle; after the first
+generation in each mode, `--offline` supports regeneration after IDL changes or cleaning build outputs.
+
+The compiler versions are 0.13.0 by default and 0.22.0 with `-PtestLatestDeps=true`.
+The native distributions support these platforms:
+
+| Platform | Default mode | Latest-dependency mode |
+| --- | --- | --- |
+| Linux x86-64 / ARM64 | glibc-based systems | glibc-based systems |
+| macOS Intel | macOS 10.14+ | macOS 14+ |
+| macOS ARM64 | macOS 12+ | macOS 15+ |
+| Windows x86-64 | x86 executable | x86 executable |
+
 ### Executing single test
 
 Executing `./gradlew :instrumentation:<INSTRUMENTATION_NAME>:test --tests <TEST FILE NAME>` will run only the selected test.
