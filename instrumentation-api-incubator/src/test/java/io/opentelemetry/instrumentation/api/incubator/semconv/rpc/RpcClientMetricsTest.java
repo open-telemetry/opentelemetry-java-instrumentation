@@ -27,6 +27,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.metrics.Aggregation;
+import io.opentelemetry.sdk.metrics.ExplicitBucketHistogramOptions;
 import io.opentelemetry.sdk.metrics.InstrumentSelector;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.View;
@@ -162,7 +163,11 @@ class RpcClientMetricsTest {
             .registerView(
                 InstrumentSelector.builder().setName("rpc.client.call.duration").build(),
                 View.builder()
-                    .setAggregation(Aggregation.explicitBucketHistogram(asList(0.1, 0.2, 0.3)))
+                    .setAggregation(
+                        Aggregation.explicitBucketHistogram(
+                            ExplicitBucketHistogramOptions.builder()
+                                .setBucketBoundaries(asList(0.1, 0.2, 0.3))
+                                .build()))
                     .build())
             .build();
     cleanup.deferCleanup(meterProvider);
