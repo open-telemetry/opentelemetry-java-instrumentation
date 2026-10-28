@@ -50,17 +50,5 @@ class RpcSpanNameExtractorTest {
     assertThat(extractor.extract(request)).isEqualTo("custom_rpc");
   }
 
-  @Test
-  @SuppressWarnings("deprecation") // testing deprecated method fallback
-  void rpcMethodNull_fallsBackToSystemName_viaGetSystem() {
-    RpcRequest request = new RpcRequest();
-
-    when(getter.getRpcSystemName(request)).thenCallRealMethod();
-    when(getter.getSystem(request)).thenReturn("custom_rpc");
-
-    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
-    assertThat(extractor.extract(request)).isEqualTo("custom_rpc");
-  }
-
   static class RpcRequest {}
 }

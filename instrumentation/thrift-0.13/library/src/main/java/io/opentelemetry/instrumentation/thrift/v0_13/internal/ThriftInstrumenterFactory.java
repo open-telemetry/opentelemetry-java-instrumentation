@@ -23,7 +23,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
-import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.thrift.v0_13.ThriftRequest;
@@ -58,9 +57,6 @@ public final class ThriftInstrumenterFactory {
 
     SpanNameExtractor<ThriftRequest> originalSpanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesGetter);
-    // Initialize before customization: a user-provided wrapper may hide the RPC extractor
-    // from InstrumenterBuilder's automatic initialization.
-    ((OpenTelemetryConfigurable) originalSpanNameExtractor).internalInitialize(openTelemetry);
     SpanNameExtractor<ThriftRequest> clientSpanNameExtractor =
         clientSpanNameExtractorCustomizer.apply(originalSpanNameExtractor);
 
@@ -91,9 +87,6 @@ public final class ThriftInstrumenterFactory {
       List<AttributesExtractor<ThriftRequest, ThriftResponse>> additionalServerExtractors) {
     SpanNameExtractor<ThriftRequest> originalSpanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesGetter);
-    // Initialize before customization: a user-provided wrapper may hide the RPC extractor
-    // from InstrumenterBuilder's automatic initialization.
-    ((OpenTelemetryConfigurable) originalSpanNameExtractor).internalInitialize(openTelemetry);
     SpanNameExtractor<ThriftRequest> serverSpanNameExtractor =
         serverSpanNameExtractorCustomizer.apply(originalSpanNameExtractor);
 

@@ -24,21 +24,8 @@ final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, 
   }
 
   @Override
-  public String getSystem(GrpcRequest request) {
+  public String getRpcSystemName(GrpcRequest request) {
     return "grpc";
-  }
-
-  @Override
-  @Nullable
-  public String getService(GrpcRequest request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getMethod(GrpcRequest request) {
-    return null;
   }
 
   @Override

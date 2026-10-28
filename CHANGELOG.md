@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes
 
+- Remove `RpcMetricsContextCustomizers` and `RpcAttributesGetter.getSystem`, `getService`, and
+  `getMethod` from the alpha `opentelemetry-instrumentation-api-incubator` artifact.
+  Implement `getRpcSystemName` and `getRpcMethod` explicitly; `getRpcMethod` returns the fully
+  qualified method name.
 - Remove `SemconvRpcStabilityUtil` from the alpha `opentelemetry-testing-common` artifact.
 - RPC telemetry now uses only the conventions with schema version 1.44.0: `rpc.system.name`,
   fully qualified `rpc.method`, `rpc.status_code`, and `error.type`, with updated span names.
@@ -216,13 +220,11 @@
   `structuredAttributesIncluded` and `structuredAttributesExcluded` in XML, or
   `setStructuredAttributes(IncludeExclude)` programmatically.
   Log4j `MapMessage` keys are emitted as their original log attribute names.
-- RPC and service-peer semantic conventions now require `otel.semconv-stability.preview=rpc`
-  and `otel.semconv-stability.preview=service.peer`, respectively (or `rpc/dup` and
-  `service.peer/dup` for dual emission). The `rpc`, `rpc/dup`, `service.peer`, and `service.peer/dup`
+- Service-peer semantic conventions now require `otel.semconv-stability.preview=service.peer`
+  (or `service.peer/dup` for dual emission). The `service.peer` and `service.peer/dup`
   values in `otel.semconv-stability.opt-in` no longer select them.
   For declarative configuration, move these values from `general.stability_opt_in_list` to
-  `java.common.semconv_stability.preview`. Default telemetry and explicit `general.rpc.semconv`
-  configuration are unchanged.
+  `java.common.semconv_stability.preview`.
 - Micrometer timers and distribution summaries no longer emit separate `.max` gauge metrics; use the
   maximum from their histogram instead. Custom meter statistic suffixes are appended after the base
   name passes through the naming convention (for example, Prometheus mode changes

@@ -11,21 +11,8 @@ import javax.annotation.Nullable;
 public class ServerAttributesGetter implements RpcAttributesGetter<SpringRmiServerRequest, Void> {
 
   @Override
-  public String getSystem(SpringRmiServerRequest request) {
+  public String getRpcSystemName(SpringRmiServerRequest request) {
     return "spring_rmi";
-  }
-
-  @Override
-  @Nullable
-  public String getService(SpringRmiServerRequest request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getMethod(SpringRmiServerRequest request) {
-    return null;
   }
 
   @Override
