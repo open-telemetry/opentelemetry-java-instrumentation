@@ -34,27 +34,11 @@ class RpcAttributesExtractorTest {
       return "test";
     }
 
-    @Override
-    public String getSystem(Map<String, String> request) {
-      return "test";
-    }
-
-    @Override
-    public String getService(Map<String, String> request) {
-      return request.get("service");
-    }
-
-    @Deprecated
-    @Override
-    public String getMethod(Map<String, String> request) {
-      return request.get("method");
-    }
-
     @Nullable
     @Override
     public String getRpcMethod(Map<String, String> request) {
-      String service = getService(request);
-      String method = getMethod(request);
+      String service = request.get("service");
+      String method = request.get("method");
       if (service == null || method == null) {
         return null;
       }
@@ -246,5 +230,42 @@ class RpcAttributesExtractorTest {
   @Test
   void statusCodeIsUnavailableByDefault() {
     assertThat(new TestGetter().getRpcStatusCode(new HashMap<>(), null, null)).isNull();
+  }
+
+  @Test
+  void sizeCaptureIsIndependentOfCallDurationMetrics() {
+    TestGetter getter =
+        new TestGetter() {
+          @Override
+          public Long getRequestSize(Map<String, String> request) {
+            return 10L;
+          }
+
+          @Override
+          public Long getResponseSize(Map<String, String> request) {
+            return 20L;
+          }
+        };
+    RpcSizeAttributesExtractor<Map<String, String>, Void> extractor =
+        RpcSizeAttributesExtractor.create(getter);
+    AttributesBuilder attributes = Attributes.builder();
+    Map<String, String> request = new HashMap<>();
+
+    extractor.onStart(attributes, Context.root(), request);
+    assertThat(attributes.build()).isEqualTo(Attributes.empty());
+    extractor.onEnd(attributes, Context.root(), request, null, null);
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE, 10L),
+            entry(RpcSizeAttributesExtractor.RPC_RESPONSE_SIZE, 20L));
+  }
+
+  @Test
+  void unavailableSizesAreOmitted() {
+    AttributesBuilder attributes = Attributes.builder();
+    RpcSizeAttributesExtractor.create(new TestGetter())
+        .onEnd(attributes, Context.root(), new HashMap<>(), null, null);
+
+    assertThat(attributes.build()).isEqualTo(Attributes.empty());
   }
 }

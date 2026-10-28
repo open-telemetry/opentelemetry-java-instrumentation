@@ -19,27 +19,6 @@ final class DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest
   }
 
   @Override
-  public String getSystem(DubboRequest request) {
-    return "apache_dubbo";
-  }
-
-  @Override
-  @Nullable
-  public String getService(DubboRequest request) {
-    if (request.isUnknownService()) {
-      return null;
-    }
-    return request.invocation().getInvoker().getInterface().getName();
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getMethod(DubboRequest request) {
-    return null;
-  }
-
-  @Override
   @Nullable
   public String getRpcMethod(DubboRequest request) {
     if (request.isUnknownService()) {
@@ -51,6 +30,14 @@ final class DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest
       return service + "/" + method;
     }
     return null;
+  }
+
+  @Nullable
+  private static String getService(DubboRequest request) {
+    if (request.isUnknownService()) {
+      return null;
+    }
+    return request.invocation().getInvoker().getInterface().getName();
   }
 
   @Override
