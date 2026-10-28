@@ -116,11 +116,12 @@ Please help us make this happen.
 
 ## Ordinary agent startup benchmark
 
-The opt-in `agentStartupBenchmark` task measures repeated ordinary `-javaagent`
-launches of the small Spring smoke application using one supplied agent JAR. It
-reuses the pinned JDK 25 smoke image from the AOT benchmark, without
-AOT or bootstrap-classpath preloading. Instrumentation and the SDK remain active;
-all exporters are `none`.
+The opt-in `agentStartupBenchmark` task compares ordinary `-javaagent` launches
+of the small Spring smoke application with a no-agent control. Supply an optional
+baseline agent JAR to compare agent-added overhead before and after a change.
+It reuses the pinned JDK 25 smoke image from the AOT benchmark, without AOT or
+bootstrap-classpath preloading. Instrumentation and the SDK remain active when
+an agent is present; all exporters are `none`.
 
 Use JDK 25 and Docker with Linux containers. Each application container has a
 two-CPU quota, a 1 GiB memory limit, and `-Xmx512m`. Do not build artifacts or run
@@ -140,7 +141,14 @@ cd benchmark-overhead
 The workflow also packages the recorder JAR with the agent and fixture so a
 measurement-only rerun reuses the same built inputs.
 
-Defaults are two discarded fresh-process starts and twenty measured starts.
+To compare two agents, also pass
+`-PstartupBenchmarkBaselineAgentJar=/absolute/path/to/baseline-agent.jar`.
+Record their revisions with `-PstartupBenchmarkRevision` and
+`-PstartupBenchmarkBaselineRevision`. The no-agent control uses the same image,
+fixture, classpath, heap, and resource limits, but omits `-javaagent`.
+
+Defaults are two discarded fresh-process starts and twenty measured starts per
+configuration. Configurations run serially, rotating their order each round.
 Set `-PstartupBenchmarkWarmups=0 -PstartupBenchmarkSamples=1` for a short
 functional run, not a performance conclusion.
 
@@ -152,12 +160,17 @@ host-side request timing. Uptime is reported with millisecond resolution.
 Readiness polling waits for that response; failed starts abort the benchmark and
 retain diagnostics, and measured starts are not retried or filtered as outliers.
 
+Agent-added startup overhead is the agent's median minus the no-agent median.
+When a baseline agent is supplied, the report also shows the absolute reduction
+and its percentage of baseline agent-added overhead. These are differences of
+configuration medians, not medians of paired per-round differences.
+
 Results under `build/reports/agent-startup/<run-id>/` include raw observations,
 host load averages, agent hash and version, the selected source revision, exact
 JVM command, image/JDK identity, and the startup-to-readiness timing distribution.
 
-One separate untimed launch records a startup JFR file and execution-sample
-summary. A diagnostic-only recorder agent starts JFR before OpenTelemetry's
+One separate untimed launch per agent records a startup JFR file and
+execution-sample summary. A diagnostic-only recorder agent starts JFR before OpenTelemetry's
 `premain()`; the JVM's `-XX:StartFlightRecording` option starts too late to
 capture agent initialization. This launch is excluded from timing results.
 These are fresh JVMs with warm image/filesystem caches, not cold-machine starts
@@ -165,11 +178,16 @@ or throughput measurements.
 
 Manually dispatch `agent-startup-benchmark.yml` on the branch or tag to measure.
 For example, run `gh workflow run agent-startup-benchmark.yml --ref my-startup-change`.
-The selected revision must contain the workflow and benchmark. Dispatch requires
+Pass `-f baseline-ref=<revision-on-main>` to also build and measure a baseline
+agent in the same run. The workflow rejects baseline revisions that are not
+reachable from upstream `main` before executing their build.
+The selected revision must contain the workflow and benchmark.
+Dispatch requires
 repository write access; only run trusted code, since it executes on a shared host.
 
-The workflow builds the agent and startup fixture and packages them with the
-harness as one artifact from the selected revision on a standard hosted runner.
+The workflow builds the selected agent, any baseline agent, and the startup
+fixture on a standard hosted runner. It packages them with the harness from the
+selected revision as one artifact.
 It unpacks the inputs under `RUNNER_TEMP`, without checking out sources on the
 bare-metal host, and measures serially on
 `oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24` without repository credentials,

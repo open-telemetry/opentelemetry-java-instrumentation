@@ -21,29 +21,8 @@ unchanged. Multiple domains can be comma-separated, for example
 Test all modes the domain supports. A domain that always emits the same conventions needs
 no semconv selection task. Code and database conventions are stable-only.
 
-### RPC preview selection
-
-RPC uses `otel.semconv-stability.preview`:
-
-| `otel.semconv-stability.preview` value | Old attrs emitted | Preview attrs emitted | Purpose                     |
-| -------------------------------------- | :---------------: | :-------------------: | --------------------------- |
-| _(unset)_                              |        ✅         |          ❌           | Default / legacy mode       |
-| `rpc`                                  |        ❌         |          ✅           | Preview-only                |
-| `rpc/dup`                              |        ✅         |          ✅           | Legacy and preview together |
-
-Legacy `opt-in` values for RPC, including `/dup`, remain accepted and combine with preview values.
-Preserve tests that explicitly cover this compatibility behavior.
-
-The naming convention is `emitStable*Semconv()` for stable selection and
-`emitPreview*Semconv()` for preview selection.
-
-Target `SemconvStability` method names:
-
-| Domain | Property                         | Values            | Methods                                          |
-| ------ | -------------------------------- | ----------------- | ------------------------------------------------ |
-| RPC    | `otel.semconv-stability.preview` | `rpc` / `rpc/dup` | `emitOldRpcSemconv()`, `emitPreviewRpcSemconv()` |
-
-The accessor class is `io.opentelemetry.instrumentation.api.internal.SemconvStability`.
+RPC telemetry and configured server service mappings emit their current conventions
+unconditionally. Their tests do not need semconv-selection variants.
 
 ## Gradle Test Task Setup
 
@@ -52,8 +31,6 @@ Every Gradle project whose tests exercise selectable semconv modes **must** defi
 Define both when the tests exercise both kinds of selection. This includes `javaagent-unit-tests`
 projects whose tests branch on an `emitOld*()`, `emitStable*()`, or `emitPreview*()` accessor.
 Keep the default `test` task for the default mode.
-
-RPC requires a `testBothSemconv` task for the `/dup` mode.
 
 Preserve mixed variants that exercise selectable domains and variants for experimental telemetry,
 disabled adapters, connection telemetry, exception signals, and dependency versions.
@@ -126,18 +103,5 @@ parameterization, sanitization, batches, namespaces, server targets, peers, and 
 
 ### Inline mode-dependent expectations
 
-When no established semconv utility applies, keep each mode-dependent expectation at the
-assertion site. Gate the expected value with the matching `emitOld*()`, `emitStable*()`,
-or `emitPreview*()` accessor and use `null` to expect the attribute to be absent:
-
-```java
-equalTo(
-    RPC_GRPC_STATUS_CODE,
-    emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null)
-equalTo(
-    RPC_RESPONSE_STATUS_CODE,
-    emitPreviewRpcSemconv() ? Status.Code.OK.name() : null)
-```
-
-This paired form also covers `/dup` mode because both accessors return true. Do not hide
-these expectations in separate conditional attribute blocks or helper-built lists.
+For any remaining mode-dependent expectations, use the matching accessor at the assertion site.
+RPC and server service mapping expectations are not mode-dependent; assert their values directly.

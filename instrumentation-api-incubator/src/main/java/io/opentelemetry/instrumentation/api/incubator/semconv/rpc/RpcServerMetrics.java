@@ -5,32 +5,23 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcCommonAttributesExtractor.RPC_METHOD;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcMetricsContextCustomizers.OLD_RPC_METHOD_CONTEXT_KEY;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
-import io.opentelemetry.api.metrics.LongHistogram;
-import io.opentelemetry.api.metrics.LongHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
-import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 
 /**
  * {@link OperationListener} which keeps track of <a
@@ -39,7 +30,6 @@ import javax.annotation.Nullable;
  */
 public final class RpcServerMetrics implements OperationListener {
 
-  private static final double NANOS_PER_MS = MILLISECONDS.toNanos(1);
   private static final double NANOS_PER_S = SECONDS.toNanos(1);
 
   private static final ContextKey<RpcServerMetrics.State> RPC_SERVER_REQUEST_METRICS_STATE =
@@ -47,67 +37,17 @@ public final class RpcServerMetrics implements OperationListener {
 
   private static final Logger logger = Logger.getLogger(RpcServerMetrics.class.getName());
 
-  @Nullable private final DoubleHistogram oldServerDurationHistogram;
-  @Nullable private final DoubleHistogram stableServerDurationHistogram;
-  @Nullable private final LongHistogram oldServerRequestSize;
-  @Nullable private final LongHistogram oldServerResponseSize;
-  private final boolean dualEmit;
+  private final DoubleHistogram serverDurationHistogram;
 
-  private RpcServerMetrics(
-      Meter meter,
-      boolean emitOldRpcSemconv,
-      boolean emitPreviewRpcSemconv,
-      List<Double> durationSecondsBucketBoundaries) {
-    dualEmit = emitOldRpcSemconv && emitPreviewRpcSemconv;
-    // Old metric (milliseconds)
-    if (emitOldRpcSemconv) {
-      DoubleHistogramBuilder oldDurationBuilder =
-          meter
-              .histogramBuilder("rpc.server.duration")
-              .setDescription("Measures the duration of inbound RPC.")
-              .setUnit("ms");
-      RpcMetricsAdvice.applyServerDurationAdvice(oldDurationBuilder, false);
-      oldServerDurationHistogram = oldDurationBuilder.build();
-    } else {
-      oldServerDurationHistogram = null;
-    }
-
-    // Stable metric (seconds)
-    if (emitPreviewRpcSemconv) {
-      DoubleHistogramBuilder stableDurationBuilder =
-          meter
-              .histogramBuilder("rpc.server.call.duration")
-              .setDescription("Measures the duration of an incoming Remote Procedure Call (RPC).")
-              .setUnit("s")
-              .setExplicitBucketBoundariesAdvice(durationSecondsBucketBoundaries);
-      RpcMetricsAdvice.applyServerDurationAdvice(stableDurationBuilder, true);
-      stableServerDurationHistogram = stableDurationBuilder.build();
-    } else {
-      stableServerDurationHistogram = null;
-    }
-
-    if (emitOldRpcSemconv) {
-      LongHistogramBuilder requestSizeBuilder =
-          meter
-              .histogramBuilder("rpc.server.request.size")
-              .setUnit("By")
-              .setDescription("Measures the size of RPC request messages (uncompressed).")
-              .ofLongs();
-      RpcMetricsAdvice.applyOldServerRequestSizeAdvice(requestSizeBuilder);
-      oldServerRequestSize = requestSizeBuilder.build();
-
-      LongHistogramBuilder responseSizeBuilder =
-          meter
-              .histogramBuilder("rpc.server.response.size")
-              .setUnit("By")
-              .setDescription("Measures the size of RPC response messages (uncompressed).")
-              .ofLongs();
-      RpcMetricsAdvice.applyOldServerRequestSizeAdvice(responseSizeBuilder);
-      oldServerResponseSize = responseSizeBuilder.build();
-    } else {
-      oldServerRequestSize = null;
-      oldServerResponseSize = null;
-    }
+  private RpcServerMetrics(Meter meter, List<Double> durationSecondsBucketBoundaries) {
+    DoubleHistogramBuilder durationBuilder =
+        meter
+            .histogramBuilder("rpc.server.call.duration")
+            .setDescription("Measures the duration of an incoming Remote Procedure Call (RPC).")
+            .setUnit("s")
+            .setExplicitBucketBoundariesAdvice(durationSecondsBucketBoundaries);
+    RpcMetricsAdvice.applyServerDurationAdvice(durationBuilder);
+    serverDurationHistogram = durationBuilder.build();
   }
 
   /**
@@ -133,10 +73,7 @@ public final class RpcServerMetrics implements OperationListener {
   public Context onStart(Context context, Attributes startAttributes, long startNanos) {
     return context.with(
         RPC_SERVER_REQUEST_METRICS_STATE,
-        new AutoValue_RpcServerMetrics_State(
-            startAttributes,
-            startNanos,
-            dualEmit ? context.get(OLD_RPC_METHOD_CONTEXT_KEY) : null));
+        new AutoValue_RpcServerMetrics_State(startAttributes, startNanos));
   }
 
   @Override
@@ -152,34 +89,7 @@ public final class RpcServerMetrics implements OperationListener {
     Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
     double durationNanos = endNanos - state.startTimeNanos();
 
-    if (oldServerDurationHistogram != null) {
-      Attributes oldAttributes = getOldAttributes(attributes, state);
-
-      oldServerDurationHistogram.record(durationNanos / NANOS_PER_MS, oldAttributes, context);
-
-      Long rpcServerRequestBodySize = attributes.get(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE);
-      if (oldServerRequestSize != null && rpcServerRequestBodySize != null) {
-        oldServerRequestSize.record(rpcServerRequestBodySize, oldAttributes, context);
-      }
-
-      Long rpcServerResponseBodySize = attributes.get(RpcSizeAttributesExtractor.RPC_RESPONSE_SIZE);
-      if (oldServerResponseSize != null && rpcServerResponseBodySize != null) {
-        oldServerResponseSize.record(rpcServerResponseBodySize, oldAttributes, context);
-      }
-    }
-
-    if (stableServerDurationHistogram != null) {
-      stableServerDurationHistogram.record(durationNanos / NANOS_PER_S, attributes, context);
-    }
-  }
-
-  private static Attributes getOldAttributes(Attributes attributes, State state) {
-    String oldRpcMethod = state.oldRpcMethod();
-    if (oldRpcMethod != null) {
-      // dup mode: replace stable rpc.method with old value
-      return attributes.toBuilder().put(RPC_METHOD, oldRpcMethod).build();
-    }
-    return attributes;
+    serverDurationHistogram.record(durationNanos / NANOS_PER_S, attributes, context);
   }
 
   @AutoValue
@@ -188,13 +98,9 @@ public final class RpcServerMetrics implements OperationListener {
     abstract Attributes startAttributes();
 
     abstract long startTimeNanos();
-
-    @Nullable
-    abstract String oldRpcMethod();
   }
 
-  private static final class Factory implements OperationMetrics, OpenTelemetryConfigurable {
-    private final RpcSemconvSelection selection = new RpcSemconvSelection();
+  private static final class Factory implements OperationMetrics {
     private final List<Double> durationSecondsBucketBoundaries;
 
     private Factory(List<Double> durationSecondsBucketBoundaries) {
@@ -203,21 +109,9 @@ public final class RpcServerMetrics implements OperationListener {
     }
 
     @Override
-    public void internalInitialize(OpenTelemetry openTelemetry) {
-      selection.initialize(openTelemetry);
-    }
-
-    @Override
     public OperationListener create(Meter meter) {
-      RpcSemconvSelection.Selection current = selection.get();
       return OperationMetricsUtil.create(
-              "rpc server",
-              ignored ->
-                  new RpcServerMetrics(
-                      meter,
-                      current.emitOld(),
-                      current.emitPreview(),
-                      durationSecondsBucketBoundaries))
+              "rpc server", ignored -> new RpcServerMetrics(meter, durationSecondsBucketBoundaries))
           .create(meter);
     }
   }

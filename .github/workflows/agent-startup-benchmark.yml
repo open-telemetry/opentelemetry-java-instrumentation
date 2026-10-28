@@ -2,6 +2,11 @@ name: Agent startup benchmark
 
 on:
   workflow_dispatch:
+    inputs:
+      baseline-ref:
+        description: Optional revision reachable from upstream main to compare against the selected agent
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -36,7 +41,36 @@ jobs:
         working-directory: benchmark-overhead
         run: ./gradlew spotlessApply test --tests 'io.opentelemetry.startup.*Test' startupRecorderJar
 
+      - name: Check out upstream main history for baseline validation
+        if: inputs.baseline-ref != ''
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          path: baseline
+          persist-credentials: false
+
+      - name: Select a baseline revision from upstream main history
+        if: inputs.baseline-ref != ''
+        env:
+          BASELINE_REF: ${{ inputs.baseline-ref }}
+        run: |
+          set -euo pipefail
+          baseline_revision=$(git -C baseline rev-parse --verify --end-of-options "${BASELINE_REF}^{commit}")
+          if ! git -C baseline merge-base --is-ancestor "$baseline_revision" refs/remotes/origin/main; then
+            echo "::error::Baseline revision must be reachable from upstream main"
+            exit 1
+          fi
+          git -C baseline checkout --detach "$baseline_revision"
+
+      - name: Build baseline agent
+        if: inputs.baseline-ref != ''
+        working-directory: baseline
+        run: ./gradlew :javaagent:shadowJar -PremoveJarVersionNumbers=true "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" --max-workers=2
+
       - name: Package all benchmark inputs
+        env:
+          BASELINE_REF: ${{ inputs.baseline-ref }}
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/startup-benchmark/fixture"
@@ -46,6 +80,11 @@ jobs:
           cp benchmark-overhead/build/libs/startup-recorder.jar "$RUNNER_TEMP/startup-benchmark/"
           git rev-parse HEAD > "$RUNNER_TEMP/startup-benchmark/revision.txt"
           (cd "$RUNNER_TEMP/startup-benchmark" && sha256sum opentelemetry-javaagent.jar startup-recorder.jar > sha256.txt)
+          if [ -n "$BASELINE_REF" ]; then
+            cp baseline/javaagent/build/libs/opentelemetry-javaagent.jar "$RUNNER_TEMP/startup-benchmark/baseline-agent.jar"
+            git -C baseline rev-parse HEAD > "$RUNNER_TEMP/startup-benchmark/baseline-revision.txt"
+            (cd "$RUNNER_TEMP/startup-benchmark" && sha256sum baseline-agent.jar >> sha256.txt)
+          fi
           git archive --format=tar HEAD \
             benchmark-overhead .java-version buildscripts/spotless.license.java \
             | gzip -n > "$RUNNER_TEMP/startup-benchmark/harness.tar.gz"
@@ -98,11 +137,17 @@ jobs:
           docker info >> build/reports/agent-startup/host.txt
           printf '%s/ actions run %s attempt %s\n' "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" > build/reports/agent-startup/workflow.txt
           source_revision=$(cat "$AGENTS/revision.txt")
+          baseline_arguments=()
+          if [ -f "$AGENTS/baseline-agent.jar" ]; then
+            baseline_arguments+=("-PstartupBenchmarkBaselineAgentJar=$AGENTS/baseline-agent.jar")
+            baseline_arguments+=("-PstartupBenchmarkBaselineRevision=$(cat "$AGENTS/baseline-revision.txt")")
+          fi
           ./gradlew --no-daemon agentStartupBenchmark \
             "-PstartupBenchmarkAgentJar=$AGENTS/opentelemetry-javaagent.jar" \
             "-PstartupBenchmarkRecorderJar=$AGENTS/startup-recorder.jar" \
             "-PstartupBenchmarkFixtureClass=$AGENTS/fixture/WebController.class" \
-            "-PstartupBenchmarkRevision=$source_revision"
+            "-PstartupBenchmarkRevision=$source_revision" \
+            "${baseline_arguments[@]}"
 
       - name: Publish summary
         working-directory: ${{ env.AGENTS }}/benchmark-overhead

@@ -9,8 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -21,8 +20,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -53,6 +50,7 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -63,7 +61,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSofaRpcTest {
 
   protected abstract InstrumentationExtension testing();
@@ -181,19 +178,11 @@ public abstract class AbstractSofaRpcTest {
                     span ->
                         span.hasName(genericServiceSpanName())
                             .hasKind(SpanKind.CLIENT)
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SERVICE,
-                                    emitOldRpcSemconv() ? GenericService.class.getName() : null),
-                                equalTo(
-                                    RPC_METHOD,
-                                    emitPreviewRpcSemconv()
-                                        ? genericServiceSpanName()
-                                        : genericMethodName()),
+                                equalTo(RPC_SYSTEM_NAME, "sofarpc"),
+                                equalTo(RPC_METHOD, genericServiceSpanName()),
                                 equalTo(
                                     stringKey("server.service.name"),
                                     testing().expectedPeerService()),
@@ -209,21 +198,13 @@ public abstract class AbstractSofaRpcTest {
                         span.hasName(
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello")
                             .hasKind(SpanKind.SERVER)
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SERVICE,
-                                    emitOldRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService"
-                                        : null),
+                                equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitPreviewRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"
-                                        : "hello"),
+                                    "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
                                     AbstractSofaRpcTest::assertNetworkPeerAddress),
@@ -231,95 +212,53 @@ public abstract class AbstractSofaRpcTest {
                                     NETWORK_PEER_PORT,
                                     AbstractSofaRpcTest::assertNetworkPeerPort))));
 
-    if (emitOldRpcSemconv()) {
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.sofa-rpc-5.4",
-              "rpc.server.duration",
-              metrics ->
-                  metrics.anySatisfy(
-                      metric ->
-                          assertThat(metric)
-                              .hasUnit("ms")
-                              .hasHistogramSatisfying(
-                                  histogram ->
-                                      histogram.hasPointsSatisfying(
-                                          point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_SERVICE,
-                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService"),
-                                                  equalTo(RPC_METHOD, "hello"))))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.sofa-rpc-5.4",
+            "rpc.server.call.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("s")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasBucketBoundaries(
+                                                    0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1,
+                                                    0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(RPC_SYSTEM_NAME, "sofarpc"),
+                                                    equalTo(
+                                                        RPC_METHOD,
+                                                        "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"))))));
 
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.sofa-rpc-5.4",
-              "rpc.client.duration",
-              metrics ->
-                  metrics.anySatisfy(
-                      metric ->
-                          assertThat(metric)
-                              .hasUnit("ms")
-                              .hasHistogramSatisfying(
-                                  histogram ->
-                                      histogram.hasPointsSatisfying(
-                                          point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_SERVICE, GenericService.class.getName()),
-                                                  equalTo(RPC_METHOD, genericMethodName()),
-                                                  equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                                  satisfies(
-                                                      SERVER_PORT,
-                                                      val -> val.isInstanceOf(Long.class)),
-                                                  satisfies(
-                                                      NETWORK_TYPE,
-                                                      AbstractSofaRpcTest::assertNetworkType))))));
-    }
-
-    if (emitPreviewRpcSemconv()) {
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.sofa-rpc-5.4",
-              "rpc.server.call.duration",
-              metrics ->
-                  metrics.anySatisfy(
-                      metric ->
-                          assertThat(metric)
-                              .hasUnit("s")
-                              .hasHistogramSatisfying(
-                                  histogram ->
-                                      histogram.hasPointsSatisfying(
-                                          point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_METHOD,
-                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"))))));
-
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.sofa-rpc-5.4",
-              "rpc.client.call.duration",
-              metrics ->
-                  metrics.anySatisfy(
-                      metric ->
-                          assertThat(metric)
-                              .hasUnit("s")
-                              .hasHistogramSatisfying(
-                                  histogram ->
-                                      histogram.hasPointsSatisfying(
-                                          point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(RPC_METHOD, genericServiceSpanName()),
-                                                  equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                                  satisfies(
-                                                      SERVER_PORT,
-                                                      val -> val.isInstanceOf(Long.class)))))));
-    }
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.sofa-rpc-5.4",
+            "rpc.client.call.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("s")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasBucketBoundaries(
+                                                    0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1,
+                                                    0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(RPC_SYSTEM_NAME, "sofarpc"),
+                                                    equalTo(RPC_METHOD, genericServiceSpanName()),
+                                                    equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                                                    satisfies(
+                                                        SERVER_PORT,
+                                                        val -> val.isInstanceOf(Long.class)))))));
   }
 
   @Test
@@ -357,19 +296,11 @@ public abstract class AbstractSofaRpcTest {
                     span ->
                         span.hasName(genericServiceSpanName())
                             .hasKind(SpanKind.CLIENT)
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SERVICE,
-                                    emitOldRpcSemconv() ? GenericService.class.getName() : null),
-                                equalTo(
-                                    RPC_METHOD,
-                                    emitPreviewRpcSemconv()
-                                        ? genericServiceSpanName()
-                                        : genericMethodName()),
+                                equalTo(RPC_SYSTEM_NAME, "sofarpc"),
+                                equalTo(RPC_METHOD, genericServiceSpanName()),
                                 equalTo(
                                     stringKey("server.service.name"),
                                     testing().expectedPeerService()),
@@ -385,21 +316,13 @@ public abstract class AbstractSofaRpcTest {
                         span.hasName(
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello")
                             .hasKind(SpanKind.SERVER)
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SERVICE,
-                                    emitOldRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService"
-                                        : null),
+                                equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitPreviewRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"
-                                        : "hello"),
+                                    "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
                                     AbstractSofaRpcTest::assertNetworkPeerAddress),
@@ -407,95 +330,53 @@ public abstract class AbstractSofaRpcTest {
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
                                 satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType))));
 
-    if (emitOldRpcSemconv()) {
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.sofa-rpc-5.4",
-              "rpc.server.duration",
-              metrics ->
-                  metrics.anySatisfy(
-                      metric ->
-                          assertThat(metric)
-                              .hasUnit("ms")
-                              .hasHistogramSatisfying(
-                                  histogram ->
-                                      histogram.hasPointsSatisfying(
-                                          point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_SERVICE,
-                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService"),
-                                                  equalTo(RPC_METHOD, "hello"))))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.sofa-rpc-5.4",
+            "rpc.server.call.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("s")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasBucketBoundaries(
+                                                    0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1,
+                                                    0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(RPC_SYSTEM_NAME, "sofarpc"),
+                                                    equalTo(
+                                                        RPC_METHOD,
+                                                        "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"))))));
 
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.sofa-rpc-5.4",
-              "rpc.client.duration",
-              metrics ->
-                  metrics.anySatisfy(
-                      metric ->
-                          assertThat(metric)
-                              .hasUnit("ms")
-                              .hasHistogramSatisfying(
-                                  histogram ->
-                                      histogram.hasPointsSatisfying(
-                                          point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_SERVICE, GenericService.class.getName()),
-                                                  equalTo(RPC_METHOD, genericMethodName()),
-                                                  equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                                  satisfies(
-                                                      SERVER_PORT,
-                                                      val -> val.isInstanceOf(Long.class)),
-                                                  satisfies(
-                                                      NETWORK_TYPE,
-                                                      AbstractSofaRpcTest::assertNetworkType))))));
-    }
-
-    if (emitPreviewRpcSemconv()) {
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.sofa-rpc-5.4",
-              "rpc.server.call.duration",
-              metrics ->
-                  metrics.anySatisfy(
-                      metric ->
-                          assertThat(metric)
-                              .hasUnit("s")
-                              .hasHistogramSatisfying(
-                                  histogram ->
-                                      histogram.hasPointsSatisfying(
-                                          point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_METHOD,
-                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"))))));
-
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.sofa-rpc-5.4",
-              "rpc.client.call.duration",
-              metrics ->
-                  metrics.anySatisfy(
-                      metric ->
-                          assertThat(metric)
-                              .hasUnit("s")
-                              .hasHistogramSatisfying(
-                                  histogram ->
-                                      histogram.hasPointsSatisfying(
-                                          point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(RPC_METHOD, genericServiceSpanName()),
-                                                  equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                                  satisfies(
-                                                      SERVER_PORT,
-                                                      val -> val.isInstanceOf(Long.class)))))));
-    }
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.sofa-rpc-5.4",
+            "rpc.client.call.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("s")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasBucketBoundaries(
+                                                    0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1,
+                                                    0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(RPC_SYSTEM_NAME, "sofarpc"),
+                                                    equalTo(RPC_METHOD, genericServiceSpanName()),
+                                                    equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                                                    satisfies(
+                                                        SERVER_PORT,
+                                                        val -> val.isInstanceOf(Long.class)))))));
   }
 
   static void assertNetworkType(AbstractStringAssert<?> stringAssert) {
@@ -577,22 +458,14 @@ public abstract class AbstractSofaRpcTest {
                         span.hasName(
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException")
                             .hasKind(SpanKind.CLIENT)
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SERVICE,
-                                    emitOldRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService"
-                                        : null),
+                                equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitPreviewRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"
-                                        : "throwException"),
+                                    "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
                                 equalTo(
                                     stringKey("server.service.name"),
                                     testing().expectedPeerService()),
@@ -604,140 +477,86 @@ public abstract class AbstractSofaRpcTest {
                                 satisfies(
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
                                 satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType),
-                                equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? "160" : null),
-                                equalTo(
-                                    stringKey("rpc.status_code"),
-                                    emitPreviewRpcSemconv() ? "160" : null))
+                                equalTo(ERROR_TYPE, "160"),
+                                equalTo(stringKey("rpc.status_code"), "160"))
                             .hasException(emitExceptionAsSpanEvents() ? clientException : null),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException")
                             .hasKind(SpanKind.SERVER)
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasParent(trace.getSpan(1))
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SERVICE,
-                                    emitOldRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService"
-                                        : null),
+                                equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitPreviewRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"
-                                        : "throwException"),
+                                    "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
                                     AbstractSofaRpcTest::assertNetworkPeerAddress),
                                 satisfies(
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
-                                equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? "160" : null),
-                                equalTo(
-                                    stringKey("rpc.status_code"),
-                                    emitPreviewRpcSemconv() ? "160" : null))
+                                equalTo(ERROR_TYPE, "160"),
+                                equalTo(stringKey("rpc.status_code"), "160"))
                             .hasException(emitExceptionAsSpanEvents() ? serverException : null)));
 
     assertExceptionLogs(clientException, serverException);
 
-    if (emitOldRpcSemconv()) {
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.sofa-rpc-5.4",
-              "rpc.server.duration",
-              metrics ->
-                  metrics.anySatisfy(
-                      metric ->
-                          assertThat(metric)
-                              .hasUnit("ms")
-                              .hasHistogramSatisfying(
-                                  histogram ->
-                                      histogram.hasPointsSatisfying(
-                                          point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_SERVICE,
-                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService"),
-                                                  equalTo(RPC_METHOD, "throwException"))))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.sofa-rpc-5.4",
+            "rpc.server.call.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("s")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasBucketBoundaries(
+                                                    0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1,
+                                                    0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(RPC_SYSTEM_NAME, "sofarpc"),
+                                                    equalTo(
+                                                        RPC_METHOD,
+                                                        "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
+                                                    equalTo(ERROR_TYPE, "160"),
+                                                    equalTo(
+                                                        stringKey("rpc.status_code"), "160"))))));
 
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.sofa-rpc-5.4",
-              "rpc.client.duration",
-              metrics ->
-                  metrics.anySatisfy(
-                      metric ->
-                          assertThat(metric)
-                              .hasUnit("ms")
-                              .hasHistogramSatisfying(
-                                  histogram ->
-                                      histogram.hasPointsSatisfying(
-                                          point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_SERVICE,
-                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService"),
-                                                  equalTo(RPC_METHOD, "throwException"),
-                                                  equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                                  satisfies(
-                                                      SERVER_PORT,
-                                                      val -> val.isInstanceOf(Long.class)),
-                                                  satisfies(
-                                                      NETWORK_TYPE,
-                                                      AbstractSofaRpcTest::assertNetworkType))))));
-    }
-
-    if (emitPreviewRpcSemconv()) {
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.sofa-rpc-5.4",
-              "rpc.server.call.duration",
-              metrics ->
-                  metrics.anySatisfy(
-                      metric ->
-                          assertThat(metric)
-                              .hasUnit("s")
-                              .hasHistogramSatisfying(
-                                  histogram ->
-                                      histogram.hasPointsSatisfying(
-                                          point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_METHOD,
-                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
-                                                  equalTo(ERROR_TYPE, "160"),
-                                                  equalTo(stringKey("rpc.status_code"), "160"))))));
-
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.sofa-rpc-5.4",
-              "rpc.client.call.duration",
-              metrics ->
-                  metrics.anySatisfy(
-                      metric ->
-                          assertThat(metric)
-                              .hasUnit("s")
-                              .hasHistogramSatisfying(
-                                  histogram ->
-                                      histogram.hasPointsSatisfying(
-                                          point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_METHOD,
-                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
-                                                  equalTo(ERROR_TYPE, "160"),
-                                                  equalTo(stringKey("rpc.status_code"), "160"),
-                                                  equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                                  satisfies(
-                                                      SERVER_PORT,
-                                                      val -> val.isInstanceOf(Long.class)))))));
-    }
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.sofa-rpc-5.4",
+            "rpc.client.call.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("s")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasBucketBoundaries(
+                                                    0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1,
+                                                    0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(RPC_SYSTEM_NAME, "sofarpc"),
+                                                    equalTo(
+                                                        RPC_METHOD,
+                                                        "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
+                                                    equalTo(ERROR_TYPE, "160"),
+                                                    equalTo(stringKey("rpc.status_code"), "160"),
+                                                    equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                                                    satisfies(
+                                                        SERVER_PORT,
+                                                        val -> val.isInstanceOf(Long.class)))))));
   }
 
   @Test
@@ -768,22 +587,14 @@ public abstract class AbstractSofaRpcTest {
                         span.hasName(
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwBusinessException")
                             .hasKind(SpanKind.CLIENT)
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SERVICE,
-                                    emitOldRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService"
-                                        : null),
+                                equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitPreviewRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwBusinessException"
-                                        : "throwBusinessException"),
+                                    "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwBusinessException"),
                                 equalTo(
                                     stringKey("server.service.name"),
                                     testing().expectedPeerService()),
@@ -795,42 +606,26 @@ public abstract class AbstractSofaRpcTest {
                                 satisfies(
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
                                 satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType),
-                                equalTo(
-                                    ERROR_TYPE,
-                                    emitPreviewRpcSemconv()
-                                        ? IllegalStateException.class.getName()
-                                        : null))
+                                equalTo(ERROR_TYPE, IllegalStateException.class.getName()))
                             .hasException(emitExceptionAsSpanEvents() ? clientException : null),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwBusinessException")
                             .hasKind(SpanKind.SERVER)
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasParent(trace.getSpan(1))
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SERVICE,
-                                    emitOldRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService"
-                                        : null),
+                                equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitPreviewRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwBusinessException"
-                                        : "throwBusinessException"),
+                                    "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwBusinessException"),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
                                     AbstractSofaRpcTest::assertNetworkPeerAddress),
                                 satisfies(
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
-                                equalTo(
-                                    ERROR_TYPE,
-                                    emitPreviewRpcSemconv()
-                                        ? IllegalStateException.class.getName()
-                                        : null))
+                                equalTo(ERROR_TYPE, IllegalStateException.class.getName()))
                             .hasException(emitExceptionAsSpanEvents() ? serverException : null)));
 
     assertExceptionLogs(clientException, serverException);
@@ -860,22 +655,14 @@ public abstract class AbstractSofaRpcTest {
                         span.hasName(
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/timeout")
                             .hasKind(SpanKind.CLIENT)
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SERVICE,
-                                    emitOldRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService"
-                                        : null),
+                                equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitPreviewRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/timeout"
-                                        : "timeout"),
+                                    "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/timeout"),
                                 equalTo(
                                     stringKey("server.service.name"),
                                     testing().expectedPeerService()),
@@ -887,31 +674,21 @@ public abstract class AbstractSofaRpcTest {
                                 satisfies(
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort),
                                 satisfies(NETWORK_TYPE, AbstractSofaRpcTest::assertNetworkType),
-                                equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? "200" : null),
-                                equalTo(
-                                    stringKey("rpc.status_code"),
-                                    emitPreviewRpcSemconv() ? "200" : null))
+                                equalTo(ERROR_TYPE, "200"),
+                                equalTo(stringKey("rpc.status_code"), "200"))
                             .hasException(emitExceptionAsSpanEvents() ? clientException : null),
                     // Server span: server completes normally (after 2s), so no error status
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/timeout")
                             .hasKind(SpanKind.SERVER)
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SERVICE,
-                                    emitOldRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService"
-                                        : null),
+                                equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitPreviewRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/timeout"
-                                        : "timeout"),
+                                    "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/timeout"),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
                                     AbstractSofaRpcTest::assertNetworkPeerAddress),
@@ -919,32 +696,34 @@ public abstract class AbstractSofaRpcTest {
                                     NETWORK_PEER_PORT, AbstractSofaRpcTest::assertNetworkPeerPort))
                             .hasException(null)));
 
-    if (emitPreviewRpcSemconv()) {
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.sofa-rpc-5.4",
-              "rpc.client.call.duration",
-              metrics ->
-                  metrics.anySatisfy(
-                      metric ->
-                          assertThat(metric)
-                              .hasUnit("s")
-                              .hasHistogramSatisfying(
-                                  histogram ->
-                                      histogram.hasPointsSatisfying(
-                                          point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(
-                                                      RPC_METHOD,
-                                                      "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/timeout"),
-                                                  equalTo(ERROR_TYPE, "200"),
-                                                  equalTo(stringKey("rpc.status_code"), "200"),
-                                                  equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                                  satisfies(
-                                                      SERVER_PORT,
-                                                      val -> val.isInstanceOf(Long.class)))))));
-    }
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.sofa-rpc-5.4",
+            "rpc.client.call.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("s")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasBucketBoundaries(
+                                                    0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1,
+                                                    0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(RPC_SYSTEM_NAME, "sofarpc"),
+                                                    equalTo(
+                                                        RPC_METHOD,
+                                                        "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/timeout"),
+                                                    equalTo(ERROR_TYPE, "200"),
+                                                    equalTo(stringKey("rpc.status_code"), "200"),
+                                                    equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                                                    satisfies(
+                                                        SERVER_PORT,
+                                                        val -> val.isInstanceOf(Long.class)))))));
 
     assertExceptionLogs(clientException, null);
   }

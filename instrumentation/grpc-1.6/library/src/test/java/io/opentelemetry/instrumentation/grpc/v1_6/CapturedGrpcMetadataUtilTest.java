@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.createLiteralRequestAttributeKeys;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.requestAttributeKey;
 import static java.util.Arrays.asList;
@@ -29,6 +30,8 @@ class CapturedGrpcMetadataUtilTest {
         createLiteralRequestAttributeKeys(selector);
 
     assertThat(literalAttributeKeys).containsOnlyKeys("literal-key");
+    assertThat(literalAttributeKeys.get("literal-key"))
+        .isEqualTo(stringArrayKey("rpc.request.metadata.literal-key"));
     assertThat(requestAttributeKey("literal-key", literalAttributeKeys))
         .isSameAs(literalAttributeKeys.get("literal-key"));
     assertThat(requestAttributeKey("wildcard-key", literalAttributeKeys))
