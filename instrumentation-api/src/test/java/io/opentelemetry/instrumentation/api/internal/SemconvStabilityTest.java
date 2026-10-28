@@ -324,6 +324,16 @@ class SemconvStabilityTest {
                         "",
                         "",
                         domain.equals("rpc") ? SemconvMode.V1_EXPERIMENTAL : SemconvMode.V0_STABLE),
+                    Arguments.of(
+                        domain,
+                        domain,
+                        "",
+                        domain.equals("rpc") ? SemconvMode.V1_EXPERIMENTAL : SemconvMode.V0_STABLE),
+                    Arguments.of(
+                        domain,
+                        domain + "/dup",
+                        "",
+                        domain.equals("rpc") ? SemconvMode.V1_EXPERIMENTAL : SemconvMode.V0_STABLE),
                     Arguments.of(domain, "", domain, SemconvMode.V1_EXPERIMENTAL),
                     Arguments.of(
                         domain,
