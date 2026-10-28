@@ -5,6 +5,9 @@
 ### ⚠️ Breaking changes
 
 - Configured service mappings now emit `server.service.name` and `server.service.namespace`, and no longer emit `peer.service`, `service.peer.name`, or `service.peer.namespace`. Rename `otel.instrumentation.common.peer-service-mapping` to `otel.instrumentation.common.server-service-mapping`; in YAML, use `java.common.server_service_mapping` with `target` instead of `peer`.
+- Replace `SpringWebfluxClientTelemetry.addFilter(list)` and
+  `addFilterAndRegisterReactorHook(list)` with `createFilter()` and
+  `createFilterAndRegisterReactorHook()`, used with `WebClient.Builder.filter(...)`.
 - RPC telemetry now uses only the conventions with schema version 1.44.0: `rpc.system.name`,
   fully qualified `rpc.method`, `rpc.status_code`, and `error.type`, with updated span names.
   RPC duration metrics use `rpc.client.call.duration` and `rpc.server.call.duration` in seconds.
