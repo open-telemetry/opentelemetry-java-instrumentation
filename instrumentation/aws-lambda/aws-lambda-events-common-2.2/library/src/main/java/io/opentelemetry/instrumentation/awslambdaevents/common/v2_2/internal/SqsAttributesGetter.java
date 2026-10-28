@@ -9,7 +9,8 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import javax.annotation.Nullable;
 
-abstract class SqsAttributesGetter<REQUEST> implements MessagingAttributesGetter<REQUEST, Void> {
+abstract class SqsAttributesGetter<REQUEST, RESPONSE>
+    implements MessagingAttributesGetter<REQUEST, RESPONSE> {
 
   @Override
   public final String getSystem(REQUEST request) {
@@ -40,7 +41,7 @@ abstract class SqsAttributesGetter<REQUEST> implements MessagingAttributesGetter
 
   @Nullable
   @Override
-  public String getMessageId(REQUEST request, @Nullable Void unused) {
+  public String getMessageId(REQUEST request, @Nullable RESPONSE unused) {
     return null;
   }
 
@@ -52,7 +53,7 @@ abstract class SqsAttributesGetter<REQUEST> implements MessagingAttributesGetter
 
   @Nullable
   @Override
-  public Long getBatchMessageCount(REQUEST request, @Nullable Void unused) {
+  public Long getBatchMessageCount(REQUEST request, @Nullable RESPONSE unused) {
     return null;
   }
 

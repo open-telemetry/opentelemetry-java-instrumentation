@@ -91,9 +91,12 @@ class JdbcServicePeerTest {
 
     List<DeclarativeConfigProperties> entries = asList(entry);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
+    when(commonConfig.get("semconv_stability")).thenReturn(DeclarativeConfigProperties.empty());
     when(commonConfig.getStructuredList("service_peer_mapping", emptyList())).thenReturn(entries);
 
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    when(openTelemetry.getGeneralInstrumentationConfig())
+        .thenReturn(DeclarativeConfigProperties.empty());
     when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
     return openTelemetry;
   }

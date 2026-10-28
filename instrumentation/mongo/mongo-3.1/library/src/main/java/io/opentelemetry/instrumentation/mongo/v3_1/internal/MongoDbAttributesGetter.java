@@ -11,6 +11,7 @@ import static java.util.Arrays.asList;
 import com.mongodb.MongoException;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
+import com.mongodb.event.CommandSucceededEvent;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -29,7 +30,8 @@ import org.bson.codecs.EncoderContext;
 import org.bson.json.JsonWriter;
 import org.bson.json.JsonWriterSettings;
 
-class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStartedEvent, Void> {
+class MongoDbAttributesGetter
+    implements DbClientAttributesGetter<CommandStartedEvent, CommandSucceededEvent> {
 
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String MONGODB = "mongodb";
@@ -140,14 +142,16 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
 
   @Nullable
   @Override
-  public String getNetworkPeerAddress(CommandStartedEvent event, @Nullable Void response) {
+  public String getNetworkPeerAddress(
+      CommandStartedEvent event, @Nullable CommandSucceededEvent response) {
     MongoNetworkPeer peer = getNetworkPeer(event);
     return peer == null ? null : peer.getAddress();
   }
 
   @Nullable
   @Override
-  public Integer getNetworkPeerPort(CommandStartedEvent event, @Nullable Void response) {
+  public Integer getNetworkPeerPort(
+      CommandStartedEvent event, @Nullable CommandSucceededEvent response) {
     MongoNetworkPeer peer = getNetworkPeer(event);
     return peer == null ? null : peer.getPort();
   }
@@ -155,7 +159,7 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   @Nullable
   @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(
-      CommandStartedEvent event, @Nullable Void unused) {
+      CommandStartedEvent event, @Nullable CommandSucceededEvent unused) {
     MongoNetworkPeer peer = getNetworkPeer(event);
     return peer == null ? null : peer.getInetSocketAddress();
   }
@@ -172,7 +176,13 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   @Nullable
   @Override
   public String getErrorType(
-      CommandStartedEvent request, @Nullable Void response, @Nullable Throwable error) {
+      CommandStartedEvent request,
+      @Nullable CommandSucceededEvent response,
+      @Nullable Throwable error) {
+    Integer writeErrorCode = getWriteErrorCode(response);
+    if (writeErrorCode != null) {
+      return writeErrorCode.toString();
+    }
     if (error instanceof MongoException) {
       // MongoException.getCode() only returns a real server error code (a positive value) when the
       // exception came from a server command error. For client-side exceptions the driver uses
@@ -184,6 +194,37 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
       }
     }
     return null;
+  }
+
+  @Nullable
+  static Integer getWriteErrorCode(@Nullable CommandSucceededEvent response) {
+    if (response == null) {
+      return null;
+    }
+    BsonDocument document = response.getResponse();
+    BsonValue writeErrors = document.get("writeErrors");
+    if (writeErrors != null && writeErrors.isArray()) {
+      for (BsonValue writeError : writeErrors.asArray()) {
+        Integer code = errorCode(writeError);
+        if (code != null) {
+          return code;
+        }
+      }
+    }
+    return errorCode(document.get("writeConcernError"));
+  }
+
+  @Nullable
+  private static Integer errorCode(@Nullable BsonValue error) {
+    if (error == null || !error.isDocument()) {
+      return null;
+    }
+    BsonValue code = error.asDocument().get("code");
+    if (code == null || !(code.isInt32() || code.isInt64())) {
+      return null;
+    }
+    long value = code.asNumber().longValue();
+    return value > 0 && value <= Integer.MAX_VALUE ? (int) value : null;
   }
 
   String sanitizeQuery(BsonDocument command) {

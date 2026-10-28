@@ -41,6 +41,8 @@ import java.util.Locale;
  * any time.
  */
 public class OpenTelemetryInstrumentationHelper {
+  private static final String SCHEMA_URL = SchemaUrls.V1_44_0;
+
   private static final NodeVisitor sanitizingVisitor = new SanitizingVisitor();
   private static final AstTransformer astTransformer = new AstTransformer();
 
@@ -76,10 +78,10 @@ public class OpenTelemetryInstrumentationHelper {
                   }
                 });
     builder.addAttributesExtractor(new GraphqlAttributesExtractor());
-    builder.setSchemaUrl(SchemaUrls.V1_44_0);
+    builder.setSchemaUrl(SCHEMA_URL);
     return new OpenTelemetryInstrumentationHelper(
         builder.buildInstrumenter(),
-        new GraphqlErrorRecorder(openTelemetry, instrumentationName, SchemaUrls.V1_44_0),
+        new GraphqlErrorRecorder(openTelemetry, instrumentationName, SCHEMA_URL),
         captureQuery,
         sanitizeQuery,
         addOperationNameToSpanName);

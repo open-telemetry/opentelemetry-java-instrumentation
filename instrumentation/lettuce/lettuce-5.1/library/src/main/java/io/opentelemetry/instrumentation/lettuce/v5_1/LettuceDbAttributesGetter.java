@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import java.net.InetSocketAddress;
-import java.util.Locale;
 import javax.annotation.Nullable;
 
 final class LettuceDbAttributesGetter
@@ -47,16 +46,10 @@ final class LettuceDbAttributesGetter
     if (response == null) {
       return null;
     }
-
-    String errorMessage = response.getErrorMessage();
-    if (errorMessage == null || errorMessage.isEmpty()) {
-      return null;
-    }
-
-    // Redis error prefix is the first upper-case, space-delimited word of the error message.
-    int separator = errorMessage.indexOf(' ');
-    String errorType = separator == -1 ? errorMessage : errorMessage.substring(0, separator);
-    return errorType.equals(errorType.toUpperCase(Locale.ROOT)) ? errorType : null;
+    String errorType = response.getRedisErrorType();
+    // Older Lettuce tracing can report a failure without exposing its exception.
+    // Leave exception-class fallback to the shared extractor when an exception is available.
+    return errorType == null && response.isFailed() && error == null ? "_OTHER" : errorType;
   }
 
   @Nullable

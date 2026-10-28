@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttri
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSizeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -24,6 +25,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
+import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.thrift.v0_13.ThriftRequest;
@@ -58,6 +60,9 @@ public final class ThriftInstrumenterFactory {
 
     SpanNameExtractor<ThriftRequest> originalSpanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesGetter);
+    // Initialize before customization: a user-provided wrapper may hide the RPC extractor
+    // from InstrumenterBuilder's automatic initialization.
+    ((OpenTelemetryConfigurable) originalSpanNameExtractor).internalInitialize(openTelemetry);
     SpanNameExtractor<ThriftRequest> clientSpanNameExtractor =
         clientSpanNameExtractorCustomizer.apply(originalSpanNameExtractor);
 
@@ -68,6 +73,7 @@ public final class ThriftInstrumenterFactory {
         new ThriftClientNetworkAttributesGetter();
 
     clientInstrumenterBuilder
+        .setSchemaUrl(RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry).schemaUrl())
         .setSpanStatusExtractor(spanStatusExtractor)
         .addAttributesExtractors(additionalExtractors)
         .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
@@ -90,6 +96,9 @@ public final class ThriftInstrumenterFactory {
       List<AttributesExtractor<ThriftRequest, ThriftResponse>> additionalServerExtractors) {
     SpanNameExtractor<ThriftRequest> originalSpanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesGetter);
+    // Initialize before customization: a user-provided wrapper may hide the RPC extractor
+    // from InstrumenterBuilder's automatic initialization.
+    ((OpenTelemetryConfigurable) originalSpanNameExtractor).internalInitialize(openTelemetry);
     SpanNameExtractor<ThriftRequest> serverSpanNameExtractor =
         serverSpanNameExtractorCustomizer.apply(originalSpanNameExtractor);
 
@@ -98,12 +107,21 @@ public final class ThriftInstrumenterFactory {
 
     ThriftServerNetworkAttributesGetter netServerAttributesGetter =
         new ThriftServerNetworkAttributesGetter();
+    RpcSemconvSelection.Selection selection =
+        RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry);
 
     serverInstrumenterBuilder
+        .setSchemaUrl(selection.schemaUrl())
         .setSpanStatusExtractor(spanStatusExtractor)
         .addAttributesExtractors(additionalExtractors)
-        .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
-        .addAttributesExtractor(ServerAttributesExtractor.create(netServerAttributesGetter))
+        .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter));
+    // The local socket is not the client's logical target; retain it as a server target only
+    // for legacy-only telemetry.
+    if (!selection.emitPreview()) {
+      serverInstrumenterBuilder.addAttributesExtractor(
+          ServerAttributesExtractor.create(netServerAttributesGetter));
+    }
+    serverInstrumenterBuilder
         .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractors(additionalServerExtractors)
         .addOperationMetrics(RpcServerMetrics.get())

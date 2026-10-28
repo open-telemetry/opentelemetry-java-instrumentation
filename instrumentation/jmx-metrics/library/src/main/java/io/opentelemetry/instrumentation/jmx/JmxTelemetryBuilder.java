@@ -186,8 +186,7 @@ public final class JmxTelemetryBuilder {
     userMetricDefs.forEach(metricConfiguration::addMetricDef);
 
     metricsDefinitions.loadInternalRules(internalMetricsSystemFilter, handlerRegistry);
-    metricsDefinitions.getMetricDefs(true).forEach(metricConfiguration::addMetricDef);
-    metricsDefinitions.getMetricDefs(false).forEach(metricConfiguration::addUnstableMetricDef);
+    metricsDefinitions.addMetricDefsTo(metricConfiguration);
 
     Set<String> stableMetrics = metricsDefinitions.getMetricNames(true);
     Set<String> unstableMetrics = metricsDefinitions.getMetricNames(false);

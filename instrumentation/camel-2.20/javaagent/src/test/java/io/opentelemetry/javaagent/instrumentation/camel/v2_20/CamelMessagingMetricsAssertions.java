@@ -42,6 +42,17 @@ public class CamelMessagingMetricsAssertions {
       String destination,
       String processErrorType,
       String processDestinationPartitionId) {
+    assertSendAndProcessMetrics(
+        testing, system, destination, null, processErrorType, processDestinationPartitionId);
+  }
+
+  public static void assertSendAndProcessMetrics(
+      InstrumentationExtension testing,
+      String system,
+      String destination,
+      String sendErrorType,
+      String processErrorType,
+      String processDestinationPartitionId) {
 
     assertDuration(
         testing,
@@ -51,7 +62,7 @@ public class CamelMessagingMetricsAssertions {
         "send",
         system,
         destination,
-        null,
+        sendErrorType,
         null);
     assertCounter(
         testing,
@@ -60,7 +71,7 @@ public class CamelMessagingMetricsAssertions {
         "send",
         system,
         destination,
-        null,
+        sendErrorType,
         null);
     assertDuration(
         testing,

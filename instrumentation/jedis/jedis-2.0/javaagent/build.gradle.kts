@@ -30,7 +30,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
+  implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
 
   testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-4.0:javaagent"))

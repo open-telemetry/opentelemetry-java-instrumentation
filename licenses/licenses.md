@@ -19,19 +19,19 @@
 > - **Embedded license files**: [jackson-annotations-2.22.jar/META-INF/LICENSE](jackson-annotations-2.22.jar/META-INF/LICENSE)
     - [jackson-annotations-2.22.jar/META-INF/NOTICE](jackson-annotations-2.22.jar/META-INF/NOTICE)
 
-**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.22.3`
+**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.22.4`
 > - **Project URL**: [https://github.com/FasterXML/jackson-core](https://github.com/FasterXML/jackson-core)
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-core-2.22.3.jar/META-INF/LICENSE](jackson-core-2.22.3.jar/META-INF/LICENSE)
-    - [jackson-core-2.22.3.jar/META-INF/NOTICE](jackson-core-2.22.3.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-core-2.22.4.jar/META-INF/LICENSE](jackson-core-2.22.4.jar/META-INF/LICENSE)
+    - [jackson-core-2.22.4.jar/META-INF/NOTICE](jackson-core-2.22.4.jar/META-INF/NOTICE)
 
-**5** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.22.3`
+**5** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.22.4`
 > - **Project URL**: [https://github.com/FasterXML/jackson](https://github.com/FasterXML/jackson)
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-databind-2.22.3.jar/META-INF/LICENSE](jackson-databind-2.22.3.jar/META-INF/LICENSE)
-    - [jackson-databind-2.22.3.jar/META-INF/NOTICE](jackson-databind-2.22.3.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-databind-2.22.4.jar/META-INF/LICENSE](jackson-databind-2.22.4.jar/META-INF/LICENSE)
+    - [jackson-databind-2.22.4.jar/META-INF/NOTICE](jackson-databind-2.22.4.jar/META-INF/NOTICE)
 
 **6** **Group:** `com.googlecode.concurrentlinkedhashmap` **Name:** `concurrentlinkedhashmap-lru` **Version:** `1.4.2`
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
@@ -202,10 +202,10 @@
 > - **Manifest License**: [https://www.apache.org/licenses/LICENSE-2.0](Apache License, Version 2.0)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**48** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.18.14`
+**48** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.18.15`
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [byte-buddy-dep-1.18.14.jar/META-INF/LICENSE](byte-buddy-dep-1.18.14.jar/META-INF/LICENSE)
-    - [byte-buddy-dep-1.18.14.jar/META-INF/NOTICE](byte-buddy-dep-1.18.14.jar/META-INF/NOTICE)
+> - **Embedded license files**: [byte-buddy-dep-1.18.15.jar/META-INF/LICENSE](byte-buddy-dep-1.18.15.jar/META-INF/LICENSE)
+    - [byte-buddy-dep-1.18.15.jar/META-INF/NOTICE](byte-buddy-dep-1.18.15.jar/META-INF/NOTICE)
 
 **49** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0`
 > - **POM Project URL**: [http://www.jetbrains.org](http://www.jetbrains.org)
@@ -215,35 +215,35 @@
 > - **POM Project URL**: [https://kotlinlang.org/](https://kotlinlang.org/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**51** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.11`
+**51** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.11.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**52** **Group:** `org.ow2.asm` **Name:** `asm-analysis` **Version:** `9.11`
+**52** **Group:** `org.ow2.asm` **Name:** `asm-analysis` **Version:** `9.11.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**53** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.11`
+**53** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.11.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**54** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.11`
+**54** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.11.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**55** **Group:** `org.ow2.asm` **Name:** `asm-util` **Version:** `9.11`
+**55** **Group:** `org.ow2.asm` **Name:** `asm-util` **Version:** `9.11.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
@@ -274,35 +274,35 @@
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**60** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.11`
+**60** **Group:** `org.ow2.asm` **Name:** `asm` **Version:** `9.11.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**61** **Group:** `org.ow2.asm` **Name:** `asm-analysis` **Version:** `9.11`
+**61** **Group:** `org.ow2.asm` **Name:** `asm-analysis` **Version:** `9.11.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**62** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.11`
+**62** **Group:** `org.ow2.asm` **Name:** `asm-commons` **Version:** `9.11.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**63** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.11`
+**63** **Group:** `org.ow2.asm` **Name:** `asm-tree` **Version:** `9.11.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**64** **Group:** `org.ow2.asm` **Name:** `asm-util` **Version:** `9.11`
+**64** **Group:** `org.ow2.asm` **Name:** `asm-util` **Version:** `9.11.1`
 > - **Manifest Project URL**: [http://asm.ow2.org](http://asm.ow2.org)
 > - **Manifest License**: [https://opensource.org/licenses/BSD-3-Clause](The 3-Clause BSD License)
 > - **POM Project URL**: [http://asm.ow2.io/](http://asm.ow2.io/)

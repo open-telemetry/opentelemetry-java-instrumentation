@@ -21,6 +21,7 @@ import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
+import com.mongodb.event.CommandSucceededEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -196,7 +197,7 @@ class MongoConfiguredTargetTest {
 
   private Attributes extractAttributes(CommandStartedEvent event) {
     AttributesBuilder attributes = Attributes.builder();
-    AttributesExtractor<CommandStartedEvent, Void> extractor =
+    AttributesExtractor<CommandStartedEvent, CommandSucceededEvent> extractor =
         DbClientAttributesExtractor.create(getter);
     extractor.onStart(attributes, Context.root(), event);
     extractor.onEnd(attributes, Context.root(), event, null, null);

@@ -273,34 +273,6 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
             .getStructured("common");
 
     assertThat(common.getString("span_suppression_strategy")).isEqualTo("none");
-    assertThat(common.getString("span_suppression_strategy/development")).isNull();
-  }
-
-  @Test
-  void testDeprecatedSpanSuppressionStrategyMapping() {
-    DeclarativeConfigProperties common =
-        createConfig("otel.instrumentation.experimental.span-suppression-strategy", "span-kind")
-            .getStructured("java")
-            .getStructured("common");
-
-    assertThat(common.getString("span_suppression_strategy")).isNull();
-    assertThat(common.getString("span_suppression_strategy/development")).isEqualTo("span-kind");
-  }
-
-  @Test
-  void testSpanSuppressionStrategyMappingsDoNotConflict() {
-    Map<String, String> properties = new HashMap<>();
-    properties.put("otel.instrumentation.common.span-suppression-strategy", "none");
-    properties.put("otel.instrumentation.experimental.span-suppression-strategy", "span-kind");
-
-    DeclarativeConfigProperties common =
-        ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
-                DefaultConfigProperties.createFromMap(properties))
-            .getStructured("java")
-            .getStructured("common");
-
-    assertThat(common.getString("span_suppression_strategy")).isEqualTo("none");
-    assertThat(common.getString("span_suppression_strategy/development")).isEqualTo("span-kind");
   }
 
   @Test

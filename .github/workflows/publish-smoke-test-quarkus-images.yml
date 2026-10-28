@@ -30,6 +30,6 @@ jobs:
     needs:
       - publish
     if: always()
-    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@544059e5691c00818aa83bd1117c4e0b8b4a6e21 # v0.21.0
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@efc55838c9769c5476e0a5cf7183a8c5b4ae70a5 # v0.24.0
     with:
       success: ${{ needs.publish.result == 'success' }}

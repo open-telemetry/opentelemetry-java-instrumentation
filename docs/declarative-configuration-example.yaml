@@ -216,10 +216,6 @@ instrumentation/development:
           # Enables capturing the `user.roles` identity attribute. Identity attributes are not
           # captured by default.
           enabled: false
-
-      # Enables a preview of the behavior planned for version 3.0 of the agent, such as ignoring
-      # deprecated settings. The set of changes it enables can grow in any release.
-      v3_preview: false
       view_telemetry:
         # Enables the creation of experimental view spans.
         enabled: false

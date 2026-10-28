@@ -293,7 +293,7 @@ public abstract class AbstractHibernateReactiveTest {
                             equalTo(DB_QUERY_SUMMARY, "select Value"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStablePeerService(), "test-peer-service")),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService())),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)

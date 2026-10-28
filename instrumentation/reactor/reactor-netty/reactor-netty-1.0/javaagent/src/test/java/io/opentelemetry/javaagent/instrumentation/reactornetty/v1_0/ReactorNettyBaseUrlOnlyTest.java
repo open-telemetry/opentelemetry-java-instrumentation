@@ -121,7 +121,7 @@ class ReactorNettyBaseUrlOnlyTest {
                             equalTo(URL_FULL, uri + "/"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),

@@ -25,4 +25,9 @@ class GwtRpcAttributesGetter implements RpcAttributesGetter<Method, Void> {
   public String getMethod(Method method) {
     return method.getName();
   }
+
+  @Override
+  public String getRpcMethod(Method method) {
+    return getService(method) + "/" + method.getName();
+  }
 }

@@ -19,12 +19,13 @@ attributes, optional metrics, and semantic convention selection.
 | Document supported non-default telemetry | Yes                | Relevant non-default `key=value` settings |
 | Unit tests or regression-only variants   | No                 | Unset                                     |
 
-For javaagent tests, keep baseline suites on instrumentation defaults, apart from the HTTP and
-messaging header-capture settings injected by the shared test exporter suppliers below. Do not
-require empty overrides, separate capture variants, or `metadataConfig` conditions solely for this
-inherited setup. Module-specific capture overrides and other non-default telemetry settings remain
-subject to the normal profile rules. Test opt-in telemetry in named variants wired into `check`.
-Preserve normal suite coverage; filtered metadata-collection tests are not a substitute.
+For javaagent, plain-library, and library-autoconfigure tests, baseline fixtures may capture
+synthetic HTTP and messaging headers. The capture may come from shared test exporter configuration,
+a library builder, or production properties that the integration actually reads. Do not require
+empty overrides, capture-only flags or variants, or `metadataConfig` conditions solely for this
+fixture setup. Other non-default telemetry settings remain subject to the normal profile rules. Test
+opt-in telemetry in named variants wired into `check`. Preserve normal suite coverage; filtered
+metadata-collection tests are not a substitute.
 
 | Property | Synthetic selector |
 | -------- | ------------------ |
@@ -34,19 +35,36 @@ Preserve normal suite coverage; filtered metadata-collection tests are not a sub
 | `otel.instrumentation.http.server.capture-response-headers` | `X-Test-Response` |
 | `otel.instrumentation.common.messaging.headers.included` | `Test-Message-Header`, `Test-Message-Int-Header`, `Test_Message_Header`, `Test_Message_Int_Header` |
 
-These synthetic selectors are test-only, not production defaults. Their attributes may appear in raw
-`.telemetry` files under `when: default`, but the analyzer excludes them from generated telemetry
-inventories.
+These synthetic selectors are fixture values, not production defaults. Their attributes may appear
+in raw `.telemetry` files under `when: default`, but the analyzer excludes them from generated
+telemetry inventories.
+
+For example, a plain-library fixture can configure synthetic messaging-header capture in its baseline
+builder:
+
+```java
+AwsSdkTelemetry.builder(testing.getOpenTelemetry())
+    .setHeaders(IncludeExclude.builder().setIncluded("Test-Message-*").build())
+    .build();
+```
+
+A variant enabling experimental attributes still labels only that meaningful opt-in:
+`AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)`. It does not label the synthetic
+header selector or its test-only flag.
 
 `metadataConfig` labels output; it does not configure instrumentation or enable collection.
 An absent or empty label records telemetry under `when: default`. Default means instrumentation
-defaults, not the task name or settings on `test`; the shared synthetic header capture above is the
-exception for baseline javaagent suites. The generator merges telemetry with the same label.
+defaults, not the task name or settings on `test`; synthetic header capture is excluded from the
+label for every fixture type. The generator merges telemetry with the same label.
 Include only non-default user-facing settings needed to describe this instrumentation's signals,
 span kinds, attributes, metrics, or events, including inherited, fixture, and library-builder settings,
-except for that shared capture. Split or filter collected tasks that would mix profiles under one label.
-Use comma-separated flat `key=value` conditions without `-D`, with consistent spelling and ordering
-for the same mode. Apply settings separately through JVM properties or library APIs.
+except for synthetic header capture. For settings applied through JVM properties, use flat
+`key=value` conditions without `-D`. For programmatically configured library profiles, use the actual
+builder calls as labels (for example,
+`AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)`) instead of javaagent properties
+that do not configure the library builder. Separate multiple conditions or builder calls with commas,
+using consistent spelling and ordering for the same mode. Split or filter collected tasks that would
+mix profiles under one label. Apply settings separately through JVM properties or library APIs.
 Label non-default metric selectors, not Java source-set names; document runtime prerequisites separately.
 
 Omit test setup, such as ports, timeouts, JVM access flags, and unrelated instrumentation settings.
@@ -123,16 +141,12 @@ currently both use the prefix before the first hyphen in that name, regardless o
 | `spring-webmvc-3.1` | `spring`  | `spring` |
 
 Namespace and group are documentation groupings, not javaagent enablement selectors.
-The names registered by a javaagent `InstrumentationModule` determine its selectors. In v3 preview,
-the primary normally matches the full module-directory name, followed by a versionless secondary:
+The names registered by a javaagent `InstrumentationModule` determine its selectors. Use the full
+module-directory name as the primary, followed by a versionless secondary:
 
 ```java
 public SpringWebMvcInstrumentationModule() {
-  super(
-      AgentCommonConfig.get().isV3Preview() ? "spring-webmvc-3.1" : "spring-webmvc",
-      AgentCommonConfig.get().isV3Preview()
-          ? new String[] {"spring-webmvc"}
-          : new String[] {"spring-webmvc-3.1"});
+  super("spring-webmvc-3.1", new String[] {"spring-webmvc"});
 }
 ```
 

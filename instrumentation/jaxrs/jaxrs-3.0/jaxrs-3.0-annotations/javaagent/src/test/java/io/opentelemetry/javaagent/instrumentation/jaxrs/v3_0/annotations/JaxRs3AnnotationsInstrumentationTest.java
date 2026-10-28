@@ -16,7 +16,9 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.annotations.JavaInterfaces.Jax;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HEAD;
@@ -24,6 +26,7 @@ import jakarta.ws.rs.OPTIONS;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -162,6 +165,61 @@ class JaxRs3AnnotationsInstrumentationTest {
                             equalTo(HTTP_REQUEST_METHOD, "GET"), equalTo(ERROR_TYPE, OTHER))));
   }
 
+  @Test
+  void covariantInterfaceMethod() {
+    CovariantInterfaceResource action = new CovariantInterfaceResourceImpl();
+    testing.runWithHttpServerSpan((ThrowingRunnable<RuntimeException>) action::call);
+    assertCovariantRoute("/covariant-interface/interface", CovariantInterfaceResourceImpl.class);
+  }
+
+  @Test
+  void covariantSuperclassMethod() {
+    CovariantSuperclassResource action = new CovariantSuperclassResourceImpl();
+    testing.runWithHttpServerSpan((ThrowingRunnable<RuntimeException>) action::call);
+    assertCovariantRoute("/covariant-superclass/superclass", CovariantSuperclassResourceImpl.class);
+  }
+
+  @Test
+  void covariantMethodWithDifferentParametersIsNotMatched() {
+    CovariantInterfaceResourceImpl action = new CovariantInterfaceResourceImpl();
+    testing.runWithHttpServerSpan((ThrowingRunnable<RuntimeException>) () -> action.call(1L));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"), equalTo(ERROR_TYPE, OTHER))));
+  }
+
+  private static void assertCovariantRoute(String route, Class<?> resourceClass) {
+    testing.waitAndAssertTraces(
+        trace -> {
+          Consumer<SpanDataAssert> serverSpan =
+              span ->
+                  span.hasName(CONTROLLER_TELEMETRY_ENABLED ? "GET " + route : "GET")
+                      .hasKind(SpanKind.SERVER)
+                      .hasNoParent()
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(HTTP_REQUEST_METHOD, "GET"),
+                          equalTo(HTTP_ROUTE, CONTROLLER_TELEMETRY_ENABLED ? route : null),
+                          equalTo(ERROR_TYPE, OTHER));
+          if (CONTROLLER_TELEMETRY_ENABLED) {
+            trace.hasSpansSatisfyingExactly(
+                serverSpan,
+                span ->
+                    span.hasName(getClassName(resourceClass) + ".call")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, resourceClass.getName() + ".call")));
+          } else {
+            trace.hasSpansSatisfyingExactly(serverSpan);
+          }
+        });
+  }
+
   @Path("/interface")
   interface InterfaceWithPath extends Jax {
     @GET
@@ -182,5 +240,52 @@ class JaxRs3AnnotationsInstrumentationTest {
     @POST
     @Override
     public void call() {}
+  }
+
+  @Path("covariant-interface")
+  interface CovariantInterfaceResource {
+    @GET
+    @Path("interface")
+    Object call();
+
+    @GET
+    @Path("overload")
+    Object call(Integer value);
+  }
+
+  static class CovariantInterfaceResourceImpl implements CovariantInterfaceResource {
+    @Override
+    public String call() {
+      return "";
+    }
+
+    @Override
+    public Object call(Integer value) {
+      return value;
+    }
+
+    public String call(Long value) {
+      return value.toString();
+    }
+  }
+
+  @Path("covariant-superclass")
+  abstract static class CovariantSuperclassResource {
+    @GET
+    @Path("superclass")
+    public abstract Object call();
+
+    @GET
+    @Path("overload")
+    public Object call(Integer value) {
+      return value;
+    }
+  }
+
+  static class CovariantSuperclassResourceImpl extends CovariantSuperclassResource {
+    @Override
+    public String call() {
+      return "";
+    }
   }
 }

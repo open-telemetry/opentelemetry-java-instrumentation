@@ -6,7 +6,7 @@
 package org.apache.hadoop.hbase.ipc;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.RequestAndContext;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;

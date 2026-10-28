@@ -23,7 +23,7 @@ class LambdaClientTest extends AbstractLambdaClientTest {
   public AWSLambdaClientBuilder configureClient(AWSLambdaClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true)
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
             .build()
             .createRequestHandler());
   }

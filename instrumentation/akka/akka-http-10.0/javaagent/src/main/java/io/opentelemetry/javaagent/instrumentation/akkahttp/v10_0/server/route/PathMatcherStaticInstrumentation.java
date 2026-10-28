@@ -15,7 +15,6 @@ import akka.http.scaladsl.model.Uri;
 import akka.http.scaladsl.server.PathMatcher;
 import akka.http.scaladsl.server.PathMatchers;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -49,7 +48,7 @@ class PathMatcherStaticInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Uri.Path path,
         @Advice.Return PathMatcher.Matching<?> result) {
       // result is either matched or unmatched, we only care about the matches
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       AkkaRouteHolder routeHolder = AkkaRouteHolder.get(context);
       if (routeHolder == null) {
         return;

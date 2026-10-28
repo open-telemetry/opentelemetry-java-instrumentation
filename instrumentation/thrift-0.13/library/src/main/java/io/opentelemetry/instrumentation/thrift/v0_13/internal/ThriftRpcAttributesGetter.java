@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesG
 import io.opentelemetry.instrumentation.thrift.v0_13.ThriftRequest;
 import io.opentelemetry.instrumentation.thrift.v0_13.ThriftResponse;
 import javax.annotation.Nullable;
+import org.apache.thrift.TApplicationException;
 import org.apache.thrift.transport.TTransportException;
 
 final class ThriftRpcAttributesGetter
@@ -44,6 +45,21 @@ final class ThriftRpcAttributesGetter
 
   @Override
   @Nullable
+  public String getRpcStatusCode(
+      ThriftRequest request, @Nullable ThriftResponse response, @Nullable Throwable error) {
+    // Application exception types are carried in RPC replies; transport exception types are not.
+    if (error instanceof TApplicationException) {
+      int code = ((TApplicationException) error).getType();
+      if (code >= TApplicationException.UNKNOWN
+          && code <= TApplicationException.UNSUPPORTED_CLIENT_TYPE) {
+        return Integer.toString(code);
+      }
+    }
+    return null;
+  }
+
+  @Override
+  @Nullable
   public String getErrorType(
       ThriftRequest request, @Nullable ThriftResponse response, @Nullable Throwable error) {
     if (error instanceof TTransportException) {
@@ -65,6 +81,9 @@ final class ThriftRpcAttributesGetter
           return String.valueOf(errorCode);
       }
     }
-    return null;
+    if (error == null && response != null && response.isFailed()) {
+      return "_OTHER";
+    }
+    return error == null ? null : error.getClass().getName();
   }
 }

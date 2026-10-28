@@ -52,18 +52,26 @@ dependencies {
   library("com.couchbase.client:java-client:2.0.0")
   compileOnly("com.couchbase.client:core-io:1.6.0")
 
-  testImplementation(project(":instrumentation:couchbase:couchbase-common:testing"))
+  testImplementation("com.couchbase.mock:CouchbaseMock:1.5.19")
 
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
 
-  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:2.+") // see test suite below
   latestDepTestLibrary("com.couchbase.client:java-client:2.5.+") // see test suite below
 }
 
 testing {
   suites {
+    register<JvmTestSuite>("version25Test") {
+      dependencies {
+        implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
+        implementation("com.couchbase.client:java-client:${baseVersion("2.5.0").orLatest("2.5.+")}")
+        implementation(
+          "org.springframework.data:spring-data-couchbase:${baseVersion("2.0.0.RELEASE").orLatest("2.+")}"
+        )
+      }
+    }
     register<JvmTestSuite>("version26Test") {
       dependencies {
         implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
@@ -97,12 +105,12 @@ tasks {
   }
 
   val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
-    val sourceTask = named<Test>("test").get()
+    val sourceTask = named<Test>("version25Test").get()
     isEnabled = sourceTask.enabled
     setJvmArgs(sourceTask.jvmArgs)
     setSystemProperties(sourceTask.systemProperties)
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+    testClassesDirs = sourceTask.testClassesDirs
+    classpath = sourceTask.classpath
 
     filter {
       includeTestsMatching("CouchbaseQuerySanitizationTest")

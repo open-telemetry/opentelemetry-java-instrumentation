@@ -14,7 +14,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -47,7 +46,7 @@ class JmsDestinationAccessorInstrumentation implements TypeInstrumentation {
       // suppress receive span creation in jms instrumentation
       Context context =
           InstrumenterUtil.suppressSpan(
-              receiveInstrumenter(), Java8BytecodeBridge.currentContext(), SpanKind.CONSUMER);
+              receiveInstrumenter(), Context.current(), SpanKind.CONSUMER);
       return context.makeCurrent();
     }
 

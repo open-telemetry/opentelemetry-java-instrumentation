@@ -18,6 +18,7 @@ import com.mongodb.connection.ClusterId;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandStartedEvent;
+import com.mongodb.event.CommandSucceededEvent;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -132,6 +133,21 @@ class MongoDbAttributesGetterTest {
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
 
     assertThat(getter.getErrorType(null, null, error)).isEqualTo(expectedErrorType);
+  }
+
+  @Test
+  void getErrorTypeReturnsWriteConcernErrorCode() {
+    MongoDbAttributesGetter getter =
+        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
+    CommandSucceededEvent response =
+        new CommandSucceededEvent(
+            1,
+            new ConnectionDescription(new ServerId(new ClusterId(), new ServerAddress())),
+            "insert",
+            BsonDocument.parse("{\"ok\": 1, \"writeConcernError\": {\"code\": 64}}"),
+            1);
+
+    assertThat(getter.getErrorType(null, response, null)).isEqualTo("64");
   }
 
   @Test

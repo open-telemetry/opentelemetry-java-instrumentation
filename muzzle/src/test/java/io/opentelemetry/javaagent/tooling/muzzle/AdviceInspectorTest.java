@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.tooling.muzzle.AdviceInspector.AdviceMode;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -65,6 +66,26 @@ class AdviceInspectorTest {
         .isFalse();
   }
 
+  @Test
+  void declaredAdviceModes() {
+    assertThat(adviceInspector.inspect(module(NonInlineAdvice.class)))
+        .isEqualTo(AdviceMode.ALL_NON_INLINE);
+    // A missing inline=false on just the exit must not be mistaken for no advice.
+    assertThat(adviceInspector.inspect(module(MixedAdvice.class))).isEqualTo(AdviceMode.MIXED);
+    assertThat(adviceInspector.inspect(module(InlineAdvice.class)))
+        .isEqualTo(AdviceMode.ALL_INLINE);
+    assertThat(adviceInspector.inspect(module(NoAdvice.class))).isEqualTo(AdviceMode.NO_ADVICE);
+  }
+
+  private static InstrumentationModule module(Class<?>... adviceClasses) {
+    return new InstrumentationModule("test") {
+      @Override
+      public List<TypeInstrumentation> typeInstrumentations() {
+        return singletonList(new TestInstrumentation(adviceClasses));
+      }
+    };
+  }
+
   private static class TestInstrumentation implements TypeInstrumentation {
     private final Class<?>[] adviceClasses;
 
@@ -88,10 +109,26 @@ class AdviceInspectorTest {
   private static class NonInlineAdvice {
     @Advice.OnMethodEnter(inline = false)
     public static void enter() {}
+
+    @Advice.OnMethodExit(inline = false)
+    public static void exit() {}
   }
 
   private static class InlineAdvice {
     @Advice.OnMethodEnter
     public static void enter() {}
+
+    @Advice.OnMethodExit
+    public static void exit() {}
   }
+
+  private static class MixedAdvice {
+    @Advice.OnMethodEnter(inline = false)
+    public static void enter() {}
+
+    @Advice.OnMethodExit
+    public static void exit() {}
+  }
+
+  private static class NoAdvice {}
 }

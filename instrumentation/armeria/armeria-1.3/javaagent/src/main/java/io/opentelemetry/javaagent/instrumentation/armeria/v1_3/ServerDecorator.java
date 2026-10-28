@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.armeria.v1_3;
 
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpResponse;
+import com.linecorp.armeria.server.HttpResponseException;
 import com.linecorp.armeria.server.HttpService;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import com.linecorp.armeria.server.SimpleDecoratingHttpService;
@@ -49,9 +50,21 @@ class ServerDecorator extends SimpleDecoratingHttpService {
     try {
       return unwrap().serve(ctx, req);
     } catch (Throwable t) {
+      Throwable error = t;
+      // A directly thrown HttpResponseException carries a response, even HTTP 200.
+      // Armeria treats its attached cause as a response-processing failure.
+      // Record that cause, if present, rather than the response-control exception.
+      // See
+      // https://github.com/line/armeria/blob/armeria-1.10.0/core/src/main/java/com/linecorp/armeria/common/logging/DefaultRequestLog.java#L1363-L1369
+      if (t instanceof HttpResponseException) {
+        error = t.getCause();
+        if (error == null) {
+          throw t;
+        }
+      }
       Span span = Span.fromContext(otelContext);
       span.setStatus(StatusCode.ERROR);
-      span.recordException(ErrorCauseExtractor.getDefault().extract(t));
+      span.recordException(ErrorCauseExtractor.getDefault().extract(error));
 
       throw t;
     }

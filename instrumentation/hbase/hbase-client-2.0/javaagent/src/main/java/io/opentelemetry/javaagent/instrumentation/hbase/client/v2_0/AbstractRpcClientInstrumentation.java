@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.getTableName;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.resetRequestAndContext;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.setRequestAndContext;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientState.getTableName;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientState.resetRequestAndContext;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientState.setRequestAndContext;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -15,12 +15,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerTarget;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseRequest;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseServerTarget;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.RequestAndContext;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -58,7 +57,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This AbstractRpcClient<?> client, @Advice.Argument(0) Configuration configuration) {
       HbaseServerTarget.store(client, configuration);
@@ -67,7 +66,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class CallMethodAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static RequestAndContext onEnter(
         @Advice.This AbstractRpcClient<?> client,
         @Advice.Argument(0) Descriptors.MethodDescriptor md,
@@ -82,7 +81,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
       }
       HbaseRequest request =
           HbaseRequest.create(operation, getTableName(), HbaseServerTarget.get(client), batchSize);
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Context.current();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
@@ -93,7 +92,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
       return requestAndContext;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable RequestAndContext requestAndContext) {

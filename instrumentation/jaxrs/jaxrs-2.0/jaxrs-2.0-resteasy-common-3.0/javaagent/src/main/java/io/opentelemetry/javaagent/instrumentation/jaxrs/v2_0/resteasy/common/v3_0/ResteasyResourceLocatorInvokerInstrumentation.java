@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -44,7 +43,7 @@ public class ResteasyResourceLocatorInvokerInstrumentation implements TypeInstru
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.This ResourceLocatorInvoker resourceInvoker) {
 
-      Context currentContext = Java8BytecodeBridge.currentContext();
+      Context currentContext = Context.current();
 
       String name = LOCATOR_NAME.get(resourceInvoker);
       ResteasySpanName.INSTANCE.updateServerSpanName(currentContext, name);

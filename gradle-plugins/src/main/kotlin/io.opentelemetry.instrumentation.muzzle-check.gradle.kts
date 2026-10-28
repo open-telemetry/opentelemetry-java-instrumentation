@@ -161,7 +161,6 @@ listOf(shadowModule, shadowMuzzleTooling, shadowMuzzleBootstrap).forEach { task 
       relocate("io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation") {
         // Exclude resource providers since they live in the agent class loader
         exclude("io.opentelemetry.instrumentation.resources.*")
-        exclude("io.opentelemetry.instrumentation.spring.resources.*")
       }
 
       // relocate(OpenTelemetry API) since these classes live in the bootstrap class loader
@@ -376,10 +375,8 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
     // Some old library versions have broken or missing transitive dependencies
     // on Maven Central (e.g. SNAPSHOTs, Maven 1 POMs, deleted artifacts).
     // Use lenient resolution so these don't break configuration cache
-    // serialization. For assertFail this is always safe: fewer classes can only
-    // add more mismatches. For assertPass a missing transitive can cause a
-    // false muzzle failure but never a false pass; such versions should be
-    // skipped in the module's build.gradle.kts when found.
+    // serialization. Missing dependencies can affect classloader matching in
+    // either assertion mode, including negative class-presence gates.
     val artifactView = config.incoming.artifactView { lenient(true) }
     val configFiles = artifactView.files
     val muzzleShadowJarFile = shadowModule.flatMap { it.archiveFile }
@@ -389,11 +386,7 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
     val excludedModules = muzzleDirective.excludedInstrumentationModules.get()
     val shouldAssertPass = muzzleDirective.assertPass.get()
     // Snapshot diagnostics as text: resolution objects cannot be captured by configuration cache.
-    val resolutionFailures = if (shouldAssertPass) {
-      artifactView.artifacts.failures.map { it.stackTraceToString() }
-    } else {
-      emptyList()
-    }
+    val resolutionFailures = artifactView.artifacts.failures.map { it.stackTraceToString() }
 
     dependsOn(configurations.named("runtimeClasspath"))
     dependsOn(shadowModule)
@@ -421,10 +414,12 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
           shouldAssertPass
         )
       } catch (e: Exception) {
-        if (shouldAssertPass && resolutionFailures.isNotEmpty()) {
-          logger.error("Dependency resolution failures collected for $path (lenient resolution):")
-          resolutionFailures.forEach { logger.error(it) }
-        }
+        val expectation = if (shouldAssertPass) "acceptance (assertPass)" else "rejection (assertFail)"
+        logger.error("Muzzle validation failed for $path; expected $expectation")
+        logger.error("Dependency resolution failures (lenient resolution): ${resolutionFailures.size}")
+        resolutionFailures.forEach { logger.error(it) }
+        logger.error("Resolved dependency JARs used for $path:")
+        configFiles.map { it.absolutePath }.sorted().forEach { logger.error(it) }
         throw e
       }
     }

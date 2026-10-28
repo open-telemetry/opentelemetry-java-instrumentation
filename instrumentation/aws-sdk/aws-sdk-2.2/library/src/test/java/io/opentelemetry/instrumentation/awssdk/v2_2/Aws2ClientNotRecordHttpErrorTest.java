@@ -20,7 +20,7 @@ class Aws2ClientNotRecordHttpErrorTest extends AbstractAws2ClientRecordHttpError
     return ClientOverrideConfiguration.builder()
         .addExecutionInterceptor(
             AwsSdkTelemetry.builder(testing.getOpenTelemetry())
-                .setCaptureExperimentalSpanAttributes(true)
+                .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
                 .setRecordIndividualHttpError(isRecordIndividualHttpErrorEnabled())
                 .build()
                 .createExecutionInterceptor());

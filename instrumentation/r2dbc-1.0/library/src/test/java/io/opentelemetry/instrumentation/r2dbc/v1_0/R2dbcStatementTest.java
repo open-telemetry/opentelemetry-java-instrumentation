@@ -29,6 +29,11 @@ class R2dbcStatementTest extends AbstractR2dbcStatementTest {
     return testing;
   }
 
+  @Override
+  protected String expectedPeerService() {
+    return "test-peer-service";
+  }
+
   @BeforeAll
   void setup() {
     tracingOperator.registerOnEachOperator();
@@ -44,7 +49,7 @@ class R2dbcStatementTest extends AbstractR2dbcStatementTest {
       ConnectionFactoryOptions connectionFactoryOptions) {
     return R2dbcTelemetry.builder(testing.getOpenTelemetry())
         .addAttributesExtractor(
-            AttributesExtractor.constant(maybeStablePeerService(), "test-peer-service"))
+            AttributesExtractor.constant(maybeStablePeerService(), expectedPeerService()))
         .build()
         .wrapConnectionFactory(
             super.createProxyConnectionFactory(connectionFactoryOptions), connectionFactoryOptions);

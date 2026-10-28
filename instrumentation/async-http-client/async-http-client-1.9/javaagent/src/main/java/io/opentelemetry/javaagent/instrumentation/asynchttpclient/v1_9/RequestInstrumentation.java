@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.v1_8.VirtualFieldHelper.ASYNC_HANDLER_DATA;
 import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9.AsyncHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -48,7 +47,7 @@ class RequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.Argument(0) Request request, @Advice.Argument(1) AsyncHandler<?> handler) {
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }

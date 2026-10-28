@@ -20,7 +20,6 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.HibernateOperation;
@@ -105,7 +104,7 @@ class SessionInstrumentation implements TypeInstrumentation {
 
       SessionInfo sessionInfo = SHARED_SESSION_CONTRACT_SESSION_INFO.get(session);
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Context.current();
       String entityName =
           getEntityName(descriptor, arg0, arg1, EntityNameUtil.bestGuessEntityName(session));
       HibernateOperation hibernateOperation =

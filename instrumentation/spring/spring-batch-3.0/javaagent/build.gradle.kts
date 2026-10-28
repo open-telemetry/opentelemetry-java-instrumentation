@@ -15,7 +15,6 @@ muzzle {
 dependencies {
   library("org.springframework.batch:spring-batch-core:3.0.0.RELEASE")
 
-  testImplementation("com.google.guava:guava")
   testImplementation("javax.inject:javax.inject:1")
 
   // SimpleAsyncTaskExecutor context propagation

@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.library-instrumentation")
@@ -38,8 +39,74 @@ testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
+        register("ExperimentalAttributes") {
+          systemProperty("test.captureExperimentalSpanAttributes", "true")
+          systemProperty(
+            "metadataConfig",
+            "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
+          )
+          filter {
+            excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+            excludeTestsMatching("Aws2SqsW3cPropagatorTest")
+            excludeTestsMatching("Aws2SqsW3cPropagatorAndXrayPropagatorTest")
+            excludeTestsMatching("Aws2SqsSuppressReceiveSpansDefaultPropagatorTest")
+            excludeTestsMatching("Aws2SqsSuppressReceiveSpansW3cPropagatorTest")
+            excludeTestsMatching("Aws2SqsSuppressReceiveSpansW3cPropagatorAndXrayPropagatorTest")
+            // Keep inherited SQS coverage by excluding only subclass-specific regression tests.
+            excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDuplicateTracingInterceptor")
+            excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDisableSqsMessageCreateSpans")
+            excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testNoopTelemetryDoesNotInjectInvalidCreationContext")
+            excludeTestsMatching("Aws2ClientNotRecordHttpErrorTest")
+            excludeTestsMatching("Aws2ClientRecordHttpErrorTest")
+            excludeTestsMatching("SqsProcessMetricsIsolationTest")
+          }
+        }
+        register("ReceiveTelemetry") {
+          systemProperty("test.captureExperimentalSpanAttributes", "true")
+          systemProperty(
+            "test.messagingReceiveTelemetryEnabled",
+            "true",
+          )
+          systemProperty(
+            "metadataConfig",
+            "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)," +
+              "AwsSdkTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)",
+          )
+          filter {
+            includeTestsMatching("Aws2SqsDefaultPropagatorTest")
+            excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDuplicateTracingInterceptor")
+            excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDisableSqsMessageCreateSpans")
+            excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testNoopTelemetryDoesNotInjectInvalidCreationContext")
+          }
+        }
+        register("IndividualHttpErrors") {
+          systemProperty("test.recordIndividualHttpError", "true")
+          systemProperty(
+            "metadataConfig",
+            "AwsSdkTelemetryBuilder.setRecordIndividualHttpError(true)",
+          )
+          filter.includeTestsMatching("Aws2ClientRecordHttpErrorTest")
+        }
         register("ExceptionSignalLogs") {
           jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+          systemProperty("test.captureExperimentalSpanAttributes", "true")
+          systemProperty(
+            "metadataConfig",
+            "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)," +
+              "otel.semconv.exception.signal.preview=logs",
+          )
+          filter {
+            includeTestsMatching("Aws2ClientTest")
+            includeTestsMatching("Aws2SqsDefaultPropagatorTest.testDeleteMessageError")
+          }
+        }
+        register("PreviewSemconv") {
+          filter.includeTestsMatching("*Aws2ClientTest.testS3ServiceError")
+          telemetryConfig("otel.semconv-stability.preview", "rpc")
+        }
+        register("BothSemconv") {
+          filter.includeTestsMatching("*Aws2ClientTest.testS3ServiceError")
+          telemetryConfig("otel.semconv-stability.preview", "rpc/dup")
         }
       }
     }
@@ -54,6 +121,11 @@ testing {
         implementation("software.amazon.awssdk:aws-json-protocol:$version")
         implementation("software.amazon.awssdk:dynamodb:$version")
         implementation("software.amazon.awssdk:lambda:$version")
+      }
+      executions {
+        register("ExperimentalAttributes") {
+          systemProperty("test.captureExperimentalSpanAttributes", "true")
+        }
       }
     }
 
@@ -82,6 +154,15 @@ testing {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
         val version = baseVersion("2.5.54").orLatest()
         implementation("software.amazon.awssdk:rdsdata:$version")
+      }
+      executions {
+        register("ExperimentalAttributes") {
+          systemProperty("test.captureExperimentalSpanAttributes", "true")
+          systemProperty(
+            "metadataConfig",
+            "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
+          )
+        }
       }
     }
   }

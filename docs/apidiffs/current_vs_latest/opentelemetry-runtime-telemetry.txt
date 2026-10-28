@@ -1,0 +1,12 @@
+Comparing source compatibility of opentelemetry-runtime-telemetry-3.0.0-SNAPSHOT.jar against 
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW INTERFACE: java.lang.AutoCloseable
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetryBuilder builder(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) void close()
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry create(io.opentelemetry.api.OpenTelemetry)
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetryBuilder  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry build()

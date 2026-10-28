@@ -33,6 +33,10 @@ import javax.annotation.Nullable;
  * A {@link MeterRegistry} implementation that forwards all the captured metrics to the {@linkplain
  * io.opentelemetry.api.metrics.Meter OpenTelemetry Meter} obtained from the passed {@link
  * OpenTelemetry} instance.
+ *
+ * <p>This bridge is not a general replacement for a read-capable Micrometer registry. Many reads
+ * return {@code NaN}, zero, or empty measurements, though some reads are supported. Use a
+ * read-capable registry alongside this bridge when Micrometer reads are needed.
  */
 public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 

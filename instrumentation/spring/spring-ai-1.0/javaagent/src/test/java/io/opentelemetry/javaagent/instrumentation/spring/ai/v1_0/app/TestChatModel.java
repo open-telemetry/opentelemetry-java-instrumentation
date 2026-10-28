@@ -78,6 +78,8 @@ public class TestChatModel implements ChatModel {
         });
   }
 
+  // getDefaultOptions() is deprecated for removal in spring-ai 2, but the instrumentation calls it
+  @SuppressWarnings("removal")
   @Override
   public ChatOptions getDefaultOptions() {
     if (defaultOptionsFailure != null) {

@@ -19,6 +19,11 @@ convention not caught by CI.
 - Use focused unit tests for nontrivial standalone logic and shared infrastructure when they add
   coverage beyond integration tests. Choose cases for distinct behavior and important edge cases,
   not to enumerate every implementation branch or combination of mocked responses.
+- Tests that exercise javaagent helper classes directly, without requiring installed-agent behavior,
+  belong in a `JvmTestSuite` named `unitTests` under `src/unitTests/java`. Prefer direct same-package
+  access over `AgentClassLoaderAccess` or reflection used solely to bypass integration-test
+  classloader isolation. Reflection or classloader access remains appropriate when that behavior
+  is itself under test.
 - Test supported behavior. Do not add or request tests that only prove
   removed settings are ignored, or preview variants that repeat the same behavior.
   When configuration wiring changes, test the real initialization path and emitted
@@ -49,7 +54,7 @@ convention not caught by CI.
   are escape hatches for buggy instrumentation, not general telemetry-tuning
   settings. Do not add or request per-instrumentation selector tests for new
   modules, aliases, renames, or consolidations. This includes module name-list
-  assertions, enable/disable matrices, precedence, legacy/v3-preview handling,
+  assertions, enable/disable matrices, precedence, legacy-name handling,
   flat/YAML parity, warning checks, and dedicated JVM variants or test projects.
   Test shared enablement or alias-helper changes centrally. Keep coverage for
   actual default-enablement changes as described above, feature settings, and
@@ -76,10 +81,12 @@ convention not caught by CI.
 - Test methods do not need `throws Exception` clauses unless actually required.
 - Prefer the nearest common parent in `catch` (including `Exception` /
   `Throwable`) over multi-catch.
-- Allocate test ports through `PortUtils` so allocations are coordinated across
-  the test process. Use `findOpenPorts(count)` when a service needs a consecutive
-  range instead of assuming ports adjacent to a separately allocated port are
-  available.
+- Prefer binding test servers to port `0` when they expose the actual bound port.
+  Wait for binding to complete before reading the port and connecting clients;
+  keep the server bound rather than probing and releasing a port.
+  When ports must be chosen before the server starts, use `PortUtils` to coordinate
+  allocations across test processes. Use `findOpenPorts(count)` for a consecutive
+  range instead of assuming adjacent ports are available.
 - Prefer plain `@AfterEach` or `@AfterAll` teardown when direct cleanup is
   safe. Introduce `AutoCleanupExtension` when deferred cleanup improves
   clarity or protects partially completed setup. Register it with the
@@ -182,9 +189,11 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 
   ```java
   span.hasName(emitPreviewRpcSemconv() ? "Greeter/SayHello" : "helloworld.Greeter/SayHello");
-  equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null);
+  equalTo(AttributeKey.stringKey("rpc.status_code"), emitPreviewRpcSemconv() ? "OK" : null);
   ```
 
+- Nested ternaries are allowed directly in attribute-assertion expected values. Other test code follows
+  the normal conditional-expression rule.
 - Do not extract the ternary into a helper such as `spanName(...)`,
   `oldOrExperimental(value)`, or `expectedNamespace()` when no established
   semconv utility applies. Seeing both expected values at the assertion is more
@@ -202,7 +211,7 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
       attributes.add(equalTo(RPC_GRPC_STATUS_CODE, 0L));
     }
     if (emitPreviewRpcSemconv()) {
-      attributes.add(equalTo(RPC_RESPONSE_STATUS_CODE, "OK"));
+      attributes.add(equalTo(AttributeKey.stringKey("rpc.status_code"), "OK"));
     }
     return attributes;
   }
@@ -211,7 +220,7 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   // Good: pass each assertion directly and keep its mode check visible.
   span.hasAttributesSatisfyingExactly(
       equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null),
-      equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null));
+      equalTo(AttributeKey.stringKey("rpc.status_code"), emitPreviewRpcSemconv() ? "OK" : null));
   ```
 
 - The conventional `experimental(value)` helper is the one exception: keep it.

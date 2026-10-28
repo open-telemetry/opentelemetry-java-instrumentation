@@ -24,9 +24,9 @@ import com.couchbase.client.core.service.ServiceType;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseSpan;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseTracer;
-import io.opentelemetry.semconv.SchemaUrls;
 import java.time.Duration;
 import javax.annotation.Nullable;
 import reactor.core.publisher.Mono;
@@ -38,12 +38,15 @@ public final class CouchbaseRequestTracer implements RequestTracer {
   public static RequestTracer create(OpenTelemetry openTelemetry) {
     String instrumentationName = "io.opentelemetry.couchbase-3.0";
     Tracer tracer =
-        openTelemetry.tracerBuilder(instrumentationName).setSchemaUrl(SchemaUrls.V1_44_0).build();
+        openTelemetry
+            .tracerBuilder(instrumentationName)
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
+            .build();
     Logger exceptionLogger =
         openTelemetry
             .getLogsBridge()
             .loggerBuilder(instrumentationName)
-            .setSchemaUrl(SchemaUrls.V1_44_0)
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .build();
     return new CouchbaseRequestTracer(
         new CouchbaseTracer(tracer, exceptionLogger, false, true, true));

@@ -18,7 +18,10 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.AttributeSelectors;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -60,6 +63,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private BlockingQueue<LoggingEventToReplay> eventsToReplay =
       new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
   private final AtomicBoolean replayLimitWarningLogged = new AtomicBoolean();
+  private final AtomicBoolean asyncAppenderWarningLogged = new AtomicBoolean();
 
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -116,6 +120,55 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .build();
     eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     super.start();
+  }
+
+  private void checkAsyncAppenderConfiguration() {
+    if (asyncAppenderWarningLogged.get() || !(getContext() instanceof LoggerContext)) {
+      return;
+    }
+    LoggerContext loggerContext = (LoggerContext) getContext();
+    Set<Appender<?>> path = Collections.newSetFromMap(new IdentityHashMap<>());
+    for (Logger logger : loggerContext.getLoggerList()) {
+      logger
+          .iteratorForAppenders()
+          .forEachRemaining(appender -> checkAsyncAppenderConfiguration(appender, null, path));
+    }
+  }
+
+  private void checkAsyncAppenderConfiguration(
+      Appender<?> appender, @Nullable Appender<?> asyncAppender, Set<Appender<?>> path) {
+    if (!path.add(appender)) {
+      return;
+    }
+    if (appender == this && asyncAppender != null) {
+      if (asyncAppenderWarningLogged.compareAndSet(false, true)) {
+        addWarn(
+            "OpenTelemetryAppender '"
+                + getName()
+                + "' is downstream of AsyncAppender '"
+                + asyncAppender.getName()
+                + "'. This loses trace/span correlation because OpenTelemetry context is not"
+                + " propagated to the async worker. Attach OpenTelemetryAppender directly to the"
+                + " logger and use SDK batch export instead; keep console/file appenders async"
+                + " separately.");
+      }
+    } else if (appender instanceof AppenderAttachable) {
+      Appender<?> boundary = isAsyncAppender(appender) ? appender : asyncAppender;
+      ((AppenderAttachable<?>) appender)
+          .iteratorForAppenders()
+          .forEachRemaining(child -> checkAsyncAppenderConfiguration(child, boundary, path));
+    }
+    path.remove(appender);
+  }
+
+  private static boolean isAsyncAppender(Appender<?> appender) {
+    // AsyncAppenderBase is absent in the earliest supported Logback versions.
+    for (Class<?> type = appender.getClass(); type != null; type = type.getSuperclass()) {
+      if (type.getName().equals("ch.qos.logback.core.AsyncAppenderBase")) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Nullable
@@ -483,6 +536,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * to function. See {@link #install(OpenTelemetry)} for simple installation option.
    */
   public void setOpenTelemetry(OpenTelemetry openTelemetry) {
+    checkAsyncAppenderConfiguration();
     List<LoggingEventToReplay> eventsToReplay = new ArrayList<>();
     Lock writeLock = lock.writeLock();
     writeLock.lock();

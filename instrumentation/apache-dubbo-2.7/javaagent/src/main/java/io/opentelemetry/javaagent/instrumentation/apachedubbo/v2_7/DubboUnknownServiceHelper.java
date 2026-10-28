@@ -90,8 +90,8 @@ public class DubboUnknownServiceHelper {
    * requested service is not registered in the exporter map. This handles the Dubbo protocol
    * (binary) case where decode succeeds past {@code PermittedSerializationKeeper} (older Dubbo
    * versions without the check, or generic invocations that pass) but the invoker lookup fails.
-   * Trace context is extracted from invocation attachments, so the resulting span is linked to the
-   * client span (1 trace).
+   * Trace context is extracted from invocation attachments, falling back to the current context
+   * when no parent is propagated.
    *
    * <p>Only {@code RemotingException} with "Not found exported service" triggers span creation;
    * other getInvoker failures are not unknown-service errors and are ignored.
@@ -117,7 +117,7 @@ public class DubboUnknownServiceHelper {
     Context parentContext =
         GlobalOpenTelemetry.getPropagators()
             .getTextMapPropagator()
-            .extract(Context.root(), rpcInvocation.getAttachments(), mapGetter);
+            .extract(Context.current(), rpcInvocation.getAttachments(), mapGetter);
 
     startAndEndSpan(serverInstrumenter(), parentContext, request, throwable, startTime, endTime);
   }
@@ -134,7 +134,8 @@ public class DubboUnknownServiceHelper {
    *
    * <p>Note: trace context is unavailable in this path because in the Dubbo protocol wire format,
    * attachments (which carry traceparent) are serialized after parameter values and haven't been
-   * read when the decode fails. The resulting span will be a root span (disconnected trace).
+   * read when the decode fails. The resulting span uses the current context as its parent, or is a
+   * root span when there is no current span.
    */
   public static void createUnknownServiceSpanFromDecode(
       RpcInvocation rpcInvocation,
@@ -161,13 +162,15 @@ public class DubboUnknownServiceHelper {
         DubboInternalHelper.createForUnknownService(
             rpcInvocation, buildOriginalFullMethodName(rpcInvocation), remoteAddress);
 
-    startAndEndSpan(serverInstrumenter(), Context.root(), request, throwable, startTime, endTime);
+    startAndEndSpan(
+        serverInstrumenter(), Context.current(), request, throwable, startTime, endTime);
   }
 
   /**
    * Creates an unknown service span for the Dubbo Triple protocol (gRPC over HTTP/2). Unlike the
    * Dubbo protocol (binary), Triple transmits trace context as HTTP/2 headers, so the parent
-   * context is always available — resulting in a single trace.
+   * context can be extracted even when service routing fails, falling back to the current context
+   * when no parent is propagated.
    *
    * <p>Only {@code HttpStatusException} with status 404 (the Dubbo Triple not-found outcome)
    * triggers span creation. Other Triple failures (e.g., descriptor/codec construction for
@@ -215,7 +218,7 @@ public class DubboUnknownServiceHelper {
     Context parentContext =
         GlobalOpenTelemetry.getPropagators()
             .getTextMapPropagator()
-            .extract(Context.root(), requestObj, httpRequestGetter);
+            .extract(Context.current(), requestObj, httpRequestGetter);
 
     startAndEndSpan(serverInstrumenter(), parentContext, request, throwable, startTime, endTime);
   }

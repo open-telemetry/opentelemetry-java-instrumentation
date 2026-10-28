@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -546,15 +546,16 @@ public abstract class AbstractDubboTest {
     if (canCaptureUnknownServiceSpans() && emitPreviewRpcSemconv() && testLatestDeps()) {
       // Dubbo protocol (binary) with newer Dubbo versions (3.x / latest):
       // DecodeableRpcInvocation.decode() fails at PermittedSerializationKeeper before attachments
-      // (which carry traceparent) are read from the wire. The server _OTHER span cannot extract
-      // trace context, so it becomes a root span in a separate (disconnected) trace.
+      // (which carry traceparent) are read from the wire. The server span cannot extract
+      // trace context. There is no current span on the server thread in this test either, so the
+      // server span becomes a root span in a separate trace.
       testing()
           .waitAndAssertTraces(
               trace -> trace.hasSpansSatisfyingExactly(clientSpanAssert),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName("_OTHER")
+                          span.hasName("dubbo")
                               .hasKind(SpanKind.SERVER)
                               .hasNoParent()
                               .hasStatus(StatusData.error())
@@ -576,14 +577,14 @@ public abstract class AbstractDubboTest {
       // Dubbo protocol (binary) with older Dubbo versions (2.7.x):
       // decode succeeds past PermittedSerializationKeeper (not present or not enforced),
       // DubboProtocol.getInvoker() fails, but attachments (with traceparent) have already been
-      // read from the wire. The server _OTHER span is a child of the client span (1 trace).
+      // read from the wire. The server span named "dubbo" is a child of the client span (1 trace).
       testing()
           .waitAndAssertTraces(
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       clientSpanAssert,
                       span ->
-                          span.hasName("_OTHER")
+                          span.hasName("dubbo")
                               .hasKind(SpanKind.SERVER)
                               .hasParent(trace.getSpan(0))
                               .hasStatus(StatusData.error())
@@ -608,8 +609,8 @@ public abstract class AbstractDubboTest {
 
   /**
    * Tests unknown service span capture for the Triple protocol (gRPC over HTTP/2). Unlike the Dubbo
-   * binary protocol, Triple transmits trace context as HTTP/2 headers, so the server _OTHER span is
-   * always a child of the client span — resulting in 1 trace with 2 spans.
+   * binary protocol, Triple transmits trace context as HTTP/2 headers, so the server "dubbo" span
+   * is always a child of the client span — resulting in 1 trace with 2 spans.
    */
   @Test
   void testTripleUnknownService() throws ReflectiveOperationException {
@@ -659,7 +660,7 @@ public abstract class AbstractDubboTest {
       // expected: MiddleService not exported on provider
     }
 
-    // Triple uses HTTP/2 headers for trace context propagation, so the server _OTHER span
+    // Triple uses HTTP/2 headers for trace context propagation, so the server "dubbo" span
     // is always a child of the client span (1 trace), unlike the Dubbo binary protocol
     // which may produce 2 separate traces when attachments are unreachable.
     testing()
@@ -691,7 +692,7 @@ public abstract class AbstractDubboTest {
                                 satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
-                        span.hasName("_OTHER")
+                        span.hasName("dubbo")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())

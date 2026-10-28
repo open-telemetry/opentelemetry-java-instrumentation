@@ -278,7 +278,7 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
                                 equalTo(NETWORK_PEER_ADDRESS, httpHost.getHost()),
                                 // Netty 4.1 Instrumentation collects NETWORK_PEER_PORT
                                 equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
-                                equalTo(maybeStablePeerService(), "test-peer-service")),
+                                equalTo(maybeStablePeerService(), testing.expectedPeerService())),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)

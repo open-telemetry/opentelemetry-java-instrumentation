@@ -23,7 +23,6 @@ dependencies {
   // Include kafka-clients instrumentation for tests.
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
 
-  testImplementation("com.google.guava:guava")
   testImplementation("org.testcontainers:testcontainers-kafka")
 }
 
@@ -44,11 +43,8 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    if (name != "unitTests") {
-      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
-      systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    }
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {

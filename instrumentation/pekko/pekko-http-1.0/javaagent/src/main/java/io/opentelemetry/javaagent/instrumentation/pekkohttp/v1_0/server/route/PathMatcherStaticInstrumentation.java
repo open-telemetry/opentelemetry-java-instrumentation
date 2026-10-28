@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -44,7 +43,7 @@ class PathMatcherStaticInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Uri.Path path,
         @Advice.Return PathMatcher.Matching<?> result) {
       // result is either matched or unmatched, we only care about the matches
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       PekkoRouteHolder routeHolder = PekkoRouteHolder.get(context);
       if (routeHolder == null) {
         return;

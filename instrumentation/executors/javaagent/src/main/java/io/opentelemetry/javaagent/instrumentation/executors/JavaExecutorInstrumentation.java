@@ -21,7 +21,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ContextPropagatingCallable;
 import io.opentelemetry.javaagent.bootstrap.executors.ContextPropagatingRunnable;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
@@ -162,7 +161,7 @@ class JavaExecutorInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext enterJobSubmit(@Advice.Argument(0) ForkJoinTask<?> task) {
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         return ExecutorAdviceHelper.attachContextToTask(
             context, FORKJOINTASK_PROPAGATED_CONTEXT, task);

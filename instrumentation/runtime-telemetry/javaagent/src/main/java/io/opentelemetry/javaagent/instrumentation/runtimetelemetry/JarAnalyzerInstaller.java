@@ -28,8 +28,7 @@ public class JarAnalyzerInstaller implements BeforeAgentListener {
 
     DeclarativeConfigProperties packageEmitterConfig = config.get("package_emitter/development");
 
-    String instrumentationName = JarAnalyzerConfig.getInstrumentationName(packageEmitterConfig);
-    if (instrumentationName == null) {
+    if (!JarAnalyzerConfig.isEnabled(packageEmitterConfig)) {
       return;
     }
     Instrumentation inst = InstrumentationHolder.getInstrumentation();
@@ -39,7 +38,7 @@ public class JarAnalyzerInstaller implements BeforeAgentListener {
 
     int jarsPerSecond = JarAnalyzerConfig.getJarsPerSecond(packageEmitterConfig);
 
-    JarAnalyzer jarAnalyzer = JarAnalyzer.create(openTelemetry, instrumentationName, jarsPerSecond);
+    JarAnalyzer jarAnalyzer = JarAnalyzer.create(openTelemetry, jarsPerSecond);
     inst.addTransformer(jarAnalyzer);
   }
 }

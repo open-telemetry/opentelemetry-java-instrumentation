@@ -38,19 +38,16 @@ abstract class HttpCommonAttributesExtractor<
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   final GETTER getter;
-  private final HttpStatusCodeConverter statusCodeConverter;
   private final CapturedHttpHeaders capturedRequestHeaders;
   private final CapturedHttpHeaders capturedResponseHeaders;
   private final Set<String> knownMethods;
 
   HttpCommonAttributesExtractor(
       GETTER getter,
-      HttpStatusCodeConverter statusCodeConverter,
       CapturedHttpHeaders capturedRequestHeaders,
       CapturedHttpHeaders capturedResponseHeaders,
       Set<String> knownMethods) {
     this.getter = getter;
-    this.statusCodeConverter = statusCodeConverter;
     this.capturedRequestHeaders = capturedRequestHeaders;
     this.capturedResponseHeaders = capturedResponseHeaders;
     this.knownMethods = new HashSet<>(knownMethods);
@@ -89,32 +86,15 @@ abstract class HttpCommonAttributesExtractor<
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
 
-    Integer statusCode = null;
     if (response != null) {
-      statusCode = getter.getHttpResponseStatusCode(request, response, error);
+      Integer statusCode = getter.getHttpResponseStatusCode(request, response, error);
       if (statusCode != null && statusCode > 0) {
         attributes.put(HTTP_RESPONSE_STATUS_CODE, (long) statusCode);
       }
 
       captureResponseHeaders(attributes, request, response);
     }
-
-    String errorType = null;
-    if (statusCode != null && statusCode > 0) {
-      if (statusCodeConverter.isError(statusCode)) {
-        errorType = statusCode.toString();
-      }
-    } else {
-      errorType = getter.getErrorType(request, response, error);
-      // fall back to exception class name & _OTHER
-      if (errorType == null && error != null) {
-        errorType = error.getClass().getName();
-      }
-      if (errorType == null) {
-        errorType = _OTHER;
-      }
-    }
-    attributes.put(ERROR_TYPE, errorType);
+    attributes.put(ERROR_TYPE, getter.getErrorType(request, response, error));
 
     String protocolName = lowercaseStr(getter.getNetworkProtocolName(request, response));
     String protocolVersion = lowercaseStr(getter.getNetworkProtocolVersion(request, response));

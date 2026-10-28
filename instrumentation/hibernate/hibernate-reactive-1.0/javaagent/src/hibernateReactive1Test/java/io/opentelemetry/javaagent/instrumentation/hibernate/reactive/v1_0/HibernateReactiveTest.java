@@ -303,7 +303,7 @@ class HibernateReactiveTest {
                                 DB_QUERY_TEXT,
                                 "select value0_.id as id1_0_0_, value0_.name as name2_0_0_ from Value value0_ where value0_.id=$1"),
                             equalTo(DB_QUERY_SUMMARY, "select Value"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
                 span ->

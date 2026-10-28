@@ -122,9 +122,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest extends AbstractAwsS
   }
 
   protected boolean isRecordIndividualHttpErrorEnabled() {
-    // See io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkTelemetryFactory
-    return Boolean.getBoolean(
-        "otel.instrumentation.aws-sdk.experimental-record-individual-http-error");
+    return Boolean.getBoolean("test.recordIndividualHttpError");
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv

@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcServerExceptionEventExtractor;
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.grpc.Status;
@@ -18,6 +20,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcMetricsCont
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSizeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -37,6 +40,13 @@ import javax.annotation.Nullable;
 public final class GrpcTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.grpc-1.6";
+  private static final List<Double> GRPC_DURATION_SECONDS_BUCKETS =
+      unmodifiableList(
+          asList(
+              0.0, 0.00001, 0.00005, 0.0001, 0.0003, 0.0006, 0.0008, 0.001, 0.002, 0.003, 0.004,
+              0.005, 0.006, 0.008, 0.01, 0.013, 0.016, 0.02, 0.025, 0.03, 0.04, 0.05, 0.065, 0.08,
+              0.1, 0.13, 0.16, 0.2, 0.25, 0.3, 0.4, 0.5, 0.65, 0.8, 1.0, 2.0, 5.0, 10.0, 20.0, 50.0,
+              100.0));
 
   private final OpenTelemetry openTelemetry;
 
@@ -229,38 +239,41 @@ public final class GrpcTelemetryBuilder {
         new GrpcClientNetworkAttributesGetter();
     GrpcServerNetworkAttributesGetter netServerAttributesGetter =
         new GrpcServerNetworkAttributesGetter();
-    GrpcRpcAttributesGetter rpcAttributesGetter = new GrpcRpcAttributesGetter();
+    GrpcRpcAttributesGetter clientRpcAttributesGetter = new GrpcRpcAttributesGetter(true);
+    GrpcRpcAttributesGetter serverRpcAttributesGetter = new GrpcRpcAttributesGetter(false);
 
     clientInstrumenterBuilder
+        .setSchemaUrl(RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry).schemaUrl())
         .setSpanStatusExtractor(GrpcSpanStatusExtractor.CLIENT)
         .addAttributesExtractors(additionalExtractors)
-        .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
+        .addAttributesExtractor(RpcClientAttributesExtractor.create(clientRpcAttributesGetter))
         .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractors(additionalClientExtractors)
         .addAttributesExtractor(
-            new GrpcAttributesExtractor(rpcAttributesGetter, clientRequestMetadata))
-        .addOperationMetrics(RpcClientMetrics.get())
+            new GrpcAttributesExtractor(clientRpcAttributesGetter, clientRequestMetadata))
+        .addOperationMetrics(RpcClientMetrics.get(GRPC_DURATION_SECONDS_BUCKETS))
         .addContextCustomizer(
-            RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
+            RpcMetricsContextCustomizers.dualEmitContextCustomizer(clientRpcAttributesGetter));
     setRpcClientExceptionEventExtractor(clientInstrumenterBuilder);
     Experimental.addOperationListenerAttributesExtractor(
-        clientInstrumenterBuilder, RpcSizeAttributesExtractor.create(rpcAttributesGetter));
+        clientInstrumenterBuilder, RpcSizeAttributesExtractor.create(clientRpcAttributesGetter));
     serverInstrumenterBuilder
+        .setSchemaUrl(RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry).schemaUrl())
         .setSpanStatusExtractor(GrpcSpanStatusExtractor.SERVER)
         .addAttributesExtractors(additionalExtractors)
-        .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
+        .addAttributesExtractor(RpcServerAttributesExtractor.create(serverRpcAttributesGetter))
         .addAttributesExtractor(ServerAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(
-            new GrpcAttributesExtractor(rpcAttributesGetter, serverRequestMetadata))
+            new GrpcAttributesExtractor(serverRpcAttributesGetter, serverRequestMetadata))
         .addAttributesExtractors(additionalServerExtractors)
-        .addOperationMetrics(RpcServerMetrics.get())
+        .addOperationMetrics(RpcServerMetrics.get(GRPC_DURATION_SECONDS_BUCKETS))
         .addContextCustomizer(
-            RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
+            RpcMetricsContextCustomizers.dualEmitContextCustomizer(serverRpcAttributesGetter));
     setRpcServerExceptionEventExtractor(serverInstrumenterBuilder);
     Experimental.addOperationListenerAttributesExtractor(
-        serverInstrumenterBuilder, RpcSizeAttributesExtractor.create(rpcAttributesGetter));
+        serverInstrumenterBuilder, RpcSizeAttributesExtractor.create(serverRpcAttributesGetter));
 
     return new GrpcTelemetry(
         serverInstrumenterBuilder.buildServerInstrumenter(new GrpcRequestGetter()),

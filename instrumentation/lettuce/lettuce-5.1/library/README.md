@@ -48,3 +48,19 @@ ClientResources clientResources = ClientResources.builder()
 RedisClient redisClient = RedisClient.create(clientResources, "redis://localhost:6379");
 StatefulRedisConnection<String, String> connection = redisClient.connect();
 ```
+
+### Error classification
+
+Lettuce 5.x tracing callbacks can report server replies and client failures as messages without
+their exceptions. These failures use `error.type="_OTHER"` on spans and duration metrics because
+the callback cannot distinguish their origin. When Lettuce supplies an exception, its class is
+used for `error.type`.
+
+Errors available only as `EXEC` result elements are not classified on the aggregate `EXEC` span
+because Lettuce does not expose per-result failure provenance to its tracing callback.
+On older versions, command spans may finish when a transaction member is acknowledged as `QUEUED`,
+before a later member failure becomes available.
+
+With Lettuce 6.0 and higher, command-aware callbacks distinguish server replies from client
+failures. A dependable server reply uses its first nonempty ASCII-space-delimited token; failures
+reported only as exceptions use the exception class. Successful operations omit `error.type`.

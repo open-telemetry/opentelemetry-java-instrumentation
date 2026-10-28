@@ -123,7 +123,7 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
@@ -164,7 +164,7 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "PUT"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(
                                 URL_FULL,
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
@@ -202,7 +202,7 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_search?typed_keys=true"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
@@ -267,7 +267,7 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
                 span ->

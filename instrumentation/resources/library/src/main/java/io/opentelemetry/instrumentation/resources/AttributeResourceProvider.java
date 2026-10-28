@@ -67,10 +67,12 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
                           e.getValue()
                               .apply(data)
                               .ifPresent(value -> putAttribute(builder, e.getKey(), value)));
-              return Resource.create(builder.build());
+              return buildResource(builder.build());
             })
         .orElse(Resource.empty());
   }
+
+  abstract Resource buildResource(Attributes attributes);
 
   private static <T> void putAttribute(AttributesBuilder builder, AttributeKey<T> key, T value) {
     builder.put(key, value);

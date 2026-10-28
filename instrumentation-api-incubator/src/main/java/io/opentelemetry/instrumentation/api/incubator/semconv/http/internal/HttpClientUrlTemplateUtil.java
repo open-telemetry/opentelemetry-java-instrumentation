@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.internal.ServiceLoaderUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ServiceLoader;
 import javax.annotation.Nullable;
 
 /**
@@ -26,9 +27,23 @@ public final class HttpClientUrlTemplateUtil {
 
   static {
     for (HttpClientUrlTemplateCustomizer customizer :
-        ServiceLoaderUtil.load(HttpClientUrlTemplateCustomizer.class)) {
+        ServiceLoaderUtil.load(
+            HttpClientUrlTemplateCustomizer.class, HttpClientUrlTemplateUtil::loadCustomizers)) {
       customizers.add(customizer);
     }
+  }
+
+  private static List<HttpClientUrlTemplateCustomizer> loadCustomizers() {
+    List<HttpClientUrlTemplateCustomizer> customizers = new ArrayList<>();
+    // Android's R8 optimizer can replace discovery with direct instantiation when the service class
+    // literal, its defining class loader, and iteration are in the same method.
+    for (HttpClientUrlTemplateCustomizer customizer :
+        ServiceLoader.load(
+            HttpClientUrlTemplateCustomizer.class,
+            HttpClientUrlTemplateCustomizer.class.getClassLoader())) {
+      customizers.add(customizer);
+    }
+    return customizers;
   }
 
   @Nullable

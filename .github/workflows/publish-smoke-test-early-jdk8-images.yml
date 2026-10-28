@@ -34,7 +34,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Login to GitHub package registry
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -57,6 +57,6 @@ jobs:
     needs:
       - publish
     if: always()
-    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@544059e5691c00818aa83bd1117c4e0b8b4a6e21 # v0.21.0
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@efc55838c9769c5476e0a5cf7183a8c5b4ae70a5 # v0.24.0
     with:
       success: ${{ needs.publish.result == 'success' }}

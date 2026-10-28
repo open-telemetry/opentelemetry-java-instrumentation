@@ -103,7 +103,8 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, httpHost.getPort()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(maybeStablePeerService(), "test-peer-service"),
+                                equalTo(
+                                    maybeStablePeerService(), getTesting().expectedPeerService()),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
@@ -175,7 +176,8 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, httpHost.getPort()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(maybeStablePeerService(), "test-peer-service"),
+                                equalTo(
+                                    maybeStablePeerService(), getTesting().expectedPeerService()),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
                     span ->

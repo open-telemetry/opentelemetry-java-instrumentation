@@ -7,11 +7,14 @@ package io.opentelemetry.instrumentation.jmx.rules.containers;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
+import static io.opentelemetry.semconv.incubating.NetworkIncubatingAttributes.NETWORK_IO_DIRECTION;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.MetricsVerifier;
 import io.opentelemetry.instrumentation.jmx.rules.TargetSystemTest;
+import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -47,7 +50,19 @@ class KafkaBrokerTest extends TargetSystemTest {
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
 
-    // TODO: add weaver validation
+    startWeaverValidation(
+        "kafka-broker.yaml",
+        result ->
+            result
+                .checkNothingUnregisteredWithPrefix("kafka.")
+                .checkRegisteredMetrics(
+                    "kafka.",
+                    reportedMetrics(zookeeperImage != null),
+                    optionalMetrics(zookeeperImage != null))
+                .checkRegisteredAttributes(
+                    "kafka.",
+                    asList("kafka.request.type", "kafka.topic.name", "kafka.server.isr.operation"),
+                    emptyList()));
 
     List<GenericContainer<?>> dependencies = emptyList();
     if (zookeeperImage != null) {
@@ -65,197 +80,252 @@ class KafkaBrokerTest extends TargetSystemTest {
     verifyMetrics(createMetricsVerifier(zookeeperImage != null));
   }
 
+  private static List<String> reportedMetrics(boolean useZookeeper) {
+    List<String> metrics =
+        new ArrayList<>(
+            asList(
+                "kafka.server.messages",
+                "kafka.server.requests",
+                "kafka.server.failed_requests",
+                "kafka.server.network.io",
+                "kafka.server.purgatory.size",
+                "kafka.network.requests",
+                "kafka.network.request.duration.p50",
+                "kafka.network.request.duration.p99",
+                "kafka.network.request.queue",
+                "kafka.server.partition.count",
+                "kafka.controller.partition.offline",
+                "kafka.server.partition.under_replicated",
+                "kafka.server.isr.operations",
+                "kafka.server.lag.max",
+                "kafka.controller.active.count",
+                "kafka.log.flushes",
+                "kafka.log.flush.duration.p50",
+                "kafka.log.flush.duration.p99"));
+    if (useZookeeper) {
+      metrics.addAll(zookeeperOnlyMetrics());
+    }
+    return metrics;
+  }
+
+  private static List<String> optionalMetrics(boolean useZookeeper) {
+    return useZookeeper ? emptyList() : zookeeperOnlyMetrics();
+  }
+
+  // those metrics are only reported when using zookeeper
+  private static List<String> zookeeperOnlyMetrics() {
+    return asList("kafka.controller.leader_elections", "kafka.controller.unclean_leader_elections");
+  }
+
   private static MetricsVerifier createMetricsVerifier(boolean useZookeeper) {
 
-    AttributeMatcherGroup fetchType = attributeGroup(attribute("type", "fetch"));
-    AttributeMatcherGroup produceType = attributeGroup(attribute("type", "produce"));
+    // topic used to send and consume the sample message
+    AttributeMatcher sampleTopic = attribute("kafka.topic.name", "my-topic");
+    // internal topic written by the broker when the sample consumer joins a consumer group
+    AttributeMatcher offsetsTopic = attribute("kafka.topic.name", "__consumer_offsets");
+    // compacted topic used to trigger a failed produce request
+    AttributeMatcher compactedTopic = attribute("kafka.topic.name", "my-compacted-topic");
 
-    AttributeMatcherGroup requestTypeProduce = attributeGroup(attribute("type", "Produce"));
+    AttributeMatcherGroup requestTypeProduce =
+        attributeGroup(attribute("kafka.request.type", "produce"));
     AttributeMatcherGroup requestTypeFetchConsumer =
-        attributeGroup(attribute("type", "FetchConsumer"));
+        attributeGroup(attribute("kafka.request.type", "fetchconsumer"));
     AttributeMatcherGroup requestTypeFetchFollower =
-        attributeGroup(attribute("type", "FetchFollower"));
+        attributeGroup(attribute("kafka.request.type", "fetchfollower"));
 
     MetricsVerifier verifier =
         MetricsVerifier.create()
             .add(
-                "kafka.message.count",
+                "kafka.server.messages",
                 metric ->
                     metric
                         .isCounter()
-                        .hasUnit("{messages}")
+                        .hasUnit("{message}")
                         .hasDescription("The number of messages received by the broker")
-                        .hasDataPointsWithoutAttributes())
+                        .hasDataPointsWithAttributes(
+                            attributeGroup(sampleTopic), attributeGroup(offsetsTopic)))
             .add(
-                "kafka.request.count",
+                "kafka.server.requests",
                 metric ->
                     metric
                         .isCounter()
-                        .hasUnit("{requests}")
+                        .hasUnit("{request}")
                         .hasDescription("The number of requests received by the broker")
-                        .hasDataPointsWithAttributes(fetchType, produceType))
+                        .hasDataPointsWithAttributes(
+                            attributeGroup(attribute("kafka.request.type", "fetch"), sampleTopic),
+                            attributeGroup(attribute("kafka.request.type", "produce"), sampleTopic),
+                            attributeGroup(
+                                attribute("kafka.request.type", "produce"), offsetsTopic),
+                            attributeGroup(
+                                attribute("kafka.request.type", "produce"), compactedTopic)))
             .add(
-                "kafka.request.failed",
+                "kafka.server.failed_requests",
                 metric ->
                     metric
                         .isCounter()
-                        .hasUnit("{requests}")
+                        .hasUnit("{request}")
                         .hasDescription(
                             "The number of requests to the broker resulting in a failure")
-                        .hasDataPointsWithAttributes(fetchType, produceType))
-            .add(
-                "kafka.request.time.total",
-                metric ->
-                    metric
-                        .isCounter()
-                        .hasUnit("ms")
-                        .hasDescription("The total time the broker has taken to service requests")
+                        // only failed produce requests can be triggered, failed fetch requests are
+                        // only reported for unexpected errors
                         .hasDataPointsWithAttributes(
-                            requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
+                            attributeGroup(
+                                attribute("kafka.request.type", "produce"), compactedTopic)))
             .add(
-                "kafka.request.time.50p",
-                metric ->
-                    metric
-                        .isGauge()
-                        .hasUnit("ms")
-                        .hasDescription(
-                            "The 50th percentile time the broker has taken to service requests")
-                        .hasDataPointsWithAttributes(
-                            requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
-            .add(
-                "kafka.request.time.99p",
-                metric ->
-                    metric
-                        .isGauge()
-                        .hasUnit("ms")
-                        .hasDescription(
-                            "The 99th percentile time the broker has taken to service requests")
-                        .hasDataPointsWithAttributes(
-                            requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
-            .add(
-                "kafka.request.queue",
-                metric ->
-                    metric
-                        .isUpDownCounter()
-                        .hasUnit("{requests}")
-                        .hasDescription("Size of the request queue")
-                        .hasDataPointsWithoutAttributes())
-            .add(
-                "kafka.network.io",
+                "kafka.server.network.io",
                 metric ->
                     metric
                         .isCounter()
                         .hasUnit("By")
                         .hasDescription("The bytes received or sent by the broker")
                         .hasDataPointsWithAttributes(
-                            attributeGroup(attribute("direction", "in")),
-                            attributeGroup(attribute("direction", "out"))))
+                            attributeGroup(
+                                attribute(NETWORK_IO_DIRECTION.getKey(), "receive"), sampleTopic),
+                            attributeGroup(
+                                attribute(NETWORK_IO_DIRECTION.getKey(), "receive"), offsetsTopic),
+                            attributeGroup(
+                                attribute(NETWORK_IO_DIRECTION.getKey(), "transmit"), sampleTopic)))
             .add(
-                "kafka.purgatory.size",
+                "kafka.server.purgatory.size",
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasUnit("{requests}")
+                        .hasUnit("{request}")
                         .hasDescription("The number of requests waiting in purgatory")
                         .hasDataPointsWithAttributes(
-                            attributeGroup(attribute("type", "Produce")),
-                            attributeGroup(attribute("type", "Fetch"))))
+                            attributeGroup(attribute("kafka.request.type", "produce")),
+                            attributeGroup(attribute("kafka.request.type", "fetch"))))
             .add(
-                "kafka.partition.count",
+                "kafka.server.partition.count",
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasUnit("{partitions}")
+                        .hasUnit("{partition}")
                         .hasDescription("The number of partitions on the broker")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.partition.offline",
+                "kafka.server.partition.under_replicated",
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasUnit("{partitions}")
-                        .hasDescription("The number of partitions offline")
+                        .hasUnit("{partition}")
+                        .hasDescription("The number of under-replicated partitions")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.partition.underReplicated",
+                "kafka.server.isr.operations",
                 metric ->
                     metric
-                        .isUpDownCounter()
-                        .hasUnit("{partitions}")
-                        .hasDescription("The number of under replicated partitions")
-                        .hasDataPointsWithoutAttributes())
-            .add(
-                "kafka.isr.operation.count",
-                metric ->
-                    metric
-                        .isUpDownCounter()
-                        .hasUnit("{operations}")
-                        .hasDescription(
-                            "The number of in-sync replica shrink and expand operations")
+                        .isCounter()
+                        .hasUnit("{operation}")
+                        .hasDescription("The number of in-sync replica operations")
                         .hasDataPointsWithAttributes(
-                            attributeGroup(attribute("operation", "shrink")),
-                            attributeGroup(attribute("operation", "expand"))))
+                            attributeGroup(attribute("kafka.server.isr.operation", "shrink")),
+                            attributeGroup(attribute("kafka.server.isr.operation", "expand"))))
             .add(
-                "kafka.lag.max",
+                "kafka.server.lag.max",
                 metric ->
                     metric
                         .isGauge()
-                        .hasUnit("{messages}")
+                        .hasUnit("{message}")
                         .hasDescription(
                             "The max lag in messages between follower and leader replicas")
+                        .hasDataPointsWithoutAttributes())
+            .add(
+                "kafka.network.requests",
+                metric ->
+                    metric
+                        .isCounter()
+                        .hasUnit("{request}")
+                        .hasDescription("The number of network requests received by the broker")
+                        .hasDataPointsWithAttributes(
+                            requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
+            .add(
+                "kafka.network.request.duration.p50",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("s")
+                        .hasDescription(
+                            "The 50th percentile duration the broker has taken to service network requests")
+                        .hasDataPointsWithAttributes(
+                            requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
+            .add(
+                "kafka.network.request.duration.p99",
+                metric ->
+                    metric
+                        .isGauge()
+                        .hasUnit("s")
+                        .hasDescription(
+                            "The 99th percentile duration the broker has taken to service network requests")
+                        .hasDataPointsWithAttributes(
+                            requestTypeProduce, requestTypeFetchConsumer, requestTypeFetchFollower))
+            .add(
+                "kafka.network.request.queue",
+                metric ->
+                    metric
+                        .isUpDownCounter()
+                        .hasUnit("{request}")
+                        .hasDescription("Size of the network request queue")
+                        .hasDataPointsWithoutAttributes())
+            .add(
+                "kafka.controller.partition.offline",
+                metric ->
+                    metric
+                        .isUpDownCounter()
+                        .hasUnit("{partition}")
+                        .hasDescription("The number of partitions offline")
                         .hasDataPointsWithoutAttributes())
             .add(
                 "kafka.controller.active.count",
                 metric ->
                     metric
                         .isUpDownCounter()
-                        .hasUnit("{controllers}")
+                        .hasUnit("{controller}")
                         .hasDescription("The number of controllers active on the broker")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.logs.flush.Count",
+                "kafka.log.flushes",
                 metric ->
                     metric
                         .isCounter()
-                        .hasUnit("ms")
+                        .hasUnit("{flush}")
                         .hasDescription("Log flush count")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.logs.flush.time.50p",
+                "kafka.log.flush.duration.p50",
                 metric ->
                     metric
                         .isGauge()
-                        .hasUnit("ms")
-                        .hasDescription("Log flush time - 50th percentile")
+                        .hasUnit("s")
+                        .hasDescription("Log flush duration 50th percentile")
                         .hasDataPointsWithoutAttributes())
             .add(
-                "kafka.logs.flush.time.99p",
+                "kafka.log.flush.duration.p99",
                 metric ->
                     metric
                         .isGauge()
-                        .hasUnit("ms")
-                        .hasDescription("Log flush time - 99th percentile")
+                        .hasUnit("s")
+                        .hasDescription("Log flush duration 99th percentile")
                         .hasDataPointsWithoutAttributes());
 
     if (useZookeeper) {
       // those metrics are only reported when using zookeeper
       verifier
           .add(
-              "kafka.leaderElection.count",
+              "kafka.controller.leader_elections",
               metric ->
                   metric
                       .isCounter()
-                      .hasUnit("{elections}")
+                      .hasUnit("{election}")
                       .hasDescription("The leader election count")
                       .hasDataPointsWithoutAttributes())
           .add(
-              "kafka.leaderElection.unclean.count",
+              "kafka.controller.unclean_leader_elections",
               metric ->
                   metric
                       .isCounter()
-                      .hasUnit("{elections}")
-                      .hasDescription(
-                          "Unclean leader election count - increasing indicates broker failures")
+                      .hasUnit("{election}")
+                      .hasDescription("Unclean leader election count")
                       .hasDataPointsWithoutAttributes());
     }
     return verifier;

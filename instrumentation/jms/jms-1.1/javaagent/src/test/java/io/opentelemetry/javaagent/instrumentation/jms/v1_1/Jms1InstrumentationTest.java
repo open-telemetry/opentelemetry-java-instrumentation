@@ -39,10 +39,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("deprecation")
 class Jms1InstrumentationTest extends AbstractJms1Test {
 
-  @SuppressWarnings("deprecation") // using deprecated JMS and semconv APIs
   @Test
   void capturesDurableSubscriberName() throws Exception {
     Topic topic = session.createTopic("durable-topic");

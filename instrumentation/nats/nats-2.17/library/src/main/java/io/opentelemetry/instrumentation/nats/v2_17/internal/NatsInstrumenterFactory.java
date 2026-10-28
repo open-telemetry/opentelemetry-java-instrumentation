@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -53,6 +54,7 @@ public final class NatsInstrumenterFactory {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
                     getter, MessagingOperationType.SEND, operationName))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 messagingAttributesExtractor(
                     getter, MessagingOperationType.SEND, operationName, headers))
@@ -69,6 +71,7 @@ public final class NatsInstrumenterFactory {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 NatsSpanNameExtractor.create(getter, MessagingOperationType.SETTLE, "settle"))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 messagingAttributesExtractor(
                     getter, MessagingOperationType.SETTLE, "settle", headers))
@@ -87,6 +90,7 @@ public final class NatsInstrumenterFactory {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
                     getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 messagingAttributesExtractor(
                     getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME, headers))

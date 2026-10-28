@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v2_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.playws.v2_0.PlayWs20Singletons.instrumenter;
 import static java.util.Arrays.asList;
 
@@ -49,7 +48,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
         @Advice.Argument(0) Request request,
         @Advice.Argument(1) AsyncHandler<?> originalAsyncHandler) {
       AsyncHandler<?> asyncHandler = originalAsyncHandler;
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return new Object[] {null, asyncHandler};
       }

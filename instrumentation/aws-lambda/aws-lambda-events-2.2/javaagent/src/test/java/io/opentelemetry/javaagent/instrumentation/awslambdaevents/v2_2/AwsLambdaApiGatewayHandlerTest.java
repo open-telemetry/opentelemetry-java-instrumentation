@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
@@ -18,15 +21,18 @@ import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_TRIGGER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.SchemaUrls;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -36,6 +42,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -109,19 +117,60 @@ class AwsLambdaApiGatewayHandlerTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
   }
 
-  @Test
-  void tracedWithoutOptionalHttpAttributes() {
-    APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent().withBody("hello");
-    new TestRequestHandlerApiGateway().handleRequest(input, context);
+  @ParameterizedTest
+  @ValueSource(ints = {200, 404, 500})
+  void tracedWithoutOptionalHttpAttributes(int statusCode) {
+    APIGatewayProxyRequestEvent input =
+        new APIGatewayProxyRequestEvent().withBody(Integer.toString(statusCode));
+    APIGatewayProxyResponseEvent result =
+        new TestRequestHandlerApiGateway().handleRequest(input, context);
+    assertThat(result.getStatusCode()).isEqualTo(statusCode);
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(FAAS_INVOCATION_ID, "1-22-2024"),
-                        equalTo(FAAS_TRIGGER, "http"),
-                        equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
+                    span.hasKind(SpanKind.SERVER)
+                        .hasStatus(statusCode >= 500 ? StatusData.error() : StatusData.unset())
+                        .hasEventsSatisfyingExactly()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(FAAS_INVOCATION_ID, "1-22-2024"),
+                            equalTo(FAAS_TRIGGER, "http"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, statusCode),
+                            equalTo(
+                                ERROR_TYPE,
+                                statusCode >= 500 ? Integer.toString(statusCode) : null))));
+  }
+
+  @Test
+  void classifiesHttpException() {
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                new TestRequestHandlerApiGateway()
+                    .handleRequest(new APIGatewayProxyRequestEvent().withBody("error"), context));
+    assertThat(thrown).isInstanceOf(IllegalStateException.class);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.SERVER)
+                        .hasStatus(StatusData.error())
+                        .hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(FAAS_INVOCATION_ID, "1-22-2024"),
+                            equalTo(FAAS_TRIGGER, "http"),
+                            equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
+    if (emitExceptionAsLogs()) {
+      testing.waitAndAssertLogRecords(
+          logRecord ->
+              logRecord
+                  .hasSeverity(Severity.ERROR)
+                  .hasEventName("faas.invocation.exception")
+                  .hasException(thrown)
+                  .hasTotalAttributeCount(3));
+    }
   }
 
   private static class TestRequestHandlerApiGateway
@@ -130,6 +179,12 @@ class AwsLambdaApiGatewayHandlerTest {
     @Override
     public APIGatewayProxyResponseEvent handleRequest(
         APIGatewayProxyRequestEvent input, Context context) {
+      if ("error".equals(input.getBody())) {
+        throw new IllegalStateException("handler failed");
+      }
+      if (!"hello".equals(input.getBody())) {
+        return new APIGatewayProxyResponseEvent().withStatusCode(Integer.parseInt(input.getBody()));
+      }
       return new APIGatewayProxyResponseEvent().withStatusCode(201).withBody("hello world");
     }
   }

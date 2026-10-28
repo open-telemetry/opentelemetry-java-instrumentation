@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
  *   <li>mysql:host:3306/db (non-standard format)
  *   <li>mariadb:replication://host1,host2/db
  *   <li>mariadb:sequential:address=(host=host1)(port=3306)(user=root)/db
+ *   <li>mysql://address=(host=host1)(port=3306)/db
  *   <li>mysql://[::1]:3306/db (IPv6)
  * </ul>
  *
@@ -84,6 +85,10 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     } else if (protoLoc > 0) {
       // Standard URL format - delegate to GenericUrlParser
       GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx, DEFAULT_PORT);
+      if (jdbcUrl.startsWith("address=", protoLoc + 3)) {
+        // java.net.URI finds no host in the address=(host=...)(port=...) form
+        parseMariaAddress(jdbcUrl.substring(protoLoc + 3), ctx);
+      }
     } else {
       // Non-standard format: type/host:port/db?params
       parseNonStandardUrl(jdbcUrl, ctx);
@@ -241,8 +246,11 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       Pattern.compile("\\(\\s*port\\s*=\\s*([\\d]+)\\s*\\)");
 
   private static void parseMariaAddress(String jdbcUrl, ParseContext ctx) {
-    int addressEnd = jdbcUrl.indexOf(",address=");
-    String addressUrl = addressEnd > 0 ? jdbcUrl.substring(0, addressEnd) : jdbcUrl;
+    // only look at the address blocks, not at the database name or the query string
+    int authorityEnd = indexOf(jdbcUrl, 0, '/', '?');
+    String authority = authorityEnd != -1 ? jdbcUrl.substring(0, authorityEnd) : jdbcUrl;
+    int addressEnd = authority.indexOf(",address=");
+    String addressUrl = addressEnd > 0 ? authority.substring(0, addressEnd) : authority;
 
     Matcher hostMatcher = HOST_PATTERN.matcher(addressUrl);
     if (hostMatcher.find()) {

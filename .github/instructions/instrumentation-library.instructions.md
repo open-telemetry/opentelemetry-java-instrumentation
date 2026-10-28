@@ -13,3 +13,8 @@ applyTo: "instrumentation/**/library/**/*.java,instrumentation/**/library/**/*.k
   for per-object state in library-only code. Import stable semantic-convention constants
   whose name and type match; copy incubating constants locally without adding an
   incubating dependency to the published library.
+- When a factory or builder returns an instrumented implementation of an existing underlying-library
+  type already used by application code, prefer that library's application-facing interface or base
+  class over the OpenTelemetry implementation class when it is the complete intended caller-facing
+  contract. This applies to library objects, not OpenTelemetry-defined types or SPIs; concrete types
+  needed for supported setup or framework integration are not automatic violations.

@@ -1031,17 +1031,17 @@ class YamlHelperTest {
   void listsGlobalConfigurationsInCatalogAndGlobalRefs() throws IOException {
     ConfigurationOption global =
         new ConfigurationOption(
-                "otel.instrumentation.common.v3-preview",
-                "java.common.v3_preview",
-                "Enables v3 preview.",
-                "false",
-                ConfigurationType.BOOLEAN,
+                "otel.instrumentation.common.span-suppression-strategy",
+                "java.common.span_suppression_strategy",
+                "Strategy for suppressing nested instrumentation spans.",
+                "semconv",
+                ConfigurationType.STRING,
                 null,
                 null,
                 null,
                 null,
                 null)
-            .withId("common.v3-preview");
+            .withId("span-suppression-strategy");
 
     StringWriter stringWriter = new StringWriter();
     try (BufferedWriter writer = new BufferedWriter(stringWriter)) {
@@ -1052,10 +1052,11 @@ class YamlHelperTest {
     Map<String, Object> configurations =
         (Map<String, Object>)
             ((Map<String, Object>) parsed.get("definitions")).get("configurations");
-    assertThat((Map<String, Object>) configurations.get("common.v3-preview"))
-        .containsEntry("name", "otel.instrumentation.common.v3-preview")
-        .containsEntry("declarative_name", "java.common.v3_preview");
-    assertThat(parsed.get("global_configuration_refs")).isEqualTo(List.of("common.v3-preview"));
+    assertThat((Map<String, Object>) configurations.get("span-suppression-strategy"))
+        .containsEntry("name", "otel.instrumentation.common.span-suppression-strategy")
+        .containsEntry("declarative_name", "java.common.span_suppression_strategy");
+    assertThat(parsed.get("global_configuration_refs"))
+        .isEqualTo(List.of("span-suppression-strategy"));
   }
 
   @Test

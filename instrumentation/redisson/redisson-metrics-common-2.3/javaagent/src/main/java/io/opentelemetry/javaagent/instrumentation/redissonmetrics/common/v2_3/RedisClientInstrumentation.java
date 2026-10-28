@@ -32,7 +32,7 @@ public class RedisClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ShutdownAsyncAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This RedisClient redisClient) {
       RedissonConnectionPoolMetrics.unregisterMetrics(redisClient);
     }

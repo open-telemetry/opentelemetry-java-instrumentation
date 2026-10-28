@@ -107,7 +107,14 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
             assertions.add(span -> span.hasName("input").hasKind(SpanKind.INTERNAL));
             assertions.add(
                 span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasAttribute(URL_FULL, url));
-            addNestedHttpClientSpan(assertions, "GET", url, "localhost", port, trace.getSpan(1));
+            addNestedHttpClientSpan(
+                assertions,
+                "GET",
+                url,
+                "localhost",
+                port,
+                testing.expectedPeerService(),
+                trace.getSpan(1));
             assertions.add(span -> span.hasName("GET /camelService").hasKind(SpanKind.SERVER));
             trace.hasSpansSatisfyingExactly(assertions);
           });
@@ -150,6 +157,7 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
                 "http://localhost:" + port + "/camelService",
                 "localhost",
                 port,
+                testing.expectedPeerService(),
                 trace.getSpan(1));
             assertions.add(span -> span.hasName("POST /camelService").hasKind(SpanKind.SERVER));
             trace.hasSpansSatisfyingExactly(assertions);

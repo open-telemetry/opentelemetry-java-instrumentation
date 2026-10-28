@@ -16,7 +16,7 @@ or test failure that CI will report.
   instrumentation. In shared modules, use a `-common`
   suffix qualified by the minimum version or API variant only when needed. For new javaagent
   modules, check that Muzzle covers their supported ranges and that the main enablement name
-  in v3 preview matches the full module directory, including versions, except where a default-off
+  matches the full module directory, including versions, except where a default-off
   feature needs a separate identity within that module. Default-off registrations must not share
   names with default-on instrumentation. Include new telemetry-collection test variants in
   `.github/scripts/instrumentations.sh`, keep `settings.gradle.kts` entries alphabetical,
@@ -29,7 +29,7 @@ or test failure that CI will report.
   where an inverse exists. A pass covering all versions has no meaningful inverse. If
   multiple `InstrumentationModule`s share a project, separate their ranges and exclude
   unrelated modules in each pass. Prefer `excludeInstrumentationName(...)` when the name selects
-  the intended classes both outside v3 preview and in preview; otherwise use
+  the intended classes; otherwise use
   `excludeInstrumentationModule(...)` with fully qualified class names. Public enablement names
   need not distinguish compatibility implementations. Muzzle checks referenced symbols, not
   whether a Byte Buddy method matcher will ever match.
@@ -52,10 +52,13 @@ or test failure that CI will report.
   of the same coordinate does not test both versions: Gradle resolves one dependency graph,
   normally selecting the higher version. Exercise the newer runtime in a wired version-specific
   test suite.
-- Inspect test sources before requiring `testcontainersBuildService`: declare `usesService`
-  on tasks that really use containers, not every task with a transitive dependency. Use
-  `withType<Test>().configureEach` for configuration shared by multiple explicitly declared
-  test tasks; not for a module with only `tasks.test` (implicit `latestDepTest` does not count).
+- Inspect test sources before requiring `testcontainersBuildService`; a transitive dependency
+  alone is not enough. In projects that use Testcontainers, register it once for all test tasks,
+  including container-free variants. Narrower registration requires a demonstrated scheduling
+  problem.
+- Prefer `tasks.test` for single-test-task projects. Use `withType<Test>().configureEach` for
+  configuration shared by multiple explicitly declared test tasks or JVM test suites.
+  Implicit `latestDepTest` does not count. Keep unrelated JVM settings and properties scoped.
 - Check metadata collection when its wiring or collected telemetry changes, not as unrelated
   cleanup. Collect default telemetry and supported non-default telemetry modes. Register
   representative tasks in `.github/scripts/instrumentations.sh` covering each profile's
@@ -68,18 +71,22 @@ or test failure that CI will report.
   including inherited settings, except for the shared synthetic header capture described below.
   Inspect JVM properties, fixtures, and library builders; split or
   filter collected tasks that mix profiles under one label. Label non-default metric selectors,
-  not Java source-set names; document runtime prerequisites separately. Use comma-separated flat
-  `key=value` conditions without `-D`, with consistent spelling and ordering for the same mode.
+  not Java source-set names; document runtime prerequisites separately. For actual JVM-property
+  configuration, use flat `key=value` conditions without `-D`. For programmatically configured
+  library options, label the actual builder calls, such as
+  `AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)`, not test-only flags or
+  equivalent javaagent properties that do not configure the library. Separate conditions and
+  builder calls with commas, using consistent spelling and ordering for the same mode.
   Omit test setup, unrelated instrumentation settings, and whole-module enablement for default-off
   instrumentation. Include span suppression settings only when they determine this instrumentation's
   telemetry. Missing labels merge optional telemetry into `when: default`.
-- For javaagent tests, keep baseline suites on instrumentation defaults, apart from HTTP and
-  messaging header capture injected by `CapturedHttpHeadersTestConfigSupplier` and
-  `CapturedMessagingHeadersTestConfigSupplier`. Do not require empty overrides, separate capture
-  variants, or `metadataConfig` conditions solely for this inherited setup. Module-specific
-  capture overrides and other non-default telemetry settings remain subject to the normal profile
-  rules. Test opt-in telemetry in named variants wired into `check`. Preserve normal suite
-  coverage; filtered metadata-collection tests are not a substitute.
+- For javaagent, plain-library, and library-autoconfigure tests, baseline fixtures may capture
+  synthetic HTTP and messaging headers through test-exporter configuration, a library builder, or
+  production properties the integration actually reads. Do not require empty overrides,
+  capture-only flags or variants, or `metadataConfig` conditions solely for this fixture setup.
+  Follow the [canonical collection guidance](../../instrumentation-docs/readme.md#telemetry-collection)
+  for synthetic capture and profile labels. Test meaningful opt-in telemetry in named variants wired
+  into `check`; preserve normal suite coverage.
 - Exclude unit tests and regression-only disablement, adapter-fallback, or classpath compatibility
   variants based on their purpose, not their names. A full-suite `testReceiveSpansDisabled` may
   document default telemetry; a suppression-only regression task does not. Keep regression tasks in
@@ -96,7 +103,7 @@ or test failure that CI will report.
   `testPreviewSemconv` for preview selection; define both when both are exercised. Preserve explicit
   legacy opt-in compatibility tests. `/dup` coverage is required for RPC, not service-peer.
   Code and database conventions are stable-only and need no selection task. Keep mixed variants
-  that exercise selectable domains. For default enablement under
-  v3-preview, use a separate `testDisabled` JVM rather than setting a property after agent
+  that exercise selectable domains. For default enablement, use a separate `testDisabled` JVM rather
+  than setting a property after agent
   startup. Because `testDisabled` intentionally emits no target instrumentation telemetry, do
   not add it to `.github/scripts/instrumentations.sh` or give it `metadataConfig`.

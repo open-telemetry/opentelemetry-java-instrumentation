@@ -14,7 +14,6 @@ import com.couchbase.mock.BucketConfiguration;
 import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.http.query.QueryServer;
 import com.couchbase.mock.httpio.HttpServer;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.LongAssertConsumer;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.StringAssertConsumer;
 import java.lang.reflect.Field;
@@ -49,17 +48,18 @@ public abstract class AbstractCouchbaseTest {
           .type(BucketType.MEMCACHED)
           .quota(100)
           .build();
-  private final int port = PortUtils.findOpenPort();
+  private int port;
   private CouchbaseMock mock;
 
   @BeforeAll
   void setUp() throws Exception {
-    mock = new CouchbaseMock("127.0.0.1", port, 1, 1);
+    mock = new CouchbaseMock("127.0.0.1", 0, 1, 1);
     Field httpServerField = CouchbaseMock.class.getDeclaredField("httpServer");
     httpServerField.setAccessible(true);
     HttpServer httpServer = (HttpServer) httpServerField.get(mock);
     httpServer.register("/query", new QueryServer());
     mock.start();
+    port = mock.getHttpPort();
     logger.info("CouchbaseMock listening on localhost:{}", port);
 
     mock.createBucket(convert(bucketCouchbase));

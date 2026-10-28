@@ -6,10 +6,19 @@ behind the shorter Java test instructions.
 
 ## Javaagent integration coverage versus unit coverage
 
-Unit suites and legacy `javaagent-unit-tests` projects exercise helper or instrumentation classes
-directly without installing the javaagent against a live target library. They do not verify agent
-loading, class transformation, or runtime behavior of clients, pools, clusters, sentinels, and
-other integrations.
+Choose the test harness before writing the test. Use installed-agent integration tests to verify
+agent loading, class transformation, and application-integration behavior. Unit suites and legacy
+`javaagent-unit-tests` projects exercise helper or instrumentation classes directly without
+installing the javaagent against a live target library; they do not replace that integration coverage.
+
+For javaagent helper tests that do not require installed-agent behavior, use a `JvmTestSuite` named
+`unitTests` under `src/unitTests/java`, with direct same-package access. See the
+[Gradle unit-suite setup](gradle-conventions.md#javaagent-unit-test-suites).
+Telemetry assertions alone do not require an installed agent.
+
+If a test needs `AgentClassLoaderAccess` or reflection solely to reach a helper across integration-test
+classloader isolation, reconsider the suite instead of adding access workarounds. Reflection and
+classloader access remain appropriate when that behavior is itself under test.
 
 When a change must support multiple runtime versions, retain real agent-backed integration tests
 for each required version. Keep tests that run on the baseline in the default `test` suite and
@@ -41,7 +50,7 @@ Do not add per-instrumentation selector tests, including for new modules,
 renames, aliases, or consolidations:
 
 - No `instrumentationNames()` or name-order assertions.
-- No enable/disable matrices, precedence, fallback, legacy/v3-preview, flat/YAML
+- No enable/disable matrices, precedence, fallback, legacy-name handling, flat/YAML
   parity, or deprecation-warning checks.
 - No test projects, source sets, JVM variants, fixtures, or dependencies solely
   for those checks.
@@ -178,11 +187,15 @@ private static Stream<Arguments> testCases() {
 
 ## Test Port Allocation
 
+Prefer binding the test server to port `0` when it exposes the actual bound port. Wait for
+binding to complete before reading that port and connecting clients. The server keeps the
+socket bound, so there is no gap between choosing the port and binding it.
+
 When a test needs an available TCP port that another server or container will bind later, use
 `PortUtils.findOpenPort()` or `PortUtils.findOpenPorts(count)`. Do not implement a local probe by
 opening `new ServerSocket(0)`, reading its port, and closing it; that bypasses the repository
-allocator's coordination between parallel test processes. Keep port `0` when the same socket
-remains bound and becomes the test server.
+allocator's coordination between parallel test processes. Use `findOpenPorts(count)` when a
+service requires consecutive ports instead of assuming adjacent ports are available.
 
 ## Abstract Test Base Classes — Per-Class State Goes On Instance Fields
 
@@ -352,11 +365,12 @@ expected:
 - `testLatestDeps` Gradle property — runs against the newest supported library versions
   instead of the pinned earliest-supported ones.
 
-### Read the flag through a shared static helper, not a per-class field
+### Read mode flags through helpers
 
-Each flag has a shared static accessor; static-import it and call it directly. Never call
-`Boolean.getBoolean("…")` inline and never duplicate the property-name string at the call
-site.
+Use the shared static accessors below for global test modes. Static-import them rather than reading
+properties in assertions or builder calls. Module-specific flags can use a constant when every
+fixture reads the same property, or an instance method when the configuration source varies by
+fixture.
 
 | Flag                                           | Shared accessor                                                                                                    | Where it lives                                                                  |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
@@ -367,6 +381,35 @@ site.
 
 Replace `<domain>` with a supported selector. Use `emitStable*Semconv()` for stable selection
 and `emitPreview*Semconv()` for preview selection.
+
+### Shared agent and library fixtures
+
+Shared tests can exercise an option configured through a production property in the agent and
+through a builder in the plain library. Resolve the mode in an instance method on the shared test
+base, using the production property for agent fixtures and a test-only flag for plain-library
+fixtures. For example, the AWS SDK tests use:
+
+```java
+protected boolean captureExperimentalSpanAttributes() {
+  return testing() instanceof AgentInstrumentationExtension
+      ? EXPERIMENTAL_ATTRIBUTES
+      : Boolean.getBoolean("test.captureExperimentalSpanAttributes");
+}
+```
+
+Here `EXPERIMENTAL_ATTRIBUTES` reads the agent's production property. Use the same method in
+library builder setup and expected-value helpers. Keep selection dependent on the concrete
+fixture instance; do not cache the resolved mode in a shared static field.
+
+Library-autoconfigure fixtures can use `LibraryInstrumentationExtension` while genuinely reading
+production properties. Override the shared method in those fixtures to select the production
+setting. Preserve overrides that intentionally force a value for a regression scenario.
+This distinction applies to builder-controlled options, not shared production settings that
+libraries actually read. See the
+[library variant example](testing-experimental-flags.md#programmatically-configured-library-tests)
+for Gradle wiring and metadata labels. For synthetic header capture in baseline fixtures and its
+metadata treatment, follow the
+[canonical collection guidance](../../../instrumentation-docs/readme.md#telemetry-collection).
 
 ### Mode-dependent expected values
 

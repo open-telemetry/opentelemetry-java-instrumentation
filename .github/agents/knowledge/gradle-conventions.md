@@ -45,8 +45,8 @@ compatible, keep the independently selected `InstrumentationModule` classes in t
 javaagent project. Public enablement names describe the library and independently selectable
 features, not compatibility implementations. Multiple classes may share all their public names.
 Configure one Muzzle `pass` per range and target artifact, excluding unrelated modules in each pass.
-Prefer `excludeInstrumentationName(...)` when the public name selects the intended classes both
-outside v3 preview and in preview. Use `excludeInstrumentationModule(...)` with a fully qualified
+Prefer `excludeInstrumentationName(...)` when the public name selects the intended classes. Use
+`excludeInstrumentationModule(...)` with a fully qualified
 class name when public names cannot distinguish the required implementations. Both forms apply
 to inverse checks, and unknown class exclusions fail the check. Keep the baseline library dependency
 and add newer or optional referenced types with `compileOnly` when appropriate.
@@ -296,6 +296,11 @@ tasks {
 Put the tests under `src/unitTests`. Declare test-only dependencies inside the suite's
 `dependencies` block.
 
+Prefer unconditional `dependsOn(testing.suites)`, including in `testLatestDeps` builds. If existing
+wiring is conditional, prefer removing the condition over adding a `unitTests` exception. Repeating
+unit or fixed-version tests is acceptable; select suites individually only for a concrete
+compatibility or resource constraint.
+
 ### Variant tasks in modules with custom `JvmTestSuite`s
 
 `testing.suites` includes the built-in `test` suite alongside any suite the module registers
@@ -468,3 +473,12 @@ tasks {
 Follow the [telemetry collection convention](../../../instrumentation-docs/readme.md#telemetry-collection)
 for task selection and labels. Shared test conventions forward `-PcollectMetadata=true` to test JVMs.
 Keep `metadataConfig` labels local.
+
+Corresponding agent and library variants can use matching task names without sharing configuration
+mechanisms or metadata labels. For builder-controlled library options, use test-only fixture flags
+and label the actual builder calls, as shown in the
+[library variant example](testing-experimental-flags.md#programmatically-configured-library-tests).
+For synthetic header setup in agent, plain-library, or library-autoconfigure fixtures, follow the
+canonical collection guidance rather than adding capture-only variants or label conditions. Inline
+complete labels for fixed profiles; the source-suite variant example above composes labels because it
+preserves inherited conditions.

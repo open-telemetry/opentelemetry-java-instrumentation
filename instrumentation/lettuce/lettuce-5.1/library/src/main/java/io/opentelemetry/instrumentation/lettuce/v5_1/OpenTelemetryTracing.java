@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.lettuce.core.output.CommandOutput;
+import io.lettuce.core.protocol.AsyncCommand;
+import io.lettuce.core.protocol.CommandWrapper;
 import io.lettuce.core.protocol.CompleteableCommand;
 import io.lettuce.core.protocol.OtelCommandArgsUtil;
 import io.lettuce.core.protocol.ProtocolKeyword;
@@ -152,8 +154,7 @@ final class OpenTelemetryTracing implements Tracing {
 
     @Nullable private List<Object> events;
     @Nullable private Throwable error;
-    @Nullable private String errorMessage;
-    @Nullable private LettuceResponse response;
+    @Nullable private String taggedErrorMessage;
     @Nullable private Context context;
 
     OpenTelemetrySpan(
@@ -209,11 +210,19 @@ final class OpenTelemetryTracing implements Tracing {
 
       if (command instanceof CompleteableCommand) {
         CompleteableCommand<?> completeableCommand = (CompleteableCommand<?>) command;
+        AsyncCommand<?, ?, ?> asyncCommand = CommandWrapper.unwrap(command, AsyncCommand.class);
         completeableCommand.onComplete(
             (o, throwable) -> {
-              CommandOutput<?, ?, ?> output = command.getOutput();
-              String errorMsg = output != null ? output.getError() : null;
-              finishWithResponse(new LettuceResponse(errorMsg, throwable));
+              Throwable error = throwable != null ? throwable : this.error;
+              // CommandWrapper can report null even when its async delegate failed.
+              if (asyncCommand != null && asyncCommand.isCompletedExceptionally()) {
+                asyncCommand.whenComplete(
+                    (result, terminalError) ->
+                        finishFromOutput(
+                            command.getOutput(), terminalError != null ? terminalError : error));
+              } else {
+                finishFromOutput(command.getOutput(), error);
+              }
             });
       }
 
@@ -263,11 +272,12 @@ final class OpenTelemetryTracing implements Tracing {
     @Override
     @CanIgnoreReturnValue
     public Tracer.Span tag(String key, String value) {
-      if (value == null || value.isEmpty()) {
+      if (key.equals("error")) {
+        taggedErrorMessage = value;
         return this;
       }
-      if (key.equals("error")) {
-        errorMessage = value;
+      if (value == null || value.isEmpty()) {
+        return this;
       }
       if (key.equals("redis.args")) {
         request.setArgsString(value);
@@ -291,23 +301,28 @@ final class OpenTelemetryTracing implements Tracing {
       return this;
     }
 
-    private void finishWithResponse(LettuceResponse resp) {
-      this.response = resp;
-      if (this.error == null && resp.getThrowable() != null) {
-        this.error = resp.getThrowable();
-      }
-      finish();
-    }
-
     @Override
     public void finish() {
+      if (error != null) {
+        end(null, error);
+      } else {
+        // Lettuce 5.x tags both server and client errors here, suppressing their throwable.
+        end(taggedErrorMessage != null ? LettuceResponse.unknownFailure() : null, null);
+      }
+    }
+
+    private void finishFromOutput(
+        @Nullable CommandOutput<?, ?, ?> output, @Nullable Throwable error) {
+      if (error != null) {
+        end(null, error);
+      } else {
+        end(LettuceResponse.fromCommandOutput(output), null);
+      }
+    }
+
+    private void end(@Nullable LettuceResponse response, @Nullable Throwable error) {
       Context context = this.context;
       if (context != null) {
-        LettuceResponse response = this.response;
-        if (response == null && errorMessage != null) {
-          response = new LettuceResponse(errorMessage, null);
-        }
-
         this.context = null;
         instrumenter.end(context, request, response, error);
       }

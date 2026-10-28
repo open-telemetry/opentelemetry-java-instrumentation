@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.async;
 
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.helper;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.http.HttpServletRequest;
 import javax.annotation.Nullable;
@@ -38,7 +38,7 @@ public class AsyncStartAdvice {
     }
 
     if (throwable == null && request != null) {
-      helper().attachAsyncListener(request, Java8BytecodeBridge.currentContext());
+      helper().attachAsyncListener(request, Context.current());
     }
   }
 }

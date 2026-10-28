@@ -19,9 +19,6 @@ dependencies {
   // it here.
   implementation("com.fasterxml.jackson.core:jackson-core")
 
-  // allows to get the function ARN
-  testLibrary("com.amazonaws:aws-lambda-java-core:1.2.1")
-
   testImplementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
@@ -45,5 +42,40 @@ testing {
         }
       }
     }
+
+    register<JvmTestSuite>("version12Test") {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+      }
+
+      dependencies {
+        implementation(project())
+        implementation(
+          "com.amazonaws:aws-lambda-java-core:${baseVersion("1.2.1").orLatest()}"
+        )
+      }
+      executions {
+        configureEach {
+          // required on jdk17
+          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+          jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+        }
+        register("ExceptionSignalLogs") {
+          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+        }
+      }
+    }
+  }
+}
+
+configurations {
+  named("version12TestImplementation") {
+    extendsFrom(configurations["testImplementation"])
+  }
+  named("version12TestRuntimeOnly") {
+    extendsFrom(configurations["testRuntimeOnly"])
   }
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_14;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.azure.core.http.policy.HttpPipelinePolicy;
@@ -50,6 +51,7 @@ class AzureSdkTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("hello")
+                        .satisfies(hasScopeSchemaUrl(null))
                         .hasKind(SpanKind.INTERNAL)
                         .hasStatus(StatusData.ok())
                         .hasTotalAttributeCount(0)));

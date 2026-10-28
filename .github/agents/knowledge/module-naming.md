@@ -37,18 +37,14 @@ include(":instrumentation:yarpc:yarpc-2.0:javaagent")
 Standard leaves are `library`, `javaagent`, `testing`.
 Special leaves: `bootstrap` (classes needed in the bootstrap class loader).
 
-## `InstrumentationModule` name
+## `InstrumentationModule` names
 
-In v3 preview, the first (main) name passed to `super()` normally equals the full Gradle module
-directory name, including versions. The version-stripped component name is a secondary:
+The first (main) name passed to `super()` normally equals the full Gradle module directory name,
+including versions. The version-stripped component name is a secondary:
 
 ```java
 public MyLibraryInstrumentationModule() {
-  super(
-      AgentCommonConfig.get().isV3Preview() ? "my-library-1.0" : "my-library",
-      AgentCommonConfig.get().isV3Preview()
-          ? new String[] {"my-library"}
-          : new String[] {"my-library-1.0"});
+  super("my-library-1.0", "my-library");
 }
 ```
 
@@ -86,7 +82,6 @@ The generic Reactor Netty server registration housed in `spring-webflux-5.0` use
 `spring-webflux-5.0` and secondaries `reactor-netty-server`, `spring-webflux-server`, and
 `spring-webflux`, without `reactor-netty` or `reactor`. This cross-family selector exception applies
 only to that registration.
-Outside v3 preview, preserve existing names and their order.
 Enablement selectors are independent of emitted instrumentation scope names; changing selectors
 does not require renaming telemetry.
 

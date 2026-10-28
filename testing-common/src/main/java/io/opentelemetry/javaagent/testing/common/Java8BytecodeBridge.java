@@ -8,10 +8,13 @@ package io.opentelemetry.javaagent.testing.common;
 import io.opentelemetry.context.Context;
 
 /**
- * A helper for scala and kotlin test code, since those tests are compiled to Java 6 bytecode, and
- * so they cannot access methods that rely on new Java 8 bytecode features such as calling a static
+ * A compatibility helper for test code compiled to pre-Java-8 bytecode, which cannot call static
  * interface methods.
+ *
+ * @deprecated Use {@link Context#current()} directly in test code targeting Java 8 or later. This
+ *     class may be removed in a subsequent minor release.
  */
+@Deprecated
 public class Java8BytecodeBridge {
 
   /** Calls {@link Context#current()}. */

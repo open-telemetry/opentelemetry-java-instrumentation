@@ -82,7 +82,7 @@ class ArmeriaHttp2Test {
                             equalTo(SERVER_PORT, server2.httpPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(maybeStablePeerService(), "test-peer-service")),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService())),
                 span ->
                     span.hasName("GET /")
                         .hasKind(SpanKind.SERVER)
@@ -113,7 +113,7 @@ class ArmeriaHttp2Test {
                             equalTo(SERVER_PORT, server1.httpPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(maybeStablePeerService(), "test-peer-service")),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService())),
                 span ->
                     span.hasName("GET /")
                         .hasKind(SpanKind.SERVER)

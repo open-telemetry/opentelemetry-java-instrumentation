@@ -85,10 +85,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
     @Advice.AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
-        @Advice.Argument(0) Request request,
-        @Advice.Argument(1) AsyncHandler<?> originalAsyncHandler) {
-      // intermediate variable required for inlined advice
-      AsyncHandler<?> asyncHandler = originalAsyncHandler;
+        @Advice.Argument(0) Request request, @Advice.Argument(1) AsyncHandler<?> asyncHandler) {
       AdviceScope adviceScope = AdviceScope.start(request);
       if (adviceScope != null) {
         asyncHandler = adviceScope.wrap(asyncHandler);

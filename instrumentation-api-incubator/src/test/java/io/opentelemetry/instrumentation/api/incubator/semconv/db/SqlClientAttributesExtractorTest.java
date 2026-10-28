@@ -28,8 +28,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
-import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -66,15 +64,6 @@ class SqlClientAttributesExtractorTest {
 
     assertThat(attributes.build())
         .containsOnly(entry(NETWORK_PEER_ADDRESS, "192.0.2.1"), entry(NETWORK_PEER_PORT, 5432L));
-  }
-
-  @Test
-  void shouldProvideSchemaUrl() {
-    AttributesExtractor<Map<String, Object>, Void> extractor =
-        SqlClientAttributesExtractor.create(new TestAttributesGetter());
-
-    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
-        .isEqualTo(SchemaUrls.V1_44_0);
   }
 
   static class TestAttributesGetter

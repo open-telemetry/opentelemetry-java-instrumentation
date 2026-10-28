@@ -23,8 +23,10 @@
 
 package io.opentelemetry.instrumentation.thrift.v0_13;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -56,6 +58,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -283,6 +286,8 @@ public abstract class AbstractThriftTest {
   protected SpanDataAssert assertClientSpan(
       SpanDataAssert span, String method, int port, boolean hasError) {
     span.hasName(CustomService.class.getName() + "/" + method)
+        .satisfies(
+            hasScopeSchemaUrl(emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfyingExactly(
             equalTo(
@@ -296,6 +301,11 @@ public abstract class AbstractThriftTest {
             equalTo(NETWORK_TYPE, "ipv4"),
             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
             equalTo(NETWORK_PEER_PORT, port),
+            equalTo(
+                stringKey("rpc.status_code"),
+                hasError && emitPreviewRpcSemconv()
+                    ? Integer.toString(TApplicationException.INTERNAL_ERROR)
+                    : null),
             equalTo(
                 ERROR_TYPE,
                 hasError && emitPreviewRpcSemconv()
@@ -311,14 +321,16 @@ public abstract class AbstractThriftTest {
   protected SpanDataAssert assertServerSpan(
       SpanDataAssert span, String className, String method, int port, String errorType) {
     return span.hasName(className + "/" + method)
+        .satisfies(
+            hasScopeSchemaUrl(emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
         .hasKind(SpanKind.SERVER)
         .hasAttributesSatisfyingExactly(
             equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? className + "/" + method : method),
             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? className : null),
             equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_thrift" : null),
             equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "apache_thrift" : null),
-            equalTo(SERVER_PORT, port),
-            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+            equalTo(SERVER_PORT, emitPreviewRpcSemconv() ? null : (long) port),
+            equalTo(SERVER_ADDRESS, emitPreviewRpcSemconv() ? null : "127.0.0.1"),
             equalTo(NETWORK_TYPE, "ipv4"),
             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
@@ -336,6 +348,8 @@ public abstract class AbstractThriftTest {
   protected SpanDataAssert assertServerSpan(
       SpanDataAssert span, String className, String method, String errorType) {
     return span.hasName(className + "/" + method)
+        .satisfies(
+            hasScopeSchemaUrl(emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
         .hasKind(SpanKind.SERVER)
         .hasAttributesSatisfyingExactly(
             equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? className + "/" + method : method),
@@ -359,14 +373,21 @@ public abstract class AbstractThriftTest {
               metric ->
                   metric
                       .hasName("rpc.server.duration")
+                      .satisfies(
+                          hasScopeSchemaUrl(
+                              emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
                       .hasUnit("ms")
                       .hasHistogramSatisfying(
                           histogram ->
                               histogram.hasPointsSatisfying(
                                   point ->
                                       point.hasAttributesSatisfyingExactly(
-                                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                          equalTo(SERVER_PORT, serverPort),
+                                          equalTo(
+                                              SERVER_ADDRESS,
+                                              emitPreviewRpcSemconv() ? null : "127.0.0.1"),
+                                          equalTo(
+                                              SERVER_PORT,
+                                              emitPreviewRpcSemconv() ? null : (long) serverPort),
                                           equalTo(RPC_METHOD, "say"),
                                           equalTo(RPC_SERVICE, CustomHandler.class.getName()),
                                           equalTo(RPC_SYSTEM, "apache_thrift"),
@@ -377,6 +398,9 @@ public abstract class AbstractThriftTest {
               metric ->
                   metric
                       .hasName("rpc.client.duration")
+                      .satisfies(
+                          hasScopeSchemaUrl(
+                              emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
                       .hasUnit("ms")
                       .hasHistogramSatisfying(
                           histogram ->
@@ -397,6 +421,9 @@ public abstract class AbstractThriftTest {
               metric ->
                   metric
                       .hasName("rpc.server.call.duration")
+                      .satisfies(
+                          hasScopeSchemaUrl(
+                              emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
                       .hasUnit("s")
                       .hasHistogramSatisfying(
                           histogram ->
@@ -404,8 +431,6 @@ public abstract class AbstractThriftTest {
                                   point ->
                                       point.hasAttributesSatisfyingExactly(
                                           equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                          equalTo(SERVER_PORT, serverPort),
                                           equalTo(
                                               RPC_METHOD,
                                               CustomHandler.class.getName() + "/say")))));
@@ -415,6 +440,9 @@ public abstract class AbstractThriftTest {
               metric ->
                   metric
                       .hasName("rpc.client.call.duration")
+                      .satisfies(
+                          hasScopeSchemaUrl(
+                              emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
                       .hasUnit("s")
                       .hasHistogramSatisfying(
                           histogram ->
@@ -531,9 +559,61 @@ public abstract class AbstractThriftTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error()),
                     span ->
-                        assertServerSpan(span, "withError", port)
+                        assertServerSpan(
+                                span, CustomHandler.class.getName(), "withError", port, "_OTHER")
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())));
+
+    if (emitPreviewRpcSemconv()) {
+      getTesting()
+          .waitAndAssertMetrics(
+              "io.opentelemetry.thrift-0.13",
+              metric ->
+                  metric
+                      .hasName("rpc.server.call.duration")
+                      .satisfies(
+                          hasScopeSchemaUrl(
+                              emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
+                      .hasUnit("s")
+                      .hasHistogramSatisfying(
+                          histogram ->
+                              histogram.hasPointsSatisfying(
+                                  point ->
+                                      point.hasAttributesSatisfyingExactly(
+                                          equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                                          equalTo(
+                                              RPC_METHOD,
+                                              CustomHandler.class.getName() + "/withError"),
+                                          equalTo(ERROR_TYPE, "_OTHER")))));
+      getTesting()
+          .waitAndAssertMetrics(
+              "io.opentelemetry.thrift-0.13",
+              metric ->
+                  metric
+                      .hasName("rpc.client.call.duration")
+                      .satisfies(
+                          hasScopeSchemaUrl(
+                              emitPreviewRpcSemconv() ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0))
+                      .hasUnit("s")
+                      .hasHistogramSatisfying(
+                          histogram ->
+                              histogram.hasPointsSatisfying(
+                                  point ->
+                                      point.hasAttributesSatisfyingExactly(
+                                          equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                                          equalTo(SERVER_ADDRESS, "localhost"),
+                                          equalTo(SERVER_PORT, port),
+                                          equalTo(
+                                              RPC_METHOD,
+                                              CustomService.class.getName() + "/withError"),
+                                          equalTo(
+                                              stringKey("rpc.status_code"),
+                                              Integer.toString(
+                                                  TApplicationException.INTERNAL_ERROR)),
+                                          equalTo(
+                                              ERROR_TYPE,
+                                              TApplicationException.class.getName())))));
+    }
   }
 
   @Test
@@ -721,8 +801,14 @@ public abstract class AbstractThriftTest {
                             .hasStatus(StatusData.error()),
                     span ->
                         (hasAsyncServerNetworkAttributes()
-                                ? assertServerSpan(span, "withError", port)
-                                : assertServerSpan(span, "withError"))
+                                ? assertServerSpan(
+                                    span,
+                                    CustomHandler.class.getName(),
+                                    "withError",
+                                    port,
+                                    "_OTHER")
+                                : assertServerSpan(
+                                    span, CustomHandler.class.getName(), "withError", "_OTHER"))
                             .hasParent(trace.getSpan(1)),
                     span ->
                         span.hasName("callback")

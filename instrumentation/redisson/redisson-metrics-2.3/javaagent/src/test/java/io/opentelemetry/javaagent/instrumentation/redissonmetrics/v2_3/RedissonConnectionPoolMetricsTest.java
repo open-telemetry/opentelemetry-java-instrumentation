@@ -6,16 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.redissonmetrics.v2_3;
 
 import static io.opentelemetry.javaagent.instrumentation.redissonmetrics.v2_3.RedissonSingletons.INSTRUMENTATION_NAME;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.javaagent.instrumentation.redissonmetrics.AbstractRedissonConnectionPoolMetricsTest;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
-import org.junit.jupiter.api.Test;
 import org.redisson.Redisson;
 import org.redisson.connection.ClientConnectionsEntry;
 import org.redisson.pubsub.AsyncSemaphore;
@@ -76,31 +72,10 @@ class RedissonConnectionPoolMetricsTest extends AbstractRedissonConnectionPoolMe
     assertDynamicPendingRequests(semaphore, regularPool, subscriptionPool);
   }
 
-  @Test
-  void shouldReadPendingRequestsAfterListenerRemoval() throws ReflectiveOperationException {
-    AsyncSemaphore semaphore = new AsyncSemaphore(0);
-    Supplier<Integer> pendingRequests =
-        requireNonNull(RedissonConnectionPoolAccessor.pendingRequestsSupplier(semaphore));
-    Runnable listener = () -> {};
-
-    assertThat(pendingRequests.get()).isZero();
-    semaphore.acquire(listener);
-    assertThat(pendingRequests.get()).isEqualTo(1);
-
-    if (!removeQueuedListener(semaphore, listener)) {
-      semaphore.release();
-    }
-    assertThat(pendingRequests.get()).isZero();
-  }
-
   private void assertDynamicPendingRequests(
       AsyncSemaphore semaphore, String regularPool, String subscriptionPool)
       throws ReflectiveOperationException {
-    Supplier<Integer> available =
-        requireNonNull(RedissonConnectionPoolAccessor.availableConnectionsSupplier(semaphore));
-    int permits = requireNonNull(available.get());
-
-    for (int i = 0; i < permits; i++) {
+    for (int i = 0; i < REGULAR_MAX; i++) {
       acquire(semaphore);
     }
 
@@ -113,7 +88,7 @@ class RedissonConnectionPoolMetricsTest extends AbstractRedissonConnectionPoolMe
       if (!removeQueuedListener(semaphore, queued)) {
         semaphore.release();
       }
-      for (int i = 0; i < permits; i++) {
+      for (int i = 0; i < REGULAR_MAX; i++) {
         semaphore.release();
       }
     }

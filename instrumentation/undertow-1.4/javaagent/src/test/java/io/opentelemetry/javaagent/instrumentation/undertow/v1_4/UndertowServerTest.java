@@ -18,6 +18,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
@@ -40,6 +41,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
@@ -256,12 +258,14 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                   span.hasName("GET")
                       .hasNoParent()
                       .hasKind(SpanKind.SERVER)
+                      .hasStatus(StatusData.error())
                       .hasAttributesSatisfyingExactly(
                           equalTo(CLIENT_ADDRESS, TEST_CLIENT_IP),
                           equalTo(URL_SCHEME, uri.getScheme()),
                           equalTo(URL_PATH, uri.getPath()),
                           equalTo(HTTP_REQUEST_METHOD, "GET"),
                           equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                          equalTo(ERROR_TYPE, Exception.class.getName()),
                           equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT),
                           equalTo(NETWORK_PROTOCOL_VERSION, useHttp2() ? "2" : "1.1"),
                           equalTo(SERVER_ADDRESS, uri.getHost()),
