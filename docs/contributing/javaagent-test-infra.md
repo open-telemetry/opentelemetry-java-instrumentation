@@ -37,16 +37,17 @@ This module provides the agent test runner, agent JUnit extensions (including th
 and bridges to the in-memory exporters and listeners that live in the `AgentClassLoader`.
 Tests using it must launch with `agent-for-testing`.
 
-External agent tests use `io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing`,
-which transitively supplies the shared testing APIs:
+For agent instrumentation tests in another repository, add:
 
 ```kotlin
 testImplementation("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing:3.0.0-alpha-SNAPSHOT")
 ```
 
+This also adds `testing-common` as a dependency, so its shared assertions and HTTP fixtures are
+available without a separate dependency declaration.
+
 ## :testing-common
 
 This module provides the shared test runner, library JUnit extensions, assertions, HTTP fixtures,
-metadata collection, and utilities. Library tests use
-`io.opentelemetry.javaagent:opentelemetry-testing-common` and do not need agent testing support
-or a javaagent. The dependency direction is `agent-testing` to `testing-common`, not the reverse.
+metadata collection, and utilities. Library instrumentation tests use
+`io.opentelemetry.javaagent:opentelemetry-testing-common`.
