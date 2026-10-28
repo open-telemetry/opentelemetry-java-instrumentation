@@ -53,7 +53,7 @@ tasks {
   withType<Test>().configureEach {
     // latest dep test fails because peer ip is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
     jvmArgs("-Djava.net.preferIPv4Stack=true")
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps && !name.startsWith("jedis51"))
     systemProperty(
       "testJedis51OrLater",
       otelProps.testLatestDeps || name.startsWith("jedis51"),
