@@ -162,6 +162,10 @@ for TEST_ARCH in x86_64 arm64 aarch64; do
       "$fixture/instrumentation/latest/javaagent" \
       "$fixture/instrumentation/colima/javaagent" \
       "$fixture/instrumentation/vertx/vertx-kafka-client-3.6/vertx-kafka-client-3.6-testing"
+    # Some library projects have metadata too, but telemetry is written to the parent module.
+    mkdir -p "$fixture/instrumentation/standard/library/.telemetry"
+    touch "$fixture/instrumentation/standard/library/metadata.yaml"
+    touch "$fixture/instrumentation/standard/library/.telemetry/unrelated"
     echo 0 > "$fixture/pass"
     echo "Testing $TEST_ARCH / $SCENARIO"
     status=0
@@ -196,6 +200,7 @@ for TEST_ARCH in x86_64 arm64 aarch64; do
       test "$(wc -l < "$fixture/colima-calls" | tr -d ' ')" = 1
     fi
     test -f "$fixture/instrumentation/unrelated/.telemetry/stale"
+    test -f "$fixture/instrumentation/standard/library/.telemetry/unrelated"
     test "$DOCKER_HOST" = original-host
     test "$DOCKER_CONTEXT" = original-context
     test "$TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE" = original-socket

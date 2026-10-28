@@ -23,19 +23,17 @@ case "$(uname -m)" in
     ;;
 esac
 
-# Resolve selected projects to their module metadata, including *-testing projects.
+# Telemetry lives in the parent of the test project, including *-testing projects.
 # Do this once, before any pass writes profiles shared with subsequent passes.
 MODULES=()
 for task in "${INSTRUMENTATIONS[@]}" "${COLIMA_INSTRUMENTATIONS[@]}" "${TEST_LATEST_DEPS_INSTRUMENTATIONS[@]}"; do
   project="${task%:*}"
-  module="instrumentation/${project//:/\/}"
-  while [[ ! -f "$module/metadata.yaml" ]]; do
-    module="${module%/*}"
-    if [[ "$module" == instrumentation ]]; then
-      echo "Cannot locate instrumentation metadata for $task" >&2
-      exit 1
-    fi
-  done
+  module="${project%:*}"
+  module="instrumentation/${module//:/\/}"
+  if [[ ! -f "$module/metadata.yaml" ]]; then
+    echo "Cannot locate instrumentation metadata for $task" >&2
+    exit 1
+  fi
   MODULES+=("$module")
 done
 if [[ ${#MODULES[@]} -gt 0 ]]; then
