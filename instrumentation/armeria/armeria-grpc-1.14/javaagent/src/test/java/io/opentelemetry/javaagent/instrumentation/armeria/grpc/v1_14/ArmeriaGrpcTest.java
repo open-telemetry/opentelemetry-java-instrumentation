@@ -57,7 +57,7 @@ class ArmeriaGrpcTest {
         }
       };
 
-    @Test
+  @Test
   void grpcInstrumentation() {
     URI uri = URI.create("http://user@localhost:" + server.httpPort());
     GreeterGrpc.GreeterBlockingStub client =
@@ -82,12 +82,8 @@ class ArmeriaGrpcTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM_NAME, "grpc"),
-                            equalTo(
-                                RPC_METHOD,
-                                "example.Greeter/SayHello"),
-                            equalTo(
-                                stringKey("rpc.status_code"),
-                                "OK"),
+                            equalTo(RPC_METHOD, "example.Greeter/SayHello"),
+                            equalTo(stringKey("rpc.status_code"), "OK"),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpPort()))
                         .hasEventsSatisfyingExactly(
@@ -112,12 +108,8 @@ class ArmeriaGrpcTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM_NAME, "grpc"),
-                            equalTo(
-                                RPC_METHOD,
-                                "example.Greeter/SayHello"),
-                            equalTo(
-                                stringKey("rpc.status_code"),
-                                "OK"),
+                            equalTo(RPC_METHOD, "example.Greeter/SayHello"),
+                            equalTo(stringKey("rpc.status_code"), "OK"),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpPort()))
                         .hasEventsSatisfyingExactly(

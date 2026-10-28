@@ -126,8 +126,7 @@ class RpcClientMetricsTest {
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
-                                                    .hasTraceId(
-                                                        "ff01020304050600ff0a0b0c0d0e0f00")
+                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
                                                     .hasSpanId("090a0b0c0d0e0f00")))));
 
     listener.onEnd(context2, responseAttributes2, nanos(300));

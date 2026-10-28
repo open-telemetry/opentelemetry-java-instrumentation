@@ -121,9 +121,7 @@ class TracingFilterTest {
                         .hasKind(SpanKind.SERVER)
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfying(
-                            equalTo(
-                                ERROR_TYPE,
-                                failure.getClass().getName()))));
+                            equalTo(ERROR_TYPE, failure.getClass().getName()))));
   }
 
   private static AsyncRpcResult invokeAsyncProvider(CompletableFuture<AppResponse> future) {

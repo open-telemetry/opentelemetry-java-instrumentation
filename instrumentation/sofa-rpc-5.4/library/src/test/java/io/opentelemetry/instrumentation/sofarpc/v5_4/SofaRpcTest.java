@@ -98,41 +98,41 @@ class SofaRpcTest extends AbstractSofaRpcTest {
                     span ->
                         span.hasName(rpcMethod)
                             .hasKind(SpanKind.CLIENT)
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    RPC_SYSTEM_NAME, "sofarpc"),
+                                equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                 equalTo(RPC_METHOD, rpcMethod),
                                 equalTo(ERROR_TYPE, errorType),
                                 equalTo(
                                     stringKey("rpc.status_code"),
-                                    !syntheticFallback
-                                        ? errorType
-                                        : null))));
+                                    !syntheticFallback ? errorType : null))));
 
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.sofa-rpc-5.4",
-              "rpc.client.call.duration",
-              metrics ->
-                  metrics.anySatisfy(
-                      metric ->
-                          assertThat(metric)
-                              .hasName("rpc.client.call.duration")
-                              .hasUnit("s")
-                              .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
-                              .hasHistogramSatisfying(
-                                  histogram ->
-                                      histogram.hasPointsSatisfying(
-                                          point ->
-                                              point.hasBucketBoundaries(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
-.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(RPC_METHOD, rpcMethod),
-                                                  equalTo(ERROR_TYPE, errorType),
-                                                  equalTo(
-                                                      stringKey("rpc.status_code"),
-                                                      syntheticFallback ? null : errorType))))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.sofa-rpc-5.4",
+            "rpc.client.call.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasName("rpc.client.call.duration")
+                            .hasUnit("s")
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasBucketBoundaries(
+                                                    0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1,
+                                                    0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(RPC_SYSTEM_NAME, "sofarpc"),
+                                                    equalTo(RPC_METHOD, rpcMethod),
+                                                    equalTo(ERROR_TYPE, errorType),
+                                                    equalTo(
+                                                        stringKey("rpc.status_code"),
+                                                        syntheticFallback ? null : errorType))))));
   }
 }

@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.grpc.v1_6.AbstractGrpcTest.addExt
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_SENT_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.experimentalSatisfies;
-import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -226,14 +225,9 @@ public abstract class AbstractGrpcStreamingTest {
                                     experimentalSatisfies(
                                         GRPC_SENT_MESSAGE_COUNT,
                                         v -> assertThat(v).isGreaterThan(0)),
-                                    equalTo(
-                                        RPC_SYSTEM_NAME, "grpc"),
-                                    equalTo(
-                                        RPC_METHOD,
-                                        "example.Greeter/Conversation"),
-                                    equalTo(
-                                        stringKey("rpc.status_code"),
-                                        "OK"),
+                                    equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                    equalTo(RPC_METHOD, "example.Greeter/Conversation"),
+                                    equalTo(stringKey("rpc.status_code"), "OK"),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
                             .satisfies(
@@ -251,12 +245,8 @@ public abstract class AbstractGrpcStreamingTest {
                                 experimentalSatisfies(
                                     GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
                                 equalTo(RPC_SYSTEM_NAME, "grpc"),
-                                equalTo(
-                                    RPC_METHOD,
-                                    "example.Greeter/Conversation"),
-                                equalTo(
-                                    stringKey("rpc.status_code"),
-                                    "OK"),
+                                equalTo(RPC_METHOD, "example.Greeter/Conversation"),
+                                equalTo(stringKey("rpc.status_code"), "OK"),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
@@ -286,9 +276,7 @@ public abstract class AbstractGrpcStreamingTest {
                                         equalTo(SERVER_ADDRESS, "localhost"),
                                         equalTo(SERVER_PORT, server.getPort()),
                                         equalTo(RPC_METHOD, "example.Greeter/Conversation"),
-                                        equalTo(
-                                            stringKey("rpc.status_code"),
-                                            "OK")))));
+                                        equalTo(stringKey("rpc.status_code"), "OK")))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
@@ -305,10 +293,8 @@ public abstract class AbstractGrpcStreamingTest {
                                         equalTo(SERVER_ADDRESS, "localhost"),
                                         equalTo(SERVER_PORT, server.getPort()),
                                         equalTo(RPC_METHOD, "example.Greeter/Conversation"),
-                                        equalTo(
-                                            stringKey("rpc.status_code"),
-                                            "OK")))));
-    }
+                                        equalTo(stringKey("rpc.status_code"), "OK")))));
+  }
 
   @Test
   void streamingErrorReturned() throws Exception {
@@ -378,17 +364,10 @@ public abstract class AbstractGrpcStreamingTest {
                                         v -> assertThat(v).isEqualTo(0)),
                                     experimentalSatisfies(
                                         GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isEqualTo(0)),
-                                    equalTo(
-                                        RPC_SYSTEM_NAME, "grpc"),
-                                    equalTo(
-                                        RPC_METHOD,
-                                        "example.Greeter/Conversation"),
-                                    equalTo(
-                                        ERROR_TYPE,
-                                        "INTERNAL"),
-                                    equalTo(
-                                        stringKey("rpc.status_code"),
-                                        "INTERNAL"),
+                                    equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                    equalTo(RPC_METHOD, "example.Greeter/Conversation"),
+                                    equalTo(ERROR_TYPE, "INTERNAL"),
+                                    equalTo(stringKey("rpc.status_code"), "INTERNAL"),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort()))),
                     span ->
@@ -400,15 +379,9 @@ public abstract class AbstractGrpcStreamingTest {
                                 experimentalSatisfies(
                                     GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isEqualTo(0)),
                                 equalTo(RPC_SYSTEM_NAME, "grpc"),
-                                equalTo(
-                                    RPC_METHOD,
-                                    "example.Greeter/Conversation"),
-                                equalTo(
-                                    ERROR_TYPE,
-                                    "INTERNAL"),
-                                equalTo(
-                                    stringKey("rpc.status_code"),
-                                    "INTERNAL"),
+                                equalTo(RPC_METHOD, "example.Greeter/Conversation"),
+                                equalTo(ERROR_TYPE, "INTERNAL"),
+                                equalTo(stringKey("rpc.status_code"), "INTERNAL"),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),

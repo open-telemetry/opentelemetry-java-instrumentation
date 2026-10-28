@@ -19,7 +19,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -27,6 +26,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.io.File;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -159,38 +159,53 @@ class SpringRmiTest {
               span ->
                   span.hasName("springrmi.app.SpringRmiGreeter/hello")
                       .hasKind(SpanKind.CLIENT)
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                      .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                          equalTo(
-                              RPC_METHOD,
-                              "springrmi.app.SpringRmiGreeter/hello")));
+                          equalTo(RPC_METHOD, "springrmi.app.SpringRmiGreeter/hello")));
           if (testSource == TestSource.RMI) {
             assertions.add(
                 span ->
-                    span.hasName(
-                            "springrmi.app.SpringRmiGreeter/hello")
+                    span.hasName("springrmi.app.SpringRmiGreeter/hello")
                         .hasKind(SpanKind.SERVER)
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                RPC_SYSTEM_NAME,
-                                testSource.serverSystem),
-                            equalTo(
-                                RPC_METHOD,
-                                "springrmi.app.SpringRmiGreeter/hello")));
+                            equalTo(RPC_SYSTEM_NAME, testSource.serverSystem),
+                            equalTo(RPC_METHOD, "springrmi.app.SpringRmiGreeter/hello")));
           }
 
           trace.hasSpansSatisfyingExactly(assertions);
         });
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.spring-rmi-4.0",
+        metric ->
+            metric
+                .hasName("rpc.client.call.duration")
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                .hasUnit("s")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasSumGreaterThan(0)
+                                    .hasBucketBoundaries(
+                                        0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0,
+                                        5.0, 10.0, 50.0, 100.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                                        equalTo(
+                                            RPC_METHOD, "springrmi.app.SpringRmiGreeter/hello")))));
+    if (testSource == TestSource.RMI) {
       testing.waitAndAssertMetrics(
           "io.opentelemetry.spring-rmi-4.0",
           metric ->
               metric
-                  .hasName("rpc.client.call.duration")
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                  .hasName("rpc.server.call.duration")
+                  .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                   .hasUnit("s")
                   .hasHistogramSatisfying(
                       histogram ->
@@ -199,34 +214,15 @@ class SpringRmiTest {
                                   point
                                       .hasCount(1)
                                       .hasSumGreaterThan(0)
-                                      .hasBucketBoundaries(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
-.hasAttributesSatisfyingExactly(
+                                      .hasBucketBoundaries(
+                                          0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0,
+                                          5.0, 10.0, 50.0, 100.0)
+                                      .hasAttributesSatisfyingExactly(
                                           equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
                                           equalTo(
                                               RPC_METHOD,
                                               "springrmi.app.SpringRmiGreeter/hello")))));
-      if (testSource == TestSource.RMI) {
-        testing.waitAndAssertMetrics(
-            "io.opentelemetry.spring-rmi-4.0",
-            metric ->
-                metric
-                    .hasName("rpc.server.call.duration")
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
-                    .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasSumGreaterThan(0)
-                                        .hasBucketBoundaries(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
-.hasAttributesSatisfyingExactly(
-                                            equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                            equalTo(
-                                                RPC_METHOD,
-                                                "springrmi.app.SpringRmiGreeter/hello")))));
-      }
+    }
   }
 
   @Test
@@ -247,131 +243,136 @@ class SpringRmiTest {
                 span ->
                     span.hasName("springrmi.app.SpringRmiGreeterParent/inherited")
                         .hasKind(SpanKind.CLIENT)
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName(
-                            "springrmi.app.SpringRmiGreeterParent/inherited")
+                    span.hasName("springrmi.app.SpringRmiGreeterParent/inherited")
                         .hasKind(SpanKind.SERVER)
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                            equalTo(
-                                RPC_METHOD,
-                                "springrmi.app.SpringRmiGreeterParent/inherited")),
+                            equalTo(RPC_METHOD, "springrmi.app.SpringRmiGreeterParent/inherited")),
                 span ->
                     span.hasName("springrmi.app.SpringRmiGreeterParent/overloaded")
                         .hasKind(SpanKind.CLIENT)
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName(
-                            "springrmi.app.SpringRmiGreeterParent/overloaded")
+                    span.hasName("springrmi.app.SpringRmiGreeterParent/overloaded")
                         .hasKind(SpanKind.SERVER)
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                            equalTo(
-                                RPC_METHOD,
-                                "springrmi.app.SpringRmiGreeterParent/overloaded")),
+                            equalTo(RPC_METHOD, "springrmi.app.SpringRmiGreeterParent/overloaded")),
                 span ->
                     span.hasName("springrmi.app.SpringRmiGreeterIntegerOverload/overloaded")
                         .hasKind(SpanKind.CLIENT)
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName(
-                            "springrmi.app.SpringRmiGreeterIntegerOverload/overloaded")
+                    span.hasName("springrmi.app.SpringRmiGreeterIntegerOverload/overloaded")
                         .hasKind(SpanKind.SERVER)
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasParent(trace.getSpan(5))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
                             equalTo(
                                 RPC_METHOD,
                                 "springrmi.app.SpringRmiGreeterIntegerOverload/overloaded"))));
-      testing.waitAndAssertMetrics(
-          "io.opentelemetry.spring-rmi-4.0",
-          metric ->
-              metric
-                  .hasName("rpc.client.call.duration")
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
-                  .hasUnit("s")
-                  .hasHistogramSatisfying(
-                      histogram ->
-                          histogram.hasPointsSatisfying(
-                              point ->
-                                  point
-                                      .hasCount(1)
-                                      .hasSumGreaterThan(0)
-                                      .hasBucketBoundaries(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
-.hasAttributesSatisfyingExactly(
-                                          equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                          equalTo(
-                                              RPC_METHOD,
-                                              "springrmi.app.SpringRmiGreeterParent/inherited")),
-                              point ->
-                                  point
-                                      .hasCount(1)
-                                      .hasSumGreaterThan(0)
-                                      .hasBucketBoundaries(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
-.hasAttributesSatisfyingExactly(
-                                          equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                          equalTo(
-                                              RPC_METHOD,
-                                              "springrmi.app.SpringRmiGreeterParent/overloaded")),
-                              point ->
-                                  point
-                                      .hasCount(1)
-                                      .hasSumGreaterThan(0)
-                                      .hasBucketBoundaries(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
-.hasAttributesSatisfyingExactly(
-                                          equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                          equalTo(
-                                              RPC_METHOD,
-                                              "springrmi.app.SpringRmiGreeterIntegerOverload/overloaded")))));
-      testing.waitAndAssertMetrics(
-          "io.opentelemetry.spring-rmi-4.0",
-          metric ->
-              metric
-                  .hasName("rpc.server.call.duration")
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
-                  .hasUnit("s")
-                  .hasHistogramSatisfying(
-                      histogram ->
-                          histogram.hasPointsSatisfying(
-                              point ->
-                                  point
-                                      .hasCount(1)
-                                      .hasSumGreaterThan(0)
-                                      .hasBucketBoundaries(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
-.hasAttributesSatisfyingExactly(
-                                          equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                          equalTo(
-                                              RPC_METHOD,
-                                              "springrmi.app.SpringRmiGreeterParent/inherited")),
-                              point ->
-                                  point
-                                      .hasCount(1)
-                                      .hasSumGreaterThan(0)
-                                      .hasBucketBoundaries(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
-.hasAttributesSatisfyingExactly(
-                                          equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                          equalTo(
-                                              RPC_METHOD,
-                                              "springrmi.app.SpringRmiGreeterParent/overloaded")),
-                              point ->
-                                  point
-                                      .hasCount(1)
-                                      .hasSumGreaterThan(0)
-                                      .hasBucketBoundaries(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
-.hasAttributesSatisfyingExactly(
-                                          equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                          equalTo(
-                                              RPC_METHOD,
-                                              "springrmi.app.SpringRmiGreeterIntegerOverload/overloaded")))));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.spring-rmi-4.0",
+        metric ->
+            metric
+                .hasName("rpc.client.call.duration")
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                .hasUnit("s")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasSumGreaterThan(0)
+                                    .hasBucketBoundaries(
+                                        0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0,
+                                        5.0, 10.0, 50.0, 100.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                                        equalTo(
+                                            RPC_METHOD,
+                                            "springrmi.app.SpringRmiGreeterParent/inherited")),
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasSumGreaterThan(0)
+                                    .hasBucketBoundaries(
+                                        0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0,
+                                        5.0, 10.0, 50.0, 100.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                                        equalTo(
+                                            RPC_METHOD,
+                                            "springrmi.app.SpringRmiGreeterParent/overloaded")),
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasSumGreaterThan(0)
+                                    .hasBucketBoundaries(
+                                        0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0,
+                                        5.0, 10.0, 50.0, 100.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                                        equalTo(
+                                            RPC_METHOD,
+                                            "springrmi.app.SpringRmiGreeterIntegerOverload/overloaded")))));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.spring-rmi-4.0",
+        metric ->
+            metric
+                .hasName("rpc.server.call.duration")
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                .hasUnit("s")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasSumGreaterThan(0)
+                                    .hasBucketBoundaries(
+                                        0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0,
+                                        5.0, 10.0, 50.0, 100.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                                        equalTo(
+                                            RPC_METHOD,
+                                            "springrmi.app.SpringRmiGreeterParent/inherited")),
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasSumGreaterThan(0)
+                                    .hasBucketBoundaries(
+                                        0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0,
+                                        5.0, 10.0, 50.0, 100.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                                        equalTo(
+                                            RPC_METHOD,
+                                            "springrmi.app.SpringRmiGreeterParent/overloaded")),
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasSumGreaterThan(0)
+                                    .hasBucketBoundaries(
+                                        0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0,
+                                        5.0, 10.0, 50.0, 100.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                                        equalTo(
+                                            RPC_METHOD,
+                                            "springrmi.app.SpringRmiGreeterIntegerOverload/overloaded")))));
   }
 
   @ParameterizedTest
@@ -393,13 +394,12 @@ class SpringRmiTest {
                 span ->
                     span.hasName("springrmi.app.SpringRmiGreeter/hello")
                         .hasKind(SpanKind.CLIENT)
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasNoParent(),
                 span ->
-                    span.hasName(
-                            "spring_rmi")
+                    span.hasName("spring_rmi")
                         .hasKind(SpanKind.SERVER)
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
@@ -407,9 +407,7 @@ class SpringRmiTest {
                             equalTo(
                                 RPC_METHOD_ORIGINAL,
                                 "springrmi.app.SpringRmiGreeter/" + methodName),
-                            equalTo(
-                                ERROR_TYPE,
-                                NoSuchMethodException.class.getName()))));
+                            equalTo(ERROR_TYPE, NoSuchMethodException.class.getName()))));
   }
 
   private static Stream<Arguments> invalidInvocations() {
@@ -447,7 +445,7 @@ class SpringRmiTest {
               span ->
                   span.hasName("springrmi.app.SpringRmiGreeter/exceptional")
                       .hasKind(SpanKind.CLIENT)
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                      .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                       .hasStatus(StatusData.error())
                       .hasParent(trace.getSpan(0))
                       .hasEventsSatisfyingExactly(
@@ -462,19 +460,14 @@ class SpringRmiTest {
                                           val -> val.isInstanceOf(String.class))))
                       .hasAttributesSatisfyingExactly(
                           equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                          equalTo(
-                              RPC_METHOD,
-                              "springrmi.app.SpringRmiGreeter/exceptional"),
-                          equalTo(
-                              ERROR_TYPE,
-                              error.getClass().getName())));
+                          equalTo(RPC_METHOD, "springrmi.app.SpringRmiGreeter/exceptional"),
+                          equalTo(ERROR_TYPE, error.getClass().getName())));
           if (testSource == TestSource.RMI) {
             assertions.add(
                 span ->
-                    span.hasName(
-                            "springrmi.app.SpringRmiGreeter/exceptional")
+                    span.hasName("springrmi.app.SpringRmiGreeter/exceptional")
                         .hasKind(SpanKind.SERVER)
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasParent(trace.getSpan(1))
                         .hasStatus(StatusData.error())
                         .hasEventsSatisfyingExactly(
@@ -489,25 +482,43 @@ class SpringRmiTest {
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                RPC_SYSTEM_NAME,
-                                testSource.serverSystem),
-                            equalTo(
-                                RPC_METHOD,
-                                "springrmi.app.SpringRmiGreeter/exceptional"),
-                            equalTo(
-                                ERROR_TYPE,
-                                error.getClass().getName())));
+                            equalTo(RPC_SYSTEM_NAME, testSource.serverSystem),
+                            equalTo(RPC_METHOD, "springrmi.app.SpringRmiGreeter/exceptional"),
+                            equalTo(ERROR_TYPE, error.getClass().getName())));
           }
 
           trace.hasSpansSatisfyingExactly(assertions);
         });
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.spring-rmi-4.0",
+        metric ->
+            metric
+                .hasName("rpc.client.call.duration")
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                .hasUnit("s")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasSumGreaterThan(0)
+                                    .hasBucketBoundaries(
+                                        0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0,
+                                        5.0, 10.0, 50.0, 100.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                                        equalTo(
+                                            RPC_METHOD,
+                                            "springrmi.app.SpringRmiGreeter/exceptional"),
+                                        equalTo(ERROR_TYPE, error.getClass().getName())))));
+    if (testSource == TestSource.RMI) {
       testing.waitAndAssertMetrics(
           "io.opentelemetry.spring-rmi-4.0",
           metric ->
               metric
-                  .hasName("rpc.client.call.duration")
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                  .hasName("rpc.server.call.duration")
+                  .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                   .hasUnit("s")
                   .hasHistogramSatisfying(
                       histogram ->
@@ -516,35 +527,15 @@ class SpringRmiTest {
                                   point
                                       .hasCount(1)
                                       .hasSumGreaterThan(0)
-                                      .hasBucketBoundaries(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
-.hasAttributesSatisfyingExactly(
+                                      .hasBucketBoundaries(
+                                          0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0,
+                                          5.0, 10.0, 50.0, 100.0)
+                                      .hasAttributesSatisfyingExactly(
                                           equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
                                           equalTo(
                                               RPC_METHOD,
                                               "springrmi.app.SpringRmiGreeter/exceptional"),
                                           equalTo(ERROR_TYPE, error.getClass().getName())))));
-      if (testSource == TestSource.RMI) {
-        testing.waitAndAssertMetrics(
-            "io.opentelemetry.spring-rmi-4.0",
-            metric ->
-                metric
-                    .hasName("rpc.server.call.duration")
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
-                    .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasSumGreaterThan(0)
-                                        .hasBucketBoundaries(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
-.hasAttributesSatisfyingExactly(
-                                            equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                            equalTo(
-                                                RPC_METHOD,
-                                                "springrmi.app.SpringRmiGreeter/exceptional"),
-                                            equalTo(ERROR_TYPE, error.getClass().getName())))));
-      }
+    }
   }
 }

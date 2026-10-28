@@ -229,9 +229,7 @@ class GrpcTest extends AbstractGrpcTest {
                                 equalTo(
                                     stringArrayKey(
                                         "rpc.request.metadata." + CLIENT_REQUEST_METADATA_KEY),
-                                    captureMetadata
-                                        ? singletonList(clientMetadataValue)
-                                        : null),
+                                    captureMetadata ? singletonList(clientMetadataValue) : null),
                                 equalTo(
                                     stringArrayKey(
                                         "rpc.request.metadata." + SERVER_REQUEST_METADATA_KEY),
@@ -248,9 +246,7 @@ class GrpcTest extends AbstractGrpcTest {
                                 equalTo(
                                     stringArrayKey(
                                         "rpc.request.metadata." + SERVER_REQUEST_METADATA_KEY),
-                                    captureMetadata
-                                        ? singletonList(serverMetadataValue)
-                                        : null))));
+                                    captureMetadata ? singletonList(serverMetadataValue) : null))));
   }
 
   /**

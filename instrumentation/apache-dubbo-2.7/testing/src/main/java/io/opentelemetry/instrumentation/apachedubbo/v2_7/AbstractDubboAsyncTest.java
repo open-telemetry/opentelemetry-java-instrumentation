@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -102,40 +101,44 @@ public abstract class AbstractDubboAsyncTest {
             trace -> assertCall(trace, "hello", fail));
     assertThat(serverSpan.isRecording()).isFalse();
 
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.apache-dubbo-2.7",
-              metric ->
-                  metric
-                      .hasName("rpc.server.call.duration")
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
-                      .hasUnit("s")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point
-                                          .hasCount(1)
-                                          .hasBucketBoundaries(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
-.hasAttributesSatisfyingExactly(
-                                              equalTo(RPC_SYSTEM_NAME, "dubbo"),
-                                              equalTo(
-                                                  RPC_METHOD,
-                                                  DelayedService.class.getName() + "/barrier")),
-                                  point ->
-                                      point
-                                          .hasCount(1)
-                                          .hasBucketBoundaries(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
-.hasAttributesSatisfyingExactly(
-                                              equalTo(RPC_SYSTEM_NAME, "dubbo"),
-                                              equalTo(
-                                                  RPC_METHOD,
-                                                  DelayedService.class.getName() + "/hello"),
-                                              equalTo(
-                                                  ERROR_TYPE,
-                                                  fail
-                                                      ? IllegalStateException.class.getName()
-                                                      : null)))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.apache-dubbo-2.7",
+            metric ->
+                metric
+                    .hasName("rpc.server.call.duration")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                    .hasUnit("s")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasCount(1)
+                                        .hasBucketBoundaries(
+                                            0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0,
+                                            5.0, 10.0, 50.0, 100.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                                            equalTo(
+                                                RPC_METHOD,
+                                                DelayedService.class.getName() + "/barrier")),
+                                point ->
+                                    point
+                                        .hasCount(1)
+                                        .hasBucketBoundaries(
+                                            0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0,
+                                            5.0, 10.0, 50.0, 100.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                                            equalTo(
+                                                RPC_METHOD,
+                                                DelayedService.class.getName() + "/hello"),
+                                            equalTo(
+                                                ERROR_TYPE,
+                                                fail
+                                                    ? IllegalStateException.class.getName()
+                                                    : null)))));
   }
 
   private static void assertCall(TraceAssert trace, String method, boolean fail) {
@@ -143,27 +146,21 @@ public abstract class AbstractDubboAsyncTest {
         span ->
             span.hasName(DelayedService.class.getName() + "/" + method)
                 .hasKind(SpanKind.CLIENT)
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                 .hasNoParent(),
         span ->
             span.hasName(DelayedService.class.getName() + "/" + method)
                 .hasKind(SpanKind.SERVER)
-.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                 .hasParent(trace.getSpan(0))
                 .hasStatus(fail ? StatusData.error() : StatusData.unset())
                 .hasAttributesSatisfyingExactly(
                     equalTo(RPC_SYSTEM_NAME, "dubbo"),
-                    equalTo(
-                        RPC_METHOD,
-                        DelayedService.class.getName() + "/" + method),
+                    equalTo(RPC_METHOD, DelayedService.class.getName() + "/" + method),
                     satisfies(NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
                     satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                     satisfies(NETWORK_TYPE, val -> val.isIn(null, "ipv4", "ipv6")),
-                    equalTo(
-                        ERROR_TYPE,
-                        fail
-                            ? IllegalStateException.class.getName()
-                            : null)));
+                    equalTo(ERROR_TYPE, fail ? IllegalStateException.class.getName() : null)));
   }
 
   public interface DelayedService {
