@@ -7,7 +7,6 @@
 - Replace `SpringWebfluxClientTelemetry.addFilter(list)` and
   `addFilterAndRegisterReactorHook(list)` with `createFilter()` and
   `createFilterAndRegisterReactorHook()`, used with `WebClient.Builder.filter(...)`.
-  Rename `RatpackClientTelemetry.instrument(HttpClient)` to `wrap(HttpClient)`.
 - GenAI error type getters now return the final value. Returning `null` omits `error.type`; overrides
   should return `error == null ? null : error.getClass().getName()` for the exception-class fallback.
 - HTTP client and server getters now determine `error.type`; their returned value, including `null`,

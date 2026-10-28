@@ -56,7 +56,7 @@ public class OpenTelemetryModule extends AbstractModule {
   @Singleton
   @Provides
   static HttpClient instrumentedHttpClient(RatpackClientTelemetry ratpackTracing) throws Exception {
-    return ratpackTracing.wrap(HttpClient.of(spec -> {}));
+    return ratpackTracing.instrument(HttpClient.of(spec -> {}));
   }
 
   @Singleton

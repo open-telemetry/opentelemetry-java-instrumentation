@@ -55,7 +55,7 @@ public class RatpackConfiguration {
   // Create an instrumented HttpClient
   public HttpClient createTracedClient(OpenTelemetry openTelemetry) {
     RatpackClientTelemetry clientTelemetry = RatpackClientTelemetry.create(openTelemetry);
-    return clientTelemetry.wrap(createClient());
+    return clientTelemetry.instrument(createClient());
   }
 
   // Configuration of the HttpClient goes here
