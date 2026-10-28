@@ -74,7 +74,7 @@ public final class RpcSemconvSelection {
     }
 
     public String schemaUrl() {
-      return emitPreview ? SchemaUrls.V1_44_0 : SchemaUrls.V1_37_0;
+      return emitPreview ? RpcSchemaUrls.SCHEMA_URL : SchemaUrls.V1_37_0;
     }
   }
 }
