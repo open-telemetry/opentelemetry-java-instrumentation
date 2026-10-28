@@ -99,18 +99,25 @@ advantage. Use the design criteria above instead.
 Mixed use of reflection objects and method handles does not itself require
 conversion.
 
-### Avoid independently resolved signature types
+### Account for signature class loaders and lookup scope
 
-For runtime compatibility discovery, `getMethod` or `getDeclaredMethod` lets the actual method
-supply its return type, instead of enumerating version-specific return types or selecting a
-same-named type from another class loader. Classes with the same binary name but different defining
-class loaders are different types. Mixing a declaring class with independently resolved signature
-types can introduce conflicting loader constraints.
+When a method handle is needed for an exact known signature, prefer `findStatic` or `findVirtual`.
+Resolve reference types through the method's declaring-class loader, for example
+`Class.forName(name, false, declaringClass.getClassLoader())`, rather than the helper's loader.
+Classes with the same binary name but different defining class loaders are different types.
+Mixing a declaring class with signature types from another loader can introduce conflicting loader
+constraints.
+
+For runtime compatibility discovery, `getMethod` or `getDeclaredMethod` can discover a
+version-dependent return type without enumerating alternatives. On HotSpot, however, these lookups
+resolve parameter, return, and declared exception types for unrelated public or declared methods
+too. A missing dependency can make the lookup throw `NoClassDefFoundError`, even when the requested
+method does not use it. Resolving those types can also encounter loader-constraint violations.
+Reflection is not inherently safer than exact method-handle lookup.
 
 If a `Method` is already available and a method handle is needed, use `lookup.unreflect(method)`
 instead of reconstructing its signature to look up the same method again. Derive follow-on
 accessors from `method.getReturnType()` rather than loading that type again by name.
-`findStatic` and `findVirtual` remain appropriate when an exact known signature is required.
 
 ## Separate access from invocation
 
