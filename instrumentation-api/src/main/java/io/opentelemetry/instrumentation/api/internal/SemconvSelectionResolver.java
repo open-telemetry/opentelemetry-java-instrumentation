@@ -26,7 +26,7 @@ class SemconvSelectionResolver {
   // SystemProperty-backed otel.semconv-stability.opt-in values.
   private final Set<String> stableFlags;
 
-  // Preview flags for service.peer and rpc. Reads through OpenTelemetry-backed
+  // Preview flags for service.peer. Reads through OpenTelemetry-backed
   // java.common.semconv_stability.preview config, and falls back to SystemProperty for
   // otel.semconv-stability.preview in library instrumentation.
   private final Set<String> previewFlags;
@@ -48,12 +48,8 @@ class SemconvSelectionResolver {
   }
 
   SemconvMode rpc() {
-    return resolveSemconvSelection(
-        SemconvDomain.builder("rpc")
-            .defaultMode(SemconvMode.V0_STABLE)
-            .otherSupportedModes(
-                SemconvMode.V1_EXPERIMENTAL, SemconvMode.V1_EXPERIMENTAL.withDualEmit())
-            .build());
+    // RPC uses the new conventions unconditionally, which are still release candidate upstream.
+    return SemconvMode.V1_EXPERIMENTAL;
   }
 
   SemconvMode servicePeer() {

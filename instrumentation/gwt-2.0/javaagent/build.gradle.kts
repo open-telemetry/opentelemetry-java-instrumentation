@@ -126,14 +126,12 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
 
     jvmArgs("-Dotel.semconv-stability.preview=rpc")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
   }
 
   val testBothSemconv = register<Test>("testBothSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
 
     jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup")
   }
 
   check {
