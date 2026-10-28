@@ -126,7 +126,6 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class InitializationAdvice {
-    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static JedisRequestContext<JedisRequest> onEnter() {
       return JedisRequestContext.attachForConnectionInitialization();

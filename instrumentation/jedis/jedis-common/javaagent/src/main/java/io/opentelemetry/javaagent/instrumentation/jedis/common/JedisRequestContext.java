@@ -99,11 +99,7 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
     return requestContext;
   }
 
-  @Nullable
   public static <T> JedisRequestContext<T> attachForConnectionInitialization() {
-    if (currentRequestContext.get() == null) {
-      return null;
-    }
     JedisRequestContext<T> requestContext = new JedisRequestContext<>();
     requestContext.previousContext = currentRequestContext.set(requestContext);
     requestContext.connectionInitialization = true;

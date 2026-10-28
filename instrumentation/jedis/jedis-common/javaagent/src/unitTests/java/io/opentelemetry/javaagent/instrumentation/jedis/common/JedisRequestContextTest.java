@@ -181,6 +181,27 @@ class JedisRequestContextTest {
   }
 
   @Test
+  void connectionInitializationWithoutEnclosingRequestCapturesServerErrors() {
+    JedisRequestContext<InitializationRequest> initializationContext =
+        JedisRequestContext.attachForConnectionInitialization();
+    try {
+      InitializationRequest request = new InitializationRequest();
+      JedisRequestContext.endIfNotAttached(instrumenter, Context.root(), request, null);
+      JedisRequestContext<InitializationRequest> commandContext =
+          requireNonNull(JedisRequestContext.attachForConnectionInitializationCommand());
+      Throwable failure = new IllegalStateException("ERR initialization failure");
+      JedisRequestContext.captureServerError(failure);
+
+      assertThat(commandContext.detachAndEnd(failure)).isSameAs(failure);
+      assertThat(request.isServerError(failure)).isTrue();
+      assertThat(initializationContext.detachAndEnd(null)).isNull();
+    } finally {
+      initializationContext.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  @Test
   void connectionInitializationIsolatesAndRestoresEnclosingRequest() {
     JedisRequestContext<Object> outerContext = JedisRequestContext.attach();
     try {
