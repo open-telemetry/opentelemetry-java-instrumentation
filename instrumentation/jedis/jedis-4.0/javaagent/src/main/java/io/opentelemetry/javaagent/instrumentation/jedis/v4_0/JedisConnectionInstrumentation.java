@@ -62,6 +62,10 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
         named("getMany").and(takesArguments(1)), getClass().getName() + "$ManyResponseAdvice");
 
     transformer.applyAdviceToMethod(
+        named("getObjectMultiBulkReply").and(takesArguments(0)),
+        getClass().getName() + "$TransactionResponseAdvice");
+
+    transformer.applyAdviceToMethod(
         named("readProtocolWithCheckingBroken").and(takesArguments(0)),
         getClass().getName() + "$ConnectionReplyAdvice");
   }
@@ -165,6 +169,14 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable) {
       JedisRequestContext.completePipelineReplies(connection);
       JedisRequestContext.completeConnectionInitializationCommands(responses, throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class TransactionResponseAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Connection connection) {
+      JedisRequestContext.completeTransactionReplies(connection);
     }
   }
 

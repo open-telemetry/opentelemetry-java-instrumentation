@@ -161,10 +161,19 @@ class JedisRequestContextTest {
     try {
       JedisRequestContext.completePipelineReplies(connection);
       assertThat(JedisRequestContext.attachForConnectionReply(connection)).isNull();
+      JedisRequestContext.completeTransactionReplies(new Object());
+      assertThat(JedisRequestContext.attachForConnectionReply(connection)).isNull();
       Throwable serverFailure = new IllegalStateException("EXEC server failure");
       JedisRequestContext.captureServerError(serverFailure);
+      JedisRequestContext.completeTransactionReplies(connection);
+      JedisRequestContext<Object> callbackReply =
+          requireNonNull(JedisRequestContext.attachForConnectionReply(connection));
+      Throwable handledFailure = new IllegalStateException("handled callback failure");
+      JedisRequestContext.captureServerError(handledFailure);
+      callbackReply.detachAndEnd(handledFailure);
       assertThat(batchContext.detachAndEnd(null)).isSameAs(serverFailure);
       assertThat(request.isServerError(serverFailure)).isTrue();
+      assertThat(request.isServerError(handledFailure)).isTrue();
     } finally {
       batchContext.detachAndEnd(null);
     }

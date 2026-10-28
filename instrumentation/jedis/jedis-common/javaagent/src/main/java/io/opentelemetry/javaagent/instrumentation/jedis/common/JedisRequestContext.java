@@ -148,14 +148,21 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
   }
 
   public static void completePipelineReplies(Object connection) {
+    completeBatchReplies(connection, false);
+  }
+
+  public static void completeTransactionReplies(Object connection) {
+    completeBatchReplies(connection, true);
+  }
+
+  private static void completeBatchReplies(Object connection, boolean transaction) {
     JedisRequestContext<?> requestContext = currentRequestContext.get();
     if (requestContext != null
         && requestContext.captureServerErrors
-        && requestContext.transactionOwner == null
+        && (requestContext.transactionOwner != null) == transaction
         && requestContext.replyOwner == connection) {
-      // Pipelines drain all replies with getMany before invoking response builders. Transactions
-      // still need to read the EXEC reply after getMany drains their queued-command
-      // acknowledgments.
+      // Pipelines finish at getMany; transactions still need the EXEC aggregate reply after their
+      // queued-command acknowledgments. Both drains finish before response builders run.
       requestContext.replyOwner = null;
     }
   }
