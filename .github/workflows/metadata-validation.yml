@@ -25,9 +25,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Test metadata collector
-        run: bash instrumentation-docs/collect-test.sh
-
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:

@@ -132,12 +132,6 @@ The other suites use your normal Docker environment. Only the x86-only pass uses
 you can stop this profile with `colima stop --profile otel-metadata`. On x86_64, Colima is not used.
 Missing prerequisites and failed collection tasks cause the collector to exit unsuccessfully.
 
-Run the lightweight collector regressions without Gradle, Docker, or Colima:
-
-```bash
-bash instrumentation-docs/collect-test.sh
-```
-
 ## Instrumentation Hierarchy
 
 The repository contains flat modules, version groups, and nested framework groups. For example:
