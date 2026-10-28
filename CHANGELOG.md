@@ -4,10 +4,6 @@
 
 ### ⚠️ Breaking changes
 
-- Remove `RpcMetricsContextCustomizers` and `RpcAttributesGetter.getSystem`, `getService`, and
-  `getMethod` from the alpha `opentelemetry-instrumentation-api-incubator` artifact.
-  Implement `getRpcSystemName` and `getRpcMethod` explicitly; `getRpcMethod` returns the fully
-  qualified method name.
 - RPC telemetry now uses only the conventions with schema version 1.44.0: `rpc.system.name`,
   fully qualified `rpc.method`, `rpc.status_code`, and `error.type`, with updated span names.
   RPC duration metrics use `rpc.client.call.duration` and `rpc.server.call.duration` in seconds.
@@ -348,6 +344,13 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- In `opentelemetry-instrumentation-api-incubator`, custom `RpcAttributesGetter` implementations
+  must implement `getRpcSystemName` and `getRpcMethod`, returning the RPC system name and fully
+  qualified method name such as `my.Service/Method`, respectively. The legacy `getSystem`,
+  `getService`, and `getMethod` methods have been removed.
+- In `opentelemetry-instrumentation-api-incubator`, remove calls to
+  `RpcMetricsContextCustomizers.dualEmitContextCustomizer`. RPC metrics no longer require this
+  context customizer.
 - Replace `GrpcRequest.getLogicalHost()` and `getLogicalPort()` with `getServerAddress()` and
   `getServerPort()`. Unavailable ports are now `null` instead of `-1`.
   ([#16161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16161))
