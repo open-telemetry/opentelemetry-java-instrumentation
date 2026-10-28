@@ -152,7 +152,9 @@ public abstract class AbstractDubboTest {
                                 equalTo(
                                     RPC_METHOD,
                                     "org.apache.dubbo.rpc.service.GenericService/$invoke"),
-                                equalTo(stringKey("server.service.name"), null),
+                                equalTo(
+                                    stringKey("server.service.name"),
+                                    testing().expectedPeerService()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -307,7 +309,7 @@ public abstract class AbstractDubboTest {
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing().expectedPeerService()),
+                                    null),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
