@@ -47,7 +47,6 @@ dependencies {
     exclude("org.codehaus.plexus", "plexus-xml")
   }
 
-  testImplementation(gradleTestKit())
   testImplementation("org.assertj:assertj-core:3.27.7")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.4"))
