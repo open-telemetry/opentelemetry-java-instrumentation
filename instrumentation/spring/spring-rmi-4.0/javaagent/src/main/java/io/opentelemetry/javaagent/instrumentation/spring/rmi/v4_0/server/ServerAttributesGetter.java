@@ -27,8 +27,13 @@ public class ServerAttributesGetter implements RpcAttributesGetter<SpringRmiServ
   }
 
   @Override
-  @Nullable
   public String getRpcMethod(SpringRmiServerRequest request) {
     return request.rpcMethod();
+  }
+
+  @Override
+  @Nullable
+  public String getRpcMethodOriginal(SpringRmiServerRequest request) {
+    return request.rpcMethodOriginal();
   }
 }

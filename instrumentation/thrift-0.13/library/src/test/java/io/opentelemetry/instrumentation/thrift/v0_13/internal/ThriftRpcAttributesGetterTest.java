@@ -34,7 +34,8 @@ class ThriftRpcAttributesGetterTest {
 
     assertThat(getter.getRpcStatusCode(request, null, error)).isEqualTo(Integer.toString(code));
     // Preserve exception-class fallback for error.type.
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error))
+        .isEqualTo(TApplicationException.class.getName());
   }
 
   @ParameterizedTest
@@ -43,7 +44,8 @@ class ThriftRpcAttributesGetterTest {
     TApplicationException error = new TApplicationException(code);
 
     assertThat(getter.getRpcStatusCode(request, null, error)).isNull();
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error))
+        .isEqualTo(TApplicationException.class.getName());
   }
 
   @ParameterizedTest
@@ -69,7 +71,13 @@ class ThriftRpcAttributesGetterTest {
     assertThat(getter.getErrorType(request, null, null)).isNull();
     assertThat(getter.getRpcStatusCode(request, ThriftResponse.FAILED, null)).isNull();
     assertThat(getter.getErrorType(request, ThriftResponse.FAILED, null)).isEqualTo("_OTHER");
-    assertThat(getter.getRpcStatusCode(request, null, new IllegalStateException())).isNull();
-    assertThat(getter.getRpcStatusCode(request, null, new TProtocolException())).isNull();
+    IllegalStateException error = new IllegalStateException();
+    assertThat(getter.getRpcStatusCode(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error))
+        .isEqualTo(IllegalStateException.class.getName());
+    TProtocolException protocolError = new TProtocolException();
+    assertThat(getter.getRpcStatusCode(request, null, protocolError)).isNull();
+    assertThat(getter.getErrorType(request, null, protocolError))
+        .isEqualTo(TProtocolException.class.getName());
   }
 }

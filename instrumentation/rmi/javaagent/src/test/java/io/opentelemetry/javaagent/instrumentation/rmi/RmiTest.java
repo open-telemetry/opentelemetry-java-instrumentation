@@ -108,6 +108,8 @@ class RmiTest {
                             equalTo(
                                 RPC_METHOD,
                                 emitPreviewRpcSemconv() ? "rmi.app.Greeter/hello" : "hello"))));
+
+    assertDurationMetrics("rmi.app.Greeter/hello", "rmi.app.Greeter/hello", null);
   }
 
   @Test
@@ -201,6 +203,9 @@ class RmiTest {
                             equalTo(
                                 ERROR_TYPE,
                                 emitPreviewRpcSemconv() ? thrown.getClass().getName() : null))));
+
+    assertDurationMetrics(
+        "rmi.app.Greeter/exceptional", "rmi.app.Greeter/exceptional", thrown.getClass().getName());
   }
 
   @ParameterizedTest
@@ -256,6 +261,45 @@ class RmiTest {
                             equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "rmi.app.Server" : null),
                             equalTo(
                                 RPC_METHOD, emitPreviewRpcSemconv() ? rpcMethod : methodName))));
+
+    assertDurationMetrics(clientService + "/" + methodName, rpcMethod, null);
+  }
+
+  private static void assertDurationMetrics(
+      String clientMethod, String serverMethod, String errorType) {
+    if (!emitPreviewRpcSemconv()) {
+      assertThat(testing.metrics())
+          .filteredOn(
+              metric ->
+                  metric.getInstrumentationScopeInfo().getName().equals("io.opentelemetry.rmi"))
+          .isEmpty();
+      return;
+    }
+
+    assertDurationMetric("rpc.client.call.duration", clientMethod, errorType);
+    assertDurationMetric("rpc.server.call.duration", serverMethod, errorType);
+  }
+
+  private static void assertDurationMetric(String metricName, String rpcMethod, String errorType) {
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.rmi",
+        metricName,
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasName(metricName)
+                        .hasUnit("s")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasCount(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(RPC_SYSTEM_NAME, "java_rmi"),
+                                                equalTo(RPC_METHOD, rpcMethod),
+                                                equalTo(ERROR_TYPE, errorType))))));
   }
 
   private static Stream<Arguments> remoteMethods() throws NoSuchMethodException {

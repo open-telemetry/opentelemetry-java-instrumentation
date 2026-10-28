@@ -107,13 +107,21 @@ public final class ThriftInstrumenterFactory {
 
     ThriftServerNetworkAttributesGetter netServerAttributesGetter =
         new ThriftServerNetworkAttributesGetter();
+    RpcSemconvSelection.Selection selection =
+        RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry);
 
     serverInstrumenterBuilder
-        .setSchemaUrl(RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry).schemaUrl())
+        .setSchemaUrl(selection.schemaUrl())
         .setSpanStatusExtractor(spanStatusExtractor)
         .addAttributesExtractors(additionalExtractors)
-        .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
-        .addAttributesExtractor(ServerAttributesExtractor.create(netServerAttributesGetter))
+        .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter));
+    // The local socket is not the client's logical target; retain it as a server target only
+    // for legacy-only telemetry.
+    if (!selection.emitPreview()) {
+      serverInstrumenterBuilder.addAttributesExtractor(
+          ServerAttributesExtractor.create(netServerAttributesGetter));
+    }
+    serverInstrumenterBuilder
         .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractors(additionalServerExtractors)
         .addOperationMetrics(RpcServerMetrics.get())
