@@ -1,42 +1,59 @@
 name: Build
 
 on:
-  push:
-    branches:
-      - main
-      - maintenance/v*.x
-      - release/*
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  common:
-    uses: $/.github/workflows/build-common.yml
-    with:
-      cache-read-only: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' }}
-    secrets:
-      DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
-
-  test-latest-deps:
-    # release branches are excluded
-    # because any time a new library version is released to maven central it can fail
-    # which requires unnecessary release branch maintenance, especially for patches
-    if: "!startsWith(github.ref_name, 'release/')"
-    uses: $/.github/workflows/reusable-test-latest-deps.yml
-    secrets:
-      DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
-
   muzzle:
-    # release branches are excluded
-    # because any time a new library version is released to maven central it can fail
-    # which requires unnecessary release branch maintenance, especially for patches
-    if: "!startsWith(github.ref_name, 'release/')"
-    uses: $/.github/workflows/reusable-muzzle.yml
+    name: ${{ matrix.variant }} / ${{ matrix.task }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - baseline
+          - optimized
+        task:
+          - ":instrumentation:muzzle1"
+          - ":instrumentation:muzzle2"
+          - ":instrumentation:muzzle3"
+          - ":instrumentation:muzzle4"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ matrix.variant == 'baseline' && '0aa389063721b3e14b69829e4913b494e4592864' || github.sha }}
+          persist-credentials: false
 
-  lint:
-    # release branches are excluded because the README.md javaagent download link has to be updated
-    # on release branches before the release download has been published
-    if: "!startsWith(github.ref_name, 'release/')"
-    uses: $/.github/workflows/reusable-lint-check.yml
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6
+        with:
+          cache-read-only: true
+
+      - name: Use the same library versions in both variants
+        shell: python
+        run: |
+          from pathlib import Path
+          path = Path("gradle-plugins/src/main/kotlin/io.opentelemetry.instrumentation.muzzle-check.gradle.kts")
+          text = path.read_text(encoding="utf-8")
+          assert text.count("range.versions.shuffled()") == 1
+          path.write_text(text.replace("range.versions.shuffled()", "range.versions.sorted()"), encoding="utf-8")
+
+      - name: Run muzzle
+        run: ./gradlew ${{ matrix.task }} --console=plain
+
+      - name: Test Gradle plugins
+        if: matrix.variant == 'optimized' && matrix.task == ':instrumentation:muzzle1'
+        run: ./gradlew -p gradle-plugins test --console=plain
