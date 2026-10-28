@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi;
 
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -15,11 +14,10 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
+import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -44,7 +42,6 @@ import rmi.app.NumericGreeter;
 import rmi.app.ParentGreeter;
 import rmi.app.Server;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class RmiTest {
 
   @RegisterExtension
@@ -87,27 +84,23 @@ class RmiTest {
                 span ->
                     span.hasName("rmi.app.Greeter/hello")
                         .hasKind(SpanKind.CLIENT)
+.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "rmi.app.Greeter" : null),
+                            equalTo(RPC_SYSTEM_NAME, "java_rmi"),
                             equalTo(
                                 RPC_METHOD,
-                                emitPreviewRpcSemconv() ? "rmi.app.Greeter/hello" : "hello")),
+                                "rmi.app.Greeter/hello")),
                 span ->
                     span.hasName(
-                            emitPreviewRpcSemconv()
-                                ? "rmi.app.Greeter/hello"
-                                : "rmi.app.Server/hello")
+                            "rmi.app.Greeter/hello")
                         .hasKind(SpanKind.SERVER)
+.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "rmi.app.Server" : null),
+                            equalTo(RPC_SYSTEM_NAME, "java_rmi"),
                             equalTo(
                                 RPC_METHOD,
-                                emitPreviewRpcSemconv() ? "rmi.app.Greeter/hello" : "hello"))));
+                                "rmi.app.Greeter/hello"))));
 
     assertDurationMetrics("rmi.app.Greeter/hello", "rmi.app.Greeter/hello", null);
   }
@@ -154,6 +147,7 @@ class RmiTest {
                 span ->
                     span.hasName("rmi.app.Greeter/exceptional")
                         .hasKind(SpanKind.CLIENT)
+.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasParent(trace.getSpan(0))
                         .hasEventsSatisfyingExactly(
                             event ->
@@ -165,23 +159,18 @@ class RmiTest {
                                         equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
                                         satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "rmi.app.Greeter" : null),
+                            equalTo(RPC_SYSTEM_NAME, "java_rmi"),
                             equalTo(
                                 RPC_METHOD,
-                                emitPreviewRpcSemconv()
-                                    ? "rmi.app.Greeter/exceptional"
-                                    : "exceptional"),
+                                "rmi.app.Greeter/exceptional"),
                             equalTo(
                                 ERROR_TYPE,
-                                emitPreviewRpcSemconv() ? thrown.getClass().getName() : null)),
+                                thrown.getClass().getName())),
                 span ->
                     span.hasName(
-                            emitPreviewRpcSemconv()
-                                ? "rmi.app.Greeter/exceptional"
-                                : "rmi.app.Server/exceptional")
+                            "rmi.app.Greeter/exceptional")
                         .hasKind(SpanKind.SERVER)
+.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
@@ -192,17 +181,13 @@ class RmiTest {
                                         equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
                                         satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "rmi.app.Server" : null),
+                            equalTo(RPC_SYSTEM_NAME, "java_rmi"),
                             equalTo(
                                 RPC_METHOD,
-                                emitPreviewRpcSemconv()
-                                    ? "rmi.app.Greeter/exceptional"
-                                    : "exceptional"),
+                                "rmi.app.Greeter/exceptional"),
                             equalTo(
                                 ERROR_TYPE,
-                                emitPreviewRpcSemconv() ? thrown.getClass().getName() : null))));
+                                thrown.getClass().getName()))));
 
     assertDurationMetrics(
         "rmi.app.Greeter/exceptional", "rmi.app.Greeter/exceptional", thrown.getClass().getName());
@@ -239,43 +224,28 @@ class RmiTest {
                 span ->
                     span.hasName(clientService + "/" + methodName)
                         .hasKind(SpanKind.CLIENT)
+.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? clientService : null),
+                            equalTo(RPC_SYSTEM_NAME, "java_rmi"),
                             equalTo(
                                 RPC_METHOD,
-                                emitPreviewRpcSemconv()
-                                    ? clientService + "/" + methodName
-                                    : methodName)),
+                                clientService + "/" + methodName)),
                 span ->
                     span.hasName(
-                            emitPreviewRpcSemconv()
-                                ? (rpcMethod == null ? "java_rmi" : rpcMethod)
-                                : "rmi.app.Server/" + methodName)
+                            (rpcMethod == null ? "java_rmi" : rpcMethod))
                         .hasKind(SpanKind.SERVER)
+.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "rmi.app.Server" : null),
+                            equalTo(RPC_SYSTEM_NAME, "java_rmi"),
                             equalTo(
-                                RPC_METHOD, emitPreviewRpcSemconv() ? rpcMethod : methodName))));
+                                RPC_METHOD, rpcMethod))));
 
     assertDurationMetrics(clientService + "/" + methodName, rpcMethod, null);
   }
 
   private static void assertDurationMetrics(
       String clientMethod, String serverMethod, String errorType) {
-    if (!emitPreviewRpcSemconv()) {
-      assertThat(testing.metrics())
-          .filteredOn(
-              metric ->
-                  metric.getInstrumentationScopeInfo().getName().equals("io.opentelemetry.rmi"))
-          .isEmpty();
-      return;
-    }
-
     assertDurationMetric("rpc.client.call.duration", clientMethod, errorType);
     assertDurationMetric("rpc.server.call.duration", serverMethod, errorType);
   }
@@ -289,6 +259,7 @@ class RmiTest {
                 metric ->
                     assertThat(metric)
                         .hasName(metricName)
+.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasUnit("s")
                         .hasHistogramSatisfying(
                             histogram ->
@@ -296,7 +267,8 @@ class RmiTest {
                                     point ->
                                         point
                                             .hasCount(1)
-                                            .hasAttributesSatisfyingExactly(
+                                            .hasBucketBoundaries(0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
+.hasAttributesSatisfyingExactly(
                                                 equalTo(RPC_SYSTEM_NAME, "java_rmi"),
                                                 equalTo(RPC_METHOD, rpcMethod),
                                                 equalTo(ERROR_TYPE, errorType))))));

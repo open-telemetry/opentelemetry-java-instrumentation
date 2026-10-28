@@ -190,12 +190,13 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   equalTo(ERROR_TYPE, "42601");
   ```
 
+- RPC expectations always use the current conventions directly, without mode checks.
 - Keep short conditional expected values directly in the assertion when the
   expected values differ by mode or an attribute exists in only one mode:
 
   ```java
-  span.hasName(emitPreviewRpcSemconv() ? "Greeter/SayHello" : "helloworld.Greeter/SayHello");
-  equalTo(AttributeKey.stringKey("rpc.status_code"), emitPreviewRpcSemconv() ? "OK" : null);
+  equalTo(PEER_SERVICE, emitOldServicePeerSemconv() ? "backend" : null);
+  equalTo(SERVICE_PEER_NAME, emitPreviewServicePeerSemconv() ? "backend" : null);
   ```
 
 - Nested ternaries are allowed directly in attribute-assertion expected values. Other test code follows
@@ -211,22 +212,22 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 
   ```java
   // Bad: the helper conditionally builds a list and hides the expected shape.
-  private static List<AttributeAssertion> rpcAttributes() {
+  private static List<AttributeAssertion> servicePeerAttributes() {
     List<AttributeAssertion> attributes = new ArrayList<>();
-    if (emitOldRpcSemconv()) {
-      attributes.add(equalTo(RPC_GRPC_STATUS_CODE, 0L));
+    if (emitOldServicePeerSemconv()) {
+      attributes.add(equalTo(PEER_SERVICE, "backend"));
     }
-    if (emitPreviewRpcSemconv()) {
-      attributes.add(equalTo(AttributeKey.stringKey("rpc.status_code"), "OK"));
+    if (emitPreviewServicePeerSemconv()) {
+      attributes.add(equalTo(SERVICE_PEER_NAME, "backend"));
     }
     return attributes;
   }
-  span.hasAttributesSatisfyingExactly(rpcAttributes());
+  span.hasAttributesSatisfyingExactly(servicePeerAttributes());
 
   // Good: pass each assertion directly and keep its mode check visible.
   span.hasAttributesSatisfyingExactly(
-      equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null),
-      equalTo(AttributeKey.stringKey("rpc.status_code"), emitPreviewRpcSemconv() ? "OK" : null));
+      equalTo(PEER_SERVICE, emitOldServicePeerSemconv() ? "backend" : null),
+      equalTo(SERVICE_PEER_NAME, emitPreviewServicePeerSemconv() ? "backend" : null));
   ```
 
 - The conventional `experimental(value)` helper is the one exception: keep it.

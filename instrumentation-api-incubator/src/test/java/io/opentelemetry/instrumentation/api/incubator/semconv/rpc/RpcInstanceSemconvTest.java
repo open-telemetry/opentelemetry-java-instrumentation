@@ -59,7 +59,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
-@SuppressWarnings("deprecation") // old semconv and dual-emission customizer
+@SuppressWarnings("deprecation") // deprecated RPC context customizer
 class RpcInstanceSemconvTest {
 
   private static final double[] DURATION_BUCKETS = {
@@ -71,7 +71,7 @@ class RpcInstanceSemconvTest {
   @ParameterizedTest
   @CsvSource({"true,''", "false,''", "true,rpc/dup", "false,rpc/dup"})
   @SetSystemProperty(key = "otel.semconv-stability.preview", value = "")
-  void defaultSdkEmitsOnlyNewRpcTelemetry(boolean client, String preview) {
+  void defaultSdkEmitsCanonicalRpcTelemetry(boolean client, String preview) {
     System.setProperty("otel.semconv-stability.preview", preview);
     ConfiguredInstrumenter instance = new ConfiguredInstrumenter(client, false, false, true);
     Context context = instance.instrumenter.start(Context.root(), "request");
@@ -112,7 +112,7 @@ class RpcInstanceSemconvTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
-  void instancesUseNewRpcConventionsAndIndependentServicePeerConventions(boolean client) {
+  void instancesUseRpcConventionsAndIndependentServicePeerConventions(boolean client) {
     List<ConfiguredInstrumenter> instances =
         asList(
             new ConfiguredInstrumenter(client, false, false),
@@ -123,8 +123,7 @@ class RpcInstanceSemconvTest {
       ConfiguredInstrumenter instance = instances.get(mode);
       boolean previewServicePeer = mode != 0;
       boolean oldServicePeer = mode != 1;
-      String schemaUrl = SchemaUrls.V1_44_0;
-      assertThat(instance.selection.schemaUrl()).isEqualTo(schemaUrl);
+      assertThat(instance.selection.schemaUrl()).isEqualTo(SchemaUrls.V1_44_0);
       assertThat(instance.selection.emitOld()).isFalse();
       assertThat(instance.selection.emitPreview()).isTrue();
       Context context = instance.instrumenter.start(Context.root(), "request");
@@ -145,18 +144,17 @@ class RpcInstanceSemconvTest {
                           equalTo(stringKey("rpc.status_code"), "CANCELLED"),
                           equalTo(ERROR_TYPE, "java.lang.IllegalStateException")));
       assertThat(instance.spanExporter.getFinishedSpanItems().get(0).getInstrumentationScopeInfo())
-          .satisfies(scope -> assertThat(scope.getSchemaUrl()).isEqualTo(schemaUrl));
+          .satisfies(scope -> assertThat(scope.getSchemaUrl()).isEqualTo(SchemaUrls.V1_44_0));
 
       Collection<MetricData> metrics = instance.metricReader.collectAllMetrics();
-      String prefix = client ? "rpc.client" : "rpc.server";
       assertThat(metrics)
           .extracting(MetricData::getName)
-          .containsExactly(prefix + ".call.duration");
+          .containsExactly(client ? "rpc.client.call.duration" : "rpc.server.call.duration");
       assertThat(metrics)
           .anySatisfy(
               metric ->
                   assertThat(metric)
-                      .hasName(prefix + ".call.duration")
+                      .hasName(client ? "rpc.client.call.duration" : "rpc.server.call.duration")
                       .hasUnit("s")
                       .hasHistogramSatisfying(
                           histogram ->
@@ -175,7 +173,7 @@ class RpcInstanceSemconvTest {
           .allSatisfy(
               metric ->
                   assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
-                      .isEqualTo(schemaUrl));
+                      .isEqualTo(SchemaUrls.V1_44_0));
     }
   }
 
