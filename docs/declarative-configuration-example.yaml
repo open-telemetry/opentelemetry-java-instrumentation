@@ -183,8 +183,9 @@ instrumentation/development:
           enabled: false
 
       # Maps server addresses or configured targets to logical server service identities. Flat
-      # mappings use `host=serviceName` and cannot express namespaces or targets containing commas
-      # or equals signs; use declarative `server_service_mapping` for those targets and namespaces.
+      # mappings use `target=service_name`; the target can be a hostname, IP address, or target
+      # including a port or path. Flat mappings cannot express service namespaces or targets
+      # containing commas or equals signs; use declarative `server_service_mapping` for those cases.
       # Each list entry is an object with the following properties:
       #   target (string, required): Server address or complete configured target to match
       #     against.

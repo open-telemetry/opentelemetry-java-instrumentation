@@ -325,7 +325,7 @@ class DeclarativeConfigValidationTest {
 
     // The declarative form is a structured list when either the flat type is structured_list
     // (legacy) or the dedicated declarative_type marks it as such. server_service_mapping uses
-    // type: map (the flat host=service form) + declarative_type: structured_list.
+    // type: map (the flat target=service_name form) + declarative_type: structured_list.
     boolean structuredList =
         type == ConfigurationType.STRUCTURED_LIST
             || config.declarativeType() == ConfigurationType.STRUCTURED_LIST;
@@ -368,11 +368,10 @@ class DeclarativeConfigValidationTest {
   }
 
   // The only structured_list config with a flat property is the common server-service-mapping. Its
-  // flat form is a host=service map, which the bridge turns into a list of {target, service_name}
-  // entries. readServerServiceMappingAsMap below rebuilds the host->service map from those entries,
-  // so
-  // the comparison exercises getStructuredList (what the consumer uses) rather than a string
-  // lookup.
+  // flat form is a target=service_name map, which the bridge turns into {target, service_name}
+  // entries. readServerServiceMappingAsMap below rebuilds the host -> service map from those
+  // entries, so the comparison exercises getStructuredList (what the consumer uses) rather than a
+  // string lookup.
   private static TestValue structuredListTestValue() {
     return new TestValue("host1=svc1,host2=svc2", Map.of("host1", "svc1", "host2", "svc2"));
   }

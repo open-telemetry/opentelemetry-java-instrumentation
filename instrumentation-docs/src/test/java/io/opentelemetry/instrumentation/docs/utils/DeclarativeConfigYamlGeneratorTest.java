@@ -108,8 +108,9 @@ class DeclarativeConfigYamlGeneratorTest {
 
   @Test
   void documentsStructuredListEntryShape() throws Exception {
-    // The flat form is a `host=service` map, but the declarative form is a list of objects, so the
-    // emitted default must be a list and the entry shape has to be documented in the comment.
+    // The flat form is a `target=service_name` map, but the declarative form is a list of objects,
+    // so the emitted default must be a list and the entry shape has to be documented in the
+    // comment.
     Map<String, DeclarativeSchema.Property> properties = new LinkedHashMap<>();
     properties.put(
         "target",

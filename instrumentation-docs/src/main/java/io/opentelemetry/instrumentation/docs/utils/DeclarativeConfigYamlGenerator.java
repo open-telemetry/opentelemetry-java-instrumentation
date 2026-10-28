@@ -190,8 +190,8 @@ public class DeclarativeConfigYamlGenerator {
 
   /**
    * Returns whether the declarative form of a configuration is a list of objects. The flat {@code
-   * type} describes the system property (e.g. {@code map} for the {@code host=service} server
-   * service mapping), so the declarative shape can differ and is then marked by {@code
+   * type} describes the system property (e.g. {@code map} for the {@code target=service_name}
+   * server service mapping), so the declarative shape can differ and is then marked by {@code
    * declarative_type}.
    *
    * @param config the configuration option

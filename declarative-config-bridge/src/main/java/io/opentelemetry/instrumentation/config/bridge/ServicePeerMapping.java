@@ -21,20 +21,21 @@ import javax.annotation.Nullable;
  * Bridges the flat config property {@code otel.instrumentation.common.server-service-mapping} to
  * the declarative config structure at {@code java.common.server_service_mapping}.
  *
- * <p>The flat property format is: {@code host=serviceName,host2=serviceName2}
+ * <p>The flat property format is: {@code target1=service_name1,target2=service_name2}, where each
+ * target can be a hostname, IP address, or target including a port or path.
  *
  * <p>The declarative config format is:
  *
  * <pre>
  * server_service_mapping:
- *   - target: host
- *     service_name: serviceName
- *   - target: host2
- *     service_name: serviceName2
+ *   - target: target1
+ *     service_name: service_name1
+ *   - target: target2
+ *     service_name: service_name2
  * </pre>
  *
- * <p>Note: The flat property does not support {@code service_namespace}, so it will always be null
- * when bridging from flat config.
+ * <p>The flat property cannot express {@code service_namespace} or targets containing commas or
+ * equals signs. Use declarative configuration for those cases.
  */
 final class ServicePeerMapping implements DeclarativeConfigProperties {
 

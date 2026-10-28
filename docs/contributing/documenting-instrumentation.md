@@ -282,8 +282,9 @@ structured list and documents the entry shape in the comment above it, using eac
 `example` (falling back to its `default`, then to a `<property-name>` placeholder) for the sample
 entry.
 
-For example, `server_service_mapping` is a `host=serviceName` map as a flat property but a list of
-`{target, service_name, service_namespace}` objects in declarative configuration:
+For example, `server_service_mapping` is a `target=service_name` map as a flat property but a list
+of `{target, service_name, service_namespace}` objects in declarative configuration. A flat target
+can be a hostname, IP address, or target including a port or path:
 
 ```yaml
 configurations:
