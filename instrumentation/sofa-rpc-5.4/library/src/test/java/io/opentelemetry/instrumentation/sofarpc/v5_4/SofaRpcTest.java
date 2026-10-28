@@ -6,14 +6,11 @@
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static java.util.Collections.singletonList;
 
@@ -30,6 +27,7 @@ import io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.List;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -59,7 +57,6 @@ class SofaRpcTest extends AbstractSofaRpcTest {
 
   @ParameterizedTest
   @CsvSource({"false, false", "false, true", "true, false", "true, true"})
-  @SuppressWarnings("deprecation")
   void statusCodeIsEmitted(boolean async, boolean syntheticFallback) {
     String service = ErrorService.class.getName();
     String method = syntheticFallback ? "throwBusinessException" : "throwException";
@@ -101,40 +98,41 @@ class SofaRpcTest extends AbstractSofaRpcTest {
                     span ->
                         span.hasName(rpcMethod)
                             .hasKind(SpanKind.CLIENT)
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "sofarpc" : null),
-                                equalTo(
-                                    RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "sofarpc" : null),
-                                equalTo(RPC_SERVICE, emitOldRpcSemconv() ? service : null),
-                                equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? rpcMethod : method),
-                                equalTo(ERROR_TYPE, emitPreviewRpcSemconv() ? errorType : null),
+                                equalTo(RPC_SYSTEM_NAME, "sofarpc"),
+                                equalTo(RPC_METHOD, rpcMethod),
+                                equalTo(ERROR_TYPE, errorType),
                                 equalTo(
                                     stringKey("rpc.status_code"),
-                                    emitPreviewRpcSemconv() && !syntheticFallback
-                                        ? errorType
-                                        : null))));
+                                    !syntheticFallback ? errorType : null))));
 
-    if (emitPreviewRpcSemconv()) {
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.sofa-rpc-5.4",
-              "rpc.client.call.duration",
-              metrics ->
-                  metrics.anySatisfy(
-                      metric ->
-                          assertThat(metric)
-                              .hasHistogramSatisfying(
-                                  histogram ->
-                                      histogram.hasPointsSatisfying(
-                                          point ->
-                                              point.hasAttributesSatisfyingExactly(
-                                                  equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                  equalTo(RPC_METHOD, rpcMethod),
-                                                  equalTo(ERROR_TYPE, errorType),
-                                                  equalTo(
-                                                      stringKey("rpc.status_code"),
-                                                      syntheticFallback ? null : errorType))))));
-    }
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.sofa-rpc-5.4",
+            "rpc.client.call.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasName("rpc.client.call.duration")
+                            .hasUnit("s")
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasBucketBoundaries(
+                                                    0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1,
+                                                    0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(RPC_SYSTEM_NAME, "sofarpc"),
+                                                    equalTo(RPC_METHOD, rpcMethod),
+                                                    equalTo(ERROR_TYPE, errorType),
+                                                    equalTo(
+                                                        stringKey("rpc.status_code"),
+                                                        syntheticFallback ? null : errorType))))));
   }
 }

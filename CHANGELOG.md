@@ -6,10 +6,19 @@
 
 - AWS Lambda invocation spans now replace alias suffixes in `cloud.resource_id` with the resolved
   function version when available.
+- Replace `SpringWebfluxClientTelemetry.addFilter(list)` and
+  `addFilterAndRegisterReactorHook(list)` with `createFilter()` and
+  `createFilterAndRegisterReactorHook()`, used with `WebClient.Builder.filter(...)`.
+- RPC telemetry now uses only the conventions with schema version 1.44.0: `rpc.system.name`,
+  fully qualified `rpc.method`, `rpc.status_code`, and `error.type`, with updated span names.
+  RPC duration metrics use `rpc.client.call.duration` and `rpc.server.call.duration` in seconds.
+  RPC opt-in/preview flags and `general.rpc.semconv` settings no longer select legacy or dual emission.
 - GenAI error type getters now return the final value. Returning `null` omits `error.type`; overrides
   should return `error == null ? null : error.getClass().getName()` for the exception-class fallback.
 - HTTP client and server getters now determine `error.type`; their returned value, including `null`,
   is used as-is.
+- RPC attribute getters return the final `error.type`; returning `null` omits it even when an
+  exception exists.
 - Messaging `MessagingAttributesGetter.getErrorType()` overrides now provide the final
   `error.type` value. Return `null` to omit it, or return `error == null ? null :
   error.getClass().getName()` for exception-class fallback.
@@ -211,13 +220,11 @@
   `structuredAttributesIncluded` and `structuredAttributesExcluded` in XML, or
   `setStructuredAttributes(IncludeExclude)` programmatically.
   Log4j `MapMessage` keys are emitted as their original log attribute names.
-- RPC and service-peer semantic conventions now require `otel.semconv-stability.preview=rpc`
-  and `otel.semconv-stability.preview=service.peer`, respectively (or `rpc/dup` and
-  `service.peer/dup` for dual emission). The `rpc`, `rpc/dup`, `service.peer`, and `service.peer/dup`
+- Service-peer semantic conventions now require `otel.semconv-stability.preview=service.peer`
+  (or `service.peer/dup` for dual emission). The `service.peer` and `service.peer/dup`
   values in `otel.semconv-stability.opt-in` no longer select them.
   For declarative configuration, move these values from `general.stability_opt_in_list` to
-  `java.common.semconv_stability.preview`. Default telemetry and explicit `general.rpc.semconv`
-  configuration are unchanged.
+  `java.common.semconv_stability.preview`.
 - Micrometer timers and distribution summaries no longer emit separate `.max` gauge metrics; use the
   maximum from their histogram instead. Custom meter statistic suffixes are appended after the base
   name passes through the naming convention (for example, Prometheus mode changes
@@ -342,6 +349,13 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- In `opentelemetry-instrumentation-api-incubator`, custom `RpcAttributesGetter` implementations
+  must implement `getRpcSystemName` and `getRpcMethod`, returning the RPC system name and fully
+  qualified method name such as `my.Service/Method`, respectively. The legacy `getSystem`,
+  `getService`, and `getMethod` methods have been removed.
+- In `opentelemetry-instrumentation-api-incubator`, remove calls to
+  `RpcMetricsContextCustomizers.dualEmitContextCustomizer`. RPC metrics no longer require this
+  context customizer.
 - Replace `GrpcRequest.getLogicalHost()` and `getLogicalPort()` with `getServerAddress()` and
   `getServerPort()`. Unavailable ports are now `null` instead of `-1`.
   ([#16161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16161))

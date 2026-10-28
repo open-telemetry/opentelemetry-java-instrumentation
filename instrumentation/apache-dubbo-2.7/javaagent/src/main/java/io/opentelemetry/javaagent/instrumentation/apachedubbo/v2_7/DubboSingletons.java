@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachedubbo.v2_7;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
@@ -15,14 +13,13 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboClientNet
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboInternalHelper;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import javax.annotation.Nullable;
 import org.apache.dubbo.rpc.Filter;
 import org.apache.dubbo.rpc.Result;
 
 class DubboSingletons {
   private static final Filter clientFilter;
   private static final Filter serverFilter;
-  @Nullable private static final Instrumenter<DubboRequest, Result> serverInstrumenter;
+  private static final Instrumenter<DubboRequest, Result> serverInstrumenter;
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
@@ -30,14 +27,11 @@ class DubboSingletons {
         DubboTelemetry.builder(openTelemetry)
             .addAttributesExtractor(
                 ServicePeerAttributesExtractor.create(
-                    new DubboClientNetworkAttributesGetter(openTelemetry), openTelemetry))
+                    new DubboClientNetworkAttributesGetter(), openTelemetry))
             .build();
     clientFilter = telemetry.newClientFilter();
     serverFilter = telemetry.newServerFilter();
-    serverInstrumenter =
-        emitPreviewRpcSemconv(openTelemetry)
-            ? DubboInternalHelper.getServerInstrumenter(telemetry)
-            : null;
+    serverInstrumenter = DubboInternalHelper.getServerInstrumenter(telemetry);
   }
 
   static Filter clientFilter() {
@@ -48,7 +42,6 @@ class DubboSingletons {
     return serverFilter;
   }
 
-  @Nullable
   static Instrumenter<DubboRequest, Result> serverInstrumenter() {
     return serverInstrumenter;
   }

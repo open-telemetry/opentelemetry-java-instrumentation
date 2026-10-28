@@ -5,13 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server;
 
-import static java.util.Collections.emptyList;
-
 import akka.http.javadsl.model.HttpResponse;
 import akka.http.scaladsl.model.ErrorInfo;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
@@ -26,7 +23,7 @@ public final class AkkaHttpParsingErrorSingletons {
       JavaagentHttpServerInstrumenters.create(
           AkkaHttpUtil.instrumentationName(),
           new AkkaHttpParsingErrorAttributesGetter(),
-          new NoopTextMapGetter());
+          (carrier, key) -> null);
 
   public static void markParsingError(ErrorInfo info) {
     PARSING_ERROR.set(info, Boolean.TRUE);
@@ -66,20 +63,6 @@ public final class AkkaHttpParsingErrorSingletons {
       }
       instrumenter.end(context, info, httpResponse, error);
       return httpResponse;
-    }
-  }
-
-  private static class NoopTextMapGetter implements TextMapGetter<ErrorInfo> {
-
-    @Override
-    public Iterable<String> keys(ErrorInfo carrier) {
-      return emptyList();
-    }
-
-    @Nullable
-    @Override
-    public String get(@Nullable ErrorInfo carrier, String key) {
-      return null;
     }
   }
 

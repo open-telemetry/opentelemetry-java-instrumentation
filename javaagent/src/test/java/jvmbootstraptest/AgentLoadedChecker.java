@@ -5,21 +5,30 @@
 
 package jvmbootstraptest;
 
-import java.net.URL;
-import java.net.URLClassLoader;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.File;
+import java.lang.instrument.Instrumentation;
 
 public class AgentLoadedChecker {
 
-  public static void main(String[] args) throws ClassNotFoundException {
-    // Empty class loader that delegates to bootstrap
-    URLClassLoader emptyClassLoader = new URLClassLoader(new URL[] {}, null);
+  public static void main(String[] args) throws Exception {
     Class<?> agentClass =
-        emptyClassLoader.loadClass("io.opentelemetry.javaagent.bootstrap.AgentInitializer");
+        Class.forName("io.opentelemetry.javaagent.bootstrap.AgentInitializer", false, null);
 
-    if (agentClass.getClassLoader() != null) {
-      throw new IllegalStateException(
-          "Agent loaded into class loader other than bootstrap: " + agentClass.getClassLoader());
-    }
+    assertThat(agentClass.getClassLoader()).isNull();
+    assertThat(agentClass.getMethod("isAgentStarted", boolean.class).invoke(null, true))
+        .isEqualTo(true);
+    assertThat(
+            Class.forName("io.opentelemetry.javaagent.bootstrap.InstrumentationHolder", false, null)
+                .getMethod("getInstrumentation")
+                .invoke(null))
+        .isInstanceOf(Instrumentation.class);
+    assertThat(
+            Class.forName("io.opentelemetry.javaagent.bootstrap.JavaagentFileHolder", false, null)
+                .getMethod("getJavaagentFile")
+                .invoke(null))
+        .isEqualTo(new File(args[0]));
   }
 
   private AgentLoadedChecker() {}
