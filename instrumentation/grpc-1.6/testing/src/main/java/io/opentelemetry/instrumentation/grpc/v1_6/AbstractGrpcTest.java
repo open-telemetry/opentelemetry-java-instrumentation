@@ -88,6 +88,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@SuppressWarnings("deprecation") // message event attributes
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractGrpcTest {
   private static final double[] GRPC_DURATION_BUCKETS = {

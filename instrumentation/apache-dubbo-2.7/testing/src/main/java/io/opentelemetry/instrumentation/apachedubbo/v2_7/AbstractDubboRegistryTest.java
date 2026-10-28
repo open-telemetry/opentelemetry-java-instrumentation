@@ -87,6 +87,7 @@ public abstract class AbstractDubboRegistryTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // ReferenceConfig.setInjvm()
   void testRegistryModeServerAddress() throws Exception {
     int port = PortUtils.findOpenPort();
     String zkAddr = zkAddress();
@@ -164,11 +165,7 @@ public abstract class AbstractDubboRegistryTest {
                                 equalTo(
                                     RPC_METHOD,
                                     "org.apache.dubbo.rpc.service.GenericService/$invoke"),
-                                satisfies(
-                                    SERVER_ADDRESS,
-                                    val -> {
-                                      val.isEqualTo(expectedServerAddress);
-                                    }),
+                                equalTo(SERVER_ADDRESS, expectedServerAddress),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
                                     val ->

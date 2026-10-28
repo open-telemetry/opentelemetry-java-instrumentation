@@ -45,7 +45,10 @@ public abstract class AbstractDubboAsyncTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  @SuppressWarnings("InterruptedExceptionSwallowed") // JUnit handles test exceptions.
+  @SuppressWarnings({
+    "InterruptedExceptionSwallowed", // JUnit handles test exceptions.
+    "deprecation" // Dubbo 2.7 configuration API
+  })
   void delayedProviderCompletion(boolean fail) throws Exception {
     int port = PortUtils.findOpenPort();
     DelayedServiceImpl provider = new DelayedServiceImpl();

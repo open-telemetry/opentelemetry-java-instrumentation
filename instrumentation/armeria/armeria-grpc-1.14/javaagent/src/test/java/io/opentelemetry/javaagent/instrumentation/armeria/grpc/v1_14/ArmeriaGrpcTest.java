@@ -57,6 +57,7 @@ class ArmeriaGrpcTest {
         }
       };
 
+  @SuppressWarnings("deprecation") // message event attributes
   @Test
   void grpcInstrumentation() {
     URI uri = URI.create("http://user@localhost:" + server.httpPort());

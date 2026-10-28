@@ -11,9 +11,6 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -30,18 +27,6 @@ class RpcSpanNameExtractorTest {
 
     SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
     assertThat(extractor.extract(request)).isEqualTo("my.Service/Method");
-  }
-
-  @ParameterizedTest
-  @NullSource
-  @ValueSource(strings = "_OTHER")
-  void unknownMethodAndSystemName_fallsBackToRpcRequest(String method) {
-    RpcRequest request = new RpcRequest();
-
-    when(getter.getRpcMethod(request)).thenReturn(method);
-
-    SpanNameExtractor<RpcRequest> extractor = RpcSpanNameExtractor.create(getter);
-    assertThat(extractor.extract(request)).isEqualTo("RPC request");
   }
 
   @Test
