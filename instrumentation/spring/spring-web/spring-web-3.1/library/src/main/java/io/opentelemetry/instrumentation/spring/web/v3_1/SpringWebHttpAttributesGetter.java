@@ -28,21 +28,37 @@ class SpringWebHttpAttributesGetter
 
     MethodHandle getStatusCode = null;
     MethodHandle statusCodeValue = null;
-    // Spring 6 changed the return type from HttpStatus to HttpStatusCode.
-    for (String typeName :
-        new String[] {
-          "org.springframework.http.HttpStatusCode", "org.springframework.http.HttpStatus"
-        }) {
+    Class<?> httpStatusCodeClass = null;
+
+    try {
+      httpStatusCodeClass =
+          Class.forName(
+              "org.springframework.http.HttpStatusCode",
+              false,
+              ClientHttpResponse.class.getClassLoader());
+    } catch (ClassNotFoundException ignored) {
       try {
-        Class<?> statusType =
-            Class.forName(typeName, false, ClientHttpResponse.class.getClassLoader());
+        httpStatusCodeClass =
+            Class.forName(
+                "org.springframework.http.HttpStatus",
+                false,
+                ClientHttpResponse.class.getClassLoader());
+      } catch (ClassNotFoundException ignore) {
+        // ignored
+      }
+    }
+
+    if (httpStatusCodeClass != null) {
+      try {
         getStatusCode =
             lookup.findVirtual(
-                ClientHttpResponse.class, "getStatusCode", MethodType.methodType(statusType));
-        statusCodeValue = lookup.findVirtual(statusType, "value", MethodType.methodType(int.class));
-        break;
-      } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException ignored) {
-        // Try the other signature.
+                ClientHttpResponse.class,
+                "getStatusCode",
+                MethodType.methodType(httpStatusCodeClass));
+        statusCodeValue =
+            lookup.findVirtual(httpStatusCodeClass, "value", MethodType.methodType(int.class));
+      } catch (NoSuchMethodException | IllegalAccessException ignored) {
+        // ignored
       }
     }
 

@@ -57,16 +57,18 @@ public abstract class RedissonRequest {
     try {
       Class<?> promiseClass =
           Class.forName("org.redisson.misc.RPromise", false, commandClass.getClassLoader());
+      // try versions older than 3.16.8
       return lookup.findVirtual(commandClass, "getPromise", MethodType.methodType(promiseClass));
     } catch (NoSuchMethodException | ClassNotFoundException ignored) {
-      // In 3.16.8 the return type changed from RPromise to CompletableFuture.
+      // in 3.16.8 CommandsData#getPromise() and CommandData#getPromise() return type was changed in
+      // a backwards-incompatible way from RPromise to CompletableFuture
+      try {
+        return lookup.findVirtual(
+            commandClass, "getPromise", MethodType.methodType(CompletableFuture.class));
+      } catch (NoSuchMethodException | IllegalAccessException ignore) {
+        return null;
+      }
     } catch (IllegalAccessException ignored) {
-      return null;
-    }
-    try {
-      return lookup.findVirtual(
-          commandClass, "getPromise", MethodType.methodType(CompletableFuture.class));
-    } catch (NoSuchMethodException | IllegalAccessException ignored) {
       return null;
     }
   }

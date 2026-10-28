@@ -30,33 +30,41 @@ public final class MessageAttributesAccessor {
   @Nullable
   private static MethodHandle findGetAttributes() {
     MethodHandles.Lookup lookup = MethodHandles.lookup();
-    // The return type changed to ConcurrentMap in 2.1.
-    for (Class<?> returnType : new Class<?>[] {Map.class, ConcurrentMap.class}) {
+    try {
+      return lookup.findVirtual(Message.class, "getAttributes", methodType(Map.class));
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
+      // changed the return type to ConcurrentMap in version 2.1
       try {
-        return lookup.findVirtual(Message.class, "getAttributes", methodType(returnType));
-      } catch (NoSuchMethodException | IllegalAccessException ignored) {
-        // Try the other signature.
+        return lookup.findVirtual(Message.class, "getAttributes", methodType(ConcurrentMap.class));
+      } catch (NoSuchMethodException | IllegalAccessException ignore) {
+        return null;
       }
     }
-    return null;
   }
 
   @Nullable
   private static MethodHandle findSetValue() {
-    // The generic bound changed from Parameter to NamedValue in 2.1.
-    for (String typeName :
-        new String[] {"org.restlet.util.NamedValue", "org.restlet.data.Parameter"}) {
+    Class<?> setValueReturnType;
+    try {
+      // changed the generic bound to NamedValue in version 2.1; earlier than that it's Parameter
+      setValueReturnType =
+          Class.forName("org.restlet.util.NamedValue", false, Series.class.getClassLoader());
+    } catch (ClassNotFoundException ignored) {
       try {
-        Class<?> returnType = Class.forName(typeName, false, Series.class.getClassLoader());
-        return MethodHandles.lookup()
-            .findVirtual(Series.class, "set", methodType(returnType, String.class, String.class));
-      } catch (ClassNotFoundException | NoSuchMethodException ignored) {
-        // Try the other signature.
-      } catch (IllegalAccessException ignored) {
+        setValueReturnType =
+            Class.forName("org.restlet.data.Parameter", false, Series.class.getClassLoader());
+      } catch (ClassNotFoundException ignore) {
         return null;
       }
     }
-    return null;
+
+    try {
+      return MethodHandles.lookup()
+          .findVirtual(
+              Series.class, "set", methodType(setValueReturnType, String.class, String.class));
+    } catch (NoSuchMethodException | IllegalAccessException ignored) {
+      return null;
+    }
   }
 
   @Nullable
