@@ -111,8 +111,6 @@ when a method handle is needed. Derive follow-on accessors from `method.getRetur
 loading that type again by name. If a `Method` is already available, prefer `unreflect` over
 reconstructing its signature to look up the same method again.
 
-Parameter types supplied to `getMethod` must still have the correct class-loader identities.
-
 ## Separate access from invocation
 
 First determine how the code may access the member. Then choose how to invoke it. Use a
