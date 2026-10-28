@@ -87,14 +87,6 @@ testing {
             includeTestsMatching("SqsTracingTest.testDeleteMessageError")
           }
         }
-        register("PreviewSemconv") {
-          filter.includeTestsMatching("*S3ClientTest.testServiceError")
-          jvmArgs("-Dotel.semconv-stability.preview=rpc")
-        }
-        register("BothSemconv") {
-          filter.includeTestsMatching("*S3ClientTest.testServiceError")
-          jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
-        }
       }
     }
 

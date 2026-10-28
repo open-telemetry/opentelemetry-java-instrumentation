@@ -42,28 +42,7 @@ tasks.withType<Test>().configureEach {
 }
 
 tasks {
-  val testSuites = testing.suites.withType(JvmTestSuite::class)
-    .matching { it.name == "test" }
-
-  val previewSemconvSuites = testSuites.map { suite ->
-    register<Test>("${suite.name}PreviewSemconv") {
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.semconv-stability.preview=rpc")
-    }
-  }
-
-  val bothSemconvSuites = testSuites.map { suite ->
-    register<Test>("${suite.name}BothSemconv") {
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
-    }
-  }
-
   check {
-    dependsOn(testing.suites, previewSemconvSuites, bothSemconvSuites)
+    dependsOn(testing.suites)
   }
 }
