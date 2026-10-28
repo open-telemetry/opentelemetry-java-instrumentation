@@ -4,6 +4,7 @@
 
 ### ⚠️ Breaking changes
 
+- Remove `SemconvRpcStabilityUtil` from the alpha `opentelemetry-testing-common` artifact.
 - RPC telemetry now uses only the conventions with schema version 1.44.0: `rpc.system.name`,
   fully qualified `rpc.method`, `rpc.status_code`, and `error.type`, with updated span names.
   RPC duration metrics use `rpc.client.call.duration` and `rpc.server.call.duration` in seconds.

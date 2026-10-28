@@ -276,7 +276,7 @@ class SemconvStabilityTest {
   @ParameterizedTest
   @MethodSource("structuredRpcSelections")
   void structuredRpcSelectionFromDeclarativeConfig(
-      int version, boolean experimental, boolean dualEmit, SemconvMode expected) {
+      int version, boolean experimental, boolean dualEmit) {
     String yaml =
         "file_format: 1.1\n"
             + "instrumentation/development:\n"
@@ -302,16 +302,13 @@ class SemconvStabilityTest {
         SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model));
 
     OpenTelemetry openTelemetry = openTelemetry(configProvider);
-    assertThat(emitOldRpcSemconv(openTelemetry))
-        .isEqualTo(expected.version() == 0 || expected.dualEmit());
-    assertThat(emitPreviewRpcSemconv(openTelemetry)).isEqualTo(expected.version() >= 1);
+    assertThat(emitOldRpcSemconv(openTelemetry)).isFalse();
+    assertThat(emitPreviewRpcSemconv(openTelemetry)).isTrue();
   }
 
   private static Stream<Arguments> structuredRpcSelections() {
     return Stream.of(
-        Arguments.of(0, false, true, SemconvMode.V1_EXPERIMENTAL),
-        Arguments.of(1, true, false, SemconvMode.V1_EXPERIMENTAL),
-        Arguments.of(1, true, true, SemconvMode.V1_EXPERIMENTAL));
+        Arguments.of(0, false, true), Arguments.of(1, true, false), Arguments.of(1, true, true));
   }
 
   private static Stream<Arguments> previewSelections() {
