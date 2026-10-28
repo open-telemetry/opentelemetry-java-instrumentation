@@ -122,6 +122,7 @@ tasks {
   // The no-dispatcher-hop regression is a pre-existing Ktor 3.0.0 leak; test the supported
   // dispatcher-switch path on 3.0.0 and both paths on fixed Ktor releases.
   val dispatcherSwitchTestName = "$contextPropagationTestName.eachRequestContinuesItsOwnTraceparentAfterDispatcherSwitch"
+  val directDispatcherSwitchTestName = "$contextPropagationTestName.eachRequestContinuesItsOwnTraceparentAfterDirectDispatcherSwitch"
   val testKtor300 = register<Test>("testKtor300") {
     systemProperty("collectMetadata", false)
     description = "Runs the Ktor context propagation compatibility test against Ktor $ktorVersion."
@@ -132,6 +133,7 @@ tasks {
     classpath = sourceSets.main.get().output + sourceSets.test.get().output + configurations.testRuntimeClasspath.get()
     filter {
       includeTestsMatching(dispatcherSwitchTestName)
+      includeTestsMatching(directDispatcherSwitchTestName)
     }
   }
 
@@ -144,6 +146,7 @@ tasks {
     classpath = files(ktor300FatJarTestFixture.flatMap { it.archiveFile }) + sourceSets.main.get().output + sourceSets.test.get().output + configurations.testRuntimeClasspath.get()
     filter {
       includeTestsMatching(dispatcherSwitchTestName)
+      includeTestsMatching(directDispatcherSwitchTestName)
     }
   }
 

@@ -46,7 +46,14 @@ class KtorServerContextPropagationTest {
   @Test
   fun eachRequestContinuesItsOwnTraceparentAfterDispatcherSwitch() = verifyEachRequestContinuesItsOwnTraceparent(dispatcherSwitch = true)
 
-  private fun verifyEachRequestContinuesItsOwnTraceparent(dispatcherSwitch: Boolean) {
+  @Test
+  fun eachRequestContinuesItsOwnTraceparentAfterDirectDispatcherSwitch() = verifyEachRequestContinuesItsOwnTraceparent(dispatcherSwitch = true, installCallId = false, initialDelay = false)
+
+  private fun verifyEachRequestContinuesItsOwnTraceparent(
+    dispatcherSwitch: Boolean,
+    installCallId: Boolean = true,
+    initialDelay: Boolean = true,
+  ) {
     System.getProperty("otel.test.ktor.regularJarVersion")?.let { version ->
       assertThat(Application::class.java.protectionDomain.codeSource.location.path)
         .contains("ktor-server-core-jvm-$version.jar")
@@ -80,13 +87,17 @@ class KtorServerContextPropagationTest {
       callGroupSize = 1 // Sequential requests share one call thread.
     }) {
       install(KtorServerTelemetry) { openTelemetry(openTelemetry) }
-      install(CallId) {
-        header(HttpHeaders.XCorrelationId)
-        generate { UUID.randomUUID().toString() }
+      if (installCallId) {
+        install(CallId) {
+          header(HttpHeaders.XCorrelationId)
+          generate { UUID.randomUUID().toString() }
+        }
       }
       routing {
         get("/") {
-          delay(5)
+          if (initialDelay) {
+            delay(5)
+          }
           if (dispatcherSwitch) {
             withContext(Dispatchers.IO) { delay(5) }
           }
