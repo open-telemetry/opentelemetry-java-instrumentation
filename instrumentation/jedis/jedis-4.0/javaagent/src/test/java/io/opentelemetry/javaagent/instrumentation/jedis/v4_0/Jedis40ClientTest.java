@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -186,8 +187,9 @@ class Jedis40ClientTest {
     client.set("cold-pool-success", "value");
 
     boolean jedis51OrLater = Boolean.getBoolean("testJedis51OrLater");
+    boolean latestJedis = testLatestDeps();
     int initializationCommands = jedis51OrLater ? 3 : 1;
-    int expectedTraces = initializationCommands + 2;
+    int expectedTraces = initializationCommands + 2 + (latestJedis ? 1 : 0);
     testing.waitForTraces(expectedTraces);
 
     assertThat(testing.spans())
@@ -210,6 +212,12 @@ class Jedis40ClientTest {
             })
         .singleElement()
         .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
+    if (latestJedis) {
+      assertThat(testing.spans())
+          .filteredOn(span -> "HELLO".equals(span.getAttributes().get(DB_OPERATION_NAME)))
+          .singleElement()
+          .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
+    }
     assertThat(testing.spans())
         .filteredOn(span -> "GET".equals(span.getAttributes().get(DB_OPERATION_NAME)))
         .singleElement()
@@ -245,6 +253,14 @@ class Jedis40ClientTest {
                           point ->
                               assertThat(point.getAttributes().get(ERROR_TYPE))
                                   .isEqualTo("WRONGTYPE"));
+                  if (latestJedis) {
+                    assertThat(metric.getHistogramData().getPoints())
+                        .filteredOn(
+                            point -> "HELLO".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                        .singleElement()
+                        .satisfies(
+                            point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
+                  }
                   assertThat(metric.getHistogramData().getPoints())
                       .filteredOn(
                           point -> "SET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
@@ -290,8 +306,10 @@ class Jedis40ClientTest {
 
     boolean jedis51OrLater = Boolean.getBoolean("testJedis51OrLater");
     testing.waitForTraces(jedis51OrLater ? 5 : 4);
+    String authenticationOperation = testLatestDeps() ? "HELLO" : "AUTH";
     assertThat(testing.spans())
-        .filteredOn(span -> "AUTH".equals(span.getAttributes().get(DB_OPERATION_NAME)))
+        .filteredOn(
+            span -> authenticationOperation.equals(span.getAttributes().get(DB_OPERATION_NAME)))
         .singleElement()
         .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
     assertThat(testing.spans())
@@ -311,7 +329,9 @@ class Jedis40ClientTest {
                 metric -> {
                   assertThat(metric.getHistogramData().getPoints())
                       .filteredOn(
-                          point -> "AUTH".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                          point ->
+                              authenticationOperation.equals(
+                                  point.getAttributes().get(DB_OPERATION_NAME)))
                       .singleElement()
                       .satisfies(
                           point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
@@ -333,7 +353,7 @@ class Jedis40ClientTest {
 
   @Test
   void partialInitializationReplyDrainPreservesCompletedCommand() throws Exception {
-    Assumptions.assumeTrue(Boolean.getBoolean("testJedis51OrLater"));
+    Assumptions.assumeTrue(Boolean.getBoolean("testJedis51OrLater") && !testLatestDeps());
 
     ExecutorService executor = Executors.newSingleThreadExecutor();
     try {
