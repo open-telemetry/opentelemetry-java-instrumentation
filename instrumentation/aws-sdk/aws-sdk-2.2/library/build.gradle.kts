@@ -99,14 +99,6 @@ testing {
             includeTestsMatching("Aws2SqsDefaultPropagatorTest.testDeleteMessageError")
           }
         }
-        register("PreviewSemconv") {
-          filter.includeTestsMatching("*Aws2ClientTest.testS3ServiceError")
-          jvmArgs("-Dotel.semconv-stability.preview=rpc")
-        }
-        register("BothSemconv") {
-          filter.includeTestsMatching("*Aws2ClientTest.testS3ServiceError")
-          jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
-        }
       }
     }
 

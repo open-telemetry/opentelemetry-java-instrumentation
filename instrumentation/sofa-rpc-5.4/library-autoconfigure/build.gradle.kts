@@ -1,5 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-
 plugins {
   id("otel.library-instrumentation")
 }
@@ -23,22 +21,8 @@ configurations.testRuntimeClasspath {
   }
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-          // required on jdk17
-          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-        }
-        register("PreviewSemconv") {
-          jvmArgs("-Dotel.semconv-stability.preview=rpc")
-        }
-        register("BothSemconv") {
-          jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
-        }
-      }
-    }
-  }
+tasks.test {
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
 }

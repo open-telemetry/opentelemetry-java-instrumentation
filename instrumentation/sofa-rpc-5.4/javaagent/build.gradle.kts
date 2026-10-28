@@ -40,17 +40,7 @@ val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { su
     testClassesDirs = suite.sources.output.classesDirs
     classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.preview=rpc,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-  }
-}
-
-val bothSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-  tasks.register<Test>("${suite.name}BothSemconv") {
-    testClassesDirs = suite.sources.output.classesDirs
-    classpath = suite.sources.runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup,service.peer")
+    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
     systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 }
@@ -67,7 +57,7 @@ val exceptionSignalLogsSuites = testing.suites.withType(JvmTestSuite::class).map
 
 tasks {
   check {
-    dependsOn(testing.suites, previewSemconvSuites, bothSemconvSuites, exceptionSignalLogsSuites)
+    dependsOn(testing.suites, previewSemconvSuites, exceptionSignalLogsSuites)
   }
 }
 

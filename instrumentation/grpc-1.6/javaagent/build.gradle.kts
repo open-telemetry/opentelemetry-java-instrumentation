@@ -57,12 +57,6 @@ testing {
         register("Experimental") {
           telemetryConfig("otel.instrumentation.grpc.experimental-span-attributes", "true")
         }
-        register("PreviewSemconv") {
-          jvmArgs("-Dotel.semconv-stability.preview=rpc")
-        }
-        register("BothSemconv") {
-          jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
-        }
         register("ExceptionSignalLogs") {
           telemetryConfig("otel.semconv.exception.signal.preview", "logs")
         }
