@@ -137,7 +137,7 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
     if (requestContext.connectionInitialization) {
       return attachForConnectionInitializationCommand();
     }
-    // Keep a batch's own replies in its context, but isolate reads on independent connections.
+    // Keep a batch's own replies in its context only until its reply drain completes.
     if (!requestContext.captureServerErrors || requestContext.replyOwner == connection) {
       return null;
     }
@@ -145,6 +145,18 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
     JedisRequestContext<T> nestedContext = new JedisRequestContext<>();
     nestedContext.previousContext = currentRequestContext.set(nestedContext);
     return nestedContext;
+  }
+
+  public static void completePipelineReplies(Object connection) {
+    JedisRequestContext<?> requestContext = currentRequestContext.get();
+    if (requestContext != null
+        && requestContext.captureServerErrors
+        && requestContext.transactionOwner == null
+        && requestContext.replyOwner == connection) {
+      // Pipelines drain all replies with getMany before invoking response builders. Transactions
+      // still need to read the EXEC reply after getMany drains their queued-command acknowledgments.
+      requestContext.replyOwner = null;
+    }
   }
 
   public static void completeConnectionInitializationCommands(

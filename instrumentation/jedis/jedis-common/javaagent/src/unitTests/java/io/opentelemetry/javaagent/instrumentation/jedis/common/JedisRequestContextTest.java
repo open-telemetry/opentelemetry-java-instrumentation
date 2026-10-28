@@ -134,12 +134,37 @@ class JedisRequestContextTest {
       Throwable handledFailure = new IllegalStateException("handled failure");
       JedisRequestContext.captureServerError(handledFailure);
       assertThat(independentReply.detachAndEnd(handledFailure)).isSameAs(handledFailure);
+      JedisRequestContext.completePipelineReplies(new Object());
       assertThat(JedisRequestContext.attachForConnectionReply(connection)).isNull();
       Throwable batchFailure = new IllegalStateException("batch failure");
       JedisRequestContext.captureServerError(batchFailure);
+      JedisRequestContext.completePipelineReplies(connection);
+      JedisRequestContext<Object> callbackReply =
+          requireNonNull(JedisRequestContext.attachForConnectionReply(connection));
+      JedisRequestContext.captureServerError(handledFailure);
+      callbackReply.detachAndEnd(handledFailure);
       assertThat(batchContext.detachAndEnd(null)).isSameAs(batchFailure);
       assertThat(request.isServerError(handledFailure)).isTrue();
       assertThat(request.isServerError(batchFailure)).isTrue();
+    } finally {
+      batchContext.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  @Test
+  void transactionRetainsReplyOwnershipAfterQueuedAcknowledgments() {
+    Object connection = new Object();
+    InitializationRequest request = new InitializationRequest();
+    JedisRequestContext<InitializationRequest> batchContext =
+        JedisRequestContext.startBatch(instrumenter, request, new Object(), connection);
+    try {
+      JedisRequestContext.completePipelineReplies(connection);
+      assertThat(JedisRequestContext.attachForConnectionReply(connection)).isNull();
+      Throwable serverFailure = new IllegalStateException("EXEC server failure");
+      JedisRequestContext.captureServerError(serverFailure);
+      assertThat(batchContext.detachAndEnd(null)).isSameAs(serverFailure);
+      assertThat(request.isServerError(serverFailure)).isTrue();
     } finally {
       batchContext.detachAndEnd(null);
     }

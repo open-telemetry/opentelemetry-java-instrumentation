@@ -906,9 +906,18 @@ class Jedis40ClientTest {
   }
 
   @ParameterizedTest
-  @CsvSource({"false, false", "false, true", "true, false", "true, true"})
+  @CsvSource({
+    "false, false, false",
+    "false, true, false",
+    "true, false, false",
+    "true, true, false",
+    "false, false, true",
+    "false, true, true",
+    "true, false, true",
+    "true, true, true"
+  })
   void caughtRawConnectionServerErrorDoesNotFailOuterPipeline(
-      boolean bulkReply, boolean outerFailure) {
+      boolean bulkReply, boolean outerFailure, boolean sameConnection) {
     jedis.lpush("nested-wrong-type", "value");
     Jedis nestedClient = new Jedis(host, port);
     cleanup.deferCleanup(nestedClient::disconnect);
@@ -924,7 +933,8 @@ class Jedis40ClientTest {
             new Builder<String>() {
               @Override
               public String build(Object response) {
-                Connection connection = nestedClient.getConnection();
+                Connection connection =
+                    sameConnection ? jedis.getConnection() : nestedClient.getConnection();
                 if (bulkReply) {
                   connection.sendCommand(Protocol.Command.GET, "nested-wrong-type".getBytes(UTF_8));
                   nestedErrors.add(catchThrowable(connection::getBulkReply));
@@ -1000,11 +1010,26 @@ class Jedis40ClientTest {
     }
     assertThatThrownBy(response::get).hasMessageStartingWith("WRONGTYPE");
     assertErrorType("WRONGTYPE");
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-4.0",
+        "db.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .singleElement()
+                        .satisfies(
+                            point -> {
+                              assertThat(point.getCount()).isEqualTo(1);
+                              assertThat(point.getAttributes().get(ERROR_TYPE))
+                                  .isEqualTo("WRONGTYPE");
+                            })));
   }
 
   @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void escapingRawManyConnectionServerErrorFailsOuterPipeline(boolean throwError) {
+  @CsvSource({"false, false", "false, true", "true, false", "true, true"})
+  void escapingRawManyConnectionServerErrorFailsOuterPipeline(
+      boolean throwError, boolean sameConnection) {
     jedis.lpush("nested-wrong-type", "value");
     Jedis nestedClient = new Jedis(host, port);
     cleanup.deferCleanup(nestedClient::disconnect);
@@ -1019,7 +1044,8 @@ class Jedis40ClientTest {
             new Builder<Object>() {
               @Override
               public Object build(Object response) {
-                Connection connection = nestedClient.getConnection();
+                Connection connection =
+                    sameConnection ? jedis.getConnection() : nestedClient.getConnection();
                 connection.sendCommand(Protocol.Command.GET, "nested-wrong-type".getBytes(UTF_8));
                 JedisDataException error = (JedisDataException) connection.getMany(1).get(0);
                 if (throwError) {
