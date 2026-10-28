@@ -154,7 +154,8 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
         && requestContext.transactionOwner == null
         && requestContext.replyOwner == connection) {
       // Pipelines drain all replies with getMany before invoking response builders. Transactions
-      // still need to read the EXEC reply after getMany drains their queued-command acknowledgments.
+      // still need to read the EXEC reply after getMany drains their queued-command
+      // acknowledgments.
       requestContext.replyOwner = null;
     }
   }
