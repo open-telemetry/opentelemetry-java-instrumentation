@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
@@ -1804,9 +1803,6 @@ public abstract class AbstractGrpcTest {
                           equalTo(
                               stableClientAttributeKey,
                               emitPreviewRpcSemconv() ? singletonList(clientHeaderValue) : null),
-                          equalTo(
-                              stringArrayKey("rpc.request.metadata." + CLIENT_REQUEST_HEADER_KEY),
-                              null),
                           equalTo(oldExcludedAttributeKey, null),
                           equalTo(stableExcludedAttributeKey, null));
                     },
@@ -1821,9 +1817,6 @@ public abstract class AbstractGrpcTest {
                           equalTo(
                               stableServerAttributeKey,
                               emitPreviewRpcSemconv() ? singletonList(serverHeaderValue) : null),
-                          equalTo(
-                              stringArrayKey("rpc.request.metadata." + SERVER_REQUEST_HEADER_KEY),
-                              null),
                           equalTo(oldExcludedAttributeKey, null),
                           equalTo(stableExcludedAttributeKey, null));
                     }));

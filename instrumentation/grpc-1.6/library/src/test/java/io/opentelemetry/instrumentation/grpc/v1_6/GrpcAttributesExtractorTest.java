@@ -63,7 +63,6 @@ class GrpcAttributesExtractorTest {
         .isEqualTo(emitOldRpcSemconv() ? asList("included-value", "second-value") : null);
     assertThat(result.get(stableHeaderAttributeKey("included-key")))
         .isEqualTo(emitPreviewRpcSemconv() ? asList("included-value", "second-value") : null);
-    assertThat(result.get(stringArrayKey("rpc.request.metadata.included-key"))).isNull();
     assertThat(result.asMap())
         .hasSize((emitOldRpcSemconv() ? 1 : 0) + (emitPreviewRpcSemconv() ? 1 : 0));
     assertExcludedHeader(result, "included-excluded");
