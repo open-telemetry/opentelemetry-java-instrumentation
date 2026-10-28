@@ -25,6 +25,7 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
   @Nullable private Throwable firstServerErrorThrowable;
   @Nullable private JedisRequestContext<?> previousContext;
   @Nullable private Object transactionOwner;
+  @Nullable private List<JedisRequestContext<T>> initializationCommands;
   private boolean captureServerErrors;
   private boolean connectionInitialization;
 
@@ -104,22 +105,45 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
     JedisRequestContext<T> initializationContext = current();
     if (initializationContext == null
         || !initializationContext.connectionInitialization
-        || initializationContext.instrumenter == null
-        || initializationContext.context == null
-        || initializationContext.request == null) {
+        || initializationContext.initializationCommands == null
+        || initializationContext.initializationCommands.isEmpty()) {
       return null;
     }
 
-    JedisRequestContext<T> commandContext = new JedisRequestContext<>();
-    commandContext.previousContext = currentRequestContext.set(commandContext);
-    commandContext.instrumenter = initializationContext.instrumenter;
-    commandContext.context = initializationContext.context;
-    commandContext.request = initializationContext.request;
-    commandContext.associateServerErrorContext(commandContext.request);
-    initializationContext.instrumenter = null;
-    initializationContext.context = null;
-    initializationContext.request = null;
+    JedisRequestContext<T> commandContext = initializationContext.pollInitializationCommand();
+    if (commandContext == null) {
+      return null;
+    }
+    currentRequestContext.set(commandContext);
     return commandContext;
+  }
+
+  public static void completeConnectionInitializationCommands(
+      @Nullable Object responses, @Nullable Throwable throwable) {
+    JedisRequestContext<?> initializationContext = current();
+    if (initializationContext == null || !initializationContext.connectionInitialization) {
+      return;
+    }
+
+    if (throwable != null) {
+      initializationContext.completePendingInitializationCommands(throwable);
+      return;
+    }
+    if (!(responses instanceof List<?>)) {
+      return;
+    }
+
+    for (Object response : (List<?>) responses) {
+      JedisRequestContext<?> commandContext = initializationContext.pollInitializationCommand();
+      if (commandContext == null) {
+        break;
+      }
+      Throwable responseThrowable = response instanceof Throwable ? (Throwable) response : null;
+      if (responseThrowable != null && initializationContext.isServerError(responseThrowable)) {
+        commandContext.addServerError(responseThrowable);
+      }
+      commandContext.detachAndEnd(responseThrowable);
+    }
   }
 
   @Nullable
@@ -138,6 +162,9 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
 
   @Nullable
   public Throwable detachAndEnd(@Nullable Throwable methodThrowable, @Nullable Object result) {
+    if (connectionInitialization) {
+      completePendingInitializationCommands(methodThrowable);
+    }
     if (scope != null) {
       scope.close();
     }
@@ -204,6 +231,10 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
       T request,
       @Nullable Throwable throwable) {
     JedisRequestContext<T> requestContext = current();
+    if (requestContext != null && requestContext.connectionInitialization) {
+      requestContext.addInitializationCommand(instrumenter, context, request);
+      return;
+    }
     if (requestContext != null) {
       requestContext.associateServerErrorContext(request);
     }
@@ -214,6 +245,35 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
       requestContext.instrumenter = instrumenter;
       requestContext.context = context;
       requestContext.request = request;
+    }
+  }
+
+  private void addInitializationCommand(
+      Instrumenter<T, Void> instrumenter, Context context, T request) {
+    JedisRequestContext<T> commandContext = new JedisRequestContext<>();
+    commandContext.previousContext = this;
+    commandContext.instrumenter = instrumenter;
+    commandContext.context = context;
+    commandContext.request = request;
+    commandContext.associateServerErrorContext(request);
+    if (initializationCommands == null) {
+      initializationCommands = new ArrayList<>();
+    }
+    initializationCommands.add(commandContext);
+  }
+
+  @Nullable
+  private JedisRequestContext<T> pollInitializationCommand() {
+    if (initializationCommands == null || initializationCommands.isEmpty()) {
+      return null;
+    }
+    return initializationCommands.remove(0);
+  }
+
+  private void completePendingInitializationCommands(@Nullable Throwable throwable) {
+    JedisRequestContext<?> commandContext;
+    while ((commandContext = pollInitializationCommand()) != null) {
+      commandContext.detachAndEnd(throwable);
     }
   }
 

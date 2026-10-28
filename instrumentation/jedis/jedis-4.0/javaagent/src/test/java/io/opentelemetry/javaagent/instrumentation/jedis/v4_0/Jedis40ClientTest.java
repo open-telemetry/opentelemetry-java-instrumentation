@@ -214,15 +214,15 @@ class Jedis40ClientTest {
                   assertThat(metric.getHistogramData().getPoints())
                       .filteredOn(
                           point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                      .isNotEmpty()
-                      .hasSize(initializationCommands)
                       .filteredOn(point -> "ERR".equals(point.getAttributes().get(ERROR_TYPE)))
-                      .hasSize(jedis51OrLater ? 2 : 0);
+                      .hasSize(jedis51OrLater ? 1 : 0)
+                      .allSatisfy(point -> assertThat(point.getCount()).isEqualTo(2));
                   assertThat(metric.getHistogramData().getPoints())
                       .filteredOn(
                           point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
                       .filteredOn(point -> point.getAttributes().get(ERROR_TYPE) == null)
-                      .hasSize(1);
+                      .singleElement()
+                      .satisfies(point -> assertThat(point.getCount()).isEqualTo(1));
                   assertThat(metric.getHistogramData().getPoints())
                       .filteredOn(
                           point -> "GET".equals(point.getAttributes().get(DB_OPERATION_NAME)))

@@ -154,6 +154,39 @@ class JedisRequestContextTest {
   }
 
   @Test
+  void queuedInitializationResponsesCompleteTheirCommands() {
+    JedisRequestContext<Object> outerContext = JedisRequestContext.attach();
+    try {
+      JedisRequestContext<Object> initializationContext =
+          requireNonNull(JedisRequestContext.attachForConnectionInitialization());
+      InitializationRequest successfulRequest = new InitializationRequest();
+      InitializationRequest firstFailedRequest = new InitializationRequest();
+      InitializationRequest secondFailedRequest = new InitializationRequest();
+      JedisRequestContext.endIfNotAttached(instrumenter, Context.root(), successfulRequest, null);
+      JedisRequestContext.endIfNotAttached(instrumenter, Context.root(), firstFailedRequest, null);
+      JedisRequestContext.endIfNotAttached(instrumenter, Context.root(), secondFailedRequest, null);
+
+      Throwable firstFailure = new IllegalStateException("first initialization failure");
+      Throwable secondFailure = new IllegalStateException("second initialization failure");
+      JedisRequestContext.captureServerError(firstFailure);
+      JedisRequestContext.captureServerError(secondFailure);
+      JedisRequestContext.completeConnectionInitializationCommands(
+          asList("OK", firstFailure, secondFailure), null);
+
+      assertThat(successfulRequest.isServerError(firstFailure)).isFalse();
+      assertThat(firstFailedRequest.isServerError(firstFailure)).isTrue();
+      assertThat(firstFailedRequest.isServerError(secondFailure)).isFalse();
+      assertThat(secondFailedRequest.isServerError(firstFailure)).isFalse();
+      assertThat(secondFailedRequest.isServerError(secondFailure)).isTrue();
+      assertThat(initializationContext.detachAndEnd(null)).isNull();
+      assertThat(outerContext.detachAndEnd(null)).isNull();
+    } finally {
+      outerContext.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  @Test
   void deferredNestedBatchServerErrorReturnedByEnclosingBatch() {
     JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch();
     try {

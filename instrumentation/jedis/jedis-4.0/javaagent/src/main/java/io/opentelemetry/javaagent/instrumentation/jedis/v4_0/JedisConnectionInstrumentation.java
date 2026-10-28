@@ -64,7 +64,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
     transformer.applyAdviceToMethod(
         named("getMany").and(takesArguments(1)),
-        getClass().getName() + "$InitializationResponseAdvice");
+        getClass().getName() + "$InitializationManyResponseAdvice");
 
     transformer.applyAdviceToMethod(
         named("getStatusCodeReply").and(takesArguments(0)),
@@ -158,6 +158,15 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
       if (requestContext != null) {
         requestContext.detachAndEnd(throwable);
       }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InitializationManyResponseAdvice {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Return @Nullable Object responses, @Advice.Thrown @Nullable Throwable throwable) {
+      JedisRequestContext.completeConnectionInitializationCommands(responses, throwable);
     }
   }
 
