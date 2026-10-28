@@ -152,6 +152,62 @@ class Jedis40ClientTest {
   }
 
   @Test
+  void coldPooledCommandFailureIsAttributedToApplicationCommand() {
+    jedis.lpush("cold-pool-wrong-type", "value");
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    JedisClientConfig clientConfig =
+        DefaultJedisClientConfig.builder().clientName("otel-cold-pool-test").build();
+    UnifiedJedis client =
+        new UnifiedJedis(
+            new PooledConnectionProvider(new HostAndPort(host, port), clientConfig),
+            1,
+            Duration.ZERO);
+    cleanup.deferCleanup(client);
+
+    assertThatThrownBy(() -> client.get("cold-pool-wrong-type"))
+        .hasMessageStartingWith("WRONGTYPE");
+    client.set("cold-pool-success", "value");
+
+    int initializationCommands = Boolean.getBoolean("testJedis51OrLater") ? 3 : 1;
+    int expectedTraces = initializationCommands + 2;
+    testing.waitForTraces(expectedTraces);
+
+    assertThat(testing.spans())
+        .hasSize(expectedTraces)
+        .filteredOn(
+            span -> "CLIENT".equals(span.getAttributes().get(DB_OPERATION_NAME)))
+        .hasSize(initializationCommands)
+        .allSatisfy(
+            span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
+    assertThat(testing.spans())
+        .filteredOn(span -> "GET".equals(span.getAttributes().get(DB_OPERATION_NAME)))
+        .singleElement()
+        .satisfies(
+            span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo("WRONGTYPE"));
+    assertThat(testing.spans())
+        .filteredOn(span -> "SET".equals(span.getAttributes().get(DB_OPERATION_NAME)))
+        .singleElement()
+        .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-4.0",
+        "db.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .filteredOn(
+                            point -> "GET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                        .singleElement()
+                        .satisfies(
+                            point ->
+                                assertThat(point.getAttributes().get(ERROR_TYPE))
+                                    .isEqualTo("WRONGTYPE"))));
+  }
+
+  @Test
   void dedicatedServerErrorUsesExceptionClass() {
     Throwable error =
         catchThrowable(
