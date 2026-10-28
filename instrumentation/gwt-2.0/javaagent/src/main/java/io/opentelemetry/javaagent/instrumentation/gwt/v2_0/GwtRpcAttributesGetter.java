@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.gwt.v2_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 
 class GwtRpcAttributesGetter implements RpcAttributesGetter<Method, Void> {
 
@@ -16,18 +17,20 @@ class GwtRpcAttributesGetter implements RpcAttributesGetter<Method, Void> {
   }
 
   @Override
+  @Nullable
   public String getService(Method method) {
-    return method.getDeclaringClass().getName();
+    return null;
   }
 
   @Deprecated
   @Override
+  @Nullable
   public String getMethod(Method method) {
-    return method.getName();
+    return null;
   }
 
   @Override
   public String getRpcMethod(Method method) {
-    return getService(method) + "/" + method.getName();
+    return method.getDeclaringClass().getName() + "/" + method.getName();
   }
 }

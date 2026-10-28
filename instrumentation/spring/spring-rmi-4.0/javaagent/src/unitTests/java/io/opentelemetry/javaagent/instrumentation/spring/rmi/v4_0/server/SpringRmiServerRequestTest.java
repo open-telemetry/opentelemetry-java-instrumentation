@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
 
@@ -72,10 +71,6 @@ class SpringRmiServerRequestTest {
 
   private static SpringRmiServerRequest createRequest(
       Class<?> serviceInterface, String methodName, Class<?>... parameterTypes) {
-    return new SpringRmiServerRequest(
-        ClassAndMethod.create(Object.class, methodName),
-        serviceInterface,
-        methodName,
-        parameterTypes);
+    return new SpringRmiServerRequest(serviceInterface, methodName, parameterTypes);
   }
 }

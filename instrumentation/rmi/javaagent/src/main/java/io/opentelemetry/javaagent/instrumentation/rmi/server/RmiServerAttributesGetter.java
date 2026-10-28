@@ -16,14 +16,16 @@ final class RmiServerAttributesGetter implements RpcAttributesGetter<RmiServerRe
   }
 
   @Override
+  @Nullable
   public String getService(RmiServerRequest request) {
-    return request.method().getDeclaringClass().getName();
+    return null;
   }
 
   @Deprecated
   @Override
+  @Nullable
   public String getMethod(RmiServerRequest request) {
-    return request.method().getName();
+    return null;
   }
 
   @Override

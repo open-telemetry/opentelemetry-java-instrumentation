@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.rmi.client;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 
 final class RmiClientAttributesGetter implements RpcAttributesGetter<Method, Void> {
 
@@ -16,14 +17,16 @@ final class RmiClientAttributesGetter implements RpcAttributesGetter<Method, Voi
   }
 
   @Override
+  @Nullable
   public String getService(Method method) {
-    return method.getDeclaringClass().getName();
+    return null;
   }
 
   @Deprecated
   @Override
+  @Nullable
   public String getMethod(Method method) {
-    return method.getName();
+    return null;
   }
 
   @Override

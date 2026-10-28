@@ -13,11 +13,9 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcMetricsContextCustomizers;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -25,6 +23,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.sofarpc.v5_4.internal.SofaRpcClientNetworkAttributesGetter;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,7 +81,6 @@ public final class SofaRpcTelemetryBuilder {
   }
 
   /** Returns a new {@link SofaRpcTelemetry} with the settings of this builder. */
-  @SuppressWarnings("deprecation") // RpcMetricsContextCustomizers is deprecated for removal in 3.0
   public SofaRpcTelemetry build() {
     SofaRpcAttributesGetter rpcAttributesGetter = new SofaRpcAttributesGetter();
     SpanNameExtractor<SofaRpcRequest> spanNameExtractor =
@@ -95,28 +93,24 @@ public final class SofaRpcTelemetryBuilder {
     InstrumenterBuilder<SofaRpcRequest, SofaResponse> serverInstrumenterBuilder =
         Instrumenter.<SofaRpcRequest, SofaResponse>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-            .setSchemaUrl(RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry).schemaUrl())
+            .setSchemaUrl(SchemaUrls.V1_44_0)
             .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
             .addAttributesExtractors(additionalServerExtractors)
-            .addOperationMetrics(RpcServerMetrics.get())
-            .addContextCustomizer(
-                RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
+            .addOperationMetrics(RpcServerMetrics.get());
     setRpcServerExceptionEventExtractor(serverInstrumenterBuilder);
 
     InstrumenterBuilder<SofaRpcRequest, SofaResponse> clientInstrumenterBuilder =
         Instrumenter.<SofaRpcRequest, SofaResponse>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-            .setSchemaUrl(RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry).schemaUrl())
+            .setSchemaUrl(SchemaUrls.V1_44_0)
             .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
             .addAttributesExtractors(additionalClientExtractors)
-            .addOperationMetrics(RpcClientMetrics.get())
-            .addContextCustomizer(
-                RpcMetricsContextCustomizers.dualEmitContextCustomizer(rpcAttributesGetter));
+            .addOperationMetrics(RpcClientMetrics.get());
     setRpcClientExceptionEventExtractor(clientInstrumenterBuilder);
 
     return new SofaRpcTelemetry(

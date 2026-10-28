@@ -33,7 +33,7 @@ final class SofaRpcAttributesGetter implements RpcAttributesGetter<SofaRpcReques
   @Override
   @Nullable
   public String getMethod(SofaRpcRequest request) {
-    return request.request().getMethodName();
+    return null;
   }
 
   @Override

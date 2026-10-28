@@ -34,11 +34,9 @@ final class DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest
 
   @Deprecated
   @Override
+  @Nullable
   public String getMethod(DubboRequest request) {
-    if (request.isUnknownService()) {
-      return UNKNOWN_METHOD_SPAN_NAME;
-    }
-    return request.invocation().getMethodName();
+    return null;
   }
 
   @Override
