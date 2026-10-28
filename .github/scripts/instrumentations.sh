@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-# This file is sourced by collect.sh and ci-collect.sh
+# This file is sourced by instrumentation-docs/collect.sh and metadata-ci-validate-tasks.sh.
 
 readonly INSTRUMENTATIONS=(
-  # <module path (colon-separated)> : <javaagent|library> : [ gradle-task-suffix ]
+  # <Gradle project path under :instrumentation> : <task>
   "activej-http-6.0:javaagent:test"
   "akka:akka-http-10.0:javaagent:test"
   "akka:akka-http-10.0:javaagent:testPreviewSemconv"
