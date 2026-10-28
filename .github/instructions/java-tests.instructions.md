@@ -109,23 +109,29 @@ convention not caught by CI.
   Use unordered assertions only when supported concurrency or asynchronous
   execution makes the order nondeterministic.
 
-## [Testing] Trace Clearing After Asynchronous Operations
+## [Testing] Discarding setup and cleanup telemetry
 
-- When test setup or cleanup performs an operation that can complete or export
-  spans asynchronously, call `testing.waitForTraces(expectedTraceCount)` before
-  its captured telemetry is cleared, whether by `testing.clearData()` or an
-  `InstrumentationExtension` lifecycle clear. Keep the wait at the end of setup
-  or cleanup even when removing a redundant explicit clear. Use the total trace
-  count expected at that point so spans exported after the clear cannot leak
-  into the next assertion or test.
-- Add the wait only when the exact trace count is deterministic. Do not guess
-  when retries, concurrent/background work, timing, or external-system behavior
-  can vary the count.
+- Inspect setup and cleanup operations before each `testing.clearData()` and
+  before an `InstrumentationExtension` lifecycle clear, not just the final
+  telemetry assertions. When an operation can complete or export spans
+  asynchronously, wait for its traces before clearing. A synchronous client
+  call returning does not by itself establish that all telemetry was captured.
+- For telemetry that is only being discarded, use
+  `testing.waitForTraces(expectedTraceCount)`. Do not introduce span-name or
+  attribute assertions, `waitAndAssertTraces(...)`, or assertion helpers solely
+  to wait for setup telemetry. Keep assertions when that telemetry's contents
+  are themselves part of the behavior under test.
+- Use the total trace count expected at that point and wait for all setup
+  traces, not just the first one. Add a count-based wait only when the count
+  is deterministic. If retries, concurrent/background work, or external-system
+  behavior can vary it, use an appropriate completion signal rather than
+  guessing a count or adding a sleep.
 - `InstrumentationExtension` already clears captured telemetry before each
-  test. Do not add or keep a setup/cleanup `clearData()` solely for per-test
-  isolation when that lifecycle clear is sufficient. Keep explicit clears only
-  for a required mid-test reset, including to discard telemetry from a
-  preceding asynchronous operation after its exports have been drained.
+  test. Keep any necessary wait at the end of setup or cleanup even when
+  removing a redundant explicit clear. Do not add or keep an explicit clear
+  solely for per-test isolation; keep explicit clears for required mid-test resets.
+- Do not wait for spans that intentionally remain open until the operation
+  under test completes, such as an unfinished pipeline or transaction.
 
 ## [Testing] AssertJ Idiomatic Simplifications
 
