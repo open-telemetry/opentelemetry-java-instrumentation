@@ -17,8 +17,8 @@ import javax.annotation.Nullable;
 public interface RpcAttributesGetter<REQUEST, RESPONSE> {
 
   /**
-   * Returns the stable semconv system name for the RPC framework (e.g. {@code "grpc"}, {@code
-   * "java_rmi"}, {@code "dotnet_wcf"}).
+   * Returns the system name for the RPC framework (e.g. {@code "grpc"}, {@code "java_rmi"}, {@code
+   * "dotnet_wcf"}).
    *
    * @see <a
    *     href="https://opentelemetry.io/docs/specs/semconv/attributes-registry/rpc/">rpc.system.name
@@ -37,7 +37,7 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Returns the fully-qualified RPC method name for stable semconv.
+   * Returns the fully-qualified RPC method name.
    *
    * @param request the request object
    * @return the fully-qualified RPC method name (e.g., "my.Service/Method"), or null if service or
