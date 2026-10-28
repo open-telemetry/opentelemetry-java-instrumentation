@@ -1,7 +1,7 @@
 [tools]
 
 # Linters
-"aqua:grafana/flint" = "0.22.14"
+"aqua:grafana/flint" = "0.22.15"
 lychee = "0.24.2"
 rumdl = "0.3.0"
 
