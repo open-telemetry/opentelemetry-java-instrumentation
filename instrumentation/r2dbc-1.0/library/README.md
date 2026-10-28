@@ -38,7 +38,7 @@ ConnectionFactory createInstrumentedConnectionFactory(
     ConnectionFactoryOptions factoryOptions) {
   return R2dbcTelemetryBuilder
     .create(openTelemetry)
-    .instrumentConnectionFactory(originalFactory, factoryOptions);
+    .instrument(originalFactory, factoryOptions);
 }
 ```
 
@@ -71,7 +71,7 @@ class R2dbcInstrumentingPostProcessor implements BeanPostProcessor {
     }
     ConnectionFactory connectionFactory = (ConnectionFactory) bean;
     return R2dbcTelemetry.create(openTelemetry)
-        .instrumentConnectionFactory(connectionFactory, getConnectionFactoryOptions(connectionFactory));
+        .instrument(connectionFactory, getConnectionFactoryOptions(connectionFactory));
   }
 
   private static ConnectionFactoryOptions getConnectionFactoryOptions(ConnectionFactory connectionFactory) {

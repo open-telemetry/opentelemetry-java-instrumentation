@@ -35,7 +35,7 @@ spans and context propagation.
 // For server-side, instrument the processor.
 TProcessor configureServer(OpenTelemetry openTelemetry, TProcessor processor, String serviceName) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
-  return thriftTelemetry.instrumentServerProcessor(processor, serviceName);
+  return thriftTelemetry.instrument(processor, serviceName);
 }
 
 // When using AsyncProcessor, also instrument the input and output protocol factories.
@@ -49,12 +49,12 @@ void configureServer(OpenTelemetry openTelemetry, TNonblockingServer.Args tnbArg
 // For client-side, instrument the protocol and client.
 TProtocol configureClient(OpenTelemetry openTelemetry, TProtocol protocol) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
-  return thriftTelemetry.instrumentClientProtocol(protocol);
+  return thriftTelemetry.instrument(protocol);
 }
 
 CustomService.Iface configureClient(OpenTelemetry openTelemetry, CustomService.Client client) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
-  return thriftTelemetry.instrumentClient(client, CustomService.Iface.class);
+  return thriftTelemetry.instrument(client, CustomService.Iface.class);
 }
 
 // For non-blocking clients, instrument the protocol factory and async client.
@@ -65,6 +65,6 @@ TProtocolFactory configureClient(OpenTelemetry openTelemetry, TProtocolFactory p
 
 CustomService.AsyncIface configureClient(OpenTelemetry openTelemetry, CustomService.AsyncClient asyncClient) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
-  return thriftTelemetry.instrumentAsyncClient(asyncClient, CustomService.AsyncIface.class);
+  return thriftTelemetry.instrument(asyncClient, CustomService.AsyncIface.class);
 }
 ```

@@ -57,7 +57,7 @@ public final class ThriftTelemetry {
   }
 
   /** Returns a {@link TProcessor} that instruments Thrift server requests. */
-  public TProcessor instrumentServerProcessor(TProcessor delegate, String serviceName) {
+  public TProcessor instrument(TProcessor delegate, String serviceName) {
     if (delegate instanceof TBaseAsyncProcessor) {
       TBaseAsyncProcessor<?> asyncProcessor = (TBaseAsyncProcessor<?>) delegate;
       Map<String, AsyncProcessFunction<?, ?, ?, ?>> processMap =
@@ -71,37 +71,16 @@ public final class ThriftTelemetry {
     return new ServerProcessorDecorator(delegate, serviceName, serverInstrumenter);
   }
 
-  /**
-   * Returns a {@link TProtocolFactory} that instruments incoming protocol for Thrift server
-   * requests.
-   */
-  public TProtocolFactory instrumentServerInProtocolFactory(TProtocolFactory delegate) {
-    return new ServerInProtocolDecorator.Factory(delegate, serverInstrumenter);
-  }
-
-  /**
-   * Returns a {@link TProtocolFactory} that instruments outgoing protocol for Thrift server
-   * requests.
-   */
-  public TProtocolFactory instrumentServerOutProtocolFactory(TProtocolFactory delegate) {
-    return new ServerOutProtocolDecorator.Factory(delegate);
-  }
-
   /** Returns a {@link TProtocol} that instruments Thrift client requests. */
-  public TProtocol instrumentClientProtocol(TProtocol delegate) {
+  public TProtocol instrument(TProtocol delegate) {
     return new ClientProtocolDecorator(delegate, propagators);
-  }
-
-  /** Returns a {@link TProtocolFactory} that instruments Thrift client requests. */
-  public TProtocolFactory instrumentClientProtocolFactory(TProtocolFactory delegate) {
-    return new ClientProtocolDecorator.Factory(delegate, propagators);
   }
 
   /**
    * Returns a client implementing the supplied interface with telemetry for requests made through
    * the provided {@link TServiceClient}.
    */
-  public <T> T instrumentClient(TServiceClient client, Class<T> clientInterface) {
+  public <T> T instrument(TServiceClient client, Class<T> clientInterface) {
     if (!clientInterface.isInterface()) {
       throw new IllegalArgumentException(
           "Supplied class must be an interface, but was " + clientInterface.getName());
@@ -147,7 +126,7 @@ public final class ThriftTelemetry {
    * Returns a client implementing the supplied interface with telemetry for requests made through
    * the provided {@link TAsyncClient}.
    */
-  public <T> T instrumentAsyncClient(TAsyncClient client, Class<T> clientInterface) {
+  public <T> T instrument(TAsyncClient client, Class<T> clientInterface) {
     if (!clientInterface.isInterface()) {
       throw new IllegalArgumentException(
           "Supplied class must be an interface, but was " + clientInterface.getName());
@@ -196,5 +175,26 @@ public final class ThriftTelemetry {
                 }
               }
             }));
+  }
+
+  /**
+   * Returns a {@link TProtocolFactory} that instruments incoming protocol for Thrift server
+   * requests.
+   */
+  public TProtocolFactory instrumentServerInProtocolFactory(TProtocolFactory delegate) {
+    return new ServerInProtocolDecorator.Factory(delegate, serverInstrumenter);
+  }
+
+  /**
+   * Returns a {@link TProtocolFactory} that instruments outgoing protocol for Thrift server
+   * requests.
+   */
+  public TProtocolFactory instrumentServerOutProtocolFactory(TProtocolFactory delegate) {
+    return new ServerOutProtocolDecorator.Factory(delegate);
+  }
+
+  /** Returns a {@link TProtocolFactory} that instruments Thrift client requests. */
+  public TProtocolFactory instrumentClientProtocolFactory(TProtocolFactory delegate) {
+    return new ClientProtocolDecorator.Factory(delegate, propagators);
   }
 }

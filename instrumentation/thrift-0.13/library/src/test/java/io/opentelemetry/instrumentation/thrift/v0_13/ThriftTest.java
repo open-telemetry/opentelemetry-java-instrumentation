@@ -37,12 +37,12 @@ class ThriftTest extends AbstractThriftTest {
 
   @Override
   protected TProcessor configure(TProcessor processor, String serviceName) {
-    return telemetry.instrumentServerProcessor(processor, serviceName);
+    return telemetry.instrument(processor, serviceName);
   }
 
   @Override
   protected TProtocol configure(TProtocol protocol) {
-    return telemetry.instrumentClientProtocol(protocol);
+    return telemetry.instrument(protocol);
   }
 
   @Override
@@ -52,12 +52,12 @@ class ThriftTest extends AbstractThriftTest {
 
   @Override
   protected CustomService.AsyncIface configure(CustomService.AsyncClient asyncClient) {
-    return telemetry.instrumentAsyncClient(asyncClient, CustomService.AsyncIface.class);
+    return telemetry.instrument(asyncClient, CustomService.AsyncIface.class);
   }
 
   @Override
   protected CustomService.Iface configure(CustomService.Client client) {
-    return telemetry.instrumentClient(client, CustomService.Iface.class);
+    return telemetry.instrument(client, CustomService.Iface.class);
   }
 
   @Override

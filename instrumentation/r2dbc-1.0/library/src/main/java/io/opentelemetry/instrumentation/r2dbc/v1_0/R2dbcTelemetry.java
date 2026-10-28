@@ -42,7 +42,7 @@ public final class R2dbcTelemetry {
   /**
    * Returns an instrumented {@link ConnectionFactory} based on the provided factory and options.
    */
-  public ConnectionFactory instrumentConnectionFactory(
+  public ConnectionFactory instrument(
       ConnectionFactory originalFactory, ConnectionFactoryOptions factoryOptions) {
     ProxyConfig proxyConfig = new ProxyConfig();
     if (sqlCommenter.isEnabled()) {
