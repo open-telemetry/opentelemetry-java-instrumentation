@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-# This file is sourced by collect.sh and ci-collect.sh
+# This file is sourced by instrumentation-docs/collect.sh and metadata-ci-validate-tasks.sh.
 
 readonly INSTRUMENTATIONS=(
-  # <module path (colon-separated)> : <javaagent|library> : [ gradle-task-suffix ]
+  # <Gradle project path under :instrumentation> : <task>
   "activej-http-6.0:javaagent:test"
   "akka:akka-http-10.0:javaagent:test"
   "akka:akka-http-10.0:javaagent:testPreviewSemconv"
@@ -243,7 +243,9 @@ readonly INSTRUMENTATIONS=(
   "oshi-5.0:javaagent:test"
   "pekko:pekko-http-1.0:javaagent:test"
   "play:play-mvc:play-mvc-2.4:javaagent:test"
-  "play:play-mvc:play-mvc-2.6:javaagent:check"
+  "play:play-mvc:play-mvc-2.6:javaagent:test"
+  "play:play-mvc:play-mvc-2.6:javaagent:play28Test"
+  "play:play-mvc:play-mvc-2.6:javaagent:play3Test"
   "play:play-ws:play-ws-1.0:javaagent:test"
   "play:play-ws:play-ws-2.0:javaagent:test"
   "play:play-ws:play-ws-2.1:javaagent:test"
@@ -283,7 +285,12 @@ readonly INSTRUMENTATIONS=(
   "rocketmq:rocketmq-client-4.8:javaagent:test"
   "rocketmq:rocketmq-client-4.8:javaagent:testExperimental"
   "rocketmq:rocketmq-client-5.0:javaagent:test"
-  "runtime-telemetry:library:check"
+  "runtime-telemetry:library:test"
+  "runtime-telemetry:library:testG1"
+  "runtime-telemetry:library:testJava17"
+  "runtime-telemetry:library:testJava21"
+  "runtime-telemetry:library:testPS"
+  "runtime-telemetry:library:testSerial"
   "servlet:servlet-2.2:javaagent:test"
   "servlet:servlet-3.0:javaagent-testing:test"
   "servlet:servlet-3.0:javaagent-testing:testRequestParameterCapture"
