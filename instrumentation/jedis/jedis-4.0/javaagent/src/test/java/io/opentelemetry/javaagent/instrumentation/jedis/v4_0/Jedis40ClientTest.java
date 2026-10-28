@@ -56,12 +56,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.Builder;
 import redis.clients.jedis.BuilderFactory;
 import redis.clients.jedis.CommandArguments;
 import redis.clients.jedis.CommandObject;
+import redis.clients.jedis.Connection;
 import redis.clients.jedis.DefaultJedisClientConfig;
 import redis.clients.jedis.DefaultJedisSocketFactory;
 import redis.clients.jedis.HostAndPort;
@@ -900,6 +903,140 @@ class Jedis40ClientTest {
                         .hasSize(1)
                         .allSatisfy(
                             point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull())));
+  }
+
+  @ParameterizedTest
+  @CsvSource({"false, false", "false, true", "true, false", "true, true"})
+  void caughtRawConnectionServerErrorDoesNotFailOuterPipeline(
+      boolean bulkReply, boolean outerFailure) {
+    jedis.lpush("nested-wrong-type", "value");
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    nestedClient.ping();
+    testing.waitForTraces(2);
+    testing.clearData();
+
+    List<Object> nestedErrors = new ArrayList<>();
+    Pipeline outer = jedis.pipelined();
+    outer.appendCommand(
+        new CommandObject<>(
+            new CommandArguments(Protocol.Command.PING),
+            new Builder<String>() {
+              @Override
+              public String build(Object response) {
+                Connection connection = nestedClient.getConnection();
+                if (bulkReply) {
+                  connection.sendCommand(Protocol.Command.GET, "nested-wrong-type".getBytes(UTF_8));
+                  nestedErrors.add(catchThrowable(connection::getBulkReply));
+                } else {
+                  connection.sendCommand(Protocol.Command.PING);
+                  connection.sendCommand(Protocol.Command.GET, "nested-wrong-type".getBytes(UTF_8));
+                  List<Object> replies = connection.getMany(2);
+                  assertThat(replies).hasSize(2);
+                  assertThat(new String((byte[]) replies.get(0), UTF_8)).isEqualTo("PONG");
+                  nestedErrors.add(replies.get(1));
+                }
+                return new String((byte[]) response, UTF_8);
+              }
+            }));
+    if (outerFailure) {
+      outer.get("nested-wrong-type");
+    } else {
+      outer.set("outer-pipeline", "value");
+    }
+
+    List<Object> results = outer.syncAndReturnAll();
+    assertThat(results).hasSize(2);
+    assertThat(results.get(0)).isEqualTo("PONG");
+    if (outerFailure) {
+      assertThat(results.get(1))
+          .isInstanceOf(JedisDataException.class)
+          .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
+    } else {
+      assertThat(results.get(1)).isEqualTo("OK");
+    }
+    assertThat(nestedErrors)
+        .singleElement()
+        .isInstanceOf(JedisDataException.class)
+        .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
+    String errorType = outerFailure ? "WRONGTYPE" : null;
+    assertErrorType(errorType);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-4.0",
+        "db.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .singleElement()
+                        .satisfies(
+                            point -> {
+                              assertThat(point.getCount()).isEqualTo(1);
+                              assertThat(point.getAttributes().get(ERROR_TYPE))
+                                  .isEqualTo(errorType);
+                            })));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void owningConnectionServerErrorFailsPipeline(boolean returnAll) {
+    jedis.lpush("wrong-type", "value");
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    Pipeline pipeline = jedis.pipelined();
+    Response<String> response = pipeline.get("wrong-type");
+    pipeline.set("after-error", "value");
+
+    if (returnAll) {
+      List<Object> results = pipeline.syncAndReturnAll();
+      assertThat(results).hasSize(2);
+      assertThat(results.get(0))
+          .isInstanceOf(JedisDataException.class)
+          .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
+      assertThat(results.get(1)).isEqualTo("OK");
+    } else {
+      pipeline.sync();
+    }
+    assertThatThrownBy(response::get).hasMessageStartingWith("WRONGTYPE");
+    assertErrorType("WRONGTYPE");
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void escapingRawManyConnectionServerErrorFailsOuterPipeline(boolean throwError) {
+    jedis.lpush("nested-wrong-type", "value");
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    nestedClient.ping();
+    testing.waitForTraces(2);
+    testing.clearData();
+
+    Pipeline outer = jedis.pipelined();
+    outer.appendCommand(
+        new CommandObject<>(
+            new CommandArguments(Protocol.Command.PING),
+            new Builder<Object>() {
+              @Override
+              public Object build(Object response) {
+                Connection connection = nestedClient.getConnection();
+                connection.sendCommand(Protocol.Command.GET, "nested-wrong-type".getBytes(UTF_8));
+                JedisDataException error = (JedisDataException) connection.getMany(1).get(0);
+                if (throwError) {
+                  throw error;
+                }
+                return error;
+              }
+            }));
+    outer.set("outer-pipeline", "value");
+
+    List<Object> results = outer.syncAndReturnAll();
+    assertThat(results).hasSize(2);
+    assertThat(results.get(0))
+        .isInstanceOf(JedisDataException.class)
+        .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
+    assertThat(results.get(1)).isEqualTo("OK");
+    assertErrorType("WRONGTYPE");
   }
 
   @Test

@@ -108,13 +108,38 @@ class JedisRequestContextTest {
     JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch();
     try {
       JedisRequestContext<Object> replyContext =
-          requireNonNull(JedisRequestContext.attachForConnectionReply());
+          requireNonNull(JedisRequestContext.attachForConnectionReply(new Object()));
       Throwable serverFailure = new IllegalStateException("WRONGTYPE handled server failure");
       JedisRequestContext.captureServerError(serverFailure);
 
       assertThat(replyContext.detachAndEnd(serverFailure)).isSameAs(serverFailure);
       assertThat(batchContext.isServerError(serverFailure)).isTrue();
       assertThat(batchContext.detachAndEnd(null)).isNull();
+    } finally {
+      batchContext.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  @Test
+  void owningConnectionRepliesStillFailBatchAfterIndependentReply() {
+    Object connection = new Object();
+    InitializationRequest request = new InitializationRequest();
+    JedisRequestContext<InitializationRequest> batchContext =
+        JedisRequestContext.startBatch(instrumenter, request, null, connection);
+    try {
+      assertThat(JedisRequestContext.attachForConnectionReply(connection)).isNull();
+      JedisRequestContext<Object> independentReply =
+          requireNonNull(JedisRequestContext.attachForConnectionReply(new Object()));
+      Throwable handledFailure = new IllegalStateException("handled failure");
+      JedisRequestContext.captureServerError(handledFailure);
+      assertThat(independentReply.detachAndEnd(handledFailure)).isSameAs(handledFailure);
+      assertThat(JedisRequestContext.attachForConnectionReply(connection)).isNull();
+      Throwable batchFailure = new IllegalStateException("batch failure");
+      JedisRequestContext.captureServerError(batchFailure);
+      assertThat(batchContext.detachAndEnd(null)).isSameAs(batchFailure);
+      assertThat(request.isServerError(handledFailure)).isTrue();
+      assertThat(request.isServerError(batchFailure)).isTrue();
     } finally {
       batchContext.detachAndEnd(null);
     }

@@ -25,6 +25,7 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
   @Nullable private Throwable firstServerErrorThrowable;
   @Nullable private JedisRequestContext<?> previousContext;
   @Nullable private Object transactionOwner;
+  @Nullable private Object replyOwner;
   @Nullable private List<JedisRequestContext<T>> initializationCommands;
   private boolean captureServerErrors;
   private boolean connectionInitialization;
@@ -56,6 +57,14 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
 
   public static <T> JedisRequestContext<T> startBatch(
       Instrumenter<T, Void> instrumenter, T request, @Nullable Object transactionOwner) {
+    return startBatch(instrumenter, request, transactionOwner, null);
+  }
+
+  public static <T> JedisRequestContext<T> startBatch(
+      Instrumenter<T, Void> instrumenter,
+      T request,
+      @Nullable Object transactionOwner,
+      @Nullable Object replyOwner) {
     Context parentContext = Context.current();
     Context context = null;
     Scope scope = null;
@@ -67,6 +76,7 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
     JedisRequestContext<T> requestContext =
         transactionOwner == null ? attachForBatch() : attachForBatch(transactionOwner);
     requestContext.request = request;
+    requestContext.replyOwner = replyOwner;
     requestContext.associateServerErrorContext(request);
     requestContext.scope = scope;
     if (context != null) {
@@ -119,7 +129,7 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
   }
 
   @Nullable
-  public static <T> JedisRequestContext<T> attachForConnectionReply() {
+  public static <T> JedisRequestContext<T> attachForConnectionReply(Object connection) {
     JedisRequestContext<?> requestContext = currentRequestContext.get();
     if (requestContext == null) {
       return null;
@@ -127,7 +137,8 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
     if (requestContext.connectionInitialization) {
       return attachForConnectionInitializationCommand();
     }
-    if (!requestContext.captureServerErrors) {
+    // Keep a batch's own replies in its context, but isolate reads on independent connections.
+    if (!requestContext.captureServerErrors || requestContext.replyOwner == connection) {
       return null;
     }
 

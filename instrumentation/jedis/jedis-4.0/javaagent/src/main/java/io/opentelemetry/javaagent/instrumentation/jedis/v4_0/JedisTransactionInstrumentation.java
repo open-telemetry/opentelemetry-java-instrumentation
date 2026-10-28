@@ -66,7 +66,8 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
         } else {
           JedisRequest request = JedisRequest.createTransaction(requests);
           state.requestContext =
-              JedisRequestContext.startBatch(instrumenter(), request, transaction);
+              JedisRequestContext.startBatch(
+                  instrumenter(), request, transaction, request.getConnection());
         }
         return state;
       } catch (Throwable t) {

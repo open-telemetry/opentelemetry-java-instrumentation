@@ -71,7 +71,7 @@ class JedisPipelineInstrumentation implements TypeInstrumentation {
         return null;
       }
       JedisRequest request = JedisRequest.createPipeline(requests);
-      return JedisRequestContext.startBatch(instrumenter(), request);
+      return JedisRequestContext.startBatch(instrumenter(), request, null, request.getConnection());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
