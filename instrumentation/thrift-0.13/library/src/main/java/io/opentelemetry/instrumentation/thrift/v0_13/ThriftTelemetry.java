@@ -97,7 +97,10 @@ public final class ThriftTelemetry {
     return new ClientProtocolDecorator.Factory(delegate, propagators);
   }
 
-  /** Wraps the provided {@link TServiceClient}, enabling telemetry for it. */
+  /**
+   * Returns a client implementing the supplied interface with telemetry for requests made through
+   * the provided {@link TServiceClient}.
+   */
   public <T> T instrumentClient(TServiceClient client, Class<T> clientInterface) {
     if (!clientInterface.isInterface()) {
       throw new IllegalArgumentException(
@@ -140,7 +143,10 @@ public final class ThriftTelemetry {
             }));
   }
 
-  /** Wraps the provided {@link TAsyncClient}, enabling telemetry for it. */
+  /**
+   * Returns a client implementing the supplied interface with telemetry for requests made through
+   * the provided {@link TAsyncClient}.
+   */
   public <T> T instrumentAsyncClient(TAsyncClient client, Class<T> clientInterface) {
     if (!clientInterface.isInterface()) {
       throw new IllegalArgumentException(

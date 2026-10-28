@@ -55,11 +55,11 @@ public final class RocketMqTelemetry {
   }
 
   /**
-   * Returns a decorated producer that emits telemetry and propagates context for single-message and
-   * batch sends.
+   * Returns an instrumented producer that emits telemetry and propagates context for single-message
+   * and batch sends.
    *
-   * <p>Configure the supplied producer before wrapping it, and send messages through the returned
-   * producer. The wrapper registers its send hook automatically. Use the collection-based {@code
+   * <p>Configure the supplied producer before calling this method, and send messages through the
+   * returned producer. It registers its send hook automatically. Use the collection-based {@code
    * send} overloads for batches so context can be injected before encoding.
    */
   public MQProducer instrument(DefaultMQProducer producer) {

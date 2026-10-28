@@ -34,7 +34,7 @@ public final class JavaHttpClientTelemetry {
     this.headersSetter = headersSetter;
   }
 
-  /** Returns a new instrumented {@link HttpClient} that wraps the provided client. */
+  /** Returns an instrumented {@link HttpClient} based on the provided client. */
   public HttpClient instrument(HttpClient client) {
     return new OpenTelemetryHttpClient(client, instrumenter, headersSetter);
   }

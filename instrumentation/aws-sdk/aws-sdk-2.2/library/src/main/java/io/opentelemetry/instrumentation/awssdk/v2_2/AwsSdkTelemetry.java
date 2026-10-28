@@ -32,7 +32,7 @@ import software.amazon.awssdk.services.sqs.SqsClient;
  * ExecutionInterceptor} returned by {@link #createExecutionInterceptor()} with an SDK client to
  * have all requests traced.
  *
- * <p>Certain services additionally require wrapping the SDK client itself:
+ * <p>Certain services additionally require instrumenting the SDK client directly:
  *
  * <ul>
  *   <li>SQSClient - {@link #instrument(SqsClient)}
@@ -142,27 +142,19 @@ public class AwsSdkTelemetry {
         messageCreateSpansEnabled);
   }
 
-  /**
-   * Construct a new tracing-enable {@link SqsClient} using the provided {@link SqsClient} instance.
-   */
+  /** Returns an instrumented {@link SqsClient} based on the provided client. */
   @NoMuzzle
   public SqsClient instrument(SqsClient sqsClient) {
     return SqsImpl.wrap(sqsClient);
   }
 
-  /**
-   * Construct a new tracing-enable {@link SqsAsyncClient} using the provided {@link SqsAsyncClient}
-   * instance.
-   */
+  /** Returns an instrumented {@link SqsAsyncClient} based on the provided client. */
   @NoMuzzle
   public SqsAsyncClient instrument(SqsAsyncClient sqsClient) {
     return SqsImpl.wrap(sqsClient);
   }
 
-  /**
-   * Construct a new tracing-enabled {@link BedrockRuntimeAsyncClient} using the provided {@link
-   * BedrockRuntimeAsyncClient} instance.
-   */
+  /** Returns an instrumented {@link BedrockRuntimeAsyncClient} based on the provided client. */
   @NoMuzzle
   public BedrockRuntimeAsyncClient instrumentBedrockRuntimeClient(
       BedrockRuntimeAsyncClient bedrockClient) {

@@ -28,9 +28,9 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-rocketmq-client-4
 
 ### Usage
 
-Wrap a configured `DefaultMQProducer` to emit telemetry and propagate context for single-message
-and batch sends. Send messages through the returned `MQProducer`; the wrapper registers its send
-hook automatically and injects batch context before RocketMQ encodes the messages.
+Instrument a configured `DefaultMQProducer` to emit telemetry and propagate context for
+single-message and batch sends. Send messages through the returned `MQProducer`; it registers its
+send hook automatically and injects batch context before RocketMQ encodes the messages.
 For batches, pass a collection of `Message` objects to `send`.
 
 ```java

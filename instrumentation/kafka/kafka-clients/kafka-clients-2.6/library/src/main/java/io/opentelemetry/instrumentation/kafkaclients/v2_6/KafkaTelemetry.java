@@ -42,7 +42,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.metrics.MetricsReporter;
 
-@SuppressWarnings("unchecked") // casting Proxy.newProxyInstance result in wrap methods
+@SuppressWarnings("unchecked") // casting Proxy.newProxyInstance result in instrument methods
 public final class KafkaTelemetry {
   private final OpenTelemetry openTelemetry;
   private final KafkaProducerTelemetry producerTelemetry;
@@ -88,7 +88,7 @@ public final class KafkaTelemetry {
             consumerReceiveInterceptorInstrumenter, consumerProcessInstrumenter);
   }
 
-  /** Returns a decorated {@link Producer} that emits spans for each sent message. */
+  /** Returns an instrumented {@link Producer} that emits spans for each sent message. */
   public <K, V> Producer<K, V> instrument(Producer<K, V> producer) {
     return (Producer<K, V>)
         Proxy.newProxyInstance(
@@ -121,7 +121,7 @@ public final class KafkaTelemetry {
             });
   }
 
-  /** Returns a decorated {@link Consumer} that consumes spans for each received message. */
+  /** Returns an instrumented {@link Consumer} that records telemetry for received messages. */
   public <K, V> Consumer<K, V> instrument(Consumer<K, V> consumer) {
     return (Consumer<K, V>)
         Proxy.newProxyInstance(

@@ -43,6 +43,7 @@ public final class JdbcTelemetry {
     this.sqlCommenter = sqlCommenter;
   }
 
+  /** Returns an instrumented {@link DataSource} based on the provided data source. */
   public DataSource instrument(DataSource dataSource) {
     return new OpenTelemetryDataSource(
         dataSource,

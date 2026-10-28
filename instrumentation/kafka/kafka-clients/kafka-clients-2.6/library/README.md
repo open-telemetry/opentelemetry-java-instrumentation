@@ -27,7 +27,7 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-kafka-clients-2.6
 
 ### Usage (Tracing)
 
-There are two options for capturing traces, either using interceptors or wrapping clients, both described below.
+There are two options for capturing traces: using interceptors or instrumenting clients.
 
 #### Using interceptors
 
@@ -39,7 +39,7 @@ would be misleading, and the interceptors do not record `messaging.client.operat
 producer interceptor still records
 `messaging.client.sent.messages`, and the consumer interceptor still records
 `messaging.process.duration`. If you want to capture the errors and the operation duration as well,
-you should consider the wrapping option described in the next section.
+you should consider the client instrumentation option described in the next section.
 
 To intercept messages and emit telemetry for a `KafkaProducer`:
 
@@ -66,11 +66,11 @@ props.putAll(telemetry.consumerInterceptorConfigProperties());
 Consumer<String, String> consumer = new KafkaConsumer<>(props);
 ```
 
-#### Wrapping clients
+#### Instrumenting clients
 
-The other way is by wrapping the Kafka client with a tracing enabled Kafka client.
+The other option is to instrument a Kafka client using `KafkaTelemetry`.
 
-Assuming you have a `Producer<K, V> producer` instance, you can wrap it in the following way.
+Assuming you have a `Producer<K, V> producer` instance, instrument it as follows.
 
 ```java
 KafkaTelemetry telemetry = KafkaTelemetry.create(GlobalOpenTelemetry.get());
@@ -79,7 +79,7 @@ Producer<String, String> tracingProducer = telemetry.instrument(producer);
 
 Then use the `tracingProducer` as usual for sending messages to the Kafka cluster.
 
-Assuming you have a `Consumer<K, V> consumer` instance, you can wrap it in the following way.
+Assuming you have a `Consumer<K, V> consumer` instance, instrument it as follows.
 
 ```java
 KafkaTelemetry telemetry = KafkaTelemetry.create(GlobalOpenTelemetry.get());

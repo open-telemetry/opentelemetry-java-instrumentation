@@ -29,7 +29,7 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-java-http-client:
 
 ### Usage
 
-The instrumentation library contains an `HttpClient` wrapper that provides OpenTelemetry-based spans
+The instrumentation library instruments `HttpClient` instances to provide OpenTelemetry-based spans
 and context propagation.
 
 ```java

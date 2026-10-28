@@ -28,16 +28,17 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-thrift-0.13:OPENT
 
 ### Usage
 
-The instrumentation library provides wrappers for thrift servers and clients that provide OpenTelemetry-based spans and context propagation.
+The instrumentation library instruments Thrift servers and clients to provide OpenTelemetry-based
+spans and context propagation.
 
 ```java
-// For server-side, decorate processor with a tracing wrapper.
+// For server-side, instrument the processor.
 TProcessor configureServer(OpenTelemetry openTelemetry, TProcessor processor, String serviceName) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
   return thriftTelemetry.instrumentServerProcessor(processor, serviceName);
 }
 
-// When using AsyncProcessor also wrap input and output protocol factories.
+// When using AsyncProcessor, also instrument the input and output protocol factories.
 void configureServer(OpenTelemetry openTelemetry, TNonblockingServer.Args tnbArgs) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
   // TBinaryProtocol.Factory is the default
@@ -45,7 +46,7 @@ void configureServer(OpenTelemetry openTelemetry, TNonblockingServer.Args tnbArg
   tnbArgs.outputProtocolFactory(thriftTelemetry.instrumentServerOutProtocolFactory(new TBinaryProtocol.Factory()));
 }
 
-// For client-side, decorate protocol and client with a tracing wrappers.
+// For client-side, instrument the protocol and client.
 TProtocol configureClient(OpenTelemetry openTelemetry, TProtocol protocol) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
   return thriftTelemetry.instrumentClientProtocol(protocol);
@@ -56,7 +57,7 @@ CustomService.Iface configureClient(OpenTelemetry openTelemetry, CustomService.C
   return thriftTelemetry.instrumentClient(client, CustomService.Iface.class);
 }
 
-// For non-blocking client, decorate protocol factory and the async client with a tracing wrappers.
+// For non-blocking clients, instrument the protocol factory and async client.
 TProtocolFactory configureClient(OpenTelemetry openTelemetry, TProtocolFactory protocolFactory) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
   return thriftTelemetry.instrumentClientProtocolFactory(protocolFactory);
