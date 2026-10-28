@@ -34,7 +34,7 @@ public final class IcebergTelemetry {
    * @param scan the scan to instrument
    * @return an instrumented {@link Scan}
    */
-  public <T1, T2 extends ScanTask, T3 extends ScanTaskGroup<T2>> T1 instrumentScan(
+  public <T1, T2 extends ScanTask, T3 extends ScanTaskGroup<T2>> T1 instrument(
       Scan<T1, T2, T3> scan) {
     return scan.metricsReporter(new IcebergMetricsReporter(openTelemetry));
   }
