@@ -111,10 +111,7 @@ when a method handle is needed. Derive follow-on accessors from `method.getRetur
 loading that type again by name. If a `Method` is already available, prefer `unreflect` over
 reconstructing its signature to look up the same method again.
 
-Parameter `Class` identities and access permissions must still be correct; this does not guarantee
-class-loader compatibility. Keep direct Java calls when appropriate, and use other lookup APIs when
-exact return-type selection or special dispatch is required. Other `findStatic` and `findVirtual`
-uses remain valid under the criteria above; this is not a performance recommendation.
+Parameter types supplied to `getMethod` must still have the correct class-loader identities.
 
 ## Separate access from invocation
 
