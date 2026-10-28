@@ -17,7 +17,6 @@ import static org.mockito.Mockito.when;
 
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -130,9 +129,6 @@ class GrpcAttributesExtractorTest {
   }
 
   private static GrpcAttributesExtractor createExtractor(@Nullable IncludeExclude selector) {
-    GrpcAttributesExtractor extractor =
-        new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(false), selector);
-    extractor.internalInitialize(OpenTelemetry.noop());
-    return extractor;
+    return new GrpcAttributesExtractor(new GrpcRpcAttributesGetter(false), selector);
   }
 }

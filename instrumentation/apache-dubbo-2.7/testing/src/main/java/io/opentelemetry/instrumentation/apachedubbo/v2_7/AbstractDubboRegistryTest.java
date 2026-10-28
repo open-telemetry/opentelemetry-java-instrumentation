@@ -46,7 +46,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
  * Integration test that verifies the registry-mode end-to-end flow: provider registers to
  * ZooKeeper, consumer discovers via ZooKeeper, and the {@code SERVER_ADDRESS} span attribute
  * contains the registry address (with service interface, version, and group) instead of the
- * provider host. Under the old rpc semconv the resolved provider host is kept.
+ * provider host.
  */
 public abstract class AbstractDubboRegistryTest {
 
