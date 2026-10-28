@@ -87,10 +87,11 @@ Keep that cache in the injected helper, or pass a loader-scoped accessor to shar
 | Supported versions expose a compatible member and normal access works | Direct Java call |
 | A fixed optional class or version-selected stable interface declares the member | One nullable static cached `Method` or `MethodHandle` |
 | The declaring type or required method metadata depends on the concrete runtime class | `ClassValue` containing the cached accessor |
-| The exact signature is known and typed or adapted invocation helps, or several member kinds need one invocation abstraction | Cached `MethodHandle` |
+| The exact signature is known, including a small set of version-specific signatures, and typed or adapted invocation helps | Cached `MethodHandle` using `findStatic` or `findVirtual`; try the known alternatives |
 | Access requires a target-associated lookup, or `CallSite` linking is part of the design | `MethodHandle` |
 | Setup performs a one-time call, construction, or field access | `Method`, `Constructor`, or `Field` |
-| Compatibility code discovers changing API shapes, receives reflection objects, or inspects member metadata | `Method`, `Constructor`, or `Field` |
+| Runtime discovery is needed to determine an unknown API shape, and its benefit justifies the additional dependencies | `Method`, `Constructor`, or `Field` |
+| Code receives reflection objects or inspects member metadata | `Method`, `Constructor`, or `Field` |
 | The caller deliberately handles `InvocationTargetException` | `Method` or `Constructor` |
 
 Do not choose or recommend `MethodHandle` solely for an assumed performance
@@ -101,19 +102,22 @@ conversion.
 
 ### Account for signature class loaders and lookup scope
 
-When a method handle is needed for an exact known signature, prefer `findStatic` or `findVirtual`.
-Resolve reference types through the method's declaring-class loader, for example
-`Class.forName(name, false, declaringClass.getClassLoader())`, rather than the helper's loader.
-Classes with the same binary name but different defining class loaders are different types.
+When a method handle is needed and the supported signatures are known, default to `findStatic` or
+`findVirtual`, including when there are a small number of known version-specific signatures. Try
+those alternatives rather than switching to reflective discovery just to remove branches. Resolve
+non-JDK signature types through the appropriate method-declaring-class loader without initialization,
+for example `Class.forName(name, false, declaringClass.getClassLoader())`, rather than the helper's
+loader. Classes with the same binary name but different defining class loaders are different types.
 Mixing a declaring class with signature types from another loader can introduce conflicting loader
 constraints.
 
-For runtime compatibility discovery, `getMethod` or `getDeclaredMethod` can discover a
-version-dependent return type without enumerating alternatives. On HotSpot, however, these lookups
-resolve parameter, return, and declared exception types for unrelated public or declared methods
-too. A missing dependency can make the lookup throw `NoClassDefFoundError`, even when the requested
-method does not use it. Resolving those types can also encounter loader-constraint violations.
-Reflection is not inherently safer than exact method-handle lookup.
+Use runtime discovery only when the signature genuinely needs discovery and the benefit justifies its
+additional dependencies. On HotSpot, `getMethod` obtains declared public methods on each class it
+searches before selecting the requested method, while `getDeclaredMethod` obtains all declared methods
+of the class. Creating those `Method` objects resolves their parameter, return, and declared exception
+types, so unrelated signatures can load dependencies and cause `NoClassDefFoundError` or other linkage
+errors. Resolving those types can also encounter loader-constraint violations. Exact method-handle
+lookup avoids this broad method enumeration, but is not immune to all class-loading or linkage failures.
 
 If a `Method` is already available and a method handle is needed, use `lookup.unreflect(method)`
 instead of reconstructing its signature to look up the same method again. Derive follow-on
