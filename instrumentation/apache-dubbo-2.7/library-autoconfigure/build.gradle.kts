@@ -51,7 +51,6 @@ tasks {
       classpath = suite.sources.runtimeClasspath
 
       jvmArgs("-Dotel.semconv-stability.preview=rpc")
-      systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
     }
   }
 
@@ -61,7 +60,6 @@ tasks {
       classpath = suite.sources.runtimeClasspath
 
       jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
-      systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup")
     }
   }
 

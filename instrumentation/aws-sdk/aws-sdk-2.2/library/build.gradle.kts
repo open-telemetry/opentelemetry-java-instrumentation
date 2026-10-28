@@ -1,5 +1,4 @@
 import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.library-instrumentation")
@@ -102,11 +101,11 @@ testing {
         }
         register("PreviewSemconv") {
           filter.includeTestsMatching("*Aws2ClientTest.testS3ServiceError")
-          telemetryConfig("otel.semconv-stability.preview", "rpc")
+          jvmArgs("-Dotel.semconv-stability.preview=rpc")
         }
         register("BothSemconv") {
           filter.includeTestsMatching("*Aws2ClientTest.testS3ServiceError")
-          telemetryConfig("otel.semconv-stability.preview", "rpc/dup")
+          jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
         }
       }
     }

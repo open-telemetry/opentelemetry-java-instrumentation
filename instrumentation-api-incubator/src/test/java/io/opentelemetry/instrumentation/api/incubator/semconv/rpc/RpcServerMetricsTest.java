@@ -129,6 +129,9 @@ class RpcServerMetricsTest {
     listener.onEnd(context1, responseAttributes1, nanos(250));
 
     Collection<MetricData> metrics1 = metricReader.collectAllMetrics();
+    assertThat(metrics1)
+        .extracting(MetricData::getName)
+        .containsExactly("rpc.server.call.duration");
 
     if (emitOldRpcSemconv()) {
       assertThat(metrics1)
@@ -249,6 +252,9 @@ class RpcServerMetricsTest {
     listener.onEnd(context2, responseAttributes2, nanos(300));
 
     Collection<MetricData> metrics2 = metricReader.collectAllMetrics();
+    assertThat(metrics2)
+        .extracting(MetricData::getName)
+        .containsExactly("rpc.server.call.duration");
 
     if (emitOldRpcSemconv()) {
       assertThat(metrics2)

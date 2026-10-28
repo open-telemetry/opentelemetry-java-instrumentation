@@ -81,7 +81,7 @@ names. A full-suite `testReceiveSpansDisabled` may document default telemetry; a
 regression task does not. Keep regression tasks in `check`, but omit them from the collection script.
 Keep `metadataConfig` labels on the tasks that document non-default telemetry.
 
-For a module collecting its default profile and an RPC preview profile:
+For a module collecting its default profile and a service-peer preview profile:
 
 ```kotlin
 tasks {
@@ -89,8 +89,8 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.preview=rpc")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
+    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 
   check {

@@ -1,5 +1,4 @@
 import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -28,10 +27,10 @@ testing {
           systemProperty("testLatestDeps", otelProps.testLatestDeps)
         }
         register("PreviewSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "rpc")
+          jvmArgs("-Dotel.semconv-stability.preview=rpc")
         }
         register("BothSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "rpc/dup")
+          jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
         }
       }
     }

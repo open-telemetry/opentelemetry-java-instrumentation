@@ -128,7 +128,7 @@ class SemconvStabilityTest {
   }
 
   @Test
-  void explicitDomainConfigTakesPrecedenceOverPreview() {
+  void rpcUsesNewOnlyConventionsWithExplicitDualEmitAndPreview() {
     // general:
     //   rpc:
     //     semconv:
@@ -140,11 +140,11 @@ class SemconvStabilityTest {
     // otel.semconv-stability.preview=rpc
     SemconvMode rpc = new SemconvSelectionResolver(general, noStableOptIn(), preview("rpc")).rpc();
 
-    assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL.withDualEmit());
+    assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
   }
 
   @Test
-  void unsupportedExplicitDomainVersionFallsBackToDefault() {
+  void rpcUsesNewConventionsWithoutExperimentalOptIn() {
     // general:
     //   rpc:
     //     semconv:
@@ -154,7 +154,7 @@ class SemconvStabilityTest {
         new SemconvSelectionResolver(general, noStableOptIn(), noPreview());
     SemconvMode rpc = resolver.rpc();
 
-    assertThat(rpc).isEqualTo(SemconvMode.V0_STABLE);
+    assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
   }
 
   @Test
@@ -173,7 +173,7 @@ class SemconvStabilityTest {
   }
 
   @Test
-  void explicitDomainVersionZeroMeansOldOnlyEvenWithDualEmit() {
+  void rpcUsesNewConventionsWithExplicitVersionZeroAndDualEmit() {
     // general:
     //   rpc:
     //     semconv:
@@ -183,7 +183,7 @@ class SemconvStabilityTest {
     SemconvMode rpc =
         new SemconvSelectionResolver(general, noStableOptIn(), preview("rpc/dup")).rpc();
 
-    assertThat(rpc).isEqualTo(SemconvMode.V0_STABLE);
+    assertThat(rpc).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
   }
 
   @Test
@@ -211,7 +211,7 @@ class SemconvStabilityTest {
         new SemconvSelectionResolver(
             general(), stableOptIn("rpc", "service.peer"), preview("rpc/dup", "service.peer/dup"));
 
-    assertThat(resolver.rpc()).isEqualTo(SemconvMode.V1_EXPERIMENTAL.withDualEmit());
+    assertThat(resolver.rpc()).isEqualTo(SemconvMode.V1_EXPERIMENTAL);
     assertThat(resolver.servicePeer()).isEqualTo(SemconvMode.V1_EXPERIMENTAL.withDualEmit());
   }
 
@@ -267,8 +267,8 @@ class SemconvStabilityTest {
         SdkConfigProvider.create(DeclarativeConfiguration.toConfigProperties(model));
 
     OpenTelemetry openTelemetry = openTelemetry(configProvider);
-    assertThat(emitOldRpcSemconv(openTelemetry)).isTrue();
-    assertThat(emitPreviewRpcSemconv(openTelemetry)).isFalse();
+    assertThat(emitOldRpcSemconv(openTelemetry)).isFalse();
+    assertThat(emitPreviewRpcSemconv(openTelemetry)).isTrue();
     assertThat(emitOldServicePeerSemconv(openTelemetry)).isTrue();
     assertThat(emitPreviewServicePeerSemconv(openTelemetry)).isFalse();
   }
@@ -309,9 +309,9 @@ class SemconvStabilityTest {
 
   private static Stream<Arguments> structuredRpcSelections() {
     return Stream.of(
-        Arguments.of(0, false, true, SemconvMode.V0_STABLE),
+        Arguments.of(0, false, true, SemconvMode.V1_EXPERIMENTAL),
         Arguments.of(1, true, false, SemconvMode.V1_EXPERIMENTAL),
-        Arguments.of(1, true, true, SemconvMode.V1_EXPERIMENTAL.withDualEmit()));
+        Arguments.of(1, true, true, SemconvMode.V1_EXPERIMENTAL));
   }
 
   private static Stream<Arguments> previewSelections() {
@@ -319,16 +319,37 @@ class SemconvStabilityTest {
         .flatMap(
             domain ->
                 Stream.of(
-                    Arguments.of(domain, "", "", SemconvMode.V0_STABLE),
+                    Arguments.of(
+                        domain,
+                        "",
+                        "",
+                        domain.equals("rpc") ? SemconvMode.V1_EXPERIMENTAL : SemconvMode.V0_STABLE),
+                    Arguments.of(
+                        domain,
+                        domain,
+                        "",
+                        domain.equals("rpc") ? SemconvMode.V1_EXPERIMENTAL : SemconvMode.V0_STABLE),
+                    Arguments.of(
+                        domain,
+                        domain + "/dup",
+                        "",
+                        domain.equals("rpc") ? SemconvMode.V1_EXPERIMENTAL : SemconvMode.V0_STABLE),
                     Arguments.of(domain, "", domain, SemconvMode.V1_EXPERIMENTAL),
                     Arguments.of(
-                        domain, "", domain + "/dup", SemconvMode.V1_EXPERIMENTAL.withDualEmit()),
+                        domain,
+                        "",
+                        domain + "/dup",
+                        domain.equals("rpc")
+                            ? SemconvMode.V1_EXPERIMENTAL
+                            : SemconvMode.V1_EXPERIMENTAL.withDualEmit()),
                     Arguments.of(domain, domain + "/dup", domain, SemconvMode.V1_EXPERIMENTAL),
                     Arguments.of(
                         domain,
                         domain,
                         domain + "/dup",
-                        SemconvMode.V1_EXPERIMENTAL.withDualEmit())));
+                        domain.equals("rpc")
+                            ? SemconvMode.V1_EXPERIMENTAL
+                            : SemconvMode.V1_EXPERIMENTAL.withDualEmit())));
   }
 
   private static OpenTelemetry openTelemetry(ConfigProvider configProvider) {
