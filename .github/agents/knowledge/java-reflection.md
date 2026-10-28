@@ -87,10 +87,11 @@ Keep that cache in the injected helper, or pass a loader-scoped accessor to shar
 | Supported versions expose a compatible member and normal access works | Direct Java call |
 | A fixed optional class or version-selected stable interface declares the member | One nullable static cached `Method` or `MethodHandle` |
 | The declaring type or required method metadata depends on the concrete runtime class | `ClassValue` containing the cached accessor |
-| The exact signature is known and typed or adapted invocation helps, or several member kinds need one invocation abstraction | Cached `MethodHandle` |
+| A method handle is needed and the supported signatures are known | Cached `MethodHandle` using `findStatic` or `findVirtual`; try the known version-specific alternatives |
 | Access requires a target-associated lookup, or `CallSite` linking is part of the design | `MethodHandle` |
 | Setup performs a one-time call, construction, or field access | `Method`, `Constructor`, or `Field` |
-| Compatibility code discovers changing API shapes, receives reflection objects, or inspects member metadata | `Method`, `Constructor`, or `Field` |
+| The supported method signatures aren't known ahead of time | Reflective discovery using `Method`, `Constructor`, or `Field` |
+| Code receives reflection objects or inspects member metadata | `Method`, `Constructor`, or `Field` |
 | The caller deliberately handles `InvocationTargetException` | `Method` or `Constructor` |
 
 Do not choose or recommend `MethodHandle` solely for an assumed performance
@@ -98,6 +99,25 @@ advantage. Use the design criteria above instead.
 
 Mixed use of reflection objects and method handles does not itself require
 conversion.
+
+### Choose the lookup scope
+
+For compatibility code that needs a method handle, use `findStatic` or `findVirtual` when
+the supported signatures are known. Enumerate known version-specific alternatives rather than using
+reflection to remove compatibility branches. Resolve non-JDK signature types without initialization
+through the method's declaring-class loader, for example
+`Class.forName(name, false, declaringClass.getClassLoader())`, rather than the helper's loader.
+
+Use reflective discovery only when the supported method signatures aren't known ahead of time or the
+code needs reflective metadata. On HotSpot, `getMethod` obtains declared public methods on each class it
+searches; `getDeclaredMethod` obtains all declared methods of the class. Constructing those `Method`
+objects resolves their parameter, return, and declared exception types. A missing dependency in an
+unrelated method can therefore break the lookup with `NoClassDefFoundError`. Exact method-handle
+lookup avoids this broad enumeration.
+
+If a `Method` is already available and a method handle is needed, use `lookup.unreflect(method)`
+instead of reconstructing its signature to look up the same method again. Derive follow-on
+accessors from `method.getReturnType()` rather than loading that type again by name.
 
 ## Separate access from invocation
 
