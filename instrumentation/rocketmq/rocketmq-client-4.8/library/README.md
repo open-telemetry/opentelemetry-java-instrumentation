@@ -38,7 +38,7 @@ RocketMqTelemetry telemetry = RocketMqTelemetry.create(openTelemetry);
 
 DefaultMQProducer configuredProducer = new DefaultMQProducer("producer-group");
 configuredProducer.setNamesrvAddr("localhost:9876");
-MQProducer producer = telemetry.wrap(configuredProducer);
+MQProducer producer = telemetry.instrument(configuredProducer);
 
 producer.start();
 producer.send(message);

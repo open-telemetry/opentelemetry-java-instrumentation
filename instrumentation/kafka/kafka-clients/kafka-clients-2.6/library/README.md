@@ -74,7 +74,7 @@ Assuming you have a `Producer<K, V> producer` instance, you can wrap it in the f
 
 ```java
 KafkaTelemetry telemetry = KafkaTelemetry.create(GlobalOpenTelemetry.get());
-Producer<String, String> tracingProducer = telemetry.wrap(producer);
+Producer<String, String> tracingProducer = telemetry.instrument(producer);
 ```
 
 Then use the `tracingProducer` as usual for sending messages to the Kafka cluster.
@@ -83,7 +83,7 @@ Assuming you have a `Consumer<K, V> consumer` instance, you can wrap it in the f
 
 ```java
 KafkaTelemetry telemetry = KafkaTelemetry.create(GlobalOpenTelemetry.get());
-Consumer<String, String> tracingConsumer = telemetry.wrap(this.consumer);
+Consumer<String, String> tracingConsumer = telemetry.instrument(this.consumer);
 ```
 
 Then use the `tracingConsumer` as usual for receiving messages from the Kafka cluster.

@@ -41,7 +41,7 @@ public class OpenAIClientConfiguration {
 
   //Use this client to capture telemetry.
   public OpenAIClient createOtelClient(OpenTelemetry openTelemetry) {
-    return OpenAITelemetry.builder(openTelemetry).build().wrap(createClient());
+    return OpenAITelemetry.builder(openTelemetry).build().instrument(createClient());
   }
 
   //your configuration of the OpenAIClient goes here:

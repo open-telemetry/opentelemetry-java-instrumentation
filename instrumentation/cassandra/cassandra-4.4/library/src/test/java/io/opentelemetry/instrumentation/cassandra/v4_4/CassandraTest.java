@@ -30,6 +30,6 @@ class CassandraTest extends AbstractCassandra44Test {
 
   @Override
   protected CqlSession wrap(CqlSession session, List<InetSocketAddress> contactPoints) {
-    return CassandraTelemetry.create(testing.getOpenTelemetry()).wrap(session, contactPoints);
+    return CassandraTelemetry.create(testing.getOpenTelemetry()).instrument(session, contactPoints);
   }
 }

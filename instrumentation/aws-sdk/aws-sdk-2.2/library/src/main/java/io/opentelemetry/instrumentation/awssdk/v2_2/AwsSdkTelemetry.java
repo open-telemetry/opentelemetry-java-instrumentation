@@ -35,9 +35,10 @@ import software.amazon.awssdk.services.sqs.SqsClient;
  * <p>Certain services additionally require wrapping the SDK client itself:
  *
  * <ul>
- *   <li>SQSClient - {@link #wrap(SqsClient)}
- *   <li>SQSAsyncClient - {@link #wrap(SqsAsyncClient)}
- *   <li>BedrockRuntimeAsyncClient - {@link #wrapBedrockRuntimeClient(BedrockRuntimeAsyncClient)}
+ *   <li>SQSClient - {@link #instrument(SqsClient)}
+ *   <li>SQSAsyncClient - {@link #instrument(SqsAsyncClient)}
+ *   <li>BedrockRuntimeAsyncClient - {@link
+ *       #instrumentBedrockRuntimeClient(BedrockRuntimeAsyncClient)}
  * </ul>
  *
  * <pre>{@code
@@ -145,7 +146,7 @@ public class AwsSdkTelemetry {
    * Construct a new tracing-enable {@link SqsClient} using the provided {@link SqsClient} instance.
    */
   @NoMuzzle
-  public SqsClient wrap(SqsClient sqsClient) {
+  public SqsClient instrument(SqsClient sqsClient) {
     return SqsImpl.wrap(sqsClient);
   }
 
@@ -154,7 +155,7 @@ public class AwsSdkTelemetry {
    * instance.
    */
   @NoMuzzle
-  public SqsAsyncClient wrap(SqsAsyncClient sqsClient) {
+  public SqsAsyncClient instrument(SqsAsyncClient sqsClient) {
     return SqsImpl.wrap(sqsClient);
   }
 
@@ -163,7 +164,7 @@ public class AwsSdkTelemetry {
    * BedrockRuntimeAsyncClient} instance.
    */
   @NoMuzzle
-  public BedrockRuntimeAsyncClient wrapBedrockRuntimeClient(
+  public BedrockRuntimeAsyncClient instrumentBedrockRuntimeClient(
       BedrockRuntimeAsyncClient bedrockClient) {
     return BedrockRuntimeImpl.wrap(bedrockClient, eventLogger, genAiCaptureMessageContent);
   }

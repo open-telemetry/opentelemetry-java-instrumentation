@@ -39,7 +39,7 @@ public final class R2dbcTelemetry {
     this.sqlCommenter = sqlCommenter;
   }
 
-  public ConnectionFactory wrapConnectionFactory(
+  public ConnectionFactory instrumentConnectionFactory(
       ConnectionFactory originalFactory, ConnectionFactoryOptions factoryOptions) {
     ProxyConfig proxyConfig = new ProxyConfig();
     if (sqlCommenter.isEnabled()) {

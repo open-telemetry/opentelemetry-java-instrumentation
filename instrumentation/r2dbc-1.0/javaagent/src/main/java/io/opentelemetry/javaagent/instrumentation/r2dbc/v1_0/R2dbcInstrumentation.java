@@ -49,7 +49,7 @@ class R2dbcInstrumentation implements TypeInstrumentation {
         return null;
       }
 
-      return telemetry().wrapConnectionFactory(factory, factoryOptions);
+      return telemetry().instrumentConnectionFactory(factory, factoryOptions);
     }
   }
 }

@@ -89,7 +89,7 @@ public final class KafkaTelemetry {
   }
 
   /** Returns a decorated {@link Producer} that emits spans for each sent message. */
-  public <K, V> Producer<K, V> wrap(Producer<K, V> producer) {
+  public <K, V> Producer<K, V> instrument(Producer<K, V> producer) {
     return (Producer<K, V>)
         Proxy.newProxyInstance(
             KafkaTelemetry.class.getClassLoader(),
@@ -122,7 +122,7 @@ public final class KafkaTelemetry {
   }
 
   /** Returns a decorated {@link Consumer} that consumes spans for each received message. */
-  public <K, V> Consumer<K, V> wrap(Consumer<K, V> consumer) {
+  public <K, V> Consumer<K, V> instrument(Consumer<K, V> consumer) {
     return (Consumer<K, V>)
         Proxy.newProxyInstance(
             KafkaTelemetry.class.getClassLoader(),

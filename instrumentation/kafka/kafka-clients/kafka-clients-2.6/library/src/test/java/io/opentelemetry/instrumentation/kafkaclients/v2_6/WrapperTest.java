@@ -236,7 +236,7 @@ class WrapperTest extends AbstractWrapperTest {
     Consumer<?, ?> mockConsumer = mock();
     IllegalStateException error = new IllegalStateException("test");
     when(mockConsumer.poll(Duration.ofSeconds(10))).thenThrow(error);
-    Consumer<?, ?> wrappedConsumer = telemetry.wrap(mockConsumer);
+    Consumer<?, ?> wrappedConsumer = telemetry.instrument(mockConsumer);
     assertThatThrownBy(() -> wrappedConsumer.poll(Duration.ofSeconds(10))).isSameAs(error);
 
     testing.waitAndAssertTraces(

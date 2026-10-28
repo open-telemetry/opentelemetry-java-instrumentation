@@ -52,11 +52,11 @@ abstract class Aws2SqsTracingTest extends AbstractAws2SqsTracingTest {
 
   @Override
   protected SqsClient configureSqsClient(SqsClient sqsClient) {
-    return telemetry.wrap(sqsClient);
+    return telemetry.instrument(sqsClient);
   }
 
   @Override
   protected SqsAsyncClient configureSqsClient(SqsAsyncClient sqsClient) {
-    return telemetry.wrap(sqsClient);
+    return telemetry.instrument(sqsClient);
   }
 }

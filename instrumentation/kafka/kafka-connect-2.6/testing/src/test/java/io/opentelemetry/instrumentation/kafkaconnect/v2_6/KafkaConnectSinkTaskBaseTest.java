@@ -617,6 +617,6 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
   }
 
   protected Producer<String, String> instrument(Producer<String, String> producer) {
-    return KafkaTelemetry.create(openTelemetry).wrap(producer);
+    return KafkaTelemetry.create(openTelemetry).instrument(producer);
   }
 }

@@ -35,7 +35,7 @@ public final class JavaHttpClientTelemetry {
   }
 
   /** Returns a new instrumented {@link HttpClient} that wraps the provided client. */
-  public HttpClient wrap(HttpClient client) {
+  public HttpClient instrument(HttpClient client) {
     return new OpenTelemetryHttpClient(client, instrumenter, headersSetter);
   }
 }

@@ -43,7 +43,7 @@ public final class JdbcTelemetry {
     this.sqlCommenter = sqlCommenter;
   }
 
-  public DataSource wrap(DataSource dataSource) {
+  public DataSource instrument(DataSource dataSource) {
     return new OpenTelemetryDataSource(
         dataSource,
         this.dataSourceInstrumenter,

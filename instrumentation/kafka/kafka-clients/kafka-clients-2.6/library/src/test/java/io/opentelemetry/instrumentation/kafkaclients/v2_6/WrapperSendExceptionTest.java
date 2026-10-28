@@ -39,7 +39,7 @@ class WrapperSendExceptionTest {
     when(producer.send(any(), any())).thenThrow(new KafkaException("send failed"));
 
     KafkaTelemetry telemetry = KafkaTelemetry.builder(testing.getOpenTelemetry()).build();
-    Producer<String, String> wrappedProducer = telemetry.wrap(producer);
+    Producer<String, String> wrappedProducer = telemetry.instrument(producer);
 
     ProducerRecord<String, String> record =
         new ProducerRecord<>("test-topic", "test-key", "test-value");

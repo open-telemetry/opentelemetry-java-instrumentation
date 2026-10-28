@@ -33,7 +33,7 @@ The instrumentation library allows creating instrumented `Scan` (e.g., `TableSca
 ```java
 OpenTelemetry openTelemetry = // ...
 IcebergTelemetry icebergTelemetry = IcebergTelemetry.create(openTelemetry);
-TableScan tableScan = icebergTelemetry.wrapScan(table.newScan());
+TableScan tableScan = icebergTelemetry.instrumentScan(table.newScan());
 
 try (CloseableIterable<FileScanTask> fileScanTasks = tableScan.planFiles()) {
   // Process the scan tasks

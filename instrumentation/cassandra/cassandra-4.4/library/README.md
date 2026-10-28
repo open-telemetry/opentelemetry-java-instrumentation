@@ -46,7 +46,7 @@ CassandraTelemetry telemetry = CassandraTelemetry.create(openTelemetry);
 CqlSession session = CqlSession.builder().build();
 
 // Wrap the session
-CqlSession tracedSession = telemetry.wrap(session);
+CqlSession tracedSession = telemetry.instrument(session);
 
 // ... use the tracedSession to make requests
 ```
@@ -70,13 +70,13 @@ CqlSession session =
         .addContactPoints(contactPoints)
         .withLocalDatacenter("datacenter1")
         .build();
-CqlSession tracedSession = telemetry.wrap(session, contactPoints);
+CqlSession tracedSession = telemetry.instrument(session, contactPoints);
 ```
 
 Include contact points from every source, including the session builder and driver configuration.
 Do not use the current coordinator or discovered cluster nodes. The wrapper snapshots this list
 without changing the session's connections.
 
-`telemetry.wrap(session)` still traces operations but omits `server.address` and `server.port`.
+`telemetry.instrument(session)` still traces operations but omits `server.address` and `server.port`.
 The Java agent captures configured contact points
 automatically and does not require this overload.

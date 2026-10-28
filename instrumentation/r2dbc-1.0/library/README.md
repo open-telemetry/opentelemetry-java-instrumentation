@@ -36,7 +36,7 @@ The instrumentation library provides a R2dbc `ProxyConnectionFactory` that gets 
 ConnectionFactory wrapWithProxyFactory(OpenTelemetry openTelemetry, ConnectionFactory originalFactory, ConnectionFactoryOptions factoryOptions) {
   return R2dbcTelemetryBuilder
     .create(openTelemetry)
-    .wrapConnectionFactory(originalFactory, factoryOptions);
+    .instrumentConnectionFactory(originalFactory, factoryOptions);
 }
 ```
 
@@ -68,7 +68,7 @@ class R2dbcInstrumentingPostProcessor implements BeanPostProcessor {
     }
     ConnectionFactory connectionFactory = (ConnectionFactory) bean;
     return R2dbcTelemetry.create(openTelemetry)
-        .wrapConnectionFactory(connectionFactory, getConnectionFactoryOptions(connectionFactory));
+        .instrumentConnectionFactory(connectionFactory, getConnectionFactoryOptions(connectionFactory));
   }
 
   private static ConnectionFactoryOptions getConnectionFactoryOptions(ConnectionFactory connectionFactory) {

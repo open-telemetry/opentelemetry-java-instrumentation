@@ -47,13 +47,13 @@ public final class CassandraTelemetry {
    * Construct a new tracing-enabled CqlSession using the provided {@link CqlSession} instance.
    *
    * <p>This overload omits {@code server.address} and {@code server.port} attributes because the
-   * session does not expose the complete original contact points. Use {@link #wrap(CqlSession,
-   * Collection)} when the configured contact points are available.
+   * session does not expose the complete original contact points. Use {@link
+   * #instrument(CqlSession, Collection)} when the configured contact points are available.
    *
    * @param session An instance of CqlSession configured as desired.
    * @return a {@link TracingCqlSession}.
    */
-  public CqlSession wrap(CqlSession session) {
+  public CqlSession instrument(CqlSession session) {
     return tracingCqlSession.wrapSession(requireNonNull(session, "session"));
   }
 
@@ -77,7 +77,7 @@ public final class CassandraTelemetry {
    * @return a tracing-enabled session
    * @throws NullPointerException if {@code session} or {@code contactPoints} is {@code null}
    */
-  public CqlSession wrap(CqlSession session, Collection<InetSocketAddress> contactPoints) {
+  public CqlSession instrument(CqlSession session, Collection<InetSocketAddress> contactPoints) {
     return tracingCqlSession.wrapSession(
         requireNonNull(session, "session"), requireNonNull(contactPoints, "contactPoints"));
   }

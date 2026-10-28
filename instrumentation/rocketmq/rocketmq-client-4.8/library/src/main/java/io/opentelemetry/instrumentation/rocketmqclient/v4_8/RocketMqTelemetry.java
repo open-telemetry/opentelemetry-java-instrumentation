@@ -62,7 +62,7 @@ public final class RocketMqTelemetry {
    * producer. The wrapper registers its send hook automatically. Use the collection-based {@code
    * send} overloads for batches so context can be injected before encoding.
    */
-  public MQProducer wrap(DefaultMQProducer producer) {
+  public MQProducer instrument(DefaultMQProducer producer) {
     return RocketMqProducerWrapper.wrap(producer, rocketMqProducerInstrumenter, propagator);
   }
 
@@ -70,8 +70,8 @@ public final class RocketMqTelemetry {
    * Returns a new {@link SendMessageHook} for use with methods like {@link
    * org.apache.rocketmq.client.impl.producer.DefaultMQProducerImpl#registerSendMessageHook(SendMessageHook)}.
    *
-   * @deprecated Use {@link #wrap(DefaultMQProducer)} instead. May be removed in the next minor
-   *     release.
+   * @deprecated Use {@link #instrument(DefaultMQProducer)} instead. May be removed in the next
+   *     minor release.
    */
   @Deprecated // may be removed in the next minor release
   public SendMessageHook createSendMessageHook() {
