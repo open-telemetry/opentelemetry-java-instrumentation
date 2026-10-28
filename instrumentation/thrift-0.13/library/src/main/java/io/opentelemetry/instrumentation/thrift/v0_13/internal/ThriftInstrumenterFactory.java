@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttri
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSizeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -27,7 +28,6 @@ import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.thrift.v0_13.ThriftRequest;
 import io.opentelemetry.instrumentation.thrift.v0_13.ThriftResponse;
-import io.opentelemetry.semconv.SchemaUrls;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
@@ -67,7 +67,7 @@ public final class ThriftInstrumenterFactory {
         new ThriftClientNetworkAttributesGetter();
 
     clientInstrumenterBuilder
-        .setSchemaUrl(SchemaUrls.V1_44_0)
+        .setSchemaUrl(RpcSchemaUrls.SCHEMA_URL)
         .setSpanStatusExtractor(spanStatusExtractor)
         .addAttributesExtractors(additionalExtractors)
         .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
@@ -96,7 +96,7 @@ public final class ThriftInstrumenterFactory {
     ThriftServerNetworkAttributesGetter netServerAttributesGetter =
         new ThriftServerNetworkAttributesGetter();
     serverInstrumenterBuilder
-        .setSchemaUrl(SchemaUrls.V1_44_0)
+        .setSchemaUrl(RpcSchemaUrls.SCHEMA_URL)
         .setSpanStatusExtractor(spanStatusExtractor)
         .addAttributesExtractors(additionalExtractors)
         .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))

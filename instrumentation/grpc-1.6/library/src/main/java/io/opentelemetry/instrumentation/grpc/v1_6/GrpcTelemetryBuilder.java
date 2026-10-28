@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientMetri
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSizeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -240,7 +241,7 @@ public final class GrpcTelemetryBuilder {
     GrpcRpcAttributesGetter serverRpcAttributesGetter = new GrpcRpcAttributesGetter(false);
 
     clientInstrumenterBuilder
-        .setSchemaUrl("https://opentelemetry.io/schemas/1.44.0")
+        .setSchemaUrl(RpcSchemaUrls.SCHEMA_URL)
         .setSpanStatusExtractor(GrpcSpanStatusExtractor.CLIENT)
         .addAttributesExtractors(additionalExtractors)
         .addAttributesExtractor(RpcClientAttributesExtractor.create(clientRpcAttributesGetter))
@@ -254,7 +255,7 @@ public final class GrpcTelemetryBuilder {
     Experimental.addOperationListenerAttributesExtractor(
         clientInstrumenterBuilder, RpcSizeAttributesExtractor.create(clientRpcAttributesGetter));
     serverInstrumenterBuilder
-        .setSchemaUrl("https://opentelemetry.io/schemas/1.44.0")
+        .setSchemaUrl(RpcSchemaUrls.SCHEMA_URL)
         .setSpanStatusExtractor(GrpcSpanStatusExtractor.SERVER)
         .addAttributesExtractors(additionalExtractors)
         .addAttributesExtractor(RpcServerAttributesExtractor.create(serverRpcAttributesGetter))

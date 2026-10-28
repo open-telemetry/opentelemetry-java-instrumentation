@@ -11,6 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -26,7 +27,7 @@ public class RmiServerSingletons {
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.rmi",
                 RpcSpanNameExtractor.create(rpcAttributesGetter))
-            .setSchemaUrl("https://opentelemetry.io/schemas/1.44.0")
+            .setSchemaUrl(RpcSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
             .addOperationMetrics(RpcServerMetrics.get());
     setRpcServerExceptionEventExtractor(builder);
