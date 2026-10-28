@@ -101,15 +101,16 @@ conversion.
 
 ### Avoid independently resolved signature types
 
-For runtime compatibility lookups, avoid resolving library-specific return types independently to
-build a `findStatic` or `findVirtual` signature. Classes with the same binary name but different
-defining class loaders are different types. Mixing a declaring class with independently resolved
-signature types can introduce conflicting loader constraints.
+For runtime compatibility discovery, `getMethod` or `getDeclaredMethod` lets the actual method
+supply its return type, instead of enumerating version-specific return types or selecting a
+same-named type from another class loader. Classes with the same binary name but different defining
+class loaders are different types. Mixing a declaring class with independently resolved signature
+types can introduce conflicting loader constraints.
 
-Use `getMethod` or `getDeclaredMethod` to obtain the actual `Method`, then `lookup.unreflect(method)`
-when a method handle is needed. Derive follow-on accessors from `method.getReturnType()` instead of
-loading that type again by name. If a `Method` is already available, prefer `unreflect` over
-reconstructing its signature to look up the same method again.
+If a `Method` is already available and a method handle is needed, use `lookup.unreflect(method)`
+instead of reconstructing its signature to look up the same method again. Derive follow-on
+accessors from `method.getReturnType()` rather than loading that type again by name.
+`findStatic` and `findVirtual` remain appropriate when an exact known signature is required.
 
 ## Separate access from invocation
 
