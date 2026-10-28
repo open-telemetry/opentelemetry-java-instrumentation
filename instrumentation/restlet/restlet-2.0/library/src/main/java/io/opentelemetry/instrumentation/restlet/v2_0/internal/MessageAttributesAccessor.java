@@ -10,6 +10,7 @@ import static java.lang.invoke.MethodType.methodType;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nullable;
 import org.restlet.Message;
 import org.restlet.data.Form;
@@ -28,21 +29,34 @@ public final class MessageAttributesAccessor {
 
   @Nullable
   private static MethodHandle findGetAttributes() {
-    try {
-      return MethodHandles.lookup().unreflect(Message.class.getMethod("getAttributes"));
-    } catch (NoSuchMethodException | IllegalAccessException ignored) {
-      return null;
+    MethodHandles.Lookup lookup = MethodHandles.lookup();
+    // The return type changed to ConcurrentMap in 2.1.
+    for (Class<?> returnType : new Class<?>[] {Map.class, ConcurrentMap.class}) {
+      try {
+        return lookup.findVirtual(Message.class, "getAttributes", methodType(returnType));
+      } catch (NoSuchMethodException | IllegalAccessException ignored) {
+        // Try the other signature.
+      }
     }
+    return null;
   }
 
   @Nullable
   private static MethodHandle findSetValue() {
-    try {
-      return MethodHandles.lookup()
-          .unreflect(Series.class.getMethod("set", String.class, String.class));
-    } catch (NoSuchMethodException | IllegalAccessException ignored) {
-      return null;
+    // The generic bound changed from Parameter to NamedValue in 2.1.
+    for (String typeName :
+        new String[] {"org.restlet.util.NamedValue", "org.restlet.data.Parameter"}) {
+      try {
+        Class<?> returnType = Class.forName(typeName, false, Series.class.getClassLoader());
+        return MethodHandles.lookup()
+            .findVirtual(Series.class, "set", methodType(returnType, String.class, String.class));
+      } catch (ClassNotFoundException | NoSuchMethodException ignored) {
+        // Try the other signature.
+      } catch (IllegalAccessException ignored) {
+        return null;
+      }
     }
+    return null;
   }
 
   @Nullable

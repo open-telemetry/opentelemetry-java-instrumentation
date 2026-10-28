@@ -28,13 +28,22 @@ class SpringWebHttpAttributesGetter
 
     MethodHandle getStatusCode = null;
     MethodHandle statusCodeValue = null;
-    try {
-      getStatusCode = lookup.unreflect(ClientHttpResponse.class.getMethod("getStatusCode"));
-      statusCodeValue =
-          lookup.findVirtual(
-              getStatusCode.type().returnType(), "value", MethodType.methodType(int.class));
-    } catch (NoSuchMethodException | IllegalAccessException ignored) {
-      // ignored
+    // Spring 6 changed the return type from HttpStatus to HttpStatusCode.
+    for (String typeName :
+        new String[] {
+          "org.springframework.http.HttpStatusCode", "org.springframework.http.HttpStatus"
+        }) {
+      try {
+        Class<?> statusType =
+            Class.forName(typeName, false, ClientHttpResponse.class.getClassLoader());
+        getStatusCode =
+            lookup.findVirtual(
+                ClientHttpResponse.class, "getStatusCode", MethodType.methodType(statusType));
+        statusCodeValue = lookup.findVirtual(statusType, "value", MethodType.methodType(int.class));
+        break;
+      } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException ignored) {
+        // Try the other signature.
+      }
     }
 
     GET_STATUS_CODE = getStatusCode;

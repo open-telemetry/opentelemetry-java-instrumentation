@@ -17,9 +17,11 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSan
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -51,8 +53,19 @@ public abstract class RedissonRequest {
 
   @Nullable
   private static MethodHandle findGetPromiseMethod(Class<?> commandClass) {
+    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
     try {
-      return MethodHandles.publicLookup().unreflect(commandClass.getMethod("getPromise"));
+      Class<?> promiseClass =
+          Class.forName("org.redisson.misc.RPromise", false, commandClass.getClassLoader());
+      return lookup.findVirtual(commandClass, "getPromise", MethodType.methodType(promiseClass));
+    } catch (NoSuchMethodException | ClassNotFoundException ignored) {
+      // In 3.16.8 the return type changed from RPromise to CompletableFuture.
+    } catch (IllegalAccessException ignored) {
+      return null;
+    }
+    try {
+      return lookup.findVirtual(
+          commandClass, "getPromise", MethodType.methodType(CompletableFuture.class));
     } catch (NoSuchMethodException | IllegalAccessException ignored) {
       return null;
     }
