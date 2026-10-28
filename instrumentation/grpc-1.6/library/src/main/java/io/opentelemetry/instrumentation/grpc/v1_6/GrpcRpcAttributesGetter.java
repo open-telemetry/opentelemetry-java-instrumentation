@@ -24,31 +24,8 @@ final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, 
   }
 
   @Override
-  public String getSystem(GrpcRequest request) {
+  public String getRpcSystemName(GrpcRequest request) {
     return "grpc";
-  }
-
-  @Override
-  @Nullable
-  public String getService(GrpcRequest request) {
-    String fullMethodName = request.getFullMethodName();
-    int slashIndex = fullMethodName.lastIndexOf('/');
-    if (slashIndex == -1) {
-      return null;
-    }
-    return fullMethodName.substring(0, slashIndex);
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getMethod(GrpcRequest request) {
-    String fullMethodName = request.getFullMethodName();
-    int slashIndex = fullMethodName.lastIndexOf('/');
-    if (slashIndex == -1) {
-      return null;
-    }
-    return fullMethodName.substring(slashIndex + 1);
   }
 
   @Override
