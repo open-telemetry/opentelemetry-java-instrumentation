@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       baseline-ref:
-        description: Optional trusted revision to compare against the selected agent
+        description: Optional revision reachable from upstream main to compare against the selected agent
         required: false
         type: string
 
@@ -41,13 +41,27 @@ jobs:
         working-directory: benchmark-overhead
         run: ./gradlew spotlessApply test --tests 'io.opentelemetry.startup.*Test' startupRecorderJar
 
-      - name: Check out baseline agent sources
+      - name: Check out upstream main history for baseline validation
         if: inputs.baseline-ref != ''
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.baseline-ref }}
+          ref: main
+          fetch-depth: 0
           path: baseline
           persist-credentials: false
+
+      - name: Select a baseline revision from upstream main history
+        if: inputs.baseline-ref != ''
+        env:
+          BASELINE_REF: ${{ inputs.baseline-ref }}
+        run: |
+          set -euo pipefail
+          baseline_revision=$(git -C baseline rev-parse --verify --end-of-options "${BASELINE_REF}^{commit}")
+          if ! git -C baseline merge-base --is-ancestor "$baseline_revision" refs/remotes/origin/main; then
+            echo "::error::Baseline revision must be reachable from upstream main"
+            exit 1
+          fi
+          git -C baseline checkout --detach "$baseline_revision"
 
       - name: Build baseline agent
         if: inputs.baseline-ref != ''
