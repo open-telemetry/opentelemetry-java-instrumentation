@@ -118,6 +118,24 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
     return commandContext;
   }
 
+  @Nullable
+  public static <T> JedisRequestContext<T> attachForConnectionReply() {
+    JedisRequestContext<?> requestContext = currentRequestContext.get();
+    if (requestContext == null) {
+      return null;
+    }
+    if (requestContext.connectionInitialization) {
+      return attachForConnectionInitializationCommand();
+    }
+    if (!requestContext.captureServerErrors) {
+      return null;
+    }
+
+    JedisRequestContext<T> nestedContext = new JedisRequestContext<>();
+    nestedContext.previousContext = currentRequestContext.set(nestedContext);
+    return nestedContext;
+  }
+
   public static void completeConnectionInitializationCommands(
       @Nullable Object responses, @Nullable Throwable throwable) {
     JedisRequestContext<?> initializationContext = current();

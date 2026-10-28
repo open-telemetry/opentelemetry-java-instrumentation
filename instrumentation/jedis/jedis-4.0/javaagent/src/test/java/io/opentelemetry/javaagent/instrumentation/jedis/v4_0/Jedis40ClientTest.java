@@ -852,6 +852,57 @@ class Jedis40ClientTest {
   }
 
   @Test
+  void caughtSplitConnectionServerErrorDoesNotFailSuccessfulOuterPipeline() {
+    jedis.lpush("nested-wrong-type", "value");
+    testing.waitForTraces(1);
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    nestedClient.ping();
+    testing.waitForTraces(2);
+    testing.clearData();
+
+    List<JedisDataException> nestedErrors = new ArrayList<>();
+    Pipeline outer = jedis.pipelined();
+    outer.appendCommand(
+        new CommandObject<>(
+            new CommandArguments(Protocol.Command.PING),
+            new Builder<String>() {
+              @Override
+              public String build(Object response) {
+                try {
+                  nestedClient
+                      .getConnection()
+                      .sendCommand(Protocol.Command.GET, "nested-wrong-type".getBytes(UTF_8));
+                  nestedClient.getConnection().getOne();
+                } catch (JedisDataException error) {
+                  nestedErrors.add(error);
+                }
+                return new String((byte[]) response, UTF_8);
+              }
+            }));
+    outer.set("outer-pipeline", "value");
+
+    assertThat(outer.syncAndReturnAll()).containsExactly("PONG", "OK");
+    assertThat(nestedErrors).hasSize(1);
+    assertThat(nestedErrors.get(0)).hasMessageStartingWith("WRONGTYPE");
+
+    testing.waitForTraces(1);
+    assertThat(testing.spans())
+        .hasSize(1)
+        .allSatisfy(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-4.0",
+        "db.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .hasSize(1)
+                        .allSatisfy(
+                            point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull())));
+  }
+
+  @Test
   void uncaughtNestedCommandServerErrorFailsOuterPipeline() {
     jedis.lpush("nested-wrong-type", "value");
     testing.waitForTraces(1);

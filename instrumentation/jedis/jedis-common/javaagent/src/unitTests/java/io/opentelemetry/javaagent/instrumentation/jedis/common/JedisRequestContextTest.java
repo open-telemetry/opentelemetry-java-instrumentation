@@ -104,6 +104,24 @@ class JedisRequestContextTest {
   }
 
   @Test
+  void caughtConnectionReplyServerErrorDoesNotFailEnclosingBatch() {
+    JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch();
+    try {
+      JedisRequestContext<Object> replyContext =
+          requireNonNull(JedisRequestContext.attachForConnectionReply());
+      Throwable serverFailure = new IllegalStateException("WRONGTYPE handled server failure");
+      JedisRequestContext.captureServerError(serverFailure);
+
+      assertThat(replyContext.detachAndEnd(serverFailure)).isSameAs(serverFailure);
+      assertThat(batchContext.isServerError(serverFailure)).isTrue();
+      assertThat(batchContext.detachAndEnd(null)).isNull();
+    } finally {
+      batchContext.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  @Test
   void connectionInitializationIsolatesAndRestoresEnclosingRequest() {
     JedisRequestContext<Object> outerContext = JedisRequestContext.attach();
     try {
