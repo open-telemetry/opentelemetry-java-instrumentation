@@ -32,7 +32,6 @@ public abstract class AbstractVaadin14Test extends AbstractVaadinTest {
     assertThat(initialResponse.status().code()).isEqualTo(200);
     String setCookie = initialResponse.headers().get(HttpHeaderNames.SET_COOKIE);
     String sessionCookie = setCookie.substring(0, setCookie.indexOf(';'));
-    initializeUi(sessionCookie);
     assertThat(MainView.getButtonNodeId()).isGreaterThanOrEqualTo(0);
     assertThat(MainView.getUiId()).isGreaterThanOrEqualTo(0);
     assertThat(MainView.getCsrfToken()).isNotEmpty();
@@ -44,11 +43,7 @@ public abstract class AbstractVaadin14Test extends AbstractVaadinTest {
             + MainView.getCsrfToken()
             + "\",\"rpc\":[{\"type\":\"event\",\"node\":"
             + MainView.getButtonNodeId()
-            + ",\"event\":\"click\"}],\"syncId\":"
-            + getSyncId()
-            + ",\"clientId\":"
-            + getClientId()
-            + "}";
+            + ",\"event\":\"click\"}],\"syncId\":0,\"clientId\":0}";
     AggregatedHttpRequest uidlRequest =
         AggregatedHttpRequest.of(
             RequestHeaders.builder(
@@ -62,16 +57,6 @@ public abstract class AbstractVaadin14Test extends AbstractVaadinTest {
     assertThat(eventResponse.status().code()).isEqualTo(200);
     assertThat(eventResponse.contentUtf8()).contains("Other view");
     assertClientEvent();
-  }
-
-  protected void initializeUi(String sessionCookie) {}
-
-  protected int getSyncId() {
-    return 0;
-  }
-
-  protected int getClientId() {
-    return 0;
   }
 
   @Override

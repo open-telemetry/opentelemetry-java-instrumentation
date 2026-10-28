@@ -54,13 +54,6 @@ testing {
       }
     }
 
-    register<JvmTestSuite>("vaadin16Test") {
-      dependencies {
-        implementation(project(":instrumentation:vaadin-14.2:testing"))
-        implementation("com.vaadin:vaadin-spring-boot-starter:16.0.0")
-      }
-    }
-
     register<JvmTestSuite>("vaadin14LatestTest") {
       dependencies {
         implementation(project(":instrumentation:vaadin-14.2:testing"))
@@ -104,7 +97,7 @@ tasks {
     if (otelProps.testLatestDeps) {
       listOf("vaadin14LatestTest", "vaadinLatestTest")
     } else {
-      listOf("vaadin142Test", "vaadin16Test")
+      listOf("vaadin142Test")
     }
   val controllerTelemetryTasks =
     controllerTelemetrySuites.map { suiteName ->
@@ -129,7 +122,7 @@ tasks {
     if (otelProps.testLatestDeps) {
       dependsOn(testing.suites.named("vaadin14LatestTest"), testing.suites.named("vaadinLatestTest"))
     } else {
-      dependsOn(testing.suites.named("vaadin142Test"), testing.suites.named("vaadin16Test"))
+      dependsOn(testing.suites.named("vaadin142Test"))
     }
     dependsOn(controllerTelemetryTasks)
   }
