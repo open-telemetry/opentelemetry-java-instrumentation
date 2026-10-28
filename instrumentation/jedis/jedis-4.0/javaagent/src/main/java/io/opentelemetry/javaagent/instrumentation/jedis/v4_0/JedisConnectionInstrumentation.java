@@ -57,6 +57,18 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
     transformer.applyAdviceToMethod(
         named("initializeFromClientConfig"), getClass().getName() + "$InitializationAdvice");
+
+    transformer.applyAdviceToMethod(
+        named("getOne").and(takesArguments(0)),
+        getClass().getName() + "$InitializationResponseAdvice");
+
+    transformer.applyAdviceToMethod(
+        named("getMany").and(takesArguments(1)),
+        getClass().getName() + "$InitializationResponseAdvice");
+
+    transformer.applyAdviceToMethod(
+        named("getStatusCodeReply").and(takesArguments(0)),
+        getClass().getName() + "$InitializationResponseAdvice");
   }
 
   public static class AdviceScope {
@@ -119,6 +131,24 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static JedisRequestContext<JedisRequest> onEnter() {
       return JedisRequestContext.attachForConnectionInitialization();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable JedisRequestContext<JedisRequest> requestContext) {
+      if (requestContext != null) {
+        requestContext.detachAndEnd(throwable);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InitializationResponseAdvice {
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static JedisRequestContext<JedisRequest> onEnter() {
+      return JedisRequestContext.attachForConnectionInitializationCommand();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

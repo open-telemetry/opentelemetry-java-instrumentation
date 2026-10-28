@@ -105,6 +105,7 @@ class Jedis40ClientTest {
     jedis.resetState();
     jedis.select(0);
     jedis.flushAll();
+    testing.waitForTraces(2);
     testing.clearData();
   }
 
@@ -208,6 +209,83 @@ class Jedis40ClientTest {
                           point ->
                               assertThat(point.getAttributes().get(ERROR_TYPE))
                                   .isEqualTo("WRONGTYPE"));
+                  assertThat(metric.getHistogramData().getPoints())
+                      .filteredOn(
+                          point -> "SET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                      .singleElement()
+                      .satisfies(
+                          point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
+                }));
+  }
+
+  @Test
+  void coldPooledSelectFailureIsAttributedToSelect() throws Exception {
+    String username = "jedis-out-of-range-db";
+    String password = "password";
+    assertThat(
+            redisServer
+                .execInContainer(
+                    "redis-cli",
+                    "ACL",
+                    "SETUSER",
+                    username,
+                    "on",
+                    ">" + password,
+                    "allkeys",
+                    "+@all")
+                .getStdout()
+                .trim())
+        .isEqualTo("OK");
+    cleanup.deferCleanup(
+        () -> redisServer.execInContainer("redis-cli", "ACL", "DELUSER", username));
+
+    JedisClientConfig clientConfig =
+        DefaultJedisClientConfig.builder().user(username).password(password).database(1000).build();
+    UnifiedJedis client =
+        new UnifiedJedis(
+            new PooledConnectionProvider(new HostAndPort(host, port), clientConfig),
+            1,
+            Duration.ZERO);
+    cleanup.deferCleanup(client);
+
+    assertThatThrownBy(() -> client.get("unreached"))
+        .hasMessageStartingWith("ERR DB index is out of range");
+    jedis.set("after-initialization-error", "value");
+
+    boolean jedis51OrLater = Boolean.getBoolean("testJedis51OrLater");
+    testing.waitForTraces(jedis51OrLater ? 5 : 4);
+    assertThat(testing.spans())
+        .filteredOn(span -> "AUTH".equals(span.getAttributes().get(DB_OPERATION_NAME)))
+        .singleElement()
+        .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
+    assertThat(testing.spans())
+        .filteredOn(span -> "SELECT".equals(span.getAttributes().get(DB_OPERATION_NAME)))
+        .singleElement()
+        .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo("ERR"));
+    assertThat(testing.spans())
+        .filteredOn(span -> "SET".equals(span.getAttributes().get(DB_OPERATION_NAME)))
+        .singleElement()
+        .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-4.0",
+        "db.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric -> {
+                  assertThat(metric.getHistogramData().getPoints())
+                      .filteredOn(
+                          point -> "AUTH".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                      .singleElement()
+                      .satisfies(
+                          point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
+                  assertThat(metric.getHistogramData().getPoints())
+                      .filteredOn(
+                          point -> "SELECT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                      .singleElement()
+                      .satisfies(
+                          point ->
+                              assertThat(point.getAttributes().get(ERROR_TYPE)).isEqualTo("ERR"));
                   assertThat(metric.getHistogramData().getPoints())
                       .filteredOn(
                           point -> "SET".equals(point.getAttributes().get(DB_OPERATION_NAME)))

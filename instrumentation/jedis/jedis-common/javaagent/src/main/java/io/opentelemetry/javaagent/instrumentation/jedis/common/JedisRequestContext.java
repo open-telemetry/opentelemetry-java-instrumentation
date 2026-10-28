@@ -26,6 +26,7 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
   @Nullable private JedisRequestContext<?> previousContext;
   @Nullable private Object transactionOwner;
   private boolean captureServerErrors;
+  private boolean connectionInitialization;
 
   private JedisRequestContext() {}
 
@@ -94,7 +95,31 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
     }
     JedisRequestContext<T> requestContext = new JedisRequestContext<>();
     requestContext.previousContext = currentRequestContext.set(requestContext);
+    requestContext.connectionInitialization = true;
     return requestContext;
+  }
+
+  @Nullable
+  public static <T> JedisRequestContext<T> attachForConnectionInitializationCommand() {
+    JedisRequestContext<T> initializationContext = current();
+    if (initializationContext == null
+        || !initializationContext.connectionInitialization
+        || initializationContext.instrumenter == null
+        || initializationContext.context == null
+        || initializationContext.request == null) {
+      return null;
+    }
+
+    JedisRequestContext<T> commandContext = new JedisRequestContext<>();
+    commandContext.previousContext = currentRequestContext.set(commandContext);
+    commandContext.instrumenter = initializationContext.instrumenter;
+    commandContext.context = initializationContext.context;
+    commandContext.request = initializationContext.request;
+    commandContext.associateServerErrorContext(commandContext.request);
+    initializationContext.instrumenter = null;
+    initializationContext.context = null;
+    initializationContext.request = null;
+    return commandContext;
   }
 
   @Nullable

@@ -9,9 +9,17 @@ import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.junit.jupiter.api.Test;
 
 class JedisRequestContextTest {
+  private static final Instrumenter<InitializationRequest, Void> instrumenter =
+      Instrumenter.<InitializationRequest, Void>builder(
+              OpenTelemetry.noop(), "test", request -> "test")
+          .buildInstrumenter();
+
   @Test
   void returnedBatchFailuresUseFirstServerError() {
     Throwable firstServerFailure = new IllegalStateException("first server failure");
@@ -107,6 +115,37 @@ class JedisRequestContextTest {
       assertThat(initializationContext.detachAndEnd(serverFailure)).isSameAs(serverFailure);
       assertThat(outerContext.isServerError(serverFailure)).isTrue();
       assertThat(JedisRequestContext.attach()).isNull();
+      assertThat(outerContext.detachAndEnd(null)).isNull();
+    } finally {
+      outerContext.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  @Test
+  void connectionInitializationCompletesEachCommandAtItsResponse() {
+    JedisRequestContext<Object> outerContext = JedisRequestContext.attach();
+    try {
+      JedisRequestContext<Object> initializationContext =
+          requireNonNull(JedisRequestContext.attachForConnectionInitialization());
+
+      InitializationRequest authRequest = new InitializationRequest();
+      JedisRequestContext.endIfNotAttached(instrumenter, Context.root(), authRequest, null);
+      JedisRequestContext<InitializationRequest> authCommandContext =
+          requireNonNull(JedisRequestContext.attachForConnectionInitializationCommand());
+      assertThat(authCommandContext.detachAndEnd(null)).isNull();
+
+      InitializationRequest selectRequest = new InitializationRequest();
+      JedisRequestContext.endIfNotAttached(instrumenter, Context.root(), selectRequest, null);
+      JedisRequestContext<InitializationRequest> selectCommandContext =
+          requireNonNull(JedisRequestContext.attachForConnectionInitializationCommand());
+      Throwable selectFailure = new IllegalStateException("SELECT failure");
+      JedisRequestContext.captureServerError(selectFailure);
+
+      assertThat(selectCommandContext.detachAndEnd(selectFailure)).isSameAs(selectFailure);
+      assertThat(authRequest.isServerError(selectFailure)).isFalse();
+      assertThat(selectRequest.isServerError(selectFailure)).isTrue();
+      assertThat(initializationContext.detachAndEnd(null)).isNull();
       assertThat(outerContext.detachAndEnd(null)).isNull();
     } finally {
       outerContext.detachAndEnd(null);
@@ -295,6 +334,19 @@ class JedisRequestContextTest {
       if (next != null) {
         next.detachAndEnd(null);
       }
+    }
+  }
+
+  private static class InitializationRequest implements JedisServerErrorRequest {
+    private JedisServerErrorContext serverErrorContext;
+
+    @Override
+    public void setServerErrorContext(JedisServerErrorContext serverErrorContext) {
+      this.serverErrorContext = serverErrorContext;
+    }
+
+    private boolean isServerError(Throwable throwable) {
+      return serverErrorContext != null && serverErrorContext.isServerError(throwable);
     }
   }
 }
