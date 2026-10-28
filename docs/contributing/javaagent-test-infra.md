@@ -45,11 +45,15 @@ JUnit extensions such as `AgentInstrumentationExtension`:
 testImplementation("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing:3.0.0-alpha-SNAPSHOT")
 ```
 
-This also adds `testing-common` as a dependency, so its shared assertions and HTTP fixtures are
-available without a separate dependency declaration.
-
 ## :testing-common
 
 This module provides the shared test runner, library JUnit extensions, assertions, HTTP fixtures,
-metadata collection, and utilities. Library instrumentation tests use
-`io.opentelemetry.javaagent:opentelemetry-testing-common`.
+metadata collection, and utilities.
+
+The `otel.library-instrumentation` convention adds this module to the test classpath automatically.
+If you configure tests without that convention, add the published artifact to use library-specific
+JUnit extensions such as `LibraryInstrumentationExtension`:
+
+```kotlin
+testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common:3.0.0-alpha-SNAPSHOT")
+```
