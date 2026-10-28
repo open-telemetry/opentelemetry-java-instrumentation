@@ -37,7 +37,9 @@ This module provides the agent test runner, agent JUnit extensions (including th
 and bridges to the in-memory exporters and listeners that live in the `AgentClassLoader`.
 Tests using it must launch with `agent-for-testing`.
 
-For agent instrumentation tests in another repository, add:
+The `otel.javaagent-testing` convention adds this module to the test classpath automatically.
+If you configure tests without that convention, add the published artifact to use agent-specific
+JUnit extensions such as `AgentInstrumentationExtension`:
 
 ```kotlin
 testImplementation("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing:3.0.0-alpha-SNAPSHOT")
