@@ -28,12 +28,6 @@ testing {
           // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
           jvmArgs("-Djava.net.preferIPv4Stack=true")
         }
-        register("PreviewSemconv") {
-          jvmArgs("-Dotel.semconv-stability.preview=rpc")
-        }
-        register("BothSemconv") {
-          jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
-        }
         register("ExceptionSignalLogs") {
           jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
         }

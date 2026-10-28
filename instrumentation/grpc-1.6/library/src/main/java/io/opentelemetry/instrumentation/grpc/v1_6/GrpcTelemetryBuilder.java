@@ -282,7 +282,6 @@ public final class GrpcTelemetryBuilder {
         clientInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient()),
         openTelemetry.getPropagators(),
         captureExperimentalSpanAttributes,
-        emitMessageEvents,
-        RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry).emitPreview());
+        emitMessageEvents);
   }
 }

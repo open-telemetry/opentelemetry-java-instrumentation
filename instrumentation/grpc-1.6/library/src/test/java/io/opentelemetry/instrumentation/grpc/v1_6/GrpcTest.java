@@ -5,9 +5,8 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -39,7 +38,6 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -282,15 +280,6 @@ class GrpcTest extends AbstractGrpcTest {
 
     assertThat(response.getMessage()).isEqualTo("Hello test");
 
-    AttributeKey<List<String>> oldClientAttributeKey =
-        AttributeKey.stringArrayKey("rpc.grpc.request.metadata." + CLIENT_REQUEST_METADATA_KEY);
-    AttributeKey<List<String>> stableClientAttributeKey =
-        AttributeKey.stringArrayKey("rpc.request.metadata." + CLIENT_REQUEST_METADATA_KEY);
-    AttributeKey<List<String>> oldServerAttributeKey =
-        AttributeKey.stringArrayKey("rpc.grpc.request.metadata." + SERVER_REQUEST_METADATA_KEY);
-    AttributeKey<List<String>> stableServerAttributeKey =
-        AttributeKey.stringArrayKey("rpc.request.metadata." + SERVER_REQUEST_METADATA_KEY);
-
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -302,34 +291,26 @@ class GrpcTest extends AbstractGrpcTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfying(
                                 equalTo(
-                                    oldClientAttributeKey,
-                                    emitOldRpcSemconv() && captureMetadata
-                                        ? singletonList(clientMetadataValue)
-                                        : null),
+                                    stringArrayKey(
+                                        "rpc.request.metadata." + CLIENT_REQUEST_METADATA_KEY),
+                                    captureMetadata ? singletonList(clientMetadataValue) : null),
                                 equalTo(
-                                    stableClientAttributeKey,
-                                    emitPreviewRpcSemconv() && captureMetadata
-                                        ? singletonList(clientMetadataValue)
-                                        : null),
-                                equalTo(oldServerAttributeKey, null),
-                                equalTo(stableServerAttributeKey, null)),
+                                    stringArrayKey(
+                                        "rpc.request.metadata." + SERVER_REQUEST_METADATA_KEY),
+                                    null)),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfying(
-                                equalTo(oldClientAttributeKey, null),
-                                equalTo(stableClientAttributeKey, null),
                                 equalTo(
-                                    oldServerAttributeKey,
-                                    emitOldRpcSemconv() && captureMetadata
-                                        ? singletonList(serverMetadataValue)
-                                        : null),
+                                    stringArrayKey(
+                                        "rpc.request.metadata." + CLIENT_REQUEST_METADATA_KEY),
+                                    null),
                                 equalTo(
-                                    stableServerAttributeKey,
-                                    emitPreviewRpcSemconv() && captureMetadata
-                                        ? singletonList(serverMetadataValue)
-                                        : null))));
+                                    stringArrayKey(
+                                        "rpc.request.metadata." + SERVER_REQUEST_METADATA_KEY),
+                                    captureMetadata ? singletonList(serverMetadataValue) : null))));
   }
 
   /**

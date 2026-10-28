@@ -4,6 +4,11 @@
 
 ### ⚠️ Breaking changes
 
+- Remove `SemconvRpcStabilityUtil` from the alpha `opentelemetry-testing-common` artifact.
+- RPC telemetry now uses only the conventions with schema version 1.44.0: `rpc.system.name`,
+  fully qualified `rpc.method`, `rpc.status_code`, and `error.type`, with updated span names.
+  RPC duration metrics use `rpc.client.call.duration` and `rpc.server.call.duration` in seconds.
+  RPC opt-in/preview flags and `general.rpc.semconv` settings no longer select legacy or dual emission.
 - GenAI error type getters now return the final value. Returning `null` omits `error.type`; overrides
   should return `error == null ? null : error.getClass().getName()` for the exception-class fallback.
 - HTTP client and server getters now determine `error.type`; their returned value, including `null`,

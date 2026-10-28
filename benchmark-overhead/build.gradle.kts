@@ -50,7 +50,7 @@ val startupRecorderJar = tasks.register<Jar>("startupRecorderJar") {
 }
 
 tasks.register<Test>("agentStartupBenchmark") {
-  description = "Measures ordinary Java agent startup."
+  description = "Measures ordinary Java agent startup overhead against a no-agent control."
   group = "verification"
   dependsOn(tasks.testClasses)
   testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -64,6 +64,8 @@ tasks.register<Test>("agentStartupBenchmark") {
   systemProperty("startup.benchmark.output", layout.buildDirectory.dir("reports/agent-startup").get().asFile.absolutePath)
   systemProperty("startup.benchmark.agent", providers.gradleProperty("startupBenchmarkAgentJar").orElse("").get())
   systemProperty("startup.benchmark.revision", providers.gradleProperty("startupBenchmarkRevision").orElse("unknown").get())
+  systemProperty("startup.benchmark.baselineAgent", providers.gradleProperty("startupBenchmarkBaselineAgentJar").orElse("").get())
+  systemProperty("startup.benchmark.baselineRevision", providers.gradleProperty("startupBenchmarkBaselineRevision").orElse("unknown").get())
   val suppliedRecorder = providers.gradleProperty("startupBenchmarkRecorderJar")
   if (suppliedRecorder.isPresent) {
     systemProperty("startup.benchmark.recorder", suppliedRecorder.get())

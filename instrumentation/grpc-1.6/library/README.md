@@ -46,6 +46,10 @@ void configureServer(OpenTelemetry openTelemetry, ServerBuilder<?> serverBuilder
 }
 ```
 
+`configureServerBuilder()` captures server spans for both registered and unregistered services.
+`createServerInterceptor()` remains available for service-level registration, but cannot capture
+requests to unregistered services.
+
 Passing the channel target, such as `dns:///orders.example.com:8443`, lets the interceptor populate
 `server.address` and `server.port` independently of an authority override. For custom name resolvers,
 use an explicit `scheme://...` target. The no-argument `createClientInterceptor()` remains available

@@ -6,18 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_TYPE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -80,7 +75,7 @@ class ArmeriaGrpcTest {
         }
       };
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
+  @SuppressWarnings("deprecation") // message event attributes
   @Test
   void grpcInstrumentation() {
     URI uri = URI.create("http://user@localhost:" + server.httpPort());
@@ -99,20 +94,15 @@ class ArmeriaGrpcTest {
                 span ->
                     span.hasName("example.Greeter/SayHello")
                         .hasKind(SpanKind.CLIENT)
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                                    .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null),
-                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "example.Greeter" : null),
-                            equalTo(
-                                RPC_METHOD,
-                                emitPreviewRpcSemconv() ? "example.Greeter/SayHello" : "SayHello"),
-                            equalTo(
-                                RPC_GRPC_STATUS_CODE,
-                                emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
-                            equalTo(
-                                stringKey("rpc.status_code"),
-                                emitPreviewRpcSemconv() ? Status.Code.OK.name() : null),
+                            equalTo(RPC_SYSTEM_NAME, "grpc"),
+                            equalTo(RPC_METHOD, "example.Greeter/SayHello"),
+                            equalTo(stringKey("rpc.status_code"), "OK"),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpPort()))
                         .hasEventsSatisfyingExactly(
@@ -130,20 +120,15 @@ class ArmeriaGrpcTest {
                 span ->
                     span.hasName("example.Greeter/SayHello")
                         .hasKind(SpanKind.SERVER)
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                                    .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null),
-                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "example.Greeter" : null),
-                            equalTo(
-                                RPC_METHOD,
-                                emitPreviewRpcSemconv() ? "example.Greeter/SayHello" : "SayHello"),
-                            equalTo(
-                                RPC_GRPC_STATUS_CODE,
-                                emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
-                            equalTo(
-                                stringKey("rpc.status_code"),
-                                emitPreviewRpcSemconv() ? Status.Code.OK.name() : null),
+                            equalTo(RPC_SYSTEM_NAME, "grpc"),
+                            equalTo(RPC_METHOD, "example.Greeter/SayHello"),
+                            equalTo(stringKey("rpc.status_code"), "OK"),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpPort()))
                         .hasEventsSatisfyingExactly(
@@ -159,7 +144,7 @@ class ArmeriaGrpcTest {
                                         equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L)))));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
+  @SuppressWarnings("deprecation") // message event attributes
   @Test
   void unknownService() {
     GreeterGrpc.GreeterBlockingStub client =
@@ -181,26 +166,17 @@ class ArmeriaGrpcTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                                    .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null),
-                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "example.Greeter" : null),
-                            equalTo(
-                                RPC_METHOD,
-                                emitPreviewRpcSemconv() ? "example.Greeter/SayHello" : "SayHello"),
-                            equalTo(
-                                RPC_GRPC_STATUS_CODE,
-                                emitOldRpcSemconv()
-                                    ? (long) Status.Code.UNIMPLEMENTED.value()
-                                    : null),
-                            equalTo(
-                                stringKey("rpc.status_code"),
-                                emitPreviewRpcSemconv() ? Status.Code.UNIMPLEMENTED.name() : null),
+                            equalTo(RPC_SYSTEM_NAME, "grpc"),
+                            equalTo(RPC_METHOD, "example.Greeter/SayHello"),
+                            equalTo(stringKey("rpc.status_code"), "UNIMPLEMENTED"),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, serverWithoutGreeter.httpPort()),
-                            equalTo(
-                                ERROR_TYPE,
-                                emitPreviewRpcSemconv() ? Status.Code.UNIMPLEMENTED.name() : null))
+                            equalTo(ERROR_TYPE, "UNIMPLEMENTED"))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event

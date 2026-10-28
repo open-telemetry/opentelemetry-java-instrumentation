@@ -19,9 +19,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * A {@link ServerStreamTracer} that creates spans for requests to unregistered gRPC methods, which
  * server interceptors do not see.
- *
- * <p>That span is only created when preview RPC semantic conventions are enabled, through {@code
- * otel.semconv-stability.preview=rpc} or {@code otel.semconv-stability.preview=rpc/dup}.
  */
 final class TracingServerStreamTracer extends ServerStreamTracer {
 

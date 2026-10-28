@@ -49,7 +49,14 @@ class AgentStartupBenchmark {
 
   @Test
   void measureStartup() throws Exception {
-    Path agent = agent();
+    List<Configuration> configurations = new ArrayList<>();
+    configurations.add(new Configuration("no-agent", null, "none"));
+    String baselineAgent = System.getProperty("startup.benchmark.baselineAgent", "");
+    if (!baselineAgent.isBlank()) {
+      configurations.add(
+          new Configuration("baseline-agent", agent(baselineAgent), required("baselineRevision")));
+    }
+    configurations.add(new Configuration("agent", agent(required("agent")), required("revision")));
     Path recorder = recorder();
     Path fixture = fixtureClass();
     int samples = count("samples", 1);
@@ -65,41 +72,66 @@ class AgentStartupBenchmark {
     metadata.setProperty("warmups", Integer.toString(warmups));
     metadata.setProperty("resources", "quota=2 CPUs; memory=1 GiB; heap=512 MiB");
     metadata.setProperty(
-        "exporters", "traces=none, metrics=none, logs=none; instrumentation enabled");
-    try (JarFile jar = new JarFile(agent.toFile())) {
+        "exporters", "traces=none, metrics=none, logs=none; instrumentation enabled with agent");
+    for (Configuration configuration : configurations) {
+      String name = configuration.name();
       metadata.setProperty(
-          "agent.version",
-          jar.getManifest().getMainAttributes().getValue("Implementation-Version"));
+          "command." + name,
+          "java " + String.join(" ", arguments(configuration.agent() != null, false)));
+      metadata.setProperty(name + ".source.revision", configuration.revision());
+      if (configuration.agent() != null) {
+        try (JarFile jar = new JarFile(configuration.agent().toFile())) {
+          metadata.setProperty(
+              name + ".version",
+              jar.getManifest().getMainAttributes().getValue("Implementation-Version"));
+        }
+        metadata.setProperty(name + ".sha256", checksum(configuration.agent()));
+        metadata.setProperty(name + ".path", configuration.agent().toString());
+        metadata.setProperty(
+            "command.profile." + name, "java " + String.join(" ", arguments(true, true)));
+      }
     }
-    metadata.setProperty("agent.sha256", checksum(agent));
     metadata.setProperty("recorder.sha256", checksum(recorder));
     metadata.setProperty("fixture.sha256", checksum(fixture));
-    metadata.setProperty("agent.path", agent.toString());
     metadata.setProperty("recorder.path", recorder.toString());
     metadata.setProperty("source.revision", System.getProperty("startup.benchmark.revision"));
-    metadata.setProperty("command.agent", "java " + String.join(" ", arguments(false)));
-    metadata.setProperty("command.profile", "java " + String.join(" ", arguments(true)));
+    metadata.setProperty("measurement.order", "rotating configuration order each round");
     saveMetadata(directory, metadata);
 
     DockerClient docker = DockerClientFactory.instance().client();
     List<AgentStartupReport.Sample> observations = new ArrayList<>();
     AgentStartupReport report = new AgentStartupReport(directory);
     for (int round = 0; round < warmups + samples; round++) {
-      AgentStartupReport.Sample observation =
-          sample(
-              agent, recorder, fixture, round, round < warmups, false, directory, metadata, docker);
-      observations.add(observation);
-      report.append(observation);
-      assertThat(observation.status()).isEqualTo("ok");
+      for (int offset = 0; offset < configurations.size(); offset++) {
+        Configuration configuration = configurations.get((round + offset) % configurations.size());
+        AgentStartupReport.Sample observation =
+            sample(
+                configuration,
+                recorder,
+                fixture,
+                round,
+                round < warmups,
+                false,
+                directory,
+                metadata,
+                docker);
+        observations.add(observation);
+        report.append(observation);
+        assertThat(observation.status()).isEqualTo("ok");
+      }
     }
     report.summarize(observations);
-    sample(agent, recorder, fixture, -1, false, true, directory, metadata, docker);
+    for (Configuration configuration : configurations) {
+      if (configuration.agent() != null) {
+        sample(configuration, recorder, fixture, -1, false, true, directory, metadata, docker);
+      }
+    }
     metadata.setProperty("status", "complete");
     saveMetadata(directory, metadata);
   }
 
   private static AgentStartupReport.Sample sample(
-      Path agent,
+      Configuration configuration,
       Path recorder,
       Path fixture,
       int round,
@@ -109,22 +141,29 @@ class AgentStartupBenchmark {
       Properties metadata,
       DockerClient docker)
       throws Exception {
-    String name = profile ? "profile-agent" : "sample-" + round;
+    boolean withAgent = configuration.agent() != null;
+    String name =
+        profile
+            ? "profile-" + configuration.name()
+            : "sample-" + configuration.name() + "-" + round;
     double load = ManagementFactory.getOperatingSystemMXBean().getSystemLoadAverage();
     try (GenericContainer<?> application =
             container()
-                .withCopyFileToContainer(MountableFile.forHostPath(agent), "/tmp/agent.jar")
                 .withCopyFileToContainer(
                     MountableFile.forHostPath(recorder), "/tmp/startup-recorder.jar")
                 .withCopyFileToContainer(
                     MountableFile.forHostPath(fixture), "/app/classes/" + APPLICATION_CLASS)
                 .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint("java"))
-                .withCommand(arguments(profile).toArray(String[]::new))
+                .withCommand(arguments(withAgent, profile).toArray(String[]::new))
                 .withExposedPorts(8080)
                 .waitingFor(Wait.forListeningPort().withStartupTimeout(TIMEOUT))
                 .withStartupAttempts(1);
         HttpClient client = HttpClient.newBuilder().connectTimeout(TIMEOUT).build()) {
       try {
+        if (withAgent) {
+          application.withCopyFileToContainer(
+              MountableFile.forHostPath(configuration.agent()), "/tmp/agent.jar");
+        }
         application.start();
         HttpResponse<String> response = awaitReadiness(application, client);
         Instant cutoff = Instant.now();
@@ -146,7 +185,11 @@ class AgentStartupBenchmark {
         metadata.setProperty("jvm.version", jvmVersion);
         saveMetadata(directory, metadata);
         String logs = application.getLogs();
-        assertThat(logs).contains("opentelemetry-javaagent - version:");
+        if (withAgent) {
+          assertThat(logs).contains("opentelemetry-javaagent - version:");
+        } else {
+          assertThat(logs).doesNotContain("opentelemetry-javaagent - version:");
+        }
         if (profile) {
           assertThat(logs.indexOf("Startup recording active before telemetry agent"))
               .isGreaterThanOrEqualTo(0)
@@ -155,15 +198,19 @@ class AgentStartupBenchmark {
               application.execInContainer(
                   "jcmd", "1", "JFR.dump", "name=startup", "filename=/tmp/startup.jfr");
           assertThat(dump.getExitCode()).isZero();
-          Path recording = directory.resolve("agent.jfr");
+          Path recording = directory.resolve(configuration.name() + ".jfr");
           application.copyFileFromContainer("/tmp/startup.jfr", recording.toString());
-          StartupProfile.summarize(recording, cutoff, directory.resolve("agent-profile.txt"));
+          StartupProfile.summarize(
+              recording, cutoff, directory.resolve(configuration.name() + "-profile.txt"));
         }
-        return new AgentStartupReport.Sample(round, discarded, "ok", startupSeconds, load);
+        return new AgentStartupReport.Sample(
+            configuration.name(), round, discarded, "ok", startupSeconds, load);
       } catch (Throwable t) {
         if (!profile) {
           new AgentStartupReport(directory)
-              .append(new AgentStartupReport.Sample(round, discarded, "failed", Double.NaN, load));
+              .append(
+                  new AgentStartupReport.Sample(
+                      configuration.name(), round, discarded, "failed", Double.NaN, load));
         }
         throw t;
       } finally {
@@ -234,13 +281,15 @@ class AgentStartupBenchmark {
     return uptimeMillis / 1000.0;
   }
 
-  static List<String> arguments(boolean profile) {
+  static List<String> arguments(boolean withAgent, boolean profile) {
     List<String> arguments = new ArrayList<>(List.of("-Xmx512m"));
     if (profile) {
       arguments.add("-XX:FlightRecorderOptions=stackdepth=256");
       arguments.add("-javaagent:/tmp/startup-recorder.jar=/tmp/startup.jfr");
     }
-    arguments.add("-javaagent:/tmp/agent.jar");
+    if (withAgent) {
+      arguments.add("-javaagent:/tmp/agent.jar");
+    }
     arguments.addAll(
         List.of("-cp", "/app/resources:/app/classes:/app/libs/*", StartupFixture.APPLICATION));
     return arguments;
@@ -262,8 +311,8 @@ class AgentStartupBenchmark {
                     .withNanoCPUs(NANO_CPUS));
   }
 
-  private static Path agent() {
-    Path path = Path.of(required("agent")).toAbsolutePath();
+  private static Path agent(String value) {
+    Path path = Path.of(value).toAbsolutePath();
     if (!Files.isRegularFile(path)) {
       throw new IllegalArgumentException("Agent JAR does not exist: " + path);
     }
@@ -319,4 +368,6 @@ class AgentStartupBenchmark {
       metadata.store(out, "Ordinary Java agent startup benchmark");
     }
   }
+
+  private record Configuration(String name, Path agent, String revision) {}
 }

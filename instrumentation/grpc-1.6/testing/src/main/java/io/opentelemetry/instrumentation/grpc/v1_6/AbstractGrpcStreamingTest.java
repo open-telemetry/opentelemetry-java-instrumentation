@@ -10,9 +10,6 @@ import static io.opentelemetry.instrumentation.grpc.v1_6.AbstractGrpcTest.addExt
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_SENT_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.experimentalSatisfies;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
-import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -24,10 +21,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_TYPE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
@@ -60,7 +54,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.cartesian.CartesianTest;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
+@SuppressWarnings("deprecation") // message event attributes
 public abstract class AbstractGrpcStreamingTest {
 
   protected abstract ServerBuilder<?> configureServer(ServerBuilder<?> server);
@@ -232,23 +226,9 @@ public abstract class AbstractGrpcStreamingTest {
                                     experimentalSatisfies(
                                         GRPC_SENT_MESSAGE_COUNT,
                                         v -> assertThat(v).isGreaterThan(0)),
-                                    equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
-                                    equalTo(
-                                        RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null),
-                                    equalTo(
-                                        RPC_SERVICE,
-                                        emitOldRpcSemconv() ? "example.Greeter" : null),
-                                    equalTo(
-                                        RPC_METHOD,
-                                        emitPreviewRpcSemconv()
-                                            ? "example.Greeter/Conversation"
-                                            : "Conversation"),
-                                    equalTo(
-                                        RPC_GRPC_STATUS_CODE,
-                                        emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
-                                    equalTo(
-                                        stringKey("rpc.status_code"),
-                                        emitPreviewRpcSemconv() ? Status.Code.OK.name() : null),
+                                    equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                    equalTo(RPC_METHOD, "example.Greeter/Conversation"),
+                                    equalTo(stringKey("rpc.status_code"), "OK"),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
                             .satisfies(
@@ -265,21 +245,9 @@ public abstract class AbstractGrpcStreamingTest {
                                     v -> assertThat(v).isGreaterThan(0)),
                                 experimentalSatisfies(
                                     GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null),
-                                equalTo(
-                                    RPC_SERVICE, emitOldRpcSemconv() ? "example.Greeter" : null),
-                                equalTo(
-                                    RPC_METHOD,
-                                    emitPreviewRpcSemconv()
-                                        ? "example.Greeter/Conversation"
-                                        : "Conversation"),
-                                equalTo(
-                                    RPC_GRPC_STATUS_CODE,
-                                    emitOldRpcSemconv() ? (long) Status.Code.OK.value() : null),
-                                equalTo(
-                                    stringKey("rpc.status_code"),
-                                    emitPreviewRpcSemconv() ? Status.Code.OK.name() : null),
+                                equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                equalTo(RPC_METHOD, "example.Greeter/Conversation"),
+                                equalTo(stringKey("rpc.status_code"), "OK"),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
@@ -293,94 +261,40 @@ public abstract class AbstractGrpcStreamingTest {
                         span.hasName("clientOnNext")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
-    if (emitOldRpcSemconv()) {
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.grpc-1.6",
-              metric ->
-                  metric
-                      .hasName("rpc.server.duration")
-                      .hasUnit("ms")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(SERVER_ADDRESS, "localhost"),
-                                          equalTo(SERVER_PORT, server.getPort()),
-                                          equalTo(RPC_METHOD, "Conversation"),
-                                          equalTo(RPC_SERVICE, "example.Greeter"),
-                                          equalTo(RPC_SYSTEM, "grpc"),
-                                          equalTo(NETWORK_TYPE, "ipv4"),
-                                          equalTo(
-                                              RPC_GRPC_STATUS_CODE,
-                                              (long) Status.Code.OK.value())))));
-    }
-    if (emitPreviewRpcSemconv()) {
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.grpc-1.6",
-              metric ->
-                  metric
-                      .hasName("rpc.server.call.duration")
-                      .hasUnit("s")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(RPC_SYSTEM_NAME, "grpc"),
-                                          equalTo(SERVER_ADDRESS, "localhost"),
-                                          equalTo(SERVER_PORT, server.getPort()),
-                                          equalTo(RPC_METHOD, "example.Greeter/Conversation"),
-                                          equalTo(
-                                              stringKey("rpc.status_code"),
-                                              Status.Code.OK.name())))));
-    }
-    if (emitOldRpcSemconv()) {
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.grpc-1.6",
-              metric ->
-                  metric
-                      .hasName("rpc.client.duration")
-                      .hasUnit("ms")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(SERVER_ADDRESS, "localhost"),
-                                          equalTo(SERVER_PORT, server.getPort()),
-                                          equalTo(RPC_METHOD, "Conversation"),
-                                          equalTo(RPC_SERVICE, "example.Greeter"),
-                                          equalTo(RPC_SYSTEM, "grpc"),
-                                          equalTo(
-                                              RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                          equalTo(
-                                              NETWORK_TYPE, testLatestDeps() ? "ipv4" : null)))));
-    }
-    if (emitPreviewRpcSemconv()) {
-      testing()
-          .waitAndAssertMetrics(
-              "io.opentelemetry.grpc-1.6",
-              metric ->
-                  metric
-                      .hasName("rpc.client.call.duration")
-                      .hasUnit("s")
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point ->
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(RPC_SYSTEM_NAME, "grpc"),
-                                          equalTo(SERVER_ADDRESS, "localhost"),
-                                          equalTo(SERVER_PORT, server.getPort()),
-                                          equalTo(RPC_METHOD, "example.Greeter/Conversation"),
-                                          equalTo(
-                                              stringKey("rpc.status_code"),
-                                              Status.Code.OK.name())))));
-    }
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            metric ->
+                metric
+                    .hasName("rpc.server.call.duration")
+                    .hasUnit("s")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                        equalTo(SERVER_ADDRESS, "localhost"),
+                                        equalTo(SERVER_PORT, server.getPort()),
+                                        equalTo(RPC_METHOD, "example.Greeter/Conversation"),
+                                        equalTo(stringKey("rpc.status_code"), "OK")))));
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            metric ->
+                metric
+                    .hasName("rpc.client.call.duration")
+                    .hasUnit("s")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                        equalTo(SERVER_ADDRESS, "localhost"),
+                                        equalTo(SERVER_PORT, server.getPort()),
+                                        equalTo(RPC_METHOD, "example.Greeter/Conversation"),
+                                        equalTo(stringKey("rpc.status_code"), "OK")))));
   }
 
   @Test
@@ -451,32 +365,10 @@ public abstract class AbstractGrpcStreamingTest {
                                         v -> assertThat(v).isEqualTo(0)),
                                     experimentalSatisfies(
                                         GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isEqualTo(0)),
-                                    equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
-                                    equalTo(
-                                        RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null),
-                                    equalTo(
-                                        RPC_SERVICE,
-                                        emitOldRpcSemconv() ? "example.Greeter" : null),
-                                    equalTo(
-                                        RPC_METHOD,
-                                        emitPreviewRpcSemconv()
-                                            ? "example.Greeter/Conversation"
-                                            : "Conversation"),
-                                    equalTo(
-                                        ERROR_TYPE,
-                                        emitPreviewRpcSemconv()
-                                            ? Status.Code.INTERNAL.name()
-                                            : null),
-                                    equalTo(
-                                        RPC_GRPC_STATUS_CODE,
-                                        emitOldRpcSemconv()
-                                            ? (long) Status.Code.INTERNAL.value()
-                                            : null),
-                                    equalTo(
-                                        stringKey("rpc.status_code"),
-                                        emitPreviewRpcSemconv()
-                                            ? Status.Code.INTERNAL.name()
-                                            : null),
+                                    equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                    equalTo(RPC_METHOD, "example.Greeter/Conversation"),
+                                    equalTo(ERROR_TYPE, "INTERNAL"),
+                                    equalTo(stringKey("rpc.status_code"), "INTERNAL"),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort()))),
                     span ->
@@ -487,26 +379,10 @@ public abstract class AbstractGrpcStreamingTest {
                                     GRPC_RECEIVED_MESSAGE_COUNT, v -> assertThat(v).isEqualTo(0)),
                                 experimentalSatisfies(
                                     GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isEqualTo(0)),
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "grpc" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "grpc" : null),
-                                equalTo(
-                                    RPC_SERVICE, emitOldRpcSemconv() ? "example.Greeter" : null),
-                                equalTo(
-                                    RPC_METHOD,
-                                    emitPreviewRpcSemconv()
-                                        ? "example.Greeter/Conversation"
-                                        : "Conversation"),
-                                equalTo(
-                                    ERROR_TYPE,
-                                    emitPreviewRpcSemconv() ? Status.Code.INTERNAL.name() : null),
-                                equalTo(
-                                    RPC_GRPC_STATUS_CODE,
-                                    emitOldRpcSemconv()
-                                        ? (long) Status.Code.INTERNAL.value()
-                                        : null),
-                                equalTo(
-                                    stringKey("rpc.status_code"),
-                                    emitPreviewRpcSemconv() ? Status.Code.INTERNAL.name() : null),
+                                equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                equalTo(RPC_METHOD, "example.Greeter/Conversation"),
+                                equalTo(ERROR_TYPE, "INTERNAL"),
+                                equalTo(stringKey("rpc.status_code"), "INTERNAL"),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
