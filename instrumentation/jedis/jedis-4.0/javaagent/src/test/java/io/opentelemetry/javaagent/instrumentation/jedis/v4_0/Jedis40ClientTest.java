@@ -171,7 +171,8 @@ class Jedis40ClientTest {
         .hasMessageStartingWith("WRONGTYPE");
     client.set("cold-pool-success", "value");
 
-    int initializationCommands = Boolean.getBoolean("testJedis51OrLater") ? 3 : 1;
+    boolean jedis51OrLater = Boolean.getBoolean("testJedis51OrLater");
+    int initializationCommands = jedis51OrLater ? 3 : 1;
     int expectedTraces = initializationCommands + 2;
     testing.waitForTraces(expectedTraces);
 
@@ -179,7 +180,22 @@ class Jedis40ClientTest {
         .hasSize(expectedTraces)
         .filteredOn(span -> "CLIENT".equals(span.getAttributes().get(DB_OPERATION_NAME)))
         .hasSize(initializationCommands)
-        .allSatisfy(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
+        .filteredOn(
+            span -> {
+              String queryText = span.getAttributes().get(DB_QUERY_TEXT);
+              return queryText != null && queryText.contains("SETINFO");
+            })
+        .hasSize(jedis51OrLater ? 2 : 0)
+        .allSatisfy(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo("ERR"));
+    assertThat(testing.spans())
+        .filteredOn(span -> "CLIENT".equals(span.getAttributes().get(DB_OPERATION_NAME)))
+        .filteredOn(
+            span -> {
+              String queryText = span.getAttributes().get(DB_QUERY_TEXT);
+              return queryText != null && queryText.contains("SETNAME");
+            })
+        .singleElement()
+        .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
     assertThat(testing.spans())
         .filteredOn(span -> "GET".equals(span.getAttributes().get(DB_OPERATION_NAME)))
         .singleElement()
@@ -199,8 +215,14 @@ class Jedis40ClientTest {
                       .filteredOn(
                           point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
                       .isNotEmpty()
-                      .allSatisfy(
-                          point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
+                      .hasSize(initializationCommands)
+                      .filteredOn(point -> "ERR".equals(point.getAttributes().get(ERROR_TYPE)))
+                      .hasSize(jedis51OrLater ? 2 : 0);
+                  assertThat(metric.getHistogramData().getPoints())
+                      .filteredOn(
+                          point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                      .filteredOn(point -> point.getAttributes().get(ERROR_TYPE) == null)
+                      .hasSize(1);
                   assertThat(metric.getHistogramData().getPoints())
                       .filteredOn(
                           point -> "GET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
