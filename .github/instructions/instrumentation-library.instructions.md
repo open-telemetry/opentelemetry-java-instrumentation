@@ -10,14 +10,14 @@ applyTo: "instrumentation/**/library/**/*.java,instrumentation/**/library/**/*.k
   `this` and carry `@CanIgnoreReturnValue`, the constructor is package-private, and
   `build()` returns the telemetry instance.
 - Public `*Telemetry` methods that instrument an existing library object and return its
-  instrumented form use `instrument(...)`, not `wrap(...)`. Prefer overloads over type-name
+  instrumented form use `instrument(...)`. Prefer overloads over type-name
   or sync/async suffixes when parameter types distinguish the operations and are available
   together on supported consumer compile classpaths.
 - Use distinct `instrumentXxx(...)` names when different roles have the same parameter
-  signature, such as Thrift's client, server-input, and server-output `TProtocolFactory`
-  methods, or when overload resolution would require an otherwise optional dependency.
-  Overload resolution can require parameter types from an overload the caller never invokes,
-  so keep AWS SQS and Bedrock entry points separately named.
+  signature, or when overloads accept types from optional dependencies that callers may not
+  have on their compile classpath. Resolving a call to one overload can require parameter
+  types from other overloads, even those the caller does not use. Separate method names
+  avoid making callers add unused dependencies just to resolve an overload.
 - Library artifacts run without javaagent transformation. Do not require `VirtualField`
   for per-object state in library-only code. Import stable semantic-convention constants
   whose name and type match; copy incubating constants locally without adding an
