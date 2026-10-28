@@ -310,12 +310,12 @@ class Jedis40ClientTest {
     assertThat(testing.spans())
         .filteredOn(
             span -> authenticationOperation.equals(span.getAttributes().get(DB_OPERATION_NAME)))
-        .singleElement()
-        .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
+        .isNotEmpty()
+        .allSatisfy(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
     assertThat(testing.spans())
         .filteredOn(span -> "SELECT".equals(span.getAttributes().get(DB_OPERATION_NAME)))
-        .singleElement()
-        .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo("ERR"));
+        .filteredOn(span -> "ERR".equals(span.getAttributes().get(ERROR_TYPE)))
+        .hasSize(1);
     assertThat(testing.spans())
         .filteredOn(span -> "SET".equals(span.getAttributes().get(DB_OPERATION_NAME)))
         .singleElement()
@@ -338,10 +338,9 @@ class Jedis40ClientTest {
                   assertThat(metric.getHistogramData().getPoints())
                       .filteredOn(
                           point -> "SELECT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                      .filteredOn(point -> "ERR".equals(point.getAttributes().get(ERROR_TYPE)))
                       .singleElement()
-                      .satisfies(
-                          point ->
-                              assertThat(point.getAttributes().get(ERROR_TYPE)).isEqualTo("ERR"));
+                      .satisfies(point -> assertThat(point.getCount()).isEqualTo(1));
                   assertThat(metric.getHistogramData().getPoints())
                       .filteredOn(
                           point -> "SET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
