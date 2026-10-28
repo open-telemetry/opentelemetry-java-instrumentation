@@ -353,7 +353,8 @@ class Jedis40ClientTest {
 
   @Test
   void partialInitializationReplyDrainPreservesCompletedCommand() throws Exception {
-    Assumptions.assumeTrue(Boolean.getBoolean("testJedis51OrLater") && !testLatestDeps());
+    Assumptions.assumeTrue(Boolean.getBoolean("testJedis51OrLater"));
+    boolean latestJedis = testLatestDeps();
 
     ExecutorService executor = Executors.newSingleThreadExecutor();
     try {
@@ -361,15 +362,26 @@ class Jedis40ClientTest {
         Future<?> serverTask =
             executor.submit(
                 () -> {
-                  try (Socket socket = server.accept()) {
-                    InputStream input = socket.getInputStream();
-                    readRedisCommand(input);
-                    readRedisCommand(input);
-                    readRedisCommand(input);
-
-                    OutputStream output = socket.getOutputStream();
-                    output.write("+OK\r\n".getBytes(UTF_8));
-                    output.flush();
+                  try {
+                    int connections = latestJedis ? 2 : 1;
+                    for (int i = 0; i < connections; i++) {
+                      try (Socket socket = server.accept()) {
+                        InputStream input = socket.getInputStream();
+                        List<String> firstCommand = readRedisCommand(input);
+                        OutputStream output = socket.getOutputStream();
+                        if ("HELLO".equals(firstCommand.get(0))) {
+                          writeHelloResponse(output, firstCommand.get(1));
+                          readRedisCommand(input);
+                          readRedisCommand(input);
+                          readRedisCommand(input);
+                        } else {
+                          readRedisCommand(input);
+                          readRedisCommand(input);
+                        }
+                        output.write("+OK\r\n".getBytes(UTF_8));
+                        output.flush();
+                      }
+                    }
                   } catch (IOException e) {
                     throw new RuntimeException(e);
                   }
@@ -384,6 +396,10 @@ class Jedis40ClientTest {
                 1,
                 Duration.ZERO);
         cleanup.deferCleanup(client);
+        if (latestJedis) {
+          testing.waitForTraces(4);
+          testing.clearData();
+        }
 
         assertThatThrownBy(() -> client.get("never")).isInstanceOf(JedisException.class);
         serverTask.get(10, SECONDS);
@@ -392,8 +408,8 @@ class Jedis40ClientTest {
       jedis.set("after-partial-initialization", "value");
 
       String connectionErrorType = JedisConnectionException.class.getName();
-      testing.waitForTraces(4);
-      assertThat(testing.spans()).hasSize(4);
+      testing.waitForTraces(latestJedis ? 5 : 4);
+      assertThat(testing.spans()).hasSize(latestJedis ? 5 : 4);
       assertThat(testing.spans())
           .filteredOn(span -> "CLIENT".equals(span.getAttributes().get(DB_OPERATION_NAME)))
           .hasSize(3);
@@ -417,6 +433,12 @@ class Jedis40ClientTest {
           .allSatisfy(
               span ->
                   assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo(connectionErrorType));
+      if (latestJedis) {
+        assertThat(testing.spans())
+            .filteredOn(span -> "HELLO".equals(span.getAttributes().get(DB_OPERATION_NAME)))
+            .singleElement()
+            .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
+      }
       assertThat(testing.spans())
           .filteredOn(span -> "SET".equals(span.getAttributes().get(DB_OPERATION_NAME)))
           .singleElement()
@@ -428,7 +450,7 @@ class Jedis40ClientTest {
           metrics ->
               metrics.anySatisfy(
                   metric -> {
-                    assertThat(metric.getHistogramData().getPoints()).hasSize(3);
+                    assertThat(metric.getHistogramData().getPoints()).hasSize(latestJedis ? 4 : 3);
                     assertThat(metric.getHistogramData().getPoints())
                         .filteredOn(
                             point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
@@ -443,6 +465,14 @@ class Jedis40ClientTest {
                         .filteredOn(point -> point.getAttributes().get(ERROR_TYPE) == null)
                         .singleElement()
                         .satisfies(point -> assertThat(point.getCount()).isEqualTo(1));
+                    if (latestJedis) {
+                      assertThat(metric.getHistogramData().getPoints())
+                          .filteredOn(
+                              point -> "HELLO".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                          .singleElement()
+                          .satisfies(
+                              point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
+                    }
                     assertThat(metric.getHistogramData().getPoints())
                         .filteredOn(
                             point -> "SET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
@@ -1481,26 +1511,66 @@ class Jedis40ClientTest {
         .newInstance(shards, clientConfig);
   }
 
-  private static void readRedisCommand(InputStream input) throws IOException {
+  private static List<String> readRedisCommand(InputStream input) throws IOException {
     String arrayHeader = readRedisLine(input);
     if (!arrayHeader.startsWith("*")) {
       throw new IOException("Expected a RESP array");
     }
 
     int argumentCount = Integer.parseInt(arrayHeader.substring(1));
+    List<String> arguments = new ArrayList<>(argumentCount);
     for (int i = 0; i < argumentCount; i++) {
       String bulkHeader = readRedisLine(input);
       if (!bulkHeader.startsWith("$")) {
         throw new IOException("Expected a RESP bulk string");
       }
 
-      int remaining = Integer.parseInt(bulkHeader.substring(1)) + 2;
-      while (remaining-- > 0) {
-        if (input.read() == -1) {
+      int argumentLength = Integer.parseInt(bulkHeader.substring(1));
+      byte[] argument = new byte[argumentLength];
+      int bytesRead = 0;
+      while (bytesRead < argumentLength) {
+        int count = input.read(argument, bytesRead, argumentLength - bytesRead);
+        if (count == -1) {
           throw new EOFException();
         }
+        bytesRead += count;
       }
+      if (input.read() != '\r' || input.read() != '\n') {
+        throw new IOException("Expected CRLF after a RESP bulk string");
+      }
+      arguments.add(new String(argument, UTF_8));
     }
+    return arguments;
+  }
+
+  private static void writeHelloResponse(OutputStream output, String protocolVersion)
+      throws IOException {
+    String response;
+    if ("3".equals(protocolVersion)) {
+      response =
+          "%7\r\n"
+              + "+server\r\n+redis\r\n"
+              + "+version\r\n+7.0.0\r\n"
+              + "+proto\r\n:3\r\n"
+              + "+id\r\n:1\r\n"
+              + "+mode\r\n+standalone\r\n"
+              + "+role\r\n+master\r\n"
+              + "+modules\r\n*0\r\n";
+    } else if ("2".equals(protocolVersion)) {
+      response =
+          "*14\r\n"
+              + "$6\r\nserver\r\n$5\r\nredis\r\n"
+              + "$7\r\nversion\r\n$5\r\n7.0.0\r\n"
+              + "$5\r\nproto\r\n:2\r\n"
+              + "$2\r\nid\r\n:1\r\n"
+              + "$4\r\nmode\r\n$10\r\nstandalone\r\n"
+              + "$4\r\nrole\r\n$6\r\nmaster\r\n"
+              + "$7\r\nmodules\r\n*0\r\n";
+    } else {
+      throw new IOException("Unexpected HELLO protocol version: " + protocolVersion);
+    }
+    output.write(response.getBytes(UTF_8));
+    output.flush();
   }
 
   private static String readRedisLine(InputStream input) throws IOException {
