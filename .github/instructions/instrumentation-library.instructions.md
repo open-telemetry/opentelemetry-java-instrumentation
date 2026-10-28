@@ -16,8 +16,7 @@ applyTo: "instrumentation/**/library/**/*.java,instrumentation/**/library/**/*.k
 - Use distinct `instrumentXxx(...)` names when different roles have the same parameter
   signature, or when overloads accept types from optional dependencies that callers may not
   have on their compile classpath. Resolving a call to one overload can require parameter
-  types from other overloads, even those the caller does not use. Separate method names
-  avoid making callers add unused dependencies just to resolve an overload.
+  types from other overloads, even those the caller does not use.
 - Library artifacts run without javaagent transformation. Do not require `VirtualField`
   for per-object state in library-only code. Import stable semantic-convention constants
   whose name and type match; copy incubating constants locally without adding an
