@@ -288,36 +288,16 @@ intentionally ad hoc or cross-trace filtering that the trace DSL cannot express.
 
 ## Discarding setup and cleanup telemetry
 
-Setup and cleanup operations can produce telemetry even when their telemetry is not part of the
-behavior under test. Before clearing that data, wait for the expected traces to arrive so late
-exports cannot leak into subsequent assertions or tests.
-
-- When changing a test, inspect setup and cleanup operations before each `testing.clearData()` and
-  before an `InstrumentationExtension` lifecycle clear. If an operation can complete or export
-  spans asynchronously, wait for its traces before clearing. Do not assume that returning from a
-  synchronous client call guarantees that all telemetry has been captured.
-- For telemetry that is only being discarded, use `testing.waitForTraces(expectedTraceCount)`.
-  Do not introduce span-name or attribute assertions, `waitAndAssertTraces(...)`, or assertion
-  helpers solely to wait for setup telemetry. Assert that telemetry only when its contents are
-  themselves part of the behavior under test.
+The [native test instructions](../../instructions/java-tests.instructions.md#testing-discarding-setup-and-cleanup-telemetry)
+define the rules and exceptions for discarding setup and cleanup telemetry.
+For example, a setup command that produces one completed trace can be drained without asserting
+its span names or attributes:
 
 ```java
 jedis.lpush("wrong-type", "value");
 testing.waitForTraces(1);
 testing.clearData();
 ```
-
-- Use the total trace count expected in captured data at that point, not just the count produced
-  by the most recent operation. Wait for all setup traces before clearing, not only the first one.
-- Add a count-based wait only when the count is deterministic. If retries, background work, or
-  external-system behavior can vary it, identify an appropriate completion signal rather than
-  guessing a count or adding a sleep.
-- `InstrumentationExtension` already clears captured telemetry before each test. Keep any necessary
-  wait at the end of setup or cleanup even when removing a redundant explicit clear. Do not add or
-  keep an explicit clear solely for per-test isolation; keep explicit clears for required mid-test
-  resets.
-- Do not wait for spans that intentionally remain open until the operation under test completes,
-  such as an unfinished pipeline or transaction.
 
 ## Attribute Assertion `satisfies()` Lambda Parameters
 
