@@ -67,6 +67,10 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$InitializationManyResponseAdvice");
 
     transformer.applyAdviceToMethod(
+        named("readProtocolWithCheckingBroken").and(takesArguments(0)),
+        getClass().getName() + "$InitializationResponseAdvice");
+
+    transformer.applyAdviceToMethod(
         named("getStatusCodeReply").and(takesArguments(0)),
         getClass().getName() + "$InitializationResponseAdvice");
   }

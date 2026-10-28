@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -29,17 +30,26 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -66,6 +76,7 @@ import redis.clients.jedis.Transaction;
 import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisDataException;
+import redis.clients.jedis.exceptions.JedisException;
 import redis.clients.jedis.providers.PooledConnectionProvider;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -315,6 +326,110 @@ class Jedis40ClientTest {
                       .satisfies(
                           point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
                 }));
+  }
+
+  @Test
+  void partialInitializationReplyDrainPreservesCompletedCommand() throws Exception {
+    Assumptions.assumeTrue(Boolean.getBoolean("testJedis51OrLater"));
+
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    try {
+      try (ServerSocket server = new ServerSocket(0)) {
+        Future<?> serverTask =
+            executor.submit(
+                () -> {
+                  try (Socket socket = server.accept()) {
+                    InputStream input = socket.getInputStream();
+                    readRedisCommand(input);
+                    readRedisCommand(input);
+                    readRedisCommand(input);
+
+                    OutputStream output = socket.getOutputStream();
+                    output.write("+OK\r\n".getBytes(UTF_8));
+                    output.flush();
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                });
+
+        JedisClientConfig clientConfig =
+            DefaultJedisClientConfig.builder().clientName("otel-partial-drain-test").build();
+        UnifiedJedis client =
+            new UnifiedJedis(
+                new PooledConnectionProvider(
+                    new HostAndPort("127.0.0.1", server.getLocalPort()), clientConfig),
+                1,
+                Duration.ZERO);
+        cleanup.deferCleanup(client);
+
+        assertThatThrownBy(() -> client.get("never")).isInstanceOf(JedisException.class);
+        serverTask.get(10, SECONDS);
+      }
+
+      jedis.set("after-partial-initialization", "value");
+
+      String connectionErrorType = JedisConnectionException.class.getName();
+      testing.waitForTraces(4);
+      assertThat(testing.spans()).hasSize(4);
+      assertThat(testing.spans())
+          .filteredOn(span -> "CLIENT".equals(span.getAttributes().get(DB_OPERATION_NAME)))
+          .hasSize(3);
+      assertThat(testing.spans())
+          .filteredOn(span -> "CLIENT".equals(span.getAttributes().get(DB_OPERATION_NAME)))
+          .filteredOn(
+              span -> {
+                String queryText = span.getAttributes().get(DB_QUERY_TEXT);
+                return queryText != null && queryText.contains("SETNAME");
+              })
+          .singleElement()
+          .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
+      assertThat(testing.spans())
+          .filteredOn(span -> "CLIENT".equals(span.getAttributes().get(DB_OPERATION_NAME)))
+          .filteredOn(
+              span -> {
+                String queryText = span.getAttributes().get(DB_QUERY_TEXT);
+                return queryText != null && queryText.contains("SETINFO");
+              })
+          .hasSize(2)
+          .allSatisfy(
+              span ->
+                  assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo(connectionErrorType));
+      assertThat(testing.spans())
+          .filteredOn(span -> "SET".equals(span.getAttributes().get(DB_OPERATION_NAME)))
+          .singleElement()
+          .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
+
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.jedis-4.0",
+          "db.client.operation.duration",
+          metrics ->
+              metrics.anySatisfy(
+                  metric -> {
+                    assertThat(metric.getHistogramData().getPoints()).hasSize(3);
+                    assertThat(metric.getHistogramData().getPoints())
+                        .filteredOn(
+                            point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                        .filteredOn(
+                            point ->
+                                connectionErrorType.equals(point.getAttributes().get(ERROR_TYPE)))
+                        .singleElement()
+                        .satisfies(point -> assertThat(point.getCount()).isEqualTo(2));
+                    assertThat(metric.getHistogramData().getPoints())
+                        .filteredOn(
+                            point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                        .filteredOn(point -> point.getAttributes().get(ERROR_TYPE) == null)
+                        .singleElement()
+                        .satisfies(point -> assertThat(point.getCount()).isEqualTo(1));
+                    assertThat(metric.getHistogramData().getPoints())
+                        .filteredOn(
+                            point -> "SET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                        .singleElement()
+                        .satisfies(
+                            point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
+                  }));
+    } finally {
+      executor.shutdownNow();
+    }
   }
 
   @Test
@@ -997,6 +1112,45 @@ class Jedis40ClientTest {
     return jedisShardingClass
         .getConstructor(List.class, JedisClientConfig.class)
         .newInstance(shards, clientConfig);
+  }
+
+  private static void readRedisCommand(InputStream input) throws IOException {
+    String arrayHeader = readRedisLine(input);
+    if (!arrayHeader.startsWith("*")) {
+      throw new IOException("Expected a RESP array");
+    }
+
+    int argumentCount = Integer.parseInt(arrayHeader.substring(1));
+    for (int i = 0; i < argumentCount; i++) {
+      String bulkHeader = readRedisLine(input);
+      if (!bulkHeader.startsWith("$")) {
+        throw new IOException("Expected a RESP bulk string");
+      }
+
+      int remaining = Integer.parseInt(bulkHeader.substring(1)) + 2;
+      while (remaining-- > 0) {
+        if (input.read() == -1) {
+          throw new EOFException();
+        }
+      }
+    }
+  }
+
+  private static String readRedisLine(InputStream input) throws IOException {
+    StringBuilder line = new StringBuilder();
+    while (true) {
+      int value = input.read();
+      if (value == -1) {
+        throw new EOFException();
+      }
+      if (value == '\r') {
+        if (input.read() != '\n') {
+          throw new IOException("Expected CRLF");
+        }
+        return line.toString();
+      }
+      line.append((char) value);
+    }
   }
 
   @Test
