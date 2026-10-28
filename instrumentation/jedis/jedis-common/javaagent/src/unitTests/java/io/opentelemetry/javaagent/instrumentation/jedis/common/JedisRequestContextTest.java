@@ -96,6 +96,25 @@ class JedisRequestContextTest {
   }
 
   @Test
+  void connectionInitializationIsolatesAndRestoresEnclosingRequest() {
+    JedisRequestContext<Object> outerContext = JedisRequestContext.attach();
+    try {
+      JedisRequestContext<Object> initializationContext =
+          requireNonNull(JedisRequestContext.attachForConnectionInitialization());
+      Throwable serverFailure = new IllegalStateException("initialization server failure");
+      JedisRequestContext.captureServerError(serverFailure);
+
+      assertThat(initializationContext.detachAndEnd(serverFailure)).isSameAs(serverFailure);
+      assertThat(outerContext.isServerError(serverFailure)).isTrue();
+      assertThat(JedisRequestContext.attach()).isNull();
+      assertThat(outerContext.detachAndEnd(null)).isNull();
+    } finally {
+      outerContext.detachAndEnd(null);
+    }
+    assertDetached();
+  }
+
+  @Test
   void deferredNestedBatchServerErrorReturnedByEnclosingBatch() {
     JedisRequestContext<Object> batchContext = JedisRequestContext.attachForBatch();
     try {

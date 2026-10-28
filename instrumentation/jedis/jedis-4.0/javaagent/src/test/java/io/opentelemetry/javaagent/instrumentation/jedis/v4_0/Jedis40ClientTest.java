@@ -176,16 +176,13 @@ class Jedis40ClientTest {
 
     assertThat(testing.spans())
         .hasSize(expectedTraces)
-        .filteredOn(
-            span -> "CLIENT".equals(span.getAttributes().get(DB_OPERATION_NAME)))
+        .filteredOn(span -> "CLIENT".equals(span.getAttributes().get(DB_OPERATION_NAME)))
         .hasSize(initializationCommands)
-        .allSatisfy(
-            span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
+        .allSatisfy(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
     assertThat(testing.spans())
         .filteredOn(span -> "GET".equals(span.getAttributes().get(DB_OPERATION_NAME)))
         .singleElement()
-        .satisfies(
-            span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo("WRONGTYPE"));
+        .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo("WRONGTYPE"));
     assertThat(testing.spans())
         .filteredOn(span -> "SET".equals(span.getAttributes().get(DB_OPERATION_NAME)))
         .singleElement()
@@ -196,15 +193,28 @@ class Jedis40ClientTest {
         "db.client.operation.duration",
         metrics ->
             metrics.anySatisfy(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .filteredOn(
-                            point -> "GET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                        .singleElement()
-                        .satisfies(
-                            point ->
-                                assertThat(point.getAttributes().get(ERROR_TYPE))
-                                    .isEqualTo("WRONGTYPE"))));
+                metric -> {
+                  assertThat(metric.getHistogramData().getPoints())
+                      .filteredOn(
+                          point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                      .isNotEmpty()
+                      .allSatisfy(
+                          point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
+                  assertThat(metric.getHistogramData().getPoints())
+                      .filteredOn(
+                          point -> "GET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                      .singleElement()
+                      .satisfies(
+                          point ->
+                              assertThat(point.getAttributes().get(ERROR_TYPE))
+                                  .isEqualTo("WRONGTYPE"));
+                  assertThat(metric.getHistogramData().getPoints())
+                      .filteredOn(
+                          point -> "SET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                      .singleElement()
+                      .satisfies(
+                          point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
+                }));
   }
 
   @Test

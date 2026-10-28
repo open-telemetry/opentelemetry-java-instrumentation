@@ -88,6 +88,16 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
   }
 
   @Nullable
+  public static <T> JedisRequestContext<T> attachForConnectionInitialization() {
+    if (currentRequestContext.get() == null) {
+      return null;
+    }
+    JedisRequestContext<T> requestContext = new JedisRequestContext<>();
+    requestContext.previousContext = currentRequestContext.set(requestContext);
+    return requestContext;
+  }
+
+  @Nullable
   public static <T> JedisRequestContext<T> attachForTransaction(Object transaction) {
     JedisRequestContext<?> requestContext = currentRequestContext.get();
     if (requestContext != null && requestContext.transactionOwner == transaction) {

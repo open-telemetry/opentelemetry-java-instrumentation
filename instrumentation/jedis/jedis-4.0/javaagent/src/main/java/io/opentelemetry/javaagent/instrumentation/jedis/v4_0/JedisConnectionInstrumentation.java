@@ -54,6 +54,9 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
     transformer.applyAdviceToMethod(
         named("executeCommand"), getClass().getName() + "$ExecuteCommandAdvice");
+
+    transformer.applyAdviceToMethod(
+        named("initializeFromClientConfig"), getClass().getName() + "$InitializationAdvice");
   }
 
   public static class AdviceScope {
@@ -107,6 +110,24 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("socketFactory") JedisSocketFactory socketFactory,
         @Advice.Argument(value = 1, optional = true) @Nullable Object clientConfig) {
       setConnectionInfo(connection, socketFactory, clientConfig);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InitializationAdvice {
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static JedisRequestContext<JedisRequest> onEnter() {
+      return JedisRequestContext.attachForConnectionInitialization();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable JedisRequestContext<JedisRequest> requestContext) {
+      if (requestContext != null) {
+        requestContext.detachAndEnd(throwable);
+      }
     }
   }
 
