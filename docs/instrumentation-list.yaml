@@ -5267,6 +5267,19 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    rpc.client.call.duration-34bfa639:
+      name: rpc.client.call.duration
+      description: Measures the duration of an outgoing Remote Procedure Call (RPC).
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.system.name
+        type: STRING
     rpc.client.call.duration-a776e0a5:
       name: rpc.client.call.duration
       description: Measures the duration of an outgoing Remote Procedure Call (RPC).
@@ -5339,6 +5352,19 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    rpc.client.duration-e3d65022:
+      name: rpc.client.duration
+      description: Measures the duration of outbound RPC.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: ms
+      attributes:
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
     rpc.client.request.size-0d8f967b:
       name: rpc.client.request.size
       description: Measures the size of RPC request messages (uncompressed).
@@ -5424,23 +5450,6 @@ definitions:
         type: STRING
       - name: rpc.system.name
         type: STRING
-    rpc.server.call.duration-cfaf5409:
-      name: rpc.server.call.duration
-      description: Measures the duration of an incoming Remote Procedure Call (RPC).
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
     rpc.server.duration-4b5b404d:
       name: rpc.server.duration
       description: Measures the duration of inbound RPC.
@@ -5494,6 +5503,21 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    rpc.server.duration-cb53bb44:
+      name: rpc.server.duration
+      description: Measures the duration of inbound RPC.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: ms
+      attributes:
+      - name: network.type
+        type: STRING
+      - name: rpc.method
+        type: STRING
+      - name: rpc.service
+        type: STRING
+      - name: rpc.system
+        type: STRING
     rpc.server.request.size-75ef4f8e:
       name: rpc.server.request.size
       description: Measures the size of RPC request messages (uncompressed).
@@ -9942,8 +9966,6 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033
@@ -9984,6 +10006,8 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
+      - name: server.port
+        type: LONG
 - name: elasticsearch-transport-5.3
   display_name: Elasticsearch Transport Client
   description: |
@@ -10021,6 +10045,8 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033
@@ -10071,8 +10097,6 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
 - name: elasticsearch-transport-6.0
   display_name: Elasticsearch Transport Client
   description: |
@@ -10738,8 +10762,10 @@ libraries:
 - name: gwt-2.0
   display_name: GWT
   description: This instrumentation enables RPC server spans for GWT RPC requests.
+    RPC server metrics are emitted when preview RPC semantic conventions are enabled.
   semantic_conventions:
   - RPC_SERVER_SPANS
+  - RPC_SERVER_METRICS
   library_link: https://www.gwtproject.org/
   source_path: instrumentation/gwt-2.0
   scope:
@@ -10761,6 +10787,8 @@ libraries:
       - name: rpc.system
         type: STRING
   - when: otel.semconv-stability.preview=rpc
+    metric_refs:
+    - rpc.server.call.duration-4a9fd153
     spans:
     - span_kind: SERVER
       attributes:
@@ -10771,6 +10799,9 @@ libraries:
       - name: rpc.system.name
         type: STRING
   - when: otel.semconv-stability.preview=rpc/dup
+    metric_refs:
+    - rpc.server.call.duration-4a9fd153
+    - rpc.server.duration-6ea1f0bd
     spans:
     - span_kind: SERVER
       attributes:
@@ -18072,10 +18103,12 @@ libraries:
 - name: rmi
   display_name: RMI (Remote Method Invocation)
   description: |
-    This instrumentation enables RPC client spans and RPC server spans for Java RMI (Remote Method Invocation).
+    This instrumentation enables RPC client spans and RPC server spans for Java RMI (Remote Method Invocation), with duration metrics when RPC semantic convention preview is enabled.
   semantic_conventions:
   - RPC_CLIENT_SPANS
+  - RPC_CLIENT_METRICS
   - RPC_SERVER_SPANS
+  - RPC_SERVER_METRICS
   library_link: https://docs.oracle.com/en/java/javase/17/docs/api/java.rmi/java/rmi/package-summary.html
   source_path: instrumentation/rmi
   scope:
@@ -18104,6 +18137,9 @@ libraries:
       - name: rpc.system
         type: STRING
   - when: otel.semconv-stability.preview=rpc
+    metric_refs:
+    - rpc.client.call.duration-34bfa639
+    - rpc.server.call.duration-4a9fd153
     spans:
     - span_kind: CLIENT
       attributes:
@@ -18122,6 +18158,11 @@ libraries:
       - name: rpc.system.name
         type: STRING
   - when: otel.semconv-stability.preview=rpc/dup
+    metric_refs:
+    - rpc.client.call.duration-34bfa639
+    - rpc.client.duration-e3d65022
+    - rpc.server.call.duration-4a9fd153
+    - rpc.server.duration-6ea1f0bd
     spans:
     - span_kind: CLIENT
       attributes:
@@ -19543,10 +19584,13 @@ libraries:
 - name: spring-rmi-4.0
   display_name: Spring RMI
   description: This instrumentation enables RPC client and RPC server spans for Spring
-    RMI applications.
+    RMI applications, and duration metrics when RPC preview semantic conventions are
+    enabled.
   semantic_conventions:
   - RPC_CLIENT_SPANS
+  - RPC_CLIENT_METRICS
   - RPC_SERVER_SPANS
+  - RPC_SERVER_METRICS
   library_link: https://docs.spring.io/spring-framework/docs/4.0.x/javadoc-api/org/springframework/remoting/rmi/package-summary.html
   source_path: instrumentation/spring/spring-rmi-4.0
   scope:
@@ -19575,6 +19619,9 @@ libraries:
       - name: rpc.system
         type: STRING
   - when: otel.semconv-stability.preview=rpc
+    metric_refs:
+    - rpc.client.call.duration-34bfa639
+    - rpc.server.call.duration-4a9fd153
     spans:
     - span_kind: CLIENT
       attributes:
@@ -19590,9 +19637,16 @@ libraries:
         type: STRING
       - name: rpc.method
         type: STRING
+      - name: rpc.method_original
+        type: STRING
       - name: rpc.system.name
         type: STRING
   - when: otel.semconv-stability.preview=rpc/dup
+    metric_refs:
+    - rpc.client.call.duration-34bfa639
+    - rpc.client.duration-e3d65022
+    - rpc.server.call.duration-4a9fd153
+    - rpc.server.duration-6ea1f0bd
     spans:
     - span_kind: CLIENT
       attributes:
@@ -19611,6 +19665,8 @@ libraries:
       - name: error.type
         type: STRING
       - name: rpc.method
+        type: STRING
+      - name: rpc.method_original
         type: STRING
       - name: rpc.service
         type: STRING
@@ -20114,6 +20170,8 @@ libraries:
       attributes:
       - name: db.operation.name
         type: STRING
+      - name: db.query.text
+        type: STRING
       - name: db.system.name
         type: STRING
       - name: error.type
@@ -20133,6 +20191,8 @@ libraries:
     - span_kind: CLIENT
       attributes:
       - name: db.operation.name
+        type: STRING
+      - name: db.query.text
         type: STRING
       - name: db.system.name
         type: STRING
@@ -20285,7 +20345,7 @@ libraries:
   - when: otel.semconv-stability.preview=rpc
     metric_refs:
     - rpc.client.call.duration-23f3e1cb
-    - rpc.server.call.duration-cfaf5409
+    - rpc.server.call.duration-4a9fd153
     spans:
     - span_kind: CLIENT
       attributes:
@@ -20325,16 +20385,12 @@ libraries:
         type: STRING
       - name: rpc.system.name
         type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
   - when: otel.semconv-stability.preview=rpc/dup
     metric_refs:
     - rpc.client.call.duration-23f3e1cb
     - rpc.client.duration-69e5f261
-    - rpc.server.call.duration-cfaf5409
-    - rpc.server.duration-4b5b404d
+    - rpc.server.call.duration-4a9fd153
+    - rpc.server.duration-cb53bb44
     spans:
     - span_kind: CLIENT
       attributes:
@@ -20382,10 +20438,6 @@ libraries:
         type: STRING
       - name: rpc.system.name
         type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
 - name: tomcat-7.0
   display_name: Apache Tomcat
   description: This instrumentation enables HTTP server spans and HTTP server metrics

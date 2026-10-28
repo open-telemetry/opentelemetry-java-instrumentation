@@ -44,11 +44,7 @@ public class GrpcRequestHandlerMappingInstrumentation implements TypeInstrumenta
   public static class GetRequestHandlerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
     public static Timer onEnter() {
-      if (!DubboUnknownServiceHelper.isEnabled()) {
-        return null;
-      }
       return Timer.start();
     }
 

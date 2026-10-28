@@ -17,33 +17,14 @@ import javax.annotation.Nullable;
 public interface RpcAttributesGetter<REQUEST, RESPONSE> {
 
   /**
-   * Returns the stable semconv system name for the RPC framework (e.g. {@code "grpc"}, {@code
-   * "java_rmi"}, {@code "dotnet_wcf"}).
+   * Returns the system name for the RPC framework (e.g. {@code "grpc"}, {@code "java_rmi"}, {@code
+   * "dotnet_wcf"}).
    *
    * @see <a
    *     href="https://opentelemetry.io/docs/specs/semconv/attributes-registry/rpc/">rpc.system.name
    *     spec</a>
    */
-  @SuppressWarnings("deprecation")
-  default String getRpcSystemName(REQUEST request) {
-    return getSystem(request);
-  }
-
-  /**
-   * @deprecated Use {@link #getRpcSystemName(REQUEST)}. To be removed in 3.0.
-   */
-  @Deprecated
-  String getSystem(REQUEST request);
-
-  @Nullable
-  String getService(REQUEST request);
-
-  /**
-   * @deprecated Use {@link #getRpcMethod(REQUEST)} for stable semconv.
-   */
-  @Deprecated // to be removed in 3.0
-  @Nullable
-  String getMethod(REQUEST request);
+  String getRpcSystemName(REQUEST request);
 
   @Nullable
   default Long getRequestSize(REQUEST request) {
@@ -56,17 +37,14 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Returns the fully-qualified RPC method name for stable semconv.
+   * Returns the fully-qualified RPC method name.
    *
    * @param request the request object
    * @return the fully-qualified RPC method name (e.g., "my.Service/Method"), or null if service or
    *     method is unavailable
    */
   @Nullable
-  // TODO remove default implementation
-  default String getRpcMethod(REQUEST request) {
-    return null;
-  }
+  String getRpcMethod(REQUEST request);
 
   /**
    * Returns the original method name when the method reported via {@link #getRpcMethod(REQUEST)} is
@@ -91,12 +69,12 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Returns a description of a class of error the operation ended with.
+   * Returns the {@code error.type} value for the operation.
    *
-   * <p>This method should return {@code null} if there was no error.
+   * <p>The default implementation returns the exception class name, or {@code null} if there is no
+   * exception.
    *
-   * <p>If this method returns {@code null}, the exception class name will be used as error type if
-   * one was thrown.
+   * <p>An override can return a protocol-specific, low-cardinality classification.
    *
    * <p>The cardinality of the error type should be low. The instrumentations implementing this
    * method are recommended to document the custom values they support.
@@ -104,9 +82,8 @@ public interface RpcAttributesGetter<REQUEST, RESPONSE> {
    * <p>Examples: {@code CANCELLED}, {@code UNKNOWN}, {@code -32602}
    */
   @Nullable
-  // TODO remove default implementation
   default String getErrorType(
       REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
-    return null;
+    return error == null ? null : error.getClass().getName();
   }
 }

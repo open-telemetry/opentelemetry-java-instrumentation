@@ -28,7 +28,6 @@ val DEPENDENCY_BOMS = listOf(
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
   "com.fasterxml.jackson:jackson-bom:2.22.4",
-  "com.google.guava:guava-bom:33.7.2-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
@@ -86,7 +85,7 @@ val DEPENDENCIES = listOf(
   "io.r2dbc:r2dbc-proxy:1.1.7.RELEASE",
   "ch.qos.logback:logback-classic:1.3.16", // 1.4+ requires Java 11+
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.14.2",
+  "com.uber.nullaway:nullaway:0.14.3",
   "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.11.0",
   "commons-codec:commons-codec:1.23.0",
