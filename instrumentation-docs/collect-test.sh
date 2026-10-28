@@ -206,4 +206,88 @@ for TEST_ARCH in x86_64 arm64 aarch64; do
     test "$TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE" = original-socket
   done
 done
+
+source "$(dirname "$0")/../.github/scripts/instrumentations.sh"
+COLLECTION_TASKS=()
+for task in "${INSTRUMENTATIONS[@]}"; do
+  case "$task" in
+    play:play-mvc:play-mvc-2.6:javaagent:*|runtime-telemetry:library:*)
+      COLLECTION_TASKS+=("$task")
+      ;;
+  esac
+done
+
+{
+  printf 'INSTRUMENTATIONS=(\n'
+  printf '  %s\n' "${COLLECTION_TASKS[@]}"
+  printf ')\nTEST_LATEST_DEPS_INSTRUMENTATIONS=()\nCOLIMA_INSTRUMENTATIONS=()\n'
+} > "$fixture/.github/scripts/instrumentations.sh"
+
+cat > "$fixture/gradlew" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+run_test_task() {
+  local task="$1"
+  local module="$2"
+  local force="$3"
+  local state="$FIXTURE/task-state/$task"
+
+  if [[ "$force" != true && -f "$state" ]]; then
+    return
+  fi
+
+  mkdir -p "$FIXTURE/$module/.telemetry" "$(dirname "$state")"
+  touch "$FIXTURE/$module/.telemetry/${task##*:}" "$state"
+}
+
+while [[ $# -gt 0 ]]; do
+  if [[ "$1" == :instrumentation:* ]]; then
+    task="$1"
+    shift
+    test "$1" = --rerun
+    case "$task" in
+      :instrumentation:play:play-mvc:play-mvc-2.6:javaagent:check)
+        for child in test play28Test play3Test; do
+          run_test_task "$task/$child" instrumentation/play/play-mvc/play-mvc-2.6 false
+        done
+        ;;
+      :instrumentation:runtime-telemetry:library:check)
+        for child in test testJava17 testJava21 testG1 testPS testSerial; do
+          run_test_task "$task/$child" instrumentation/runtime-telemetry false
+        done
+        ;;
+      :instrumentation:play:play-mvc:play-mvc-2.6:javaagent:*)
+        run_test_task "$task" instrumentation/play/play-mvc/play-mvc-2.6 true
+        ;;
+      :instrumentation:runtime-telemetry:library:*)
+        run_test_task "$task" instrumentation/runtime-telemetry true
+        ;;
+      *)
+        echo "Unexpected task $task" >&2
+        exit 1
+        ;;
+    esac
+  fi
+  shift
+done
+EOF
+chmod +x "$fixture/gradlew"
+
+mkdir -p "$fixture/instrumentation/play/play-mvc/play-mvc-2.6/.telemetry" \
+  "$fixture/instrumentation/runtime-telemetry/.telemetry"
+touch "$fixture/instrumentation/play/play-mvc/play-mvc-2.6/metadata.yaml" \
+  "$fixture/instrumentation/runtime-telemetry/metadata.yaml" \
+  "$fixture/instrumentation/play/play-mvc/play-mvc-2.6/.telemetry/stale" \
+  "$fixture/instrumentation/runtime-telemetry/.telemetry/stale"
+for collection in 1 2; do
+  echo "Testing repeated collection $collection"
+  "$fixture/instrumentation-docs/collect.sh"
+done
+for profile in test play28Test play3Test; do
+  test -f "$fixture/instrumentation/play/play-mvc/play-mvc-2.6/.telemetry/$profile"
+done
+for profile in test testJava17 testJava21 testG1 testPS testSerial; do
+  test -f "$fixture/instrumentation/runtime-telemetry/.telemetry/$profile"
+done
 echo "Collector regressions passed."
