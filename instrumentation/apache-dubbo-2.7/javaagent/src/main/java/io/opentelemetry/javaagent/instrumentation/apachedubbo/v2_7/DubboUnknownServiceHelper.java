@@ -104,9 +104,7 @@ public class DubboUnknownServiceHelper {
       Instant startTime,
       Instant endTime) {
 
-    if (serverInstrumenter() == null
-        || !isUnknownServiceInvokerFailure(throwable)
-        || isAlreadyRecorded(rpcInvocation)) {
+    if (!isUnknownServiceInvokerFailure(throwable) || isAlreadyRecorded(rpcInvocation)) {
       return;
     }
 
@@ -144,9 +142,7 @@ public class DubboUnknownServiceHelper {
       Instant startTime,
       Instant endTime) {
 
-    if (serverInstrumenter() == null
-        || !isUnknownServiceDecodeFailure(throwable)
-        || isAlreadyRecorded(rpcInvocation)) {
+    if (!isUnknownServiceDecodeFailure(throwable) || isAlreadyRecorded(rpcInvocation)) {
       return;
     }
 
@@ -187,7 +183,7 @@ public class DubboUnknownServiceHelper {
   public static void createUnknownServiceSpanFromTriple(
       Object requestObj, Throwable throwable, Instant startTime, Instant endTime) {
 
-    if (serverInstrumenter() == null || !isTripleNotFoundFailure(throwable)) {
+    if (!isTripleNotFoundFailure(throwable)) {
       return;
     }
 
@@ -326,10 +322,6 @@ public class DubboUnknownServiceHelper {
       InstrumenterUtil.startAndEnd(
           instrumenter, parentContext, request, null, throwable, startTime, endTime);
     }
-  }
-
-  public static boolean isEnabled() {
-    return serverInstrumenter() != null;
   }
 
   private DubboUnknownServiceHelper() {}

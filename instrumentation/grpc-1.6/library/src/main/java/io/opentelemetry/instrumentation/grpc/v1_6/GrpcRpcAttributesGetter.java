@@ -31,24 +31,14 @@ final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, 
   @Override
   @Nullable
   public String getService(GrpcRequest request) {
-    String fullMethodName = request.getMethod().getFullMethodName();
-    int slashIndex = fullMethodName.lastIndexOf('/');
-    if (slashIndex == -1) {
-      return null;
-    }
-    return fullMethodName.substring(0, slashIndex);
+    return null;
   }
 
   @Deprecated
   @Override
   @Nullable
   public String getMethod(GrpcRequest request) {
-    String fullMethodName = request.getMethod().getFullMethodName();
-    int slashIndex = fullMethodName.lastIndexOf('/');
-    if (slashIndex == -1) {
-      return null;
-    }
-    return fullMethodName.substring(slashIndex + 1);
+    return null;
   }
 
   @Override

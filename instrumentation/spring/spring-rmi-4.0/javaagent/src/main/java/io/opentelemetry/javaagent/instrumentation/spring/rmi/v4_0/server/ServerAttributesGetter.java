@@ -16,14 +16,16 @@ public class ServerAttributesGetter implements RpcAttributesGetter<SpringRmiServ
   }
 
   @Override
+  @Nullable
   public String getService(SpringRmiServerRequest request) {
-    return request.legacyRequest().declaringClass().getName();
+    return null;
   }
 
   @Deprecated
   @Override
+  @Nullable
   public String getMethod(SpringRmiServerRequest request) {
-    return request.legacyRequest().methodName();
+    return null;
   }
 
   @Override
