@@ -148,9 +148,13 @@ public class AgentBuilderUtil {
                     if (loadingSuperTypes.isEmpty()) {
                       return transformations.iterator();
                     }
-                    if (containsAny(superTypeNames, loadingSuperTypes)) {
-                      // we know that this class is going to be transformed
-                      return transformations.iterator();
+                    // A class usually has fewer supertypes than the combined targets of all
+                    // matchers, so iterate the class's supertypes and search the matcher targets.
+                    for (String className : loadingSuperTypes) {
+                      if (superTypeNames.contains(className)) {
+                        // we know that this class is going to be transformed
+                        return transformations.iterator();
+                      }
                     }
 
                     // apply only the transformations that we can't decompose
@@ -410,7 +414,17 @@ public class AgentBuilderUtil {
         if (!result.subtype) {
           return false;
         }
-        if (!containsAny(loadedTypeNames.get(classBeingRedefined), result.names)) {
+        Set<String> hierarchy = loadedTypeNames.get(classBeingRedefined);
+        boolean candidate = false;
+        // One matcher usually targets fewer names than a class hierarchy contains,
+        // so iterate the matcher targets and search the class hierarchy.
+        for (String name : result.names) {
+          if (hierarchy.contains(name)) {
+            candidate = true;
+            break;
+          }
+        }
+        if (!candidate) {
           return false;
         }
       }
@@ -456,16 +470,5 @@ public class AgentBuilderUtil {
         boolean loaded) {
       transformedName.remove();
     }
-  }
-
-  // Keep iteration explicit and avoid Collections.disjoint's general collection-selection checks
-  // in this startup matching path.
-  private static boolean containsAny(Set<String> lookup, Set<String> candidates) {
-    for (String candidate : candidates) {
-      if (lookup.contains(candidate)) {
-        return true;
-      }
-    }
-    return false;
   }
 }
