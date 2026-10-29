@@ -30,7 +30,6 @@ jobs:
     with:
       skip-openj9-tests: ${{ inputs.skip-openj9-tests }}
       skip-windows-smoke-tests: ${{ inputs.skip-windows-smoke-tests }}
-      # Selects whether Linux also runs the additional task, not a different limited-matrix recipe.
       limited-appserver-matrix: ${{ inputs.limited-appserver-matrix }}
       cache-read-only: true
 
