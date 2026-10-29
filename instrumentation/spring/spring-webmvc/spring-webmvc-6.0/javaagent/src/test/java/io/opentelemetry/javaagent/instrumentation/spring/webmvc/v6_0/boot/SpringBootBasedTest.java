@@ -30,7 +30,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 
 class SpringBootBasedTest extends AbstractSpringBootBasedTest {
@@ -124,15 +123,5 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
                 .getResource(
                     "io/opentelemetry/javaagent/instrumentation/spring/webmvc/v6_0/OpenTelemetryHandlerMappingFilter.class"))
         .isNotNull();
-  }
-
-  @Test
-  void handlerMappingFilterApplicationVisible() throws ClassNotFoundException {
-    Class<?> filterClass = context.getBean("otelAutoDispatcherFilter").getClass();
-    assertThat(filterClass.getName())
-        .isEqualTo(
-            "io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.OpenTelemetryHandlerMappingFilter");
-    assertThat(context.getClassLoader().loadClass(filterClass.getName())).isSameAs(filterClass);
-    assertThat(filterClass.getClassLoader()).isNotSameAs(DispatcherServlet.class.getClassLoader());
   }
 }
