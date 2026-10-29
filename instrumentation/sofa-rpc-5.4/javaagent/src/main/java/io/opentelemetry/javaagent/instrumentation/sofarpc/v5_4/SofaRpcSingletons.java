@@ -18,7 +18,7 @@ class SofaRpcSingletons {
   static {
     SofaRpcTelemetry telemetry =
         SofaRpcTelemetry.builder(GlobalOpenTelemetry.get())
-            .addAttributesExtractor(
+            .addClientAttributeExtractor(
                 ServerServiceAttributesExtractor.create(
                     new SofaRpcClientNetworkAttributesGetter(), GlobalOpenTelemetry.get()))
             .build();

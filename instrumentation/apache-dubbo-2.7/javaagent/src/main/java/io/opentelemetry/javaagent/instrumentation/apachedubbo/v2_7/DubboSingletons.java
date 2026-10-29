@@ -25,7 +25,7 @@ class DubboSingletons {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     DubboTelemetry telemetry =
         DubboTelemetry.builder(openTelemetry)
-            .addAttributesExtractor(
+            .addClientAttributeExtractor(
                 ServerServiceAttributesExtractor.create(
                     new DubboClientNetworkAttributesGetter(), openTelemetry))
             .build();
