@@ -1,0 +1,23 @@
+name: Muzzle before and after
+
+on:
+  push:
+    branches:
+      - trask-pr-performance-description
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  before:
+    name: Before
+    uses: ./.github/workflows/reusable-muzzle.yml
+    with:
+      checkout-ref: 9240b97264428d2226fd5874fa2ee074327ab278
+
+  after:
+    name: After
+    uses: ./.github/workflows/reusable-muzzle.yml
+    with:
+      checkout-ref: 907788f489507bb3200b503acf6ae6f089d471e4
