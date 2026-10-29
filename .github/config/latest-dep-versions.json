@@ -306,6 +306,7 @@
     "org.apache.derby:derbytools#+": "10.17.1.0",
     "org.apache.dubbo:dubbo#+": "3.3.6",
     "org.apache.dubbo:dubbo-config-api#+": "3.3.6",
+    "org.apache.dubbo:dubbo-rpc-triple#+": "3.3.6",
     "org.apache.geode:geode-core#+": "2.0.3",
     "org.apache.hbase:hbase-client#+": "3.0.0",
     "org.apache.hbase:hbase-client#1.+": "1.7.2",

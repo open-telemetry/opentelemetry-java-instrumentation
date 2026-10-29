@@ -13,6 +13,12 @@ final class DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest
 
   private static final String UNKNOWN_METHOD_SPAN_NAME = "_OTHER";
 
+  private final boolean isClient;
+
+  DubboRpcAttributesGetter(boolean isClient) {
+    this.isClient = isClient;
+  }
+
   @Override
   public String getRpcSystemName(DubboRequest request) {
     return "dubbo";
@@ -44,5 +50,16 @@ final class DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest
   @Nullable
   public String getRpcMethodOriginal(DubboRequest request) {
     return request.originalFullMethodName();
+  }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      DubboRequest request, @Nullable Result response, @Nullable Throwable error) {
+    String statusCode = DubboRpcStatus.getStatusCode(response, error);
+    if (statusCode != null && !"OK".equals(statusCode)) {
+      return DubboRpcStatus.isError(statusCode, isClient) ? statusCode : null;
+    }
+    return DubboRpcStatus.getExceptionType(response, error);
   }
 }
