@@ -37,10 +37,26 @@ dependencies {
   testInstrumentation(project(":instrumentation:cassandra:cassandra-4.4:javaagent"))
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation-api-incubator"))
+        implementation("com.datastax.cassandra:cassandra-driver-core:3.11.5")
+      }
+    }
+  }
+}
+
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
 configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:19.0")
 
 tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
