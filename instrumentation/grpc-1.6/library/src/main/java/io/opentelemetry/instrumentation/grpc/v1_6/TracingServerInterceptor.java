@@ -70,6 +70,7 @@ final class TracingServerInterceptor implements ServerInterceptor {
       // field.
       authority = GrpcAuthorityStorage.getAuthority(call);
     }
+
     GrpcRequest request =
         GrpcRequest.createServerRequest(
             call.getMethodDescriptor(),
