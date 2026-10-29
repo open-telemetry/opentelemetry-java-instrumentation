@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.thrift.v0_13;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewRpcSemconv;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -33,7 +32,6 @@ public final class ThriftSingletons {
       ThriftInstrumenterFactory.createServerInstrumenter(
           GlobalOpenTelemetry.get(), UnaryOperator.identity(), emptyList(), emptyList());
   private static final ContextPropagators propagators = GlobalOpenTelemetry.get().getPropagators();
-  private static final boolean useIdlServiceName = emitPreviewRpcSemconv(GlobalOpenTelemetry.get());
   private static final ClassValue<String> serviceNames =
       new ClassValue<String>() {
         @Override
@@ -63,11 +61,9 @@ public final class ThriftSingletons {
       };
 
   public static String getServerServiceName(Object processor, Object iface) {
-    if (useIdlServiceName) {
-      String serviceName = serviceNames.get(processor.getClass());
-      if (!serviceName.isEmpty()) {
-        return serviceName;
-      }
+    String serviceName = serviceNames.get(processor.getClass());
+    if (!serviceName.isEmpty()) {
+      return serviceName;
     }
     return iface.getClass().getName();
   }
