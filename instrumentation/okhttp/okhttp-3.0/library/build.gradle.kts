@@ -33,7 +33,6 @@ testing {
 }
 
 tasks {
-
   check {
     dependsOn(testing.suites)
   }

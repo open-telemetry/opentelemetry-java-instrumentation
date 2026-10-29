@@ -50,7 +50,6 @@ testing {
 }
 
 tasks {
-
   val exceptionSignalLogsSuites = testing.suites.withType(JvmTestSuite::class)
     .map { suite ->
       register<Test>("${suite.name}ExceptionSignalLogs") {
