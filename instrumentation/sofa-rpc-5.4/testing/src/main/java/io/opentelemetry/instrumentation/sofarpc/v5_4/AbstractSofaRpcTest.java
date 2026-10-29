@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -184,8 +185,7 @@ public abstract class AbstractSofaRpcTest {
                                 equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                 equalTo(RPC_METHOD, genericServiceSpanName()),
                                 equalTo(
-                                    stringKey("server.service.name"),
-                                    testing().expectedServerServiceName()),
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -302,8 +302,7 @@ public abstract class AbstractSofaRpcTest {
                                 equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                 equalTo(RPC_METHOD, genericServiceSpanName()),
                                 equalTo(
-                                    stringKey("server.service.name"),
-                                    testing().expectedServerServiceName()),
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -467,8 +466,7 @@ public abstract class AbstractSofaRpcTest {
                                     RPC_METHOD,
                                     "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
                                 equalTo(
-                                    stringKey("server.service.name"),
-                                    testing().expectedServerServiceName()),
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -596,8 +594,7 @@ public abstract class AbstractSofaRpcTest {
                                     RPC_METHOD,
                                     "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwBusinessException"),
                                 equalTo(
-                                    stringKey("server.service.name"),
-                                    testing().expectedServerServiceName()),
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -664,8 +661,7 @@ public abstract class AbstractSofaRpcTest {
                                     RPC_METHOD,
                                     "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/timeout"),
                                 equalTo(
-                                    stringKey("server.service.name"),
-                                    testing().expectedServerServiceName()),
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(

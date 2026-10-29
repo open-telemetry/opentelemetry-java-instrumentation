@@ -349,8 +349,9 @@
 - Remove the deprecated `ServicePeerAttributesExtractor`,
   `HttpClientServicePeerAttributesExtractor`, `ServicePeerResolver`, and
   `expectedPeerService()` APIs; use `ServerServiceAttributesExtractor`,
-  `HttpClientServerServiceAttributesExtractor`, `ServiceMappingResolver`, and
-  `expectedServerServiceName()` instead.
+  `HttpClientServerServiceAttributesExtractor`, and `ServiceMappingResolver` instead. Replace
+  `expectedServerServiceName()` with `TestServerServiceMapping.expectedMappedServiceName()` in
+  service-mapping tests.
 - In `opentelemetry-instrumentation-api-incubator`, custom `RpcAttributesGetter` implementations
   must implement `getRpcSystemName` and `getRpcMethod`, returning the RPC system name and fully
   qualified method name such as `my.Service/Method`, respectively. The legacy `getSystem`,

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
@@ -303,9 +304,7 @@ class HibernateReactiveTest {
                                 DB_QUERY_TEXT,
                                 "select value0_.id as id1_0_0_, value0_.name as name2_0_0_ from Value value0_ where value0_.id=$1"),
                             equalTo(DB_QUERY_SUMMARY, "select Value"),
-                            equalTo(
-                                stringKey("server.service.name"),
-                                testing.expectedServerServiceName()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
                 span ->

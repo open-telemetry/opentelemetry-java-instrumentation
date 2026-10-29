@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.AbstractReactorNettyHttpClientTest.USER_AGENT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -92,9 +93,7 @@ class ReactorNettyConnectionSpanTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpPort()),
-                            equalTo(
-                                stringKey("server.service.name"),
-                                testing.expectedServerServiceName())),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(INTERNAL)
@@ -106,9 +105,7 @@ class ReactorNettyConnectionSpanTest {
                             equalTo(SERVER_PORT, server.httpPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
-                            equalTo(
-                                stringKey("server.service.name"),
-                                testing.expectedServerServiceName())),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
                 span ->
                     span.hasName("GET")
                         .hasKind(CLIENT)
@@ -118,9 +115,7 @@ class ReactorNettyConnectionSpanTest {
                             equalTo(URL_FULL, uri),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(
-                                stringKey("server.service.name"),
-                                testing.expectedServerServiceName()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
@@ -176,9 +171,7 @@ class ReactorNettyConnectionSpanTest {
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, PortUtils.UNUSABLE_PORT),
                             equalTo(ERROR_TYPE, connectException.getClass().getName()),
-                            equalTo(
-                                stringKey("server.service.name"),
-                                testing.expectedServerServiceName())),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
                 span ->
                     span.hasName("RESOLVE")
                         .hasKind(INTERNAL)
@@ -186,9 +179,7 @@ class ReactorNettyConnectionSpanTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, PortUtils.UNUSABLE_PORT),
-                            equalTo(
-                                stringKey("server.service.name"),
-                                testing.expectedServerServiceName())),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(INTERNAL)
@@ -200,7 +191,6 @@ class ReactorNettyConnectionSpanTest {
                             equalTo(SERVER_PORT, PortUtils.UNUSABLE_PORT),
                             satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(null, "127.0.0.1")),
                             equalTo(
-                                stringKey("server.service.name"),
-                                testing.expectedServerServiceName()))));
+                                stringKey("server.service.name"), expectedMappedServiceName()))));
   }
 }

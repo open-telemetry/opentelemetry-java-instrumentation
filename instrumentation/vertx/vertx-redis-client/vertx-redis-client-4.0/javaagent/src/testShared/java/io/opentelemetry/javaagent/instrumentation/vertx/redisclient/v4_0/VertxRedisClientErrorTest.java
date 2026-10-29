@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -426,9 +427,7 @@ class VertxRedisClientErrorTest {
                             equalTo(SERVER_PORT, server.port),
                             equalTo(NETWORK_PEER_ADDRESS, HOST),
                             equalTo(NETWORK_PEER_PORT, server.port),
-                            equalTo(
-                                stringKey("server.service.name"),
-                                testing.expectedServerServiceName()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(ERROR_TYPE, errorType))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,

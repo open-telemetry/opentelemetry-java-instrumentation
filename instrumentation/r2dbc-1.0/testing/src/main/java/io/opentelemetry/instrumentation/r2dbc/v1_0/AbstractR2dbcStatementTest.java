@@ -31,6 +31,7 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping;
 import io.r2dbc.spi.Batch;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactories;
@@ -68,8 +69,8 @@ public abstract class AbstractR2dbcStatementTest {
   protected abstract InstrumentationExtension getTesting();
 
   @Nullable
-  protected String expectedServerServiceName() {
-    return getTesting().expectedServerServiceName();
+  protected String expectedMappedServiceName() {
+    return TestServerServiceMapping.expectedMappedServiceName();
   }
 
   private static final String USER_DB = "SA";
@@ -193,7 +194,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(DB_QUERY_TEXT, parameter.expectedQueryText),
                                 equalTo(DB_QUERY_SUMMARY, parameter.getQuerySummary()),
                                 equalTo(
-                                    stringKey("server.service.name"), expectedServerServiceName()),
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port)),
                     span ->
@@ -378,7 +379,7 @@ public abstract class AbstractR2dbcStatementTest {
                                   equalTo(DB_OPERATION_BATCH_SIZE, 0L),
                                   equalTo(
                                       stringKey("server.service.name"),
-                                      expectedServerServiceName()),
+                                      expectedMappedServiceName()),
                                   equalTo(SERVER_ADDRESS, container.getHost()),
                                   equalTo(SERVER_PORT, port),
                                   equalTo(ERROR_TYPE, "java.util.NoSuchElementException"))));
@@ -402,7 +403,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(DB_QUERY_SUMMARY, scenario.summary),
                                 equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
                                 equalTo(
-                                    stringKey("server.service.name"), expectedServerServiceName()),
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port))));
   }

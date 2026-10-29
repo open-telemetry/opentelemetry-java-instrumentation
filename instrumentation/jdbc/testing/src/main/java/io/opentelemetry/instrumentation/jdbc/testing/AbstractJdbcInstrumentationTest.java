@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -1409,8 +1410,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(DB_SYSTEM_NAME, OTHER_SQL),
                                 equalTo(DB_QUERY_TEXT, "testing ?"),
                                 equalTo(
-                                    stringKey("server.service.name"),
-                                    testing().expectedServerServiceName()),
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1498,8 +1498,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     DB_QUERY_SUMMARY,
                                     table != null ? operation + " " + table : operation),
                                 equalTo(
-                                    stringKey("server.service.name"),
-                                    testing().expectedServerServiceName()),
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1615,8 +1614,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(DB_QUERY_TEXT, "SELECT * FROM table"),
                                 equalTo(DB_QUERY_SUMMARY, "SELECT table"),
                                 equalTo(
-                                    stringKey("server.service.name"),
-                                    testing().expectedServerServiceName()),
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 

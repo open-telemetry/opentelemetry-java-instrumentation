@@ -13,6 +13,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -1125,10 +1126,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
-              String expectedServerServiceName = testing.expectedServerServiceName();
-              if (expectedServerServiceName != null) {
+              String mappedServiceName = expectedMappedServiceName();
+              if (mappedServiceName != null) {
                 assertThat(attrs)
-                    .containsEntry(stringKey("server.service.name"), expectedServerServiceName);
+                    .containsEntry(stringKey("server.service.name"), mappedServiceName);
               } else {
                 assertThat(attrs).doesNotContainKey(stringKey("server.service.name"));
               }

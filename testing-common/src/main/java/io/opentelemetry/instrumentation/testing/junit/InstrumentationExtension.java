@@ -22,7 +22,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
-import javax.annotation.Nullable;
 import org.assertj.core.api.ListAssert;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -69,19 +68,6 @@ public abstract class InstrumentationExtension
   /** Return the {@link OpenTelemetry} instance used to produce telemetry data. */
   public OpenTelemetry getOpenTelemetry() {
     return testRunner.getOpenTelemetry();
-  }
-
-  /**
-   * Returns the server service name expected on spans that target a local test server, or {@code
-   * null} when no server service mapping is configured.
-   *
-   * <p>Server service mapping is a javaagent-only feature, so only javaagent tests expect a value.
-   * Library instrumentation never applies the service identity extractor; library users add service
-   * identity through their own attributes extractor.
-   */
-  @Nullable
-  public String expectedServerServiceName() {
-    return testRunner.expectedServerServiceName();
   }
 
   /** Return a list of all captured spans. */

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimentalSatisfies;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.SuppressionTest.addNestedHttpClientSpan;
@@ -124,7 +125,7 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
               "http://localhost:" + port + "/api/firstModule/unit/unitOne",
               "localhost",
               port,
-              testing.expectedServerServiceName(),
+              expectedMappedServiceName(),
               trace.getSpan(1));
           assertions.add(
               span ->

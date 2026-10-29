@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.ExperimentalHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -192,8 +193,7 @@ class LettuceAsyncClientTest {
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(
-                                stringKey("server.service.name"),
-                                testing.expectedServerServiceName()))));
+                                stringKey("server.service.name"), expectedMappedServiceName()))));
   }
 
   @Test
@@ -362,8 +362,7 @@ class LettuceAsyncClientTest {
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(
-                                stringKey("server.service.name"),
-                                testing.expectedServerServiceName()))));
+                                stringKey("server.service.name"), expectedMappedServiceName()))));
   }
 
   @Test

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.javahttpclient;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -161,9 +162,7 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, method),
                             equalTo(ERROR_TYPE, CancellationException.class.getName()),
-                            equalTo(
-                                stringKey("server.service.name"),
-                                testing.expectedServerServiceName())),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
                 span ->
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)

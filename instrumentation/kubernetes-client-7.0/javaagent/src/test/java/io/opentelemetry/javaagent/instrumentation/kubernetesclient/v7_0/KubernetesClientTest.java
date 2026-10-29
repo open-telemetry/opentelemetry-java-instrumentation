@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kubernetesclient.v7_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -97,9 +98,7 @@ class KubernetesClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
-                            equalTo(
-                                stringKey("server.service.name"),
-                                testing.expectedServerServiceName()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(
                                 stringKey("kubernetes-client.namespace"),
                                 experimental("namespace")),
@@ -156,9 +155,7 @@ class KubernetesClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 451),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
-                            equalTo(
-                                stringKey("server.service.name"),
-                                testing.expectedServerServiceName()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(ERROR_TYPE, "451"),
                             equalTo(
                                 stringKey("kubernetes-client.namespace"),
@@ -213,9 +210,7 @@ class KubernetesClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
-                            equalTo(
-                                stringKey("server.service.name"),
-                                testing.expectedServerServiceName()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(
                                 stringKey("kubernetes-client.namespace"),
                                 experimental("namespace")),
@@ -277,9 +272,7 @@ class KubernetesClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 451),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
-                            equalTo(
-                                stringKey("server.service.name"),
-                                testing.expectedServerServiceName()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(ERROR_TYPE, "451"),
                             equalTo(
                                 stringKey("kubernetes-client.namespace"),

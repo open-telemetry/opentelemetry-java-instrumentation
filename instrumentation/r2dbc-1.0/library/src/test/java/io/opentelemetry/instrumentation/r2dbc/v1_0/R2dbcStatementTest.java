@@ -30,7 +30,7 @@ class R2dbcStatementTest extends AbstractR2dbcStatementTest {
   }
 
   @Override
-  protected String expectedServerServiceName() {
+  protected String expectedMappedServiceName() {
     return "test-server-service";
   }
 
@@ -50,7 +50,7 @@ class R2dbcStatementTest extends AbstractR2dbcStatementTest {
     return R2dbcTelemetry.builder(testing.getOpenTelemetry())
         .addAttributesExtractor(
             AttributesExtractor.constant(
-                stringKey("server.service.name"), expectedServerServiceName()))
+                stringKey("server.service.name"), expectedMappedServiceName()))
         .build()
         .wrapConnectionFactory(
             super.createProxyConnectionFactory(connectionFactoryOptions), connectionFactoryOptions);

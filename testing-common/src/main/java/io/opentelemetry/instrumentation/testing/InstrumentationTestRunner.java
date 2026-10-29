@@ -106,19 +106,6 @@ public abstract class InstrumentationTestRunner {
 
   public abstract boolean forceFlushCalled();
 
-  /**
-   * Returns the server service name expected on spans that target a local test server, or {@code
-   * null} when no server service mapping is configured.
-   *
-   * <p>Server service mapping is a javaagent-only feature, so only javaagent tests expect a value.
-   * Library instrumentation never applies the service identity extractor; library users add service
-   * identity through their own attributes extractor.
-   */
-  @Nullable
-  public String expectedServerServiceName() {
-    return null;
-  }
-
   /** Return a list of all captured traces, where each trace is a sorted list of spans. */
   public List<List<SpanData>> traces() {
     return TelemetryDataUtil.groupTraces(getExportedSpans());

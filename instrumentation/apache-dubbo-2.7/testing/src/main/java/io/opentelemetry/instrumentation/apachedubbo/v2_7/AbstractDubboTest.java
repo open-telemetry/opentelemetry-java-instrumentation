@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -153,8 +154,7 @@ public abstract class AbstractDubboTest {
                                     RPC_METHOD,
                                     "org.apache.dubbo.rpc.service.GenericService/$invoke"),
                                 equalTo(
-                                    stringKey("server.service.name"),
-                                    testing().expectedServerServiceName()),
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -283,8 +283,7 @@ public abstract class AbstractDubboTest {
                                     RPC_METHOD,
                                     "org.apache.dubbo.rpc.service.GenericService/$invokeAsync"),
                                 equalTo(
-                                    stringKey("server.service.name"),
-                                    testing().expectedServerServiceName()),
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -422,8 +421,7 @@ public abstract class AbstractDubboTest {
                     equalTo(RPC_SYSTEM_NAME, "dubbo"),
                     equalTo(RPC_METHOD, "org.apache.dubbo.rpc.service.GenericService/$invoke"),
                     satisfies(ERROR_TYPE, val -> val.isNotNull()),
-                    equalTo(
-                        stringKey("server.service.name"), testing().expectedServerServiceName()),
+                    equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                     equalTo(SERVER_ADDRESS, "localhost"),
                     satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                     satisfies(
@@ -570,8 +568,7 @@ public abstract class AbstractDubboTest {
                                     "org.apache.dubbo.rpc.service.GenericService/$invoke"),
                                 satisfies(ERROR_TYPE, val -> val.isNotNull()),
                                 equalTo(
-                                    stringKey("server.service.name"),
-                                    testing().expectedServerServiceName()),
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(

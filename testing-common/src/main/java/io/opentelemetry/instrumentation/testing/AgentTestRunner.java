@@ -39,11 +39,6 @@ public class AgentTestRunner extends InstrumentationTestRunner {
 
   private static final AgentTestRunner INSTANCE = new AgentTestRunner();
 
-  // Javaagent integration tests use this name for mapped local test hosts.
-  private static final String SERVER_SERVICE_NAME = "test-server-service";
-  private static final String SERVER_SERVICE_MAPPING_PROPERTY =
-      "otel.instrumentation.common.server-service-mapping";
-
   public static InstrumentationTestRunner instance() {
     return INSTANCE;
   }
@@ -114,10 +109,5 @@ public class AgentTestRunner extends InstrumentationTestRunner {
   @Override
   public boolean forceFlushCalled() {
     return AgentTestingExporterAccess.forceFlushCalled();
-  }
-
-  @Override
-  public String expectedServerServiceName() {
-    return System.getProperty(SERVER_SERVICE_MAPPING_PROPERTY) == null ? null : SERVER_SERVICE_NAME;
   }
 }

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v4_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
@@ -182,9 +183,7 @@ class VertxSqlClientServerListTest {
                             equalTo(DB_NAMESPACE, DB),
                             equalTo(DB_QUERY_TEXT, "select ?"),
                             equalTo(DB_QUERY_SUMMARY, "select"),
-                            equalTo(
-                                stringKey("server.service.name"),
-                                testing.expectedServerServiceName()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
@@ -227,9 +226,7 @@ class VertxSqlClientServerListTest {
                             equalTo(DB_NAMESPACE, DB),
                             equalTo(DB_QUERY_TEXT, "select ?"),
                             equalTo(DB_QUERY_SUMMARY, "select"),
-                            equalTo(
-                                stringKey("server.service.name"),
-                                testing.expectedServerServiceName()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))),
         trace ->
