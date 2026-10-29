@@ -5,9 +5,7 @@
 ### ⚠️ Breaking changes
 
 - Rename `otel.instrumentation.grpc.{client,server}.request-metadata.{included,excluded}` to
-  `otel.instrumentation.grpc.{client,server}.request-headers.{included,excluded}`, and rename
-  `java.grpc.{client,server}.request_metadata.{included,excluded}` to
-  `java.grpc.{client,server}.request_headers.{included,excluded}`.
+  `otel.instrumentation.grpc.{client,server}.request-headers.{included,excluded}`.
 - Captured gRPC request attributes now use `rpc.request.header.<key>` instead of
   `rpc.request.metadata.<key>`.
 - Replace `SpringWebfluxClientTelemetry.addFilter(list)` and
