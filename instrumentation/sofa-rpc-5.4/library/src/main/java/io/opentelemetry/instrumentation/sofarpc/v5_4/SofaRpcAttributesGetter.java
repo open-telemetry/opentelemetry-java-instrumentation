@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
-import com.alipay.sofa.rpc.common.RemotingConstants;
 import com.alipay.sofa.rpc.core.exception.RpcErrorType;
 import com.alipay.sofa.rpc.core.exception.SofaRpcException;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
@@ -44,9 +43,7 @@ final class SofaRpcAttributesGetter implements RpcAttributesGetter<SofaRpcReques
       return sofaRpcCode != null ? sofaRpcCode : error.getClass().getName();
     }
 
-    if (response != null
-        && (response.isError()
-            || "true".equals(response.getResponseProp(RemotingConstants.HEAD_RESPONSE_ERROR)))) {
+    if (SofaRpcResponseUtil.isError(response)) {
       return Integer.toString(RpcErrorType.SERVER_UNDECLARED_ERROR);
     }
     return null;

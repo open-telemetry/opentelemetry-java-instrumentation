@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
-import com.alipay.sofa.rpc.common.RemotingConstants;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder;
@@ -21,13 +20,7 @@ final class SofaRpcSpanStatusExtractor
       SofaRpcRequest request,
       @Nullable SofaResponse response,
       @Nullable Throwable error) {
-    SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, response, error);
-    if (error != null || response == null) {
-      return;
-    }
-
-    if (response.isError()
-        || "true".equals(response.getResponseProp(RemotingConstants.HEAD_RESPONSE_ERROR))) {
+    if (error != null || SofaRpcResponseUtil.isError(response)) {
       spanStatusBuilder.setStatus(StatusCode.ERROR);
     }
   }
