@@ -16,12 +16,17 @@ val instrumentationProjectMuzzle = listOf(
   tasks.register("muzzle4"),
 )
 
+val finatraBaggageTestSuite =
+  if (findProperty("testLatestDeps") == "true") "latestDepTest" else "test"
+
 val httpServerBaggageTestSuites = mapOf(
   ":instrumentation:activej-http-6.0:javaagent" to listOf("test"),
+  ":instrumentation:akka:akka-http-10.0:javaagent" to listOf("test"),
   ":instrumentation:armeria:armeria-1.3:javaagent" to listOf("test", "testArmeria19"),
   ":instrumentation:armeria:armeria-1.3:library" to listOf("test"),
   ":instrumentation:dropwizard:dropwizard-testing" to listOf("test"),
   ":instrumentation:finagle-http-23.11:javaagent" to listOf("test"),
+  ":instrumentation:finatra-2.9:javaagent" to listOf(finatraBaggageTestSuite),
   ":instrumentation:grails-3.0:javaagent" to listOf("test"),
   ":instrumentation:grizzly-2.3:javaagent" to listOf("test"),
   ":instrumentation:helidon-4.3:javaagent" to listOf("test"),
@@ -38,10 +43,16 @@ val httpServerBaggageTestSuites = mapOf(
   ":instrumentation:jetty:jetty-12.0:javaagent" to listOf("test"),
   ":instrumentation:jetty:jetty-8.0:javaagent" to listOf("test"),
   ":instrumentation:jfinal-3.2:javaagent" to listOf("test"),
+  ":instrumentation:ktor:ktor-1.0:library" to listOf("test"),
+  ":instrumentation:ktor:ktor-2.0:javaagent" to listOf("test"),
+  ":instrumentation:ktor:ktor-2.0:library" to listOf("test"),
+  ":instrumentation:ktor:ktor-3.0:javaagent" to listOf("test"),
+  ":instrumentation:ktor:ktor-3.0:library" to listOf("test"),
   ":instrumentation:netty:netty-3.8:javaagent" to listOf("test"),
   ":instrumentation:netty:netty-4.0:javaagent" to listOf("test"),
   ":instrumentation:netty:netty-4.1:javaagent" to listOf("test"),
   ":instrumentation:netty:netty-4.1:library" to listOf("test"),
+  ":instrumentation:pekko:pekko-http-1.0:javaagent" to listOf("test", "scala3Test"),
   ":instrumentation:play:play-mvc:play-mvc-2.4:javaagent" to listOf("test", "play24Test"),
   ":instrumentation:play:play-mvc:play-mvc-2.6:javaagent" to listOf("test", "play28Test", "play3Test"),
   ":instrumentation:ratpack:ratpack-1.4:javaagent" to listOf("test", "version17Test"),
