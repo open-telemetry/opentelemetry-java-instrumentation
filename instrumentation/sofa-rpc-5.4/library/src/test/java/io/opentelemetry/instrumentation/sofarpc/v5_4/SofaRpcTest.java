@@ -106,11 +106,11 @@ class SofaRpcTest extends AbstractSofaRpcTest {
         response.setAppResponse("success");
         break;
       case ERROR_FLAG:
-        errorType = Integer.toString(RpcErrorType.SERVER_UNDECLARED_ERROR);
+        errorType = "_OTHER";
         break;
       case ERROR_MESSAGE:
         response.setErrorMsg("RPC error");
-        errorType = Integer.toString(RpcErrorType.SERVER_UNDECLARED_ERROR);
+        errorType = "_OTHER";
         break;
       case RPC_EXCEPTION:
         actualException = new SofaRpcException(RpcErrorType.SERVER_BUSY, "RPC error");

@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.sofarpc.v5_4;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.alipay.sofa.rpc.common.RemotingConstants;
-import com.alipay.sofa.rpc.core.exception.RpcErrorType;
 import com.alipay.sofa.rpc.core.exception.SofaRpcException;
 import com.alipay.sofa.rpc.core.request.SofaRequest;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
@@ -58,8 +57,7 @@ class SofaRpcAttributesGetterTest {
     response.addResponseProp(RemotingConstants.HEAD_RESPONSE_ERROR, "true");
 
     assertThat(getter.getRpcStatusCode(request, response, null)).isNull();
-    assertThat(getter.getErrorType(request, response, null))
-        .isEqualTo(Integer.toString(RpcErrorType.SERVER_UNDECLARED_ERROR));
+    assertThat(getter.getErrorType(request, response, null)).isEqualTo("_OTHER");
 
     SofaRpcException error = new SofaRpcException(160, "RPC error");
     assertThat(getter.getRpcStatusCode(request, response, error)).isEqualTo("160");
@@ -77,7 +75,6 @@ class SofaRpcAttributesGetterTest {
 
     assertThat(response.isError()).isTrue();
     assertThat(getter.getRpcStatusCode(request, response, null)).isNull();
-    assertThat(getter.getErrorType(request, response, null))
-        .isEqualTo(Integer.toString(RpcErrorType.SERVER_UNDECLARED_ERROR));
+    assertThat(getter.getErrorType(request, response, null)).isEqualTo("_OTHER");
   }
 }
