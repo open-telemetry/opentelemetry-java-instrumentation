@@ -125,12 +125,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
     attributes.put(
         DB_RESPONSE_STATUS_CODE, getter.getDbResponseStatusCode(request, response, error));
-    String errorType = getter.getErrorType(request, response, error);
-    // fall back to exception class name
-    if (errorType == null && error != null) {
-      errorType = error.getClass().getName();
-    }
-    attributes.put(ERROR_TYPE, errorType);
+    attributes.put(ERROR_TYPE, getter.getErrorType(request, response, error));
   }
 
   /**

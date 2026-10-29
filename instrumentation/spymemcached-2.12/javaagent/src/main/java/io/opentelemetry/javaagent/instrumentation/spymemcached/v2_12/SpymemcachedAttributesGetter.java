@@ -69,6 +69,9 @@ class SpymemcachedAttributesGetter
   @Nullable
   public String getErrorType(
       SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
+    if (error != null) {
+      return error.getClass().getName();
+    }
     OperationStatus status = getOperationStatus(response, error);
     if (status == null || status.isSuccess()) {
       return null;

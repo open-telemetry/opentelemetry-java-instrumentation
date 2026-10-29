@@ -179,7 +179,8 @@ class MongoDbAttributesGetter
       CommandStartedEvent request,
       @Nullable CommandSucceededEvent response,
       @Nullable Throwable error) {
-    return getServerErrorCode(response, error);
+    String errorCode = getServerErrorCode(response, error);
+    return errorCode != null ? errorCode : error == null ? null : error.getClass().getName();
   }
 
   @Nullable
@@ -209,7 +210,7 @@ class MongoDbAttributesGetter
     if (error instanceof MongoException) {
       // MongoException.getCode() only returns a real server error code (a positive value) when the
       // exception came from a server command error. For client-side exceptions the driver uses
-      // negative sentinels (e.g. -2, -3, -4), which are not protocol response codes.
+      // negative sentinels (e.g. -2, -3, -4), which are meaningless as an error.type.
       int code = ((MongoException) error).getCode();
       if (code > 0) {
         return Integer.toString(code);

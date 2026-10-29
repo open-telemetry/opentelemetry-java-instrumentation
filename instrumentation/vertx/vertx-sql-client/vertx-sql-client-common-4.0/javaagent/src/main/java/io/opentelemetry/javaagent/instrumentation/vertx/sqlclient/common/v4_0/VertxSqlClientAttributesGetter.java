@@ -78,7 +78,11 @@ class VertxSqlClientAttributesGetter
   @Override
   public String getErrorType(
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
-    return responseStatusExtractor.apply(error);
+    String errorCode = responseStatusExtractor.apply(error);
+    if (errorCode != null) {
+      return errorCode;
+    }
+    return error == null ? null : error.getClass().getName();
   }
 
   @Nullable
@@ -134,8 +138,8 @@ class VertxSqlClientAttributesGetter
     Function<Throwable, String> fallback =
         responseStatusExtractor("io.vertx.pgclient.PgException", "getCode", preserveNull);
     return error -> {
-      String status = extractor.apply(error);
-      return status != null ? status : fallback.apply(error);
+      String errorCode = extractor.apply(error);
+      return errorCode != null ? errorCode : fallback.apply(error);
     };
   }
 

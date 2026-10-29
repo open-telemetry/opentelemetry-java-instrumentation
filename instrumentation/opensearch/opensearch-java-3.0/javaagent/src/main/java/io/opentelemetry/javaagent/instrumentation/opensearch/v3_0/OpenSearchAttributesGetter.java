@@ -45,7 +45,7 @@ final class OpenSearchAttributesGetter
     Integer statusCode = getErrorCode(error);
     return statusCode != null && (statusCode >= 400 || statusCode < 100)
         ? statusCode.toString()
-        : null;
+        : error == null ? null : error.getClass().getName();
   }
 
   @Override

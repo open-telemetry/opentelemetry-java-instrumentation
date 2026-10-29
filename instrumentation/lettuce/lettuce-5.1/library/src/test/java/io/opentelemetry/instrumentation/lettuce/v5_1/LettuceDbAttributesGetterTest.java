@@ -27,9 +27,9 @@ class LettuceDbAttributesGetterTest {
   }
 
   @Test
-  void ignoresClientErrorWithoutResponse() {
+  void returnsExceptionFallbackWithoutResponse() {
     assertThat(getter.getErrorType(null, null, new RedisCommandTimeoutException("timed out")))
-        .isNull();
+        .isEqualTo(RedisCommandTimeoutException.class.getName());
     assertThat(
             getter.getDbResponseStatusCode(
                 null, null, new RedisCommandTimeoutException("timed out")))
@@ -43,7 +43,7 @@ class LettuceDbAttributesGetterTest {
     assertThat(getter.getErrorType(null, response, null)).isEqualTo("_OTHER");
     assertThat(getter.getDbResponseStatusCode(null, response, null)).isNull();
     assertThat(getter.getErrorType(null, response, new RedisNoScriptException("missing script")))
-        .isNull();
+        .isEqualTo(RedisNoScriptException.class.getName());
   }
 
   @Test
@@ -67,7 +67,8 @@ class LettuceDbAttributesGetterTest {
     RedisCommandExecutionException error = new RedisCommandExecutionException("WRONGTYPE error");
 
     assertThat(getter.getDbResponseStatusCode(null, response, error)).isEqualTo("WRONGTYPE");
-    assertThat(getter.getErrorType(null, response, error)).isNull();
+    assertThat(getter.getErrorType(null, response, error))
+        .isEqualTo(RedisCommandExecutionException.class.getName());
   }
 
   @Test

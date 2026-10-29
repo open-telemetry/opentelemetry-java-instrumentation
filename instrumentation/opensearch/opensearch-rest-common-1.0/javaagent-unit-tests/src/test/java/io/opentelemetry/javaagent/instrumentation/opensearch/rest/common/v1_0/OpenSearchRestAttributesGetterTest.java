@@ -51,6 +51,7 @@ class OpenSearchRestAttributesGetterTest {
     IllegalStateException error = new IllegalStateException("test");
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("200");
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error))
+        .isEqualTo(IllegalStateException.class.getName());
   }
 }
