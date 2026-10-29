@@ -12,10 +12,12 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import example.GreeterGrpc;
 import example.Helloworld;
@@ -26,14 +28,20 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Metadata;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.ServerCall;
+import io.grpc.ServerCallHandler;
+import io.grpc.ServerInterceptor;
 import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.Experimental;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -53,14 +61,17 @@ class GrpcTest extends AbstractGrpcTest {
 
   @Override
   protected ServerBuilder<?> configureServer(ServerBuilder<?> server) {
-    return server.intercept(
+    GrpcTelemetry telemetry =
         GrpcTelemetry.builder(testing.getOpenTelemetry())
             .setServerRequestHeaders(
                 IncludeExclude.builder()
                     .setIncluded(singletonList(SERVER_REQUEST_HEADER_KEY))
                     .build())
-            .build()
-            .createServerInterceptor());
+            .build();
+    telemetry.configureServerBuilder(server);
+    // A server can be configured more than once.
+    telemetry.configureServerBuilder(server);
+    return server;
   }
 
   @Override
@@ -84,6 +95,59 @@ class GrpcTest extends AbstractGrpcTest {
   @Override
   protected InstrumentationExtension testing() {
     return testing;
+  }
+
+  @Test
+  void registeredMethodShortCircuitedBeforeTracingInterceptor() throws Exception {
+    ServerBuilder<?> serverBuilder =
+        ServerBuilder.forPort(0).addService(new GreeterGrpc.GreeterImplBase() {});
+    GrpcTelemetry.create(testing.getOpenTelemetry()).configureServerBuilder(serverBuilder);
+    serverBuilder.intercept(
+        new ServerInterceptor() {
+          @Override
+          public <REQUEST, RESPONSE> ServerCall.Listener<REQUEST> interceptCall(
+              ServerCall<REQUEST, RESPONSE> call,
+              Metadata headers,
+              ServerCallHandler<REQUEST, RESPONSE> next) {
+            call.close(
+                Status.UNIMPLEMENTED.withDescription(
+                    "Method not found: " + call.getMethodDescriptor().getFullMethodName()),
+                new Metadata());
+            return new ServerCall.Listener<REQUEST>() {};
+          }
+        });
+    Server server = serverBuilder.build().start();
+    ManagedChannel channel =
+        createChannel(
+            configureClient(ManagedChannelBuilder.forAddress("localhost", server.getPort())));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
+
+    GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
+
+    assertThatThrownBy(() -> client.sayHello(request)).isInstanceOf(StatusRuntimeException.class);
+
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT)));
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  void nonMethodUnimplementedStatusDoesNotStartSpan() {
+    Instrumenter<GrpcRequest, Status> instrumenter = mock(Instrumenter.class);
+    TracingServerStreamTracer tracer =
+        new TracingServerStreamTracer(
+            instrumenter,
+            ContextPropagators.noop(),
+            "example.Greeter/SayHello",
+            new Metadata(),
+            Context.root());
+
+    tracer.streamClosed(
+        Status.UNIMPLEMENTED.withDescription("Can't find decompressor for unsupported"));
+
+    verifyNoInteractions(instrumenter);
   }
 
   @ParameterizedTest
@@ -169,17 +233,14 @@ class GrpcTest extends AbstractGrpcTest {
           }
         };
 
-    Server server =
-        ServerBuilder.forPort(0)
-            .addService(greeter)
-            .intercept(
-                GrpcTelemetry.builder(testing.getOpenTelemetry())
-                    .addAttributesExtractor(new CustomAttributesExtractor())
-                    .addServerAttributeExtractor(new CustomAttributesExtractorV2("serverSideValue"))
-                    .build()
-                    .createServerInterceptor())
-            .build()
-            .start();
+    GrpcTelemetry serverTelemetry =
+        GrpcTelemetry.builder(testing.getOpenTelemetry())
+            .addAttributesExtractor(new CustomAttributesExtractor())
+            .addServerAttributeExtractor(new CustomAttributesExtractorV2("serverSideValue"))
+            .build();
+    ServerBuilder<?> serverBuilder = ServerBuilder.forPort(0).addService(greeter);
+    serverTelemetry.configureServerBuilder(serverBuilder);
+    Server server = serverBuilder.build().start();
 
     ManagedChannelBuilder<?> channelBuilder =
         ManagedChannelBuilder.forAddress("localhost", server.getPort());

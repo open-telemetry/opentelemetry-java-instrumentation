@@ -25,6 +25,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -787,6 +788,92 @@ public abstract class AbstractGrpcTest {
         || code == Status.Code.INTERNAL
         || code == Status.Code.UNAVAILABLE
         || code == Status.Code.DATA_LOSS;
+  }
+
+  @Test
+  void unknownService() throws Exception {
+    // Create a server without GreeterService registered
+    Server server = configureServer(ServerBuilder.forPort(0)).build().start();
+    ManagedChannel channel = createChannel(server);
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
+
+    GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
+
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
+    assertThatThrownBy(() -> client.sayHello(request))
+        .isInstanceOfSatisfying(
+            StatusRuntimeException.class,
+            t -> assertThat(t.getStatus().getCode()).isEqualTo(Status.Code.UNIMPLEMENTED));
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("example.Greeter/SayHello")
+                            .hasKind(SpanKind.CLIENT)
+                            .satisfies(
+                                spanData ->
+                                    assertThat(
+                                            spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                                        .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
+                            .hasNoParent()
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfyingExactly(
+                                addExtraClientAttributes(
+                                    experimentalSatisfies(
+                                        GRPC_RECEIVED_MESSAGE_COUNT,
+                                        v -> assertThat(v).isEqualTo(0)),
+                                    experimentalSatisfies(
+                                        GRPC_SENT_MESSAGE_COUNT,
+                                        v -> assertThat(v).isGreaterThan(0)),
+                                    equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                    equalTo(RPC_METHOD, "example.Greeter/SayHello"),
+                                    equalTo(stringKey("rpc.status_code"), "UNIMPLEMENTED"),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, server.getPort()),
+                                    equalTo(ERROR_TYPE, "UNIMPLEMENTED"))),
+                    span ->
+                        span.hasName("grpc")
+                            .hasKind(SpanKind.SERVER)
+                            .satisfies(
+                                spanData ->
+                                    assertThat(
+                                            spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                                        .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                equalTo(RPC_METHOD, "_OTHER"),
+                                equalTo(RPC_METHOD_ORIGINAL, "example.Greeter/SayHello"),
+                                equalTo(ERROR_TYPE, "UNIMPLEMENTED"),
+                                equalTo(stringKey("rpc.status_code"), "UNIMPLEMENTED"))));
+
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            metric ->
+                metric
+                    .hasName("rpc.server.call.duration")
+                    .satisfies(
+                        metricData ->
+                            assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
+                                .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
+                    .hasUnit("s")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasCount(1)
+                                        .hasBucketBoundaries(GRPC_DURATION_BUCKETS)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                            equalTo(RPC_METHOD, "_OTHER"),
+                                            equalTo(stringKey("rpc.status_code"), "UNIMPLEMENTED"),
+                                            equalTo(ERROR_TYPE, "UNIMPLEMENTED")))));
   }
 
   @Test

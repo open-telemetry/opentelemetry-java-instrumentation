@@ -377,16 +377,15 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
     // Use lenient resolution so these don't break configuration cache
     // serialization. Missing dependencies can affect classloader matching in
     // either assertion mode, including negative class-presence gates.
-    val artifactView = config.incoming.artifactView { lenient(true) }
-    val configFiles = artifactView.files
+    // Keep resolution lazy; ArtifactCollection can be stored in the configuration cache.
+    val artifacts = config.incoming.artifactView { lenient(true) }.artifacts
+    val configFiles = artifacts.artifactFiles
     val muzzleShadowJarFile = shadowModule.flatMap { it.archiveFile }
     val muzzleToolingShadowJarFile = shadowMuzzleTooling.flatMap { it.archiveFile }
     val muzzleBootstrapShadowJarFile = shadowMuzzleBootstrap.flatMap { it.archiveFile }
     val excludedNames = muzzleDirective.excludedInstrumentationNames.get()
     val excludedModules = muzzleDirective.excludedInstrumentationModules.get()
     val shouldAssertPass = muzzleDirective.assertPass.get()
-    // Snapshot diagnostics as text: resolution objects cannot be captured by configuration cache.
-    val resolutionFailures = artifactView.artifacts.failures.map { it.stackTraceToString() }
 
     dependsOn(configurations.named("runtimeClasspath"))
     dependsOn(shadowModule)
@@ -399,28 +398,29 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
         muzzleShadowJarFile.get().asFile.toURI().toURL(),
         muzzleToolingShadowJarFile.get().asFile.toURI().toURL()
       )
-      val instrumentationCL = URLClassLoader(instrumentationUrls, ClassLoader.getPlatformClassLoader())
-
-      // Create user classloader
-      val userUrls = (configFiles + muzzleBootstrapShadowJarFile.get().asFile).map { it.toURI().toURL() }.toTypedArray()
-      val userCL = URLClassLoader(userUrls, ClassLoader.getPlatformClassLoader())
-
-      try {
-        MuzzleGradlePluginUtil.assertInstrumentationMuzzled(
-          instrumentationCL,
-          userCL,
-          excludedNames,
-          excludedModules,
-          shouldAssertPass
-        )
-      } catch (e: Exception) {
-        val expectation = if (shouldAssertPass) "acceptance (assertPass)" else "rejection (assertFail)"
-        logger.error("Muzzle validation failed for $path; expected $expectation")
-        logger.error("Dependency resolution failures (lenient resolution): ${resolutionFailures.size}")
-        resolutionFailures.forEach { logger.error(it) }
-        logger.error("Resolved dependency JARs used for $path:")
-        configFiles.map { it.absolutePath }.sorted().forEach { logger.error(it) }
-        throw e
+      URLClassLoader(instrumentationUrls, ClassLoader.getPlatformClassLoader()).use { instrumentationCL ->
+        // Create user classloader
+        val userUrls = (configFiles + muzzleBootstrapShadowJarFile.get().asFile).map { it.toURI().toURL() }.toTypedArray()
+        URLClassLoader(userUrls, ClassLoader.getPlatformClassLoader()).use { userCL ->
+          try {
+            MuzzleGradlePluginUtil.assertInstrumentationMuzzled(
+              instrumentationCL,
+              userCL,
+              excludedNames,
+              excludedModules,
+              shouldAssertPass
+            )
+          } catch (e: Exception) {
+            val resolutionFailures = artifacts.failures
+            val expectation = if (shouldAssertPass) "acceptance (assertPass)" else "rejection (assertFail)"
+            logger.error("Muzzle validation failed for $path; expected $expectation")
+            logger.error("Dependency resolution failures (lenient resolution): ${resolutionFailures.size}")
+            resolutionFailures.forEach { logger.error(it.stackTraceToString()) }
+            logger.error("Resolved dependency JARs used for $path:")
+            configFiles.map { it.absolutePath }.sorted().forEach { logger.error(it) }
+            throw e
+          }
+        }
       }
     }
   }

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 import io.grpc.Context;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.ServerBuilder;
-import io.grpc.ServerInterceptor;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -35,8 +34,6 @@ public class GrpcSingletons {
 
   private static final GrpcTelemetry telemetry;
 
-  private static final ServerInterceptor serverInterceptor;
-
   private static final AtomicReference<Context.Storage> storageReference = new AtomicReference<>();
 
   static {
@@ -62,14 +59,7 @@ public class GrpcSingletons {
     if (serverRequestHeaders != null) {
       telemetryBuilder.setServerRequestHeaders(serverRequestHeaders);
     }
-    GrpcTelemetry configuredTelemetry = telemetryBuilder.build();
-
-    telemetry = configuredTelemetry;
-    serverInterceptor = configuredTelemetry.createServerInterceptor();
-  }
-
-  public static ServerInterceptor serverInterceptor() {
-    return serverInterceptor;
+    telemetry = telemetryBuilder.build();
   }
 
   @Nullable
@@ -84,6 +74,10 @@ public class GrpcSingletons {
   public static Context.Storage setStorage(Context.Storage storage) {
     storageReference.compareAndSet(null, new ContextStorageBridge(storage));
     return storage();
+  }
+
+  public static void configureServerBuilder(ServerBuilder<?> serverBuilder) {
+    telemetry.configureServerBuilder(serverBuilder);
   }
 
   private GrpcSingletons() {}
