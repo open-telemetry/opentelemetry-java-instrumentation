@@ -13,6 +13,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -176,6 +179,27 @@ class ContextBridgeTest {
   void testEmptyCurrentContextIsRootContext() {
     // Expect
     assertThat(Context.current()).isEqualTo(Context.root());
+  }
+
+  @Test
+  void propagatedSpanIdentityPreserved() {
+    Span span =
+        Span.wrap(
+            SpanContext.create(
+                "00000000000000000000000000000001",
+                "0000000000000001",
+                TraceFlags.getDefault(),
+                TraceState.getDefault()));
+    Context context = Context.root().with(span);
+    assertThat(Span.fromContext(context)).isSameAs(span);
+  }
+
+  @Test
+  void spanIdentityPreserved() {
+    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
+    Span span = tracer.spanBuilder("test").startSpan();
+    Context context = Context.root().with(span);
+    assertThat(Span.fromContext(context)).isSameAs(span);
   }
 
   // TODO (trask)

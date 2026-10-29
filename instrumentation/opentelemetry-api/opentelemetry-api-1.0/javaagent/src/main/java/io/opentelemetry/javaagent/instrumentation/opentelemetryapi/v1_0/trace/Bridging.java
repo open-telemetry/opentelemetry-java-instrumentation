@@ -16,6 +16,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.TraceStateBuilder;
+import io.opentelemetry.javaagent.bootstrap.FieldHolder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.ValueBridging;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,15 @@ public class Bridging {
   private static final Logger logger = Logger.getLogger(Bridging.class.getName());
 
   public static application.io.opentelemetry.api.trace.Span toApplication(Span agentSpan) {
+    // we add FieldHolder interface to span implementations used in agent via instrumentation
+    // this lets us associate the original application span with the agent span so we can convert
+    // the agent span back to exactly the same application span that the agent span was created for
+    if (agentSpan instanceof FieldHolder) {
+      Object applicationSpan = ((FieldHolder) agentSpan).getFieldValue();
+      if (applicationSpan instanceof application.io.opentelemetry.api.trace.Span) {
+        return (application.io.opentelemetry.api.trace.Span) applicationSpan;
+      }
+    }
     if (!agentSpan.getSpanContext().isValid()) {
       // no need to wrap
       return application.io.opentelemetry.api.trace.Span.getInvalid();
