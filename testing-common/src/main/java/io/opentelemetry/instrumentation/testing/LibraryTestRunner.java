@@ -42,6 +42,7 @@ import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
@@ -81,17 +82,21 @@ public class LibraryTestRunner extends InstrumentationTestRunner {
             .setInterval(Duration.ofNanos(Long.MAX_VALUE))
             .build();
 
+    SdkTracerProviderBuilder tracerProvider =
+        SdkTracerProvider.builder()
+            .addSpanProcessor(new FlushTrackingSpanProcessor())
+            .addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()))
+            .addSpanProcessor(SimpleSpanProcessor.create(testSpanExporter));
+    String baggageKeys =
+        System.getProperty("otel.java.experimental.span-attributes.copy-from-baggage.include", "");
+    if (!baggageKeys.isEmpty()) {
+      tracerProvider.addSpanProcessor(
+          new BaggageSpanProcessor(asList(baggageKeys.split(",")), null));
+    }
+
     openTelemetrySdk =
         OpenTelemetrySdk.builder()
-            .setTracerProvider(
-                SdkTracerProvider.builder()
-                    .addSpanProcessor(new FlushTrackingSpanProcessor())
-                    .addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()))
-                    .addSpanProcessor(SimpleSpanProcessor.create(testSpanExporter))
-                    .addSpanProcessor(
-                        new BaggageSpanProcessor(
-                            asList("test-baggage-key-1", "test-baggage-key-2"), null))
-                    .build())
+            .setTracerProvider(tracerProvider.build())
             .setMeterProvider(SdkMeterProvider.builder().registerMetricReader(metricReader).build())
             .setLoggerProvider(
                 SdkLoggerProvider.builder()

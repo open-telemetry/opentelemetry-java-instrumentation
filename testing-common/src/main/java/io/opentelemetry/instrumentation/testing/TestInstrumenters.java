@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.testing;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -61,7 +62,23 @@ class TestInstrumenters {
    */
   <T, E extends Throwable> T runWithSpan(String spanName, ThrowingSupplier<T, E> callback)
       throws E {
-    return runWithInstrumenter(spanName, instrumenter, callback);
+    return runWithInstrumenter(
+        spanName,
+        instrumenter,
+        () -> {
+          if (spanName.equals("controller")) {
+            // HTTP fixtures observe handler baggage independently of SDK attribute copying.
+            Span.current()
+                .setAttribute(
+                    "test.extracted-baggage-key-1",
+                    Baggage.current().getEntryValue("test-baggage-key-1"));
+            Span.current()
+                .setAttribute(
+                    "test.extracted-baggage-key-2",
+                    Baggage.current().getEntryValue("test-baggage-key-2"));
+          }
+          return callback.get();
+        });
   }
 
   /**

@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -14,6 +17,25 @@ dependencies {
 
   testCompileOnly("com.google.auto.value:auto-value-annotations")
   testAnnotationProcessor("com.google.auto.value:auto-value")
+}
+
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("Baggage") {
+          filter {
+            includeTestsMatching("InterceptorsTest.testInterceptors")
+            includeTestsMatching("InterceptorsSuppressReceiveSpansTest.testInterceptors")
+          }
+          telemetryConfig(
+            "otel.java.experimental.span-attributes.copy-from-baggage.include",
+            "test-baggage-key-1,test-baggage-key-2"
+          )
+        }
+      }
+    }
+  }
 }
 
 tasks {

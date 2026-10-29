@@ -99,8 +99,11 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                 equalTo(MESSAGING_OPERATION_TYPE, "process"),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"),
-                equalTo(stringKey("test-baggage-key-1"), "test-baggage-value-1"),
-                equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2")));
+                equalTo(
+                    stringKey("test-baggage-key-1"), COPY_BAGGAGE ? "test-baggage-value-1" : null),
+                equalTo(
+                    stringKey("test-baggage-key-2"),
+                    COPY_BAGGAGE ? "test-baggage-value-2" : null)));
 
     assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
     assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")));

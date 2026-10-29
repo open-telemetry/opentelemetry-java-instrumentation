@@ -820,11 +820,17 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
     testing.waitAndAssertTraces(
-        trace ->
-            trace.anySatisfy(
-                span ->
-                    assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status)
-                        .hasAttribute(stringKey("test-baggage-key-1"), "test-baggage-value-1")));
+        trace -> {
+          trace.anySatisfy(
+              span -> assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status));
+          trace.anySatisfy(
+              span ->
+                  assertThat(span)
+                      .hasName("controller")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(
+                              stringKey("test.extracted-baggage-key-1"), "test-baggage-value-1")));
+        });
   }
 
   @Test
@@ -843,12 +849,19 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
     testing.waitAndAssertTraces(
-        trace ->
-            trace.anySatisfy(
-                span ->
-                    assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status)
-                        .hasAttribute(stringKey("test-baggage-key-1"), "test-baggage-value-1")
-                        .hasAttribute(stringKey("test-baggage-key-2"), "test-baggage-value-2")));
+        trace -> {
+          trace.anySatisfy(
+              span -> assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status));
+          trace.anySatisfy(
+              span ->
+                  assertThat(span)
+                      .hasName("controller")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(
+                              stringKey("test.extracted-baggage-key-1"), "test-baggage-value-1"),
+                          equalTo(
+                              stringKey("test.extracted-baggage-key-2"), "test-baggage-value-2")));
+        });
   }
 
   private static Bootstrap buildBootstrap(EventLoopGroup eventLoopGroup) {

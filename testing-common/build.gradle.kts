@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.java-conventions")
   id("otel.publish-conventions")
@@ -66,5 +68,23 @@ dependencies {
 tasks {
   javadoc {
     enabled = false
+  }
+}
+
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("Baggage") {
+          filter {
+            includeTestsMatching("LibraryTestRunnerTest")
+          }
+          systemProperty(
+            "otel.java.experimental.span-attributes.copy-from-baggage.include",
+            "test-baggage-key-1,test-baggage-key-2"
+          )
+        }
+      }
+    }
   }
 }

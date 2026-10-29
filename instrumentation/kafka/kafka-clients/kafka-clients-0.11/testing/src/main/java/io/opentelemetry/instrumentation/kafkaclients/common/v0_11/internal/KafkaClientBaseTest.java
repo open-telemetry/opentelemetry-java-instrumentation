@@ -84,6 +84,10 @@ public abstract class KafkaClientBaseTest {
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
 
+  protected static final boolean COPY_BAGGAGE =
+      !System.getProperty("otel.java.experimental.span-attributes.copy-from-baggage.include", "")
+          .isEmpty();
+
   public static final int PARTITION = 0;
   public static final TopicPartition TOPIC_PARTITION = new TopicPartition(SHARED_TOPIC, PARTITION);
 
@@ -276,7 +280,7 @@ public abstract class KafkaClientBaseTest {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
 
-    if (testMultiBaggage) {
+    if (testMultiBaggage && COPY_BAGGAGE) {
       assertions.add(equalTo(stringKey("test-baggage-key-1"), "test-baggage-value-1"));
       assertions.add(equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2"));
     }

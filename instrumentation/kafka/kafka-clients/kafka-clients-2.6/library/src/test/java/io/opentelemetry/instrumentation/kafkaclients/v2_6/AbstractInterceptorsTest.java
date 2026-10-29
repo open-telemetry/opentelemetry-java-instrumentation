@@ -281,8 +281,10 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                     })));
 
     assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
-    assertions.add(equalTo(stringKey("test-baggage-key-1"), "test-baggage-value-1"));
-    assertions.add(equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2"));
+    assertions.add(
+        equalTo(stringKey("test-baggage-key-1"), COPY_BAGGAGE ? "test-baggage-value-1" : null));
+    assertions.add(
+        equalTo(stringKey("test-baggage-key-2"), COPY_BAGGAGE ? "test-baggage-value-2" : null));
     assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")));
     assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
