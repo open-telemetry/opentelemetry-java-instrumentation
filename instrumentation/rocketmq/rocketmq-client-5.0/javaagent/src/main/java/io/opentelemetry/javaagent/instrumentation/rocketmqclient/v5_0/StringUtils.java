@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
 import javax.annotation.Nullable;
 
-final class RocketMqNamespaceUtil {
+final class StringUtils {
 
   @Nullable
-  static String normalize(@Nullable String namespace) {
-    return namespace == null || namespace.isEmpty() ? null : namespace;
+  static String emptyToNull(@Nullable String value) {
+    return value == null || value.isEmpty() ? null : value;
   }
 
-  private RocketMqNamespaceUtil() {}
+  private StringUtils() {}
 }

@@ -67,10 +67,9 @@ final class ProducerImplInstrumentation implements TypeInstrumentation {
       List<SettableFuture<SendReceiptImpl>> futures = FutureConverter.convert(future0, count);
       @Nullable
       String namespace =
-          RocketMqNamespaceUtil.normalize(
-              messageQueues.isEmpty()
-                  ? null
-                  : messageQueues.get(0).getTopicResource().getNamespace());
+          messageQueues.isEmpty()
+              ? null
+              : StringUtils.emptyToNull(messageQueues.get(0).getTopicResource().getNamespace());
       for (int i = 0; i < count; i++) {
         PublishingMessageImpl message = messages.get(i);
         VirtualFieldStore.setNamespaceByMessage(message, namespace);

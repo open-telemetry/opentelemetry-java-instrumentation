@@ -39,7 +39,7 @@ class RocketMqConsumerProcessAttributeExtractor
     attributes.put(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup);
     String namespace =
         ((MessageViewImpl) messageView).getMessageQueue().getTopicResource().getNamespace();
-    attributes.put(MESSAGING_ROCKETMQ_NAMESPACE, RocketMqNamespaceUtil.normalize(namespace));
+    attributes.put(MESSAGING_ROCKETMQ_NAMESPACE, StringUtils.emptyToNull(namespace));
   }
 
   @Override
