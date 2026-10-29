@@ -71,8 +71,21 @@ class HostResourceTest {
         .isEqualTo(
             Resource.create(
                 HostResource.get().getAttributes().toBuilder().put(HOST_ID, hostId).build(),
-                SchemaUrls.V1_24_0));
+                SchemaUrls.V1_40_0));
     assertThat(EntityUtil.getEntities(resource)).isEmpty();
+  }
+
+  @Test
+  void hostIdDetectionDenied() {
+    HostResource host =
+        new HostResource(
+            () -> {
+              throw new SecurityException("os.name access denied");
+            },
+            null,
+            null);
+
+    assertThat(host.createResource(true)).isEqualTo(HostResource.get());
   }
 
   @ParameterizedTest

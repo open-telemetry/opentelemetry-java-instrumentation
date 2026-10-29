@@ -106,11 +106,18 @@ public final class HostResource {
   }
 
   Resource createResource(boolean collectHostId) {
-    return collectHostId
-        ? Resource.create(
-            INSTANCE.getAttributes().toBuilder().put(HOST_ID, detectHostId()).build(),
-            SchemaUrls.V1_24_0)
-        : get();
+    if (!collectHostId) {
+      return get();
+    }
+    String hostId;
+    try {
+      hostId = detectHostId();
+    } catch (SecurityException e) {
+      logger.log(FINE, "Failed to detect host ID", e);
+      return get();
+    }
+    return Resource.create(
+        INSTANCE.getAttributes().toBuilder().put(HOST_ID, hostId).build(), SchemaUrls.V1_40_0);
   }
 
   // Visible for testing
