@@ -15,7 +15,6 @@ val appServerSuites = mapOf(
   "websphere" to "**/Websphere*.*",
   "wildfly" to "**/Wildfly*.*",
 )
-val suites = appServerSuites + ("spring-aot" to "**/SpringBootAotSmokeTest.*")
 val smokeTestSuite = project.findProperty("smokeTestSuite") as String?
 
 otelJava {
@@ -77,9 +76,9 @@ tasks {
         }
       }
 
-      smokeTestSuite in suites -> include(suites.getValue(smokeTestSuite!!))
+      smokeTestSuite in appServerSuites -> include(appServerSuites.getValue(smokeTestSuite!!))
 
-      smokeTestSuite == "other" -> exclude(suites.values)
+      smokeTestSuite == "other" -> exclude(appServerSuites.values)
 
       smokeTestSuite == "none" -> exclude("**/*")
 
