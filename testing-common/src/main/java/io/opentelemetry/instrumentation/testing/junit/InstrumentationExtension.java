@@ -79,9 +79,10 @@ public abstract class InstrumentationExtension
    * Library instrumentation never applies the service identity extractor; library users add service
    * identity through their own attributes extractor.
    */
+  @SuppressWarnings("deprecation")
   @Nullable
   public String expectedServerServiceName() {
-    return testRunner.expectedServerServiceName();
+    return testRunner.expectedPeerService();
   }
 
   /**

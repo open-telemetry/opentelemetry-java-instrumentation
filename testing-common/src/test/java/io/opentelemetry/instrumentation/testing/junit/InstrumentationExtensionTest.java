@@ -25,6 +25,19 @@ class InstrumentationExtensionTest {
     InstrumentationExtension extension = new InstrumentationExtension(runner) {};
 
     assertThat(runner.expectedPeerService()).isEqualTo("service");
+    assertThat(extension.expectedServerServiceName()).isEqualTo("service");
     assertThat(extension.expectedPeerService()).isEqualTo("service");
+  }
+
+  @SuppressWarnings("deprecation")
+  @Test
+  void expectedServerServiceNameForwardsToLegacyRunnerOverride() {
+    InstrumentationTestRunner runner =
+        mock(InstrumentationTestRunner.class, withSettings().defaultAnswer(CALLS_REAL_METHODS));
+    when(runner.expectedPeerService()).thenReturn("legacy-service");
+    InstrumentationExtension extension = new InstrumentationExtension(runner) {};
+
+    assertThat(extension.expectedServerServiceName()).isEqualTo("legacy-service");
+    assertThat(extension.expectedPeerService()).isEqualTo("legacy-service");
   }
 }
