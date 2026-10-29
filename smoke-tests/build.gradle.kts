@@ -17,7 +17,6 @@ val appServerSuites = mapOf(
 )
 val suites = appServerSuites + ("spring-aot" to "**/SpringBootAotSmokeTest.*")
 val smokeTestSuite = project.findProperty("smokeTestSuite") as String?
-val reducedAppServerTests = project.findProperty("reducedAppServerTests") == "true"
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
@@ -71,14 +70,15 @@ tasks {
     )
 
     val appServerGroup = when (name) {
-      "testRepresentativeAppServers" -> "representative"
-      "testRemainingAppServers" -> "remaining"
+      "testLimitedMatrix" -> "limitedMatrix"
+      "testAdditionalVariants" -> "additionalVariants"
+      "test" -> "all"
       else -> null
     }
-    val includesAppServers = smokeTestSuite == null || smokeTestSuite in appServerSuites
+    val appServerSuite = smokeTestSuite == null || smokeTestSuite in appServerSuites
     when {
       smokeTestSuite == null -> {
-        if (appServerGroup != null) {
+        if (name == "testLimitedMatrix" || name == "testAdditionalVariants") {
           include(appServerSuites.values)
         }
       }
@@ -91,21 +91,18 @@ tasks {
 
       else -> throw GradleException("Unknown smoke test suite: $smokeTestSuite")
     }
-    if (appServerGroup != null && !includesAppServers) {
+    if (name == "testAdditionalVariants" && !appServerSuite) {
       // An empty partition must not turn into an unfiltered Test task.
       exclude("**/*")
     }
-    if (includesAppServers) {
-      if (appServerGroup != null) {
-        systemProperty("appServerTestGroup", appServerGroup)
-      }
-      if (
-        findProperty("skipOpenJ9SmokeTests") == "true" &&
-        !reducedAppServerTests &&
+    if (appServerGroup != null && appServerSuite) {
+      systemProperty("appServerTestGroup", appServerGroup)
+    }
+    val skipOpenJ9 =
+      findProperty("skipOpenJ9SmokeTests") == "true" &&
         smokeTestSuite != "websphere"
-      ) {
-        exclude("**/*Openj9*.*")
-      }
+    if (appServerSuite && skipOpenJ9) {
+      exclude("**/*Openj9*.*")
     }
 
     val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")
@@ -143,30 +140,14 @@ tasks {
   }
 
   // Keep test/check as full-suite entry points; CI explicitly requests these disjoint partitions.
-  register<Test>("testRepresentativeAppServers") {
-    description = "Runs the representative app-server matrix shared by PRs and main."
+  register<Test>("testLimitedMatrix") {
+    description = "Runs the limited app-server matrix shared by PRs and main."
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
   }
-  register<Test>("testRemainingAppServers") {
-    description = "Runs app-server cases outside the representative matrix."
+  register<Test>("testAdditionalVariants") {
+    description = "Runs app-server cases outside the limited matrix."
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-  }
-
-  register("smokeTest") {
-    when {
-      smokeTestSuite in appServerSuites -> {
-        dependsOn(named("testRepresentativeAppServers"))
-        if (!reducedAppServerTests) {
-          dependsOn(named("testRemainingAppServers"))
-        }
-      }
-
-      smokeTestSuite == null || smokeTestSuite in suites || smokeTestSuite == "other" || smokeTestSuite == "none" ->
-        dependsOn(named("test"))
-
-      else -> throw GradleException("Unknown smoke test suite: $smokeTestSuite")
-    }
   }
 }

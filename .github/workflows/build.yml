@@ -15,8 +15,8 @@ jobs:
   common:
     uses: $/.github/workflows/build-common.yml
     with:
-      # Populate the shared representative task and run its disjoint complement.
-      reduced-appserver-tests: false
+      # Run the limited task and its disjoint complement.
+      limited-appserver-matrix: false
       cache-read-only: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' }}
     secrets:
       DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}

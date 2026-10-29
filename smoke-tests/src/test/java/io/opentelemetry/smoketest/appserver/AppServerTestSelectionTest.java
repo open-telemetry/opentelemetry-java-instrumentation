@@ -41,10 +41,10 @@ class AppServerTestSelectionTest {
               .filter(type -> !(skipOpenJ9 && type.getName().contains("Openj9")))
               .collect(toList());
       List<Class<?>> full = select(effective, "all", windows);
-      List<Class<?>> representative = select(effective, "representative", windows);
-      List<Class<?>> remaining = select(effective, "remaining", windows);
+      List<Class<?>> limitedMatrix = select(effective, "limitedMatrix", windows);
+      List<Class<?>> additionalVariants = select(effective, "additionalVariants", windows);
 
-      assertThat(representative).noneMatch(remaining::contains);
+      assertThat(limitedMatrix).noneMatch(additionalVariants::contains);
       assertThat(full)
           .containsExactlyInAnyOrderElementsOf(
               effective.stream()
@@ -55,36 +55,36 @@ class AppServerTestSelectionTest {
                   .collect(toList()));
       assertThat(full)
           .containsExactlyInAnyOrderElementsOf(
-              concat(representative.stream(), remaining.stream()).collect(toList()));
-      assertThat(representative)
-          .allMatch(type -> type.getAnnotation(AppServer.class).inReducedMatrix());
-      assertThat(remaining)
-          .noneMatch(type -> type.getAnnotation(AppServer.class).inReducedMatrix());
+              concat(limitedMatrix.stream(), additionalVariants.stream()).collect(toList()));
+      assertThat(limitedMatrix)
+          .allMatch(type -> type.getAnnotation(AppServer.class).inLimitedMatrix());
+      assertThat(additionalVariants)
+          .noneMatch(type -> type.getAnnotation(AppServer.class).inLimitedMatrix());
     }
   }
 
   @Test
-  void tomeeRepresentativesRequireOpenJ9AndAreEmptyOnWindows() {
+  void tomeeLimitedMatrixRequiresOpenJ9AndIsEmptyOnWindows() {
     List<Class<?>> tomee =
         APP_SERVERS.stream().filter(TomeeSmokeTest.class::isAssignableFrom).collect(toList());
-    assertThat(select(tomee, "representative", false))
+    assertThat(select(tomee, "limitedMatrix", false))
         .isNotEmpty()
         .allMatch(type -> type.getAnnotation(AppServer.class).jdk().endsWith("-openj9"));
-    assertThat(select(tomee, "representative", true)).isEmpty();
-    assertThat(select(tomee, "remaining", true))
+    assertThat(select(tomee, "limitedMatrix", true)).isEmpty();
+    assertThat(select(tomee, "additionalVariants", true))
         .isNotEmpty()
         .containsExactlyInAnyOrderElementsOf(select(tomee, "all", true));
   }
 
   @Test
-  void emptyRemainingGroupDoesNotSelectFullSuite() {
+  void emptyAdditionalVariantsGroupDoesNotSelectFullSuite() {
     List<Class<?>> servletOnly =
         APP_SERVERS.stream()
             .filter(LibertyServletOnlySmokeTest.class::isAssignableFrom)
             .collect(toList());
     assertThat(servletOnly).isNotEmpty();
-    assertThat(select(servletOnly, "remaining", false)).isEmpty();
-    assertThat(select(servletOnly, "representative", false))
+    assertThat(select(servletOnly, "additionalVariants", false)).isEmpty();
+    assertThat(select(servletOnly, "limitedMatrix", false))
         .containsExactlyInAnyOrderElementsOf(servletOnly);
   }
 

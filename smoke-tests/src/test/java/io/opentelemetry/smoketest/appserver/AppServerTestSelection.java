@@ -14,10 +14,10 @@ final class AppServerTestSelection {
     switch (group) {
       case "all":
         return true;
-      case "representative":
-        return appServer.inReducedMatrix();
-      case "remaining":
-        return !appServer.inReducedMatrix();
+      case "limitedMatrix":
+        return appServer.inLimitedMatrix();
+      case "additionalVariants":
+        return !appServer.inLimitedMatrix();
       default:
         throw new IllegalArgumentException("Unknown app-server test group: " + group);
     }
