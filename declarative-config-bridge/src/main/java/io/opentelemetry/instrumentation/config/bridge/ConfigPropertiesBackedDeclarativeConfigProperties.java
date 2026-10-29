@@ -254,7 +254,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   public List<DeclarativeConfigProperties> getStructuredList(String name) {
     String fullPath = pathWithName(name);
     if (instrumentationConfig && fullPath.equals(JAVA_COMMON_SERVER_SERVICE_MAPPING)) {
-      return ServicePeerMapping.getList(configProperties);
+      return ServiceMapping.getList(configProperties);
     }
     return null;
   }

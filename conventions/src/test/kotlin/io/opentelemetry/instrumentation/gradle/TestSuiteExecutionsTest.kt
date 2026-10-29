@@ -169,7 +169,7 @@ class TestSuiteExecutionsTest {
     val mapping = "127.0.0.1=test-server-service,localhost=test-server-service"
     source.executions {
       group {
-        register("WithServerServiceMapping") {
+        register("WithServiceMapping") {
           telemetryConfig(mappingKey, mapping)
         }
       }
@@ -177,10 +177,10 @@ class TestSuiteExecutionsTest {
 
     assertThat(test(source.name).systemProperties)
       .doesNotContainKeys(mappingKey, "metadataConfig")
-    assertThat(test(source.name + "WithServerServiceMapping").systemProperties)
+    assertThat(test(source.name + "WithServiceMapping").systemProperties)
       .containsEntry(mappingKey, mapping)
       .containsEntry("metadataConfig", "$mappingKey=$mapping")
-    assertBinding(test(source.name + "WithServerServiceMapping"), source)
+    assertBinding(test(source.name + "WithServiceMapping"), source)
   }
 
   @JunitTest

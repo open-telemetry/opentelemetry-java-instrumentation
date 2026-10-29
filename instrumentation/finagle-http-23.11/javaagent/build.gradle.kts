@@ -79,7 +79,7 @@ testing {
             enabled = false
           }
         }
-        register("WithServerServiceMapping") {
+        register("WithServiceMapping") {
           telemetryConfig(
             "otel.instrumentation.common.server-service-mapping",
             "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service",

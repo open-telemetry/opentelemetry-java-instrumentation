@@ -86,13 +86,13 @@ testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
-        register("WithServerServiceMapping") {
+        register("WithServiceMapping") {
           telemetryConfig(
             "otel.instrumentation.common.server-service-mapping",
             "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service",
           )
         }
-        register("ConnectionTelemetryEnabledWithServerServiceMapping") {
+        register("ConnectionTelemetryEnabledWithServiceMapping") {
           telemetryConfig("otel.instrumentation.lettuce.connection-telemetry.enabled", "true")
           telemetryConfig(
             "otel.instrumentation.common.server-service-mapping",

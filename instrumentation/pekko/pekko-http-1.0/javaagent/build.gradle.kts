@@ -76,7 +76,7 @@ testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
-        register("WithServerServiceMapping") {
+        register("WithServiceMapping") {
           filter {
             includeTestsMatching("*PekkoHttpClientInstrumentationTest")
           }

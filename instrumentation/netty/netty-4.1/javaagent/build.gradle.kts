@@ -56,7 +56,7 @@ testing {
               excludeTestsMatching("Netty41ClientSslTest")
             }
           }
-          register("WithServerServiceMapping") {
+          register("WithServiceMapping") {
             telemetryConfig(
               "otel.instrumentation.common.server-service-mapping",
               "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service",
@@ -74,7 +74,7 @@ testing {
             telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
           }
           register("ConnectionSpan") {}
-          register("ConnectionSpanWithServerServiceMapping") {
+          register("ConnectionSpanWithServiceMapping") {
             telemetryConfig(
               "otel.instrumentation.common.server-service-mapping",
               "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service",

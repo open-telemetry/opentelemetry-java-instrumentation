@@ -369,7 +369,7 @@ class DeclarativeConfigValidationTest {
 
   // The only structured_list config with a flat property is the common server-service-mapping. Its
   // flat form is a target=service_name map, which the bridge turns into {target, service_name}
-  // entries. readServerServiceMappingAsMap below rebuilds the target -> service_name map from those
+  // entries. readServiceMappingAsMap below rebuilds the target -> service_name map from those
   // entries, so the comparison exercises getStructuredList (what the consumer uses) rather than a
   // string lookup.
   private static TestValue structuredListTestValue() {
@@ -403,7 +403,7 @@ class DeclarativeConfigValidationTest {
 
     String lastSegment = segments[segments.length - 1];
     if (structuredList) {
-      return readServerServiceMappingAsMap(current, lastSegment);
+      return readServiceMappingAsMap(current, lastSegment);
     }
     return switch (type) {
       case BOOLEAN -> current.getBoolean(lastSegment);
@@ -421,7 +421,7 @@ class DeclarativeConfigValidationTest {
    * against the flat-property value the test fed in. This is specific to server-service-mapping,
    * which is currently the only {@code structured_list} config.
    */
-  private static Object readServerServiceMappingAsMap(
+  private static Object readServiceMappingAsMap(
       DeclarativeConfigProperties current, String lastSegment) {
     List<DeclarativeConfigProperties> entries = current.getStructuredList(lastSegment);
     if (entries == null) {

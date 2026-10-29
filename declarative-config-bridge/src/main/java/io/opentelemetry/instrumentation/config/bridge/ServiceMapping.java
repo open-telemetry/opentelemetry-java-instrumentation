@@ -37,7 +37,7 @@ import javax.annotation.Nullable;
  * <p>The flat property cannot express {@code service_namespace} or targets containing commas or
  * equals signs. Use declarative configuration for those cases.
  */
-final class ServicePeerMapping implements DeclarativeConfigProperties {
+final class ServiceMapping implements DeclarativeConfigProperties {
 
   private final Map<String, String> fields;
   private final ComponentLoader componentLoader;
@@ -55,12 +55,12 @@ final class ServicePeerMapping implements DeclarativeConfigProperties {
       fields.put("target", entry.getKey());
       fields.put("service_name", entry.getValue());
       // service_namespace is not supported in flat config, will be null
-      result.add(new ServicePeerMapping(fields, configProperties.getComponentLoader()));
+      result.add(new ServiceMapping(fields, configProperties.getComponentLoader()));
     }
     return result;
   }
 
-  private ServicePeerMapping(Map<String, String> fields, ComponentLoader componentLoader) {
+  private ServiceMapping(Map<String, String> fields, ComponentLoader componentLoader) {
     this.fields = fields;
     this.componentLoader = componentLoader;
   }
