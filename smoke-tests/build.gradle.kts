@@ -1,4 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.selectSmokeTests
 import java.time.Duration
 
 plugins {
@@ -6,6 +5,19 @@ plugins {
 }
 
 description = "smoke-tests"
+
+val appServerSuites = mapOf(
+  "payara" to "**/Payara*.*",
+  "jetty" to "**/Jetty*.*",
+  "liberty" to "**/Liberty*.*",
+  "tomcat" to "**/Tomcat*.*",
+  "tomee" to "**/Tomee*.*",
+  "websphere" to "**/Websphere*.*",
+  "wildfly" to "**/Wildfly*.*",
+)
+val suites = appServerSuites + ("spring-aot" to "**/SpringBootAotSmokeTest.*")
+val smokeTestSuite = project.findProperty("smokeTestSuite") as String?
+val reducedAppServerTests = project.findProperty("reducedAppServerTests") == "true"
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
@@ -50,16 +62,51 @@ tasks {
     // In addition to that we disable them on normal test task to only run when explicitly requested.
     enabled = enabled && gradle.startParameter.taskNames.any { it.startsWith(":smoke-tests:") }
 
-    selectSmokeTests(
-      project.findProperty("smokeTestSuite") as String?,
-      appServerGroup = when (name) {
-        "testRepresentativeAppServers" -> "representative"
-        "testRemainingAppServers" -> "remaining"
-        else -> null
-      },
-      reducedAppServerTests = findProperty("reducedAppServerTests") == "true",
-      skipOpenJ9 = findProperty("skipOpenJ9SmokeTests") == "true",
+    inputs.property(
+      "useWindowsContainers",
+      project.providers.systemProperty("os.name")
+        .zip(project.providers.environmentVariable("USE_LINUX_CONTAINERS").orElse("")) { os, linux ->
+          linux != "1" && os.lowercase().contains("windows")
+        },
     )
+
+    val appServerGroup = when (name) {
+      "testRepresentativeAppServers" -> "representative"
+      "testRemainingAppServers" -> "remaining"
+      else -> null
+    }
+    val includesAppServers = smokeTestSuite == null || smokeTestSuite in appServerSuites
+    when {
+      smokeTestSuite == null -> {
+        if (appServerGroup != null) {
+          include(appServerSuites.values)
+        }
+      }
+
+      smokeTestSuite in suites -> include(suites.getValue(smokeTestSuite!!))
+
+      smokeTestSuite == "other" -> exclude(suites.values)
+
+      smokeTestSuite == "none" -> exclude("**/*")
+
+      else -> throw GradleException("Unknown smoke test suite: $smokeTestSuite")
+    }
+    if (appServerGroup != null && !includesAppServers) {
+      // An empty partition must not turn into an unfiltered Test task.
+      exclude("**/*")
+    }
+    if (includesAppServers) {
+      if (appServerGroup != null) {
+        systemProperty("appServerTestGroup", appServerGroup)
+      }
+      if (
+        findProperty("skipOpenJ9SmokeTests") == "true" &&
+        !reducedAppServerTests &&
+        smokeTestSuite != "websphere"
+      ) {
+        exclude("**/*Openj9*.*")
+      }
+    }
 
     val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")
     val agentJarPath = shadowTask.flatMap { it.archiveFile }
@@ -105,5 +152,21 @@ tasks {
     description = "Runs app-server cases outside the representative matrix."
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+  }
+
+  register("smokeTest") {
+    when {
+      smokeTestSuite in appServerSuites -> {
+        dependsOn(named("testRepresentativeAppServers"))
+        if (!reducedAppServerTests) {
+          dependsOn(named("testRemainingAppServers"))
+        }
+      }
+
+      smokeTestSuite == null || smokeTestSuite in suites || smokeTestSuite == "other" || smokeTestSuite == "none" ->
+        dependsOn(named("test"))
+
+      else -> throw GradleException("Unknown smoke test suite: $smokeTestSuite")
+    }
   }
 }
