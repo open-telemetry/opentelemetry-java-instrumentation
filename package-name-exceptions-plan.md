@@ -26,6 +26,14 @@ Updated on 2026-09-19 after #20070 added Redisson package-private configuration 
 
 Continue reducing package-name checker exceptions in reviewable PRs. Prefer changes where the current package name is only a historical abbreviation and the rename has a small blast radius. Use up to about 40 changed files per package-cleanup PR, while still submitting only four PRs at a time.
 
+## Module-name rules
+
+The checker accepts `jaxrs-<major.minor>-annotations` and `jaxrs-<major.minor>-common` without individual allowlist entries. Other roles, other libraries with a version before the role, and patch-level versions before these roles are not covered by this rule.
+
+Unversioned shared modules may end in `-common`, `-common-javax`, or `-common-jakarta`. The prefix consists of dash-separated tokens starting with a lowercase letter and containing lowercase letters or digits, so this rule does not allow embedded numeric version tokens. Other variant suffixes still require an explicit decision.
+
+Both rules only allow the module name. Expected package names are still derived and checked, subject to the existing package-specific exceptions. Whether a common module needs a minimum dependency version remains a separate module-naming review.
+
 ## Quick Audit Summary
 
 The remaining exceptions fall into four buckets:
@@ -109,7 +117,7 @@ The `servlet-common` library internal package was moved upstream as:
 - #18855: `io.opentelemetry.instrumentation.servlet.internal` -> `io.opentelemetry.instrumentation.servlet.common.internal`.
 
 `external-annotations` still remains in the unversioned-module allowlist as `javaagent:external-annotations`; that is a separate module-name exception, not a historical package exception.
-`spring-boot-resources` keeps a narrow deprecated compatibility-package exception for `io.opentelemetry.instrumentation.spring.resources`; the replacement javaagent package is already present under `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`.
+The deprecated `spring-boot-resources` compatibility wrappers were removed in #20806, so their package exception is no longer needed.
 
 ## PR Creation Notes
 

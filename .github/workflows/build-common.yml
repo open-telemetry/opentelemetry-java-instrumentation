@@ -192,7 +192,9 @@ jobs:
 
       - name: Check package names
         if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
-        run: .github/scripts/check-package-names.sh
+        run: |
+          .github/scripts/check-package-names.sh
+          bash -e .github/scripts/test-check-package-names.sh
 
   # kept on ubuntu-latest: `gh aw validate` checks container images with `docker pull` and silently
   # skips that when no Docker daemon is available, as on ubuntu-slim

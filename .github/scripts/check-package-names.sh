@@ -64,23 +64,24 @@ check_source_set() {
     fi
 
     if [[ "$source_set" == "javaagent" ]]; then
-      # advice and injected helper packages that must live under the instrumented library's own
-      # namespace, so that they can reach package-private library types and members
+      # advice and injected helper packages that must share a namespace with package-private
+      # library types and members, including library instrumentation helpers
       case "$dir" in
         instrumentation/apache-dbcp-2.0/javaagent/src/main/java/org/apache/commons/dbcp2) continue ;;
         instrumentation/clickhouse/clickhouse-client-v1-0.5/javaagent/src/main/java/com/clickhouse/client | instrumentation/clickhouse/clickhouse-client-v1-0.5/javaagent/src/main/java/com/clickhouse/client/*) continue ;;
         instrumentation/finagle-http-23.11/javaagent/src/main/java/com/twitter/finagle | instrumentation/finagle-http-23.11/javaagent/src/main/java/com/twitter/finagle/*) continue ;;
         instrumentation/finagle-http-23.11/javaagent/src/main/java/io/netty/channel | instrumentation/finagle-http-23.11/javaagent/src/main/java/io/netty/channel/*) continue ;;
         instrumentation/hbase/hbase-client-common-1.0/javaagent/src/main/java/org/apache/hadoop/hbase/ipc) continue ;;
+        instrumentation/jedis/jedis-3.0/javaagent/src/main/java/redis/clients/jedis) continue ;;
         instrumentation/jedis/jedis-4.0/javaagent/src/main/java/redis/clients/jedis) continue ;;
         instrumentation/reactor/reactor-netty/reactor-netty-1.0/javaagent/src/main/java/reactor/netty/http/client | instrumentation/reactor/reactor-netty/reactor-netty-1.0/javaagent/src/main/java/reactor/netty/http/client/*) continue ;;
         instrumentation/redisson/redisson-3.0/javaagent/src/main/java/org/redisson/config) continue ;;
         instrumentation/redisson/redisson-3.17/javaagent/src/main/java/org/redisson/config) continue ;;
-        instrumentation/spring/spring-boot-resources/javaagent/src/main/java/io/opentelemetry/instrumentation/spring/resources) continue ;;
+        instrumentation/rocketmq/rocketmq-client-4.8/javaagent/src/main/java/io/opentelemetry/instrumentation/rocketmqclient/v4_8) continue ;;
         instrumentation/spring/spring-webmvc/spring-webmvc-3.1/javaagent/src/main/java/org/springframework/web/servlet/v3_1 | instrumentation/spring/spring-webmvc/spring-webmvc-3.1/javaagent/src/main/java/org/springframework/web/servlet/v3_1/*) continue ;;
         instrumentation/spring/spring-webmvc/spring-webmvc-6.0/javaagent/src/main/java/org/springframework/web/servlet/v6_0 | instrumentation/spring/spring-webmvc/spring-webmvc-6.0/javaagent/src/main/java/org/springframework/web/servlet/v6_0/*) continue ;;
         instrumentation/tomcat/tomcat-dbcp-8.0/javaagent/src/main/java/org/apache/tomcat/dbcp/dbcp2) continue ;;
-        instrumentation/vertx/vertx-redis-client-4.0/javaagent/src/main/java/io/vertx/redis/client/impl | instrumentation/vertx/vertx-redis-client-4.0/javaagent/src/main/java/io/vertx/redis/client/impl/*) continue ;;
+        instrumentation/vertx/vertx-redis-client/vertx-redis-client-4.0/javaagent/src/main/java/io/vertx/redis/client/impl | instrumentation/vertx/vertx-redis-client/vertx-redis-client-4.0/javaagent/src/main/java/io/vertx/redis/client/impl/*) continue ;;
         instrumentation/vertx/vertx-sql-client/vertx-sql-client-common-4.0/javaagent/src/main/java/io/vertx/sqlclient/impl | instrumentation/vertx/vertx-sql-client/vertx-sql-client-common-4.0/javaagent/src/main/java/io/vertx/sqlclient/impl/*) continue ;;
       esac
 
@@ -95,28 +96,27 @@ check_source_set() {
         instrumentation/opentelemetry-instrumentation-api/opentelemetry-instrumentation-api-1.14/javaagent/*) continue ;;
       esac
 
-      # historical javaagent modules that do not follow the module-name <-> package-name convention
+      # javaagent modules with package layouts that differ from their module names
       case "$dir" in
         instrumentation/hbase/hbase-client-common-1.0/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/hbase/client/common) continue ;;
         instrumentation/java-http-client/javaagent/*) continue ;;
         instrumentation/java-http-server/javaagent/*) continue ;;
         instrumentation/java-util-logging/javaagent/*) continue ;;
+        instrumentation/jaxrs/jaxrs-1.0-annotations/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/jaxrs/v1_0) continue ;;
       esac
     fi
 
-    # modules whose name does not end with a version digit, either because they have no base
-    # version (e.g. jdbc, netty-common) or because the version is embedded mid-name (e.g.
-    # jaxrs-2.0-annotations); package layout is still derived from the module name below
-    if [[ ! "$module_name" =~ [0-9]$ ]]; then
+    # JAX-RS roles may follow a major.minor version. Unversioned common modules may
+    # have a javax/jakarta variant, but no numeric version token in their prefix.
+    # These rules allow module names; package layout is still checked below.
+    if [[ ! "$module_name" =~ [0-9]$
+      && ! "$module_name" =~ ^jaxrs-[0-9]+\.[0-9]+-(annotations|common)$
+      && ! "$module_name" =~ ^[a-z][a-z0-9]*(-[a-z][a-z0-9]*)*-common(-(javax|jakarta))?$ ]]; then
       case "$source_set:$module_name" in
         # library:
         library:jdbc) ;;
-        library:lettuce-common) ;;
-        library:netty-common) ;;
         library:resources) ;;
         library:runtime-telemetry) ;;
-        library:servlet-common) ;;
-        library:servlet-common-javax) ;;
         # javaagent:
         javaagent:executors) ;;
         javaagent:external-annotations) ;;
@@ -126,20 +126,11 @@ check_source_set() {
         javaagent:internal-lambda) ;;
         javaagent:internal-reflection) ;;
         javaagent:internal-url-class-loader) ;;
-        javaagent:jaxrs-2.0-annotations) ;;
-        javaagent:jaxrs-2.0-common) ;;
-        javaagent:jaxrs-3.0-annotations) ;;
-        javaagent:jaxrs-3.0-common) ;;
-        javaagent:jaxrs-common) ;;
         javaagent:jdbc) ;;
-        javaagent:jsf-common-jakarta) ;;
-        javaagent:jsf-common-javax) ;;
         javaagent:methods) ;;
         javaagent:rmi) ;;
         javaagent:runtime-telemetry) ;;
-        javaagent:servlet-common) ;;
         javaagent:spring-boot-resources) ;;
-        javaagent:spring-cloud-gateway-common) ;;
         *)
           echo "module name doesn't have a base version: $dir"
           exit 1
