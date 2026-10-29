@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
@@ -20,7 +21,6 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_RESOURCE_ID;
-import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_TRIGGER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -130,7 +130,7 @@ class AwsLambdaApiGatewayWrapperTest {
                                 AwsLambdaTestUtils.supportsInvokedFunctionArn()
                                     ? "123456789"
                                     : null),
-                            equalTo(FAAS_INVOCATION_ID, "1-22-333"),
+                            equalTo(stringKey("faas.invocation.id"), "1-22-333"),
                             equalTo(FAAS_TRIGGER, "http"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(URL_PATH, "/hello/world"),
@@ -181,7 +181,7 @@ class AwsLambdaApiGatewayWrapperTest {
                                 AwsLambdaTestUtils.supportsInvokedFunctionArn()
                                     ? "123456789"
                                     : null),
-                            equalTo(FAAS_INVOCATION_ID, "1-22-333"),
+                            equalTo(stringKey("faas.invocation.id"), "1-22-333"),
                             equalTo(FAAS_TRIGGER, "http"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, null),
                             equalTo(ERROR_TYPE, null))));
@@ -220,7 +220,7 @@ class AwsLambdaApiGatewayWrapperTest {
                                 AwsLambdaTestUtils.supportsInvokedFunctionArn()
                                     ? "123456789"
                                     : null),
-                            equalTo(FAAS_INVOCATION_ID, "1-22-333"),
+                            equalTo(stringKey("faas.invocation.id"), "1-22-333"),
                             equalTo(FAAS_TRIGGER, "http"))));
   }
 
@@ -257,7 +257,7 @@ class AwsLambdaApiGatewayWrapperTest {
                                 AwsLambdaTestUtils.supportsInvokedFunctionArn()
                                     ? "123456789"
                                     : null),
-                            equalTo(FAAS_INVOCATION_ID, "1-22-333"),
+                            equalTo(stringKey("faas.invocation.id"), "1-22-333"),
                             equalTo(FAAS_TRIGGER, "http"))));
   }
 
@@ -297,7 +297,7 @@ class AwsLambdaApiGatewayWrapperTest {
                                 AwsLambdaTestUtils.supportsInvokedFunctionArn()
                                     ? "123456789"
                                     : null),
-                            equalTo(FAAS_INVOCATION_ID, "1-22-333"),
+                            equalTo(stringKey("faas.invocation.id"), "1-22-333"),
                             equalTo(FAAS_TRIGGER, "http"))));
   }
 
@@ -337,7 +337,7 @@ class AwsLambdaApiGatewayWrapperTest {
                                 AwsLambdaTestUtils.supportsInvokedFunctionArn()
                                     ? "123456789"
                                     : null),
-                            equalTo(FAAS_INVOCATION_ID, "1-22-333"),
+                            equalTo(stringKey("faas.invocation.id"), "1-22-333"),
                             equalTo(FAAS_TRIGGER, "http"),
                             equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
     if (emitExceptionAsLogs()) {
