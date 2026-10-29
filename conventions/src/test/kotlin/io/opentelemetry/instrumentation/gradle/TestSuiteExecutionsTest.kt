@@ -135,67 +135,6 @@ class TestSuiteExecutionsTest {
   }
 
   @JunitTest
-  fun `groups scope configuration to their registered executions`() {
-    suite("test").executions {
-      group {
-        configureEach {
-          systemProperty("order", "${systemProperties["order"]},group")
-          filter.includeTestsMatching("*ClientTest")
-        }
-        register("Client") {
-          systemProperty("order", "${systemProperties["order"]},execution")
-        }
-      }
-      register("Sibling") {}
-      configureEach {
-        systemProperty("order", "suite")
-      }
-    }
-
-    assertThat(test("test").systemProperties).containsEntry("order", "suite")
-    assertThat(test("testSibling").systemProperties).containsEntry("order", "suite")
-    assertThat(test("testClient").systemProperties).containsEntry("order", "suite,group,execution")
-    assertThat(test("testClient").filter.includePatterns).containsExactly("*ClientTest")
-    assertThat(test("test").filter.includePatterns).isEmpty()
-    assertThat(test("testSibling").filter.includePatterns).isEmpty()
-    assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
-      .contains("test", "testSibling", "testClient")
-  }
-
-  @JunitTest
-  fun `group telemetry config labels only explicit executions`() {
-    val source = suite("test")
-    val settingKey = "otel.instrumentation.example.enabled"
-    source.executions {
-      group {
-        register("Enabled") {
-          telemetryConfig(settingKey, "true")
-        }
-      }
-    }
-
-    assertThat(test(source.name).systemProperties)
-      .doesNotContainKeys(settingKey, "metadataConfig")
-    assertThat(test(source.name + "Enabled").systemProperties)
-      .containsEntry(settingKey, "true")
-      .containsEntry("metadataConfig", "$settingKey=true")
-    assertBinding(test(source.name + "Enabled"), source)
-  }
-
-  @JunitTest
-  fun `groups reject duplicate execution suffixes`() {
-    assertThatThrownBy {
-      suite("test").executions {
-        register("Variant") {}
-        group {
-          register("Variant") {}
-        }
-      }
-    }.isInstanceOf(IllegalArgumentException::class.java)
-      .hasMessage("Execution variant 'Variant' is already registered")
-  }
-
-  @JunitTest
   fun `variants stay lazy and receive shared providers independently without flattening`() {
     var configuredTasks = 0
     var providerReads = 0

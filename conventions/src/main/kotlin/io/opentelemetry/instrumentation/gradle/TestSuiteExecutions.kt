@@ -47,11 +47,6 @@ class TestSuiteExecutions internal constructor(
     variants[suffix] = action
   }
 
-  /** Shared configuration scoped to the executions registered in this group. */
-  fun group(action: Action<TestSuiteExecutionGroup>) {
-    action.execute(TestSuiteExecutionGroup(::register))
-  }
-
   internal fun configure(action: Action<TestSuiteExecutions>) {
     check(!configured) { "Declare one executions block per suite" }
     configured = true
@@ -77,23 +72,6 @@ class TestSuiteExecutions internal constructor(
         dependsOn(task)
       }
     }
-  }
-}
-
-class TestSuiteExecutionGroup internal constructor(
-  private val registerExecution: (String, Action<Test>) -> Unit,
-) {
-  private val common = mutableListOf<Action<Test>>()
-
-  fun configureEach(action: Action<Test>) {
-    common.add(action)
-  }
-
-  fun register(suffix: String, action: Action<Test>) {
-    registerExecution(suffix, Action {
-      common.forEach { it.execute(this) }
-      action.execute(this)
-    })
   }
 }
 
