@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.springframework.web.servlet.v6_0;
+package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
 import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.SpringWebMvcServerSpanNaming.serverSpanName;
