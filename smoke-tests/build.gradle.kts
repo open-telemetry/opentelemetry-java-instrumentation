@@ -62,7 +62,9 @@ tasks {
 
     val smokeTestSuite = project.findProperty("smokeTestSuite") as String?
     val skipOpenJ9SmokeTests = (findProperty("skipOpenJ9SmokeTests") as String?) == "true"
-    systemProperty("reducedAppServerTests", findProperty("reducedAppServerTests") == "true")
+    // Keep non-app-server cache recipes independent of the PR-only selection flag.
+    val hasAppServerTests = smokeTestSuite !in listOf("other", "spring-aot", "none")
+    systemProperty("reducedAppServerTests", hasAppServerTests && findProperty("reducedAppServerTests") == "true")
     if (smokeTestSuite != null) {
       val suite = suites[smokeTestSuite]
       if (suite != null) {

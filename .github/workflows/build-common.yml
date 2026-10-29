@@ -473,6 +473,21 @@ jobs:
           ${{ inputs.skip-openj9-tests && !inputs.reduced-appserver-tests && matrix.smoke-test-suite != 'websphere' && '-PskipOpenJ9SmokeTests=true' || '' }}
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
+      - name: Warm reduced app-server cache
+        if: >-
+          github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+          matrix.os == 'ubuntu-latest' &&
+          matrix.smoke-test-suite != 'other' && matrix.smoke-test-suite != 'spring-aot'
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+        # Match reduced PR selection, including its OpenJ9 policy, after running the full matrix.
+        run: >
+          ./gradlew
+          :smoke-tests:test
+          -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
+          -PreducedAppServerTests=true
+          ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+
       - name: Build scan
         if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
         run: cat build-scan.txt
