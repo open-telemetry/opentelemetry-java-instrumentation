@@ -44,7 +44,7 @@ class AppServerTestSelectionTest {
       List<Class<?>> representative = select(effective, "representative", windows);
       List<Class<?>> remaining = select(effective, "remaining", windows);
 
-      assertThat(representative).doesNotContainAnyElementsOf(remaining);
+      assertThat(representative).noneMatch(remaining::contains);
       assertThat(full)
           .containsExactlyInAnyOrderElementsOf(
               effective.stream()
