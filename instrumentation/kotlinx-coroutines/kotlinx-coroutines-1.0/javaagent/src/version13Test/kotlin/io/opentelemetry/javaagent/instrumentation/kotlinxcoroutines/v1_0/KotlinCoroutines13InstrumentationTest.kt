@@ -30,7 +30,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
@@ -197,7 +196,6 @@ class KotlinCoroutines13InstrumentationTest {
 
   @ParameterizedTest
   @ValueSource(booleans = [false, true])
-  @Disabled("Tail-call @WithSpan continuations can resume application code on the wrong thread, breaking dispatcher confinement and thread-bound state such as Spring transactions: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20744")
   fun `callback suspension preserves dispatcher`(annotated: Boolean) {
     val continuationReady = CompletableFuture<Continuation<Unit>>()
     val threads = runBlocking {

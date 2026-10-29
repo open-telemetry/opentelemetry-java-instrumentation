@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations;
 
 import static io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.AnnotationSingletons.instrumenter;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -13,10 +14,15 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.extension.kotlin.ContextExtensionsKt;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.lang.reflect.Field;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
+import kotlin.ResultKt;
 import kotlin.coroutines.Continuation;
+import kotlin.coroutines.ContinuationInterceptor;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.intrinsics.IntrinsicsKt;
+import kotlin.coroutines.jvm.internal.ContinuationImpl;
 import kotlin.coroutines.jvm.internal.CoroutineStackFrame;
 import kotlinx.coroutines.ThreadContextElement;
 import org.jetbrains.annotations.NotNull;
@@ -72,9 +78,13 @@ public class AnnotationInstrumentationHelper {
     return Context.current();
   }
 
+  @SuppressWarnings("unchecked") // the frame passes the callee's result through unchanged
   public static <T> Continuation<T> wrapContinuation(
       Continuation<T> continuation, Context context, Context parentContext, Object request) {
-    return new ContextContinuation<>(continuation, context, parentContext, request);
+    return (Continuation<T>)
+        new SuspendFrame(
+            new ContextContinuation<>(continuation, context, parentContext, request),
+            continuation.getContext());
   }
 
   @Nullable
@@ -107,6 +117,11 @@ public class AnnotationInstrumentationHelper {
     // final state (returns anything else besides COROUTINE_SUSPENDED)
     if (continuation == null || result != IntrinsicsKt.getCOROUTINE_SUSPENDED()) {
       instrumenter().end(context, (MethodRequest) request, null, error);
+      if (continuation != null && continuation instanceof SuspendFrame) {
+        // the callee completed without suspending, so the frame never completes and never
+        // releases the continuation it intercepted when it was created
+        ((SuspendFrame) continuation).release();
+      }
     }
   }
 
@@ -195,6 +210,7 @@ public class AnnotationInstrumentationHelper {
     private final Continuation<T> delegate;
     private final CoroutineContext coroutineContext;
     private final ThreadContextElement<Scope> delegateContextElement;
+    private final Context parentContext;
     private final Context spanContext;
     private final Object request;
 
@@ -206,6 +222,7 @@ public class AnnotationInstrumentationHelper {
           delegate.getContext().plus(ContextExtensionsKt.asContextElement(spanContext));
       this.delegateContextElement =
           (ThreadContextElement<Scope>) ContextExtensionsKt.asContextElement(parentContext);
+      this.parentContext = parentContext;
       this.spanContext = spanContext;
       this.request = request;
     }
@@ -233,12 +250,138 @@ public class AnnotationInstrumentationHelper {
       Throwable error = KotlinResultUtilKt.exceptionOrNull(result);
       instrumenter().end(spanContext, (MethodRequest) request, null, error);
 
+      // Resuming the caller here switches the thread context in the middle of a task the runtime
+      // started with another context. Under an undispatched withContext the runtime may restore
+      // that task's context later, out of order with the switch, so let the caller's interceptor
+      // resume it with its own context instead.
+      if (Context.current() != parentContext && UndispatchedMarker.mayBeIn(delegate.getContext())) {
+        Continuation<T> intercepted = IntrinsicsKt.intercepted(delegate);
+        if (intercepted != delegate) {
+          intercepted.resumeWith(result);
+          return;
+        }
+      }
+
       Scope scope = delegateContextElement.updateThreadContext(delegate.getContext());
       try {
         delegate.resumeWith(result);
       } finally {
         delegateContextElement.restoreThreadContext(delegate.getContext(), scope);
       }
+    }
+  }
+
+  /**
+   * Stands in for the frame the compiler omits when the annotated method tail calls another suspend
+   * function. Coroutine runtimes intercept only {@link ContinuationImpl} frames, so without it a
+   * callee completing on another dispatcher would resume the caller on the callee's thread.
+   */
+  public static final class SuspendFrame extends ContinuationImpl {
+
+    private static final Logger logger = Logger.getLogger(SuspendFrame.class.getName());
+
+    // the cache behind ContinuationImpl.intercepted()
+    @Nullable private static final Field INTERCEPTED = findInterceptedField();
+
+    @SuppressWarnings("unchecked") // ContinuationImpl takes Continuation<Object>
+    SuspendFrame(Continuation<?> completion, CoroutineContext callerContext) {
+      super((Continuation<Object>) completion);
+      // Intercept a stand-in that carries the caller's context instead of this frame, whose
+      // context also holds the span: the runtime then applies the caller's thread context when it
+      // resumes the caller, as it would without the annotation.
+      ContinuationInterceptor interceptor = callerContext.get(ContinuationInterceptor.Key);
+      if (interceptor != null && INTERCEPTED != null) {
+        try {
+          INTERCEPTED.set(
+              this, interceptor.interceptContinuation(new CallerResumption(this, callerContext)));
+        } catch (IllegalAccessException | RuntimeException e) {
+          // fall back to intercepting this frame
+          logger.log(FINE, "Failed to set the intercepted continuation of the tail call frame", e);
+        }
+      }
+    }
+
+    @Nullable
+    private static Field findInterceptedField() {
+      try {
+        Field field = ContinuationImpl.class.getDeclaredField("intercepted");
+        field.setAccessible(true);
+        return field;
+      } catch (NoSuchFieldException | RuntimeException e) {
+        return null;
+      }
+    }
+
+    void release() {
+      releaseIntercepted();
+    }
+
+    @Override
+    @SuppressWarnings("OtelCanIgnoreReturnValueSuggester") // returns the callee's result
+    protected Object invokeSuspend(@NotNull Object result) {
+      ResultKt.throwOnFailure(result);
+      return result;
+    }
+  }
+
+  private static final class UndispatchedMarker {
+    // kotlinx-coroutines marks the context of every undispatched withContext with this element
+    @Nullable private static final CoroutineContext.Key<?> KEY = findKey();
+
+    static boolean mayBeIn(CoroutineContext context) {
+      return KEY == null || context.get(KEY) != null;
+    }
+
+    @Nullable
+    private static CoroutineContext.Key<?> findKey() {
+      try {
+        Class<?> marker =
+            Class.forName(
+                "kotlinx.coroutines.UndispatchedMarker",
+                false,
+                ThreadContextElement.class.getClassLoader());
+        // the class is not public
+        Field field = marker.getField("INSTANCE");
+        field.setAccessible(true);
+        Object instance = field.get(null);
+        return instance instanceof CoroutineContext.Key ? (CoroutineContext.Key<?>) instance : null;
+      } catch (ReflectiveOperationException | RuntimeException e) {
+        return null;
+      }
+    }
+
+    private UndispatchedMarker() {}
+  }
+
+  private static final class CallerResumption implements Continuation<Object>, CoroutineStackFrame {
+    private final SuspendFrame frame;
+    private final CoroutineContext callerContext;
+
+    CallerResumption(SuspendFrame frame, CoroutineContext callerContext) {
+      this.frame = frame;
+      this.callerContext = callerContext;
+    }
+
+    @NotNull
+    @Override
+    public CoroutineContext getContext() {
+      return callerContext;
+    }
+
+    @Override
+    public void resumeWith(@NotNull Object result) {
+      frame.resumeWith(result);
+    }
+
+    @Override
+    public CoroutineStackFrame getCallerFrame() {
+      return frame;
+    }
+
+    @Nullable
+    @Override
+    public StackTraceElement getStackTraceElement() {
+      return null;
     }
   }
 
