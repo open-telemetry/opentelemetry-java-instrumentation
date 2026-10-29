@@ -58,7 +58,8 @@ class RocketMqReceiveRequest {
   static RocketMqReceiveRequest create(String consumerGroup, List<MessageView> messages) {
     MessageView message = messages.get(0);
     String namespace =
-        ((MessageViewImpl) message).getMessageQueue().getTopicResource().getNamespace();
+        StringUtils.emptyToNull(
+            ((MessageViewImpl) message).getMessageQueue().getTopicResource().getNamespace());
     return new RocketMqReceiveRequest(message.getTopic(), namespace, consumerGroup, messages);
   }
 
@@ -71,11 +72,9 @@ class RocketMqReceiveRequest {
   @Nullable
   String getNamespace() {
     ReceiveMessageRequest request = this.request;
-    String namespace =
-        request == null
-            ? this.namespace
-            : request.getMessageQueue().getTopic().getResourceNamespace();
-    return StringUtils.emptyToNull(namespace);
+    return request == null
+        ? namespace
+        : StringUtils.emptyToNull(request.getMessageQueue().getTopic().getResourceNamespace());
   }
 
   String getConsumerGroup() {
