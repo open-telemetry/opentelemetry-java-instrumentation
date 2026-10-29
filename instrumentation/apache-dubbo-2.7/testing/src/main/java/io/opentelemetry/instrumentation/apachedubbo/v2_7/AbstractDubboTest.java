@@ -658,6 +658,7 @@ public abstract class AbstractDubboTest {
   }
 
   private void assertErrorMetric(String metricName, String method, String errorType) {
+    boolean isClient = metricName.equals("rpc.client.call.duration");
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.apache-dubbo-2.7",
@@ -674,6 +675,10 @@ public abstract class AbstractDubboTest {
                                         equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                         equalTo(RPC_METHOD, method),
                                         equalTo(ERROR_TYPE, errorType),
+                                        equalTo(SERVER_ADDRESS, isClient ? "localhost" : null),
+                                        equalTo(
+                                            SERVER_PORT,
+                                            isClient ? (long) protocolConfig.getPort() : null),
                                         equalTo(stringKey("rpc.status_code"), null)))));
   }
 
