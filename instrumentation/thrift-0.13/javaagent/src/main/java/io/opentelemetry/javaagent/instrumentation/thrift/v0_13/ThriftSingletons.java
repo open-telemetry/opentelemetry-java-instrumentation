@@ -41,11 +41,13 @@ public final class ThriftSingletons {
             if (service == null) {
               continue;
             }
-            // Generated processors bind I to their service's Iface or AsyncIface.
+            // Generated processors declare Processor<I extends Iface> or
+            // AsyncProcessor<I extends AsyncIface>; the bound identifies the service.
             for (TypeVariable<?> parameter : current.getTypeParameters()) {
               for (Type bound : parameter.getBounds()) {
                 if (bound instanceof Class<?>) {
                   Class<?> iface = (Class<?>) bound;
+                  // Both the processor and its bound interface must belong to the same service.
                   if (iface.isInterface()
                       && iface.getEnclosingClass() == service
                       && ("Iface".equals(iface.getSimpleName())
