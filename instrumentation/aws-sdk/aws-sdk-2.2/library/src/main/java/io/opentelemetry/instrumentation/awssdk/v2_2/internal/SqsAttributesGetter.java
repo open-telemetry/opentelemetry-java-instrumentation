@@ -18,6 +18,7 @@ import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
 class SqsAttributesGetter implements MessagingAttributesGetter<ExecutionAttributes, Response> {
 
+  // copied from MessagingIncubatingAttributes.MessagingSystemIncubatingValues
   private static final String AWS_SQS = "aws.sqs";
 
   @Override

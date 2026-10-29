@@ -16,6 +16,7 @@ import javax.annotation.Nullable;
 class SqsCreateRequestAttributesGetter
     implements MessagingAttributesGetter<SqsCreateRequest, Void> {
 
+  // copied from MessagingIncubatingAttributes.MessagingSystemIncubatingValues
   private static final String AWS_SQS = "aws.sqs";
 
   @Override
