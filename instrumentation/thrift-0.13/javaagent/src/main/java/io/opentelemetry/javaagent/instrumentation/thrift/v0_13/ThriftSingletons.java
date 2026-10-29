@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.thrift.v0_13;
 
 import static java.util.Collections.emptyList;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.propagation.ContextPropagators;
@@ -19,10 +20,12 @@ import io.opentelemetry.instrumentation.thrift.v0_13.internal.ThriftInstrumenter
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.function.UnaryOperator;
+import java.util.logging.Logger;
 import org.apache.thrift.protocol.TProtocol;
 
 public final class ThriftSingletons {
 
+  private static final Logger logger = Logger.getLogger(ThriftSingletons.class.getName());
   private static final VirtualField<TProtocol, TProtocol> PROTOCOL_DECORATOR =
       VirtualField.find(TProtocol.class, TProtocol.class);
   private static final Instrumenter<ThriftRequest, ThriftResponse> clientInstrumenter =
@@ -41,21 +44,26 @@ public final class ThriftSingletons {
             if (service == null) {
               continue;
             }
-            // Generated processors declare Processor<I extends Iface> or
-            // AsyncProcessor<I extends AsyncIface>; the bound identifies the service.
-            for (TypeVariable<?> parameter : current.getTypeParameters()) {
-              for (Type bound : parameter.getBounds()) {
-                if (bound instanceof Class<?>) {
-                  Class<?> iface = (Class<?>) bound;
-                  // Both the processor and its bound interface must belong to the same service.
-                  if (iface.isInterface()
-                      && iface.getEnclosingClass() == service
-                      && ("Iface".equals(iface.getSimpleName())
-                          || "AsyncIface".equals(iface.getSimpleName()))) {
-                    return service.getName();
+            try {
+              // Generated processors declare Processor<I extends Iface> or
+              // AsyncProcessor<I extends AsyncIface>; the bound identifies the service.
+              for (TypeVariable<?> parameter : current.getTypeParameters()) {
+                for (Type bound : parameter.getBounds()) {
+                  if (bound instanceof Class<?>) {
+                    Class<?> iface = (Class<?>) bound;
+                    // Both the processor and its bound interface must belong to the same service.
+                    if (iface.isInterface()
+                        && iface.getEnclosingClass() == service
+                        && ("Iface".equals(iface.getSimpleName())
+                            || "AsyncIface".equals(iface.getSimpleName()))) {
+                      return service.getName();
+                    }
                   }
                 }
               }
+            } catch (Throwable t) {
+              logger.log(
+                  FINE, "Failed to inspect Thrift service name from " + current.getName(), t);
             }
           }
           return "";
