@@ -164,6 +164,7 @@
     "io.ktor:ktor-server-core#+": "3.6.0",
     "io.ktor:ktor-server-core#1.+": "1.6.8",
     "io.ktor:ktor-server-core#2.+": "2.3.13",
+    "io.ktor:ktor-server-call-id#+": "3.6.0",
     "io.ktor:ktor-server-netty#+": "3.6.0",
     "io.ktor:ktor-server-netty#1.+": "1.6.8",
     "io.ktor:ktor-server-netty#2.+": "2.3.13",

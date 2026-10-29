@@ -53,6 +53,19 @@ kotlin {
   }
 }
 
+// Reproduce the Ktor 3.4.3 CallId context leak with a Java-agent test and no Netty spans.
+testing {
+  suites {
+    register<JvmTestSuite>("version343Test") {
+      dependencies {
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+        implementation("io.ktor:ktor-server-netty:${baseVersion("3.4.3").orLatest("+")}")
+        implementation("io.ktor:ktor-server-call-id:${baseVersion("3.4.3").orLatest("+")}")
+      }
+    }
+  }
+}
+
 tasks {
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -67,7 +80,14 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.preview=service.peer")
   }
 
+  named<Test>("version343Test") {
+    systemProperty("collectMetadata", false)
+    // Ensure a Netty server span does not mask a missing Ktor request context.
+    systemProperty("otel.instrumentation.netty.enabled", false)
+    systemProperty("otel.instrumentation.netty-4.1.enabled", false)
+  }
+
   check {
-    dependsOn(testExperimental, testPreviewSemconv)
+    dependsOn(testing.suites, testExperimental, testPreviewSemconv)
   }
 }
