@@ -499,15 +499,21 @@ class SpringKafkaInterceptorTest {
       LinkData.create(
           FIRST_CREATION,
           Attributes.of(
-              MESSAGING_DESTINATION_PARTITION_ID, "0",
-              longKey("kafka.offset"), 1L,
-              stringKey("kafka.message.key"), "first")),
+              MESSAGING_DESTINATION_PARTITION_ID,
+              "0",
+              longKey("kafka.offset"),
+              1L,
+              stringKey("kafka.message.key"),
+              "first")),
       LinkData.create(
           SECOND_CREATION,
           Attributes.of(
-              MESSAGING_DESTINATION_PARTITION_ID, "1",
-              longKey("kafka.offset"), 2L,
-              stringKey("kafka.message.key"), "second"))
+              MESSAGING_DESTINATION_PARTITION_ID,
+              "1",
+              longKey("kafka.offset"),
+              2L,
+              stringKey("kafka.message.key"),
+              "second"))
     };
   }
 
