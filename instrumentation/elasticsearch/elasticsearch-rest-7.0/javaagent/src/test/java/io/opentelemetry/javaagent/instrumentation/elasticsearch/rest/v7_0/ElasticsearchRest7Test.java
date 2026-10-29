@@ -110,7 +110,8 @@ class ElasticsearchRest7Test {
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
 
@@ -187,7 +188,8 @@ class ElasticsearchRest7Test {
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
                 span ->

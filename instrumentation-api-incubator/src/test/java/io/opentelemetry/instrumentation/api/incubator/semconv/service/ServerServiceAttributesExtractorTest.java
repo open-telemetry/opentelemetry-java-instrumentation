@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.semconv.service.peer;
+package io.opentelemetry.instrumentation.api.incubator.semconv.service;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -19,7 +19,8 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal.ServicePeerResolver;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.internal.ServiceMappingResolver;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import java.util.List;
@@ -30,17 +31,17 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class ServicePeerAttributesExtractorTest {
+class ServerServiceAttributesExtractorTest {
 
   @Mock ServerAttributesGetter<String> attributesGetter;
 
   @Test
   void shouldNotSetAnyValueIfNetExtractorReturnsNulls() {
     // given
-    ServicePeerResolver resolver = createResolver(mapping("1.2.3.4", "myService", null));
+    ServiceMappingResolver resolver = createResolver(mapping("1.2.3.4", "myService", null));
 
     AttributesExtractor<String, String> underTest =
-        new ServicePeerAttributesExtractor<>(attributesGetter, resolver);
+        new ServerServiceAttributesExtractor<>(attributesGetter, resolver);
 
     Context context = Context.root();
 
@@ -54,12 +55,12 @@ class ServicePeerAttributesExtractorTest {
   }
 
   @Test
-  void shouldNotSetAnyValueIfPeerNameDoesNotMatch() {
+  void shouldNotSetAnyValueIfTargetDoesNotMatch() {
     // given
-    ServicePeerResolver resolver = createResolver(mapping("example.com", "myService", null));
+    ServiceMappingResolver resolver = createResolver(mapping("example.com", "myService", null));
 
     AttributesExtractor<String, String> underTest =
-        new ServicePeerAttributesExtractor<>(attributesGetter, resolver);
+        new ServerServiceAttributesExtractor<>(attributesGetter, resolver);
 
     when(attributesGetter.getServerAddress(any())).thenReturn("example2.com");
 
@@ -79,13 +80,13 @@ class ServicePeerAttributesExtractorTest {
   @Test
   void shouldSetServerServiceIdentityIfItMatches() {
     // given
-    ServicePeerResolver resolver =
+    ServiceMappingResolver resolver =
         createResolver(
             mapping("example.com", "myService", null),
             mapping("1.2.3.4", "someOtherService", null));
 
     AttributesExtractor<String, String> underTest =
-        new ServicePeerAttributesExtractor<>(attributesGetter, resolver);
+        new ServerServiceAttributesExtractor<>(attributesGetter, resolver);
 
     when(attributesGetter.getServerAddress(any())).thenReturn("example.com");
 
@@ -101,17 +102,14 @@ class ServicePeerAttributesExtractorTest {
     assertThat(startAttributes.build()).isEmpty();
     Attributes attrs = endAttributes.build();
     assertThat(attrs).containsOnly(entry(stringKey("server.service.name"), "myService"));
-    assertThat(attrs.get(stringKey("peer.service"))).isNull();
-    assertThat(attrs.get(stringKey("service.peer.name"))).isNull();
-    assertThat(attrs.get(stringKey("service.peer.namespace"))).isNull();
   }
 
   @Test
   void shouldMatchConfiguredTargetExactly() {
     String target = "db1.example:5432,db2.example:5432";
-    ServicePeerResolver resolver = createResolver(mapping(target, "myService", null));
+    ServiceMappingResolver resolver = createResolver(mapping(target, "myService", null));
     AttributesExtractor<String, String> underTest =
-        new ServicePeerAttributesExtractor<>(attributesGetter, resolver);
+        new ServerServiceAttributesExtractor<>(attributesGetter, resolver);
     when(attributesGetter.getServerAddress(any())).thenReturn(target);
 
     AttributesBuilder attributes = Attributes.builder();
@@ -121,14 +119,33 @@ class ServicePeerAttributesExtractorTest {
     assertThat(attrs).containsOnly(entry(stringKey("server.service.name"), "myService"));
   }
 
-  private static ServicePeerResolver createResolver(DeclarativeConfigProperties... entries) {
+  @SuppressWarnings("deprecation")
+  @Test
+  void deprecatedExtractorForwardsToServerServiceExtractor() {
+    AttributesExtractor<String, String> underTest =
+        ServicePeerAttributesExtractor.create(
+            attributesGetter, createOpenTelemetry(mapping("example.com", "myService", null)));
+    when(attributesGetter.getServerAddress(any())).thenReturn("example.com");
+
+    AttributesBuilder attributes = Attributes.builder();
+    underTest.onEnd(attributes, Context.root(), "request", "response", null);
+
+    assertThat(attributes.build())
+        .containsOnly(entry(stringKey("server.service.name"), "myService"));
+  }
+
+  private static ServiceMappingResolver createResolver(DeclarativeConfigProperties... entries) {
+    return new ServiceMappingResolver(createOpenTelemetry(entries));
+  }
+
+  private static ExtendedOpenTelemetry createOpenTelemetry(DeclarativeConfigProperties... entries) {
     ExtendedOpenTelemetry otel = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
     when(otel.getInstrumentationConfig("common")).thenReturn(commonConfig);
     List<DeclarativeConfigProperties> entryList = asList(entries);
     when(commonConfig.getStructuredList("server_service_mapping", emptyList()))
         .thenReturn(entryList);
-    return new ServicePeerResolver(otel);
+    return otel;
   }
 
   private static DeclarativeConfigProperties mapping(

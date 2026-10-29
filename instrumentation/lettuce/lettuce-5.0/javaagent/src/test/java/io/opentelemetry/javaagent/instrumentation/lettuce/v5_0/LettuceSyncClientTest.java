@@ -125,7 +125,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()))));
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()))));
   }
 
   @Test
@@ -153,7 +154,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()))
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event

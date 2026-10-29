@@ -30,8 +30,8 @@ class R2dbcStatementTest extends AbstractR2dbcStatementTest {
   }
 
   @Override
-  protected String expectedPeerService() {
-    return "test-peer-service";
+  protected String expectedServerServiceName() {
+    return "test-server-service";
   }
 
   @BeforeAll
@@ -49,7 +49,8 @@ class R2dbcStatementTest extends AbstractR2dbcStatementTest {
       ConnectionFactoryOptions connectionFactoryOptions) {
     return R2dbcTelemetry.builder(testing.getOpenTelemetry())
         .addAttributesExtractor(
-            AttributesExtractor.constant(stringKey("server.service.name"), expectedPeerService()))
+            AttributesExtractor.constant(
+                stringKey("server.service.name"), expectedServerServiceName()))
         .build()
         .wrapConnectionFactory(
             super.createProxyConnectionFactory(connectionFactoryOptions), connectionFactoryOptions);

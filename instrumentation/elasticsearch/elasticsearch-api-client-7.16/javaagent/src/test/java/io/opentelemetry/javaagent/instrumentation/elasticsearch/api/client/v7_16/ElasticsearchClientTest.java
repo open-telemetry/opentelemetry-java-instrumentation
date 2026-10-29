@@ -124,7 +124,8 @@ class ElasticsearchClientTest {
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
@@ -166,7 +167,8 @@ class ElasticsearchClientTest {
                             equalTo(HTTP_REQUEST_METHOD, "PUT"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(
                                 URL_FULL,
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
@@ -205,7 +207,8 @@ class ElasticsearchClientTest {
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_search?typed_keys=true"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
@@ -271,7 +274,8 @@ class ElasticsearchClientTest {
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
                 span ->

@@ -1389,7 +1389,7 @@ class VertxSqlClientTest {
                             equalTo(DB_QUERY_SUMMARY, "select test"),
                             equalTo(
                                 stringKey("server.service.name"),
-                                serverList ? null : testing.expectedPeerService()),
+                                serverList ? null : testing.expectedServerServiceName()),
                             equalTo(
                                 SERVER_ADDRESS,
                                 serverList
@@ -1603,7 +1603,8 @@ class VertxSqlClientTest {
                             equalTo(DB_QUERY_TEXT, "select * from test"),
                             equalTo(DB_QUERY_SUMMARY, "select test"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
@@ -1639,7 +1640,8 @@ class VertxSqlClientTest {
                             equalTo(DB_QUERY_TEXT, "select * from test"),
                             equalTo(DB_QUERY_SUMMARY, "select test"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
@@ -1687,7 +1689,7 @@ class VertxSqlClientTest {
                     equalTo(DB_NAMESPACE, DB),
                     equalTo(DB_QUERY_TEXT, "select * from test"),
                     equalTo(DB_QUERY_SUMMARY, "select test"),
-                    equalTo(stringKey("server.service.name"), testing.expectedPeerService()),
+                    equalTo(stringKey("server.service.name"), testing.expectedServerServiceName()),
                     equalTo(SERVER_ADDRESS, host),
                     equalTo(SERVER_PORT, port)));
   }
@@ -1706,7 +1708,7 @@ class VertxSqlClientTest {
                     equalTo(DB_NAMESPACE, DB),
                     equalTo(DB_QUERY_TEXT, "select * from test"),
                     equalTo(DB_QUERY_SUMMARY, "select test"),
-                    equalTo(stringKey("server.service.name"), testing.expectedPeerService()),
+                    equalTo(stringKey("server.service.name"), testing.expectedServerServiceName()),
                     equalTo(SERVER_ADDRESS, expectedHost),
                     equalTo(SERVER_PORT, port)));
   }
@@ -1735,7 +1737,7 @@ class VertxSqlClientTest {
                               && (expectedHost.equals(host)
                                   || expectedHost.equals("localhost")
                                   || expectedHost.equals("127.0.0.1"))
-                          ? testing.expectedPeerService()
+                          ? testing.expectedServerServiceName()
                           : null),
                   equalTo(SERVER_ADDRESS, expectedHost),
                   equalTo(SERVER_PORT, expectedHost != null ? Long.valueOf(port) : null),
@@ -1820,7 +1822,7 @@ class VertxSqlClientTest {
                     equalTo(
                         stringKey("server.service.name"),
                         expectedHost != null && expectedHost.equals(host)
-                            ? testing.expectedPeerService()
+                            ? testing.expectedServerServiceName()
                             : null),
                     equalTo(SERVER_ADDRESS, expectedHost),
                     equalTo(SERVER_PORT, expectedHost != null ? Long.valueOf(port) : null),
@@ -1846,7 +1848,7 @@ class VertxSqlClientTest {
                     equalTo(DB_SYSTEM_NAME, "other_sql"),
                     equalTo(DB_NAMESPACE, ""),
                     equalTo(DB_QUERY_TEXT, ""),
-                    equalTo(stringKey("server.service.name"), testing.expectedPeerService()),
+                    equalTo(stringKey("server.service.name"), testing.expectedServerServiceName()),
                     equalTo(SERVER_ADDRESS, host),
                     equalTo(SERVER_PORT, port),
                     equalTo(ERROR_TYPE, error.getClass().getName())));
@@ -1880,7 +1882,7 @@ class VertxSqlClientTest {
                     equalTo(DB_NAMESPACE, "testdb"),
                     equalTo(DB_QUERY_TEXT, "select * from test"),
                     equalTo(DB_QUERY_SUMMARY, "select test"),
-                    equalTo(stringKey("server.service.name"), testing.expectedPeerService()),
+                    equalTo(stringKey("server.service.name"), testing.expectedServerServiceName()),
                     equalTo(SERVER_ADDRESS, "127.0.0.1"),
                     equalTo(SERVER_PORT, 1),
                     equalTo(ERROR_TYPE, "66000")));
@@ -1938,7 +1940,8 @@ class VertxSqlClientTest {
                             equalTo(DB_QUERY_TEXT, "select * from test"),
                             equalTo(DB_QUERY_SUMMARY, "select test"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
                 span ->
@@ -2003,7 +2006,8 @@ class VertxSqlClientTest {
                             equalTo(DB_NAMESPACE, DB),
                             equalTo(DB_QUERY_TEXT, "invalid"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(ERROR_TYPE, "42601")),
@@ -2045,7 +2049,8 @@ class VertxSqlClientTest {
                             equalTo(DB_QUERY_TEXT, query),
                             equalTo(DB_QUERY_SUMMARY, "select test"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
@@ -2145,7 +2150,8 @@ class VertxSqlClientTest {
                             equalTo(DB_QUERY_TEXT, query),
                             equalTo(DB_QUERY_SUMMARY, "select test"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(ERROR_TYPE, "22012"))));
@@ -2222,7 +2228,8 @@ class VertxSqlClientTest {
                             equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
                             equalTo(ERROR_TYPE, scenario.errorType),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
@@ -2351,7 +2358,7 @@ class VertxSqlClientTest {
                                 equalTo(DB_QUERY_SUMMARY, "select test"),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing.expectedPeerService()),
+                                    testing.expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, host),
                                 equalTo(SERVER_PORT, port)),
                     span ->
@@ -2418,7 +2425,7 @@ class VertxSqlClientTest {
                                 equalTo(DB_QUERY_SUMMARY, "select test"),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing.expectedPeerService()),
+                                    testing.expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, host),
                                 equalTo(SERVER_PORT, port)),
                     span ->

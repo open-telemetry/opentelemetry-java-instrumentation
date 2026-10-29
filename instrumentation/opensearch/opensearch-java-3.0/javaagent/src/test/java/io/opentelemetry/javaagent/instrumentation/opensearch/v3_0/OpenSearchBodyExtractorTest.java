@@ -111,6 +111,6 @@ class OpenSearchBodyExtractorTest extends AbstractOpenSearchQueryTest {
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing.expectedPeerService()))));
+                                    testing.expectedServerServiceName()))));
   }
 }

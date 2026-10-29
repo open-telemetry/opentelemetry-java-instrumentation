@@ -105,7 +105,7 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    getTesting().expectedPeerService()),
+                                    getTesting().expectedServerServiceName()),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
@@ -179,7 +179,7 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    getTesting().expectedPeerService()),
+                                    getTesting().expectedServerServiceName()),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
                     span ->

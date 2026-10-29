@@ -1125,7 +1125,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
-              String expectedServerServiceName = testing.expectedPeerService();
+              String expectedServerServiceName = testing.expectedServerServiceName();
               if (expectedServerServiceName != null) {
                 assertThat(attrs)
                     .containsEntry(stringKey("server.service.name"), expectedServerServiceName);

@@ -280,7 +280,7 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
                                 equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing.expectedPeerService())),
+                                    testing.expectedServerServiceName())),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)

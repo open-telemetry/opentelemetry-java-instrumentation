@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboRequest;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboClientNetworkAttributesGetter;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboInternalHelper;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.apache.dubbo.rpc.Filter;
 import org.apache.dubbo.rpc.Result;
@@ -26,7 +26,7 @@ class DubboSingletons {
     DubboTelemetry telemetry =
         DubboTelemetry.builder(openTelemetry)
             .addAttributesExtractor(
-                ServicePeerAttributesExtractor.create(
+                ServerServiceAttributesExtractor.create(
                     new DubboClientNetworkAttributesGetter(), openTelemetry))
             .build();
     clientFilter = telemetry.newClientFilter();

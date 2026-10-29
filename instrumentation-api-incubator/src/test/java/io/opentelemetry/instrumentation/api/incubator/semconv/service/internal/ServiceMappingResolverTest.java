@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal;
+package io.opentelemetry.instrumentation.api.incubator.semconv.service.internal;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,6 +16,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal.ServicePeerResolver;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -26,9 +26,9 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class ServicePeerResolverTest {
+class ServiceMappingResolverTest {
   // resolver with a rich set of mappings exercising name, namespace, and specificity
-  private static final ServicePeerResolver resolver =
+  private static final ServiceMappingResolver resolver =
       createResolver(
           mapping("example.com", "baseSvc", "baseNs"),
           mapping("example.com:8080", "portSvc", null),
@@ -53,9 +53,6 @@ class ServicePeerResolverTest {
 
     assertName(expectedName, result);
     assertNamespace(expectedNamespace, result);
-    assertThat(result.get(stringKey("peer.service"))).isNull();
-    assertThat(result.get(stringKey("service.peer.name"))).isNull();
-    assertThat(result.get(stringKey("service.peer.namespace"))).isNull();
   }
 
   static Stream<Arguments> resolutionCases() {
@@ -90,7 +87,7 @@ class ServicePeerResolverTest {
 
   @Test
   void emptyWhenNoMappings() {
-    ServicePeerResolver empty = createResolver();
+    ServiceMappingResolver empty = createResolver();
     assertThat(empty.isEmpty()).isTrue();
   }
 
@@ -99,10 +96,22 @@ class ServicePeerResolverTest {
     assertThat(resolver.isEmpty()).isFalse();
   }
 
+  @SuppressWarnings("deprecation")
+  @Test
+  void deprecatedResolverForwardsToServiceMappingResolver() {
+    ServicePeerResolver deprecatedResolver =
+        new ServicePeerResolver(createOpenTelemetry(mapping("example.com", "service", null)));
+    AttributesBuilder attrs = Attributes.builder();
+
+    deprecatedResolver.resolve("example.com", null, () -> null, attrs::put);
+
+    assertName("service", attrs.build());
+  }
+
   @Test
   void configuredTargetDoesNotAlsoMatchItsFirstHost() {
     String target = "node1:6379,node2:6380";
-    ServicePeerResolver r = createResolver(mapping(target, "cluster", null));
+    ServiceMappingResolver r = createResolver(mapping(target, "cluster", null));
     assertThat(r.isEmpty()).isFalse();
 
     AttributesBuilder attrs = Attributes.builder();
@@ -116,7 +125,7 @@ class ServicePeerResolverTest {
 
   @Test
   void firstDuplicateMappingWins() {
-    ServicePeerResolver r =
+    ServiceMappingResolver r =
         createResolver(
             mapping("example.com", "first", null), mapping("example.com", "second", null));
 
@@ -128,7 +137,7 @@ class ServicePeerResolverTest {
 
   @Test
   void exactTargetMatchTakesPriorityOverHostPortAndPathMatches() {
-    ServicePeerResolver r =
+    ServiceMappingResolver r =
         createResolver(
             mapping("example.com:8080/api", "exact", null),
             mapping("example.com:8080", "port", null),
@@ -147,7 +156,7 @@ class ServicePeerResolverTest {
         "oracle:thin:@(DESCRIPTION=(ADDRESS = (HOST=h1))(ADDRESS = (HOST=h2)))"
       })
   void oracleDescriptorDoesNotAlsoMatchParsedHost(String target) {
-    ServicePeerResolver r = createResolver(mapping(target, "cluster", null));
+    ServiceMappingResolver r = createResolver(mapping(target, "cluster", null));
 
     AttributesBuilder attrs = Attributes.builder();
     r.resolve(target, null, () -> null, attrs::put);
@@ -160,7 +169,7 @@ class ServicePeerResolverTest {
 
   @Test
   void commaInPathStillUsesHostAndPathMatching() {
-    ServicePeerResolver r = createResolver(mapping("example.com/api,v2", "versionedApi", null));
+    ServiceMappingResolver r = createResolver(mapping("example.com/api,v2", "versionedApi", null));
 
     AttributesBuilder attrs = Attributes.builder();
     r.resolve("example.com", null, () -> "/api,v2", attrs::put);
@@ -170,7 +179,7 @@ class ServicePeerResolverTest {
 
   @Test
   void shouldSkipEntryWithNullTarget() {
-    ServicePeerResolver r =
+    ServiceMappingResolver r =
         createResolver(mapping(null, "svc", null), mapping("valid.com", "validSvc", null));
 
     // null-target entry is skipped, but resolver is not empty due to the valid entry
@@ -183,7 +192,7 @@ class ServicePeerResolverTest {
 
   @Test
   void shouldSkipEntryWithNullNameAndNamespace() {
-    ServicePeerResolver r =
+    ServiceMappingResolver r =
         createResolver(mapping("invalid.com", null, null), mapping("valid.com", "svc", "ns"));
 
     // invalid.com entry is skipped — resolving it yields no attributes
@@ -216,7 +225,11 @@ class ServicePeerResolverTest {
     }
   }
 
-  private static ServicePeerResolver createResolver(DeclarativeConfigProperties... entries) {
+  private static ServiceMappingResolver createResolver(DeclarativeConfigProperties... entries) {
+    return new ServiceMappingResolver(createOpenTelemetry(entries));
+  }
+
+  private static ExtendedOpenTelemetry createOpenTelemetry(DeclarativeConfigProperties... entries) {
     ExtendedOpenTelemetry otel = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
     when(otel.getInstrumentationConfig("common")).thenReturn(commonConfig);
@@ -225,7 +238,7 @@ class ServicePeerResolverTest {
     when(commonConfig.getStructuredList("server_service_mapping", emptyList()))
         .thenReturn(entryList);
 
-    return new ServicePeerResolver(otel);
+    return otel;
   }
 
   private static DeclarativeConfigProperties mapping(

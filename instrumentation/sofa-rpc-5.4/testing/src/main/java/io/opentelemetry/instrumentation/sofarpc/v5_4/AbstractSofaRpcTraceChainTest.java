@@ -166,7 +166,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                 equalTo(RPC_METHOD, genericServiceSpanName()),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing().expectedPeerService()),
+                                    testing().expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -204,7 +204,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                     "io.opentelemetry.instrumentation.sofarpc.v5_4.api.HelloService/hello"),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing().expectedPeerService()),
+                                    testing().expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -357,7 +357,7 @@ public abstract class AbstractSofaRpcTraceChainTest {
                                 equalTo(RPC_METHOD, genericServiceSpanName()),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing().expectedPeerService()),
+                                    testing().expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(

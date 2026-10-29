@@ -98,7 +98,8 @@ class Jedis30ClientTest {
                             equalTo(DB_OPERATION_NAME, "SET"),
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
@@ -136,7 +137,8 @@ class Jedis30ClientTest {
                             equalTo(DB_OPERATION_NAME, "SET"),
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
@@ -183,7 +185,8 @@ class Jedis30ClientTest {
                             equalTo(DB_OPERATION_NAME, "SET"),
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
@@ -199,7 +202,8 @@ class Jedis30ClientTest {
                             equalTo(DB_OPERATION_NAME, "GET"),
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
@@ -225,7 +229,8 @@ class Jedis30ClientTest {
                             equalTo(DB_OPERATION_NAME, "SET"),
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
@@ -241,7 +246,8 @@ class Jedis30ClientTest {
                             equalTo(DB_OPERATION_NAME, "RANDOMKEY"),
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
@@ -267,7 +273,8 @@ class Jedis30ClientTest {
                             // this span still reports the database it was sent on
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
@@ -283,7 +290,8 @@ class Jedis30ClientTest {
                             equalTo(DB_OPERATION_NAME, "SET"),
                             equalTo(DB_NAMESPACE, "1"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
@@ -315,7 +323,8 @@ class Jedis30ClientTest {
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
@@ -350,7 +359,8 @@ class Jedis30ClientTest {
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip),

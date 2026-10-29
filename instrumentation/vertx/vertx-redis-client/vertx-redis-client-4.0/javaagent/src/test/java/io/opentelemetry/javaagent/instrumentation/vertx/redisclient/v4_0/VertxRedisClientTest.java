@@ -158,7 +158,8 @@ class VertxRedisClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))));
 
@@ -649,7 +650,7 @@ class VertxRedisClientTest {
       equalTo(DB_OPERATION_BATCH_SIZE, batchSize),
       equalTo(SERVER_ADDRESS, host),
       equalTo(SERVER_PORT, port),
-      equalTo(stringKey("server.service.name"), testing.expectedPeerService()),
+      equalTo(stringKey("server.service.name"), testing.expectedServerServiceName()),
       equalTo(NETWORK_PEER_PORT, port),
       equalTo(NETWORK_PEER_ADDRESS, ip)
     };

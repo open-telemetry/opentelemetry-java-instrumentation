@@ -115,8 +115,20 @@ public abstract class InstrumentationTestRunner {
    * identity through their own attributes extractor.
    */
   @Nullable
-  public String expectedPeerService() {
+  public String expectedServerServiceName() {
     return null;
+  }
+
+  /**
+   * Returns the server service name expected on spans targeting a local test server.
+   *
+   * @deprecated Use {@link #expectedServerServiceName()} instead. May be removed in the next minor
+   *     release.
+   */
+  @Deprecated // may be removed in the next minor release
+  @Nullable
+  public String expectedPeerService() {
+    return expectedServerServiceName();
   }
 
   /** Return a list of all captured traces, where each trace is a sorted list of spans. */

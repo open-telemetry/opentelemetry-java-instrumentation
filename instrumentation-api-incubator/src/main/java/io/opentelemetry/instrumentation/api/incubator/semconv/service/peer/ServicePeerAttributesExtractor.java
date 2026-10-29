@@ -8,50 +8,44 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.service.peer;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal.ServicePeerResolver;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import javax.annotation.Nullable;
 
 /**
- * Extractor of the configured {@code server.service.name} and {@code server.service.namespace} span
- * attributes.
+ * Extractor of configured server service identity attributes.
+ *
+ * @deprecated Use {@link ServerServiceAttributesExtractor} instead. May be removed in the next
+ *     minor release.
  */
+@Deprecated // may be removed in the next minor release
 public final class ServicePeerAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
-  private final ServerAttributesGetter<REQUEST> attributesGetter;
-  private final ServicePeerResolver servicePeerResolver;
+  private final AttributesExtractor<REQUEST, RESPONSE> delegate;
 
-  /**
-   * Returns a new {@link ServicePeerAttributesExtractor} that will use the passed {@code
-   * attributesGetter} instance to determine the values of the configured server service identity
-   * attributes.
-   *
-   * @param attributesGetter the getter to extract server address and port from the request
-   * @param openTelemetry the OpenTelemetry instance to read server service mapping configuration
-   *     from
-   */
-  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
-  // via openTelemetry.getConfigProvider()
-  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      ServerAttributesGetter<REQUEST> attributesGetter, OpenTelemetry openTelemetry) {
-    ServicePeerResolver servicePeerResolver = new ServicePeerResolver(openTelemetry);
-    if (servicePeerResolver.isEmpty()) {
-      return new EmptyAttributesExtractor<>();
-    }
-    return new ServicePeerAttributesExtractor<>(attributesGetter, servicePeerResolver);
+  private ServicePeerAttributesExtractor(AttributesExtractor<REQUEST, RESPONSE> delegate) {
+    this.delegate = delegate;
   }
 
-  // visible for tests
-  ServicePeerAttributesExtractor(
-      ServerAttributesGetter<REQUEST> attributesGetter, ServicePeerResolver servicePeerResolver) {
-    this.attributesGetter = attributesGetter;
-    this.servicePeerResolver = servicePeerResolver;
+  /**
+   * Creates the server service attributes extractor.
+   *
+   * @deprecated Use {@link ServerServiceAttributesExtractor#create(ServerAttributesGetter,
+   *     OpenTelemetry)} instead. May be removed in the next minor release.
+   */
+  @Deprecated // may be removed in the next minor release
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
+      ServerAttributesGetter<REQUEST> attributesGetter, OpenTelemetry openTelemetry) {
+    return new ServicePeerAttributesExtractor<>(
+        ServerServiceAttributesExtractor.create(attributesGetter, openTelemetry));
   }
 
   @Override
-  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {}
+  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    delegate.onStart(attributes, parentContext, request);
+  }
 
   @Override
   public void onEnd(
@@ -60,28 +54,6 @@ public final class ServicePeerAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-
-    String serverAddress = attributesGetter.getServerAddress(request);
-    if (serverAddress == null) {
-      return;
-    }
-
-    servicePeerResolver.resolve(
-        serverAddress, attributesGetter.getServerPort(request), () -> null, attributes::put);
-  }
-
-  private static final class EmptyAttributesExtractor<REQUEST, RESPONSE>
-      implements AttributesExtractor<REQUEST, RESPONSE> {
-
-    @Override
-    public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {}
-
-    @Override
-    public void onEnd(
-        AttributesBuilder attributes,
-        Context context,
-        REQUEST request,
-        @Nullable RESPONSE response,
-        @Nullable Throwable error) {}
+    delegate.onEnd(attributes, context, request, response, error);
   }
 }

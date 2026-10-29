@@ -156,7 +156,8 @@ class VertxSqlClientTest {
                             equalTo(DB_QUERY_TEXT, "select * from test"),
                             equalTo(DB_QUERY_SUMMARY, "select test"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
                 span ->
@@ -212,7 +213,8 @@ class VertxSqlClientTest {
                             equalTo(DB_NAMESPACE, DB),
                             equalTo(DB_QUERY_TEXT, "invalid"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(ERROR_TYPE, "42601")),
@@ -263,7 +265,8 @@ class VertxSqlClientTest {
                             equalTo(DB_QUERY_TEXT, query),
                             equalTo(DB_QUERY_SUMMARY, "select test"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
@@ -363,7 +366,8 @@ class VertxSqlClientTest {
                             equalTo(DB_QUERY_TEXT, query),
                             equalTo(DB_QUERY_SUMMARY, "select test"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(ERROR_TYPE, "22012"))));
@@ -432,7 +436,8 @@ class VertxSqlClientTest {
                             equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
                             equalTo(ERROR_TYPE, scenario.errorType),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
@@ -560,7 +565,7 @@ class VertxSqlClientTest {
                                 equalTo(DB_QUERY_SUMMARY, "select test"),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing.expectedPeerService()),
+                                    testing.expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, host),
                                 equalTo(SERVER_PORT, port)),
                     span ->
@@ -627,7 +632,7 @@ class VertxSqlClientTest {
                                 equalTo(DB_QUERY_SUMMARY, "select test"),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing.expectedPeerService()),
+                                    testing.expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, host),
                                 equalTo(SERVER_PORT, port)),
                     span ->

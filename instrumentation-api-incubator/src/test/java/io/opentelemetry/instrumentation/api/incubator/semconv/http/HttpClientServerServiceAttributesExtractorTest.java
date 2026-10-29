@@ -21,7 +21,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal.ServicePeerResolver;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.internal.ServiceMappingResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.internal.HostAddressAndPortExtractor;
@@ -34,7 +34,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class HttpClientServicePeerAttributesExtractorTest {
+class HttpClientServerServiceAttributesExtractorTest {
 
   @Mock HttpClientAttributesGetter<String, String> httpAttributesGetter;
 
@@ -56,7 +56,7 @@ class HttpClientServicePeerAttributesExtractorTest {
   }
 
   @Test
-  void shouldNotSetAnyValueIfPeerNameDoesNotMatch() {
+  void shouldNotSetAnyValueIfTargetDoesNotMatch() {
     // given
     AttributesExtractor<String, String> underTest =
         createExtractor(mapping("example.com", "myService", null));
@@ -126,24 +126,44 @@ class HttpClientServicePeerAttributesExtractorTest {
     assertThat(attrs).containsOnly(entry(stringKey("server.service.name"), "myService"));
   }
 
+  @SuppressWarnings("deprecation")
+  @Test
+  void deprecatedExtractorForwardsToServerServiceExtractor() {
+    ExtendedOpenTelemetry openTelemetry =
+        createOpenTelemetry(mapping("example.com", "myService", null));
+    AttributesExtractor<String, String> underTest =
+        HttpClientServicePeerAttributesExtractor.create(httpAttributesGetter, openTelemetry);
+    when(httpAttributesGetter.getServerAddress(any())).thenReturn("example.com");
+
+    AttributesBuilder attributes = Attributes.builder();
+    underTest.onEnd(attributes, Context.root(), "request", "response", null);
+
+    assertThat(attributes.build())
+        .containsOnly(entry(stringKey("server.service.name"), "myService"));
+  }
+
   private AttributesExtractor<String, String> createExtractor(
       DeclarativeConfigProperties... mappings) {
-    ServicePeerResolver resolver = createResolver(mappings);
-    return new HttpClientServicePeerAttributesExtractor<>(
+    ServiceMappingResolver resolver = createResolver(mappings);
+    return new HttpClientServerServiceAttributesExtractor<>(
         new ServerAddressAndPortExtractor<>(
             httpAttributesGetter, new HostAddressAndPortExtractor<>(httpAttributesGetter)),
         httpAttributesGetter,
         resolver);
   }
 
-  private static ServicePeerResolver createResolver(DeclarativeConfigProperties... entries) {
+  private static ServiceMappingResolver createResolver(DeclarativeConfigProperties... entries) {
+    return new ServiceMappingResolver(createOpenTelemetry(entries));
+  }
+
+  private static ExtendedOpenTelemetry createOpenTelemetry(DeclarativeConfigProperties... entries) {
     ExtendedOpenTelemetry otel = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
     when(otel.getInstrumentationConfig("common")).thenReturn(commonConfig);
     List<DeclarativeConfigProperties> entryList = asList(entries);
     when(commonConfig.getStructuredList("server_service_mapping", emptyList()))
         .thenReturn(entryList);
-    return new ServicePeerResolver(otel);
+    return otel;
   }
 
   private static DeclarativeConfigProperties mapping(

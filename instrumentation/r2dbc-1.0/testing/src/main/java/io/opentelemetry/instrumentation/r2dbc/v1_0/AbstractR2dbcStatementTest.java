@@ -68,8 +68,8 @@ public abstract class AbstractR2dbcStatementTest {
   protected abstract InstrumentationExtension getTesting();
 
   @Nullable
-  protected String expectedPeerService() {
-    return getTesting().expectedPeerService();
+  protected String expectedServerServiceName() {
+    return getTesting().expectedServerServiceName();
   }
 
   private static final String USER_DB = "SA";
@@ -192,7 +192,8 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(DB_NAMESPACE, DB),
                                 equalTo(DB_QUERY_TEXT, parameter.expectedQueryText),
                                 equalTo(DB_QUERY_SUMMARY, parameter.getQuerySummary()),
-                                equalTo(stringKey("server.service.name"), expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port)),
                     span ->
@@ -375,7 +376,9 @@ public abstract class AbstractR2dbcStatementTest {
                                   equalTo(DB_NAMESPACE, DB),
                                   equalTo(DB_QUERY_SUMMARY, "BATCH"),
                                   equalTo(DB_OPERATION_BATCH_SIZE, 0L),
-                                  equalTo(stringKey("server.service.name"), expectedPeerService()),
+                                  equalTo(
+                                      stringKey("server.service.name"),
+                                      expectedServerServiceName()),
                                   equalTo(SERVER_ADDRESS, container.getHost()),
                                   equalTo(SERVER_PORT, port),
                                   equalTo(ERROR_TYPE, "java.util.NoSuchElementException"))));
@@ -398,7 +401,8 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(DB_QUERY_TEXT, scenario.queryText),
                                 equalTo(DB_QUERY_SUMMARY, scenario.summary),
                                 equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                                equalTo(stringKey("server.service.name"), expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port))));
   }

@@ -121,7 +121,8 @@ class ElasticsearchRest5Test {
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200))));
 
@@ -169,7 +170,8 @@ class ElasticsearchRest5Test {
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_search"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200))));
   }
@@ -238,7 +240,8 @@ class ElasticsearchRest5Test {
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200)),
                 span ->

@@ -106,7 +106,8 @@ class ReactorNettyClientSslTest {
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(URL_FULL, uri),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpsPort()),
                             equalTo(ERROR_TYPE, SSLHandshakeException.class.getCanonicalName())),
@@ -116,7 +117,8 @@ class ReactorNettyClientSslTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpsPort())),
                 span ->
@@ -127,7 +129,8 @@ class ReactorNettyClientSslTest {
                             equalTo(NETWORK_TRANSPORT, "tcp"),
                             equalTo(NETWORK_TYPE, "ipv4"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpsPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
@@ -175,7 +178,8 @@ class ReactorNettyClientSslTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpsPort())),
                 span ->
@@ -186,7 +190,8 @@ class ReactorNettyClientSslTest {
                             equalTo(NETWORK_TRANSPORT, "tcp"),
                             equalTo(NETWORK_TYPE, "ipv4"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpsPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
@@ -210,7 +215,8 @@ class ReactorNettyClientSslTest {
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpsPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),

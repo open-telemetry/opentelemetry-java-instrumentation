@@ -427,7 +427,8 @@ class VertxRedisClientErrorTest {
                             equalTo(NETWORK_PEER_ADDRESS, HOST),
                             equalTo(NETWORK_PEER_PORT, server.port),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(ERROR_TYPE, errorType))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,

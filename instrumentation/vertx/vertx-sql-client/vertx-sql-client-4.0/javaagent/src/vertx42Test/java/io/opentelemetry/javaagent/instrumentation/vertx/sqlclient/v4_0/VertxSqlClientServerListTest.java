@@ -183,7 +183,8 @@ class VertxSqlClientServerListTest {
                             equalTo(DB_QUERY_TEXT, "select ?"),
                             equalTo(DB_QUERY_SUMMARY, "select"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
@@ -227,7 +228,8 @@ class VertxSqlClientServerListTest {
                             equalTo(DB_QUERY_TEXT, "select ?"),
                             equalTo(DB_QUERY_SUMMARY, "select"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))),
         trace ->

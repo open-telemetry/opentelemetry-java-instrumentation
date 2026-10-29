@@ -207,7 +207,8 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(ERROR_TYPE, "cancelled")),
                 span ->
                     span.hasName("test-http-server")

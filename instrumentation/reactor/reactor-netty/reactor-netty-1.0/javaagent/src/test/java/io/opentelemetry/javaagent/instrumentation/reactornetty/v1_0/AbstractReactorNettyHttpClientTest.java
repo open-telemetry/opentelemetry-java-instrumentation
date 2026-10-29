@@ -318,7 +318,8 @@ abstract class AbstractReactorNettyHttpClientTest
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(ERROR_TYPE, "cancelled"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService())),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName())),
                 span ->
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)

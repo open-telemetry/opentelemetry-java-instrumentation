@@ -84,6 +84,7 @@ class ReactiveSpringDataTest {
                             equalTo(DB_QUERY_SUMMARY, "SELECT CUSTOMER"),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()))));
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()))));
   }
 }

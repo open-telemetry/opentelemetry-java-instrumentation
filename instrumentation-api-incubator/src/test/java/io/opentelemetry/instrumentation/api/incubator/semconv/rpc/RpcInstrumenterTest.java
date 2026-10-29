@@ -13,7 +13,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -22,7 +21,7 @@ import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
@@ -36,11 +35,12 @@ import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Collection;
+import java.util.function.Function;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class RpcInstanceSemconvTest {
+class RpcInstrumenterTest {
 
   private static final double[] DURATION_BUCKETS = {
     0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5, 10, 50, 100
@@ -51,7 +51,7 @@ class RpcInstanceSemconvTest {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void defaultSdkEmitsCanonicalRpcTelemetry(boolean client) {
-    ConfiguredInstrumenter instance = new ConfiguredInstrumenter(client, true);
+    ConfiguredInstrumenter instance = new ConfiguredInstrumenter(client);
     Context context = instance.instrumenter.start(Context.root(), "request");
     instance.instrumenter.end(context, "request", null, null);
 
@@ -91,7 +91,8 @@ class RpcInstanceSemconvTest {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void instancesUseRpcConventionsAndServerServiceMapping(boolean client) {
-    ConfiguredInstrumenter instance = new ConfiguredInstrumenter(client, false);
+    ConfiguredInstrumenter instance =
+        new ConfiguredInstrumenter(client, RpcInstrumenterTest::withServerServiceMapping);
     Context context = instance.instrumenter.start(Context.root(), "request");
     instance.instrumenter.end(context, "request", null, new IllegalStateException());
 
@@ -143,8 +144,8 @@ class RpcInstanceSemconvTest {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void nestedOperationDoesNotInheritParentMethod(boolean client) {
-    ConfiguredInstrumenter parent = new ConfiguredInstrumenter(!client, false);
-    ConfiguredInstrumenter child = new ConfiguredInstrumenter(client, false);
+    ConfiguredInstrumenter parent = new ConfiguredInstrumenter(!client);
+    ConfiguredInstrumenter child = new ConfiguredInstrumenter(client);
     Context parentContext = parent.instrumenter.start(Context.root(), "parent");
     Context childContext = child.instrumenter.start(parentContext, "request");
     child.instrumenter.end(childContext, "request", null, null);
@@ -170,7 +171,12 @@ class RpcInstanceSemconvTest {
     final InMemoryMetricReader metricReader = InMemoryMetricReader.create();
     final Instrumenter<String, Void> instrumenter;
 
-    ConfiguredInstrumenter(boolean client, boolean defaultConfiguration) {
+    ConfiguredInstrumenter(boolean client) {
+      this(client, sdk -> sdk);
+    }
+
+    ConfiguredInstrumenter(
+        boolean client, Function<OpenTelemetrySdk, OpenTelemetry> telemetryFactory) {
       OpenTelemetrySdk sdk =
           OpenTelemetrySdk.builder()
               .setTracerProvider(
@@ -182,26 +188,7 @@ class RpcInstanceSemconvTest {
               .build();
       cleanup.deferCleanup(sdk);
 
-      DeclarativeConfigProperties general =
-          mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-      DeclarativeConfigProperties common =
-          mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-      DeclarativeConfigProperties mapping = mock(DeclarativeConfigProperties.class);
-      when(mapping.getString("target")).thenReturn("example.com");
-      when(mapping.getString("service_name")).thenReturn("payments");
-      when(mapping.getString("service_namespace")).thenReturn("checkout");
-      when(common.getStructuredList("server_service_mapping", emptyList()))
-          .thenReturn(singletonList(mapping));
-      ConfigProvider configProvider = mock(ConfigProvider.class);
-      when(configProvider.getInstrumentationConfig("common")).thenReturn(common);
-      ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
-      when(openTelemetry.getTracerProvider()).thenReturn(sdk.getTracerProvider());
-      when(openTelemetry.getMeterProvider()).thenReturn(sdk.getMeterProvider());
-      when(openTelemetry.getLogsBridge()).thenReturn(sdk.getLogsBridge());
-      when(openTelemetry.getConfigProvider()).thenReturn(configProvider);
-      when(openTelemetry.getGeneralInstrumentationConfig()).thenReturn(general);
-      when(openTelemetry.getInstrumentationConfig("common")).thenReturn(common);
-      OpenTelemetry telemetry = defaultConfiguration ? sdk : openTelemetry;
+      OpenTelemetry telemetry = telemetryFactory.apply(sdk);
 
       TestGetter getter = new TestGetter();
       instrumenter =
@@ -213,7 +200,7 @@ class RpcInstanceSemconvTest {
                       : RpcServerAttributesExtractor.create(getter))
               .addOperationMetrics(client ? RpcClientMetrics.get() : RpcServerMetrics.get())
               .addAttributesExtractor(
-                  ServicePeerAttributesExtractor.create(
+                  ServerServiceAttributesExtractor.create(
                       new ServerAttributesGetter<String>() {
                         @Override
                         public String getServerAddress(String request) {
@@ -224,6 +211,25 @@ class RpcInstanceSemconvTest {
               .buildInstrumenter(
                   client ? SpanKindExtractor.alwaysClient() : SpanKindExtractor.alwaysServer());
     }
+  }
+
+  private static OpenTelemetry withServerServiceMapping(OpenTelemetrySdk sdk) {
+    DeclarativeConfigProperties mapping = mock(DeclarativeConfigProperties.class);
+    when(mapping.getString("target")).thenReturn("example.com");
+    when(mapping.getString("service_name")).thenReturn("payments");
+    when(mapping.getString("service_namespace")).thenReturn("checkout");
+    DeclarativeConfigProperties common = mock(DeclarativeConfigProperties.class);
+    when(common.getStructuredList("server_service_mapping", emptyList()))
+        .thenReturn(singletonList(mapping));
+    ConfigProvider configProvider = mock(ConfigProvider.class);
+    when(configProvider.getInstrumentationConfig("common")).thenReturn(common);
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    when(openTelemetry.getTracerProvider()).thenReturn(sdk.getTracerProvider());
+    when(openTelemetry.getMeterProvider()).thenReturn(sdk.getMeterProvider());
+    when(openTelemetry.getLogsBridge()).thenReturn(sdk.getLogsBridge());
+    when(openTelemetry.getConfigProvider()).thenReturn(configProvider);
+    when(openTelemetry.getInstrumentationConfig("common")).thenReturn(common);
+    return openTelemetry;
   }
 
   private static final class TestGetter implements RpcAttributesGetter<String, Void> {

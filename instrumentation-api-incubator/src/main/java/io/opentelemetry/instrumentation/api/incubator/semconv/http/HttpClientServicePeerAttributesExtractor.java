@@ -8,62 +8,45 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal.ServicePeerResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HostAddressAndPortExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPortExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.ServerAddressAndPortExtractor;
 import javax.annotation.Nullable;
 
 /**
- * Extractor of the configured {@code server.service.name} and {@code server.service.namespace} span
- * attributes.
+ * Extractor of configured server service identity attributes for HTTP clients.
+ *
+ * @deprecated Use {@link HttpClientServerServiceAttributesExtractor} instead. May be removed in the
+ *     next minor release.
  */
+@Deprecated // may be removed in the next minor release
 public final class HttpClientServicePeerAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
-  private final AddressAndPortExtractor<REQUEST> addressAndPortExtractor;
-  private final HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter;
-  private final ServicePeerResolver servicePeerResolver;
+  private final AttributesExtractor<REQUEST, RESPONSE> delegate;
 
-  /**
-   * Returns a new {@link HttpClientServicePeerAttributesExtractor} that will use the passed {@code
-   * attributesGetter} to extract server address and port (with fallback to the HTTP Host header).
-   *
-   * @param attributesGetter the getter to extract HTTP client attributes from the request
-   * @param openTelemetry the OpenTelemetry instance to read server service mapping configuration
-   *     from
-   */
-  // TODO: replace OpenTelemetry parameter with ConfigProvider once it is stabilized and available
-  // via openTelemetry.getConfigProvider()
-  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter, OpenTelemetry openTelemetry) {
-    ServicePeerResolver servicePeerResolver = new ServicePeerResolver(openTelemetry);
-    if (servicePeerResolver.isEmpty()) {
-      return new EmptyAttributesExtractor<>();
-    }
-    AddressAndPortExtractor<REQUEST> addressAndPortExtractor =
-        new ServerAddressAndPortExtractor<>(
-            attributesGetter, new HostAddressAndPortExtractor<>(attributesGetter));
-    return new HttpClientServicePeerAttributesExtractor<>(
-        addressAndPortExtractor, attributesGetter, servicePeerResolver);
+  private HttpClientServicePeerAttributesExtractor(
+      AttributesExtractor<REQUEST, RESPONSE> delegate) {
+    this.delegate = delegate;
   }
 
-  // visible for tests
-  HttpClientServicePeerAttributesExtractor(
-      AddressAndPortExtractor<REQUEST> addressAndPortExtractor,
-      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      ServicePeerResolver servicePeerResolver) {
-    this.addressAndPortExtractor = addressAndPortExtractor;
-    this.attributesGetter = attributesGetter;
-    this.servicePeerResolver = servicePeerResolver;
+  /**
+   * Creates the HTTP client server service attributes extractor.
+   *
+   * @deprecated Use {@link HttpClientServerServiceAttributesExtractor#create(
+   *     HttpClientAttributesGetter, OpenTelemetry)} instead. May be removed in the next minor
+   *     release.
+   */
+  @Deprecated // may be removed in the next minor release
+  public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
+      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter, OpenTelemetry openTelemetry) {
+    return new HttpClientServicePeerAttributesExtractor<>(
+        HttpClientServerServiceAttributesExtractor.create(attributesGetter, openTelemetry));
   }
 
   @Override
-  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {}
+  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    delegate.onStart(attributes, parentContext, request);
+  }
 
   @Override
   public void onEnd(
@@ -72,42 +55,6 @@ public final class HttpClientServicePeerAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-
-    AddressAndPort addressAndPort = addressAndPortExtractor.extract(request);
-    String host = addressAndPort.getAddress();
-    if (host == null) {
-      return;
-    }
-
-    servicePeerResolver.resolve(
-        host,
-        addressAndPort.getPort(),
-        () -> getUrlPath(attributesGetter, request),
-        attributes::put);
-  }
-
-  @Nullable
-  private String getUrlPath(
-      HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter, REQUEST request) {
-    String urlFull = attributesGetter.getUrlFull(request);
-    if (urlFull == null) {
-      return null;
-    }
-    return UrlParser.getPath(urlFull);
-  }
-
-  private static final class EmptyAttributesExtractor<REQUEST, RESPONSE>
-      implements AttributesExtractor<REQUEST, RESPONSE> {
-
-    @Override
-    public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {}
-
-    @Override
-    public void onEnd(
-        AttributesBuilder attributes,
-        Context context,
-        REQUEST request,
-        @Nullable RESPONSE response,
-        @Nullable Throwable error) {}
+    delegate.onEnd(attributes, context, request, response, error);
   }
 }

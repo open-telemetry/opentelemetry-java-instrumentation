@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### 🚫 Deprecations
+
+- Deprecate `ServicePeerAttributesExtractor`, `HttpClientServicePeerAttributesExtractor`, and
+  `ServicePeerResolver`; use `ServerServiceAttributesExtractor`,
+  `HttpClientServerServiceAttributesExtractor`, and `ServiceMappingResolver` instead. Rename
+  `expectedPeerService()` to `expectedServerServiceName()`.
+
 ### ⚠️ Breaking changes
 
 - Configured service mappings now emit `server.service.name` and `server.service.namespace`, and no longer emit `peer.service`, `service.peer.name`, or `service.peer.namespace`. Rename `otel.instrumentation.common.peer-service-mapping` to `otel.instrumentation.common.server-service-mapping`; in YAML, use `java.common.server_service_mapping` with `target` instead of `peer`.

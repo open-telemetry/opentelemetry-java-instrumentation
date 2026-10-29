@@ -101,7 +101,8 @@ class Netty40ClientSslTest {
                   span.hasAttributesSatisfyingExactly(
                       equalTo(NETWORK_TRANSPORT, "tcp"),
                       equalTo(NETWORK_TYPE, "ipv4"),
-                      equalTo(stringKey("server.service.name"), testing.expectedPeerService()),
+                      equalTo(
+                          stringKey("server.service.name"), testing.expectedServerServiceName()),
                       equalTo(SERVER_ADDRESS, uri.getHost()),
                       equalTo(SERVER_PORT, uri.getPort()),
                       equalTo(NETWORK_PEER_PORT, uri.getPort()),
@@ -182,7 +183,8 @@ class Netty40ClientSslTest {
                   span.hasAttributesSatisfyingExactly(
                       equalTo(NETWORK_TRANSPORT, "tcp"),
                       equalTo(NETWORK_TYPE, "ipv4"),
-                      equalTo(stringKey("server.service.name"), testing.expectedPeerService()),
+                      equalTo(
+                          stringKey("server.service.name"), testing.expectedServerServiceName()),
                       equalTo(SERVER_ADDRESS, uri.getHost()),
                       equalTo(SERVER_PORT, uri.getPort()),
                       equalTo(NETWORK_PEER_PORT, uri.getPort()),

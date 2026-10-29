@@ -139,7 +139,8 @@ class Netty41ClientSslTest {
                             equalTo(SERVER_ADDRESS, uri.getHost()),
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService())),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName())),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.INTERNAL)
@@ -152,7 +153,8 @@ class Netty41ClientSslTest {
                             equalTo(NETWORK_PEER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService())),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName())),
                 span ->
                     span.hasName("SSL handshake")
                         .hasKind(SpanKind.INTERNAL)
@@ -201,7 +203,8 @@ class Netty41ClientSslTest {
                             equalTo(SERVER_ADDRESS, uri.getHost()),
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService())),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName())),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.INTERNAL)
@@ -214,7 +217,8 @@ class Netty41ClientSslTest {
                             equalTo(NETWORK_PEER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService())),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName())),
                 span ->
                     span.hasName("SSL handshake")
                         .hasKind(SpanKind.INTERNAL)

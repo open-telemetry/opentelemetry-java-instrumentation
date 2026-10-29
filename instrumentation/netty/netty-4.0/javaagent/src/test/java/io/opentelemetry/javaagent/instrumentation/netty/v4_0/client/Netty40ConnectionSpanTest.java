@@ -110,7 +110,8 @@ class Netty40ConnectionSpanTest {
                   span.hasAttributesSatisfyingExactly(
                       equalTo(NETWORK_TRANSPORT, "tcp"),
                       equalTo(NETWORK_TYPE, "ipv4"),
-                      equalTo(stringKey("server.service.name"), testing.expectedPeerService()),
+                      equalTo(
+                          stringKey("server.service.name"), testing.expectedServerServiceName()),
                       equalTo(SERVER_ADDRESS, uri.getHost()),
                       equalTo(SERVER_PORT, uri.getPort()),
                       equalTo(NETWORK_PEER_PORT, uri.getPort()),
@@ -142,7 +143,8 @@ class Netty40ConnectionSpanTest {
                       satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", null)),
                       equalTo(SERVER_ADDRESS, uri.getHost()),
                       equalTo(SERVER_PORT, uri.getPort()),
-                      equalTo(stringKey("server.service.name"), testing.expectedPeerService()),
+                      equalTo(
+                          stringKey("server.service.name"), testing.expectedServerServiceName()),
                       satisfies(NETWORK_PEER_PORT, val -> val.isIn((long) uri.getPort(), null)),
                       satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn("127.0.0.1", null)));
                 }));

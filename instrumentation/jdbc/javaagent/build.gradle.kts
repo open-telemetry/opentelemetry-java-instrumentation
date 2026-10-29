@@ -60,7 +60,7 @@ testing {
               excludeTestsMatching("*JdbcInstrumentationTest.testRollbackTransaction")
               excludeTestsMatching("*JdbcInstrumentationTest.testFailedTransaction")
             }
-            telemetryConfig("otel.instrumentation.jdbc-datasource.enabled", "true")
+            systemProperty("otel.instrumentation.jdbc-datasource.enabled", "true")
           }
           register("WithServiceMapping") {
             telemetryConfig(

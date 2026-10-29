@@ -294,7 +294,8 @@ public abstract class AbstractHibernateReactiveTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService())),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName())),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)

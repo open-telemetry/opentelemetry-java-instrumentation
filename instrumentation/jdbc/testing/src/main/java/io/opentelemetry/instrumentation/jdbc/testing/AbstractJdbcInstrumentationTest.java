@@ -1410,7 +1410,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(DB_QUERY_TEXT, "testing ?"),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing().expectedPeerService()),
+                                    testing().expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1499,7 +1499,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     table != null ? operation + " " + table : operation),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing().expectedPeerService()),
+                                    testing().expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1616,7 +1616,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(DB_QUERY_SUMMARY, "SELECT table"),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing().expectedPeerService()),
+                                    testing().expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 

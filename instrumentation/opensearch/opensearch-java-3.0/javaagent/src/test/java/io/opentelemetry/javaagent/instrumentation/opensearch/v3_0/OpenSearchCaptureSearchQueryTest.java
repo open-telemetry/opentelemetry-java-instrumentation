@@ -85,7 +85,7 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing.expectedPeerService()))));
+                                    testing.expectedServerServiceName()))));
   }
 
   @Test
@@ -164,7 +164,7 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing.expectedPeerService()))));
+                                    testing.expectedServerServiceName()))));
   }
 
   @Test
@@ -247,7 +247,7 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 201L),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing.expectedPeerService()))));
+                                    testing.expectedServerServiceName()))));
   }
 
   private void assertQueryBody(String expected, String urlSuffix) {
@@ -279,7 +279,7 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing.expectedPeerService()))));
+                                    testing.expectedServerServiceName()))));
   }
 
   private static SearchRequest searchRequest(String field) {

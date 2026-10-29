@@ -186,7 +186,7 @@ public abstract class AbstractDubboTraceChainTest {
                                     "org.apache.dubbo.rpc.service.GenericService/$invoke"),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing().expectedPeerService()),
+                                    testing().expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -224,7 +224,7 @@ public abstract class AbstractDubboTraceChainTest {
                                     "org.apache.dubbo.rpc.service.GenericService/$invoke"),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing().expectedPeerService()),
+                                    testing().expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -385,7 +385,7 @@ public abstract class AbstractDubboTraceChainTest {
                                     "org.apache.dubbo.rpc.service.GenericService/$invoke"),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing().expectedPeerService()),
+                                    testing().expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(

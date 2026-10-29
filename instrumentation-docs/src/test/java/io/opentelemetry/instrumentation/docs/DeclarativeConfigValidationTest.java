@@ -416,7 +416,7 @@ class DeclarativeConfigValidationTest {
 
   /**
    * Reads the server-service-mapping structured list through the bridge (the same {@code
-   * getStructuredList} call {@code ServicePeerResolver} makes) and collapses its {@code {target,
+   * getStructuredList} call {@code ServiceMappingResolver} makes) and collapses its {@code {target,
    * service_name}} entries back into a {@code target -> service_name} map, so it can be compared
    * against the flat-property value the test fed in. This is specific to server-service-mapping,
    * which is currently the only {@code structured_list} config.

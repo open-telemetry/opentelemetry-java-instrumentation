@@ -102,7 +102,8 @@ class KubernetesClientVer20Test {
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(
                                 stringKey("kubernetes-client.namespace"),
                                 experimental("namespace")),
@@ -165,7 +166,8 @@ class KubernetesClientVer20Test {
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
                             equalTo(ERROR_TYPE, "451"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(
                                 stringKey("kubernetes-client.namespace"),
                                 experimental("namespace")),
@@ -221,7 +223,8 @@ class KubernetesClientVer20Test {
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(
                                 stringKey("kubernetes-client.namespace"),
                                 experimental("namespace")),
@@ -286,7 +289,8 @@ class KubernetesClientVer20Test {
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
                             equalTo(ERROR_TYPE, "451"),
                             equalTo(
-                                stringKey("server.service.name"), testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                testing.expectedServerServiceName()),
                             equalTo(
                                 stringKey("kubernetes-client.namespace"),
                                 experimental("namespace")),

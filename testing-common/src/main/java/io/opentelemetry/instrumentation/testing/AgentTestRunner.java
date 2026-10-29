@@ -117,7 +117,7 @@ public class AgentTestRunner extends InstrumentationTestRunner {
   }
 
   @Override
-  public String expectedPeerService() {
+  public String expectedServerServiceName() {
     return System.getProperty(SERVER_SERVICE_MAPPING_PROPERTY) == null ? null : SERVER_SERVICE_NAME;
   }
 }

@@ -154,7 +154,7 @@ public abstract class AbstractDubboTest {
                                     "org.apache.dubbo.rpc.service.GenericService/$invoke"),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing().expectedPeerService()),
+                                    testing().expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -285,7 +285,7 @@ public abstract class AbstractDubboTest {
                                     "org.apache.dubbo.rpc.service.GenericService/$invokeAsync"),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing().expectedPeerService()),
+                                    testing().expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -424,7 +424,8 @@ public abstract class AbstractDubboTest {
                     equalTo(RPC_SYSTEM_NAME, "dubbo"),
                     equalTo(RPC_METHOD, "org.apache.dubbo.rpc.service.GenericService/$invoke"),
                     satisfies(ERROR_TYPE, val -> val.isNotNull()),
-                    equalTo(stringKey("server.service.name"), testing().expectedPeerService()),
+                    equalTo(
+                        stringKey("server.service.name"), testing().expectedServerServiceName()),
                     equalTo(SERVER_ADDRESS, "localhost"),
                     satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                     satisfies(
@@ -572,7 +573,7 @@ public abstract class AbstractDubboTest {
                                 satisfies(ERROR_TYPE, val -> val.isNotNull()),
                                 equalTo(
                                     stringKey("server.service.name"),
-                                    testing().expectedPeerService()),
+                                    testing().expectedServerServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(

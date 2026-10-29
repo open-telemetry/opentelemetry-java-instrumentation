@@ -20,13 +20,13 @@ import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-class JdbcServicePeerTest {
+class JdbcServiceMappingTest {
 
   private static final String GROUP_TARGET = "pg.host1:5432,pg.host2:5433";
   private static final String DEFAULT_PORT_GROUP_TARGET = "orcl.host1,orcl.host2";
@@ -77,7 +77,7 @@ class JdbcServicePeerTest {
 
   private static Attributes resolve(DbRequest request, String target) {
     AttributesExtractor<DbRequest, Void> extractor =
-        ServicePeerAttributesExtractor.create(new JdbcAttributesGetter(), openTelemetry(target));
+        ServerServiceAttributesExtractor.create(new JdbcAttributesGetter(), openTelemetry(target));
     AttributesBuilder attributes = Attributes.builder();
     extractor.onEnd(attributes, Context.root(), request, null, null);
     return attributes.build();
