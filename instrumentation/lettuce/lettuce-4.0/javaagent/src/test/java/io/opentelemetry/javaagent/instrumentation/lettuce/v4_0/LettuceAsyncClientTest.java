@@ -14,6 +14,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -221,6 +222,7 @@ class LettuceAsyncClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "WRONGTYPE"),
                             equalTo(ERROR_TYPE, "WRONGTYPE"))));
 
     assertErrorTypeMetric("io.opentelemetry.lettuce-4.0", "WRONGTYPE", 1);
@@ -769,9 +771,10 @@ class LettuceAsyncClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
                             equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                            equalTo(ERROR_TYPE, scenario.errorType))));
+                            equalTo(DB_RESPONSE_STATUS_CODE, scenario.errorCode),
+                            equalTo(ERROR_TYPE, scenario.errorCode))));
 
-    assertErrorTypeMetric("io.opentelemetry.lettuce-4.0", scenario.errorType, 1);
+    assertErrorTypeMetric("io.opentelemetry.lettuce-4.0", scenario.errorCode, 1);
   }
 
   private static void assertErrorTypeMetric(
@@ -913,7 +916,7 @@ class LettuceAsyncClientTest {
                 .operationName("PIPELINE")
                 .batchSize(2)
                 .exceptionType("com.lambdaworks.redis.RedisCommandExecutionException")
-                .errorType("ERR")
+                .errorCode("ERR")
                 .build()));
   }
 
@@ -922,14 +925,14 @@ class LettuceAsyncClientTest {
     private final String operationName;
     private final Long batchSize;
     private final String exceptionType;
-    private final String errorType;
+    private final String errorCode;
 
     private BatchScenario(Builder builder) {
       this.commands = builder.commands;
       this.operationName = builder.operationName;
       this.batchSize = builder.batchSize;
       this.exceptionType = builder.exceptionType;
-      this.errorType = builder.errorType;
+      this.errorCode = builder.errorCode;
     }
 
     private static Builder builder() {
@@ -945,7 +948,7 @@ class LettuceAsyncClientTest {
       private String operationName;
       private Long batchSize;
       private String exceptionType;
-      private String errorType;
+      private String errorCode;
 
       private Builder addCommand(BatchCommand command) {
         commands.add(command);
@@ -962,8 +965,8 @@ class LettuceAsyncClientTest {
         return this;
       }
 
-      private Builder errorType(String errorType) {
-        this.errorType = errorType;
+      private Builder errorCode(String errorCode) {
+        this.errorCode = errorCode;
         return this;
       }
 

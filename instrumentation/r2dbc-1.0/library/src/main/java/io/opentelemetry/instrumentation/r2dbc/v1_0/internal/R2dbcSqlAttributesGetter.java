@@ -20,6 +20,14 @@ import javax.annotation.Nullable;
 public final class R2dbcSqlAttributesGetter
     implements SqlClientAttributesGetter<DbExecution, Void> {
 
+  private static final String MYSQL_DATABASE = "mysql";
+  private static final String MARIADB_DATABASE = "mariadb";
+  private static final String POSTGRESQL_DATABASE = "postgresql";
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
+  private static final String ORACLE_DB = "oracle.db";
+  private static final String SQL_SERVER_DATABASE = "microsoft.sql_server";
+  private static final String DB2_DATABASE = "ibm.db2";
+
   @Override
   public String getDbSystemName(DbExecution request) {
     return request.getSystemName();
@@ -51,10 +59,57 @@ public final class R2dbcSqlAttributesGetter
   @Override
   public String getErrorType(
       DbExecution request, @Nullable Void response, @Nullable Throwable error) {
+    return getSqlState(error);
+  }
+
+  @Nullable
+  @Override
+  public String getDbResponseStatusCode(
+      DbExecution request, @Nullable Void response, @Nullable Throwable error) {
+    String dbSystemName = getDbSystemName(request);
+    int errorCode = getErrorCode(error);
+    String sqlState = getAvailableSqlState(error);
+    boolean hasErrorCode = errorCode != 0;
+
+    if (prefersVendorCode(dbSystemName) && hasErrorCode) {
+      return Integer.toString(errorCode);
+    }
+    if (POSTGRESQL_DATABASE.equals(dbSystemName) && sqlState != null) {
+      return sqlState;
+    }
+    if (sqlState != null && hasErrorCode) {
+      return sqlState + "/" + errorCode;
+    }
+    if (sqlState != null) {
+      return sqlState;
+    }
+    return hasErrorCode ? Integer.toString(errorCode) : null;
+  }
+
+  private static boolean prefersVendorCode(String dbSystemName) {
+    return MYSQL_DATABASE.equals(dbSystemName)
+        || MARIADB_DATABASE.equals(dbSystemName)
+        || ORACLE_DB.equals(dbSystemName)
+        || SQL_SERVER_DATABASE.equals(dbSystemName)
+        || DB2_DATABASE.equals(dbSystemName);
+  }
+
+  private static int getErrorCode(@Nullable Throwable error) {
+    return error instanceof R2dbcException ? ((R2dbcException) error).getErrorCode() : 0;
+  }
+
+  @Nullable
+  private static String getSqlState(@Nullable Throwable error) {
     if (error instanceof R2dbcException) {
       return ((R2dbcException) error).getSqlState();
     }
     return null;
+  }
+
+  @Nullable
+  private static String getAvailableSqlState(@Nullable Throwable error) {
+    String sqlState = getSqlState(error);
+    return sqlState == null || sqlState.isEmpty() ? null : sqlState;
   }
 
   @Nullable

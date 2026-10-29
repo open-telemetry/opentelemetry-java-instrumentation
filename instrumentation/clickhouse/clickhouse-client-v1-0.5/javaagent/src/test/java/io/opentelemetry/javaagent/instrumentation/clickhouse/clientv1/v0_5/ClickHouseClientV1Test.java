@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -34,6 +35,7 @@ import com.clickhouse.client.ClickHouseResponseSummary;
 import com.clickhouse.client.TestClickHouseClient;
 import com.clickhouse.data.ClickHouseFormat;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -335,6 +337,46 @@ class ClickHouseClientV1Test {
   }
 
   @Test
+  void testClientConnectionFailureCapturesResponseStatus() {
+    int unavailablePort = PortUtils.findOpenPort();
+    ClickHouseNode unavailableServer =
+        ClickHouseNode.of("http://127.0.0.1:" + unavailablePort + "/default?compress=0");
+    Throwable thrown =
+        catchThrowable(
+            () -> {
+              ClickHouseResponse response =
+                  client
+                      .read(unavailableServer)
+                      .query("select * from non_existent_table")
+                      .executeAndWait();
+              response.close();
+            });
+
+    assertThat(thrown).isInstanceOf(ClickHouseException.class);
+    assertThat(((ClickHouseException) thrown).getErrorCode()).isEqualTo(210);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("select non_existent_table")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.error())
+                        .hasException(thrown)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_PORT, unavailablePort),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NETWORK_PEER_PORT, unavailablePort),
+                            equalTo(DB_QUERY_TEXT, "select * from non_existent_table"),
+                            equalTo(DB_QUERY_SUMMARY, "select non_existent_table"),
+                            equalTo(ERROR_TYPE, "210"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "210"))));
+  }
+
+  @Test
   void testExecuteAndWaitThrowsException() {
     Throwable thrown =
         catchThrowable(
@@ -367,7 +409,8 @@ class ClickHouseClientV1Test {
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(DB_QUERY_TEXT, "select * from non_existent_table"),
                             equalTo(DB_QUERY_SUMMARY, "select non_existent_table"),
-                            equalTo(ERROR_TYPE, "60"))));
+                            equalTo(ERROR_TYPE, "60"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "60"))));
 
     assertDurationMetric(
         testing,

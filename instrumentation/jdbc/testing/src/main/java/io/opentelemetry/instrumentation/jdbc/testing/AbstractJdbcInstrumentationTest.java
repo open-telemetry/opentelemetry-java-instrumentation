@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -2151,7 +2152,10 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(DB_SYSTEM_NAME, "h2database"),
                                 equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
                                 equalTo(DB_OPERATION_NAME, operation),
-                                equalTo(ERROR_TYPE, Integer.toString(error.getErrorCode())))));
+                                equalTo(ERROR_TYPE, Integer.toString(error.getErrorCode())),
+                                equalTo(
+                                    DB_RESPONSE_STATUS_CODE,
+                                    error.getSQLState() + "/" + error.getErrorCode()))));
 
     if (emitExceptionAsLogs()) {
       testing()

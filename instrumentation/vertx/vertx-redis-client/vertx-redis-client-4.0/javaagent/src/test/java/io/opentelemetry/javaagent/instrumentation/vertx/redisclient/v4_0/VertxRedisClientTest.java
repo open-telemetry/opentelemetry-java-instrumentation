@@ -13,6 +13,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -215,7 +216,7 @@ class VertxRedisClientTest {
             .get(30, SECONDS);
 
     assertThat(result).isInstanceOf(ErrorType.class);
-    assertErrorTypeTelemetry("WRONGTYPE", "GET", "GET wrong-type", null);
+    assertErrorTypeTelemetry("WRONGTYPE", "WRONGTYPE", "GET", "GET wrong-type", null);
   }
 
   @Test
@@ -242,6 +243,7 @@ class VertxRedisClientTest {
     assertThat(result).isInstanceOf(ErrorType.class);
     assertErrorTypeTelemetry(
         testLatestDeps() ? ErrorType.class.getName() : "WRONGTYPE",
+        testLatestDeps() ? null : "WRONGTYPE",
         "PIPELINE GET",
         "GET batch-wrong-type; GET batch-wrong-type",
         2L);
@@ -249,7 +251,8 @@ class VertxRedisClientTest {
 
   @ParameterizedTest
   @MethodSource("serverErrorReplyPrefixCases")
-  void serverErrorReplyPrefixes(String reply, String expectedErrorType) throws Exception {
+  void serverErrorReplyPrefixes(String reply, String expectedErrorType, String expectedStatusCode)
+      throws Exception {
     Object result =
         connection
             .send(
@@ -264,24 +267,33 @@ class VertxRedisClientTest {
 
     assertThat(result).isInstanceOf(ErrorType.class);
     assertErrorTypeTelemetry(
-        expectedErrorType, "EVAL", "EVAL return redis.error_reply(ARGV[1]) 0 ?", null);
+        expectedErrorType,
+        expectedStatusCode,
+        "EVAL",
+        "EVAL return redis.error_reply(ARGV[1]) 0 ?",
+        null);
   }
 
   private static Stream<Arguments> serverErrorReplyPrefixCases() {
     return Stream.of(
-        argumentSet("customPrefix", "Custom.Code! detail", "Custom.Code!"),
-        argumentSet("lowercasePrefix", "lowercase detail", "lowercase"),
-        argumentSet("prefixOnly", "PrefixOnly", "PrefixOnly"),
-        argumentSet("blankPrefix", " ", ErrorType.class.getName()));
+        argumentSet("customPrefix", "Custom.Code! detail", "Custom.Code!", "Custom.Code!"),
+        argumentSet("lowercasePrefix", "lowercase detail", "lowercase", "lowercase"),
+        argumentSet("prefixOnly", "PrefixOnly", "PrefixOnly", "PrefixOnly"),
+        argumentSet("blankPrefix", " ", ErrorType.class.getName(), null));
   }
 
   private static void assertErrorTypeTelemetry(
-      String errorType, String operationName, String queryText, Long batchSize) {
+      String expectedErrorType,
+      String expectedStatusCode,
+      String operationName,
+      String queryText,
+      Long batchSize) {
     AttributeAssertion[] operationAttributes =
         redisSpanAttributes(operationName, queryText, batchSize);
     AttributeAssertion[] attributes =
-        Arrays.copyOf(operationAttributes, operationAttributes.length + 1);
-    attributes[attributes.length - 1] = equalTo(ERROR_TYPE, errorType);
+        Arrays.copyOf(operationAttributes, operationAttributes.length + 2);
+    attributes[attributes.length - 2] = equalTo(DB_RESPONSE_STATUS_CODE, expectedStatusCode);
+    attributes[attributes.length - 1] = equalTo(ERROR_TYPE, expectedErrorType);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -299,7 +311,8 @@ class VertxRedisClientTest {
                     histogram ->
                         histogram.hasPointsSatisfying(
                             point ->
-                                point.hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType)))));
+                                point.hasAttributesSatisfying(
+                                    equalTo(ERROR_TYPE, expectedErrorType)))));
   }
 
   @Test

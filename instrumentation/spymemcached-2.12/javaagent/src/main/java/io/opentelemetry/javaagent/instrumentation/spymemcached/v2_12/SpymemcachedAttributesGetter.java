@@ -10,6 +10,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServ
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
+import net.spy.memcached.internal.BulkFuture;
+import net.spy.memcached.internal.GetFuture;
 import net.spy.memcached.internal.OperationFuture;
 import net.spy.memcached.ops.OperationStatus;
 import net.spy.memcached.ops.StatusCode;
@@ -40,16 +42,34 @@ class SpymemcachedAttributesGetter
 
   @Override
   @Nullable
+  public String getDbResponseStatusCode(
+      SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
+    OperationStatus status = getOperationStatus(response);
+    if (status == null) {
+      return null;
+    }
+    StatusCode code = status.getStatusCode();
+    if (code == null || status.isSuccess()) {
+      return null;
+    }
+    switch (code) {
+      case SUCCESS:
+      case ERR_NOT_FOUND:
+      case ERR_EXISTS:
+      case ERR_NOT_STORED:
+      case CANCELLED:
+        return null;
+      default:
+        break;
+    }
+    return code.name();
+  }
+
+  @Override
+  @Nullable
   public String getErrorType(
       SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
-    if (error != null || !(response instanceof OperationFuture)) {
-      return null;
-    }
-    OperationFuture<?> future = (OperationFuture<?>) response;
-    if (future.isCancelled()) {
-      return null;
-    }
-    OperationStatus status = future.getStatus();
+    OperationStatus status = getOperationStatus(response, error);
     if (status == null || status.isSuccess()) {
       return null;
     }
@@ -67,6 +87,33 @@ class SpymemcachedAttributesGetter
       default:
         return code.name();
     }
+  }
+
+  @Nullable
+  private static OperationStatus getOperationStatus(
+      @Nullable Object response, @Nullable Throwable error) {
+    if (error != null || !(response instanceof OperationFuture)) {
+      return null;
+    }
+    OperationFuture<?> future = (OperationFuture<?>) response;
+    if (future.isCancelled()) {
+      return null;
+    }
+    return future.getStatus();
+  }
+
+  @Nullable
+  private static OperationStatus getOperationStatus(@Nullable Object response) {
+    if (response instanceof OperationFuture) {
+      return ((OperationFuture<?>) response).getStatus();
+    }
+    if (response instanceof GetFuture) {
+      return ((GetFuture<?>) response).getStatus();
+    }
+    if (response instanceof BulkFuture) {
+      return ((BulkFuture<?>) response).getStatus();
+    }
+    return null;
   }
 
   @Override

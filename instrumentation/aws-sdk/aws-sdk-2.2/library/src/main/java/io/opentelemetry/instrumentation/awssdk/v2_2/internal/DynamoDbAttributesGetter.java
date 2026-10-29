@@ -68,10 +68,24 @@ class DynamoDbAttributesGetter implements DbClientAttributesGetter<ExecutionAttr
 
   @Override
   @Nullable
+  public String getDbResponseStatusCode(
+      ExecutionAttributes executionAttributes,
+      @Nullable Response response,
+      @Nullable Throwable error) {
+    return getServiceErrorCode(error);
+  }
+
+  @Override
+  @Nullable
   public String getErrorType(
       ExecutionAttributes executionAttributes,
       @Nullable Response response,
       @Nullable Throwable error) {
+    return getServiceErrorCode(error);
+  }
+
+  @Nullable
+  private static String getServiceErrorCode(@Nullable Throwable error) {
     if (!(error instanceof AwsServiceException)) {
       return null;
     }

@@ -14,8 +14,10 @@ import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQ
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DERBY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CLICKHOUSE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.H2DATABASE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.SAP_HANA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -28,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class JdbcAttributesGetterTest {
 
@@ -71,7 +74,8 @@ class JdbcAttributesGetterTest {
 
   @ParameterizedTest
   @MethodSource("errorCodes")
-  void getErrorTypeNormalizesVendorCode(int errorCode, String sqlState, String expectedErrorType) {
+  void getErrorTypeNormalizesVendorCode(
+      int errorCode, String sqlState, String expectedErrorType, String expectedStatusCode) {
     DbRequest request =
         DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);
 
@@ -79,16 +83,152 @@ class JdbcAttributesGetterTest {
             attributesGetter.getErrorType(
                 request, null, new SQLException("test", sqlState, errorCode)))
         .isEqualTo(expectedErrorType);
+    assertThat(
+            attributesGetter.getDbResponseStatusCode(
+                request, null, new SQLException("test", sqlState, errorCode)))
+        .isEqualTo(expectedStatusCode);
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {17008, 17009})
+  void capturesOracleClosedCodesWithoutChangingErrorType(int errorCode) {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(ORACLE_DB).build(), "SELECT 1", false);
+    SQLException error = new SQLException("Closed locally", "99999", errorCode);
+
+    assertThat(attributesGetter.getErrorType(request, null, error))
+        .isEqualTo(Integer.toString(errorCode));
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error))
+        .isEqualTo(Integer.toString(errorCode));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {17008, 17009})
+  void keepsOtherDatabaseCodesThatOverlapOracleLocalCodes(int errorCode) {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(OTHER_SQL).build(), "SELECT 1", false);
+    SQLException error = new SQLException("Server failure", "99999", errorCode);
+
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error))
+        .isEqualTo("99999/" + errorCode);
+  }
+
+  @Test
+  void capturesH2ClosedObjectCodeWithoutChangingErrorType() {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(H2DATABASE).build(), "SELECT 1", false);
+    SQLException error = new SQLException("The object is already closed", "90007", 90007);
+
+    assertThat(attributesGetter.getErrorType(request, null, error)).isEqualTo("90007");
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error))
+        .isEqualTo("90007/90007");
+  }
+
+  @Test
+  void capturesPostgresqlLocalClosedConnectionCodeWithoutChangingErrorType() {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);
+    SQLException error = new SQLException("This connection has been closed.", "08003");
+    error.setStackTrace(
+        new StackTraceElement[] {
+          new StackTraceElement("org.postgresql.jdbc.PgConnection", "checkClosed", null, -1)
+        });
+
+    assertThat(attributesGetter.getErrorType(request, null, error)).isEqualTo("08003");
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isEqualTo("08003");
+  }
+
+  @Test
+  void keepsPostgresqlServerConnectionDoesNotExistCode() {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);
+    SQLException error = new SQLException("Server connection does not exist", "08003");
+
+    assertThat(attributesGetter.getErrorType(request, null, error)).isEqualTo("08003");
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isEqualTo("08003");
+  }
+
+  @Test
+  void keepsH2ClosedObjectCodeForOtherDatabaseSystems() {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(OTHER_SQL).build(), "SELECT 1", false);
+    SQLException error = new SQLException("Server failure", "90007", 90007);
+
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error))
+        .isEqualTo("90007/90007");
+  }
+
+  @ParameterizedTest
+  @MethodSource("otherSqlResponseStatuses")
+  void formatsGenericSqlResponseStatus(
+      String sqlState, int errorCode, String expectedStatus, String expectedErrorType) {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(OTHER_SQL).build(), "SELECT 1", false);
+    SQLException error = new SQLException("test", sqlState, errorCode);
+
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error))
+        .isEqualTo(expectedStatus);
+    assertThat(attributesGetter.getErrorType(request, null, error)).isEqualTo(expectedErrorType);
+  }
+
+  private static Stream<Arguments> otherSqlResponseStatuses() {
+    return Stream.of(
+        argumentSet("both codes", "42000", 1071, "42000/1071", "1071"),
+        argumentSet("SQLSTATE only", "42000", 0, "42000", "42000"),
+        argumentSet("success SQLSTATE", "00000", 0, "00000", null),
+        argumentSet("vendor code only", null, 1071, "1071", "1071"),
+        argumentSet("neither code", null, 0, null, null));
+  }
+
+  @ParameterizedTest
+  @MethodSource("vendorCodePreferredSystems")
+  void prefersAvailableVendorCode(String dbSystemName) {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(dbSystemName).build(), "SELECT 1", false);
+    SQLException error = new SQLException("test", "42000", 1071);
+
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isEqualTo("1071");
+  }
+
+  private static Stream<String> vendorCodePreferredSystems() {
+    return Stream.of(IBM_DB2, MARIADB, MICROSOFT_SQL_SERVER, MYSQL, ORACLE_DB, "sqlite");
+  }
+
+  @Test
+  void prefersSqlStateForPostgresqlAndFallsBackToVendorCode() {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);
+
+    assertThat(
+            attributesGetter.getDbResponseStatusCode(
+                request, null, new SQLException("test", "42601", 42)))
+        .isEqualTo("42601");
+    assertThat(
+            attributesGetter.getDbResponseStatusCode(
+                request, null, new SQLException("test", null, 42)))
+        .isEqualTo("42");
+  }
+
+  @Test
+  void omitsResponseStatusWithoutSqlException() {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);
+
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, null)).isNull();
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, new IllegalStateException()))
+        .isNull();
   }
 
   private static Stream<Arguments> errorCodes() {
     return Stream.of(
-        argumentSet("positive vendor code takes precedence", 42, "42601", "42"),
-        argumentSet("negative vendor code", -42, null, "-42"),
-        argumentSet("SQLSTATE with zero vendor code", 0, "42601", "42601"),
-        argumentSet("null SQLSTATE is unavailable", 0, null, null),
-        argumentSet("empty SQLSTATE is unavailable", 0, "", null),
-        argumentSet("successful completion SQLSTATE is unavailable", 0, "00000", null));
+        argumentSet(
+            "positive vendor code takes precedence for error type", 42, "42601", "42", "42601"),
+        argumentSet("negative vendor code", -42, null, "-42", "-42"),
+        argumentSet("SQLSTATE with zero vendor code", 0, "42601", "42601", "42601"),
+        argumentSet("null SQLSTATE is unavailable", 0, null, null, null),
+        argumentSet("empty SQLSTATE is unavailable", 0, "", null, null),
+        argumentSet(
+            "successful completion SQLSTATE is available for status", 0, "00000", null, "00000"));
   }
 
   @Test

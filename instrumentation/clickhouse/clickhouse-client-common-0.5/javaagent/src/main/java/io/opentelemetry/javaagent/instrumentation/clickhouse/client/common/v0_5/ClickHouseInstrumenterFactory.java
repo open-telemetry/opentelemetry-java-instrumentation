@@ -22,8 +22,15 @@ public class ClickHouseInstrumenterFactory {
 
   public static Instrumenter<ClickHouseDbRequest, Void> createInstrumenter(
       String instrumenterName, Function<Throwable, String> errorCodeExtractor) {
+    return createInstrumenter(instrumenterName, errorCodeExtractor, errorCodeExtractor);
+  }
+
+  public static Instrumenter<ClickHouseDbRequest, Void> createInstrumenter(
+      String instrumenterName,
+      Function<Throwable, String> errorCodeExtractor,
+      Function<Throwable, String> responseStatusExtractor) {
     ClickHouseAttributesGetter dbAttributesGetter =
-        new ClickHouseAttributesGetter(errorCodeExtractor);
+        new ClickHouseAttributesGetter(errorCodeExtractor, responseStatusExtractor);
 
     InstrumenterBuilder<ClickHouseDbRequest, Void> builder =
         Instrumenter.<ClickHouseDbRequest, Void>builder(

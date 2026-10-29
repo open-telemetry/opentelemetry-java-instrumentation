@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.RedisCommandTimeoutException;
 import io.lettuce.core.RedisNoScriptException;
 import org.junit.jupiter.api.Test;
@@ -22,11 +23,16 @@ class LettuceDbAttributesGetterTest {
             "WRONGTYPE Operation against a key holding the wrong kind of value");
 
     assertThat(getter.getErrorType(null, response, null)).isEqualTo("WRONGTYPE");
+    assertThat(getter.getDbResponseStatusCode(null, response, null)).isEqualTo("WRONGTYPE");
   }
 
   @Test
   void ignoresClientErrorWithoutResponse() {
     assertThat(getter.getErrorType(null, null, new RedisCommandTimeoutException("timed out")))
+        .isNull();
+    assertThat(
+            getter.getDbResponseStatusCode(
+                null, null, new RedisCommandTimeoutException("timed out")))
         .isNull();
   }
 
@@ -35,6 +41,7 @@ class LettuceDbAttributesGetterTest {
     LettuceResponse response = LettuceResponse.fromErrorMessage("   ");
 
     assertThat(getter.getErrorType(null, response, null)).isEqualTo("_OTHER");
+    assertThat(getter.getDbResponseStatusCode(null, response, null)).isNull();
     assertThat(getter.getErrorType(null, response, new RedisNoScriptException("missing script")))
         .isNull();
   }
@@ -43,25 +50,29 @@ class LettuceDbAttributesGetterTest {
   void doesNotInventExceptionClassForUnknownFailure() {
     assertThat(getter.getErrorType(null, LettuceResponse.unknownFailure(), null))
         .isEqualTo("_OTHER");
+    assertThat(getter.getDbResponseStatusCode(null, LettuceResponse.unknownFailure(), null))
+        .isNull();
   }
 
   @Test
   void omitsErrorTypeOnSuccess() {
     assertThat(getter.getErrorType(null, LettuceResponse.fromErrorMessage(null), null)).isNull();
+    assertThat(getter.getDbResponseStatusCode(null, LettuceResponse.fromErrorMessage(null), null))
+        .isNull();
   }
 
   @Test
   void preservesExceptionFallback() {
-    assertThat(
-            getter.getErrorType(
-                null,
-                LettuceResponse.unknownFailure(),
-                new RedisCommandTimeoutException("Connection closed")))
-        .isNull();
+    LettuceResponse response = LettuceResponse.fromErrorMessage("WRONGTYPE error");
+    RedisCommandExecutionException error = new RedisCommandExecutionException("WRONGTYPE error");
+
+    assertThat(getter.getDbResponseStatusCode(null, response, error)).isEqualTo("WRONGTYPE");
+    assertThat(getter.getErrorType(null, response, error)).isNull();
   }
 
   @Test
   void ignoresMissingResponse() {
     assertThat(getter.getErrorType(null, null, null)).isNull();
+    assertThat(getter.getDbResponseStatusCode(null, null, null)).isNull();
   }
 }
