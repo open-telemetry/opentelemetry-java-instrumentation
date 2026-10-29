@@ -393,6 +393,9 @@ public class AgentBuilderUtil {
     return !(elementMatcher instanceof BooleanMatcher);
   }
 
+  // During agent installation, Byte Buddy checks already-loaded classes before
+  // onDiscovery() records their names for the transformation-list proxy.
+  // This matcher can reject those classes directly using their loaded hierarchy.
   private static class LoadedTypeMatcher implements AgentBuilder.RawMatcher {
     private final AgentBuilder.RawMatcher delegate;
     private final Result result;
@@ -409,17 +412,17 @@ public class AgentBuilderUtil {
         @Nullable JavaModule module,
         @Nullable Class<?> classBeingRedefined,
         @Nullable ProtectionDomain protectionDomain) {
-      // Initial retransformation discovery runs before the transformation listener has a context.
       if (classBeingRedefined != null
-          && cannotMatchLoadedType(typeDescription.getName(), classBeingRedefined)) {
+          && cannotMatchLoadedType(result, typeDescription, classBeingRedefined)) {
         return false;
       }
       return delegate.matches(
           typeDescription, classLoader, module, classBeingRedefined, protectionDomain);
     }
 
-    private boolean cannotMatchLoadedType(String className, Class<?> loadedClass) {
-      if (result.names.contains(className)) {
+    private static boolean cannotMatchLoadedType(
+        Result result, TypeDescription typeDescription, Class<?> loadedClass) {
+      if (result.names.contains(typeDescription.getName())) {
         return false;
       }
       if (!result.subtype) {
