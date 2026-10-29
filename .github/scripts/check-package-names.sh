@@ -73,7 +73,6 @@ check_source_set() {
         instrumentation/finagle-http-23.11/javaagent/src/main/java/io/netty/channel | instrumentation/finagle-http-23.11/javaagent/src/main/java/io/netty/channel/*) continue ;;
         instrumentation/hbase/hbase-client-common-1.0/javaagent/src/main/java/org/apache/hadoop/hbase/ipc) continue ;;
         instrumentation/jedis/jedis-3.0/javaagent/src/main/java/redis/clients/jedis) continue ;;
-        instrumentation/jedis/jedis-4.0/javaagent/src/main/java/redis/clients/jedis) continue ;;
         instrumentation/reactor/reactor-netty/reactor-netty-1.0/javaagent/src/main/java/reactor/netty/http/client | instrumentation/reactor/reactor-netty/reactor-netty-1.0/javaagent/src/main/java/reactor/netty/http/client/*) continue ;;
         instrumentation/redisson/redisson-3.0/javaagent/src/main/java/org/redisson/config) continue ;;
         instrumentation/redisson/redisson-3.17/javaagent/src/main/java/org/redisson/config) continue ;;
@@ -90,7 +89,6 @@ check_source_set() {
       # first dash-separated token as the instrumented library's namespace) does
       # not apply; package layout is owned by these modules and reviewed by hand
       case "$dir" in
-        instrumentation/opentelemetry-api/opentelemetry-api-1.0/javaagent/*) continue ;;
         instrumentation/opentelemetry-extension-annotations-1.0/javaagent/*) continue ;;
         instrumentation/opentelemetry-instrumentation-annotations-1.16/javaagent/*) continue ;;
         instrumentation/opentelemetry-instrumentation-api/opentelemetry-instrumentation-api-1.14/javaagent/*) continue ;;
@@ -98,7 +96,6 @@ check_source_set() {
 
       # javaagent modules with package layouts that differ from their module names
       case "$dir" in
-        instrumentation/hbase/hbase-client-common-1.0/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/hbase/client/common) continue ;;
         instrumentation/java-http-client/javaagent/*) continue ;;
         instrumentation/java-http-server/javaagent/*) continue ;;
         instrumentation/java-util-logging/javaagent/*) continue ;;
