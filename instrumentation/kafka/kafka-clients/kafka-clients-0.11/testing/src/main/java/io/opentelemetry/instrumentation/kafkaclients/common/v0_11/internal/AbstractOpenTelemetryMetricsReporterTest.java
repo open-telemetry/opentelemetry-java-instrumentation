@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -367,13 +368,13 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                 .flatMap(m -> m.getData().getPoints().stream())
                 .anyMatch(
                     p -> {
-                      String id = p.getAttributes().get(KafkaClusterId.ATTRIBUTE_KEY);
+                      String id = p.getAttributes().get(stringKey("kafka.cluster.id"));
                       return id != null && !id.isEmpty();
                     }))
         .isTrue();
 
     // All data points for a given metric must carry the same set of attribute keys, with the
-    // exception of messaging.kafka.cluster.id which may be absent on points emitted before
+    // exception of kafka.cluster.id which may be absent on points emitted before
     // onUpdate() fires (lazy metadata fetch on first broker contact).
     assertThat(metrics.stream().filter(metric -> metric.getName().startsWith("kafka.")))
         .allSatisfy(
@@ -385,7 +386,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                           point ->
                               point.getAttributes().asMap().keySet().stream()
                                   .map(AttributeKey::getKey)
-                                  .filter(k -> !k.equals(KafkaClusterId.ATTRIBUTE_KEY.getKey()))
+                                  .filter(k -> !k.equals("kafka.cluster.id"))
                                   .collect(toSet()))
                       .orElse(emptySet());
               assertThat(metricData.getData().getPoints())
@@ -394,9 +395,13 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                       attributes ->
                           attributes.asMap().keySet().stream()
                               .map(AttributeKey::getKey)
-                              .filter(k -> !k.equals(KafkaClusterId.ATTRIBUTE_KEY.getKey()))
+                              .filter(k -> !k.equals("kafka.cluster.id"))
                               .collect(toSet()))
-                  .allSatisfy(attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
+                  .allSatisfy(
+                      attributeKeys ->
+                          assertThat(attributeKeys)
+                              .isEqualTo(expectedKeys)
+                              .doesNotContain("messaging.kafka.cluster.id"));
             });
 
     // Print mapping table

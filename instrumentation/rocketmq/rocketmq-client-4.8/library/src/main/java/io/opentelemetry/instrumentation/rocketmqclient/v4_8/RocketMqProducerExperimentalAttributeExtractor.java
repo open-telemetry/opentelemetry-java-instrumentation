@@ -16,8 +16,8 @@ final class RocketMqProducerExperimentalAttributeExtractor
     implements AttributesExtractor<SendMessageContext, Void> {
 
   // copied from MessagingIncubatingAttributes
-  private static final AttributeKey<String> MESSAGING_ROCKETMQ_MESSAGE_TAG =
-      AttributeKey.stringKey("messaging.rocketmq.message.tag");
+  private static final AttributeKey<String> ROCKETMQ_MESSAGE_TAG =
+      AttributeKey.stringKey("rocketmq.message.tag");
 
   private static final AttributeKey<String> MESSAGING_ROCKETMQ_BROKER_ADDRESS =
       AttributeKey.stringKey("messaging.rocketmq.broker_address");
@@ -29,7 +29,7 @@ final class RocketMqProducerExperimentalAttributeExtractor
       AttributesBuilder attributes, Context parentContext, SendMessageContext request) {
     if (request.getMessage() != null
         && !RocketMqBatchSendSpanLinksExtractor.isBatchRequest(request)) {
-      attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TAG, request.getMessage().getTags());
+      attributes.put(ROCKETMQ_MESSAGE_TAG, request.getMessage().getTags());
     }
     attributes.put(MESSAGING_ROCKETMQ_BROKER_ADDRESS, request.getBrokerAddr());
   }

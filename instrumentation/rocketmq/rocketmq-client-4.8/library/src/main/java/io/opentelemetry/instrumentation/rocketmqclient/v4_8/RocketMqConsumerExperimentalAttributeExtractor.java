@@ -18,8 +18,8 @@ final class RocketMqConsumerExperimentalAttributeExtractor
     implements AttributesExtractor<RocketMqConsumerRequest, ConsumeMessageContext> {
 
   // copied from MessagingIncubatingAttributes
-  private static final AttributeKey<String> MESSAGING_ROCKETMQ_MESSAGE_TAG =
-      AttributeKey.stringKey("messaging.rocketmq.message.tag");
+  private static final AttributeKey<String> ROCKETMQ_MESSAGE_TAG =
+      AttributeKey.stringKey("rocketmq.message.tag");
 
   private static final AttributeKey<Long> MESSAGING_ROCKETMQ_QUEUE_ID =
       AttributeKey.longKey("messaging.rocketmq.queue_id");
@@ -32,7 +32,7 @@ final class RocketMqConsumerExperimentalAttributeExtractor
   public void onStart(
       AttributesBuilder attributes, Context parentContext, RocketMqConsumerRequest request) {
     MessageExt msg = request.getMessage();
-    attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TAG, msg.getTags());
+    attributes.put(ROCKETMQ_MESSAGE_TAG, msg.getTags());
     attributes.put(MESSAGING_ROCKETMQ_QUEUE_ID, msg.getQueueId());
     attributes.put(MESSAGING_ROCKETMQ_QUEUE_OFFSET, msg.getQueueOffset());
     SocketAddress storeHost = msg.getStoreHost();

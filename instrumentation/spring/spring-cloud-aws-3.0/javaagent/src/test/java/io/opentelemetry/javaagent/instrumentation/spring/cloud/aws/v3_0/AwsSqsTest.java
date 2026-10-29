@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -22,8 +23,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
@@ -142,7 +141,8 @@ class AwsSqsTest {
                                 val ->
                                     val.startsWith(
                                         "http://localhost:" + AwsSqsTestApplication.sqsPort)),
-                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                            equalTo(stringKey("messaging.system"), null),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -170,7 +170,7 @@ class AwsSqsTest {
                               val ->
                                   val.startsWith(
                                       "http://localhost:" + AwsSqsTestApplication.sqsPort)),
-                          equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                          equalTo(stringKey("messaging.system.name"), "aws.sqs"),
                           satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                           equalTo(MESSAGING_OPERATION_NAME, "process"),
                           equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -208,7 +208,7 @@ class AwsSqsTest {
                                 "http://localhost:"
                                     + AwsSqsTestApplication.sqsPort
                                     + "/000000000000/test-queue"),
-                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
                             equalTo(MESSAGING_DESTINATION_NAME, "test-queue"),
                             equalTo(MESSAGING_OPERATION_NAME, "delete"),
                             equalTo(MESSAGING_OPERATION_TYPE, "settle"),
@@ -254,7 +254,7 @@ class AwsSqsTest {
                                             val.startsWith(
                                                 "http://localhost:"
                                                     + AwsSqsTestApplication.sqsPort)),
-                                    equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                    equalTo(stringKey("messaging.system.name"), "aws.sqs"),
                                     satisfies(
                                         MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                                     equalTo(MESSAGING_OPERATION_NAME, "process"),
@@ -319,7 +319,8 @@ class AwsSqsTest {
                                             .hasValue(1)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "aws.sqs"),
                                                 equalTo(ERROR_TYPE, null),
                                                 equalTo(MESSAGING_DESTINATION_NAME, "test-queue"),
                                                 equalTo(SERVER_ADDRESS, "localhost"),

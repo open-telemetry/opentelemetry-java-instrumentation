@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
@@ -17,13 +18,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_TOMBSTONE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -181,24 +177,24 @@ public abstract class KafkaClientBaseTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(stringKey("messaging.system.name"), "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty)));
 
-    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
+    assertions.add(satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative));
     if (messageKey != null) {
-      assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
+      assertions.add(equalTo(stringKey("kafka.message.key"), messageKey));
     }
     if (messageValue == null) {
-      assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true));
+      assertions.add(equalTo(booleanKey("kafka.message.tombstone"), true));
     }
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
-    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
+    assertions.add(satisfies(stringKey("kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(
@@ -212,7 +208,7 @@ public abstract class KafkaClientBaseTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(stringKey("messaging.system.name"), "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION_NAME, "poll"),
                 equalTo(MESSAGING_OPERATION_TYPE, "receive"),
@@ -226,7 +222,7 @@ public abstract class KafkaClientBaseTest {
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
-    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
+    assertions.add(satisfies(stringKey("kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 
@@ -237,10 +233,10 @@ public abstract class KafkaClientBaseTest {
     return LinkData.create(
         asRemote(producerSpan.getSpanContext()),
         Attributes.builder()
-            .put(MESSAGING_KAFKA_OFFSET, producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET))
+            .put(longKey("kafka.offset"), producerSpan.getAttributes().get(longKey("kafka.offset")))
             .put(
-                MESSAGING_KAFKA_MESSAGE_KEY,
-                producerSpan.getAttributes().get(MESSAGING_KAFKA_MESSAGE_KEY))
+                stringKey("kafka.message.key"),
+                producerSpan.getAttributes().get(stringKey("kafka.message.key")))
             .build());
   }
 
@@ -249,28 +245,28 @@ public abstract class KafkaClientBaseTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(stringKey("messaging.system.name"), "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                 equalTo(MESSAGING_OPERATION_TYPE, "process"),
                 satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty)));
-    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
+    assertions.add(satisfies(stringKey("kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));
     }
 
-    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
+    assertions.add(satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative));
     // consumer group is not available in version 0.11
     if (testLatestDeps()) {
       assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"));
     }
     if (messageKey != null) {
-      assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
+      assertions.add(equalTo(stringKey("kafka.message.key"), messageKey));
     }
     if (messageValue == null) {
-      assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true));
+      assertions.add(equalTo(booleanKey("kafka.message.tombstone"), true));
     }
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));

@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.testing.junit.message.MessageHeaderUtil.headerAttributeKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
@@ -19,13 +22,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_GROUP;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_NAMESPACE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues.DELAY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues.FIFO;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues.NORMAL;
@@ -497,12 +493,12 @@ abstract class AbstractRocketMqClientTest {
     List<AttributeAssertion> attributeAssertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL),
+                equalTo(stringKey("rocketmq.message.tag"), tag),
+                equalTo(stringArrayKey("rocketmq.message.keys"), asList(keys)),
+                equalTo(stringKey("rocketmq.message.type"), NORMAL),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
-                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
+                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                equalTo(stringKey("rocketmq.namespace"), ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
@@ -526,13 +522,13 @@ abstract class AbstractRocketMqClientTest {
     List<AttributeAssertion> attributeAssertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_GROUP, messageGroup),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, FIFO),
+                equalTo(stringKey("rocketmq.message.tag"), tag),
+                equalTo(stringArrayKey("rocketmq.message.keys"), asList(keys)),
+                equalTo(stringKey("rocketmq.message.group"), messageGroup),
+                equalTo(stringKey("rocketmq.message.type"), FIFO),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
-                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
+                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                equalTo(stringKey("rocketmq.namespace"), ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
@@ -556,13 +552,13 @@ abstract class AbstractRocketMqClientTest {
     List<AttributeAssertion> attributeAssertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, deliveryTimestamp),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, DELAY),
+                equalTo(stringKey("rocketmq.message.tag"), tag),
+                equalTo(stringArrayKey("rocketmq.message.keys"), asList(keys)),
+                equalTo(longKey("rocketmq.message.delivery_timestamp"), deliveryTimestamp),
+                equalTo(stringKey("rocketmq.message.type"), DELAY),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
-                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
+                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                equalTo(stringKey("rocketmq.namespace"), ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
@@ -585,8 +581,8 @@ abstract class AbstractRocketMqClientTest {
             .hasStatus(StatusData.unset())
             .hasAttributesSatisfyingExactly(
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
+                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                equalTo(stringKey("rocketmq.namespace"), ""),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION_NAME, "receive"),
                 equalTo(MESSAGING_OPERATION_TYPE, "receive"),
@@ -594,17 +590,17 @@ abstract class AbstractRocketMqClientTest {
                 // receiving is a batching operation, so the message id is on the link instead
                 equalTo(MESSAGING_MESSAGE_ID, null),
                 equalTo(
-                    MESSAGING_ROCKETMQ_MESSAGE_TAG,
-                    linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_TAG)),
+                    stringKey("rocketmq.message.tag"),
+                    linkedAttributes.get(stringKey("rocketmq.message.tag"))),
                 equalTo(
-                    MESSAGING_ROCKETMQ_MESSAGE_GROUP,
-                    linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_GROUP)),
+                    stringKey("rocketmq.message.group"),
+                    linkedAttributes.get(stringKey("rocketmq.message.group"))),
                 equalTo(
-                    MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP,
-                    linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP)),
+                    longKey("rocketmq.message.delivery_timestamp"),
+                    linkedAttributes.get(longKey("rocketmq.message.delivery_timestamp"))),
                 equalTo(
-                    MESSAGING_ROCKETMQ_MESSAGE_KEYS,
-                    linkedAttributes.get(MESSAGING_ROCKETMQ_MESSAGE_KEYS)));
+                    stringArrayKey("rocketmq.message.keys"),
+                    linkedAttributes.get(stringArrayKey("rocketmq.message.keys"))));
     if (linkedSpan != null) {
       // one link per received message, carrying the attributes of that message
       result.hasLinks(
@@ -670,11 +666,11 @@ abstract class AbstractRocketMqClientTest {
         new ArrayList<>(
             asList(
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
+                equalTo(stringKey("rocketmq.message.tag"), tag),
+                equalTo(stringArrayKey("rocketmq.message.keys"), asList(keys)),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
-                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
+                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                equalTo(stringKey("rocketmq.namespace"), ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
@@ -703,12 +699,12 @@ abstract class AbstractRocketMqClientTest {
         new ArrayList<>(
             asList(
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_GROUP, messageGroup),
+                equalTo(stringKey("rocketmq.message.tag"), tag),
+                equalTo(stringArrayKey("rocketmq.message.keys"), asList(keys)),
+                equalTo(stringKey("rocketmq.message.group"), messageGroup),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
-                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
+                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                equalTo(stringKey("rocketmq.namespace"), ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
@@ -737,12 +733,12 @@ abstract class AbstractRocketMqClientTest {
         new ArrayList<>(
             asList(
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
-                equalTo(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, deliveryTimestamp),
+                equalTo(stringKey("rocketmq.message.tag"), tag),
+                equalTo(stringArrayKey("rocketmq.message.keys"), asList(keys)),
+                equalTo(longKey("rocketmq.message.delivery_timestamp"), deliveryTimestamp),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
-                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
+                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                equalTo(stringKey("rocketmq.namespace"), ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
@@ -774,7 +770,9 @@ abstract class AbstractRocketMqClientTest {
                                                 .hasCount(1)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"),
+                                                        "rocketmq"),
                                                     equalTo(
                                                         ERROR_TYPE, ConsumeResult.FAILURE.name()),
                                                     equalTo(
@@ -823,7 +821,9 @@ abstract class AbstractRocketMqClientTest {
                                                 .hasValue(1)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"),
+                                                        "rocketmq"),
                                                     equalTo(
                                                         MESSAGING_DESTINATION_NAME,
                                                         NORMAL_TOPIC))))));
@@ -843,7 +843,9 @@ abstract class AbstractRocketMqClientTest {
                                                 .hasCount(1)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"),
+                                                        "rocketmq"),
                                                     equalTo(
                                                         MESSAGING_DESTINATION_NAME, NORMAL_TOPIC),
                                                     equalTo(MESSAGING_OPERATION_TYPE, "send")),
@@ -852,7 +854,8 @@ abstract class AbstractRocketMqClientTest {
                                         point ->
                                             point.hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "rocketmq"),
                                                 equalTo(
                                                     MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
                                                 equalTo(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC),
@@ -873,7 +876,9 @@ abstract class AbstractRocketMqClientTest {
                                                 .hasCount(1)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"),
+                                                        "rocketmq"),
                                                     equalTo(
                                                         MESSAGING_CONSUMER_GROUP_NAME,
                                                         CONSUMER_GROUP),
@@ -898,7 +903,9 @@ abstract class AbstractRocketMqClientTest {
                                                 .hasValue(1)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"),
+                                                        "rocketmq"),
                                                     equalTo(
                                                         MESSAGING_CONSUMER_GROUP_NAME,
                                                         CONSUMER_GROUP),

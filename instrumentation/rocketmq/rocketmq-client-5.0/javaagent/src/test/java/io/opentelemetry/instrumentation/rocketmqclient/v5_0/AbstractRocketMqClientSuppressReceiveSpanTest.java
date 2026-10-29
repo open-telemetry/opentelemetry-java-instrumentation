@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -13,11 +15,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_NAMESPACE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues.NORMAL;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -117,11 +114,11 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                           .hasParent(trace.getSpan(0))
                           .hasStatus(StatusData.unset())
                           .hasAttributesSatisfyingExactly(
-                              equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
-                              equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
-                              equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL),
-                              equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                              equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
+                              equalTo(stringKey("rocketmq.message.tag"), tag),
+                              equalTo(stringArrayKey("rocketmq.message.keys"), asList(keys)),
+                              equalTo(stringKey("rocketmq.message.type"), NORMAL),
+                              equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                              equalTo(stringKey("rocketmq.namespace"), ""),
                               equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                               equalTo(MESSAGING_DESTINATION_NAME, topic),
                               equalTo(MESSAGING_OPERATION_NAME, "send"),
@@ -134,10 +131,10 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                           .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
                           .hasAttributesSatisfyingExactly(
                               equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                              equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
-                              equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
-                              equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                              equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
+                              equalTo(stringKey("rocketmq.message.tag"), tag),
+                              equalTo(stringArrayKey("rocketmq.message.keys"), asList(keys)),
+                              equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                              equalTo(stringKey("rocketmq.namespace"), ""),
                               equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                               equalTo(MESSAGING_DESTINATION_NAME, topic),
                               equalTo(MESSAGING_OPERATION_NAME, "process"),
@@ -167,7 +164,9 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                                 .hasValue(1)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"),
+                                                        "rocketmq"),
                                                     equalTo(MESSAGING_DESTINATION_NAME, topic))))));
     testing()
         .waitAndAssertMetrics(
@@ -185,7 +184,9 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                                 .hasCount(1)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"),
+                                                        "rocketmq"),
                                                     equalTo(MESSAGING_DESTINATION_NAME, topic),
                                                     equalTo(MESSAGING_OPERATION_TYPE, "send"))))));
     testing()
@@ -204,7 +205,9 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                                 .hasCount(1)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"),
+                                                        "rocketmq"),
                                                     equalTo(
                                                         MESSAGING_CONSUMER_GROUP_NAME,
                                                         consumerGroup),
@@ -227,7 +230,9 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                                 .hasValue(1)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"),
+                                                        "rocketmq"),
                                                     equalTo(
                                                         MESSAGING_CONSUMER_GROUP_NAME,
                                                         consumerGroup),

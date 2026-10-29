@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.SEND;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CLIENT_OPERATION_DURATION;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.SENT_MESSAGES;
@@ -21,7 +22,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.common.Attributes;
@@ -56,7 +56,7 @@ class MessagingProducerMetricsTest {
 
     Attributes requestAttributes =
         Attributes.builder()
-            .put(MESSAGING_SYSTEM, "pulsar")
+            .put(stringKey("messaging.system.name"), "pulsar")
             .put(MESSAGING_DESTINATION_NAME, "topic")
             .put(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}")
             .put(MESSAGING_OPERATION_NAME, "send")
@@ -106,7 +106,7 @@ class MessagingProducerMetricsTest {
                                         .hasBucketBoundaries(DURATION_BUCKETS)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(stringKey("messaging.system.name"), "pulsar"),
                                             equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
                                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                             equalTo(
@@ -133,7 +133,7 @@ class MessagingProducerMetricsTest {
                                         .hasValue(2)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(stringKey("messaging.system.name"), "pulsar"),
                                             equalTo(
                                                 ERROR_TYPE, IllegalStateException.class.getName()),
                                             equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
@@ -152,7 +152,7 @@ class MessagingProducerMetricsTest {
     OperationListener inner = MessagingProducerMetrics.get().create(meterProvider.get("inner"));
     Attributes attributes =
         Attributes.builder()
-            .put(MESSAGING_SYSTEM, "kafka")
+            .put(stringKey("messaging.system.name"), "kafka")
             .put(MESSAGING_OPERATION_NAME, "send")
             .put(MESSAGING_OPERATION_TYPE, "send")
             .build();
@@ -204,7 +204,7 @@ class MessagingProducerMetricsTest {
     OperationListener listener = MessagingProducerMetrics.get().create(meterProvider.get("test"));
     Attributes attributes =
         Attributes.builder()
-            .put(MESSAGING_SYSTEM, "kafka")
+            .put(stringKey("messaging.system.name"), "kafka")
             .put(MESSAGING_OPERATION_NAME, "send")
             .put(MESSAGING_OPERATION_TYPE, "send")
             .build();
@@ -279,7 +279,7 @@ class MessagingProducerMetricsTest {
 
     Attributes attributes =
         Attributes.builder()
-            .put(MESSAGING_SYSTEM, "kafka")
+            .put(stringKey("messaging.system.name"), "kafka")
             .put(MESSAGING_OPERATION_NAME, "send")
             .put(MESSAGING_OPERATION_TYPE, "send")
             .build();

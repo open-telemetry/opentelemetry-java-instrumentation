@@ -61,8 +61,8 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       AttributeKey.stringKey("messaging.operation.name");
   private static final AttributeKey<String> MESSAGING_OPERATION_TYPE =
       AttributeKey.stringKey("messaging.operation.type");
-  private static final AttributeKey<String> MESSAGING_SYSTEM =
-      AttributeKey.stringKey("messaging.system");
+  private static final AttributeKey<String> MESSAGING_SYSTEM_NAME =
+      AttributeKey.stringKey("messaging.system.name");
 
   /**
    * Creates the messaging attributes extractor for the given operation type.
@@ -138,7 +138,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    attributes.put(MESSAGING_SYSTEM, getter.getSystem(request));
+    attributes.put(MESSAGING_SYSTEM_NAME, getter.getSystem(request));
     boolean isTemporaryDestination = getter.isTemporaryDestination(request);
     if (isTemporaryDestination) {
       attributes.put(MESSAGING_DESTINATION_TEMPORARY, true);

@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes
 
+- Rename `messaging.system` to `messaging.system.name` (`aws_sqs` becomes `aws.sqs`) and adopt
+  the system-specific attribute renames from
+  [semantic-conventions #4250](https://github.com/open-telemetry/semantic-conventions/pull/4250).
 - AWS Lambda invocation spans now replace alias suffixes in `cloud.resource_id` with the resolved
   function version when available.
 - AWS Lambda spans now use `faas.invocation.id` instead of `faas.invocation_id` for invocation IDs.

@@ -21,12 +21,9 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -219,7 +216,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
   }
 
   private static LinkData batchRecordLink(SpanContext producerSpanContext, long offset) {
-    return LinkData.create(producerSpanContext, Attributes.of(MESSAGING_KAFKA_OFFSET, offset));
+    return LinkData.create(producerSpanContext, Attributes.of(longKey("kafka.offset"), offset));
   }
 
   private static List<AttributeAssertion> publishAttributes(boolean experimental) {
@@ -227,7 +224,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
         new ArrayList<>(
             asList(
                 equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
-                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(stringKey("messaging.system.name"), "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -239,7 +236,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                       }
                     })));
     assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")));
-    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
+    assertions.add(satisfies(stringKey("kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 
@@ -248,14 +245,14 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
         new ArrayList<>(
             asList(
                 equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
-                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(stringKey("messaging.system.name"), "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION_NAME, "poll"),
                 equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")));
-    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
+    assertions.add(satisfies(stringKey("kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     return assertions;
   }
@@ -265,7 +262,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
         new ArrayList<>(
             asList(
                 equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")),
-                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(stringKey("messaging.system.name"), "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                 equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -280,11 +277,11 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                       }
                     })));
 
-    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
+    assertions.add(satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative));
     assertions.add(equalTo(stringKey("test-baggage-key-1"), "test-baggage-value-1"));
     assertions.add(equalTo(stringKey("test-baggage-key-2"), "test-baggage-value-2"));
     assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")));
-    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
+    assertions.add(satisfies(stringKey("kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 }

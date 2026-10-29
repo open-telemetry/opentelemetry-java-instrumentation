@@ -329,7 +329,7 @@ public final class KafkaMessagingMetricsAssertions {
       String errorType) {
     return Attributes.builder()
         .put(stringKey("messaging.operation.name"), operation)
-        .put(stringKey("messaging.system"), "kafka")
+        .put(stringKey("messaging.system.name"), "kafka")
         .put(stringKey("error.type"), errorType)
         .put(stringKey("messaging.consumer.group.name"), group)
         .put(stringKey("messaging.destination.name"), destination)

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -15,10 +17,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_NAMESPACE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -210,7 +208,8 @@ class RocketMqSimpleConsumerTest {
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(
                                                     MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-                                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "rocketmq"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
                                                 equalTo(MESSAGING_OPERATION_NAME, "receive"),
                                                 equalTo(MESSAGING_OPERATION_TYPE, "receive"))))));
@@ -230,7 +229,8 @@ class RocketMqSimpleConsumerTest {
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(
                                                     MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-                                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "rocketmq"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
                                                 equalTo(MESSAGING_OPERATION_NAME, "receive"))))));
   }
@@ -303,7 +303,7 @@ class RocketMqSimpleConsumerTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                            equalTo(stringKey("messaging.system.name"), "rocketmq"),
                             equalTo(MESSAGING_OPERATION_NAME, "receive"),
                             equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()))));
@@ -315,14 +315,14 @@ class RocketMqSimpleConsumerTest {
         .hasStatus(StatusData.unset())
         .hasAttributesSatisfyingExactly(
             equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-            equalTo(MESSAGING_SYSTEM, "rocketmq"),
-            equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
+            equalTo(stringKey("messaging.system.name"), "rocketmq"),
+            equalTo(stringKey("rocketmq.namespace"), ""),
             equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
             equalTo(MESSAGING_OPERATION_NAME, "receive"),
             equalTo(MESSAGING_OPERATION_TYPE, "receive"),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
-            equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, TAG),
-            equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(KEYS)))
+            equalTo(stringKey("rocketmq.message.tag"), TAG),
+            equalTo(stringArrayKey("rocketmq.message.keys"), asList(KEYS)))
         .hasLinks(
             LinkData.create(
                 asRemote(sendSpan.getSpanContext()),

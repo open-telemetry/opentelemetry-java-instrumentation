@@ -545,7 +545,7 @@ instrumentation/development:
         # Enables the creation of Connect and DNS spans.
         enabled: false
     rocketmq_client:
-      # Enables capturing experimental span attributes `messaging.rocketmq.message.tag`,
+      # Enables capturing experimental span attributes `rocketmq.message.tag`,
       # `messaging.rocketmq.broker_address`, `messaging.rocketmq.send_result`,
       # `messaging.rocketmq.queue_id`, and `messaging.rocketmq.queue_offset`.
       experimental_span_attributes/development: false
