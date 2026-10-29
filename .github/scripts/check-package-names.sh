@@ -33,7 +33,6 @@ check_source_set() {
     if [[ "$module_name" == "jmx-metrics" ]]; then
       continue
     fi
-    # these are possibly problematic
     if [[ "$source_set" == "library" ]]; then
       if [[ "$dir" == "instrumentation/grpc-1.6/library/src/main/java/io/grpc/override" ]]; then
         continue
@@ -51,14 +50,6 @@ check_source_set() {
         continue
       fi
       if [[ "$dir" == "instrumentation/thrift-0.13/library/src/main/java/org/apache/thrift/server" ]]; then
-        continue
-      fi
-      if [[ "$dir" == "instrumentation/java-http-client/library/src/main/java/io/opentelemetry/instrumentation/javahttpclient"
-        || "$dir" == instrumentation/java-http-client/library/src/main/java/io/opentelemetry/instrumentation/javahttpclient/* ]]; then
-        continue
-      fi
-      if [[ "$dir" == "instrumentation/java-http-server/library/src/main/java/io/opentelemetry/instrumentation/javahttpserver"
-        || "$dir" == instrumentation/java-http-server/library/src/main/java/io/opentelemetry/instrumentation/javahttpserver/* ]]; then
         continue
       fi
     fi
@@ -96,8 +87,6 @@ check_source_set() {
 
       # javaagent modules with package layouts that differ from their module names
       case "$dir" in
-        instrumentation/java-http-client/javaagent/*) continue ;;
-        instrumentation/java-http-server/javaagent/*) continue ;;
         instrumentation/java-util-logging/javaagent/*) continue ;;
         instrumentation/jaxrs/jaxrs-1.0-annotations/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/jaxrs/v1_0) continue ;;
       esac
@@ -111,6 +100,8 @@ check_source_set() {
       && ! "$module_name" =~ ^[a-z][a-z0-9]*(-[a-z][a-z0-9]*)*-common(-(javax|jakarta))?$ ]]; then
       case "$source_set:$module_name" in
         # library:
+        library:java-http-client) ;;
+        library:java-http-server) ;;
         library:jdbc) ;;
         library:resources) ;;
         library:runtime-telemetry) ;;
@@ -123,6 +114,8 @@ check_source_set() {
         javaagent:internal-lambda) ;;
         javaagent:internal-reflection) ;;
         javaagent:internal-url-class-loader) ;;
+        javaagent:java-http-client) ;;
+        javaagent:java-http-server) ;;
         javaagent:jdbc) ;;
         javaagent:methods) ;;
         javaagent:rmi) ;;
