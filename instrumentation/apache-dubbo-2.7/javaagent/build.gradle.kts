@@ -40,8 +40,6 @@ testing {
           implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
         }
       }
-    }
-    named<JvmTestSuite>("testDubbo") {
       executions {
         register("WithServiceMapping") {
           telemetryConfig(

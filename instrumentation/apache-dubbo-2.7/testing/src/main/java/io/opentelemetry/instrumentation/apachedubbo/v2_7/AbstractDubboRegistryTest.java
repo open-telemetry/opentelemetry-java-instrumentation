@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.apachedubbo.v2_7.AbstractDubboTest.assertLatestDeps;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
@@ -164,7 +163,6 @@ public abstract class AbstractDubboRegistryTest {
                                 equalTo(
                                     RPC_METHOD,
                                     "org.apache.dubbo.rpc.service.GenericService/$invoke"),
-                                equalTo(stringKey("server.service.name"), null),
                                 equalTo(SERVER_ADDRESS, expectedServerAddress),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
@@ -185,7 +183,6 @@ public abstract class AbstractDubboRegistryTest {
                                 equalTo(
                                     RPC_METHOD,
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"),
-                                equalTo(stringKey("server.service.name"), null),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
                                 satisfies(

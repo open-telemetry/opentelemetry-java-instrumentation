@@ -27,8 +27,6 @@ testing {
         implementation(project(":instrumentation:sofa-rpc-5.4:testing"))
         implementation("com.alipay.sofa:sofa-rpc-all:${baseVersion("5.4.0").orLatest()}")
       }
-    }
-    named<JvmTestSuite>("testSofaRpc") {
       executions {
         register("WithServiceMapping") {
           telemetryConfig(
