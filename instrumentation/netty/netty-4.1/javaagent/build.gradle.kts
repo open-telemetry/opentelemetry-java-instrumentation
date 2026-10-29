@@ -49,25 +49,14 @@ testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
-        group {
-          configureEach {
-            filter {
-              excludeTestsMatching("Netty41ConnectionSpanTest")
-              excludeTestsMatching("Netty41ClientSslTest")
-            }
+        register("ConnectionSpan") {
+          filter {
+            includeTestsMatching("Netty41ConnectionSpanTest")
+            includeTestsMatching("Netty41ClientSslTest")
           }
-        }
-        group {
-          configureEach {
-            filter {
-              includeTestsMatching("Netty41ConnectionSpanTest")
-              includeTestsMatching("Netty41ClientSslTest")
-            }
-            include("**/Netty41ConnectionSpanTest.*", "**/Netty41ClientSslTest.*")
-            telemetryConfig("otel.instrumentation.netty.connection-telemetry.enabled", "true")
-            telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
-          }
-          register("ConnectionSpan") {}
+          include("**/Netty41ConnectionSpanTest.*", "**/Netty41ClientSslTest.*")
+          telemetryConfig("otel.instrumentation.netty.connection-telemetry.enabled", "true")
+          telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
         }
       }
     }

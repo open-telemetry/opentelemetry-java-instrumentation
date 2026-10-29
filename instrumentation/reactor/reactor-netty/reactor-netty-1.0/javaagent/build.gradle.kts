@@ -57,25 +57,14 @@ testing {
         }
       }
       executions {
-        group {
-          configureEach {
-            filter {
-              excludeTestsMatching("ReactorNettyConnectionSpanTest")
-              excludeTestsMatching("ReactorNettyClientSslTest")
-            }
+        register("ConnectionSpan") {
+          filter {
+            includeTestsMatching("ReactorNettyConnectionSpanTest")
+            includeTestsMatching("ReactorNettyClientSslTest")
           }
-        }
-        group {
-          configureEach {
-            filter {
-              includeTestsMatching("ReactorNettyConnectionSpanTest")
-              includeTestsMatching("ReactorNettyClientSslTest")
-            }
-            include("**/ReactorNettyConnectionSpanTest.*", "**/ReactorNettyClientSslTest.*")
-            telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
-            telemetryConfig("otel.instrumentation.reactor-netty.connection-telemetry.enabled", "true")
-          }
-          register("ConnectionSpan") {}
+          include("**/ReactorNettyConnectionSpanTest.*", "**/ReactorNettyClientSslTest.*")
+          telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
+          telemetryConfig("otel.instrumentation.reactor-netty.connection-telemetry.enabled", "true")
         }
       }
     }
