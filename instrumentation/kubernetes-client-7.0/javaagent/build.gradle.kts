@@ -1,5 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -37,21 +35,21 @@ testing {
       dependencies {
         implementation("io.kubernetes:client-java-api:${baseVersion("22.0.0").orLatest()}")
       }
-      executions {
-        configureEach {
-          // client-java-api 22.0.0+ requires Java 11+
-          if (testJavaVersion.isJava8) {
-            enabled = false
-          }
-        }
-      }
     }
+  }
+}
+
+tasks.named<Test>("version22Test") {
+  // client-java-api 22.0.0+ requires Java 11+
+  if (testJavaVersion.isJava8) {
+    enabled = false
   }
 }
 
 tasks {
   check {
     dependsOn(testing.suites)
+    dependsOn("version22Test")
   }
 }
 

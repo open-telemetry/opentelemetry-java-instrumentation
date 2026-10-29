@@ -1,4 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -37,14 +36,6 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-docgen:3.+") // see vertx-http-client-4.0 module
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          systemProperty("testLatestDeps", otelProps.testLatestDeps)
-        }
-      }
-    }
-  }
+tasks.named<Test>("test") {
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
 }

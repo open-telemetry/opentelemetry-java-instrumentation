@@ -1,4 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
@@ -49,27 +48,19 @@ dependencies {
   implementation(project(":instrumentation:netty:netty-common-4.0:library"))
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          telemetryConfig("otel.instrumentation.http.client.emit-experimental-telemetry", "true")
-          telemetryConfig("otel.instrumentation.http.server.emit-experimental-telemetry", "true")
-          jvmArgs("-Dio.opentelemetry.context.enableStrictContext=true")
+tasks.named<Test>("test") {
+  telemetryConfig("otel.instrumentation.http.client.emit-experimental-telemetry", "true")
+  telemetryConfig("otel.instrumentation.http.server.emit-experimental-telemetry", "true")
+  jvmArgs("-Dio.opentelemetry.context.enableStrictContext=true")
 
-          // force the netty event loop into constrained territory
-          systemProperty("io.netty.eventLoopThreads", "2")
-          // ensure concurrent tests are competing for netty workers
-          systemProperty("com.twitter.finagle.netty4.numWorkers", "2")
-          // ensure concurrent tests are competing for offload pool workers
-          systemProperty("com.twitter.finagle.offload.numWorkers", "2")
+  // force the netty event loop into constrained territory
+  systemProperty("io.netty.eventLoopThreads", "2")
+  // ensure concurrent tests are competing for netty workers
+  systemProperty("com.twitter.finagle.netty4.numWorkers", "2")
+  // ensure concurrent tests are competing for offload pool workers
+  systemProperty("com.twitter.finagle.offload.numWorkers", "2")
 
-          if (otelProps.denyUnsafe) {
-            enabled = false
-          }
-        }
-      }
-    }
+  if (otelProps.denyUnsafe) {
+    enabled = false
   }
 }
