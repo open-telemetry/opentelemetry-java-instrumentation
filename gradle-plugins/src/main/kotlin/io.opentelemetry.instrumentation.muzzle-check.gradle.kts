@@ -7,7 +7,6 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.opentelemetry.javaagent.muzzle.AcceptableVersions
 import io.opentelemetry.javaagent.muzzle.MuzzleDirective
 import io.opentelemetry.javaagent.muzzle.MuzzleExtension
-import io.opentelemetry.javaagent.muzzle.MuzzleTaskSelection
 import io.opentelemetry.javaagent.muzzle.matcher.MuzzleGradlePluginUtil
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils
 import org.eclipse.aether.RepositorySystem
@@ -221,8 +220,28 @@ tasks.register("printMuzzleReferences") {
 }
 
 afterEvaluate {
-  // Aggregate membership is recorded by the parent project's plugin callback, after application.
-  if (!MuzzleTaskSelection.isRequested(project)) {
+  val aggregateTaskPath = project.extensions.extraProperties
+    .takeIf { it.has("otel.muzzle.aggregateTaskPath") }
+    ?.get("otel.muzzle.aggregateTaskPath") as? String
+  val hasRelevantTask = gradle.startParameter.taskNames.any { requested ->
+    val taskName = requested.removePrefix(":")
+    when (taskName) {
+      "instrumentation:muzzle1",
+      "instrumentation:muzzle2",
+      "instrumentation:muzzle3",
+      "instrumentation:muzzle4" ->
+        aggregateTaskPath?.removePrefix(":") == taskName
+      else -> {
+        val projectPath = project.path.removePrefix(":")
+        val muzzleTaskName = if (projectPath.isEmpty()) "muzzle" else "$projectPath:muzzle"
+        taskName == muzzleTaskName ||
+          taskName.startsWith("instrumentation:muzzle") ||
+          taskName.startsWith("muzzle-Assert") ||
+          taskName.contains(":muzzle-Assert")
+      }
+    }
+  }
+  if (!hasRelevantTask) {
     return@afterEvaluate
   }
   val system = newRepositorySystem()

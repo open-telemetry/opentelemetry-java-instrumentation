@@ -91,39 +91,49 @@ class MuzzleTaskSelectionTest {
 
   @Test
   void partitionRequestOnlyEnumeratesAndSchedulesItsMembers() {
-    assertSelected(run("instrumentation:muzzle2"), "bravo");
+    assertSelected(run("instrumentation:muzzle2"), Set.of("bravo"));
   }
 
   @Test
   void explicitModuleRequestOnlyEnumeratesAndSchedulesThatModule() {
-    assertSelected(run(":instrumentation:alpha:muzzle"), "alpha");
+    assertSelected(run(":instrumentation:alpha:muzzle"), Set.of("alpha"));
   }
 
-  private void assertSelected(BuildResult result, String selected) {
-    assertThat(contactedModules).containsExactly(selected);
-    String task = ":instrumentation:" + selected + ":muzzle";
-    assertThat(result.getOutput())
-        .containsSubsequence(
-            task + " SKIPPED",
-            task + "-AssertPass-fixture-" + selected + "-2.0 SKIPPED",
-            task + "-AssertPass-fixture-" + selected + "-3.0 SKIPPED",
-            task + "-AssertFail-fixture-" + selected + "-1.0 SKIPPED",
-            task + "-AssertFail-fixture-" + selected + "-4.0 SKIPPED");
-    assertThat(result.getOutput())
-        .contains(
-            "MODEL::instrumentation:"
-                + selected
-                + "=muzzle-AssertFail-fixture-"
-                + selected
-                + "-1.0,muzzle-AssertFail-fixture-"
-                + selected
-                + "-4.0,muzzle-AssertPass-fixture-"
-                + selected
-                + "-2.0,muzzle-AssertPass-fixture-"
-                + selected
-                + "-3.0\n");
+  @Test
+  void multiplePartitionAndModuleRequestsSelectTheirUnion() {
+    assertSelected(
+        run(
+            ":instrumentation:muzzle2",
+            "instrumentation:muzzle3",
+            ":instrumentation:alpha:muzzle"),
+        Set.of("alpha", "bravo", "charlie"));
+  }
+
+  private void assertSelected(BuildResult result, Set<String> selectedModules) {
+    assertThat(contactedModules).containsExactlyInAnyOrderElementsOf(selectedModules);
+    for (String selected : selectedModules) {
+      String task = ":instrumentation:" + selected + ":muzzle";
+      assertThat(result.getOutput())
+          .contains(
+              task + " SKIPPED",
+              task + "-AssertPass-fixture-" + selected + "-2.0 SKIPPED",
+              task + "-AssertPass-fixture-" + selected + "-3.0 SKIPPED",
+              task + "-AssertFail-fixture-" + selected + "-1.0 SKIPPED",
+              task + "-AssertFail-fixture-" + selected + "-4.0 SKIPPED",
+              "MODEL::instrumentation:"
+                  + selected
+                  + "=muzzle-AssertFail-fixture-"
+                  + selected
+                  + "-1.0,muzzle-AssertFail-fixture-"
+                  + selected
+                  + "-4.0,muzzle-AssertPass-fixture-"
+                  + selected
+                  + "-2.0,muzzle-AssertPass-fixture-"
+                  + selected
+                  + "-3.0\n");
+    }
     for (String module : MODULES) {
-      if (!module.equals(selected)) {
+      if (!selectedModules.contains(module)) {
         assertThat(result.getOutput())
             .contains("MODEL::instrumentation:" + module + "=\n")
             .doesNotContain(":instrumentation:" + module + ":muzzle");
