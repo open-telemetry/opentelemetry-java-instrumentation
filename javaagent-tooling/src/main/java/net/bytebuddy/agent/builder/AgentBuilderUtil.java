@@ -410,26 +410,30 @@ public class AgentBuilderUtil {
         @Nullable Class<?> classBeingRedefined,
         @Nullable ProtectionDomain protectionDomain) {
       // Initial retransformation discovery runs before the transformation listener has a context.
-      if (classBeingRedefined != null && !result.names.contains(typeDescription.getName())) {
-        if (!result.subtype) {
-          return false;
-        }
-        Set<String> hierarchy = loadedTypeNames.get(classBeingRedefined);
-        boolean candidate = false;
-        // One matcher usually targets fewer names than a class hierarchy contains,
-        // so iterate the matcher targets and search the class hierarchy.
-        for (String name : result.names) {
-          if (hierarchy.contains(name)) {
-            candidate = true;
-            break;
-          }
-        }
-        if (!candidate) {
-          return false;
-        }
+      if (classBeingRedefined != null
+          && cannotMatchLoadedType(typeDescription.getName(), classBeingRedefined)) {
+        return false;
       }
       return delegate.matches(
           typeDescription, classLoader, module, classBeingRedefined, protectionDomain);
+    }
+
+    private boolean cannotMatchLoadedType(String className, Class<?> loadedClass) {
+      if (result.names.contains(className)) {
+        return false;
+      }
+      if (!result.subtype) {
+        return true;
+      }
+      Set<String> hierarchy = loadedTypeNames.get(loadedClass);
+      // One matcher usually targets fewer names than a class hierarchy contains,
+      // so iterate the matcher targets and search the class hierarchy.
+      for (String name : result.names) {
+        if (hierarchy.contains(name)) {
+          return false;
+        }
+      }
+      return true;
     }
   }
 
