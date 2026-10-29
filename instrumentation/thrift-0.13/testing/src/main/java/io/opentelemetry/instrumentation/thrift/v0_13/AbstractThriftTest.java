@@ -99,6 +99,10 @@ public abstract class AbstractThriftTest {
 
   protected abstract boolean hasAsyncServerNetworkAttributes();
 
+  protected String getServerServiceName(String handlerClassName) {
+    return handlerClassName;
+  }
+
   protected abstract TProcessor configure(TProcessor processor, String serviceName);
 
   protected abstract TProtocol configure(TProtocol protocol);
@@ -129,10 +133,15 @@ public abstract class AbstractThriftTest {
 
   protected int startSimpleServer(boolean configure, TTransportFactory transportFactory)
       throws Exception {
-    CustomHandler handler = new CustomHandler();
+    return startSimpleServer(configure, transportFactory, new CustomHandler());
+  }
+
+  protected int startSimpleServer(
+      boolean configure, TTransportFactory transportFactory, CustomHandler handler)
+      throws Exception {
     TProcessor processor = new CustomService.Processor<CustomService.Iface>(handler);
     if (configure) {
-      processor = configure(processor, CustomHandler.class.getName());
+      processor = configure(processor, handler.getClass().getName());
     }
 
     TServerSocket transport = new TServerSocket(0);
@@ -202,10 +211,13 @@ public abstract class AbstractThriftTest {
   }
 
   protected int startAsyncServer(boolean configure) throws Exception {
-    CustomAsyncHandler handler = new CustomAsyncHandler();
+    return startAsyncServer(configure, new CustomAsyncHandler());
+  }
+
+  protected int startAsyncServer(boolean configure, CustomAsyncHandler handler) throws Exception {
     TProcessor processor = new CustomService.AsyncProcessor<CustomService.AsyncIface>(handler);
     if (configure) {
-      processor = configure(processor, CustomAsyncHandler.class.getName());
+      processor = configure(processor, handler.getClass().getName());
     }
 
     TNonblockingServerSocket transport = new TNonblockingServerSocket(0, 30000);
@@ -303,6 +315,7 @@ public abstract class AbstractThriftTest {
 
   protected SpanDataAssert assertServerSpan(
       SpanDataAssert span, String className, String method, int port, String errorType) {
+    className = getServerServiceName(className);
     return span.hasName(className + "/" + method)
         .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
         .hasKind(SpanKind.SERVER)
@@ -323,6 +336,7 @@ public abstract class AbstractThriftTest {
 
   protected SpanDataAssert assertServerSpan(
       SpanDataAssert span, String className, String method, String errorType) {
+    className = getServerServiceName(className);
     return span.hasName(className + "/" + method)
         .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
         .hasKind(SpanKind.SERVER)
@@ -336,7 +350,7 @@ public abstract class AbstractThriftTest {
     return assertServerSpan(span, CustomHandler.class.getName(), method, null);
   }
 
-  private void assertMetrics(int serverPort) {
+  protected void assertMetrics(int serverPort, String handlerClassName) {
     getTesting()
         .waitAndAssertMetrics(
             "io.opentelemetry.thrift-0.13",
@@ -357,7 +371,8 @@ public abstract class AbstractThriftTest {
                                             equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
                                             equalTo(
                                                 RPC_METHOD,
-                                                CustomHandler.class.getName() + "/say")))));
+                                                getServerServiceName(handlerClassName)
+                                                    + "/say")))));
     getTesting()
         .waitAndAssertMetrics(
             "io.opentelemetry.thrift-0.13",
@@ -401,7 +416,7 @@ public abstract class AbstractThriftTest {
                     span -> assertClientSpan(span, "say", port).hasParent(trace.getSpan(0)),
                     span -> assertServerSpan(span, "say", port).hasParent(trace.getSpan(1))));
 
-    assertMetrics(port);
+    assertMetrics(port, CustomHandler.class.getName());
   }
 
   private static TTransportFactory framedTransportFactory() throws Exception {
@@ -449,7 +464,7 @@ public abstract class AbstractThriftTest {
                     span -> assertClientSpan(span, "say", port).hasParent(trace.getSpan(0)),
                     span -> assertServerSpan(span, "say", port).hasParent(trace.getSpan(1))));
 
-    assertMetrics(port);
+    assertMetrics(port, CustomHandler.class.getName());
   }
 
   @Test
@@ -509,7 +524,8 @@ public abstract class AbstractThriftTest {
                                             equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
                                             equalTo(
                                                 RPC_METHOD,
-                                                CustomHandler.class.getName() + "/withError"),
+                                                getServerServiceName(CustomHandler.class.getName())
+                                                    + "/withError"),
                                             equalTo(ERROR_TYPE, "_OTHER")))));
     getTesting()
         .waitAndAssertMetrics(
