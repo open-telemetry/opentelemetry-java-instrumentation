@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
@@ -18,7 +19,6 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
-import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_TRIGGER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -104,7 +104,7 @@ class AwsLambdaApiGatewayHandlerTest {
                         .hasTraceId("ee13e7026227ebf4c74278ae29691d7a")
                         .hasParentSpanId("0000000000000456")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(FAAS_INVOCATION_ID, "1-22-2024"),
+                            equalTo(stringKey("faas.invocation.id"), "1-22-2024"),
                             equalTo(FAAS_TRIGGER, "http"),
                             equalTo(HTTP_REQUEST_METHOD, "PUT"),
                             equalTo(URL_PATH, "/hello/world"),
@@ -134,7 +134,7 @@ class AwsLambdaApiGatewayHandlerTest {
                         .hasStatus(statusCode >= 500 ? StatusData.error() : StatusData.unset())
                         .hasEventsSatisfyingExactly()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(FAAS_INVOCATION_ID, "1-22-2024"),
+                            equalTo(stringKey("faas.invocation.id"), "1-22-2024"),
                             equalTo(FAAS_TRIGGER, "http"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, statusCode),
                             equalTo(
@@ -159,7 +159,7 @@ class AwsLambdaApiGatewayHandlerTest {
                         .hasStatus(StatusData.error())
                         .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(FAAS_INVOCATION_ID, "1-22-2024"),
+                            equalTo(stringKey("faas.invocation.id"), "1-22-2024"),
                             equalTo(FAAS_TRIGGER, "http"),
                             equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
     if (emitExceptionAsLogs()) {

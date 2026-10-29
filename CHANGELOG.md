@@ -4,6 +4,7 @@
 
 ### ⚠️ Breaking changes
 
+- AWS Lambda spans now use `faas.invocation.id` instead of `faas.invocation_id` for invocation IDs.
 - Replace `SpringWebfluxClientTelemetry.addFilter(list)` and
   `addFilterAndRegisterReactorHook(list)` with `createFilter()` and
   `createFilterAndRegisterReactorHook()`, used with `WebClient.Builder.filter(...)`.
