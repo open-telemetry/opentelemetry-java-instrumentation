@@ -43,31 +43,13 @@ class SpymemcachedAttributesGetterTest {
   @ParameterizedTest
   @EnumSource(
       value = StatusCode.class,
-      names = {
-        "SUCCESS",
-        "ERR_NOT_FOUND",
-        "ERR_EXISTS",
-        "ERR_2BIG",
-        "ERR_INVAL",
-        "ERR_NOT_STORED",
-        "ERR_DELTA_BADVAL",
-        "ERR_NOT_MY_VBUCKET",
-        "ERR_UNKNOWN_COMMAND",
-        "ERR_NO_MEM",
-        "ERR_NOT_SUPPORTED",
-        "ERR_INTERNAL",
-        "ERR_BUSY",
-        "ERR_TEMP_FAIL",
-        "CANCELLED",
-        "INTERRUPTED",
-        "TIMEDOUT",
-        "ERR_CLIENT"
-      })
-  void databaseOutcomeStatusesAreReportedRegardlessOfSuccess(StatusCode code) {
+      names = {"SUCCESS", "ERR_NOT_FOUND", "ERR_EXISTS", "ERR_NOT_STORED", "CANCELLED"})
+  void expectedOutcomesDoNotReportResponseStatus(StatusCode code) {
     OperationFuture<?> future = mock(OperationFuture.class);
-    when(future.getStatus()).thenReturn(new OperationStatus(true, "status", code));
+    when(future.getStatus())
+        .thenReturn(new OperationStatus(code == StatusCode.SUCCESS, "status", code));
 
-    assertThat(getter.getDbResponseStatusCode(null, future, null)).isEqualTo(code.name());
+    assertThat(getter.getDbResponseStatusCode(null, future, null)).isNull();
   }
 
   @Test
@@ -79,10 +61,10 @@ class SpymemcachedAttributesGetterTest {
     assertThat(getter.getErrorType(null, future, null)).isEqualTo("ERR_2BIG");
 
     when(future.getStatus()).thenReturn(new OperationStatus(true, "stored", StatusCode.SUCCESS));
-    assertThat(getter.getDbResponseStatusCode(null, future, null)).isEqualTo("SUCCESS");
+    assertThat(getter.getDbResponseStatusCode(null, future, null)).isNull();
     when(future.getStatus())
         .thenReturn(new OperationStatus(false, "cancelled", StatusCode.CANCELLED));
-    assertThat(getter.getDbResponseStatusCode(null, future, null)).isEqualTo("CANCELLED");
+    assertThat(getter.getDbResponseStatusCode(null, future, null)).isNull();
     assertThat(getter.getErrorType(null, future, null)).isNull();
     assertThat(getter.getDbResponseStatusCode(null, null, new IllegalStateException("failed")))
         .isNull();
@@ -125,22 +107,23 @@ class SpymemcachedAttributesGetterTest {
   }
 
   @Test
-  void cancelledFutureRetainsItsResponseStatus() {
+  void cancelledFutureDoesNotRetainItsResponseStatus() {
     OperationFuture<?> future = mock(OperationFuture.class);
     when(future.isCancelled()).thenReturn(true);
     when(future.getStatus())
         .thenReturn(new OperationStatus(false, "cancelled", StatusCode.CANCELLED));
 
-    assertThat(getter.getDbResponseStatusCode(null, future, null)).isEqualTo("CANCELLED");
+    assertThat(getter.getDbResponseStatusCode(null, future, null)).isNull();
     assertThat(getter.getErrorType(null, future, null)).isNull();
   }
 
   @Test
   void bulkFutureStatusIsAvailable() {
     BulkGetFuture<?> future = mock(BulkGetFuture.class);
-    when(future.getStatus()).thenReturn(new OperationStatus(true, "stored", StatusCode.SUCCESS));
+    when(future.getStatus())
+        .thenReturn(new OperationStatus(false, "too large", StatusCode.ERR_2BIG));
 
-    assertThat(getter.getDbResponseStatusCode(null, future, null)).isEqualTo("SUCCESS");
+    assertThat(getter.getDbResponseStatusCode(null, future, null)).isEqualTo("ERR_2BIG");
   }
 
   @Test

@@ -106,6 +106,7 @@ class DbClientMetricsTest {
                                                 SERVER_ADDRESS,
                                                 "db1.example:5432,db2.example:5432"),
                                             equalTo(ERROR_TYPE, "400"),
+                                            equalTo(DB_RESPONSE_STATUS_CODE, "400"),
                                             equalTo(NETWORK_PEER_ADDRESS, "1.2.3.4"),
                                             equalTo(NETWORK_PEER_PORT, 8080))
                                         .hasExemplarsSatisfying(
@@ -114,6 +115,80 @@ class DbClientMetricsTest {
                                                     .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
                                                     .hasSpanId("090a0b0c0d0e0f00"))
                                         .hasBucketBoundaries(DURATION_BUCKETS))));
+  }
+
+  @Test
+  void responseStatusCodeIsRecordedOnlyForFailedOperationsWithAvailableCode() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.create();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
+
+    OperationListener listener = DbClientMetrics.get().create(meterProvider.get("test"));
+
+    record(
+        listener,
+        "failedWithCode",
+        Attributes.builder().put(ERROR_TYPE, "400").put(DB_RESPONSE_STATUS_CODE, "400").build());
+    record(listener, "failedWithoutCode", Attributes.of(ERROR_TYPE, "io.example.DbException"));
+    record(listener, "successfulWithCode", Attributes.of(DB_RESPONSE_STATUS_CODE, "200"));
+    record(listener, "successfulWithoutCode", Attributes.empty());
+
+    assertThat(metricReader.collectAllMetrics())
+        .satisfiesExactly(
+            metric -> {
+              assertThat(metric).hasName("db.client.operation.duration");
+              assertThat(metric.getHistogramData().getPoints())
+                  .satisfiesExactlyInAnyOrder(
+                      point ->
+                          assertThat(point.getAttributes().asMap())
+                              .isEqualTo(
+                                  Attributes.builder()
+                                      .put(DB_SYSTEM_NAME, "myDb")
+                                      .put(DB_OPERATION_NAME, "failedWithCode")
+                                      .put(ERROR_TYPE, "400")
+                                      .put(DB_RESPONSE_STATUS_CODE, "400")
+                                      .build()
+                                      .asMap()),
+                      point ->
+                          assertThat(point.getAttributes().asMap())
+                              .isEqualTo(
+                                  Attributes.builder()
+                                      .put(DB_SYSTEM_NAME, "myDb")
+                                      .put(DB_OPERATION_NAME, "failedWithoutCode")
+                                      .put(ERROR_TYPE, "io.example.DbException")
+                                      .build()
+                                      .asMap()),
+                      point ->
+                          assertThat(point.getAttributes().asMap())
+                              .isEqualTo(
+                                  Attributes.builder()
+                                      .put(DB_SYSTEM_NAME, "myDb")
+                                      .put(DB_OPERATION_NAME, "successfulWithCode")
+                                      .build()
+                                      .asMap()),
+                      point ->
+                          assertThat(point.getAttributes().asMap())
+                              .isEqualTo(
+                                  Attributes.builder()
+                                      .put(DB_SYSTEM_NAME, "myDb")
+                                      .put(DB_OPERATION_NAME, "successfulWithoutCode")
+                                      .build()
+                                      .asMap()));
+            });
+  }
+
+  private static void record(
+      OperationListener listener, String operationName, Attributes responseAttributes) {
+    Context context =
+        listener.onStart(
+            Context.root(),
+            Attributes.builder()
+                .put(DB_SYSTEM_NAME, "myDb")
+                .put(DB_OPERATION_NAME, operationName)
+                .build(),
+            nanos(100));
+    listener.onEnd(context, responseAttributes, nanos(250));
   }
 
   private static long nanos(int millis) {

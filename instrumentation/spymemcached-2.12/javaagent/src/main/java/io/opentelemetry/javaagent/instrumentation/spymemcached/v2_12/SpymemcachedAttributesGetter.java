@@ -49,8 +49,18 @@ class SpymemcachedAttributesGetter
       return null;
     }
     StatusCode code = status.getStatusCode();
-    if (code == null) {
+    if (code == null || status.isSuccess()) {
       return null;
+    }
+    switch (code) {
+      case SUCCESS:
+      case ERR_NOT_FOUND:
+      case ERR_EXISTS:
+      case ERR_NOT_STORED:
+      case CANCELLED:
+        return null;
+      default:
+        break;
     }
     return code.name();
   }
