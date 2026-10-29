@@ -46,6 +46,7 @@ class LibraryTestRunnerTest {
           .isEqualTo("test-baggage-value-1");
       assertThat(Baggage.current().getEntryValue("test-baggage-key-2"))
           .isEqualTo("test-baggage-value-2");
+      assertThat(Baggage.current().getEntryValue("other")).isEqualTo("value");
       Map<String, String> injected = new HashMap<>();
       testing
           .getOpenTelemetry()
@@ -74,7 +75,8 @@ class LibraryTestRunnerTest {
                                 copyBaggage ? "test-baggage-value-1" : null),
                             equalTo(
                                 stringKey("test-baggage-key-2"),
-                                copyBaggage ? "test-baggage-value-2" : null))));
+                                copyBaggage ? "test-baggage-value-2" : null),
+                            equalTo(stringKey("other"), null))));
   }
 
   private static class MapGetter implements TextMapGetter<Map<String, String>> {

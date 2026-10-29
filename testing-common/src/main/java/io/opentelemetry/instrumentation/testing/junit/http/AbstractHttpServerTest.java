@@ -829,7 +829,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                       .hasName("controller")
                       .hasAttributesSatisfyingExactly(
                           equalTo(
-                              stringKey("test.extracted-baggage-key-1"), "test-baggage-value-1")));
+                              stringKey("test-baggage-extracted-key-1"), "test-baggage-value-1")));
         });
   }
 
@@ -858,9 +858,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                       .hasName("controller")
                       .hasAttributesSatisfyingExactly(
                           equalTo(
-                              stringKey("test.extracted-baggage-key-1"), "test-baggage-value-1"),
+                              stringKey("test-baggage-extracted-key-1"), "test-baggage-value-1"),
                           equalTo(
-                              stringKey("test.extracted-baggage-key-2"), "test-baggage-value-2")));
+                              stringKey("test-baggage-extracted-key-2"), "test-baggage-value-2")));
         });
   }
 

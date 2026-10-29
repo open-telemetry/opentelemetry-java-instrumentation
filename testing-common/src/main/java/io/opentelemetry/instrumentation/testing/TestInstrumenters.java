@@ -70,11 +70,11 @@ class TestInstrumenters {
             // HTTP fixtures observe handler baggage independently of SDK attribute copying.
             Span.current()
                 .setAttribute(
-                    "test.extracted-baggage-key-1",
+                    "test-baggage-extracted-key-1",
                     Baggage.current().getEntryValue("test-baggage-key-1"));
             Span.current()
                 .setAttribute(
-                    "test.extracted-baggage-key-2",
+                    "test-baggage-extracted-key-2",
                     Baggage.current().getEntryValue("test-baggage-key-2"));
           }
           return callback.get();
