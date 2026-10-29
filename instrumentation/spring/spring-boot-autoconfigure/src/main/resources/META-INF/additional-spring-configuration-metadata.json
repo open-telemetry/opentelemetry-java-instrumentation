@@ -287,7 +287,7 @@
     {
       "name": "otel.instrumentation.common.server-service-mapping",
       "type": "java.util.Map<java.lang.String, java.lang.String>",
-      "description": "Maps server addresses or configured targets to logical server service identities as comma-separated <code>host=serviceName</code> pairs. Flat mappings cannot express namespaces or targets containing commas or equals signs; use declarative <code>server_service_mapping</code> for those."
+      "description": "Maps server addresses or configured targets to logical server service identities as comma-separated <code>target=service_name</code> pairs. Flat mappings cannot express namespaces or targets containing commas or equals signs; use declarative <code>server_service_mapping</code> for those."
     },
     {
       "name": "otel.instrumentation.common.thread-details.enabled",
