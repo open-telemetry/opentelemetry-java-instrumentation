@@ -131,7 +131,7 @@ class RocketMqInstrumenterFactory {
       public void onStart(
           AttributesBuilder attributes, Context parentContext, SendMessageContext request) {
         String namespace = RocketMqNamespaceUtil.getNamespace(request);
-        attributes.put(MESSAGING_ROCKETMQ_NAMESPACE, namespace == null ? "" : namespace);
+        attributes.put(MESSAGING_ROCKETMQ_NAMESPACE, namespace);
       }
 
       @Override

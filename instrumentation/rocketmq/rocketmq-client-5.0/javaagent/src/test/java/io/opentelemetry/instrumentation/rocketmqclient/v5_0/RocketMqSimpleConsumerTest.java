@@ -316,7 +316,7 @@ class RocketMqSimpleConsumerTest {
         .hasAttributesSatisfyingExactly(
             equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
             equalTo(MESSAGING_SYSTEM, "rocketmq"),
-            equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
+            equalTo(MESSAGING_ROCKETMQ_NAMESPACE, null),
             equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
             equalTo(MESSAGING_OPERATION_NAME, "receive"),
             equalTo(MESSAGING_OPERATION_TYPE, "receive"),

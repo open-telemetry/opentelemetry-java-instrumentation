@@ -491,7 +491,7 @@ class RocketMqProducerWrapperTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_SYSTEM, "rocketmq"),
                             equalTo(MESSAGING_DESTINATION_NAME, "topic"),
-                            equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
+                            equalTo(MESSAGING_ROCKETMQ_NAMESPACE, null),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, count),

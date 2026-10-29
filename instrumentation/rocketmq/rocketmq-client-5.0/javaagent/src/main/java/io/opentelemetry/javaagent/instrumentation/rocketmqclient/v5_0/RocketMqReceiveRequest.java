@@ -71,9 +71,11 @@ class RocketMqReceiveRequest {
   @Nullable
   String getNamespace() {
     ReceiveMessageRequest request = this.request;
-    return request == null
-        ? namespace
-        : request.getMessageQueue().getTopic().getResourceNamespace();
+    String namespace =
+        request == null
+            ? this.namespace
+            : request.getMessageQueue().getTopic().getResourceNamespace();
+    return RocketMqNamespaceUtil.normalize(namespace);
   }
 
   String getConsumerGroup() {

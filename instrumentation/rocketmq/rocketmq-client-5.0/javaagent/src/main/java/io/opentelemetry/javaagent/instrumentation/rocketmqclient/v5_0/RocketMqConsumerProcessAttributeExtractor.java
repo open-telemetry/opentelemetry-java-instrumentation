@@ -37,9 +37,9 @@ class RocketMqConsumerProcessAttributeExtractor
     attributes.put(MESSAGING_ROCKETMQ_MESSAGE_KEYS, new ArrayList<>(messageView.getKeys()));
     String consumerGroup = VirtualFieldStore.getConsumerGroupByMessage(messageView);
     attributes.put(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup);
-    attributes.put(
-        MESSAGING_ROCKETMQ_NAMESPACE,
-        ((MessageViewImpl) messageView).getMessageQueue().getTopicResource().getNamespace());
+    String namespace =
+        ((MessageViewImpl) messageView).getMessageQueue().getTopicResource().getNamespace();
+    attributes.put(MESSAGING_ROCKETMQ_NAMESPACE, RocketMqNamespaceUtil.normalize(namespace));
   }
 
   @Override

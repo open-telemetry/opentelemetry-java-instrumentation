@@ -42,7 +42,7 @@ class RocketMqInstrumenterFactoryTest {
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Test
-  void usesEmptyProducerNamespaceByDefault() {
+  void omitsProducerNamespaceByDefault() {
     SendMessageContext request = mock(SendMessageContext.class);
     when(request.getMessage()).thenReturn(new Message("topic", new byte[0]));
     Instrumenter<SendMessageContext, Void> instrumenter =
@@ -65,7 +65,7 @@ class RocketMqInstrumenterFactoryTest {
                             equalTo(MESSAGING_DESTINATION_NAME, "topic"),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                            equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""))));
+                            equalTo(MESSAGING_ROCKETMQ_NAMESPACE, null))));
   }
 
   @Test
