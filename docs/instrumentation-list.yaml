@@ -1353,25 +1353,6 @@ definitions:
       description: Enables host ID resource detection in the Java agent.
       type: boolean
       default: false
-    rpc.semconv.dual_emit:
-      declarative_name: general.rpc.semconv.dual_emit
-      description: 'With `version: 1` and `experimental: true`, emits both the current
-        and the preview RPC semantic conventions.'
-      type: boolean
-      default: false
-    rpc.semconv.experimental:
-      declarative_name: general.rpc.semconv.experimental
-      description: 'With `version: 1`, selects the preview RPC semantic conventions.
-        Required, because version 1 of the RPC semantic conventions is not yet stable.'
-      type: boolean
-      default: false
-    rpc.semconv.version:
-      declarative_name: general.rpc.semconv.version
-      description: 'RPC semantic convention version to emit: `0` for the current conventions
-        or `1` together with `experimental: true` for the preview conventions. Takes
-        precedence over the semantic convention opt-in settings; when unset, those
-        settings select the conventions.'
-      type: int
     sanitization.url.sensitive-query-parameters:
       name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
       declarative_name: general.sanitization.url.sensitive_query_parameters
@@ -1406,10 +1387,10 @@ definitions:
       name: otel.semconv-stability.preview
       declarative_name: java.common.semconv_stability.preview
       description: Opt-in to emit preview (not yet stable) semantic conventions for
-        the `rpc` and `service.peer` groups. Use `<group>/dup` to emit both the old
-        and the preview conventions simultaneously. The flat `otel.semconv-stability.preview`
-        property is read only from system properties and environment variables, not
-        from the agent configuration file.
+        the `service.peer` group. Use `<group>/dup` to emit both the old and the preview
+        conventions simultaneously. The flat `otel.semconv-stability.preview` property
+        is read only from system properties and environment variables, not from the
+        agent configuration file.
       type: list
     span-suppression-strategy:
       name: otel.instrumentation.common.span-suppression-strategy
@@ -5297,112 +5278,6 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    rpc.client.duration-69e5f261:
-      name: rpc.client.duration
-      description: Measures the duration of outbound RPC.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: ms
-      attributes:
-      - name: network.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    rpc.client.duration-bd919f7d:
-      name: rpc.client.duration
-      description: Measures the duration of outbound RPC.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: ms
-      attributes:
-      - name: rpc.grpc.status_code
-        type: LONG
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    rpc.client.duration-c6925f70:
-      name: rpc.client.duration
-      description: Measures the duration of outbound RPC.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: ms
-      attributes:
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    rpc.client.duration-e3d65022:
-      name: rpc.client.duration
-      description: Measures the duration of outbound RPC.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: ms
-      attributes:
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-    rpc.client.request.size-0d8f967b:
-      name: rpc.client.request.size
-      description: Measures the size of RPC request messages (uncompressed).
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: By
-      attributes:
-      - name: rpc.grpc.status_code
-        type: LONG
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    rpc.client.response.size-d0124e0e:
-      name: rpc.client.response.size
-      description: Measures the size of RPC response messages (uncompressed).
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: By
-      attributes:
-      - name: rpc.grpc.status_code
-        type: LONG
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
     rpc.server.call.duration-09bb76fd:
       name: rpc.server.call.duration
       description: Measures the duration of an incoming Remote Procedure Call (RPC).
@@ -5450,116 +5325,6 @@ definitions:
         type: STRING
       - name: rpc.system.name
         type: STRING
-    rpc.server.duration-4b5b404d:
-      name: rpc.server.duration
-      description: Measures the duration of inbound RPC.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: ms
-      attributes:
-      - name: network.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    rpc.server.duration-6ea1f0bd:
-      name: rpc.server.duration
-      description: Measures the duration of inbound RPC.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: ms
-      attributes:
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-    rpc.server.duration-aa764f4b:
-      name: rpc.server.duration
-      description: Measures the duration of inbound RPC.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: ms
-      attributes:
-      - name: network.type
-        type: STRING
-      - name: rpc.grpc.status_code
-        type: LONG
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    rpc.server.duration-cb53bb44:
-      name: rpc.server.duration
-      description: Measures the duration of inbound RPC.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: ms
-      attributes:
-      - name: network.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-    rpc.server.request.size-75ef4f8e:
-      name: rpc.server.request.size
-      description: Measures the size of RPC request messages (uncompressed).
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: By
-      attributes:
-      - name: network.type
-        type: STRING
-      - name: rpc.grpc.status_code
-        type: LONG
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    rpc.server.response.size-fb45af0b:
-      name: rpc.server.response.size
-      description: Measures the size of RPC response messages (uncompressed).
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: By
-      attributes:
-      - name: network.type
-        type: STRING
-      - name: rpc.grpc.status_code
-        type: LONG
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
     system.disk.io-7a80ac09:
       name: system.disk.io
       description: Disk bytes transferred.
@@ -5762,9 +5527,6 @@ global_configuration_refs:
 - semconv-stability.preview
 - semconv-exception.signal.preview
 - span-suppression-strategy
-- rpc.semconv.version
-- rpc.semconv.experimental
-- rpc.semconv.dual_emit
 - semconv-stability.opt-in.deprecated-declarative-name
 libraries:
 - name: activej-http-6.0
@@ -6064,18 +5826,18 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - rpc.client.duration-c6925f70
-    - rpc.server.duration-6ea1f0bd
+    - rpc.client.call.duration-a776e0a5
+    - rpc.server.call.duration-4a9fd153
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: error.type
+        type: STRING
       - name: peer.service
         type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
+      - name: rpc.system.name
         type: STRING
       - name: server.address
         type: STRING
@@ -6083,17 +5845,21 @@ libraries:
         type: LONG
     - span_kind: SERVER
       attributes:
+      - name: error.type
+        type: STRING
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: network.type
+        type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.service
+      - name: rpc.method_original
         type: STRING
-      - name: rpc.system
+      - name: rpc.system.name
         type: STRING
-  - when: otel.semconv-stability.preview=rpc,service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - rpc.client.call.duration-a776e0a5
     - rpc.server.call.duration-4a9fd153
@@ -6125,51 +5891,6 @@ libraries:
       - name: rpc.method
         type: STRING
       - name: rpc.method_original
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-  - when: otel.semconv-stability.preview=rpc/dup,service.peer
-    metric_refs:
-    - rpc.client.call.duration-a776e0a5
-    - rpc.client.duration-c6925f70
-    - rpc.server.call.duration-4a9fd153
-    - rpc.server.duration-6ea1f0bd
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
-        type: STRING
-    - span_kind: SERVER
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.method_original
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -6750,36 +6471,6 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
-      - name: rpc.grpc.status_code
-        type: LONG
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    - span_kind: SERVER
-      attributes:
-      - name: rpc.grpc.status_code
-        type: LONG
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-  - when: otel.semconv-stability.preview=rpc
-    spans:
-    - span_kind: CLIENT
-      attributes:
       - name: rpc.method
         type: STRING
       - name: rpc.status_code
@@ -6795,44 +6486,6 @@ libraries:
       - name: rpc.method
         type: STRING
       - name: rpc.status_code
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-  - when: otel.semconv-stability.preview=rpc/dup
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: rpc.grpc.status_code
-        type: LONG
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.status_code
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    - span_kind: SERVER
-      attributes:
-      - name: rpc.grpc.status_code
-        type: LONG
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.status_code
-        type: STRING
-      - name: rpc.system
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -9966,6 +9619,8 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033
@@ -10006,8 +9661,6 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
 - name: elasticsearch-transport-5.3
   display_name: Elasticsearch Transport Client
   description: |
@@ -10045,8 +9698,6 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033
@@ -10097,6 +9748,8 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
+      - name: server.port
+        type: LONG
 - name: elasticsearch-transport-6.0
   display_name: Elasticsearch Transport Client
   description: |
@@ -10134,8 +9787,6 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
-      - name: server.port
-        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033
@@ -10566,22 +10217,18 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - rpc.client.duration-bd919f7d
-    - rpc.client.request.size-0d8f967b
-    - rpc.client.response.size-d0124e0e
-    - rpc.server.duration-aa764f4b
-    - rpc.server.request.size-75ef4f8e
-    - rpc.server.response.size-fb45af0b
+    - rpc.client.call.duration-23f3e1cb
+    - rpc.server.call.duration-09bb76fd
     spans:
     - span_kind: CLIENT
       attributes:
-      - name: rpc.grpc.status_code
-        type: LONG
+      - name: error.type
+        type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.service
+      - name: rpc.status_code
         type: STRING
-      - name: rpc.system
+      - name: rpc.system.name
         type: STRING
       - name: server.address
         type: STRING
@@ -10589,19 +10236,19 @@ libraries:
         type: LONG
     - span_kind: SERVER
       attributes:
+      - name: error.type
+        type: STRING
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
         type: LONG
       - name: network.type
         type: STRING
-      - name: rpc.grpc.status_code
-        type: LONG
       - name: rpc.method
         type: STRING
-      - name: rpc.service
+      - name: rpc.status_code
         type: STRING
-      - name: rpc.system
+      - name: rpc.system.name
         type: STRING
       - name: server.address
         type: STRING
@@ -10609,26 +10256,22 @@ libraries:
         type: LONG
   - when: otel.instrumentation.grpc.experimental-span-attributes=true
     metric_refs:
-    - rpc.client.duration-bd919f7d
-    - rpc.client.request.size-0d8f967b
-    - rpc.client.response.size-d0124e0e
-    - rpc.server.duration-aa764f4b
-    - rpc.server.request.size-75ef4f8e
-    - rpc.server.response.size-fb45af0b
+    - rpc.client.call.duration-23f3e1cb
+    - rpc.server.call.duration-09bb76fd
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: error.type
+        type: STRING
       - name: grpc.received.message_count
         type: LONG
       - name: grpc.sent.message_count
         type: LONG
-      - name: rpc.grpc.status_code
-        type: LONG
       - name: rpc.method
         type: STRING
-      - name: rpc.service
+      - name: rpc.status_code
         type: STRING
-      - name: rpc.system
+      - name: rpc.system.name
         type: STRING
       - name: server.address
         type: STRING
@@ -10636,6 +10279,8 @@ libraries:
         type: LONG
     - span_kind: SERVER
       attributes:
+      - name: error.type
+        type: STRING
       - name: grpc.received.message_count
         type: LONG
       - name: grpc.sent.message_count
@@ -10646,19 +10291,17 @@ libraries:
         type: LONG
       - name: network.type
         type: STRING
-      - name: rpc.grpc.status_code
-        type: LONG
       - name: rpc.method
         type: STRING
-      - name: rpc.service
+      - name: rpc.status_code
         type: STRING
-      - name: rpc.system
+      - name: rpc.system.name
         type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.preview=rpc
+  - when: otel.semconv.exception.signal.preview=logs
     metric_refs:
     - rpc.client.call.duration-23f3e1cb
     - rpc.server.call.duration-09bb76fd
@@ -10697,49 +10340,6 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv.exception.signal.preview=logs
-    metric_refs:
-    - rpc.client.duration-bd919f7d
-    - rpc.client.request.size-0d8f967b
-    - rpc.client.response.size-d0124e0e
-    - rpc.server.duration-aa764f4b
-    - rpc.server.request.size-75ef4f8e
-    - rpc.server.response.size-fb45af0b
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: rpc.grpc.status_code
-        type: LONG
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    - span_kind: SERVER
-      attributes:
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.type
-        type: STRING
-      - name: rpc.grpc.status_code
-        type: LONG
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
     event_refs:
     - rpc.client.call.exception-fadee4e0
     - rpc.server.call.exception-738e89fe
@@ -10761,8 +10361,8 @@ libraries:
   - otel.instrumentation.guava.experimental-span-attributes
 - name: gwt-2.0
   display_name: GWT
-  description: This instrumentation enables RPC server spans for GWT RPC requests.
-    RPC server metrics are emitted when preview RPC semantic conventions are enabled.
+  description: This instrumentation enables RPC server spans and duration metrics
+    for GWT RPC requests.
   semantic_conventions:
   - RPC_SERVER_SPANS
   - RPC_SERVER_METRICS
@@ -10777,16 +10377,6 @@ libraries:
   - org.gwtproject:gwt-servlet:[2.10.0,)
   telemetry:
   - when: default
-    spans:
-    - span_kind: SERVER
-      attributes:
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-  - when: otel.semconv-stability.preview=rpc
     metric_refs:
     - rpc.server.call.duration-4a9fd153
     spans:
@@ -10795,35 +10385,20 @@ libraries:
       - name: error.type
         type: STRING
       - name: rpc.method
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-  - when: otel.semconv-stability.preview=rpc/dup
-    metric_refs:
-    - rpc.server.call.duration-4a9fd153
-    - rpc.server.duration-6ea1f0bd
-    spans:
-    - span_kind: SERVER
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
         type: STRING
       - name: rpc.system.name
         type: STRING
   - when: otel.semconv.exception.signal.preview=logs
+    metric_refs:
+    - rpc.server.call.duration-4a9fd153
     spans:
     - span_kind: SERVER
       attributes:
+      - name: error.type
+        type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
+      - name: rpc.system.name
         type: STRING
     event_refs:
     - rpc.server.call.exception-c007c661
@@ -18103,7 +17678,7 @@ libraries:
 - name: rmi
   display_name: RMI (Remote Method Invocation)
   description: |
-    This instrumentation enables RPC client spans and RPC server spans for Java RMI (Remote Method Invocation), with duration metrics when RPC semantic convention preview is enabled.
+    This instrumentation enables RPC client spans and RPC server spans for Java RMI (Remote Method Invocation), with duration metrics.
   semantic_conventions:
   - RPC_CLIENT_SPANS
   - RPC_CLIENT_METRICS
@@ -18119,24 +17694,6 @@ libraries:
   - Java 8+
   telemetry:
   - when: default
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-    - span_kind: SERVER
-      attributes:
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-  - when: otel.semconv-stability.preview=rpc
     metric_refs:
     - rpc.client.call.duration-34bfa639
     - rpc.server.call.duration-4a9fd153
@@ -18154,37 +17711,6 @@ libraries:
       - name: error.type
         type: STRING
       - name: rpc.method
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-  - when: otel.semconv-stability.preview=rpc/dup
-    metric_refs:
-    - rpc.client.call.duration-34bfa639
-    - rpc.client.duration-e3d65022
-    - rpc.server.call.duration-4a9fd153
-    - rpc.server.duration-6ea1f0bd
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-    - span_kind: SERVER
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -18884,18 +18410,20 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - rpc.client.duration-c6925f70
-    - rpc.server.duration-6ea1f0bd
+    - rpc.client.call.duration-23f3e1cb
+    - rpc.server.call.duration-8600ccb1
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: error.type
+        type: STRING
       - name: peer.service
         type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.service
+      - name: rpc.status_code
         type: STRING
-      - name: rpc.system
+      - name: rpc.system.name
         type: STRING
       - name: server.address
         type: STRING
@@ -18903,13 +18431,15 @@ libraries:
         type: LONG
     - span_kind: SERVER
       attributes:
+      - name: error.type
+        type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.service
+      - name: rpc.status_code
         type: STRING
-      - name: rpc.system
+      - name: rpc.system.name
         type: STRING
-  - when: otel.semconv-stability.preview=rpc,service.peer
+  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - rpc.client.call.duration-23f3e1cb
     - rpc.server.call.duration-8600ccb1
@@ -18937,64 +18467,25 @@ libraries:
       - name: rpc.method
         type: STRING
       - name: rpc.status_code
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-  - when: otel.semconv-stability.preview=rpc/dup,service.peer
-    metric_refs:
-    - rpc.client.call.duration-23f3e1cb
-    - rpc.client.duration-c6925f70
-    - rpc.server.call.duration-8600ccb1
-    - rpc.server.duration-6ea1f0bd
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.status_code
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
-        type: STRING
-    - span_kind: SERVER
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.status_code
-        type: STRING
-      - name: rpc.system
         type: STRING
       - name: rpc.system.name
         type: STRING
   - when: otel.semconv.exception.signal.preview=logs
     metric_refs:
-    - rpc.client.duration-c6925f70
-    - rpc.server.duration-6ea1f0bd
+    - rpc.client.call.duration-23f3e1cb
+    - rpc.server.call.duration-8600ccb1
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: error.type
+        type: STRING
       - name: peer.service
         type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.service
+      - name: rpc.status_code
         type: STRING
-      - name: rpc.system
+      - name: rpc.system.name
         type: STRING
       - name: server.address
         type: STRING
@@ -19002,11 +18493,13 @@ libraries:
         type: LONG
     - span_kind: SERVER
       attributes:
+      - name: error.type
+        type: STRING
       - name: rpc.method
         type: STRING
-      - name: rpc.service
+      - name: rpc.status_code
         type: STRING
-      - name: rpc.system
+      - name: rpc.system.name
         type: STRING
     event_refs:
     - rpc.client.call.exception-fadee4e0
@@ -19583,9 +19076,8 @@ libraries:
         type: LONG
 - name: spring-rmi-4.0
   display_name: Spring RMI
-  description: This instrumentation enables RPC client and RPC server spans for Spring
-    RMI applications, and duration metrics when RPC preview semantic conventions are
-    enabled.
+  description: This instrumentation enables RPC client and RPC server spans and duration
+    metrics for Spring RMI applications.
   semantic_conventions:
   - RPC_CLIENT_SPANS
   - RPC_CLIENT_METRICS
@@ -19601,24 +19093,6 @@ libraries:
   - org.springframework:spring-context:[4.0.0.RELEASE,6)
   telemetry:
   - when: default
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-    - span_kind: SERVER
-      attributes:
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-  - when: otel.semconv-stability.preview=rpc
     metric_refs:
     - rpc.client.call.duration-34bfa639
     - rpc.server.call.duration-4a9fd153
@@ -19638,39 +19112,6 @@ libraries:
       - name: rpc.method
         type: STRING
       - name: rpc.method_original
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-  - when: otel.semconv-stability.preview=rpc/dup
-    metric_refs:
-    - rpc.client.call.duration-34bfa639
-    - rpc.client.duration-e3d65022
-    - rpc.server.call.duration-4a9fd153
-    - rpc.server.duration-6ea1f0bd
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-    - span_kind: SERVER
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.method_original
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
         type: STRING
       - name: rpc.system.name
         type: STRING
@@ -20299,51 +19740,6 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - rpc.client.duration-69e5f261
-    - rpc.server.duration-4b5b404d
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    - span_kind: SERVER
-      attributes:
-      - name: network.local.address
-        type: STRING
-      - name: network.local.port
-        type: LONG
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-  - when: otel.semconv-stability.preview=rpc
-    metric_refs:
     - rpc.client.call.duration-23f3e1cb
     - rpc.server.call.duration-4a9fd153
     spans:
@@ -20382,59 +19778,6 @@ libraries:
       - name: network.type
         type: STRING
       - name: rpc.method
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-  - when: otel.semconv-stability.preview=rpc/dup
-    metric_refs:
-    - rpc.client.call.duration-23f3e1cb
-    - rpc.client.duration-69e5f261
-    - rpc.server.call.duration-4a9fd153
-    - rpc.server.duration-cb53bb44
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.status_code
-        type: STRING
-      - name: rpc.system
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    - span_kind: SERVER
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: network.local.address
-        type: STRING
-      - name: network.local.port
-        type: LONG
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.service
-        type: STRING
-      - name: rpc.system
         type: STRING
       - name: rpc.system.name
         type: STRING

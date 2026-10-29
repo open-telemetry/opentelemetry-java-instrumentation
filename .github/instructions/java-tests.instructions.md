@@ -173,37 +173,50 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 
 ## [Testing] Mode-Dependent Expected Values
 
-- Use the shared static `TestLatestDeps.testLatestDeps()` and
-  `SemconvStability.emitOld*Semconv()`, `emitStable*Semconv()`, or `emitPreview*Semconv()` accessors,
-  preferably via static imports, rather than repeating inline
-  `Boolean.getBoolean(...)` calls with the mode property names. A
+- When a feature supports distinct telemetry emission modes, exercise each
+  supported mode in a separate test JVM: DEFAULT-only, PREVIEW-only, and
+  combined emission only where supported. Do not require variants for features
+  without distinct modes or presume every feature supports combined emission.
+- DEFAULT telemetry covered by the [repository compatibility policy](../../VERSIONING.md)
+  remains backward compatible until the next major version, subject to the
+  telemetry changes that policy permits. PREVIEW telemetry is provisional.
+  These emission-mode labels do not establish formal semantic-convention
+  stability or extend compatibility guarantees to alpha artifacts.
+- Use the shared static `TestLatestDeps.testLatestDeps()` and reuse existing
+  appropriate shared mode accessors when available, preferably via static imports,
+  rather than repeating inline `Boolean.getBoolean(...)` calls with mode property names. A
   module-specific experimental flag may use a per-class constant such as
   `EXPERIMENTAL_ATTRIBUTES`; keep the conventional `experimental(value)`
   helper for attribute values absent when the flag is off.
-- Name stable-selection accessors `emitStable*Semconv()` and preview-selection
-  accessors `emitPreview*Semconv()`.
 - Assert keys and values directly when expectations do not depend on a mode:
 
   ```java
-  equalTo(DB_SYSTEM_NAME, ELASTICSEARCH);
-  equalTo(DB_OPERATION_NAME, "info");
-  equalTo(ERROR_TYPE, "42601");
+  equalTo(stringKey("example.invariant"), "value");
   ```
 
-- RPC expectations always use the current conventions directly, without mode checks.
 - Keep short conditional expected values directly in the assertion when the
-  expected values differ by mode or an attribute exists in only one mode:
+  expected values differ by mode or an attribute exists in only one mode.
+  In these examples, `emitDefault` and `emitPreview` are illustrative booleans,
+  not required accessor names or new helpers. `null` means assert absence;
+  both flags can be true in a supported combined mode:
 
   ```java
-  equalTo(PEER_SERVICE, emitOldServicePeerSemconv() ? "backend" : null);
-  equalTo(SERVICE_PEER_NAME, emitPreviewServicePeerSemconv() ? "backend" : null);
+  equalTo(stringKey("example.default"), emitDefault ? "value" : null);
+  equalTo(stringKey("example.preview"), emitPreview ? "value" : null);
+  ```
+
+- When a value changes between mutually exclusive DEFAULT and PREVIEW modes,
+  keep both expected values inline:
+
+  ```java
+  equalTo(stringKey("example.name"), emitPreview ? "preview-value" : "default-value");
   ```
 
 - Nested ternaries are allowed directly in attribute-assertion expected values. Other test code follows
   the normal conditional-expression rule.
 - Do not extract the ternary into a helper such as `spanName(...)`,
-  `oldOrExperimental(value)`, or `expectedNamespace()` when no established
-  semconv utility applies. Seeing both expected values at the assertion is more
+  `modeValue(...)`, or `expectedNamespace()` when no established
+  mode utility applies. Seeing both expected values at the assertion is more
   useful than deduplicating a short expression.
 - Do not conditionally build a `List<AttributeAssertion>` and then pass that
   list to `hasAttributesSatisfyingExactly(...)`. Pass each assertion directly
@@ -212,22 +225,22 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 
   ```java
   // Bad: the helper conditionally builds a list and hides the expected shape.
-  private static List<AttributeAssertion> servicePeerAttributes() {
+  private static List<AttributeAssertion> modeAttributes() {
     List<AttributeAssertion> attributes = new ArrayList<>();
-    if (emitOldServicePeerSemconv()) {
-      attributes.add(equalTo(PEER_SERVICE, "backend"));
+    if (emitDefault) {
+      attributes.add(equalTo(stringKey("example.default"), "value"));
     }
-    if (emitPreviewServicePeerSemconv()) {
-      attributes.add(equalTo(SERVICE_PEER_NAME, "backend"));
+    if (emitPreview) {
+      attributes.add(equalTo(stringKey("example.preview"), "value"));
     }
     return attributes;
   }
-  span.hasAttributesSatisfyingExactly(servicePeerAttributes());
+  span.hasAttributesSatisfyingExactly(modeAttributes());
 
   // Good: pass each assertion directly and keep its mode check visible.
   span.hasAttributesSatisfyingExactly(
-      equalTo(PEER_SERVICE, emitOldServicePeerSemconv() ? "backend" : null),
-      equalTo(SERVICE_PEER_NAME, emitPreviewServicePeerSemconv() ? "backend" : null));
+      equalTo(stringKey("example.default"), emitDefault ? "value" : null),
+      equalTo(stringKey("example.preview"), emitPreview ? "value" : null));
   ```
 
 - The conventional `experimental(value)` helper is the one exception: keep it.
