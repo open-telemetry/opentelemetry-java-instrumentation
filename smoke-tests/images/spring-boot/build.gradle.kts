@@ -54,6 +54,7 @@ java {
 
 springBoot {
   buildInfo {
+    excludes.add("time")
     properties {
       version = "1.2.3"
     }

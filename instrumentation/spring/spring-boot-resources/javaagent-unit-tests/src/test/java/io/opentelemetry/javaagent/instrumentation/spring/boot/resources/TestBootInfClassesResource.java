@@ -11,6 +11,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -43,5 +46,15 @@ class TestBootInfClassesResource {
     SpringBootServiceVersionDetector guesser = new SpringBootServiceVersionDetector();
     Resource result = guesser.createResource(config);
     assertThat(result.getAttribute(SERVICE_VERSION)).isEqualTo("1.2.3");
+  }
+
+  @Test
+  void testBuildInfoHasNoTimestamp() throws IOException {
+    Properties properties = new Properties();
+    try (InputStream in = getClass().getResourceAsStream("/META-INF/build-info.properties")) {
+      assertThat(in).isNotNull();
+      properties.load(in);
+    }
+    assertThat(properties).containsEntry("build.version", "1.2.3").doesNotContainKey("build.time");
   }
 }
