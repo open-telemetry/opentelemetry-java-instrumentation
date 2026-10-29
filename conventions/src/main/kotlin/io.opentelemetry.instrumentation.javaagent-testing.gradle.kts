@@ -166,7 +166,8 @@ afterEvaluate {
       // instead.
 
       val lib = it.absoluteFile
-      if (lib.name.startsWith("opentelemetry-javaagent-")) {
+      if (lib.name.startsWith("opentelemetry-javaagent-") &&
+        !lib.name.startsWith("opentelemetry-javaagent-instrumentation-testing")) {
         // These dependencies are packaged into the testing jar, so we need to exclude them from the test
         // classpath, which automatically inherits them, to ensure our shaded versions are used.
         return@filter false
