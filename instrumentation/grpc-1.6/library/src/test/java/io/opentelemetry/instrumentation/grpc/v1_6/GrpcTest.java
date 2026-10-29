@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;

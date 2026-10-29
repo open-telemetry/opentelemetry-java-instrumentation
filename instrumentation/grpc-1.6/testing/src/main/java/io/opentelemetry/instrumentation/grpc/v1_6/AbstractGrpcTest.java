@@ -1480,12 +1480,6 @@ public abstract class AbstractGrpcTest {
 
   @Test
   void setCapturedRequestHeaders() throws Exception {
-    AttributeKey<List<String>> clientAttributeKey =
-        AttributeKey.stringArrayKey("rpc.request.header." + CLIENT_REQUEST_HEADER_KEY);
-    AttributeKey<List<String>> serverAttributeKey =
-        AttributeKey.stringArrayKey("rpc.request.header." + SERVER_REQUEST_HEADER_KEY);
-    AttributeKey<List<String>> excludedAttributeKey =
-        AttributeKey.stringArrayKey("rpc.request.header." + EXCLUDED_REQUEST_HEADER_KEY);
     String serverHeaderValue = "server-value";
     String clientHeaderValue = "client-value";
 
@@ -1540,15 +1534,27 @@ public abstract class AbstractGrpcTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfying(
-                                equalTo(clientAttributeKey, singletonList(clientHeaderValue)),
-                                equalTo(excludedAttributeKey, null)),
+                                equalTo(
+                                    stringArrayKey(
+                                        "rpc.request.header." + CLIENT_REQUEST_HEADER_KEY),
+                                    singletonList(clientHeaderValue)),
+                                equalTo(
+                                    stringArrayKey(
+                                        "rpc.request.header." + EXCLUDED_REQUEST_HEADER_KEY),
+                                    null)),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfying(
-                                equalTo(serverAttributeKey, singletonList(serverHeaderValue)),
-                                equalTo(excludedAttributeKey, null))));
+                                equalTo(
+                                    stringArrayKey(
+                                        "rpc.request.header." + SERVER_REQUEST_HEADER_KEY),
+                                    singletonList(serverHeaderValue)),
+                                equalTo(
+                                    stringArrayKey(
+                                        "rpc.request.header." + EXCLUDED_REQUEST_HEADER_KEY),
+                                    null))));
   }
 
   private ManagedChannel createChannel(Server server) throws Exception {
