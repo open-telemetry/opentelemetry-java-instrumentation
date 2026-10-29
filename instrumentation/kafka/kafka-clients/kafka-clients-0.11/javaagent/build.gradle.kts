@@ -1,5 +1,4 @@
 import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -36,10 +35,11 @@ testing {
           filter {
             includeTestsMatching("KafkaClientSuppressReceiveSpansTest.testKafkaProduceAndConsume")
           }
-          telemetryConfig(
+          systemProperty(
             "otel.java.experimental.span-attributes.copy-from-baggage.include",
             "test-baggage-key-1,test-baggage-key-2"
           )
+          systemProperty("collectMetadata", false)
         }
       }
     }

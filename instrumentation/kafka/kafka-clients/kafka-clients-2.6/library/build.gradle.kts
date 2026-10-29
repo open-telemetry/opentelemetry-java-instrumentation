@@ -1,5 +1,4 @@
 import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.library-instrumentation")
@@ -31,7 +30,8 @@ testing {
             includeTestsMatching("InterceptorsTest.testInterceptors")
             includeTestsMatching("InterceptorsSuppressReceiveSpansTest.testInterceptors")
           }
-          telemetryConfig(baggageCopyProperty, baggageKeys)
+          systemProperty(baggageCopyProperty, baggageKeys)
+          systemProperty("collectMetadata", false)
         }
       }
     }
@@ -77,10 +77,9 @@ tasks {
       includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.WrapperTest.testConsumerError")
     }
     systemProperty("test.messagingReceiveTelemetryEnabled", "true")
-    telemetryConfig(baggageCopyProperty, baggageKeys)
     systemProperty(
       "metadataConfig",
-      "KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true),$baggageCopyProperty=$baggageKeys"
+      "KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)"
     )
   }
 
@@ -94,11 +93,10 @@ tasks {
     }
     systemProperty("test.messagingReceiveTelemetryEnabled", "true")
     systemProperty("test.captureExperimentalSpanAttributes", "true")
-    telemetryConfig(baggageCopyProperty, baggageKeys)
     systemProperty(
       "metadataConfig",
       "KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)," +
-        "KafkaTelemetryBuilder.setCaptureExperimentalSpanAttributes(true),$baggageCopyProperty=$baggageKeys"
+        "KafkaTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)"
     )
   }
 
