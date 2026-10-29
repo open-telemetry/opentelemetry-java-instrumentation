@@ -1,0 +1,41 @@
+initscript {
+  repositories {
+    mavenCentral()
+    gradlePluginPortal()
+  }
+  dependencies {
+    classpath("com.diffplug.spotless:spotless-plugin-gradle:8.10.4")
+  }
+}
+
+allprojects {
+  if (projectDir.name == "gradle-plugins") {
+    apply plugin: com.diffplug.gradle.spotless.SpotlessPlugin
+    spotless {
+      java {
+        googleJavaFormat()
+        licenseHeaderFile(
+          file("../buildscripts/spotless.license.java"),
+          "(package|import|public)"
+        )
+        target(
+          "src/main/java/io/opentelemetry/javaagent/muzzle/MuzzleBenchmark.java",
+          "src/test/java/io/opentelemetry/javaagent/muzzle/MuzzleBenchmarkTest.java"
+        )
+      }
+      kotlinGradle {
+        ktlint().editorConfigOverride([
+          "indent_size": "2",
+          "continuation_indent_size": "2",
+          "ktlint_standard_no-wildcard-imports": "disabled",
+          "ktlint_standard_max-line-length": "disabled",
+          "ktlint_standard_trailing-comma-on-call-site": "disabled",
+          "ktlint_standard_trailing-comma-on-declaration-site": "disabled",
+          "ktlint_standard_wrapping": "disabled",
+          "ktlint_standard_property-naming": "disabled"
+        ])
+        target("src/main/kotlin/io.opentelemetry.instrumentation.muzzle-check.gradle.kts")
+      }
+    }
+  }
+}

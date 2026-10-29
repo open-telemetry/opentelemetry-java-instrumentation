@@ -7,14 +7,6 @@ on:
         type: boolean
         required: false
         default: true
-      checkout-ref:
-        type: string
-        required: false
-        default: ""
-      tasks:
-        type: string
-        required: false
-        default: '[":instrumentation:muzzle1", ":instrumentation:muzzle2", ":instrumentation:muzzle3", ":instrumentation:muzzle4"]'
 
 permissions:
   contents: read
@@ -25,12 +17,15 @@ jobs:
     timeout-minutes: 75
     strategy:
       matrix:
-        task: ${{ fromJSON(inputs.tasks) }}
+        task:
+          - ":instrumentation:muzzle1"
+          - ":instrumentation:muzzle2"
+          - ":instrumentation:muzzle3"
+          - ":instrumentation:muzzle4"
       fail-fast: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.checkout-ref }}
           persist-credentials: false
 
       - name: Free disk space
@@ -47,25 +42,5 @@ jobs:
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
-      - name: Warm full muzzle build
-        env:
-          MUZZLE_TASK: ${{ matrix.task }}
-        run: ./gradlew "$MUZZLE_TASK"
-
-      - name: Prepare fresh checkout and Gradle daemon
-        run: |
-          ./gradlew --stop
-          git worktree add --detach "$RUNNER_TEMP/muzzle-measured" HEAD
-
-      - name: Measure muzzle with warmed caches
-        working-directory: ${{ runner.temp }}/muzzle-measured
-        env:
-          MUZZLE_TASK: ${{ matrix.task }}
-        run: ./gradlew "$MUZZLE_TASK" --profile
-
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: always()
-        with:
-          name: muzzle-profiles-${{ inputs.checkout-ref }}-${{ strategy.job-index }}
-          path: ${{ runner.temp }}/muzzle-measured/build/reports/profile
-          if-no-files-found: error
+      - name: Run muzzle
+        run: ./gradlew ${{ matrix.task }}

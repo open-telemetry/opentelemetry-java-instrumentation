@@ -1,23 +1,172 @@
-name: Muzzle warmed-cache comparison
+name: Muzzle benchmark
 
 on:
   push:
     branches:
       - trask-pr-performance-description
   workflow_dispatch:
+    inputs:
+      baseline-ref:
+        description: Baseline revision
+        required: true
+        type: string
+      candidate-ref:
+        description: Candidate revision, defaults to the selected workflow revision
+        type: string
+      support-commit:
+        description: Optional benchmark-support commit to apply to older revisions
+        type: string
+      partitions:
+        description: Muzzle partitions
+        type: choice
+        default: '[1]'
+        options:
+          - '[1]'
+          - '[2]'
+          - '[3]'
+          - '[4]'
+          - '[1,2,3,4]'
+      rounds:
+        description: Measured baseline/control/candidate rounds, 1 to 10
+        type: string
+        default: '5'
+      workload-run-id:
+        description: Optional earlier benchmark run whose frozen workload to reuse
+        type: string
+      profile:
+        description: Collect separate untimed JFR profiles
+        type: boolean
+        default: false
 
 permissions:
   contents: read
+  actions: read
+
+concurrency:
+  group: muzzle-benchmark-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  before:
-    name: Before
-    uses: ./.github/workflows/reusable-muzzle.yml
-    with:
-      checkout-ref: 9240b97264428d2226fd5874fa2ee074327ab278
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-  after:
-    name: After
-    uses: ./.github/workflows/reusable-muzzle.yml
-    with:
-      checkout-ref: 907788f489507bb3200b503acf6ae6f089d471e4
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 25.0.5+8
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: true
+
+      - name: Validate runner
+        working-directory: benchmark-muzzle
+        run: python3 -m unittest -v
+
+      - name: Format and validate benchmark controls
+        run: |
+          ./gradlew -p gradle-plugins --init-script "$PWD/benchmark-muzzle/spotless.init.gradle" spotlessApply
+          git diff --exit-code
+          ./gradlew -p gradle-plugins test --tests '*MuzzleBenchmarkTest'
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: muzzle-benchmark-validation
+          path: gradle-plugins/build/reports/tests
+
+  benchmark:
+    if: github.event_name == 'workflow_dispatch'
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: ${{ fromJSON(inputs.partitions) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 25.0.5+8
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: true
+
+      - name: Install pinned Gradle Profiler
+        run: |
+          version=$(python3 -c 'import sys; sys.path.insert(0, "benchmark-muzzle"); import benchmark; print(benchmark.PROFILER_VERSION)')
+          sha=$(python3 -c 'import sys; sys.path.insert(0, "benchmark-muzzle"); import benchmark; print(benchmark.PROFILER_SHA256)')
+          curl --fail --location --retry 3 "https://github.com/gradle/gradle-profiler/releases/download/v$version/gradle-profiler-$version.zip" --output "$RUNNER_TEMP/profiler.zip"
+          echo "$sha  $RUNNER_TEMP/profiler.zip" | sha256sum --check
+          unzip -q "$RUNNER_TEMP/profiler.zip" -d "$RUNNER_TEMP/profiler"
+          echo "PROFILER=$RUNNER_TEMP/profiler/gradle-profiler-$version/bin/gradle-profiler" >> "$GITHUB_ENV"
+
+      - name: Download frozen workload
+        if: inputs.workload-run-id != ''
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: muzzle-benchmark-inputs-${{ matrix.partition }}
+          path: ${{ runner.temp }}/muzzle-workload
+          run-id: ${{ inputs.workload-run-id }}
+          github-token: ${{ github.token }}
+
+      - name: Run paired benchmark with identical-revision control
+        env:
+          BASELINE: ${{ inputs.baseline-ref }}
+          CANDIDATE: ${{ inputs.candidate-ref || github.sha }}
+          SUPPORT_COMMIT: ${{ inputs.support-commit }}
+          PARTITION: ${{ matrix.partition }}
+          ROUNDS: ${{ inputs.rounds }}
+          WORKLOAD_RUN_ID: ${{ inputs.workload-run-id }}
+          PROFILE: ${{ inputs.profile }}
+        run: |
+          arguments=()
+          if [ -n "$SUPPORT_COMMIT" ]; then
+            arguments+=(--support-commit "$SUPPORT_COMMIT")
+          fi
+          if [ -n "$WORKLOAD_RUN_ID" ]; then
+            arguments+=(--inputs "$RUNNER_TEMP/muzzle-workload")
+          fi
+          if [ "$PROFILE" = true ]; then
+            arguments+=(--profile)
+          fi
+          python3 benchmark-muzzle/benchmark.py \
+            --baseline "$BASELINE" --candidate "$CANDIDATE" \
+            --partition "$PARTITION" --rounds "$ROUNDS" \
+            --profiler "$PROFILER" --work-dir "$RUNNER_TEMP/muzzle-benchmark" \
+            --seed-gradle-home "$HOME/.gradle" "${arguments[@]}"
+
+      - name: Publish summary
+        run: cat "$RUNNER_TEMP/muzzle-benchmark/reports/summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: muzzle-benchmark-inputs-${{ matrix.partition }}
+          path: ${{ runner.temp }}/muzzle-benchmark/reports/inputs
+          if-no-files-found: error
+          retention-days: 30
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: muzzle-benchmark-results-${{ matrix.partition }}
+          path: |
+            ${{ runner.temp }}/muzzle-benchmark/reports
+            ${{ runner.temp }}/muzzle-benchmark/profiler-output
+          if-no-files-found: error
+          retention-days: 30
