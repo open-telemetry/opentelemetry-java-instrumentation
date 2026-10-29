@@ -840,8 +840,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                 }),
             satisfies(stringKey("rabbitmq.command"), val -> val.isIn(null, "basic." + operation)),
             equalTo(stringKey("rabbitmq.vhost.name"), experimental("otel-test")),
-            equalTo(
-                stringKey("rabbitmq.cluster.name"), experimental("otel-test-cluster")));
+            equalTo(stringKey("rabbitmq.cluster.name"), experimental("otel-test-cluster")));
   }
 
   private static Stream<Arguments> provideParametersForMessageCountAndTimestamp() {

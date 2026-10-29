@@ -81,8 +81,7 @@ class RabbitMqRecoveryTest extends AbstractRabbitMqTest {
                         satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
                         satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()),
                         equalTo(stringKey("rabbitmq.command"), experimental("queue.declare")),
-                        equalTo(
-                            stringKey("rabbitmq.vhost.name"), experimental("otel-test")),
+                        equalTo(stringKey("rabbitmq.vhost.name"), experimental("otel-test")),
                         equalTo(
                             stringKey("rabbitmq.cluster.name"),
                             experimental("otel-test-cluster")))));
