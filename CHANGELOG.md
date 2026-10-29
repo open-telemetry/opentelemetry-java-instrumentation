@@ -259,8 +259,8 @@
   respectively.
 - Remove `otel.instrumentation.grpc.capture-metadata.client.request` and
   `otel.instrumentation.grpc.capture-metadata.server.request`.
-  Use `otel.instrumentation.grpc.client.request-metadata.included` and
-  `otel.instrumentation.grpc.server.request-metadata.included`.
+  Use `otel.instrumentation.grpc.client.request-headers.included` and
+  `otel.instrumentation.grpc.server.request-headers.included`.
 - Captured messaging header attribute keys now preserve dashes unconditionally; for example,
   `messaging.header.Test_Message_Id` is now `messaging.header.Test-Message-Id`. Replace
   `otel.instrumentation.messaging.experimental.headers.included=Test-Message-*` with
