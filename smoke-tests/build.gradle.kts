@@ -69,12 +69,6 @@ tasks {
         },
     )
 
-    val appServerGroup = when (name) {
-      "testLimitedMatrix" -> "limitedMatrix"
-      "testAdditionalVariants" -> "additionalVariants"
-      "test" -> "all"
-      else -> null
-    }
     val appServerSuite = smokeTestSuite == null || smokeTestSuite in appServerSuites
     when {
       smokeTestSuite == null -> {
@@ -95,8 +89,11 @@ tasks {
       // An empty partition must not turn into an unfiltered Test task.
       exclude("**/*")
     }
-    if (appServerGroup != null && appServerSuite) {
-      systemProperty("appServerTestGroup", appServerGroup)
+    if (appServerSuite) {
+      when (name) {
+        "testLimitedMatrix" -> systemProperty("inLimitedMatrix", true)
+        "testAdditionalVariants" -> systemProperty("inLimitedMatrix", false)
+      }
     }
     val skipOpenJ9 =
       findProperty("skipOpenJ9SmokeTests") == "true" &&

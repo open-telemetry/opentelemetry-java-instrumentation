@@ -51,8 +51,8 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
     isWindows = TestContainerManager.useWindowsContainers();
 
     assumeTrue(
-        AppServerTestSelection.includes(
-            appServer, System.getProperty("appServerTestGroup", "all"), isWindows));
+        includes(
+            appServer, parseInLimitedMatrix(System.getProperty("inLimitedMatrix")), isWindows));
 
     serverVersion = appServer.version();
     startWithoutCleanup(new AppServerImage(jdk, serverVersion, isWindows));
@@ -78,6 +78,26 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
 
   protected boolean testJsp() {
     return true;
+  }
+
+  static boolean includes(AppServer appServer, Boolean inLimitedMatrix, boolean windows) {
+    if (windows && appServer.jdk().endsWith("-openj9")) {
+      return false;
+    }
+    return inLimitedMatrix == null || appServer.inLimitedMatrix() == inLimitedMatrix;
+  }
+
+  static Boolean parseInLimitedMatrix(String value) {
+    if (value == null) {
+      return null;
+    }
+    if ("true".equalsIgnoreCase(value)) {
+      return true;
+    }
+    if ("false".equalsIgnoreCase(value)) {
+      return false;
+    }
+    throw new IllegalArgumentException("Invalid value for inLimitedMatrix: " + value);
   }
 
   @Test

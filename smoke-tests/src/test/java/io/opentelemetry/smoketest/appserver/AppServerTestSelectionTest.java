@@ -17,6 +17,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.platform.commons.support.ReflectionSupport;
 
 class AppServerTestSelectionTest {
@@ -31,7 +32,8 @@ class AppServerTestSelectionTest {
 
   @ParameterizedTest
   @CsvSource({"false,false", "false,true", "true,false", "true,true"})
-  void partitionsPreserveEachServersEffectiveMatrix(boolean windows, boolean skipOpenJ9) {
+  void limitedAndAdditionalVariantsPartitionEachServersEffectiveMatrix(
+      boolean windows, boolean skipOpenJ9) {
     assertThat(APP_SERVERS).isNotEmpty();
     Map<Class<?>, List<Class<?>>> suites =
         APP_SERVERS.stream().collect(groupingBy(Class::getEnclosingClass));
@@ -40,9 +42,9 @@ class AppServerTestSelectionTest {
           suite.stream()
               .filter(type -> !(skipOpenJ9 && type.getName().contains("Openj9")))
               .collect(toList());
-      List<Class<?>> full = select(effective, "all", windows);
-      List<Class<?>> limitedMatrix = select(effective, "limitedMatrix", windows);
-      List<Class<?>> additionalVariants = select(effective, "additionalVariants", windows);
+      List<Class<?>> full = select(effective, null, windows);
+      List<Class<?>> limitedMatrix = select(effective, true, windows);
+      List<Class<?>> additionalVariants = select(effective, false, windows);
 
       assertThat(limitedMatrix).noneMatch(additionalVariants::contains);
       assertThat(full)
@@ -67,45 +69,56 @@ class AppServerTestSelectionTest {
   void tomeeLimitedMatrixRequiresOpenJ9AndIsEmptyOnWindows() {
     List<Class<?>> tomee =
         APP_SERVERS.stream().filter(TomeeSmokeTest.class::isAssignableFrom).collect(toList());
-    assertThat(select(tomee, "limitedMatrix", false))
+    assertThat(select(tomee, true, false))
         .isNotEmpty()
         .allMatch(type -> type.getAnnotation(AppServer.class).jdk().endsWith("-openj9"));
-    assertThat(select(tomee, "limitedMatrix", true)).isEmpty();
-    assertThat(select(tomee, "additionalVariants", true))
+    assertThat(select(tomee, true, true)).isEmpty();
+    assertThat(select(tomee, false, true))
         .isNotEmpty()
-        .containsExactlyInAnyOrderElementsOf(select(tomee, "all", true));
+        .containsExactlyInAnyOrderElementsOf(select(tomee, null, true));
   }
 
   @Test
-  void emptyAdditionalVariantsGroupDoesNotSelectFullSuite() {
+  void emptyAdditionalVariantsPartitionDoesNotSelectFullSuite() {
     List<Class<?>> servletOnly =
         APP_SERVERS.stream()
             .filter(LibertyServletOnlySmokeTest.class::isAssignableFrom)
             .collect(toList());
     assertThat(servletOnly).isNotEmpty();
-    assertThat(select(servletOnly, "additionalVariants", false)).isEmpty();
-    assertThat(select(servletOnly, "limitedMatrix", false))
-        .containsExactlyInAnyOrderElementsOf(servletOnly);
+    assertThat(select(servletOnly, false, false)).isEmpty();
+    assertThat(select(servletOnly, true, false)).containsExactlyInAnyOrderElementsOf(servletOnly);
+  }
+
+  @ParameterizedTest
+  @CsvSource({"true,true", "false,false", "TRUE,true", "FALSE,false"})
+  void parsesLimitedMatrixProperty(String value, boolean expected) {
+    assertThat(AppServerTest.parseInLimitedMatrix(value)).isEqualTo(expected);
   }
 
   @Test
-  void unknownGroupFails() {
-    assertThatThrownBy(
-            () ->
-                AppServerTestSelection.includes(
-                    TomeeSmokeTest.Tomee8Jdk11.class.getAnnotation(AppServer.class),
-                    "unknown",
-                    false))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Unknown app-server test group: unknown");
+  void missingLimitedMatrixPropertyDoesNotFilter() {
+    assertThat(AppServerTest.parseInLimitedMatrix(null)).isNull();
+    assertThat(
+            AppServerTest.includes(
+                TomeeSmokeTest.Tomee8Jdk11.class.getAnnotation(AppServer.class), null, false))
+        .isTrue();
   }
 
-  private static List<Class<?>> select(List<Class<?>> classes, String group, boolean windows) {
+  @ParameterizedTest
+  @ValueSource(strings = {"", "yes", "1"})
+  void malformedLimitedMatrixPropertyFails(String value) {
+    assertThatThrownBy(() -> AppServerTest.parseInLimitedMatrix(value))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Invalid value for inLimitedMatrix: " + value);
+  }
+
+  private static List<Class<?>> select(
+      List<Class<?>> classes, Boolean inLimitedMatrix, boolean windows) {
     return classes.stream()
         .filter(
             type ->
-                AppServerTestSelection.includes(
-                    type.getAnnotation(AppServer.class), group, windows))
+                AppServerTest.includes(
+                    type.getAnnotation(AppServer.class), inLimitedMatrix, windows))
         .collect(toList());
   }
 }
