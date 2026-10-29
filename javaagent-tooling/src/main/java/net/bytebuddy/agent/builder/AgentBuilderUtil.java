@@ -412,6 +412,7 @@ public class AgentBuilderUtil {
         @Nullable JavaModule module,
         @Nullable Class<?> classBeingRedefined,
         @Nullable ProtectionDomain protectionDomain) {
+
       if (classBeingRedefined != null
           && cannotMatchLoadedType(result, typeDescription, classBeingRedefined)) {
         return false;
