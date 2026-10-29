@@ -89,9 +89,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites.named("unitTests"))
-    if (!otelProps.testLatestDeps) {
-      dependsOn(testing.suites)
-    }
+    dependsOn(testing.suites)
   }
 }
