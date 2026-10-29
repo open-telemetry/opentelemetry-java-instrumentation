@@ -59,9 +59,7 @@ testing {
         // Gradle creates this task automatically; skipping suite configuration does not disable it.
         enabled = false
       }
-    }
 
-    if (otelProps.testLatestDeps) {
       register<JvmTestSuite>("latestDepTest") {
         dependencies {
           implementation("com.typesafe.play:play-ahc-ws-standalone_2.13:latest.release")

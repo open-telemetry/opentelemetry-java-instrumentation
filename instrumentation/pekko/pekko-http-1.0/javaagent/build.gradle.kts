@@ -71,7 +71,6 @@ dependencies {
 
 testing {
   suites {
-
     // the agent matches methods of pekko classes by name, some of them are private and scala
     // mangles their names, run the tests against the scala 3 artifacts to catch a name that only
     // holds for scala 2

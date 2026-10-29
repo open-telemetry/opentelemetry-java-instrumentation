@@ -35,7 +35,6 @@ dependencies {
 
 testing {
   suites {
-
     // pools over a list of servers were added in 4.2, and the module's own tests run against 4.0
     register<JvmTestSuite>("vertx42Test") {
       dependencies {

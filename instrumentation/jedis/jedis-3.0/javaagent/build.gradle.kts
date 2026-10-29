@@ -28,7 +28,6 @@ dependencies {
 
 testing {
   suites {
-
     register<JvmTestSuite>("jedis36Test") {
       dependencies {
         implementation("redis.clients:jedis:3.6.1")

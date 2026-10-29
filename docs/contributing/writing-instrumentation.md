@@ -459,13 +459,6 @@ If the common module does not have a direct dependency on the instrumented libra
 suffix is required. Examples of such cases include modules named `lettuce-common` and
 `netty-common`.
 
-## Configuring test-suite executions
-
-Within a `JvmTestSuite`, `executions { register("Suffix") { ... } }` creates a test task named
-`<suite name>Suffix`, reusing the suite's compiled sources and runtime classpath and wiring it into
-`check`. Suite-level `configureEach` applies to the default task and every registered execution.
-Suite-common configuration is applied before execution-specific configuration.
-
 ## Writing Java agent unit tests
 
 As mentioned before, tests in the `javaagent` module cannot access the javaagent instrumentation

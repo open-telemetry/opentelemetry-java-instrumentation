@@ -40,7 +40,6 @@ dependencies {
 
 testing {
   suites {
-
     register<JvmTestSuite>("unitTests") {
       dependencies {
         implementation(project())

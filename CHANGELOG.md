@@ -2,20 +2,6 @@
 
 ## Unreleased
 
-### 🚫 Deprecations
-
-- Deprecate both `Java8BytecodeBridge` classes in `javaagent-extension-api` and `testing-common`
-  in favor of direct `Context`, `Span`, and `Baggage` APIs now that non-inline instrumentation
-  is the default.
-
-### ⚠️ Breaking changes to non-stable APIs
-
-- Remove the deprecated `ServicePeerAttributesExtractor`,
-  `HttpClientServicePeerAttributesExtractor`, `ServicePeerResolver`, and
-  `expectedPeerService()` APIs; use `ServerServiceAttributesExtractor`,
-  `HttpClientServerServiceAttributesExtractor`, `ServiceMappingResolver`, and
-  `expectedServerServiceName()` instead.
-
 ### ⚠️ Breaking changes
 
 - Configured service mappings now emit `server.service.name` and `server.service.namespace`, and no longer emit `peer.service`, `service.peer.name`, or `service.peer.namespace`. Rename `otel.instrumentation.common.peer-service-mapping` to `otel.instrumentation.common.server-service-mapping`; in YAML, use `java.common.server_service_mapping` with `target` instead of `peer`.
@@ -360,6 +346,11 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove the deprecated `ServicePeerAttributesExtractor`,
+  `HttpClientServicePeerAttributesExtractor`, `ServicePeerResolver`, and
+  `expectedPeerService()` APIs; use `ServerServiceAttributesExtractor`,
+  `HttpClientServerServiceAttributesExtractor`, `ServiceMappingResolver`, and
+  `expectedServerServiceName()` instead.
 - In `opentelemetry-instrumentation-api-incubator`, custom `RpcAttributesGetter` implementations
   must implement `getRpcSystemName` and `getRpcMethod`, returning the RPC system name and fully
   qualified method name such as `my.Service/Method`, respectively. The legacy `getSystem`,
@@ -481,6 +472,12 @@
   extractors from `opentelemetry-instrumentation-api-incubator`.
   `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or
   `getMessageEnvelopeSize()`.
+
+### 🚫 Deprecations
+
+- Deprecate both `Java8BytecodeBridge` classes in `javaagent-extension-api` and `testing-common`
+  in favor of direct `Context`, `Span`, and `Baggage` APIs now that non-inline instrumentation
+  is the default.
 
 ## Version 2.32.0 (2026-10-03)
 
