@@ -26,68 +26,60 @@ import org.junit.jupiter.params.provider.MethodSource;
 class AgentBuilderUtilTest {
 
   @ParameterizedTest
-  @MethodSource("loadedTypeMatchers")
-  void filtersLoadedTypes(
-      ElementMatcher.Junction<TypeDescription> matcher,
-      Class<?> type,
-      boolean expected,
-      boolean evaluateDelegate) {
+  @MethodSource("rejectsImpossibleLoadedTypeMatchers")
+  void rejectsImpossibleLoadedTypesWithoutEvaluatingDelegate(
+      ElementMatcher.Junction<TypeDescription> matcher, Class<?> type) {
     List<String> calls = new ArrayList<>();
-    AgentBuilder.Default builder = builder(matcher, calls);
+    AgentBuilder.Default builder = optimizedBuilder(matcher, calls);
 
-    assertThat(matches(builder, type, type)).isEqualTo(expected);
-    if (evaluateDelegate) {
-      assertThat(calls).containsExactly("classloader", "type");
-    } else {
-      assertThat(calls).isEmpty();
-    }
+    assertThat(matchesFirstTransformation(builder, type, type)).isFalse();
+    assertThat(calls).isEmpty();
   }
 
-  private static Stream<Arguments> loadedTypeMatchers() {
+  private static Stream<Arguments> rejectsImpossibleLoadedTypeMatchers() {
     return Stream.of(
-        argumentSet("exact name", named(Child.class.getName()), Child.class, true, true),
-        argumentSet("unrelated name", named(String.class.getName()), Child.class, false, false),
+        argumentSet("unrelated exact name", named(String.class.getName()), Child.class),
+        argumentSet("parent name is not child name", named(Parent.class.getName()), Child.class),
         argumentSet(
-            "parent name is not child name",
-            named(Parent.class.getName()),
-            Child.class,
-            false,
-            false),
+            "unrelated hierarchy", hasSuperType(named(String.class.getName())), Child.class));
+  }
+
+  @ParameterizedTest
+  @MethodSource("delegatesPossibleOrUnknownLoadedTypeMatchers")
+  void delegatesPossibleOrUnknownLoadedTypes(
+      ElementMatcher.Junction<TypeDescription> matcher, Class<?> type, boolean expectedMatch) {
+    List<String> calls = new ArrayList<>();
+    AgentBuilder.Default builder = optimizedBuilder(matcher, calls);
+
+    assertThat(matchesFirstTransformation(builder, type, type)).isEqualTo(expectedMatch);
+    assertThat(calls).containsExactly("classloader", "type");
+  }
+
+  private static Stream<Arguments> delegatesPossibleOrUnknownLoadedTypeMatchers() {
+    return Stream.of(
+        argumentSet("exact name hit", named(Child.class.getName()), Child.class, true),
+        argumentSet("superclass", hasSuperType(named(Parent.class.getName())), Child.class, true),
+        argumentSet("interface", hasSuperType(named(Marker.class.getName())), Child.class, true),
         argumentSet(
-            "superclass", hasSuperType(named(Parent.class.getName())), Child.class, true, true),
-        argumentSet(
-            "interface", hasSuperType(named(Marker.class.getName())), Child.class, true, true),
-        argumentSet(
-            "supertype itself",
-            hasSuperType(named(Parent.class.getName())),
-            Parent.class,
-            true,
-            true),
-        argumentSet(
-            "unrelated hierarchy",
-            hasSuperType(named(String.class.getName())),
-            Child.class,
-            false,
-            false),
+            "supertype itself", hasSuperType(named(Parent.class.getName())), Parent.class, true),
         argumentSet(
             "original matcher rejects interface",
             extendsClass(named(Marker.class.getName())),
             Child.class,
-            false,
-            true),
-        argumentSet("unknown matcher", nameStartsWith("net.bytebuddy."), Child.class, true, true));
+            false),
+        argumentSet("unknown matcher", nameStartsWith("net.bytebuddy."), Child.class, true));
   }
 
   @Test
   void retainsOriginalMatcherWithoutLoadedClass() {
     List<String> calls = new ArrayList<>();
-    AgentBuilder.Default builder = builder(named(String.class.getName()), calls);
+    AgentBuilder.Default builder = optimizedBuilder(named(String.class.getName()), calls);
 
-    assertThat(matches(builder, Child.class, null)).isFalse();
+    assertThat(matchesFirstTransformation(builder, Child.class, null)).isFalse();
     assertThat(calls).containsExactly("classloader", "type");
   }
 
-  private static AgentBuilder.Default builder(
+  private static AgentBuilder.Default optimizedBuilder(
       ElementMatcher.Junction<TypeDescription> matcher, List<String> calls) {
     ElementMatcher.Junction<TypeDescription> recording =
         new ElementMatcher.Junction.AbstractBase<TypeDescription>() {
@@ -111,7 +103,7 @@ class AgentBuilderUtilTest {
                         dynamicBuilder));
   }
 
-  private static boolean matches(
+  private static boolean matchesFirstTransformation(
       AgentBuilder.Default builder, Class<?> type, Class<?> classBeingRedefined) {
     return builder
         .transformations
