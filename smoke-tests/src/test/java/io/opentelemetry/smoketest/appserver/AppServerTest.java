@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OS_TYPE;
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.LINUX;
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.WINDOWS;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -50,9 +51,11 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
     var jdk = appServer.jdk();
     isWindows = TestContainerManager.useWindowsContainers();
 
+    String inLimitedMatrix = System.getProperty("inLimitedMatrix");
     assumeTrue(
-        includes(
-            appServer, parseInLimitedMatrix(System.getProperty("inLimitedMatrix")), isWindows));
+        inLimitedMatrix == null
+            || appServer.inLimitedMatrix() == Boolean.parseBoolean(inLimitedMatrix));
+    assumeFalse(isWindows && jdk.endsWith("-openj9"));
 
     serverVersion = appServer.version();
     startWithoutCleanup(new AppServerImage(jdk, serverVersion, isWindows));
@@ -78,26 +81,6 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
 
   protected boolean testJsp() {
     return true;
-  }
-
-  static boolean includes(AppServer appServer, Boolean inLimitedMatrix, boolean windows) {
-    if (windows && appServer.jdk().endsWith("-openj9")) {
-      return false;
-    }
-    return inLimitedMatrix == null || appServer.inLimitedMatrix() == inLimitedMatrix;
-  }
-
-  static Boolean parseInLimitedMatrix(String value) {
-    if (value == null) {
-      return null;
-    }
-    if ("true".equalsIgnoreCase(value)) {
-      return true;
-    }
-    if ("false".equalsIgnoreCase(value)) {
-      return false;
-    }
-    throw new IllegalArgumentException("Invalid value for inLimitedMatrix: " + value);
   }
 
   @Test
