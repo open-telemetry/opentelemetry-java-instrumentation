@@ -464,9 +464,7 @@ suffix is required. Examples of such cases include modules named `lettuce-common
 Within a `JvmTestSuite`, `executions { register("Suffix") { ... } }` creates a test task named
 `<suite name>Suffix`, reusing the suite's compiled sources and runtime classpath and wiring it into
 `check`. Suite-level `configureEach` applies to the default task and every registered execution.
-Use `group { configureEach { ... }; register("Suffix") { ... } }` to share configuration only among
-that group's executions. Configuration is applied in suite-common, group-common, then
-execution-specific order. Groups add no tasks of their own.
+Suite-common configuration is applied before execution-specific configuration.
 
 ## Writing Java agent unit tests
 
