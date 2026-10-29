@@ -16,7 +16,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal.ServicePeerResolver;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -94,18 +93,6 @@ class ServiceMappingResolverTest {
   @Test
   void nonEmptyWithValidMapping() {
     assertThat(resolver.isEmpty()).isFalse();
-  }
-
-  @SuppressWarnings("deprecation")
-  @Test
-  void deprecatedResolverForwardsToServiceMappingResolver() {
-    ServicePeerResolver deprecatedResolver =
-        new ServicePeerResolver(createOpenTelemetry(mapping("example.com", "service", null)));
-    AttributesBuilder attrs = Attributes.builder();
-
-    deprecatedResolver.resolve("example.com", null, () -> null, attrs::put);
-
-    assertName("service", attrs.build());
   }
 
   @Test

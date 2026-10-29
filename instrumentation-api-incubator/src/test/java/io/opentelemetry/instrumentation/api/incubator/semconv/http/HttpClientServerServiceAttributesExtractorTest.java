@@ -126,22 +126,6 @@ class HttpClientServerServiceAttributesExtractorTest {
     assertThat(attrs).containsOnly(entry(stringKey("server.service.name"), "myService"));
   }
 
-  @SuppressWarnings("deprecation")
-  @Test
-  void deprecatedExtractorForwardsToServerServiceExtractor() {
-    ExtendedOpenTelemetry openTelemetry =
-        createOpenTelemetry(mapping("example.com", "myService", null));
-    AttributesExtractor<String, String> underTest =
-        HttpClientServicePeerAttributesExtractor.create(httpAttributesGetter, openTelemetry);
-    when(httpAttributesGetter.getServerAddress(any())).thenReturn("example.com");
-
-    AttributesBuilder attributes = Attributes.builder();
-    underTest.onEnd(attributes, Context.root(), "request", "response", null);
-
-    assertThat(attributes.build())
-        .containsOnly(entry(stringKey("server.service.name"), "myService"));
-  }
-
   private AttributesExtractor<String, String> createExtractor(
       DeclarativeConfigProperties... mappings) {
     ServiceMappingResolver resolver = createResolver(mappings);

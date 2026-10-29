@@ -20,7 +20,6 @@ import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.internal.ServiceMappingResolver;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import java.util.List;
@@ -117,21 +116,6 @@ class ServerServiceAttributesExtractorTest {
 
     Attributes attrs = attributes.build();
     assertThat(attrs).containsOnly(entry(stringKey("server.service.name"), "myService"));
-  }
-
-  @SuppressWarnings("deprecation")
-  @Test
-  void deprecatedExtractorForwardsToServerServiceExtractor() {
-    AttributesExtractor<String, String> underTest =
-        ServicePeerAttributesExtractor.create(
-            attributesGetter, createOpenTelemetry(mapping("example.com", "myService", null)));
-    when(attributesGetter.getServerAddress(any())).thenReturn("example.com");
-
-    AttributesBuilder attributes = Attributes.builder();
-    underTest.onEnd(attributes, Context.root(), "request", "response", null);
-
-    assertThat(attributes.build())
-        .containsOnly(entry(stringKey("server.service.name"), "myService"));
   }
 
   private static ServiceMappingResolver createResolver(DeclarativeConfigProperties... entries) {

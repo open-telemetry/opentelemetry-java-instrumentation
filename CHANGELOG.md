@@ -4,13 +4,17 @@
 
 ### 🚫 Deprecations
 
-- Deprecate `ServicePeerAttributesExtractor`, `HttpClientServicePeerAttributesExtractor`, and
-  `ServicePeerResolver`; use `ServerServiceAttributesExtractor`,
-  `HttpClientServerServiceAttributesExtractor`, and `ServiceMappingResolver` instead. Rename
-  `expectedPeerService()` to `expectedServerServiceName()`.
 - Deprecate both `Java8BytecodeBridge` classes in `javaagent-extension-api` and `testing-common`
   in favor of direct `Context`, `Span`, and `Baggage` APIs now that non-inline instrumentation
   is the default.
+
+### ⚠️ Breaking changes to non-stable APIs
+
+- Remove the deprecated `ServicePeerAttributesExtractor`,
+  `HttpClientServicePeerAttributesExtractor`, `ServicePeerResolver`, and
+  `expectedPeerService()` APIs; use `ServerServiceAttributesExtractor`,
+  `HttpClientServerServiceAttributesExtractor`, `ServiceMappingResolver`, and
+  `expectedServerServiceName()` instead.
 
 ### ⚠️ Breaking changes
 

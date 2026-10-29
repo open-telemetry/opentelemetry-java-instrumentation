@@ -79,22 +79,9 @@ public abstract class InstrumentationExtension
    * Library instrumentation never applies the service identity extractor; library users add service
    * identity through their own attributes extractor.
    */
-  @SuppressWarnings("deprecation")
   @Nullable
   public String expectedServerServiceName() {
-    return testRunner.expectedPeerService();
-  }
-
-  /**
-   * Returns the server service name expected on spans targeting a local test server.
-   *
-   * @deprecated Use {@link #expectedServerServiceName()} instead. May be removed in the next minor
-   *     release.
-   */
-  @Deprecated // may be removed in the next minor release
-  @Nullable
-  public String expectedPeerService() {
-    return expectedServerServiceName();
+    return testRunner.expectedServerServiceName();
   }
 
   /** Return a list of all captured spans. */
