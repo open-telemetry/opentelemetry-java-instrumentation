@@ -4,6 +4,36 @@
 
 ### ⚠️ Breaking changes
 
+- AWS Lambda invocation spans now replace alias suffixes in `cloud.resource_id` with the resolved
+  function version when available.
+- AWS Lambda spans now use `faas.invocation.id` instead of `faas.invocation_id` for invocation IDs.
+- Replace `SpringWebfluxClientTelemetry.addFilter(list)` and
+  `addFilterAndRegisterReactorHook(list)` with `createFilter()` and
+  `createFilterAndRegisterReactorHook()`, used with `WebClient.Builder.filter(...)`.
+- RPC telemetry now uses only the conventions with schema version 1.44.0: `rpc.system.name`,
+  fully qualified `rpc.method`, `rpc.status_code`, and `error.type`, with updated span names.
+  RPC duration metrics use `rpc.client.call.duration` and `rpc.server.call.duration` in seconds.
+  RPC opt-in/preview flags and `general.rpc.semconv` settings no longer select legacy or dual emission.
+- GenAI error type getters now return the final value. Returning `null` omits `error.type`; overrides
+  should return `error == null ? null : error.getClass().getName()` for the exception-class fallback.
+- HTTP client and server getters now determine `error.type`; their returned value, including `null`,
+  is used as-is.
+- RPC attribute getters return the final `error.type`; returning `null` omits it even when an
+  exception exists.
+- Messaging `MessagingAttributesGetter.getErrorType()` overrides now provide the final
+  `error.type` value. Return `null` to omit it, or return `error == null ? null :
+  error.getClass().getName()` for exception-class fallback.
+- Require R2DBC SPI 1.0 or later.
+- Rename the Spark Java instrumentation selector from `spark-2.3` to `spark-2.4`.
+- Spring Boot Java agent resource providers move from
+  `io.opentelemetry.instrumentation.spring.resources` to
+  `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`. Update class names in
+  `otel.java.enabled.resource.providers` and `otel.java.disabled.resource.providers`.
+- Spring Rabbit 1.0 is no longer supported. Use the `spring-rabbit-1.1` selector; telemetry scope
+  changes from `io.opentelemetry.spring-rabbit-1.0` to `io.opentelemetry.spring-rabbit-1.1`.
+- `InstrumenterBuilder` no longer infers a schema URL from attribute extractors. Call
+  `setSchemaUrl()` with the schema for the conventions defining the instrumenter's signals;
+  otherwise its telemetry has no schema URL.
 - Remove the Spring Boot starter-provided `ConfigProperties` bean in declarative mode.
   Read configuration through `ConfigProvider` and `DeclarativeConfigProperties` instead.
 - `@WithSpan` and `@AddingSpanAttributes` no longer allow targeting constructors
@@ -191,13 +221,11 @@
   `structuredAttributesIncluded` and `structuredAttributesExcluded` in XML, or
   `setStructuredAttributes(IncludeExclude)` programmatically.
   Log4j `MapMessage` keys are emitted as their original log attribute names.
-- RPC and service-peer semantic conventions now require `otel.semconv-stability.preview=rpc`
-  and `otel.semconv-stability.preview=service.peer`, respectively (or `rpc/dup` and
-  `service.peer/dup` for dual emission). The `rpc`, `rpc/dup`, `service.peer`, and `service.peer/dup`
+- Service-peer semantic conventions now require `otel.semconv-stability.preview=service.peer`
+  (or `service.peer/dup` for dual emission). The `service.peer` and `service.peer/dup`
   values in `otel.semconv-stability.opt-in` no longer select them.
   For declarative configuration, move these values from `general.stability_opt_in_list` to
-  `java.common.semconv_stability.preview`. Default telemetry and explicit `general.rpc.semconv`
-  configuration are unchanged.
+  `java.common.semconv_stability.preview`.
 - Micrometer timers and distribution summaries no longer emit separate `.max` gauge metrics; use the
   maximum from their histogram instead. Custom meter statistic suffixes are appended after the base
   name passes through the naming convention (for example, Prometheus mode changes
@@ -292,6 +320,33 @@
   `otel.instrumentation.elasticsearch.query-sanitization.enabled` or
   `otel.instrumentation.opensearch.query-sanitization.enabled`, which override
   `otel.instrumentation.common.db.query-sanitization.enabled`.
+- The experimental Kafka broker JMX metrics now start with the JMX domain of their MBean, use
+  singular count units (for example `{message}` instead of `{messages}`), and report durations in
+  seconds. Update dashboards and alerts that use the old names:
+  - `kafka.network.io`, `kafka.purgatory.size`, `kafka.partition.count` and
+    `kafka.lag.max` are prefixed with `kafka.server.`.
+  - `kafka.message.count` becomes `kafka.server.messages`.
+  - `kafka.request.count` becomes `kafka.server.requests`.
+  - `kafka.request.failed` becomes `kafka.server.failed_requests`.
+  - `kafka.isr.operation.count` becomes `kafka.server.isr.operations`.
+  - `kafka.partition.underReplicated` becomes `kafka.server.partition.under_replicated`.
+  - `kafka.partition.offline` becomes `kafka.controller.partition.offline`, and
+    `kafka.leaderElection.count` and `kafka.leaderElection.unclean.count` become
+    `kafka.controller.leader_elections` and `kafka.controller.unclean_leader_elections`.
+  - `kafka.request.queue` becomes `kafka.network.request.queue`.
+  - `kafka.request.time.total` becomes `kafka.network.requests`: it reported a request count,
+    not a time. `kafka.request.time.50p` and `kafka.request.time.99p` become
+    `kafka.network.request.duration.p50` and `kafka.network.request.duration.p99`, in seconds
+    instead of milliseconds.
+  - `kafka.logs.flush.Count` becomes `kafka.log.flushes`, and `kafka.logs.flush.time.50p` and
+    `kafka.logs.flush.time.99p` become `kafka.log.flush.duration.p50` and
+    `kafka.log.flush.duration.p99`, in seconds instead of milliseconds.
+  - The attributes `type`, `direction` and `operation` become `kafka.request.type`,
+    `network.io.direction` (`in` and `out` become `receive` and `transmit`) and
+    `kafka.server.isr.operation`. Request type values are now lowercase.
+  - `kafka.server.messages`, `kafka.server.requests`, `kafka.server.failed_requests` and
+    `kafka.server.network.io` now have a `kafka.topic.name` attribute instead of a broker-wide value.
+  - `kafka.server.isr.operations` is now a counter instead of an updowncounter.
 
 ### ⚠️ Breaking changes to non-stable APIs
 
@@ -303,6 +358,28 @@
   `io.opentelemetry.instrumentation.resources.HostResourceProvider`. Disabling
   the consolidated provider also disables host name and architecture collection.
   Host ID detection is now enabled by default in the Java agent and Spring Boot starter. Remove `otel.resource.providers.host-id.enabled`, which is no longer supported.
+- In `opentelemetry-instrumentation-api-incubator`, custom `RpcAttributesGetter` implementations
+  must implement `getRpcSystemName` and `getRpcMethod`, returning the RPC system name and fully
+  qualified method name such as `my.Service/Method`, respectively. The legacy `getSystem`,
+  `getService`, and `getMethod` methods have been removed.
+- In `opentelemetry-instrumentation-api-incubator`, remove calls to
+  `RpcMetricsContextCustomizers.dualEmitContextCustomizer`. RPC metrics no longer require this
+  context customizer.
+- Replace `GrpcRequest.getLogicalHost()` and `getLogicalPort()` with `getServerAddress()` and
+  `getServerPort()`. Unavailable ports are now `null` instead of `-1`.
+  ([#16161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16161))
+- `TracedOnSubscribe.perSubscription(...)` now returns `Observable.OnSubscribe<T>` instead of
+  `TracedOnSubscribe<T, REQUEST>`. Recompile consumers.
+- Make the Netty 4.1 library's `NettyRequest` final; use it only as an opaque request view.
+- Java HTTP Client's `addAttributesExtractor` now requires
+  `AttributesExtractor<HttpRequest, HttpResponse<?>>`.
+- Remove `setBaseTimeUnit(TimeUnit)` and `setPrometheusMode(boolean)` from the Micrometer registry
+  builder. Use `Experimental.setBaseTimeUnit(builder, timeUnit)` and
+  `Experimental.setPrometheusMode(builder, enabled)`.
+- Remove `otel.instrumentation.experimental.span-suppression-strategy` and
+  `java.common.span_suppression_strategy/development` in favor of
+  `otel.instrumentation.common.span-suppression-strategy` and
+  `java.common.span_suppression_strategy`.
 - Remove deprecated `DeclarativeConfigPropertiesBridge` and
   `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative configuration through
   `DeclarativeConfigProperties` or use `DeclarativeConfigBridge` to expose flat configuration.
@@ -402,6 +479,12 @@
   extractors from `opentelemetry-instrumentation-api-incubator`.
   `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or
   `getMessageEnvelopeSize()`.
+
+### 🚫 Deprecations
+
+- Deprecate both `Java8BytecodeBridge` classes in `javaagent-extension-api` and `testing-common`
+  in favor of direct `Context`, `Span`, and `Baggage` APIs now that non-inline instrumentation
+  is the default.
 
 ## Version 2.32.0 (2026-10-03)
 

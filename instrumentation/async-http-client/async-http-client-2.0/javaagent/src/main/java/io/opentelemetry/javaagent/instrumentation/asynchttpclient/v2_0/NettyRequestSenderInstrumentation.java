@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -60,7 +59,7 @@ class NettyRequestSenderInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void attachContext(@Advice.Argument(0) Request request) {
-      REQUEST_CONTEXT.set(request, Java8BytecodeBridge.currentContext());
+      REQUEST_CONTEXT.set(request, Context.current());
     }
   }
 

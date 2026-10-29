@@ -10,8 +10,15 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
-import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
+import io.opentelemetry.sdk.testing.assertj.{
+  HistogramAssert,
+  HistogramPointAssert,
+  MetricAssert,
+  SpanDataAssert,
+  TraceAssert
+}
 import io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE
+import io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS
 import io.opentelemetry.semconv.DbAttributes.{
   DB_NAMESPACE,
@@ -23,6 +30,8 @@ import io.opentelemetry.semconv.NetworkAttributes.{
   NETWORK_PEER_PORT
 }
 import io.opentelemetry.semconv.ServerAttributes.{SERVER_ADDRESS, SERVER_PORT}
+import io.opentelemetry.sdk.trace.data.StatusData
+import io.opentelemetry.instrumentation.test.utils.PortUtils
 import org.assertj.core.api.Assertions.{assertThat, assertThatThrownBy}
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -31,6 +40,7 @@ import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.{Arguments, MethodSource}
 import org.testcontainers.containers.GenericContainer
+import redis.actors.ReplyErrorException
 import redis.commands.TransactionBuilder
 import redis.{RedisClient, RedisDispatcher}
 
@@ -78,7 +88,10 @@ class RediscalaClientTest {
     nonDefaultDbClient = createClient(Some(nonDefaultDbIndex))
   }
 
-  private def createClient(db: Option[Int]): RedisClient =
+  private def createClient(
+      db: Option[Int],
+      serverPort: JLong = port
+  ): RedisClient =
     try {
       // latest RedisClient constructor takes username as argument
       classOf[RedisClient].getMethod("username")
@@ -86,7 +99,7 @@ class RediscalaClientTest {
         .getConstructors()(0)
         .newInstance(
           host,
-          Integer.valueOf(port.intValue()),
+          Integer.valueOf(serverPort.intValue()),
           Option.apply(null),
           Option.apply(null),
           db,
@@ -102,7 +115,7 @@ class RediscalaClientTest {
           .getConstructors()(0)
           .newInstance(
             host,
-            Integer.valueOf(port.intValue()),
+            Integer.valueOf(serverPort.intValue()),
             Option.apply(null),
             db,
             "RedisClient",
@@ -168,6 +181,73 @@ class RediscalaClientTest {
       SERVER_ADDRESS,
       SERVER_PORT
     )
+  }
+
+  @Test def testWrongTypeCommandSetsErrorType(): Unit = {
+    Await.result(redisClient.set("wrong-type", "value"), Duration("3 second"))
+    testing.waitForTraces(1)
+    testing.clearData()
+
+    val result = testing.runWithSpan(
+      "parent",
+      new ThrowingSupplier[Future[_], Exception] {
+        override def get(): Future[_] = {
+          redisClient.lpush("wrong-type", "value")
+        }
+      }
+    )
+
+    assertThatThrownBy(new ThrowingCallable {
+      override def call(): Unit = {
+        Await.result(result, Duration("3 second"))
+      }
+    }).isInstanceOf(classOf[ReplyErrorException])
+
+    assertErrorType("LPUSH", "WRONGTYPE")
+  }
+
+  @Test def testCustomServerErrorPrefixSetsErrorType(): Unit = {
+    val result = testing.runWithSpan(
+      "parent",
+      new ThrowingSupplier[Future[_], Exception] {
+        override def get(): Future[_] =
+          redisClient.eval[String](
+            "return redis.error_reply('Custom.Code!É custom message')"
+          )
+      }
+    )
+
+    assertThatThrownBy(new ThrowingCallable {
+      override def call(): Unit = {
+        Await.result(result, Duration("3 second"))
+      }
+    }).isInstanceOf(classOf[ReplyErrorException])
+
+    assertErrorType("EVAL", "Custom.Code!É")
+  }
+
+  @Test def testClientFailureUsesExceptionClassAsErrorType(): Unit = {
+    val failedPort = PortUtils.findOpenPort()
+    val client = createClient(None, JLong.valueOf(failedPort.toLong))
+    try {
+      val result = testing.runWithSpan(
+        "parent",
+        new ThrowingSupplier[Future[_], Exception] {
+          override def get(): Future[_] = client.ping()
+        }
+      )
+
+      val failure = Await.result(result.failed, Duration("3 second"))
+      assertThat(failure).isNotInstanceOf(classOf[ReplyErrorException])
+
+      assertErrorType(
+        "PING",
+        failure.getClass.getName,
+        JLong.valueOf(failedPort.toLong)
+      )
+    } finally {
+      client.stop()
+    }
   }
 
   @Test def testReconnectRefreshesServerTarget(): Unit = {
@@ -388,6 +468,62 @@ class RediscalaClientTest {
 
   private def assertCommandSpan(operationName: String): Unit =
     assertCommandSpan(operationName, host, port)
+
+  private def assertErrorType(
+      operationName: String,
+      errorType: String,
+      serverPort: JLong = port
+  ): Unit = {
+    testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+      override def accept(trace: TraceAssert): Unit =
+        trace.hasSpansSatisfyingExactly(
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit = {
+              span.hasName("parent").hasNoParent
+            }
+          },
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit = {
+              span
+                .hasName(s"$operationName $host:$serverPort")
+                .hasKind(CLIENT)
+                .hasParent(trace.getSpan(0))
+                .hasStatus(StatusData.error())
+                .hasAttributesSatisfyingExactly(
+                  equalTo(DB_SYSTEM_NAME, REDIS),
+                  equalTo(DB_OPERATION_NAME, operationName),
+                  equalTo(DB_NAMESPACE, defaultDbIndex.toString),
+                  equalTo(SERVER_ADDRESS, host),
+                  equalTo(SERVER_PORT, serverPort),
+                  equalTo(ERROR_TYPE, errorType)
+                )
+            }
+          }
+        )
+    })
+
+    testing.waitAndAssertMetrics(
+      "io.opentelemetry.rediscala-1.8",
+      new Consumer[MetricAssert] {
+        override def accept(metric: MetricAssert): Unit = {
+          metric
+            .hasName("db.client.operation.duration")
+            .hasHistogramSatisfying(new Consumer[HistogramAssert] {
+              override def accept(histogram: HistogramAssert): Unit = {
+                histogram.hasPointsSatisfying(
+                  new Consumer[HistogramPointAssert] {
+                    override def accept(point: HistogramPointAssert): Unit = {
+                      point
+                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType))
+                    }
+                  }
+                )
+              }
+            })
+        }
+      }
+    )
+  }
 
   private def assertCommandSpan(
       operationName: String,

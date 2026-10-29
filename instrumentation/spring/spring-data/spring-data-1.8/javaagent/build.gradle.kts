@@ -21,9 +21,6 @@ muzzle {
   }
 }
 
-// DQH - API changes that impact instrumentation occurred in spring-data-commons in March 2014.
-// For now, that limits support to spring-data-commons 1.9.0 (maybe 1.8.0).
-// For testing, chose a couple spring-data modules that are old enough to work with 1.9.0.
 dependencies {
   library("org.springframework.data:spring-data-commons:1.8.0.RELEASE")
   compileOnly("org.springframework:spring-aop:1.2")
@@ -32,10 +29,11 @@ dependencies {
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
 
   testImplementation(project(":instrumentation:spring:spring-data:spring-data-common:testing"))
+  testImplementation(platform("org.springframework:spring-framework-bom:3.2.10.RELEASE"))
 
   testLibrary("org.hibernate:hibernate-entitymanager:4.3.0.Final")
-  testLibrary("org.springframework.data:spring-data-jpa:1.8.0.RELEASE")
-  testLibrary("org.springframework:spring-test:3.0.0.RELEASE")
+  testLibrary("org.springframework.data:spring-data-jpa:1.6.0.RELEASE")
+  testLibrary("org.springframework:spring-test:3.2.10.RELEASE")
 
   testImplementation("org.hsqldb:hsqldb:2.0.0")
 

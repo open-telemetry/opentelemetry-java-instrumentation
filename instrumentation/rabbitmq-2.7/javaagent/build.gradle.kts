@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -14,14 +17,6 @@ muzzle {
 dependencies {
   library("com.rabbitmq:amqp-client:2.7.0")
 
-  // automatic recovery (Recoverable, RecoveryListener, ConnectionFactory#setAutomaticRecoveryEnabled)
-  // does not exist at the 2.7.0 muzzle floor. testCompileOnly lets the recovery test compile
-  // against a client new enough to have it without pulling a newer client onto the test runtime
-  // classpath, so the floor (2.7.0) still gets exercised by every other test; the recovery test
-  // itself is gated with Assumptions.assumeTrue(testLatestDeps) and only actually runs when
-  // testLatestDeps bumps the library() floor to a version that has the feature.
-  testCompileOnly("com.rabbitmq:amqp-client:4.0.0")
-
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
@@ -30,15 +25,45 @@ dependencies {
   }
 
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
+}
 
-  testLibrary("io.projectreactor.rabbitmq:reactor-rabbitmq:1.0.0.RELEASE")
+testing.suites {
+  register<JvmTestSuite>("reactorTest") {
+    dependencies {
+      implementation("io.projectreactor.rabbitmq:reactor-rabbitmq:${baseVersion("1.0.0.RELEASE").orLatest()}")
+      implementation("com.rabbitmq:amqp-client:${baseVersion("5.5.1").orLatest()}")
+    }
+  }
+  register<JvmTestSuite>("recoveryTest") {
+    dependencies {
+      implementation("com.rabbitmq:amqp-client:${baseVersion("4.0.0").orLatest()}")
+    }
+  }
+  withType<JvmTestSuite>().configureEach {
+    sources.java.srcDir("src/testCommon/java")
+    dependencies {
+      implementation("org.testcontainers:testcontainers")
+    }
+    val baseline = name == "test"
+    executions {
+      configureEach {
+        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+      }
+      register("Experimental") {
+        telemetryConfig("otel.instrumentation.rabbitmq.experimental-span-attributes", "true")
+      }
+      if (baseline) {
+        register("ReceiveSpansDisabled") {
+          telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "false")
+        }
+      }
+    }
+  }
 }
 
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-
-    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
 
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
@@ -46,30 +71,5 @@ tasks {
     configurations.testRuntimeClasspath.get().find { it.name.contains("byte-buddy-agent") }?.apply {
       jvmArgs("-javaagent:$absolutePath")
     }
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.rabbitmq.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.rabbitmq.experimental-span-attributes=true")
-  }
-
-  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "false")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false",
-    )
-  }
-
-  check {
-    dependsOn(
-      testExperimental,
-      testReceiveSpansDisabled,
-    )
   }
 }

@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -44,7 +44,7 @@ class LoggerInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ILoggingEvent onEnter(@Advice.Argument(0) ILoggingEvent event) {
-      CONTEXT.set(event, Java8BytecodeBridge.currentContext());
+      CONTEXT.set(event, Context.current());
       return event;
     }
   }

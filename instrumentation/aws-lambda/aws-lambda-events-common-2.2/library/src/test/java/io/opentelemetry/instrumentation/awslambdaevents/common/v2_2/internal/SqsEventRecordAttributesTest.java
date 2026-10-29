@@ -102,7 +102,7 @@ class SqsEventRecordAttributesTest {
   }
 
   private static SQSMessage message(String messageId, String eventSourceArn) {
-    SQSMessage message = new SQSMessage();
+    SQSMessage message = SqsEventTestUtils.newMessage();
     message.setMessageId(messageId);
     message.setEventSourceArn(eventSourceArn);
     return message;

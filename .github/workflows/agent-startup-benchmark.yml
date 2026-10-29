@@ -1,0 +1,168 @@
+name: Agent startup benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      baseline-ref:
+        description: Optional revision reachable from upstream main to compare against the selected agent
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-startup-benchmark
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: true
+
+      - name: Build agent from selected revision
+        run: ./gradlew :javaagent:shadowJar :smoke-tests:images:spring-boot:classes -PremoveJarVersionNumbers=true "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" --max-workers=2
+
+      - name: Format and validate standalone benchmark
+        working-directory: benchmark-overhead
+        run: ./gradlew spotlessApply test --tests 'io.opentelemetry.startup.*Test' startupRecorderJar
+
+      - name: Check out upstream main history for baseline validation
+        if: inputs.baseline-ref != ''
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          path: baseline
+          persist-credentials: false
+
+      - name: Select a baseline revision from upstream main history
+        if: inputs.baseline-ref != ''
+        env:
+          BASELINE_REF: ${{ inputs.baseline-ref }}
+        run: |
+          set -euo pipefail
+          baseline_revision=$(git -C baseline rev-parse --verify --end-of-options "${BASELINE_REF}^{commit}")
+          if ! git -C baseline merge-base --is-ancestor "$baseline_revision" refs/remotes/origin/main; then
+            echo "::error::Baseline revision must be reachable from upstream main"
+            exit 1
+          fi
+          git -C baseline checkout --detach "$baseline_revision"
+
+      - name: Build baseline agent
+        if: inputs.baseline-ref != ''
+        working-directory: baseline
+        run: ./gradlew :javaagent:shadowJar -PremoveJarVersionNumbers=true "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" --max-workers=2
+
+      - name: Package all benchmark inputs
+        env:
+          BASELINE_REF: ${{ inputs.baseline-ref }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/startup-benchmark/fixture"
+          cp javaagent/build/libs/opentelemetry-javaagent.jar "$RUNNER_TEMP/startup-benchmark/"
+          cp smoke-tests/images/spring-boot/build/classes/java/main/io/opentelemetry/smoketest/springboot/controller/WebController.class \
+            "$RUNNER_TEMP/startup-benchmark/fixture/"
+          cp benchmark-overhead/build/libs/startup-recorder.jar "$RUNNER_TEMP/startup-benchmark/"
+          git rev-parse HEAD > "$RUNNER_TEMP/startup-benchmark/revision.txt"
+          (cd "$RUNNER_TEMP/startup-benchmark" && sha256sum opentelemetry-javaagent.jar startup-recorder.jar > sha256.txt)
+          if [ -n "$BASELINE_REF" ]; then
+            cp baseline/javaagent/build/libs/opentelemetry-javaagent.jar "$RUNNER_TEMP/startup-benchmark/baseline-agent.jar"
+            git -C baseline rev-parse HEAD > "$RUNNER_TEMP/startup-benchmark/baseline-revision.txt"
+            (cd "$RUNNER_TEMP/startup-benchmark" && sha256sum baseline-agent.jar >> sha256.txt)
+          fi
+          git archive --format=tar HEAD \
+            benchmark-overhead .java-version buildscripts/spotless.license.java \
+            | gzip -n > "$RUNNER_TEMP/startup-benchmark/harness.tar.gz"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: startup-benchmark
+          path: ${{ runner.temp }}/startup-benchmark
+          if-no-files-found: error
+          retention-days: 30
+
+  benchmark:
+    needs: build
+    permissions: {}
+    runs-on: oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24
+    timeout-minutes: 45
+    steps:
+      - name: Isolate this attempt under runner temporary storage
+        working-directory: ${{ runner.temp }}
+        run: |
+          root="$RUNNER_TEMP/agent-startup-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          printf 'AGENTS=%s\nGRADLE_USER_HOME=%s/gradle-home\n' "$root" "$root" >> "$GITHUB_ENV"
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: startup-benchmark
+          path: ${{ env.AGENTS }}
+
+      - name: Unpack standalone benchmark
+        run: tar -xzf "$AGENTS/harness.tar.gz" -C "$AGENTS"
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version-file: ${{ env.AGENTS }}/.java-version
+
+      - name: Verify benchmark input checksums
+        run: (cd "$AGENTS" && sha256sum --check sha256.txt)
+
+      - name: Measure startup and collect separate profile
+        working-directory: ${{ env.AGENTS }}/benchmark-overhead
+        env:
+          TMPDIR: ${{ runner.temp }}
+          TMP: ${{ runner.temp }}
+          TEMP: ${{ runner.temp }}
+        run: |
+          mkdir -p build/reports/agent-startup
+          uname -a > build/reports/agent-startup/host.txt
+          lscpu >> build/reports/agent-startup/host.txt
+          docker info >> build/reports/agent-startup/host.txt
+          printf '%s/ actions run %s attempt %s\n' "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" > build/reports/agent-startup/workflow.txt
+          source_revision=$(cat "$AGENTS/revision.txt")
+          baseline_arguments=()
+          if [ -f "$AGENTS/baseline-agent.jar" ]; then
+            baseline_arguments+=("-PstartupBenchmarkBaselineAgentJar=$AGENTS/baseline-agent.jar")
+            baseline_arguments+=("-PstartupBenchmarkBaselineRevision=$(cat "$AGENTS/baseline-revision.txt")")
+          fi
+          ./gradlew --no-daemon agentStartupBenchmark \
+            "-PstartupBenchmarkAgentJar=$AGENTS/opentelemetry-javaagent.jar" \
+            "-PstartupBenchmarkRecorderJar=$AGENTS/startup-recorder.jar" \
+            "-PstartupBenchmarkFixtureClass=$AGENTS/fixture/WebController.class" \
+            "-PstartupBenchmarkRevision=$source_revision" \
+            "${baseline_arguments[@]}"
+
+      - name: Publish summary
+        working-directory: ${{ env.AGENTS }}/benchmark-overhead
+        run: cat build/reports/agent-startup/*/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: agent-startup-results-${{ github.run_attempt }}
+          path: |
+            ${{ env.AGENTS }}/benchmark-overhead/build/reports/agent-startup
+            ${{ env.AGENTS }}/benchmark-overhead/build/reports/tests
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Remove only this attempt's files
+        if: always()
+        run: rm -rf -- "$AGENTS"

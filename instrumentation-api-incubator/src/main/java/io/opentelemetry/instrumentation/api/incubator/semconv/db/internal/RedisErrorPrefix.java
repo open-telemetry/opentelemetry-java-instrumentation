@@ -18,6 +18,24 @@ import javax.annotation.Nullable;
 public final class RedisErrorPrefix {
 
   /**
+   * Returns the prefix from {@link #extract(String)} only when every character in the prefix is
+   * ASCII, or {@code null} otherwise.
+   */
+  @Nullable
+  public static String extractAscii(@Nullable String serverErrorLine) {
+    String prefix = extract(serverErrorLine);
+    if (prefix == null) {
+      return null;
+    }
+    for (int i = 0; i < prefix.length(); i++) {
+      if (prefix.charAt(i) > 0x7f) {
+        return null;
+      }
+    }
+    return prefix;
+  }
+
+  /**
    * Returns the first nonempty ASCII-space-delimited token unchanged, or {@code null} for null,
    * empty, or ASCII-space-only input. Only ASCII space U+0020 separates tokens; case, punctuation,
    * tabs, other characters, and token length are unrestricted.

@@ -6,9 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisErrorPrefix;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
+import redis.actors.ReplyErrorException;
 
 final class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaRequest, Void> {
 
@@ -41,6 +43,19 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
   @Nullable
   public Long getDbOperationBatchSize(RediscalaRequest request) {
     return request.getBatchSize();
+  }
+
+  @Nullable
+  @Override
+  public String getErrorType(
+      RediscalaRequest request, @Nullable Void unused, @Nullable Throwable error) {
+    // Rediscala wraps decoded Redis error replies in ReplyErrorException. RESP errors start with an
+    // error prefix; a missing prefix preserves the shared exception-class fallback.
+    // https://redis.io/docs/latest/develop/reference/protocol-spec/#resp-errors
+    if (!(error instanceof ReplyErrorException)) {
+      return null;
+    }
+    return RedisErrorPrefix.extract(error.getMessage());
   }
 
   @Nullable

@@ -220,6 +220,95 @@ class JmxTelemetryTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
+  void bundledAndCustomJvmSchemas(boolean includeUnstable) throws Exception {
+    String customRules =
+        "rules:\n"
+            + "  - bean: java.lang:type=Threading\n"
+            + "    prefix: jvm.memory.\n"
+            + "    type: updowncounter\n"
+            + "    unit: By\n"
+            + "    metricAttribute:\n"
+            + "      test.source: const(custom)\n"
+            + "    mapping:\n"
+            + "      ThreadCount:\n"
+            + "        metric: used\n"
+            + "        desc: Measure of memory used.\n"
+            + "      PeakThreadCount:\n"
+            + "        metric: init\n"
+            + "        desc: Measure of initial memory requested.\n";
+    JmxTelemetryBuilder builder =
+        JmxTelemetry.builder(testing.getOpenTelemetry())
+            .addRules(new ByteArrayInputStream(customRules.getBytes(UTF_8)))
+            .setInternalMetricsSystemFilter(IncludeExclude.builder().setIncluded("jvm").build())
+            .setMetrics(
+                IncludeExclude.builder()
+                    .setIncluded("jvm.memory.used", "jvm.memory.init", "jvm.thread.count")
+                    .setExcluded("jvm.thread.count")
+                    .build());
+    if (includeUnstable) {
+      builder.setInternalMetricsUnstableMetricsFilter(
+          IncludeExclude.builder().setIncluded("jvm.memory.init").build());
+    }
+    AutoCloseable collection = builder.build().start();
+    cleanup.deferCleanup(collection);
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx",
+        "jvm.memory.used",
+        metrics -> {
+          metrics
+              .filteredOn(metric -> metric.getInstrumentationScopeInfo().getSchemaUrl() == null)
+              .isNotEmpty()
+              .allSatisfy(
+                  metric -> {
+                    assertThat(metric.getLongSumData().getPoints())
+                        .singleElement()
+                        .satisfies(
+                            point ->
+                                assertThat(point.getAttributes().get(stringKey("test.source")))
+                                    .isEqualTo("custom"));
+                  });
+          metrics
+              .filteredOn(metric -> metric.getInstrumentationScopeInfo().getSchemaUrl() != null)
+              .isNotEmpty()
+              .allSatisfy(
+                  metric -> {
+                    assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
+                        .isEqualTo("https://opentelemetry.io/schemas/1.44.0");
+                    assertThat(metric.getLongSumData().getPoints())
+                        .isNotEmpty()
+                        .allSatisfy(
+                            point ->
+                                assertThat(point.getAttributes().get(stringKey("test.source")))
+                                    .isNull());
+                  });
+        });
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx",
+        "jvm.memory.init",
+        metrics ->
+            metrics
+                .extracting(metric -> metric.getInstrumentationScopeInfo().getSchemaUrl())
+                .containsOnly(
+                    includeUnstable
+                        ? new String[] {null, "https://opentelemetry.io/schemas/1.44.0"}
+                        : new String[] {null}));
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric -> metric.getInstrumentationScopeInfo().getName().equals("io.opentelemetry.jmx"))
+        .extracting(metric -> metric.getName())
+        .containsOnly("jvm.memory.used", "jvm.memory.init");
+
+    collection.close();
+    testing.clearData();
+    assertThat(testing.metrics())
+        .filteredOn(
+            metric -> metric.getInstrumentationScopeInfo().getName().equals("io.opentelemetry.jmx"))
+        .isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
   void customRuleSharingEmbeddedUnstableName(boolean includeUnstable) {
     String customRules =
         "rules:\n"
@@ -245,7 +334,13 @@ class JmxTelemetryTest {
     cleanup.deferCleanup(builder.build(collisionDefinitions()).start());
 
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.jmx", metric -> metric.hasName("test.collision.count"));
+        "io.opentelemetry.jmx",
+        metric ->
+            metric
+                .hasName("test.collision.count")
+                .satisfies(
+                    data ->
+                        assertThat(data.getInstrumentationScopeInfo().getSchemaUrl()).isNull()));
     Collection<String> sources =
         testing.metrics().stream()
             .filter(metric -> metric.getName().equals("test.collision.count"))

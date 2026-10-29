@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ContextPropagatingRunnable;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -39,7 +38,7 @@ class SimpleAsyncTaskExecutorInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static Runnable enterJobSubmit(@Advice.Argument(0) Runnable task) {
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       return ContextPropagatingRunnable.propagateContext(task, context);
     }
   }

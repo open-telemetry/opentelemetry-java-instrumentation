@@ -32,7 +32,6 @@ dependencies {
   testImplementation("com.sun.xml.bind:jaxb-core:2.2.11")
   testImplementation("com.sun.xml.bind:jaxb-impl:2.2.11")
   testImplementation("javax.activation:activation:1.1.1")
-  testImplementation("com.google.guava:guava")
   testImplementation(project(":instrumentation:spring:spring-ws-2.0:testing"))
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))

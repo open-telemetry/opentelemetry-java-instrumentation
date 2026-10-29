@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.common.ServletH
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletRequest;
 import net.bytebuddy.asm.Advice;
@@ -28,8 +27,8 @@ public class AsyncDispatchAdvice {
 
     ServletRequest request = context.getRequest();
 
-    Context currentContext = Java8BytecodeBridge.currentContext();
-    Span currentSpan = Java8BytecodeBridge.spanFromContext(currentContext);
+    Context currentContext = Context.current();
+    Span currentSpan = Span.fromContext(currentContext);
     if (currentSpan.getSpanContext().isValid()) {
       // this tells the dispatched servlet to use the current span as the parent for its work
       // (if the currentSpan is not valid for some reason, the original servlet span should still

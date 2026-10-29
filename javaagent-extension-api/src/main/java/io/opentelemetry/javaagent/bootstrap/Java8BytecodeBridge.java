@@ -15,7 +15,14 @@ import io.opentelemetry.context.Context;
  * into an instrumented class, however many times the instrumented class has been compiled to a
  * previous version of bytecode and so we cannot inline calls to static interface methods, as those
  * were not supported prior to Java 8 and will lead to a class verification error.
+ *
+ * @deprecated Use {@link Context#current()}, {@link Context#root()}, {@link Span#current()}, {@link
+ *     Span#fromContext(Context)}, and {@link Baggage#fromContext(Context)} directly in non-inlined
+ *     advice and helpers. Static interface calls must not be copied into pre-Java-8 class files:
+ *     extension authors with inlined advice must use non-inlined advice or their own
+ *     Java-8-compiled helper instead. This class may be removed in a subsequent minor release.
  */
+@Deprecated
 public final class Java8BytecodeBridge {
 
   /** Calls {@link Context#current()}. */

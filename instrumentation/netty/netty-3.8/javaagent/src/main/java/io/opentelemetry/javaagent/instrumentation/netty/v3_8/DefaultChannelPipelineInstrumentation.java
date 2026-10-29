@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -36,7 +36,7 @@ class DefaultChannelPipelineInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(1) Throwable throwable) {
       if (throwable != null) {
-        NettyErrorHolder.set(Java8BytecodeBridge.currentContext(), throwable);
+        NettyErrorHolder.set(Context.current(), throwable);
       }
     }
   }

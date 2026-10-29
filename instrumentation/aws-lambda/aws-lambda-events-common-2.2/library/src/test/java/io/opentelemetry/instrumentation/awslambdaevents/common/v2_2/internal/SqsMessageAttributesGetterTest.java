@@ -21,7 +21,7 @@ class SqsMessageAttributesGetterTest {
 
   @Test
   void headers() {
-    SQSMessage message = new SQSMessage();
+    SQSMessage message = SqsEventTestUtils.newMessage();
     MessageAttribute attribute = new MessageAttribute();
     attribute.setStringValue("value");
     MessageAttribute binary = new MessageAttribute();
@@ -47,7 +47,7 @@ class SqsMessageAttributesGetterTest {
 
   @Test
   void noHeaders() {
-    SQSMessage message = new SQSMessage();
+    SQSMessage message = SqsEventTestUtils.newMessage();
     assertThat(getter.getMessageHeaderNames(message)).isEmpty();
     assertThat(getter.getMessageHeader(message, "missing")).isEmpty();
     assertThat(new SqsEventAttributesGetter().getMessageHeaderNames(new SQSEvent())).isEmpty();

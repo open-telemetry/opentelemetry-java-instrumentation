@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1.ApacheHttpAsyncClientSingletons.instrumenter;
@@ -70,7 +69,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) HttpContext httpContext,
         @Advice.Argument(3) FutureCallback<?> futureCallback) {
 
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
 
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);

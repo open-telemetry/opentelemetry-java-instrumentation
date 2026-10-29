@@ -10,11 +10,11 @@ import io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME
 import io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT
 import io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME
 import io.opentelemetry.api.trace.{SpanKind, Tracer}
+import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.testing.junit.{
   AgentInstrumentationExtension,
   InstrumentationExtension
 }
-import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY
@@ -152,7 +152,7 @@ class SlickTest {
 
   private def startQuery(query: String): Future[Vector[Int]] = {
     val span = tracer.spanBuilder("run query").startSpan()
-    val scope = Java8BytecodeBridge.currentContext().`with`(span).makeCurrent()
+    val scope = Context.current().`with`(span).makeCurrent()
     try {
       database.run(sql"#$query".as[Int])
     } finally {

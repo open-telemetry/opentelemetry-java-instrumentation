@@ -9,8 +9,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -45,7 +45,7 @@ class MemcachedConnectionInstrumentation implements TypeInstrumentation {
   public static class AddOperationAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(1) Operation operation) {
-      SpymemcachedRequestContext.trackOperation(Java8BytecodeBridge.currentContext(), operation);
+      SpymemcachedRequestContext.trackOperation(Context.current(), operation);
     }
   }
 

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
@@ -81,7 +80,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
       // parent context captured when the AsyncCommand was constructed during dispatch
       Context parentContext = CONTEXT.get(asyncCommand);
       if (parentContext == null) {
-        parentContext = currentContext();
+        parentContext = Context.current();
       }
       if (!instrumenter().shouldStart(parentContext, command)) {
         return;

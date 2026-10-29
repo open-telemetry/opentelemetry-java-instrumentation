@@ -10,10 +10,10 @@ the stated exception before reporting a repository convention.
 
 - **Visibility**: use the narrowest access that works. Add `// visible for
   testing` if a production member has broader visibility solely for direct
-  test access. Members referenced directly by advice must remain public because
-  the transformer may inline the advice even when its source annotation sets
-  `inline = false`; transitive helper members may use narrower visibility. A
-  single public class in a module may be needed for Javadoc.
+  test access. Keep advice classes and their static entry points public for
+  indy method-handle dispatch. Ordinary helpers may use narrower access when
+  their callers and classloader boundaries permit it. A single public class
+  in a module may be needed for Javadoc.
 - **Public API**: make public API classes `final` where possible; name
   public getters `get*` or `is*` for booleans. Javaagent singleton accessors
   directly returning stored fields are an exception to getter naming. Public
@@ -38,10 +38,10 @@ the stated exception before reporting a repository convention.
   intentional deprecated API use.
 - **Attribute setters**: `AttributesBuilder.put`, `Span.setAttribute`,
   `SpanBuilder.setAttribute`, and `LogRecordBuilder.setAttribute` ignore a
-  null value. A guard around a directly passed boxed value is redundant,
-  except when an `Integer` passed for `AttributeKey<Long>` selects the
-  `int` overload and would unbox null. Retain a guard protecting a
-  dereference or derived computation.
+  null value. A guard around a directly passed nullable value, such as a
+  `String` or boxed primitive, is redundant, except when an `Integer`
+  passed for `AttributeKey<Long>` selects the `int` overload and would
+  unbox null. Retain a guard protecting a dereference or derived computation.
 - **Reflection**: cache reflective method lookups that may repeat on a
   production path. For a fixed declaring class or stable interface,
   resolve once; use `ClassValue` only when lookup metadata actually varies
@@ -85,3 +85,8 @@ the stated exception before reporting a repository convention.
   Avoid `Optional` in public API signatures and hot-path code. Omit
   explicit type arguments on generic method calls when type inference
   already works; keep them where compilation actually requires them.
+- **Conditional expressions**: avoid directly nested ternaries, even when
+  parenthesized. Use named intermediate values, `if`/`else`, or early returns,
+  keeping simple ternaries where they improve readability. A ternary inside a
+  separate method-call argument does not count as direct nesting. In tests,
+  nested ternaries may remain inline in attribute-assertion expected values.

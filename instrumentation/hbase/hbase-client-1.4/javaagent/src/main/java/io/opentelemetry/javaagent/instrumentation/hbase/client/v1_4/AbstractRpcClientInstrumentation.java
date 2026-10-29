@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.resetRequestAndContext;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.setRequestAndContext;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientUtil.createRequest;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientState.resetRequestAndContext;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientState.setRequestAndContext;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientUtil.createRequest;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4.HbaseSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -19,9 +19,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerTarget;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseRequest;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseServerTarget;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.RequestAndContext;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;

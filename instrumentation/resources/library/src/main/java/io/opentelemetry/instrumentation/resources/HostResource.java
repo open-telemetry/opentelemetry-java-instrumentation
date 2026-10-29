@@ -129,7 +129,7 @@ public final class HostResource {
     }
     attributes.put(HOST_ARCH, hostArch);
 
-    return Resource.create(attributes.build(), SchemaUrls.V1_24_0);
+    return Resource.create(attributes.build(), SchemaUrls.V1_40_0);
   }
 
   @Nullable

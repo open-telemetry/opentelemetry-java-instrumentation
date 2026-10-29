@@ -32,9 +32,11 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import com.google.common.collect.ImmutableMap;
 import com.lambdaworks.redis.ClientOptions;
 import com.lambdaworks.redis.RedisClient;
+import com.lambdaworks.redis.RedisCommandExecutionException;
 import com.lambdaworks.redis.RedisConnectionException;
 import com.lambdaworks.redis.RedisFuture;
 import com.lambdaworks.redis.RedisURI;
+import com.lambdaworks.redis.ScriptOutputType;
 import com.lambdaworks.redis.api.StatefulRedisConnection;
 import com.lambdaworks.redis.api.async.RedisAsyncCommands;
 import com.lambdaworks.redis.api.sync.RedisCommands;
@@ -152,7 +154,11 @@ class LettuceAsyncClientTest {
     // (+ 1 connect trace per client when connection telemetry is enabled). Older lettuce connects
     // synchronously and nests the SELECT under CONNECT, while newer lettuce connects asynchronously
     // and starts a new trace for it.
-    testing.waitForTraces(connectionTelemetryEnabled() ? (testLatestDeps() ? 4 : 3) : 2);
+    int expectedTraceCount = 2;
+    if (connectionTelemetryEnabled()) {
+      expectedTraceCount = testLatestDeps() ? 4 : 3;
+    }
+    testing.waitForTraces(expectedTraceCount);
   }
 
   private static boolean connectionTelemetryEnabled() {
@@ -186,6 +192,141 @@ class LettuceAsyncClientTest {
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
+  }
+
+  @Test
+  void testCommandServerErrorUsesRedisErrorType() throws Exception {
+    connection.sync().hmset("TESTHM", TEST_HASH_MAP);
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    Throwable thrown = catchThrowable(() -> asyncCommands.get("TESTHM").get(10, SECONDS));
+
+    assertThat(thrown)
+        .isInstanceOf(ExecutionException.class)
+        .hasCauseInstanceOf(RedisCommandExecutionException.class);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(ERROR_TYPE, "WRONGTYPE"))));
+
+    assertErrorTypeMetric("io.opentelemetry.lettuce-4.0", "WRONGTYPE", 1);
+  }
+
+  @Test
+  void testNonAsciiServerErrorUsesExceptionTypeFallback() throws Exception {
+    Throwable error =
+        catchThrowable(
+            () ->
+                asyncCommands
+                    .eval(
+                        "return redis.error_reply('\\195\\169chec\\228\\184\\173 details')",
+                        ScriptOutputType.VALUE)
+                    .get(10, SECONDS));
+    assertThat(error)
+        .isInstanceOf(ExecutionException.class)
+        .hasCauseInstanceOf(RedisCommandExecutionException.class);
+    assertThat(error.getCause()).hasMessage("ￃﾩchec￤ﾸﾭ details");
+
+    String exceptionType = RedisCommandExecutionException.class.getName();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("EVAL " + host + ":" + port)
+                        .hasStatus(StatusData.error())
+                        .hasException(error.getCause())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "EVAL"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(ERROR_TYPE, exceptionType))));
+
+    assertErrorTypeMetric("io.opentelemetry.lettuce-4.0", exceptionType, 1);
+    testing.clearData();
+
+    assertThat(asyncCommands.set("UNICODE_ERROR_TEST_KEY", "value").get(10, SECONDS))
+        .isEqualTo("OK");
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SET " + host + ":" + port)
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
+  }
+
+  @Test
+  void testTransactionServerErrorUsesRedisErrorType() throws Exception {
+    asyncCommands.multi().get(10, SECONDS);
+    RedisFuture<Object> failedCommand =
+        asyncCommands.eval(
+            "return redis.error_reply('ERR transaction failure')", ScriptOutputType.VALUE);
+    assertThat(asyncCommands.exec().get(10, SECONDS)).isNotNull();
+
+    Throwable error = catchThrowable(() -> failedCommand.get(10, SECONDS));
+    assertThat(error)
+        .isInstanceOf(ExecutionException.class)
+        .hasCauseInstanceOf(RedisCommandExecutionException.class);
+    assertThat(error.getCause()).hasMessage("ERR transaction failure");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("MULTI " + host + ":" + port).hasStatus(StatusData.unset())),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("EVAL " + host + ":" + port)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, "ERR"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("EXEC " + host + ":" + port).hasStatus(StatusData.unset())));
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.lettuce-4.0",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.satisfies(
+                            data ->
+                                assertThat(data.getPoints())
+                                    .filteredOn(
+                                        point -> point.getAttributes().get(ERROR_TYPE) != null)
+                                    .singleElement()
+                                    .satisfies(
+                                        point -> {
+                                          assertThat(point.getCount()).isEqualTo(1);
+                                          assertThat(point.getAttributes().get(ERROR_TYPE))
+                                              .isEqualTo("ERR");
+                                        }))));
   }
 
   @Test
@@ -538,6 +679,8 @@ class LettuceAsyncClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(ERROR_TYPE, "java.lang.IllegalStateException"))));
+
+    assertErrorTypeMetric("io.opentelemetry.lettuce-4.0", "java.lang.IllegalStateException", 1);
   }
 
   @Test
@@ -601,7 +744,7 @@ class LettuceAsyncClientTest {
     for (RedisFuture<?> future : futures) {
       Throwable thrown = catchThrowable(() -> future.get(10, SECONDS));
       if (thrown != null) {
-        assertThat(thrown.getCause().getClass().getName()).isEqualTo(scenario.errorType);
+        assertThat(thrown.getCause().getClass().getName()).isEqualTo(scenario.exceptionType);
       }
     }
 
@@ -627,6 +770,27 @@ class LettuceAsyncClientTest {
                             equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
                             equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
                             equalTo(ERROR_TYPE, scenario.errorType))));
+
+    assertErrorTypeMetric("io.opentelemetry.lettuce-4.0", scenario.errorType, 1);
+  }
+
+  private static void assertErrorTypeMetric(
+      String instrumentationName, String errorType, long count) {
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        metrics ->
+            metrics
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasCount(count)
+                                    .hasAttributesSatisfying(
+                                        attributes ->
+                                            assertThat(attributes.get(ERROR_TYPE))
+                                                .isEqualTo(errorType)))));
   }
 
   @Test
@@ -748,7 +912,8 @@ class LettuceAsyncClientTest {
                 .addCommand(commands -> commands.set("batch-after-error", "v1"))
                 .operationName("PIPELINE")
                 .batchSize(2)
-                .errorType("com.lambdaworks.redis.RedisCommandExecutionException")
+                .exceptionType("com.lambdaworks.redis.RedisCommandExecutionException")
+                .errorType("ERR")
                 .build()));
   }
 
@@ -756,12 +921,14 @@ class LettuceAsyncClientTest {
     private final List<BatchCommand> commands;
     private final String operationName;
     private final Long batchSize;
+    private final String exceptionType;
     private final String errorType;
 
     private BatchScenario(Builder builder) {
       this.commands = builder.commands;
       this.operationName = builder.operationName;
       this.batchSize = builder.batchSize;
+      this.exceptionType = builder.exceptionType;
       this.errorType = builder.errorType;
     }
 
@@ -777,6 +944,7 @@ class LettuceAsyncClientTest {
       private final List<BatchCommand> commands = new ArrayList<>();
       private String operationName;
       private Long batchSize;
+      private String exceptionType;
       private String errorType;
 
       private Builder addCommand(BatchCommand command) {
@@ -796,6 +964,11 @@ class LettuceAsyncClientTest {
 
       private Builder errorType(String errorType) {
         this.errorType = errorType;
+        return this;
+      }
+
+      private Builder exceptionType(String exceptionType) {
+        this.exceptionType = exceptionType;
         return this;
       }
 

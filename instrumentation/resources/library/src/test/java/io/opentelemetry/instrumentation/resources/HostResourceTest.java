@@ -43,7 +43,7 @@ class HostResourceTest {
     Attributes attributes = resource.getAttributes();
 
     // then
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
     assertThat(attributes.get(HOST_NAME)).isNotBlank();
     assertThat(attributes.get(HOST_ARCH)).isNotBlank();
   }

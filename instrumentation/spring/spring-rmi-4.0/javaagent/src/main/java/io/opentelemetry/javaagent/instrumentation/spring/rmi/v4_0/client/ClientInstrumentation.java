@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
@@ -67,7 +66,7 @@ public class ClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(@Advice.Argument(0) MethodInvocation methodInv) {
       Method method = methodInv.getMethod();
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Context.current();
       if (!clientInstrumenter().shouldStart(parentContext, method)) {
         return null;
       }

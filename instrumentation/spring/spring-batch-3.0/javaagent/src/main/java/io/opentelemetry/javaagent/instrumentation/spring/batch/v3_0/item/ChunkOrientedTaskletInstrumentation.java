@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.item;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.SpringBatchInstrumentationConfig.shouldTraceItems;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.item.ItemSingletons.startChunk;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -48,7 +47,7 @@ public class ChunkOrientedTaskletInstrumentation implements TypeInstrumentation 
       if (!shouldTraceItems()) {
         return null;
       }
-      Context context = startChunk(currentContext(), chunkContext);
+      Context context = startChunk(Context.current(), chunkContext);
       return context.makeCurrent();
     }
 
