@@ -28,6 +28,8 @@ import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.repository.LocalRepository;
+import org.eclipse.aether.resolution.VersionRangeRequest;
+import org.eclipse.aether.resolution.VersionRangeResolutionException;
 import org.eclipse.aether.resolution.VersionRangeResult;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
@@ -49,8 +51,24 @@ public final class MuzzleBenchmark {
     return session;
   }
 
-  public static void requireVersions(VersionRangeResult result, boolean intentionallyEmpty) {
-    if (result.getVersions().isEmpty() && !intentionallyEmpty) {
+  public static void requireVersionMetadata(
+      RepositorySystem system,
+      RepositorySystemSession session,
+      VersionRangeResult result,
+      boolean intentionallyEmpty)
+      throws VersionRangeResolutionException {
+    if (!result.getVersions().isEmpty() || intentionallyEmpty) {
+      return;
+    }
+    VersionRangeRequest request = result.getRequest();
+    VersionRangeResult allVersions =
+        system.resolveVersionRange(
+            session,
+            new VersionRangeRequest()
+                .setArtifact(request.getArtifact().setVersion("[0,)"))
+                .setRepositories(request.getRepositories())
+                .setRequestContext(request.getRequestContext()));
+    if (allVersions.getVersions().isEmpty()) {
       throw new IllegalStateException(
           "Missing Muzzle benchmark version metadata for " + result.getRequest().getArtifact());
     }

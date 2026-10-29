@@ -481,7 +481,7 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
   }
   val allRangeResult = system.resolveVersionRange(session, allRangeRequest)
   if (muzzleBenchmarkSeed != null) {
-    MuzzleBenchmark.requireVersions(allRangeResult, upperBound?.toString() == "0.0")
+    MuzzleBenchmark.requireVersionMetadata(system, session, allRangeResult, upperBound?.toString() == "0.0")
   }
 
   val rangeRequest = VersionRangeRequest().apply {
@@ -550,7 +550,7 @@ fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: Reposit
   val rangeResult = system.resolveVersionRange(session, rangeRequest)
 
   if (muzzleBenchmarkSeed != null) {
-    MuzzleBenchmark.requireVersions(rangeResult, upperBound?.toString() == "0.0")
+    MuzzleBenchmark.requireVersionMetadata(system, session, rangeResult, upperBound?.toString() == "0.0")
   }
   val allVersionArtifacts = filterVersions(rangeResult, muzzleDirective.normalizedSkipVersions, upperBound)
     .map {

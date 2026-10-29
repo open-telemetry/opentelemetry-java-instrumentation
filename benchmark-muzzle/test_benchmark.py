@@ -132,6 +132,59 @@ class BenchmarkTest(unittest.TestCase):
             "stdev_ms": benchmark.statistics.stdev([10, 11, 1000]),
         })
 
+    def test_preparation_applies_support_in_order_before_shared_cache_audits(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runner = object.__new__(benchmark.Benchmark)
+            runner.root = Path(directory)
+            for name in ("source", "checkout", "home", "repository", "audit", "snapshots", "reports"):
+                setattr(runner, name, runner.root / name)
+            for path in (runner.source, runner.home, runner.snapshots, runner.reports):
+                path.mkdir()
+            runner.revisions = {"baseline": "before", "candidate": "after"}
+            runner.support = [b"first", b"second"]
+            runner.frozen_metadata = None
+            runner.input_identity = {"seed": 1729}
+            phases = []
+            applied = []
+
+            def fake_git(command, **kwargs):
+                if "clone" in command:
+                    runner.checkout.mkdir()
+                elif "apply" in command:
+                    control = runner.checkout / benchmark.CONTROLS
+                    control.parent.mkdir(parents=True, exist_ok=True)
+                    with control.open("ab") as stream:
+                        stream.write(kwargs["input"])
+                    applied.append(kwargs["input"])
+                return b""
+
+            def bootstrap(label, *, offline):
+                phases.append(f"bootstrap-{label}")
+                self.assertEqual(offline, label == "candidate")
+                runner.repository.mkdir(exist_ok=True)
+                (runner.repository / "metadata.xml").write_text("frozen", encoding="utf-8")
+
+            def audit(destination, *, preparation):
+                phases.append(f"audit-{destination.name}")
+                self.assertTrue(preparation)
+                self.assertEqual(len(applied), 4)
+                runner.remove(runner.audit)
+                runner.audit.mkdir()
+                (runner.audit / "assertion.txt").write_text("verified", encoding="utf-8")
+
+            with (
+                patch.object(benchmark, "run", side_effect=fake_git),
+                patch.object(runner, "gradle", side_effect=bootstrap),
+                patch.object(runner, "invoke_profiler", side_effect=audit),
+            ):
+                runner.prepare()
+            self.assertEqual(applied, [b"first", b"second", b"first", b"second"])
+            self.assertEqual(phases, [
+                "bootstrap-baseline", "bootstrap-candidate", "audit-baseline", "audit-candidate",
+            ])
+            self.assertTrue((runner.snapshots / "gradle-home").is_dir())
+            self.assertTrue((runner.reports / "inputs" / "identity.json").is_file())
+
     def test_invocations_are_offline_and_reject_invalid_measurements(self):
         for failure in (
             "none", "configuration-reused", "changed-metadata", "changed-workload",

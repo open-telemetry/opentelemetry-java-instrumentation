@@ -11,7 +11,7 @@ on:
         description: Candidate revision, defaults to the selected workflow revision
         type: string
       support-commit:
-        description: Optional benchmark-support commit to apply to older revisions
+        description: Optional space-separated benchmark-support commits, applied in order
         type: string
       partitions:
         description: Muzzle partitions
@@ -133,9 +133,10 @@ jobs:
           PROFILE: ${{ inputs.profile }}
         run: |
           arguments=()
-          if [ -n "$SUPPORT_COMMIT" ]; then
-            arguments+=(--support-commit "$SUPPORT_COMMIT")
-          fi
+          read -r -a support_commits <<< "$SUPPORT_COMMIT"
+          for commit in "${support_commits[@]}"; do
+            arguments+=(--support-commit "$commit")
+          done
           if [ -n "$WORKLOAD_RUN_ID" ]; then
             arguments+=(--inputs "$RUNNER_TEMP/muzzle-workload")
           fi

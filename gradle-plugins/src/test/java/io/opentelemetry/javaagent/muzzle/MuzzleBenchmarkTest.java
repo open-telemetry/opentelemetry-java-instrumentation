@@ -72,7 +72,8 @@ class MuzzleBenchmarkTest {
         metadata,
         "<metadata><groupId>example</groupId><artifactId>library</artifactId>"
             + "<versioning><versions><version>1.0</version><version>2.0</version>"
-            + "<version>3.0</version></versions></versioning></metadata>");
+            + "<version>3.0</version><version>6.0-rc2</version>"
+            + "</versions></versioning></metadata>");
     RepositorySystem system =
         MavenRepositorySystemUtils.newServiceLocator().getService(RepositorySystem.class);
     RepositorySystemSession session =
@@ -89,14 +90,20 @@ class MuzzleBenchmarkTest {
     assertThat(system.resolveVersionRange(session, request).getVersions())
         .extracting(Object::toString)
         .containsExactly("1.0", "2.0");
+    request.setArtifact(new DefaultArtifact("example:library:[6.0,)"));
+    org.eclipse.aether.resolution.VersionRangeResult empty =
+        system.resolveVersionRange(session, request);
+    assertThat(empty.getVersions()).isEmpty();
+    MuzzleBenchmark.requireVersionMetadata(system, session, empty, false);
     request.setArtifact(new DefaultArtifact("example:missing:[1.0,3.0)"));
     org.eclipse.aether.resolution.VersionRangeResult missing =
         system.resolveVersionRange(session, request);
     assertThat(missing.getVersions()).isEmpty();
-    assertThatThrownBy(() -> MuzzleBenchmark.requireVersions(missing, false))
+    assertThatThrownBy(
+            () -> MuzzleBenchmark.requireVersionMetadata(system, session, missing, false))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("Missing Muzzle benchmark version metadata");
-    MuzzleBenchmark.requireVersions(missing, true);
+    MuzzleBenchmark.requireVersionMetadata(system, session, missing, true);
     assertThat(session.isOffline()).isTrue();
   }
 

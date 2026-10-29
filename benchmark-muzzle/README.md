@@ -29,10 +29,12 @@ Set `profile=true` to collect separate, untimed JFR profiles.
 Normal Muzzle CI remains unchanged.
 
 Both revisions must contain the benchmark controls. To compare older revisions,
-pass `support-commit` with the commit that introduces those controls. The runner
-applies that commit's `gradle-plugins/src/main` patch to each older checkout,
-without committing or publishing either checkout. Use a support-only commit,
-not a commit containing the optimization under measurement.
+pass `support-commit` with the commit that introduces those controls, followed by
+any fixes as space-separated commits in application order. The runner applies
+each commit's `gradle-plugins/src/main` patch to each older checkout, without
+committing or publishing either checkout. Use support-only commits, not commits
+containing the optimization under measurement. The local CLI accepts repeated
+`--support-commit` options.
 The report records the original revisions and support patch hash.
 
 ## Fixed inputs
@@ -53,6 +55,8 @@ exclusions, ordered classpath identities and SHA-256 hashes, and unresolved depe
 The complete records must agree across both revisions and every measured build.
 Known historical unresolved transitives remain visible and must match; assertion
 failures, missing metadata, or changed dependency graphs invalidate the comparison.
+An empty version range is valid when the captured metadata contains releases
+outside that range, such as a future stable release with only prereleases published.
 
 The revisions must also agree on the wrapper, Gradle properties, JDK requirement,
 and pinned latest-dependency versions. The workflow pins Temurin and Gradle Profiler.

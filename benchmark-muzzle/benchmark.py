@@ -191,14 +191,15 @@ class Benchmark:
         self.expected = None
         self.frozen_metadata = None
         self.samples = []
-        self.support = b""
-        if args.support_commit:
-            self.support = self.git(
-                "diff", f"{self.revision(args.support_commit)}^",
-                self.revision(args.support_commit), "--", "gradle-plugins/src/main",
+        self.support = []
+        for ref in args.support_commit:
+            commit = self.revision(ref)
+            support = self.git(
+                "diff", f"{commit}^", commit, "--", "gradle-plugins/src/main",
             )
-            if not self.support:
-                raise ValueError("Support commit contains no benchmark plugin changes")
+            if not support:
+                raise ValueError(f"Support commit {commit} contains no benchmark plugin changes")
+            self.support.append(support)
         self.revisions = {
             "baseline": self.revision(args.baseline),
             "candidate": self.revision(args.candidate),
@@ -232,7 +233,7 @@ class Benchmark:
             json.dumps({
                 "revisions": self.revisions,
                 "harness_revision": self.revision("HEAD"),
-                "support_patch_sha256": hashlib.sha256(self.support).hexdigest(),
+                "support_patch_sha256": hashlib.sha256(b"".join(self.support)).hexdigest(),
                 "workload": self.input_identity,
                 "profiler_version": PROFILER_VERSION,
                 "profiler_sha256": PROFILER_SHA256,
@@ -368,7 +369,8 @@ class Benchmark:
             if not (self.checkout / CONTROLS).exists():
                 if not self.support:
                     raise ValueError("Revision lacks benchmark support; pass --support-commit")
-                run(["git", "-C", str(self.checkout), "apply", "--3way", "-"], input=self.support)
+                for support in self.support:
+                    run(["git", "-C", str(self.checkout), "apply", "--3way", "-"], input=support)
             if control_hash is None:
                 control_hash = digest(self.checkout / CONTROLS)
             require_equal(control_hash, digest(self.checkout / CONTROLS), "Benchmark controls")
@@ -494,7 +496,7 @@ def main():
     parser.add_argument("--repository", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--baseline", required=True)
     parser.add_argument("--candidate", required=True)
-    parser.add_argument("--support-commit")
+    parser.add_argument("--support-commit", action="append", default=[])
     parser.add_argument("--profiler", type=Path, required=True)
     parser.add_argument("--work-dir", type=Path, required=True)
     parser.add_argument("--partition", type=int, choices=range(1, 5), required=True)
