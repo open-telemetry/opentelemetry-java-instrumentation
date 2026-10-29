@@ -86,7 +86,7 @@ tasks {
       else -> throw GradleException("Unknown smoke test suite: $smokeTestSuite")
     }
     if (name == "testAdditionalVariants" && !appServerSuite) {
-      // An empty partition must not turn into an unfiltered Test task.
+      // Non-app-server suites run only in testLimitedMatrix.
       exclude("**/*")
     }
     if (appServerSuite) {

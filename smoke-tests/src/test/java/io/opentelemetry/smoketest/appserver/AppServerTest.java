@@ -51,10 +51,13 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
     var jdk = appServer.jdk();
     isWindows = TestContainerManager.useWindowsContainers();
 
+    // An unset property runs the full matrix.
+    // Otherwise, true selects the limited matrix and false selects the additional variants.
     String inLimitedMatrix = System.getProperty("inLimitedMatrix");
     assumeTrue(
         inLimitedMatrix == null
             || appServer.inLimitedMatrix() == Boolean.parseBoolean(inLimitedMatrix));
+    // OpenJ9 images are unavailable for supported Windows containers.
     assumeFalse(isWindows && jdk.endsWith("-openj9"));
 
     serverVersion = appServer.version();
