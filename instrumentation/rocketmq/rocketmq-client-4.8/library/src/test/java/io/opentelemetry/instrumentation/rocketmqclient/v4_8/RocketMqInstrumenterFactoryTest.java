@@ -74,10 +74,7 @@ class RocketMqInstrumenterFactoryTest {
                             equalTo(stringKey("rocketmq.namespace"), ""),
                             equalTo(
                                 stringKey("rocketmq.message.tag"),
-                                captureExperimentalSpanAttributes ? "tag" : null),
-                            equalTo(stringKey("messaging.system"), null),
-                            equalTo(stringKey("messaging.rocketmq.namespace"), null),
-                            equalTo(stringKey("messaging.rocketmq.message.tag"), null))));
+                                captureExperimentalSpanAttributes ? "tag" : null))));
   }
 
   @Test

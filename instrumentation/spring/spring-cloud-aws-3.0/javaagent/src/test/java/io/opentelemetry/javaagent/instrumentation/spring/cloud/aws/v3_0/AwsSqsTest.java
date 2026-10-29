@@ -142,7 +142,6 @@ class AwsSqsTest {
                                     val.startsWith(
                                         "http://localhost:" + AwsSqsTestApplication.sqsPort)),
                             equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                            equalTo(stringKey("messaging.system"), null),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),

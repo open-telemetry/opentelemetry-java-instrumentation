@@ -220,7 +220,6 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                 equalTo(SERVER_ADDRESS, "localhost"),
                 equalTo(SERVER_PORT, sqsPort),
                 equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                equalTo(stringKey("messaging.system"), null),
                 equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                 satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1")));

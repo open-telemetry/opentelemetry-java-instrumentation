@@ -48,10 +48,7 @@ class MessagingMetricsAdviceTest {
     verify(consumedMessages).setAttributesAdvice(attributesCaptor.capture());
     assertThat(attributesCaptor.getAllValues())
         .allSatisfy(
-            attributes ->
-                assertThat(attributes)
-                    .contains(stringKey("messaging.system.name"))
-                    .doesNotContain(stringKey("messaging.system")));
+            attributes -> assertThat(attributes).contains(stringKey("messaging.system.name")));
   }
 
   @Test

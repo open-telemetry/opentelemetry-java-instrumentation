@@ -101,7 +101,6 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
                                 equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                                equalTo(stringKey("messaging.system"), null),
                                 equalTo(MESSAGING_DESTINATION_NAME, "queue1"),
                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "process"),

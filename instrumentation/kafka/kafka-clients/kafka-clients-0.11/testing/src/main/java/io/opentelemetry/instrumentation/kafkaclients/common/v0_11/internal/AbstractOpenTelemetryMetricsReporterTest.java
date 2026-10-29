@@ -397,11 +397,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                               .map(AttributeKey::getKey)
                               .filter(k -> !k.equals("kafka.cluster.id"))
                               .collect(toSet()))
-                  .allSatisfy(
-                      attributeKeys ->
-                          assertThat(attributeKeys)
-                              .isEqualTo(expectedKeys)
-                              .doesNotContain("messaging.kafka.cluster.id"));
+                  .allSatisfy(attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
             });
 
     // Print mapping table

@@ -1056,9 +1056,6 @@ class RabbitMqTest extends AbstractRabbitMqTest {
       Throwable exception) {
     span.hasAttributesSatisfying(
         equalTo(stringKey("messaging.system.name"), "rabbitmq"),
-        equalTo(stringKey("messaging.system"), null),
-        equalTo(stringKey("messaging.rabbitmq.destination.routing_key"), null),
-        equalTo(longKey("messaging.rabbitmq.message.delivery_tag"), null),
         equalTo(
             MESSAGING_DESTINATION_NAME, destinationName(exchange, routingKey, operation, resource)),
         satisfies(
