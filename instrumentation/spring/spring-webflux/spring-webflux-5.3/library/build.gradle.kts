@@ -32,9 +32,3 @@ if (!otelProps.testLatestDeps) {
     }
   }
 }
-
-tasks {
-
-  check {
-  }
-}

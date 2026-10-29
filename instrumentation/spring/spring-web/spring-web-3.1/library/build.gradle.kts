@@ -17,9 +17,3 @@ if (otelProps.testLatestDeps) {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
   }
 }
-
-tasks {
-
-  check {
-  }
-}

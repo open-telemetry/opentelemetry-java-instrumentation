@@ -1,6 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
-
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -28,13 +25,4 @@ dependencies {
 
   latestDepTestLibrary("io.vertx:vertx-core:4.+") // see vertx-http-client-5.0 module
   latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // see vertx-http-client-5.0 module
-}
-
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-      }
-    }
-  }
 }

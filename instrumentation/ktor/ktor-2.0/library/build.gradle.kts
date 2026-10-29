@@ -36,9 +36,3 @@ kotlin {
     languageVersion.set(KotlinVersion.KOTLIN_2_0)
   }
 }
-
-tasks {
-
-  check {
-  }
-}

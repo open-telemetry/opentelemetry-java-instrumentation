@@ -1,6 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
-
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -24,13 +21,4 @@ dependencies {
   library("com.squareup.okhttp:okhttp:2.2.0")
 
   testInstrumentation(project(":instrumentation:okhttp:okhttp-3.0:javaagent"))
-}
-
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-      }
-    }
-  }
 }

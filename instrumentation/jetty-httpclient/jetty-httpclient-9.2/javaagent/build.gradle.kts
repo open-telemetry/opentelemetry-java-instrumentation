@@ -1,6 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
-
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -28,13 +25,4 @@ dependencies {
   testImplementation(project(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:testing"))
 
   latestDepTestLibrary("org.eclipse.jetty:jetty-client:9.+") // documented limitation
-}
-
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-      }
-    }
-  }
 }

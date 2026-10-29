@@ -12,9 +12,3 @@ dependencies {
 
   testImplementation(project(":instrumentation:netty:netty-4.1:testing"))
 }
-
-tasks {
-
-  check {
-  }
-}

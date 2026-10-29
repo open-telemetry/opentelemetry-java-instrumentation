@@ -16,7 +16,4 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
-
-  check {
-  }
 }

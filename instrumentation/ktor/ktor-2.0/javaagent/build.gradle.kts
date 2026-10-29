@@ -57,9 +57,3 @@ kotlin {
     javaParameters = true
   }
 }
-
-tasks {
-
-  check {
-  }
-}
