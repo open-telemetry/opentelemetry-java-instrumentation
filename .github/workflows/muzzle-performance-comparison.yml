@@ -1,9 +1,6 @@
 name: Muzzle benchmark
 
 on:
-  push:
-    branches:
-      - trask-pr-performance-description
   workflow_dispatch:
     inputs:
       baseline-ref:

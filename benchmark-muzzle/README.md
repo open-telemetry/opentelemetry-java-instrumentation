@@ -45,7 +45,8 @@ It does not replay a precomputed task graph or replace Muzzle with a synthetic f
 Preparation captures Aether's Maven metadata once. Both revisions then use that
 same metadata offline. Online, untimed builds fetch the selected library dependencies,
 build each revision's shared build logic, and prepare workspace outputs.
-An offline Gradle Profiler invocation verifies each prepared revision.
+After both online builds finish, an offline Gradle Profiler invocation verifies
+each prepared revision against the same dependency cache.
 
 Every successful assertion records its path, pass/fail mode, instrumentation
 exclusions, ordered classpath identities and SHA-256 hashes, and unresolved dependency outcomes.
@@ -72,6 +73,7 @@ The runner uses the same absolute checkout and Gradle user-home paths for both
 revisions. After preparation, it snapshots each workspace and a shared, fully
 warmed Gradle user home. Before every measured invocation it restores those
 snapshots and removes the root configuration-cache entry.
+It stops daemons in its private Gradle user home before copying state.
 
 This keeps build outputs, Kotlin DSL caches, dependency artifacts, and the initial
 task state fixed. It also avoids checkout relocation as a source of cache misses.

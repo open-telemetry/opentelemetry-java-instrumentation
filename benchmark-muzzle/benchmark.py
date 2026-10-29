@@ -290,6 +290,13 @@ class Benchmark:
              *self.properties(offline=offline)],
             cwd=self.checkout, env=self.env, log=self.reports / f"prepare-{label}.log",
         )
+        self.stop_daemons()
+
+    def stop_daemons(self):
+        run(
+            [str(self.checkout / "gradlew"), "--stop", "--console=plain"],
+            cwd=self.checkout, env=self.env,
+        )
 
     def reset_configuration(self):
         configuration = self.checkout / ".gradle" / "configuration-cache"
@@ -318,6 +325,7 @@ class Benchmark:
         command.append("muzzle")
         destination.mkdir(parents=True)
         run(command, cwd=self.checkout, env=self.env, log=destination / "console.log")
+        self.stop_daemons()
         shutil.copytree(self.profiler_output, destination / "profiler")
         shutil.copytree(self.audit, destination / "assertions")
         text = (destination / "console.log").read_text(encoding="utf-8", errors="replace")
@@ -370,6 +378,10 @@ class Benchmark:
                 self.frozen_metadata = inventory(self.repository)
                 if not self.frozen_metadata:
                     raise ValueError("No Aether version metadata captured")
+            self.reset_configuration()
+            self.copy(self.checkout, self.snapshots / label)
+        for label in ("baseline", "candidate"):
+            self.copy(self.snapshots / label, self.checkout)
             self.invoke_profiler(self.reports / "preparation" / label, preparation=True)
             self.reset_configuration()
             self.copy(self.checkout, self.snapshots / label)

@@ -163,6 +163,8 @@ class BenchmarkTest(unittest.TestCase):
                 (configuration_cache / "state").write_text("stale", encoding="utf-8")
 
                 def fake_profiler(command, **kwargs):
+                    if "--stop" in command:
+                        return b""
                     self.assertIn("--single-shot", command)
                     self.assertIn("--no-daemon", command)
                     self.assertFalse(configuration_cache.exists())
