@@ -44,7 +44,7 @@ class RocketMqInstrumenterFactoryTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  void emitsRenamedProducerAttributes(boolean captureExperimentalSpanAttributes) {
+  void capturesProducerMessageTagOnlyWhenEnabled(boolean captureExperimentalSpanAttributes) {
     SendMessageContext request = mock(SendMessageContext.class);
     Message message = new Message("topic", new byte[0]);
     message.setTags("tag");
