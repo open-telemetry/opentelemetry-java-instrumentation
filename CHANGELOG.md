@@ -8,9 +8,8 @@
   `otel.instrumentation.grpc.{client,server}.request-headers.{included,excluded}`, and rename
   `java.grpc.{client,server}.request_metadata.{included,excluded}` to
   `java.grpc.{client,server}.request_headers.{included,excluded}`.
-- Rename `GrpcTelemetryBuilder.setClientRequestMetadata` and
-  `GrpcTelemetryBuilder.setServerRequestMetadata` to their `RequestHeaders` forms. Remove
-  `setCapturedClientRequestMetadata` and `setCapturedServerRequestMetadata`.
+- Captured gRPC request attributes now use `rpc.request.header.<key>` instead of
+  `rpc.request.metadata.<key>`.
 - Replace `SpringWebfluxClientTelemetry.addFilter(list)` and
   `addFilterAndRegisterReactorHook(list)` with `createFilter()` and
   `createFilterAndRegisterReactorHook()`, used with `WebClient.Builder.filter(...)`.
@@ -354,6 +353,9 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Rename `GrpcTelemetryBuilder.setClientRequestMetadata` and
+  `GrpcTelemetryBuilder.setServerRequestMetadata` to their `RequestHeaders` forms. Remove
+  `setCapturedClientRequestMetadata` and `setCapturedServerRequestMetadata`.
 - In `opentelemetry-instrumentation-api-incubator`, custom `RpcAttributesGetter` implementations
   must implement `getRpcSystemName` and `getRpcMethod`, returning the RPC system name and fully
   qualified method name such as `my.Service/Method`, respectively. The legacy `getSystem`,
