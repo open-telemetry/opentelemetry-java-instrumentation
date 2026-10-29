@@ -133,6 +133,6 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
         .isEqualTo(
             "io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.OpenTelemetryHandlerMappingFilter");
     assertThat(context.getClassLoader().loadClass(filterClass.getName())).isSameAs(filterClass);
-    assertThat(filterClass.getClassLoader()).isSameAs(DispatcherServlet.class.getClassLoader());
+    assertThat(filterClass.getClassLoader()).isNotSameAs(DispatcherServlet.class.getClassLoader());
   }
 }

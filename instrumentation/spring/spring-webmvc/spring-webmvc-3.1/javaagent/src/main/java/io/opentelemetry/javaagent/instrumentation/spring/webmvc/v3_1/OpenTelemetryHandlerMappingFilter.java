@@ -46,6 +46,9 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
 
   private final HttpServerRouteGetter<HttpServletRequest> serverSpanName =
       (context, request) -> {
+        if (request == null) {
+          return null;
+        }
         if (this.parseRequestPath) {
           // sets new value for PATH_ATTRIBUTE of request
           if (!parseAndCache(request)) {
