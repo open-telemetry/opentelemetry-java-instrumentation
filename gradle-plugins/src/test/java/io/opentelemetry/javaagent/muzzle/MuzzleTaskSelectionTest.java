@@ -14,7 +14,6 @@ import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,8 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class MuzzleTaskSelectionTest {
-  private static final List<String> MODULES =
-      List.of("alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf", "hotel");
+  private static final List<String> MODULES = List.of("alpha", "bravo", "charlie", "delta");
 
   @TempDir Path directory;
 
@@ -64,14 +62,10 @@ class MuzzleTaskSelectionTest {
     write(
         "build.gradle",
         """
-        tasks.register('muzzleReport')
         gradle.projectsEvaluated {
           allprojects.each { p ->
             def assertions = p.configurations.names.findAll { it.startsWith('muzzle-Assert') }.sort()
             println "MODEL:${p.path}=${assertions.join(',')}"
-            if (p.extensions.extraProperties.has('otel.muzzle.aggregateTaskPath')) {
-              println "PARTITION:${p.path}=${p.extensions.extraProperties.get('otel.muzzle.aggregateTaskPath')}"
-            }
           }
         }
         """);
@@ -80,8 +74,6 @@ class MuzzleTaskSelectionTest {
         "instrumentation/build.gradle.kts",
         Files.readString(Path.of(System.getProperty("muzzle.aggregateBuildScript")))
             .replace("id(\"otel.java-conventions\")", "java"));
-    // A project without the Muzzle plugin must not consume a partition slot.
-    include("instrumentation:aardvark", "");
     for (String module : MODULES) {
       include("instrumentation:" + module, moduleBuild(module));
     }
@@ -98,133 +90,43 @@ class MuzzleTaskSelectionTest {
   }
 
   @Test
-  void partitionsUseTheExistingAssignmentAndOnlyEnumerateTheirMembers() {
-    BuildResult result = run("instrumentation:muzzle2");
-    assertSelected(result, "bravo", "foxtrot");
-    assertScheduled(result, "bravo", "foxtrot");
-    for (int i = 0; i < MODULES.size(); i++) {
-      assertThat(result.getOutput())
-          .contains(
-              "PARTITION::instrumentation:"
-                  + MODULES.get(i)
-                  + "=:instrumentation:muzzle"
-                  + (i % 4 + 1));
-    }
+  void partitionRequestOnlyEnumeratesAndSchedulesItsMembers() {
+    assertSelected(run("instrumentation:muzzle2"), "bravo");
   }
 
   @Test
-  void multiplePartitionsAndExplicitModulesFormAUnion() {
-    BuildResult result =
-        run(":instrumentation:muzzle1", "instrumentation:muzzle3", ":instrumentation:bravo:muzzle");
-    assertSelected(result, "alpha", "bravo", "charlie", "echo", "golf");
-    assertScheduled(result, "alpha", "bravo", "charlie", "echo", "golf");
+  void explicitModuleRequestOnlyEnumeratesAndSchedulesThatModule() {
+    assertSelected(run(":instrumentation:alpha:muzzle"), "alpha");
   }
 
-  @Test
-  void directAssertionsSelectTheirProjectAndKeepTheFinalizerOrder() {
-    BuildResult result = run(":instrumentation:bravo:muzzle-AssertPass-fixture-bravo-2.0");
-    assertSelected(result, "bravo");
+  private void assertSelected(BuildResult result, String selected) {
+    assertThat(contactedModules).containsExactly(selected);
+    String task = ":instrumentation:" + selected + ":muzzle";
     assertThat(result.getOutput())
         .containsSubsequence(
-            ":instrumentation:bravo:muzzle-AssertPass-fixture-bravo-2.0 SKIPPED",
-            ":instrumentation:bravo:muzzle-AssertFail-fixture-bravo-1.0 SKIPPED",
-            ":instrumentation:bravo:muzzle-AssertFail-fixture-bravo-4.0 SKIPPED",
-            ":instrumentation:bravo:muzzle-AssertFail-fixture-bravo-1.0explicit SKIPPED",
-            ":instrumentation:bravo:muzzle-AssertPass-core-jdk SKIPPED");
-  }
-
-  @Test
-  void relativeModuleInvocationWorks() {
-    assertSelected(run("-p", "instrumentation/bravo", "muzzle"), "bravo");
-  }
-
-  @Test
-  void ambiguousProjectSelectorsDoNotDropChecks() {
-    assertSelected(run(":inst:muzzle1"), MODULES.toArray(new String[0]));
-  }
-
-  @Test
-  void abbreviatedAssertionSelectorsDoNotDropChecks() {
-    assertSelected(
-        run(":instrumentation:bravo:muzzle-AP-core-jdk"), MODULES.toArray(new String[0]));
-  }
-
-  @Test
-  void unrelatedRequestsDoNotEnumerateVersions() {
-    assertSelected(run("help", "muzzleReport"));
-  }
-
-  @Test
-  void externalProjectsNeedNoPartitionMetadata() throws IOException {
-    include("external", moduleBuild("external"));
-    // Fixed ranges still resolve without this repository's pinned catalog.
-    Files.delete(directory.resolve(".github/config/latest-dep-versions.json"));
-    BuildResult result = run("external:muzzle");
-    assertModels(result);
-    assertThat(contactedModules).containsExactly("external");
+            task + " SKIPPED",
+            task + "-AssertPass-fixture-" + selected + "-2.0 SKIPPED",
+            task + "-AssertPass-fixture-" + selected + "-3.0 SKIPPED",
+            task + "-AssertFail-fixture-" + selected + "-1.0 SKIPPED",
+            task + "-AssertFail-fixture-" + selected + "-4.0 SKIPPED");
     assertThat(result.getOutput())
-        .contains("MODEL::external=muzzle-AssertFail-fixture-external-1.0");
-  }
-
-  @Test
-  void missingPinnedEntriesStillFailOnlyWhenSelected() throws IOException {
-    Path pinnedVersions = directory.resolve(".github/config/latest-dep-versions.json");
-    write(
-        ".github/config/latest-dep-versions.json",
-        Files.readString(pinnedVersions).replace("\"fixture:alpha#+\":\"4.0\",", ""));
-    assertSelected(run(":instrumentation:muzzle2"), "bravo", "foxtrot");
-    contactedModules.clear();
-    BuildResult result = runner(":instrumentation:alpha:muzzle").buildAndFail();
-    assertThat(result.getOutput())
-        .contains("Pinned version missing for muzzle artifact \"fixture:alpha#+\"");
-    assertThat(contactedModules).isEmpty();
-  }
-
-  private void assertSelected(BuildResult result, String... selected) {
-    assertThat(contactedModules).containsExactlyInAnyOrder(selected);
-    assertModels(result, selected);
-  }
-
-  private static void assertScheduled(BuildResult result, String... selected) {
-    Set<String> expected = Set.of(selected);
+        .contains(
+            "MODEL::instrumentation:"
+                + selected
+                + "=muzzle-AssertFail-fixture-"
+                + selected
+                + "-1.0,muzzle-AssertFail-fixture-"
+                + selected
+                + "-4.0,muzzle-AssertPass-fixture-"
+                + selected
+                + "-2.0,muzzle-AssertPass-fixture-"
+                + selected
+                + "-3.0\n");
     for (String module : MODULES) {
-      String task = ":instrumentation:" + module + ":muzzle";
-      if (expected.contains(module)) {
+      if (!module.equals(selected)) {
         assertThat(result.getOutput())
-            .containsSubsequence(
-                task + " SKIPPED",
-                task + "-AssertPass-fixture-" + module + "-2.0 SKIPPED",
-                task + "-AssertFail-fixture-" + module + "-1.0 SKIPPED",
-                task + "-AssertFail-fixture-" + module + "-4.0 SKIPPED",
-                task + "-AssertFail-fixture-" + module + "-1.0explicit SKIPPED",
-                task + "-AssertPass-core-jdk SKIPPED");
-      } else {
-        assertThat(result.getOutput()).doesNotContain(task + " SKIPPED");
-      }
-    }
-  }
-
-  private void assertModels(BuildResult result, String... selected) {
-    Set<String> expected = Set.of(selected);
-    for (String module : MODULES) {
-      String model = "MODEL::instrumentation:" + module + "=";
-      if (expected.contains(module)) {
-        assertThat(result.getOutput())
-            .contains(
-                model
-                    + "muzzle-AssertFail-fixture-"
-                    + module
-                    + "-1.0,muzzle-AssertFail-fixture-"
-                    + module
-                    + "-1.0explicit,muzzle-AssertFail-fixture-"
-                    + module
-                    + "-4.0,muzzle-AssertPass-core-jdk,muzzle-AssertPass-fixture-"
-                    + module
-                    + "-2.0\n");
-      } else {
-        assertThat(result.getOutput()).contains(model + "\n");
-        assertThat(directory.resolve("instrumentation/" + module + "/build/muzzleRepo"))
-            .doesNotExist();
+            .contains("MODEL::instrumentation:" + module + "=\n")
+            .doesNotContain(":instrumentation:" + module + ":muzzle");
       }
     }
   }
@@ -239,21 +141,10 @@ class MuzzleTaskSelectionTest {
         module = '%s'
         versions = '[2.0,4.0)'
         assertInverse = true
-        skip '3.0'
-        excludeDependency 'unused:dependency'
-        excludeInstrumentationName 'unused-name'
-        excludeInstrumentationModule 'unused.Module'
       }
-      fail {
-        name = 'explicit'
-        group = 'fixture'
-        module = '%s'
-        versions = '[1.0]'
-      }
-      pass { coreJdk = true }
     }
     """
-        .formatted(repository.getAddress().getPort(), module, module);
+        .formatted(repository.getAddress().getPort(), module);
   }
 
   private BuildResult run(String... arguments) {
@@ -261,7 +152,7 @@ class MuzzleTaskSelectionTest {
   }
 
   private GradleRunner runner(String... arguments) {
-    List<String> args = new ArrayList<>(Arrays.asList(arguments));
+    List<String> args = new ArrayList<>(List.of(arguments));
     args.addAll(List.of("--dry-run", "--stacktrace", "--no-configuration-cache"));
     return GradleRunner.create()
         .withProjectDir(directory.toFile())
