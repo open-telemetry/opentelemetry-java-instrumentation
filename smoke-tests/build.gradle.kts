@@ -139,7 +139,6 @@ tasks {
     }
   }
 
-  // Keep test/check as full-suite entry points; CI explicitly requests these disjoint partitions.
   register<Test>("testLimitedMatrix") {
     description = "Runs the limited app-server matrix shared by PRs and main."
     testClassesDirs = sourceSets.test.get().output.classesDirs
