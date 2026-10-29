@@ -11,6 +11,10 @@ on:
         type: string
         required: false
         default: ""
+      tasks:
+        type: string
+        required: false
+        default: '[":instrumentation:muzzle1", ":instrumentation:muzzle2", ":instrumentation:muzzle3", ":instrumentation:muzzle4"]'
 
 permissions:
   contents: read
@@ -21,11 +25,7 @@ jobs:
     timeout-minutes: 75
     strategy:
       matrix:
-        task:
-          - ":instrumentation:muzzle1"
-          - ":instrumentation:muzzle2"
-          - ":instrumentation:muzzle3"
-          - ":instrumentation:muzzle4"
+        task: ${{ fromJSON(inputs.tasks) }}
       fail-fast: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -47,5 +47,17 @@ jobs:
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
+      - name: Warm build scripts
+        run: ./gradlew help --info --profile
+
       - name: Run muzzle
-        run: ./gradlew ${{ matrix.task }}
+        env:
+          MUZZLE_TASK: ${{ matrix.task }}
+        run: ./gradlew "$MUZZLE_TASK" --info --profile
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: muzzle-profiles-${{ inputs.checkout-ref }}-${{ strategy.job-index }}
+          path: build/reports/profile
+          if-no-files-found: error
