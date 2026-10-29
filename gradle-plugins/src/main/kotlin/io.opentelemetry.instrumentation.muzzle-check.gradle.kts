@@ -7,6 +7,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.opentelemetry.javaagent.muzzle.AcceptableVersions
 import io.opentelemetry.javaagent.muzzle.MuzzleDirective
 import io.opentelemetry.javaagent.muzzle.MuzzleExtension
+import io.opentelemetry.javaagent.muzzle.MuzzleTaskSelection
 import io.opentelemetry.javaagent.muzzle.matcher.MuzzleGradlePluginUtil
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils
 import org.eclipse.aether.RepositorySystem
@@ -219,42 +220,32 @@ tasks.register("printMuzzleReferences") {
   }
 }
 
-val hasRelevantTask = gradle.startParameter.taskNames.any {
-  // removing leading ':' if present
-  val taskName = it.removePrefix(":")
-  val projectPath = project.path.removePrefix(":")
-  val muzzleTaskName = if (projectPath.isEmpty()) "muzzle" else "$projectPath:muzzle"
-  // Either the specific muzzle task in this project or a top level muzzle task.
-  taskName == muzzleTaskName ||
-    taskName.startsWith("instrumentation:muzzle") ||
-    taskName.startsWith("muzzle-Assert") ||
-    taskName.contains(":muzzle-Assert")
-}
-
-if (hasRelevantTask) {
+afterEvaluate {
+  // Aggregate membership is recorded by the parent project's plugin callback, after application.
+  if (!MuzzleTaskSelection.isRequested(project)) {
+    return@afterEvaluate
+  }
   val system = newRepositorySystem()
   val session = newRepositorySystemSession(system)
 
-  afterEvaluate {
-    var runAfter = muzzle
+  var runAfter = muzzle
 
-    // the project repositories need to be retrieved after evaluation, before that the list is just empty
-    val projectRepositories = getProjectRepositories(project)
+  // the project repositories need to be retrieved after evaluation, before that the list is just empty
+  val projectRepositories = getProjectRepositories(project)
 
-    for (muzzleDirective in muzzleConfig.directives.get()) {
-      logger.info("configured $muzzleDirective")
+  for (muzzleDirective in muzzleConfig.directives.get()) {
+    logger.info("configured $muzzleDirective")
 
-      if (muzzleDirective.coreJdk.get()) {
-        runAfter = addMuzzleTask(muzzleDirective, null, runAfter)
-      } else {
-        for (singleVersion in muzzleDirectiveToArtifacts(muzzleDirective, system, session, projectRepositories)) {
-          runAfter = addMuzzleTask(muzzleDirective, singleVersion, runAfter)
-        }
-        if (muzzleDirective.assertInverse.get()) {
-          for (inverseDirective in inverseOf(muzzleDirective, system, session, projectRepositories)) {
-            for (singleVersion in muzzleDirectiveToArtifacts(inverseDirective, system, session, projectRepositories)) {
-              runAfter = addMuzzleTask(inverseDirective, singleVersion, runAfter)
-            }
+    if (muzzleDirective.coreJdk.get()) {
+      runAfter = addMuzzleTask(muzzleDirective, null, runAfter)
+    } else {
+      for (singleVersion in muzzleDirectiveToArtifacts(muzzleDirective, system, session, projectRepositories)) {
+        runAfter = addMuzzleTask(muzzleDirective, singleVersion, runAfter)
+      }
+      if (muzzleDirective.assertInverse.get()) {
+        for (inverseDirective in inverseOf(muzzleDirective, system, session, projectRepositories)) {
+          for (singleVersion in muzzleDirectiveToArtifacts(inverseDirective, system, session, projectRepositories)) {
+            runAfter = addMuzzleTask(inverseDirective, singleVersion, runAfter)
           }
         }
       }
