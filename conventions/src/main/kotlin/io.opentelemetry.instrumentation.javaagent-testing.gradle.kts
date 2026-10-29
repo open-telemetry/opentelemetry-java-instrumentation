@@ -98,6 +98,7 @@ class JavaagentTestArgumentsProvider(
       // prevent sporadic gradle deadlocks, see SafeLogger for more details
       "-Dotel.javaagent.testing.transform-safe-logging.enabled=true",
       "-Dotel.javaagent.testing.check-virtual-field-usage.enabled=true",
+      "-Dotel.instrumentation.common.server-service-mapping=127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service",
       // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
       // in smoke tests instead.
       "-Dotel.javaagent.add-thread-details=false",

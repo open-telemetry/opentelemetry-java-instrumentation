@@ -1,5 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -26,19 +24,4 @@ dependencies {
   testInstrumentation(project(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:javaagent"))
 
   testImplementation(project(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:testing"))
-}
-
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("WithServiceMapping") {
-          telemetryConfig(
-            "otel.instrumentation.common.server-service-mapping",
-            "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service",
-          )
-        }
-      }
-    }
-  }
 }

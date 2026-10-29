@@ -43,6 +43,10 @@ public class MetaDataCollector {
 
   private static final Logger logger = Logger.getLogger(MetaDataCollector.class.getName());
 
+  private static final String TEST_SERVER_SERVICE_MAPPING =
+      "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service";
+  private static final String SERVER_SERVICE_MAPPING_PROPERTY =
+      "otel.instrumentation.common.server-service-mapping";
   private static final String TMP_DIR = ".telemetry";
   private static final Pattern MODULE_PATTERN =
       Pattern.compile("(.*?/instrumentation/.*)(/javaagent|/library|/testing|/.*?-testing)");
@@ -107,6 +111,11 @@ public class MetaDataCollector {
 
     String config = System.getProperty("metadataConfig");
     String when = (config != null && !config.isEmpty()) ? config : "default";
+    boolean unlabeledTestServerServiceMapping =
+        TEST_SERVER_SERVICE_MAPPING.equals(System.getProperty(SERVER_SERVICE_MAPPING_PROPERTY))
+            && (config == null
+                || !config.contains(
+                    SERVER_SERVICE_MAPPING_PROPERTY + "=" + TEST_SERVER_SERVICE_MAPPING));
 
     SpanData spanData = new SpanData();
     spanData.when = when;
@@ -134,6 +143,11 @@ public class MetaDataCollector {
 
         attributes.forEach(
             (key, value) -> {
+              if (unlabeledTestServerServiceMapping
+                  && (key.getKey().equals("server.service.name")
+                      || key.getKey().equals("server.service.namespace"))) {
+                return;
+              }
               AttributeInfo attr = new AttributeInfo();
               attr.name = key.getKey();
               attr.type = key.getType().toString();

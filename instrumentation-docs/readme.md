@@ -39,6 +39,11 @@ These synthetic selectors are fixture values, not production defaults. Their att
 in raw `.telemetry` files under `when: default`, but the analyzer excludes them from generated
 telemetry inventories.
 
+Javaagent integration tests also share a local-destination mapping fixture:
+`otel.instrumentation.common.server-service-mapping=127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service`.
+The shared fixture's mapped service identity is excluded from generated metadata unless this mapping
+is explicitly included in `metadataConfig`, since the fixture is not a production default.
+
 For example, a plain-library fixture can configure synthetic messaging-header capture in its baseline
 builder:
 

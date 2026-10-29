@@ -1,5 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -38,13 +36,6 @@ dependencies {
 
 testing {
   suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("WithServiceMapping") {
-          telemetryConfig("otel.instrumentation.common.server-service-mapping", "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service")
-        }
-      }
-    }
 
     // pools over a list of servers were added in 4.2, and the module's own tests run against 4.0
     register<JvmTestSuite>("vertx42Test") {
@@ -53,11 +44,6 @@ testing {
         implementation("io.vertx:vertx-pg-client:${baseVersion("4.2.0").orLatest("4.+")}")
         implementation("io.vertx:vertx-codegen:${baseVersion("4.2.0").orLatest("4.+")}")
         implementation("org.testcontainers:testcontainers")
-      }
-      executions {
-        register("WithServiceMapping") {
-          telemetryConfig("otel.instrumentation.common.server-service-mapping", "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service")
-        }
       }
     }
   }

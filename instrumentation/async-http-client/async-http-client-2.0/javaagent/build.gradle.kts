@@ -1,5 +1,4 @@
 import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -45,12 +44,6 @@ testing {
           if (otelProps.testLatestDeps && testJavaVersion.isJava8) {
             enabled = false
           }
-        }
-        register("WithServiceMapping") {
-          telemetryConfig(
-            "otel.instrumentation.common.server-service-mapping",
-            "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service",
-          )
         }
       }
     }

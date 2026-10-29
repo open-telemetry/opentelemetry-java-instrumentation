@@ -1,5 +1,4 @@
 import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -61,12 +60,6 @@ testing {
               excludeTestsMatching("*JdbcInstrumentationTest.testFailedTransaction")
             }
             systemProperty("otel.instrumentation.jdbc-datasource.enabled", "true")
-          }
-          register("WithServiceMapping") {
-            telemetryConfig(
-              "otel.instrumentation.common.server-service-mapping",
-              "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service",
-            )
           }
         }
       }

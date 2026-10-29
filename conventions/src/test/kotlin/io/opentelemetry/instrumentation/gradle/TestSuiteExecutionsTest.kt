@@ -163,24 +163,23 @@ class TestSuiteExecutionsTest {
   }
 
   @JunitTest
-  fun `group telemetry config labels only explicit mapped executions`() {
+  fun `group telemetry config labels only explicit executions`() {
     val source = suite("test")
-    val mappingKey = "otel.instrumentation.common.server-service-mapping"
-    val mapping = "127.0.0.1=test-server-service,localhost=test-server-service"
+    val settingKey = "otel.instrumentation.example.enabled"
     source.executions {
       group {
-        register("WithServiceMapping") {
-          telemetryConfig(mappingKey, mapping)
+        register("Enabled") {
+          telemetryConfig(settingKey, "true")
         }
       }
     }
 
     assertThat(test(source.name).systemProperties)
-      .doesNotContainKeys(mappingKey, "metadataConfig")
-    assertThat(test(source.name + "WithServiceMapping").systemProperties)
-      .containsEntry(mappingKey, mapping)
-      .containsEntry("metadataConfig", "$mappingKey=$mapping")
-    assertBinding(test(source.name + "WithServiceMapping"), source)
+      .doesNotContainKeys(settingKey, "metadataConfig")
+    assertThat(test(source.name + "Enabled").systemProperties)
+      .containsEntry(settingKey, "true")
+      .containsEntry("metadataConfig", "$settingKey=true")
+    assertBinding(test(source.name + "Enabled"), source)
   }
 
   @JunitTest

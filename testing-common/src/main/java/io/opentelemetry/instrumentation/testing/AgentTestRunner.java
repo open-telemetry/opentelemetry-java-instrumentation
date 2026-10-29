@@ -39,7 +39,7 @@ public class AgentTestRunner extends InstrumentationTestRunner {
 
   private static final AgentTestRunner INSTANCE = new AgentTestRunner();
 
-  // Configured mapped test executions use this name for local test hosts.
+  // Javaagent integration tests use this name for mapped local test hosts.
   private static final String SERVER_SERVICE_NAME = "test-server-service";
   private static final String SERVER_SERVICE_MAPPING_PROPERTY =
       "otel.instrumentation.common.server-service-mapping";

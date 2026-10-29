@@ -1,5 +1,4 @@
 import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -26,13 +25,6 @@ val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
 
 testing {
   suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("WithServiceMapping") {
-          telemetryConfig("otel.instrumentation.common.server-service-mapping", "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service")
-        }
-      }
-    }
     // version22Test reuses the same test source against `latest.release` in latest-deps mode
     // (currently 26.x), and against 22.0.0 otherwise, to exercise the upper end of the v20+
     // builder API line.
@@ -51,9 +43,6 @@ testing {
           if (testJavaVersion.isJava8) {
             enabled = false
           }
-        }
-        register("WithServiceMapping") {
-          telemetryConfig("otel.instrumentation.common.server-service-mapping", "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service")
         }
       }
     }
