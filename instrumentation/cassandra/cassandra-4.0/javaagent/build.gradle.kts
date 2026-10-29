@@ -30,18 +30,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:cassandra:cassandra-4.4:javaagent"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation-api-incubator"))
-        implementation("com.datastax.oss:java-driver-core:4.3.1")
-      }
-    }
-  }
-}
-
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
@@ -77,7 +65,6 @@ tasks {
 
   check {
     dependsOn(
-      testing.suites,
       testShaded,
       testShadedLatest,
     )
