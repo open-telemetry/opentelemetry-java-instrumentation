@@ -16,7 +16,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -41,31 +40,24 @@ class HostResourceProviderTest {
   }
 
   private static Stream<Arguments> skipDetectionCases() {
-    Map<String, String> configuredHostId = new HashMap<>();
-    configuredHostId.put("otel.resource.providers.host-id.enabled", "true");
-    configuredHostId.put("otel.resource.attributes", "host.id=configured%20id");
     return Stream.of(
-        argumentSet("disabled by default", emptyMap(), Resource.empty()),
         argumentSet(
-            "explicitly disabled",
-            singletonMap("otel.resource.providers.host-id.enabled", "false"),
+            "configured host ID",
+            singletonMap("otel.resource.attributes", "host.id=configured%20id"),
             Resource.empty()),
-        argumentSet("configured host ID", configuredHostId, Resource.empty()),
         argumentSet(
             "earlier provider host ID",
-            singletonMap("otel.resource.providers.host-id.enabled", "true"),
+            emptyMap(),
             Resource.create(Attributes.of(HOST_ID, "cloud-id"))));
   }
 
   @Test
-  void hostIdEnabled() {
+  void detectsHostIdByDefault() {
     Resource expected = Resource.create(Attributes.of(HOST_ID, "local-id"));
     try (MockedStatic<HostResource> host = mockStatic(HostResource.class)) {
       host.when(() -> HostResource.create(true)).thenReturn(expected);
 
-      Resource resource =
-          createResource(
-              singletonMap("otel.resource.providers.host-id.enabled", "true"), Resource.empty());
+      Resource resource = createResource(emptyMap(), Resource.empty());
 
       assertThat(resource).isEqualTo(expected);
       host.verify(() -> HostResource.create(true));

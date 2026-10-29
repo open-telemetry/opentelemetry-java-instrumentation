@@ -32,8 +32,7 @@ public final class HostResourceProvider implements ConditionalResourceProvider {
   public Resource createResource(ConfigProperties config) {
     Resource detected =
         HostResource.create(
-            config.getBoolean("otel.resource.providers.host-id.enabled", false)
-                && !config.getMap("otel.resource.attributes").containsKey(HOST_ID.getKey())
+            !config.getMap("otel.resource.attributes").containsKey(HOST_ID.getKey())
                 && existingAttributes.get(HOST_ID) == null);
     return Resource.create(
         detected.getAttributes().toBuilder()

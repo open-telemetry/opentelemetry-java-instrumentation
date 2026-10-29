@@ -1348,11 +1348,6 @@ definitions:
       default: ''
       examples:
       - jvm.memory.*,jvm.thread.count
-    otel.resource.providers.host-id.enabled:
-      name: otel.resource.providers.host-id.enabled
-      description: Enables host ID resource detection in the Java agent.
-      type: boolean
-      default: false
     rpc.semconv.dual_emit:
       declarative_name: general.rpc.semconv.dual_emit
       description: 'With `version: 1` and `experimental: true`, emits both the current
@@ -17992,7 +17987,6 @@ libraries:
   has_standalone_library: true
   configuration_refs:
   - otel.instrumentation.resources.experimental.process-command-attributes.enabled
-  - otel.resource.providers.host-id.enabled
 - name: restlet-1.1
   display_name: Restlet
   description: This instrumentation enables HTTP server spans and HTTP server metrics

@@ -29,9 +29,9 @@ Implemented attributes:
 
 - `host.name`
 - `host.arch`
-- `host.id` (opt-in)
+- `host.id`
 
-Host ID detection is disabled by default in property-based configuration. Enable it with `otel.resource.providers.host-id.enabled=true`. Host name and architecture collection are unaffected by this setting. The declarative `host` detector includes ID detection.
+Host ID detection is enabled by default. In property-based configuration, detection is skipped when `host.id` is already set by another resource provider or through `otel.resource.attributes`.
 
 For programmatic use, `HostResource.create(true)` includes host ID detection, while `HostResource.get()` omits it.
 

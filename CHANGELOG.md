@@ -302,9 +302,7 @@
   `io.opentelemetry.instrumentation.resources.HostIdResourceProvider` with
   `io.opentelemetry.instrumentation.resources.HostResourceProvider`. Disabling
   the consolidated provider also disables host name and architecture collection.
-  Standalone SDK autoconfiguration now requires
-  `otel.resource.providers.host-id.enabled=true` to detect host IDs, matching
-  the Java agent and Spring Boot starter.
+  Host ID detection is now enabled by default in the Java agent and Spring Boot starter. Remove `otel.resource.providers.host-id.enabled`, which is no longer supported.
 - Remove deprecated `DeclarativeConfigPropertiesBridge` and
   `DeclarativeConfigPropertiesBridgeBuilder`. Read declarative configuration through
   `DeclarativeConfigProperties` or use `DeclarativeConfigBridge` to expose flat configuration.

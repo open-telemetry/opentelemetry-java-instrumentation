@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.resources.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.semconv.incubating.HostIncubatingAttributes.HOST_ARCH;
-import static io.opentelemetry.semconv.incubating.HostIncubatingAttributes.HOST_ID;
 import static io.opentelemetry.semconv.incubating.HostIncubatingAttributes.HOST_NAME;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
@@ -18,7 +17,6 @@ import static org.mockito.Mockito.mockStatic;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.resources.HostResource;
 import io.opentelemetry.instrumentation.resources.HostResourceProvider;
-import io.opentelemetry.instrumentation.resources.ProcessResourceProvider;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
@@ -82,20 +80,6 @@ class ResourceProviderPropertiesCustomizerTest {
   }
 
   @Test
-  void hostIdOptInWithUnrelatedAllowlist() {
-    Map<String, String> props = new HashMap<>();
-    props.put(
-        ResourceProviderPropertiesCustomizer.ENABLED_KEY, ProcessResourceProvider.class.getName());
-    props.put("otel.resource.providers.host-id.enabled", "true");
-    Resource detected = Resource.create(Attributes.of(HOST_ID, "local-id"));
-    try (MockedStatic<HostResource> host = mockStatic(HostResource.class)) {
-      host.when(() -> HostResource.create(true)).thenReturn(detected);
-
-      assertThat(configure(props).get(HOST_ID)).isEqualTo("local-id");
-    }
-  }
-
-  @Test
   void preservesEarlierHostDescriptions() {
     Map<String, String> props = new HashMap<>();
     props.put(
@@ -104,13 +88,13 @@ class ResourceProviderPropertiesCustomizerTest {
     Resource descriptions =
         Resource.create(Attributes.of(HOST_NAME, "local-host", HOST_ARCH, "local-arch"));
     try (MockedStatic<HostResource> host = mockStatic(HostResource.class)) {
-      host.when(() -> HostResource.create(false)).thenReturn(descriptions);
+      host.when(() -> HostResource.create(true)).thenReturn(descriptions);
 
       Attributes attributes = configure(props);
 
       assertThat(attributes.get(HOST_NAME)).isEqualTo("provider-host");
       assertThat(attributes.get(HOST_ARCH)).isEqualTo("provider-arch");
-      host.verify(() -> HostResource.create(false));
+      host.verify(() -> HostResource.create(true));
     }
   }
 

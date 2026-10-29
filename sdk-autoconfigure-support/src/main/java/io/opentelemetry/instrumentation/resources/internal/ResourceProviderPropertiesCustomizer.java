@@ -89,9 +89,6 @@ public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCu
 
     if (!enabledProviders.isEmpty()) {
       // users has requested specific providers to be enabled only
-      if (config.getBoolean("otel.resource.providers.host-id.enabled", false)) {
-        enabled.add("io.opentelemetry.instrumentation.resources.HostResourceProvider");
-      }
       enabled.addAll(enabledProviders);
       return singletonMap(ENABLED_KEY, String.join(",", enabled));
     }
