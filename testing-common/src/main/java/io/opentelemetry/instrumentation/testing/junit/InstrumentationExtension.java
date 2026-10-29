@@ -30,6 +30,14 @@ import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
+/**
+ * Base JUnit 5 extension for instrumentation tests shared by agent and library implementations in
+ * this repository, also usable for external Javaagent extension tests.
+ *
+ * <p>See the <a
+ * href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/javaagent-test-infra.md">testing
+ * guide</a> for matching testing-agent setup and the SDK testing alternative for ordinary tests.
+ */
 public abstract class InstrumentationExtension
     implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback, AfterEachCallback {
 

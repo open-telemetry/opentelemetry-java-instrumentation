@@ -24,6 +24,6 @@ dependencies {
   // Used by byte-buddy but not brought in as a transitive dependency.
   compileOnly("com.google.code.findbugs:annotations")
 
-  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing")
   testImplementation("com.google.guava:guava:33.7.2-jre")
 }

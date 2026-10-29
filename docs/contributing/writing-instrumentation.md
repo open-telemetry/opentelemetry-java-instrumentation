@@ -211,7 +211,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing")
 
   // ...
 }
@@ -239,9 +239,11 @@ pass, the library instrumentation is working.
 
 ### JUnit
 
-The `testing-common` module exposes several JUnit extensions that facilitate writing instrumentation
-tests. In particular, we'll take a look at `LibraryInstrumentationExtension`
-, `AgentInstrumentationExtension`, and their parent class `InstrumentationExtension`. The extension
+The `:testing-common` module, published as
+`io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing`, exposes JUnit extensions
+for these shared repository tests: `LibraryInstrumentationExtension`, `AgentInstrumentationExtension`,
+and their parent class `InstrumentationExtension`. For agent setup and guidance on when to use SDK
+testing instead, see the [testing guide](javaagent-test-infra.md). The extension
 class implements several useful methods, such as `waitAndAssertTraces` and `waitAndAssertMetrics`,
 that you can use in your test cases to verify that the correct telemetry has been produced.
 

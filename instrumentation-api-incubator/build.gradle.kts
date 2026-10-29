@@ -23,7 +23,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing")
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("io.opentelemetry.semconv:opentelemetry-semconv-incubating")

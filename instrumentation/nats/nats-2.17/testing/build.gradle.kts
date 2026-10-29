@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing")
 
   compileOnly("io.nats:jnats:2.17.2")
 

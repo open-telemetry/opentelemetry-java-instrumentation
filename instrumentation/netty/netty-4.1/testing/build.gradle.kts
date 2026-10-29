@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing")
 
   api("io.netty:netty-codec-http:4.1.0.Final")
 }

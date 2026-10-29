@@ -11,7 +11,7 @@ dependencies {
   compileOnly("jakarta.faces:jakarta.faces-api:2.3.2")
   compileOnly("jakarta.el:jakarta.el-api:3.0.3")
 
-  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  implementation("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing")
   implementation("org.jsoup:jsoup:1.13.1")
 
   val jettyVersion = "9.4.35.v20201120"

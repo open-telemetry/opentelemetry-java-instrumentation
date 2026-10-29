@@ -8,7 +8,8 @@ package io.opentelemetry.instrumentation.testing.junit;
 import io.opentelemetry.instrumentation.testing.LibraryTestRunner;
 
 /**
- * JUnit 5 extension for writing library instrumentation tests.
+ * JUnit 5 extension for running the library side of this repository's shared instrumentation tests.
+ * See {@link InstrumentationExtension} for setup guidance and the SDK testing alternative.
  *
  * <p>Example usage:
  *

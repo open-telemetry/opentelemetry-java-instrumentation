@@ -3,36 +3,57 @@
 Javaagent instrumentation tests are run using a fully shaded `-javaagent` in order to perform
 the same bytecode instrumentation as when the agent is run against a normal app.
 
-There are a few key components that make this possible, described below.
+The combined `:testing-common` module is published as
+`io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing`. It provides this
+repository's instrumentation testing infrastructure, including reusable HTTP suites,
+instrumentation-scope-version checks, telemetry metadata collection, and shared-suite execution
+against agent and library implementations. `LibraryInstrumentationExtension` runs the library side
+of these shared tests without attaching an agent.
 
-## gradle/instrumentation.gradle
+External Javaagent instrumentation and extension tests can also use this artifact. For ordinary
+tests needing an SDK, in-memory telemetry, and assertions instead, use
+`io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension` from
+`io.opentelemetry:opentelemetry-sdk-testing`.
 
-- shades the instrumentation
-- adds jvm args to the test configuration
-  - -javaagent:[agent for testing]
-  - -Dotel.javaagent.experimental.initializer.jar=[shaded instrumentation jar]
+## Agent test setup
 
-The `otel.javaagent.experimental.initializer.jar` property is used to load the shaded instrumentation jar into the
-`AgentClassLoader`, so that the javaagent jar doesn't need to be re-built each time.
+Use `io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing:<version>` as a test
+dependency and obtain `io.opentelemetry.javaagent:opentelemetry-agent-for-testing:<version>`.
+The testing agent and testing dependencies must come from matching releases (including the alpha
+version suffix). These are alpha artifacts subject to the repository's [versioning policy](../../VERSIONING.md).
+The test-support dependency alone does not attach the agent.
+
+Start the test JVM with:
+
+```text
+-javaagent:/path/to/opentelemetry-agent-for-testing-<version>.jar
+-Dotel.javaagent.experimental.initializer.jar=/path/to/shaded-instrumentation.jar
+```
+
+The initializer JAR contains the instrumentation under test and its service registrations, shaded
+as in the [distro example](../../examples/distro). The initializer property loads it into the
+`AgentClassLoader`, so the testing agent does not need rebuilding for each instrumentation change.
+Register `AgentInstrumentationExtension` in the test to access exported telemetry.
+
+In this repository, `otel.javaagent-instrumentation` applies
+[`io.opentelemetry.instrumentation.javaagent-testing`](../../conventions/src/main/kotlin/io.opentelemetry.instrumentation.javaagent-testing.gradle.kts),
+which shades the instrumentation and supplies the testing dependencies and JVM arguments.
+For external extension setup, see the distro example's
+[testing convention](../../examples/distro/buildSrc/src/main/kotlin/otel.instrumentation-conventions.gradle.kts).
 
 ## :testing:agent-exporter
 
-This contains the span and metric exporters that are used.
+This contains the in-memory telemetry exporters used by agent tests.
 
-These are in-memory exporters, so that the tests can verify the spans and metrics being exported.
+The exporters and their data live in the `AgentClassLoader`; `:testing-common` makes the data
+available to assertions in the test class loader.
 
-These exporters and the in-memory data live in the `AgentClassLoader`, so tests must access them
-using reflection. To simplify this, they store the in-memory data using the OTLP protobuf objects,
-so that they can be serialized into byte arrays inside the `AgentClassLoader`, then passed back
-to the tests and deserialized inside their class loader where they can be verified. The
-`:testing-common` module (described below) hides this complexity from instrumentation test authors.
-
-## :agent-for-testing
+## :testing:agent-for-testing
 
 This is a custom distro of the javaagent that embeds the `:testing:agent-exporter`.
 
 ## :testing-common
 
-This module provides methods to help verify the span and metric data produced by the
-instrumentation, hiding the complexity of accessing the in-memory exporters that live in the
-`AgentClassLoader`.
+This module provides the JUnit extensions and shared instrumentation test suites. See
+[writing instrumentation tests](writing-instrumentation.md#writing-instrumentation-tests) for
+agent/library shared-suite usage.

@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing")
 
   api("com.amazonaws:aws-java-sdk-core:1.11.0")
 

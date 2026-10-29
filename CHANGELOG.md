@@ -4,6 +4,8 @@
 
 ### ⚠️ Breaking changes
 
+- Rename `io.opentelemetry.javaagent:opentelemetry-testing-common` to
+  `io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing`.
 - AWS Lambda invocation spans now replace alias suffixes in `cloud.resource_id` with the resolved
   function version when available.
 - AWS Lambda spans now use `faas.invocation.id` instead of `faas.invocation_id` for invocation IDs.

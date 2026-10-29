@@ -11,7 +11,7 @@ val agentShadowJar = project(":javaagent").tasks.named<Jar>("shadowJar")
 
 dependencies {
   testImplementation(project(":smoke-tests"))
-  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.apache.kafka:kafka-clients:3.6.1")
   testImplementation("io.opentelemetry:opentelemetry-exporter-logging")

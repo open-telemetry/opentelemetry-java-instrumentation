@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  implementation("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing")
   implementation("org.testcontainers:testcontainers-kafka")
 
   compileOnly("org.springframework.kafka:spring-kafka:2.9.0")

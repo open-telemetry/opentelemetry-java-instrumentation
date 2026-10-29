@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing")
 
   // earlier versions have bugs that may make tests flaky.
   implementation("org.apache.rocketmq:rocketmq-client-java:5.0.2")

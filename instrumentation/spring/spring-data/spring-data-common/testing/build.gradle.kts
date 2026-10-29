@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  implementation("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing")
 
   compileOnly(platform("org.springframework:spring-framework-bom:3.2.10.RELEASE"))
   compileOnly("org.hibernate:hibernate-core:4.3.0.Final")

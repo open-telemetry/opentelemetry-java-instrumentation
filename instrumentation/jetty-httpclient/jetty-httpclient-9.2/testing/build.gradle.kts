@@ -6,7 +6,7 @@ plugins {
 val jettyVersBase9 = "9.2.0.v20140526"
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing")
 
   api("org.eclipse.jetty:jetty-client:$jettyVersBase9")
 

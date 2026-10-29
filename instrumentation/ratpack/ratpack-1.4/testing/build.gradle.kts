@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.javaagent:opentelemetry-javaagent-instrumentation-testing")
 
   // it's important for these to not be api dependencies, because api dependencies pull in their
   // transitive dependencies as well, which causes issues for testLatestDep
