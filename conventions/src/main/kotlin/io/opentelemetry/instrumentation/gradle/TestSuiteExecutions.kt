@@ -35,6 +35,7 @@ class TestSuiteExecutions internal constructor(
   private val common = mutableListOf<Action<Test>>()
   private val variants = linkedMapOf<String, Action<Test>>()
   private var configured = false
+  private var configuring = false
 
   fun configureEach(action: Action<Test>) {
     common.add(action)
@@ -44,13 +45,24 @@ class TestSuiteExecutions internal constructor(
   fun register(suffix: String, action: Action<Test>) {
     require(suffix.isNotBlank()) { "An execution variant needs a non-empty suffix" }
     require(!variants.containsKey(suffix)) { "Execution variant '$suffix' is already registered" }
+
+    if (!configured) {
+      configure(Action { register(suffix, action) })
+      return
+    }
+
     variants[suffix] = action
+    if (!configuring) {
+      registerVariant(suffix, action)
+    }
   }
 
   internal fun configure(action: Action<TestSuiteExecutions>) {
     check(!configured) { "Declare one executions block per suite" }
     configured = true
+    configuring = true
     action.execute(this)
+    configuring = false
 
     // Collect the whole block first so common configuration always precedes variant configuration.
     suite.targets.configureEach {
@@ -62,15 +74,38 @@ class TestSuiteExecutions internal constructor(
       }
     }
     variants.forEach { (suffix, variant) ->
-      val task = project.tasks.register(suite.name + suffix, Test::class.java) {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-        common.forEach { it.execute(this) }
-        variant.execute(this)
-      }
-      project.tasks.named("check").configure {
-        dependsOn(task)
-      }
+      registerVariant(suffix, variant)
+    }
+  }
+
+  private fun registerVariant(suffix: String, variant: Action<Test>) {
+    val task = project.tasks.register(suite.name + suffix, Test::class.java) {
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+      common.forEach { it.execute(this) }
+      variant.execute(this)
+    }
+    project.tasks.named("check").configure {
+      dependsOn(task)
+    }
+  }
+}
+
+fun TestingExtension.registerHttpServerBaggageTestExecutions(suiteNames: Iterable<String>) {
+  suiteNames.forEach { suiteName ->
+    suites.named(suiteName, JvmTestSuite::class.java).configure {
+      (this as ExtensionAware).extensions.getByType(TestSuiteExecutions::class.java)
+        .register("BaggageExtraction") {
+          filter {
+            includeTestsMatching("*.extractSingleBaggage")
+            includeTestsMatching("*.extractMultiBaggage")
+          }
+          systemProperty(
+            "otel.java.experimental.span-attributes.copy-from-baggage.include",
+            "test-baggage-key-1,test-baggage-key-2"
+          )
+          systemProperty("collectMetadata", false)
+        }
     }
   }
 }

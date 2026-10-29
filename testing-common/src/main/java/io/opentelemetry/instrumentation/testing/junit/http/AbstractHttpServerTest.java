@@ -124,11 +124,16 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerUsingTest<SERVER> {
+  private static final String BAGGAGE_COPY_PROPERTY =
+      "otel.java.experimental.span-attributes.copy-from-baggage.include";
+  private static final String BAGGAGE_COPY_KEYS = "test-baggage-key-1,test-baggage-key-2";
+
   public static final String TEST_REQUEST_HEADER = "X-Test-Request";
   public static final String TEST_RESPONSE_HEADER = "X-Test-Response";
 
@@ -806,6 +811,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @Test
+  @EnabledIfSystemProperty(named = BAGGAGE_COPY_PROPERTY, matches = BAGGAGE_COPY_KEYS)
   void extractSingleBaggage() {
     String method = "GET";
     AggregatedHttpRequest request =
@@ -820,20 +826,15 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.anySatisfy(
-              span -> assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status));
-          trace.anySatisfy(
-              span ->
-                  assertThat(span)
-                      .hasName("controller")
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              stringKey("test-baggage-extracted-key-1"), "test-baggage-value-1")));
-        });
+        trace ->
+            trace.anySatisfy(
+                span ->
+                    assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status)
+                        .hasAttribute(stringKey("test-baggage-key-1"), "test-baggage-value-1")));
   }
 
   @Test
+  @EnabledIfSystemProperty(named = BAGGAGE_COPY_PROPERTY, matches = BAGGAGE_COPY_KEYS)
   void extractMultiBaggage() {
     String method = "GET";
     AggregatedHttpRequest request =
@@ -849,19 +850,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.anySatisfy(
-              span -> assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status));
-          trace.anySatisfy(
-              span ->
-                  assertThat(span)
-                      .hasName("controller")
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              stringKey("test-baggage-extracted-key-1"), "test-baggage-value-1"),
-                          equalTo(
-                              stringKey("test-baggage-extracted-key-2"), "test-baggage-value-2")));
-        });
+        trace ->
+            trace.anySatisfy(
+                span ->
+                    assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status)
+                        .hasAttribute(stringKey("test-baggage-key-1"), "test-baggage-value-1")
+                        .hasAttribute(stringKey("test-baggage-key-2"), "test-baggage-value-2")));
   }
 
   private static Bootstrap buildBootstrap(EventLoopGroup eventLoopGroup) {

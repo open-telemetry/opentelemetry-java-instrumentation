@@ -135,6 +135,34 @@ class TestSuiteExecutionsTest {
   }
 
   @JunitTest
+  fun `HTTP baggage executions are filtered and excluded from metadata`() {
+    val testSuite = suite("test")
+    testSuite.executions {
+      register("Existing") {}
+    }
+    suites().register("integrationTest", JvmTestSuite::class.java)
+    project.extensions.getByType(TestingExtension::class.java)
+      .registerHttpServerBaggageTestExecutions(listOf("test"))
+
+    val baggageTask = test("testBaggageExtraction")
+    assertBinding(baggageTask, testSuite)
+    assertThat(baggageTask.filter.includePatterns)
+      .containsExactlyInAnyOrder("*.extractSingleBaggage", "*.extractMultiBaggage")
+    assertThat(baggageTask.systemProperties)
+      .containsEntry(
+        "otel.java.experimental.span-attributes.copy-from-baggage.include",
+        "test-baggage-key-1,test-baggage-key-2"
+      )
+      .containsEntry("collectMetadata", false)
+      .doesNotContainKey("metadataConfig")
+    assertThat(
+        project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name }
+      )
+      .contains("testBaggageExtraction")
+    assertThat(project.tasks.names).doesNotContain("integrationTestBaggageExtraction")
+  }
+
+  @JunitTest
   fun `variants stay lazy and receive shared providers independently without flattening`() {
     var configuredTasks = 0
     var providerReads = 0
