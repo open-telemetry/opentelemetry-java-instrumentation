@@ -96,14 +96,16 @@ or test failure that CI will report.
   the default test task and run the flag-on assertions through a wired `testExperimental` task
   or an existing equivalent variant. Do not request a task for flags unrelated to the tests or
   another task when the default test and an existing wired variant already cover both modes.
-  Semconv selection assertions need a task for the relevant stable or preview mode. Use
-  `otel.semconv-stability.opt-in=<domain>` for selectable stable conventions and
-  `otel.semconv-stability.preview=<domain>` for preview conventions, replacing `<domain>` with a
-  supported selector. Name the tasks `testStableSemconv` for stable selection and
-  `testPreviewSemconv` for preview selection; define both when both are exercised. Preserve explicit
-  legacy opt-in compatibility tests. `/dup` coverage is required for RPC, not service-peer.
-  Code and database conventions are stable-only and need no selection task. Keep mixed variants
-  that exercise selectable domains. For default enablement, use a separate `testDisabled` JVM rather
-  than setting a property after agent
-  startup. Because `testDisabled` intentionally emits no target instrumentation telemetry, do
+- When a feature supports distinct telemetry emission modes, exercise each supported mode in
+  separate test JVMs. Keep DEFAULT coverage in the default JVM and configure PREVIEW explicitly
+  in an additional JVM. Cover DEFAULT-only, PREVIEW-only, and combined emission only when supported;
+  do not presume a combined selector or any particular property exists. Use the feature's actual
+  supported configuration. Task names such as `examplePreviewTest` are illustrative, not required
+  tasks in every module. Scope variants to relevant suites, preserve their JVM settings, and wire
+  them into `check`. Retain meaningful independent variants, including mixed variants that exercise
+  distinct behavior; do not duplicate equivalent combinations. Preserve configuration compatibility
+  coverage only when that compatibility is supported. Apply the metadata collection rules above
+  to representative telemetry-producing variants; a compatibility-only variant need not collect.
+- For default enablement, use a separate `testDisabled` JVM rather than setting a property after
+  agent startup. Because `testDisabled` intentionally emits no target instrumentation telemetry, do
   not add it to `.github/scripts/instrumentations.sh` or give it `metadataConfig`.

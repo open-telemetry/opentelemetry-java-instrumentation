@@ -8,7 +8,7 @@ group = "io.opentelemetry.javaagent"
 
 dependencies {
   // Only used during compilation by bytebuddy plugin
-  compileOnly("com.google.guava:guava")
+  compileOnly("com.google.guava:guava:33.7.2-jre")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
@@ -25,5 +25,5 @@ dependencies {
   compileOnly("com.google.code.findbugs:annotations")
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
-  testImplementation("com.google.guava:guava")
+  testImplementation("com.google.guava:guava:33.7.2-jre")
 }

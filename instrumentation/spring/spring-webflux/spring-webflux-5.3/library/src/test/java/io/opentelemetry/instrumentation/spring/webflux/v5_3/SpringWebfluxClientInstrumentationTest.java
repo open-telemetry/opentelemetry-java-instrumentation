@@ -39,6 +39,6 @@ class SpringWebfluxClientInstrumentationTest
             .setResponseHeaders(AbstractHttpClientTest.TEST_HEADERS);
     Experimental.setEmitExperimentalTelemetry(telemetryBuilder, emitExperimentalTelemetry());
     SpringWebfluxClientTelemetry instrumentation = telemetryBuilder.build();
-    return builder.filters(instrumentation::addFilterAndRegisterReactorHook);
+    return builder.filter(instrumentation.createFilterAndRegisterReactorHook());
   }
 }

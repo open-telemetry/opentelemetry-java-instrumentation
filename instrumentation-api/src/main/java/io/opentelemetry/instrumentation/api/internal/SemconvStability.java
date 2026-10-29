@@ -10,8 +10,6 @@ import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -29,35 +27,8 @@ public final class SemconvStability {
     return emitStable(selectionResolver(openTelemetry).servicePeer());
   }
 
-  public static boolean emitOldRpcSemconv(OpenTelemetry openTelemetry) {
-    return emitOld(selectionResolver(openTelemetry).rpc());
-  }
-
-  public static boolean emitPreviewRpcSemconv(OpenTelemetry openTelemetry) {
-    return emitStable(selectionResolver(openTelemetry).rpc());
-  }
-
   private static SemconvSelectionResolver selectionResolver(OpenTelemetry openTelemetry) {
-    return new SemconvSelectionResolver(
-        openTelemetry, getGeneralInstrumentationConfig(openTelemetry));
-  }
-
-  private static final Map<String, String> rpcSystemNameMap = new HashMap<>();
-
-  static {
-    rpcSystemNameMap.put("apache_dubbo", "dubbo");
-    rpcSystemNameMap.put("connect_rpc", "connectrpc");
-  }
-
-  public static String stableRpcSystemName(String oldRpcSystem) {
-    String rpcSystemName = rpcSystemNameMap.get(oldRpcSystem);
-    return rpcSystemName != null ? rpcSystemName : oldRpcSystem;
-  }
-
-  static DeclarativeConfigProperties getGeneralInstrumentationConfig(OpenTelemetry openTelemetry) {
-    return openTelemetry instanceof ExtendedOpenTelemetry
-        ? ((ExtendedOpenTelemetry) openTelemetry).getGeneralInstrumentationConfig()
-        : empty();
+    return new SemconvSelectionResolver(openTelemetry);
   }
 
   static DeclarativeConfigProperties getInstrumentationConfig(

@@ -34,7 +34,8 @@ class SofaRpcAttributesGetterTest {
     SofaRpcException error = new SofaRpcException(code, "RPC error");
 
     assertThat(getter.getRpcStatusCode(request, null, error)).isNull();
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error))
+        .isEqualTo(SofaRpcException.class.getName());
   }
 
   @Test
@@ -45,6 +46,7 @@ class SofaRpcAttributesGetterTest {
 
     IllegalStateException error = new IllegalStateException();
     assertThat(getter.getRpcStatusCode(request, response, error)).isNull();
-    assertThat(getter.getErrorType(request, response, error)).isNull();
+    assertThat(getter.getErrorType(request, response, error))
+        .isEqualTo(IllegalStateException.class.getName());
   }
 }

@@ -24,36 +24,13 @@ final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, 
   }
 
   @Override
-  public String getSystem(GrpcRequest request) {
+  public String getRpcSystemName(GrpcRequest request) {
     return "grpc";
   }
 
   @Override
-  @Nullable
-  public String getService(GrpcRequest request) {
-    String fullMethodName = request.getMethod().getFullMethodName();
-    int slashIndex = fullMethodName.lastIndexOf('/');
-    if (slashIndex == -1) {
-      return null;
-    }
-    return fullMethodName.substring(0, slashIndex);
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getMethod(GrpcRequest request) {
-    String fullMethodName = request.getMethod().getFullMethodName();
-    int slashIndex = fullMethodName.lastIndexOf('/');
-    if (slashIndex == -1) {
-      return null;
-    }
-    return fullMethodName.substring(slashIndex + 1);
-  }
-
-  @Override
   public String getRpcMethod(GrpcRequest request) {
-    return request.getMethod().getFullMethodName();
+    return request.getFullMethodName();
   }
 
   @Override
@@ -70,13 +47,19 @@ final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, 
 
   @Override
   @Nullable
+  public String getRpcMethodOriginal(GrpcRequest request) {
+    return request.getOriginalFullMethodName();
+  }
+
+  @Override
+  @Nullable
   public String getErrorType(
       GrpcRequest request, @Nullable Status response, @Nullable Throwable error) {
     if (response != null
         && (isClient ? !response.isOk() : GrpcSpanStatusExtractor.isServerError(response))) {
       return response.getCode().name();
     }
-    return null;
+    return error == null ? null : error.getClass().getName();
   }
 
   List<String> metadataValue(GrpcRequest request, String key) {

@@ -17,25 +17,6 @@ final class SofaRpcAttributesGetter implements RpcAttributesGetter<SofaRpcReques
     return "sofarpc";
   }
 
-  @Deprecated
-  @Override
-  public String getSystem(SofaRpcRequest request) {
-    return "sofarpc";
-  }
-
-  @Override
-  @Nullable
-  public String getService(SofaRpcRequest request) {
-    return request.request().getInterfaceName();
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getMethod(SofaRpcRequest request) {
-    return request.request().getMethodName();
-  }
-
   @Override
   @Nullable
   public String getRpcMethod(SofaRpcRequest request) {
@@ -47,11 +28,20 @@ final class SofaRpcAttributesGetter implements RpcAttributesGetter<SofaRpcReques
     return null;
   }
 
+  @Nullable
+  private static String getService(SofaRpcRequest request) {
+    return request.request().getInterfaceName();
+  }
+
   @Override
   @Nullable
   public String getErrorType(
       SofaRpcRequest request, @Nullable SofaResponse response, @Nullable Throwable error) {
-    return getSofaRpcCode(error);
+    String rpcCode = getSofaRpcCode(error);
+    if (rpcCode != null) {
+      return rpcCode;
+    }
+    return error == null ? null : error.getClass().getName();
   }
 
   @Override
