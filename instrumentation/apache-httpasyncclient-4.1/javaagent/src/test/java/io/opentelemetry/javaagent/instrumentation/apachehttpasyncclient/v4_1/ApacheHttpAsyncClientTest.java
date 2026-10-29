@@ -10,8 +10,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -26,8 +25,6 @@ import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
@@ -115,7 +112,7 @@ class ApacheHttpAsyncClientTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
-    void resolvedAddressDoesNotPreventCallback(boolean explicitPort) throws Exception {
+    void requestWithInetAddress(boolean explicitPort) throws Exception {
       int serverPort = resolveAddress("/success").getPort();
       InetAddress address = InetAddress.getByAddress("127.0.0.1", new byte[] {127, 0, 0, 1});
       HttpHost target = new HttpHost(address, explicitPort ? serverPort : -1, "http");
@@ -124,34 +121,29 @@ class ApacheHttpAsyncClientTest {
       CloseableHttpAsyncClient resolvedClient =
           HttpAsyncClients.custom()
               .setDefaultRequestConfig(requestConfig)
+              // Resolve -1 to the test server port for routing; the original target keeps -1.
               .setRoutePlanner(new DefaultRoutePlanner(host -> serverPort))
               .build();
       cleanup.deferCleanup(resolvedClient);
       resolvedClient.start();
 
-      AtomicInteger callbackCalls = new AtomicInteger();
-      AtomicReference<SpanContext> parentContext = new AtomicReference<>();
-      AtomicReference<SpanContext> callbackContext = new AtomicReference<>();
       CompletableFuture<HttpResponse> callbackResult = new CompletableFuture<>();
 
       FutureCallback<HttpResponse> callback =
           new FutureCallback<HttpResponse>() {
             @Override
             public void completed(HttpResponse response) {
-              callbackCalls.incrementAndGet();
-              callbackContext.set(Span.current().getSpanContext());
+              testing.runWithSpan("callback", () -> {});
               callbackResult.complete(response);
             }
 
             @Override
             public void failed(Exception ex) {
-              callbackCalls.incrementAndGet();
               callbackResult.completeExceptionally(ex);
             }
 
             @Override
             public void cancelled() {
-              callbackCalls.incrementAndGet();
               callbackResult.completeExceptionally(new CancellationException());
             }
           };
@@ -159,22 +151,18 @@ class ApacheHttpAsyncClientTest {
       Future<HttpResponse> requestFuture =
           testing.runWithSpan(
               "parent",
-              () -> {
-                parentContext.set(Span.current().getSpanContext());
-                return resolvedClient.execute(
-                    target, new HttpUriRequest("GET", URI.create("/success")), callback);
-              });
+              () ->
+                  resolvedClient.execute(
+                      target, new HttpUriRequest("GET", URI.create("/success")), callback));
 
       HttpResponse response = callbackResult.get(10, SECONDS);
       assertThat(getResponseCode(response)).isEqualTo(200);
       assertThat(requestFuture.get(10, SECONDS)).isSameAs(response);
-      assertThat(callbackCalls.get()).isEqualTo(1);
-      assertThat(callbackContext.get()).isEqualTo(parentContext.get());
 
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasNoParent(),
+                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                   span ->
                       assertClientSpan(span, expectedUri, "GET", 200, null)
                           .hasParent(trace.getSpan(0))
@@ -189,7 +177,11 @@ class ApacheHttpAsyncClientTest {
                                   assertThat(attributes.get(NETWORK_PEER_PORT)).isNull();
                                 }
                               }),
-                  span -> assertServerSpan(span).hasParent(trace.getSpan(1))));
+                  span -> assertServerSpan(span).hasParent(trace.getSpan(1)),
+                  span ->
+                      span.hasName("callback")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasParent(trace.getSpan(0))));
     }
 
     @Override
