@@ -69,7 +69,6 @@ CustomService.AsyncIface configureClient(OpenTelemetry openTelemetry, CustomServ
 }
 ```
 
-The `serviceName` passed to `wrapServerProcessor` identifies the Thrift RPC service, not the
-application's resource `service.name`. Supply the generated service class name, as above, rather
-than the handler implementation class. The name is used as provided and is not discovered from
-either synchronous or asynchronous processors.
+The `rpcMethodPrefix` passed to `wrapServerProcessor` is combined with the method name as
+`prefix/method` for server span names and the `rpc.method` attribute on server spans and duration
+metrics. Use the generated service class name, as above, to match client telemetry.
