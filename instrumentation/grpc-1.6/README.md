@@ -9,7 +9,5 @@
 | `otel.instrumentation.grpc.server.request-headers.included` | String  |         | A comma-separated list of ASCII request header key patterns to capture on server spans. Matching is case-insensitive. `?` matches one character and `*` matches zero or more characters.                                                                                                                                                                                 |
 | `otel.instrumentation.grpc.server.request-headers.excluded` | String  |         | A comma-separated list of ASCII request header key patterns to exclude from server spans. Excluded patterns take precedence over included patterns. Matching is case-insensitive. `?` matches one character and `*` matches zero or more characters. If included is not configured, all non-excluded ASCII headers are captured, which may expose sensitive information. |
 
-Captured headers use `rpc.grpc.request.metadata.<key>` by default. With
-`otel.semconv-stability.preview=rpc`, it uses `rpc.request.header.<key>` instead;
-`otel.semconv-stability.preview=rpc/dup` emits both. In each case, `<key>` is lowercase
-and values are string arrays. Binary metadata and HTTP/2 pseudo-headers are not captured.
+Captured headers use `rpc.request.header.<key>`, with lowercase keys and string-array values.
+Binary metadata and HTTP/2 pseudo-headers are not captured.

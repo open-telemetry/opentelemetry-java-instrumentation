@@ -6,33 +6,25 @@
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcRequestHeadersUtil.createLiteralRequestHeaderAttributeKeys;
-import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcRequestHeadersUtil.createLiteralStableRequestHeaderAttributeKeys;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcRequestHeadersUtil.lowercase;
 import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcRequestHeadersUtil.requestHeaderAttributeKey;
-import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcRequestHeadersUtil.stableRequestHeaderAttributeKey;
 import static java.util.Collections.emptyMap;
 
 import io.grpc.Metadata;
 import io.grpc.Status;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
-import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-final class GrpcAttributesExtractor
-    implements AttributesExtractor<GrpcRequest, Status>, OpenTelemetryConfigurable {
+final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, Status> {
 
   // copied from RpcIncubatingAttributes
-  private static final AttributeKey<Long> RPC_GRPC_STATUS_CODE =
-      AttributeKey.longKey("rpc.grpc.status_code");
   private static final AttributeKey<String> RPC_STATUS_CODE =
       AttributeKey.stringKey("rpc.status_code");
   private final GrpcRpcAttributesGetter getter;
@@ -44,27 +36,17 @@ final class GrpcAttributesExtractor
   // provides a fixed per-capture cost with no peer-controlled retained state, while literal
   // configured keys remain allocation-free.
   private final Map<String, AttributeKey<List<String>>> literalRequestHeaderAttributeKeys;
-  private final Map<String, AttributeKey<List<String>>> literalStableRequestHeaderAttributeKeys;
-  private final RpcSemconvSelection semconvSelection = new RpcSemconvSelection();
 
   GrpcAttributesExtractor(GrpcRpcAttributesGetter getter, @Nullable IncludeExclude requestHeaders) {
     this.getter = getter;
     if (requestHeaders == null || requestHeaders.isEmpty()) {
       this.requestHeaders = null;
       literalRequestHeaderAttributeKeys = emptyMap();
-      literalStableRequestHeaderAttributeKeys = emptyMap();
     } else {
       this.requestHeaders = lowercase(requestHeaders);
       literalRequestHeaderAttributeKeys =
           createLiteralRequestHeaderAttributeKeys(this.requestHeaders);
-      literalStableRequestHeaderAttributeKeys =
-          createLiteralStableRequestHeaderAttributeKeys(this.requestHeaders);
     }
-  }
-
-  @Override
-  public void internalInitialize(OpenTelemetry openTelemetry) {
-    semconvSelection.initialize(openTelemetry);
   }
 
   @Override
@@ -79,14 +61,8 @@ final class GrpcAttributesExtractor
       GrpcRequest request,
       @Nullable Status status,
       @Nullable Throwable error) {
-    RpcSemconvSelection.Selection selection = semconvSelection.get();
     if (status != null) {
-      if (selection.emitOld()) {
-        attributes.put(RPC_GRPC_STATUS_CODE, status.getCode().value());
-      }
-      if (selection.emitPreview()) {
-        attributes.put(RPC_STATUS_CODE, status.getCode().name());
-      }
+      attributes.put(RPC_STATUS_CODE, status.getCode().name());
     }
     if (requestHeaders == null || request.getMetadata() == null) {
       return;
@@ -106,15 +82,8 @@ final class GrpcAttributesExtractor
       }
       List<String> value = getter.metadataValue(request, metadataKey);
       if (!value.isEmpty()) {
-        if (selection.emitOld()) {
-          attributes.put(
-              requestHeaderAttributeKey(metadataKey, literalRequestHeaderAttributeKeys), value);
-        }
-        if (selection.emitPreview()) {
-          attributes.put(
-              stableRequestHeaderAttributeKey(metadataKey, literalStableRequestHeaderAttributeKeys),
-              value);
-        }
+        attributes.put(
+            requestHeaderAttributeKey(metadataKey, literalRequestHeaderAttributeKeys), value);
       }
     }
   }

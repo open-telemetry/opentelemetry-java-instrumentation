@@ -23,15 +23,6 @@ instrumentation/development:
 
         # List of HTTP response headers to capture in HTTP server telemetry.
         response_captured_headers: []
-    rpc:
-      semconv:
-        # With `version: 1` and `experimental: true`, emits both the current and the preview RPC
-        # semantic conventions.
-        dual_emit: false
-
-        # With `version: 1`, selects the preview RPC semantic conventions. Required, because version
-        # 1 of the RPC semantic conventions is not yet stable.
-        experimental: false
     sanitization:
       url:
         # List of URL query parameter names whose values are redacted in URL attributes. See

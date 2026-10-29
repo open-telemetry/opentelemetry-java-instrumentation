@@ -6,33 +6,25 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD_ORIGINAL;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.entry;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class RpcAttributesExtractorTest {
 
   private static class TestGetter implements RpcAttributesGetter<Map<String, String>, Void> {
@@ -42,27 +34,11 @@ class RpcAttributesExtractorTest {
       return "test";
     }
 
-    @Override
-    public String getSystem(Map<String, String> request) {
-      return "test";
-    }
-
-    @Override
-    public String getService(Map<String, String> request) {
-      return request.get("service");
-    }
-
-    @Deprecated
-    @Override
-    public String getMethod(Map<String, String> request) {
-      return request.get("method");
-    }
-
     @Nullable
     @Override
     public String getRpcMethod(Map<String, String> request) {
-      String service = getService(request);
-      String method = getMethod(request);
+      String service = request.get("service");
+      String method = request.get("method");
       if (service == null || method == null) {
         return null;
       }
@@ -112,31 +88,18 @@ class RpcAttributesExtractorTest {
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, context, request);
 
-    // Build expected entries list based on semconv mode
-    List<Map.Entry<? extends AttributeKey<?>, ?>> expectedEntries = new ArrayList<>();
-
-    if (emitPreviewRpcSemconv()) {
-      expectedEntries.add(entry(RPC_SYSTEM_NAME, "test"));
-      expectedEntries.add(entry(RPC_METHOD, "my.Service/Method"));
-      expectedEntries.add(entry(RPC_METHOD_ORIGINAL, "my.Service/OriginalMethod"));
-    }
-
-    if (emitOldRpcSemconv()) {
-      expectedEntries.add(entry(RPC_SYSTEM, "test"));
-      expectedEntries.add(entry(RPC_SERVICE, "my.Service"));
-      if (!emitPreviewRpcSemconv()) {
-        expectedEntries.add(entry(RPC_METHOD, "Method"));
-      }
-    }
-
-    // safe conversion for test assertions
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    Map.Entry<? extends AttributeKey<?>, ?>[] expectedArray =
-        (Map.Entry<? extends AttributeKey<?>, ?>[]) expectedEntries.toArray(new Map.Entry[0]);
-    assertThat(attributes.build()).containsOnly(expectedArray);
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(RPC_SYSTEM_NAME, "test"),
+            entry(RPC_METHOD, "my.Service/Method"),
+            entry(RPC_METHOD_ORIGINAL, "my.Service/OriginalMethod"));
 
     extractor.onEnd(attributes, context, request, null, null);
-    assertThat(attributes.build()).containsOnly(expectedArray);
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(RPC_SYSTEM_NAME, "test"),
+            entry(RPC_METHOD, "my.Service/Method"),
+            entry(RPC_METHOD_ORIGINAL, "my.Service/OriginalMethod"));
   }
 
   @Test
@@ -154,9 +117,11 @@ class RpcAttributesExtractorTest {
     extractor.onStart(attributes, context, request);
     extractor.onEnd(attributes, context, request, null, null);
 
-    if (emitPreviewRpcSemconv()) {
-      assertThat(attributes.build()).containsEntry(ERROR_TYPE, "CANCELLED");
-    }
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(RPC_SYSTEM_NAME, "test"),
+            entry(RPC_METHOD, "my.Service/Method"),
+            entry(ERROR_TYPE, "CANCELLED"));
   }
 
   @Test
@@ -173,10 +138,11 @@ class RpcAttributesExtractorTest {
     extractor.onStart(attributes, context, request);
     extractor.onEnd(attributes, context, request, null, new IllegalArgumentException());
 
-    if (emitPreviewRpcSemconv()) {
-      assertThat(attributes.build())
-          .containsEntry(ERROR_TYPE, "java.lang.IllegalArgumentException");
-    }
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(RPC_SYSTEM_NAME, "test"),
+            entry(RPC_METHOD, "my.Service/Method"),
+            entry(ERROR_TYPE, "java.lang.IllegalArgumentException"));
   }
 
   @Test
@@ -193,9 +159,8 @@ class RpcAttributesExtractorTest {
     extractor.onStart(attributes, context, request);
     extractor.onEnd(attributes, context, request, null, null);
 
-    if (emitPreviewRpcSemconv()) {
-      assertThat(attributes.build()).doesNotContainKey(ERROR_TYPE);
-    }
+    assertThat(attributes.build())
+        .containsOnly(entry(RPC_SYSTEM_NAME, "test"), entry(RPC_METHOD, "my.Service/Method"));
   }
 
   @Test
@@ -213,9 +178,8 @@ class RpcAttributesExtractorTest {
     extractor.onStart(attributes, context, request);
     extractor.onEnd(attributes, context, request, null, new IllegalArgumentException());
 
-    if (emitPreviewRpcSemconv()) {
-      assertThat(attributes.build()).doesNotContainKey(ERROR_TYPE);
-    }
+    assertThat(attributes.build())
+        .containsOnly(entry(RPC_SYSTEM_NAME, "test"), entry(RPC_METHOD, "my.Service/Method"));
   }
 
   @ParameterizedTest
@@ -257,8 +221,8 @@ class RpcAttributesExtractorTest {
       assertThat(attributes.build())
           .isEqualTo(
               Attributes.builder()
-                  .put(stringKey("rpc.status_code"), emitPreviewRpcSemconv() ? statusCode : null)
-                  .put(ERROR_TYPE, emitPreviewRpcSemconv() ? errorType : null)
+                  .put(stringKey("rpc.status_code"), statusCode)
+                  .put(ERROR_TYPE, errorType)
                   .build());
     }
   }
@@ -266,5 +230,42 @@ class RpcAttributesExtractorTest {
   @Test
   void statusCodeIsUnavailableByDefault() {
     assertThat(new TestGetter().getRpcStatusCode(new HashMap<>(), null, null)).isNull();
+  }
+
+  @Test
+  void sizeCaptureIsIndependentOfCallDurationMetrics() {
+    TestGetter getter =
+        new TestGetter() {
+          @Override
+          public Long getRequestSize(Map<String, String> request) {
+            return 10L;
+          }
+
+          @Override
+          public Long getResponseSize(Map<String, String> request) {
+            return 20L;
+          }
+        };
+    RpcSizeAttributesExtractor<Map<String, String>, Void> extractor =
+        RpcSizeAttributesExtractor.create(getter);
+    AttributesBuilder attributes = Attributes.builder();
+    Map<String, String> request = new HashMap<>();
+
+    extractor.onStart(attributes, Context.root(), request);
+    assertThat(attributes.build()).isEqualTo(Attributes.empty());
+    extractor.onEnd(attributes, Context.root(), request, null, null);
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE, 10L),
+            entry(RpcSizeAttributesExtractor.RPC_RESPONSE_SIZE, 20L));
+  }
+
+  @Test
+  void unavailableSizesAreOmitted() {
+    AttributesBuilder attributes = Attributes.builder();
+    RpcSizeAttributesExtractor.create(new TestGetter())
+        .onEnd(attributes, Context.root(), new HashMap<>(), null, null);
+
+    assertThat(attributes.build()).isEqualTo(Attributes.empty());
   }
 }

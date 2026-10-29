@@ -43,9 +43,9 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
   private static AsyncHttpClient buildClient(boolean readTimeout) {
     AsyncHttpClientConfig.Builder builder =
         new AsyncHttpClientConfig.Builder().setConnectTimeout(CONNECTION_TIMEOUT_MS);
-    // Netty 3 does not complete TLS 1.3 handshakes on JDK 27.
+    // Netty 3 does not complete TLS 1.3 handshakes on affected JDK versions.
     if (Integer.parseInt(System.getProperty("java.specification.version").replace("1.", ""))
-        >= 27) {
+        >= 25) {
       builder.setEnabledProtocols(new String[] {"TLSv1.2"});
     }
     if (readTimeout) {

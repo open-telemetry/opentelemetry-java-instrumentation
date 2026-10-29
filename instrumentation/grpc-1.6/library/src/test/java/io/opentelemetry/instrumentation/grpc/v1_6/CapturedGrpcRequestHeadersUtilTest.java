@@ -33,5 +33,7 @@ class CapturedGrpcRequestHeadersUtilTest {
         .isSameAs(literalRequestHeaderAttributeKeys.get("literal-key"));
     assertThat(requestHeaderAttributeKey("wildcard-key", literalRequestHeaderAttributeKeys))
         .isNotSameAs(requestHeaderAttributeKey("wildcard-key", literalRequestHeaderAttributeKeys));
+    assertThat(requestHeaderAttributeKey("literal-key", literalRequestHeaderAttributeKeys).getKey())
+        .isEqualTo("rpc.request.header.literal-key");
   }
 }

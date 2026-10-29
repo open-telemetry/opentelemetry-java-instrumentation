@@ -17,10 +17,7 @@ import java.util.Locale;
 import java.util.Map;
 
 final class CapturedGrpcRequestHeadersUtil {
-  private static final String RPC_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX =
-      "rpc.grpc.request.metadata.";
-  private static final String RPC_STABLE_REQUEST_HEADER_KEY_ATTRIBUTE_PREFIX =
-      "rpc.request.header.";
+  private static final String RPC_REQUEST_HEADER_KEY_ATTRIBUTE_PREFIX = "rpc.request.header.";
 
   static List<String> lowercase(List<String> names) {
     return unmodifiableList(names.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(toList()));
@@ -35,28 +32,14 @@ final class CapturedGrpcRequestHeadersUtil {
 
   static Map<String, AttributeKey<List<String>>> createLiteralRequestHeaderAttributeKeys(
       IncludeExclude selector) {
-    return createLiteralAttributeKeys(selector, RPC_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX);
-  }
-
-  static Map<String, AttributeKey<List<String>>> createLiteralStableRequestHeaderAttributeKeys(
-      IncludeExclude selector) {
-    return createLiteralAttributeKeys(selector, RPC_STABLE_REQUEST_HEADER_KEY_ATTRIBUTE_PREFIX);
+    return createLiteralAttributeKeys(selector, RPC_REQUEST_HEADER_KEY_ATTRIBUTE_PREFIX);
   }
 
   static AttributeKey<List<String>> requestHeaderAttributeKey(
       String metadataKey,
       Map<String, AttributeKey<List<String>>> literalRequestHeaderAttributeKeys) {
     return attributeKey(
-        metadataKey, literalRequestHeaderAttributeKeys, RPC_REQUEST_METADATA_KEY_ATTRIBUTE_PREFIX);
-  }
-
-  static AttributeKey<List<String>> stableRequestHeaderAttributeKey(
-      String metadataKey,
-      Map<String, AttributeKey<List<String>>> literalRequestHeaderAttributeKeys) {
-    return attributeKey(
-        metadataKey,
-        literalRequestHeaderAttributeKeys,
-        RPC_STABLE_REQUEST_HEADER_KEY_ATTRIBUTE_PREFIX);
+        metadataKey, literalRequestHeaderAttributeKeys, RPC_REQUEST_HEADER_KEY_ATTRIBUTE_PREFIX);
   }
 
   private static Map<String, AttributeKey<List<String>>> createLiteralAttributeKeys(
