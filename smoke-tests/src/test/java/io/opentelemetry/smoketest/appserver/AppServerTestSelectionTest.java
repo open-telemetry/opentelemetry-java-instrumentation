@@ -7,6 +7,7 @@ package io.opentelemetry.smoketest.appserver;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.concat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -54,8 +55,7 @@ class AppServerTestSelectionTest {
                   .collect(toList()));
       assertThat(full)
           .containsExactlyInAnyOrderElementsOf(
-              java.util.stream.Stream.concat(representative.stream(), remaining.stream())
-                  .collect(toList()));
+              concat(representative.stream(), remaining.stream()).collect(toList()));
       assertThat(representative)
           .allMatch(type -> type.getAnnotation(AppServer.class).inReducedMatrix());
       assertThat(remaining)

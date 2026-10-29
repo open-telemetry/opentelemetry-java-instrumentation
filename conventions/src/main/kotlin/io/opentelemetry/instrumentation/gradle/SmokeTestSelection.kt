@@ -14,6 +14,14 @@ fun Test.selectSmokeTests(
   reducedAppServerTests: Boolean = false,
   skipOpenJ9: Boolean = false,
 ) {
+  // Match TestContainerManager.useWindowsContainers(), including its Linux-container override.
+  inputs.property(
+    "useWindowsContainers",
+    project.providers.systemProperty("os.name")
+      .zip(project.providers.environmentVariable("USE_LINUX_CONTAINERS").orElse("")) { os, linux ->
+        smokeTestUsesWindowsContainers(os, linux)
+      },
+  )
   val appServerSuites = mapOf(
     "payara" to "**/Payara*.*",
     "jetty" to "**/Jetty*.*",
@@ -52,3 +60,6 @@ fun Test.selectSmokeTests(
     }
   }
 }
+
+internal fun smokeTestUsesWindowsContainers(os: String, linuxContainers: String): Boolean =
+  linuxContainers != "1" && os.lowercase().contains("windows")

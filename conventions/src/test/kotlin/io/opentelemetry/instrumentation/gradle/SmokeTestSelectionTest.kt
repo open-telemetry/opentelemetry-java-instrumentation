@@ -72,6 +72,17 @@ class SmokeTestSelectionTest {
   }
 
   @JunitTest
+  fun `platform cache input follows Windows container selection and Linux override`() {
+    assertThat(smokeTestUsesWindowsContainers("Windows Server 2025", "")).isTrue()
+    assertThat(smokeTestUsesWindowsContainers("WINDOWS", "0")).isTrue()
+    assertThat(smokeTestUsesWindowsContainers("Windows Server 2025", "1")).isFalse()
+    assertThat(smokeTestUsesWindowsContainers("Linux", "")).isFalse()
+    assertThat(smokeTestUsesWindowsContainers("Linux", "1")).isFalse()
+    assertThat(task("tomee").inputs.properties.getValue("useWindowsContainers"))
+      .isEqualTo(smokeTestUsesWindowsContainers(System.getProperty("os.name"), System.getenv("USE_LINUX_CONTAINERS") ?: ""))
+  }
+
+  @JunitTest
   fun `unknown suites fail rather than running everything`() {
     assertThatThrownBy { task("unknown") }
       .isInstanceOf(GradleException::class.java)
@@ -92,6 +103,7 @@ class SmokeTestSelectionTest {
 
   private fun selectionInputs(task: Test) = mapOf(
     "systemProperties" to task.inputs.properties.getValue("systemProperties"),
+    "useWindowsContainers" to task.inputs.properties.getValue("useWindowsContainers"),
     "includes" to task.includes,
     "excludes" to task.excludes,
     "includePatterns" to task.filter.includePatterns,
