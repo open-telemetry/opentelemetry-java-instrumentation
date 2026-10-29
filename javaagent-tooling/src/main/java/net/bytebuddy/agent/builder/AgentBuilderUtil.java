@@ -148,11 +148,9 @@ public class AgentBuilderUtil {
                     if (loadingSuperTypes.isEmpty()) {
                       return transformations.iterator();
                     }
-                    for (String className : loadingSuperTypes) {
+                    if (containsAny(superTypeNames, loadingSuperTypes)) {
                       // we know that this class is going to be transformed
-                      if (superTypeNames.contains(className)) {
-                        return transformations.iterator();
-                      }
+                      return transformations.iterator();
                     }
 
                     // apply only the transformations that we can't decompose
@@ -412,15 +410,7 @@ public class AgentBuilderUtil {
         if (!result.subtype) {
           return false;
         }
-        Set<String> hierarchy = loadedTypeNames.get(classBeingRedefined);
-        boolean candidate = false;
-        for (String name : result.names) {
-          if (hierarchy.contains(name)) {
-            candidate = true;
-            break;
-          }
-        }
-        if (!candidate) {
+        if (!containsAny(loadedTypeNames.get(classBeingRedefined), result.names)) {
           return false;
         }
       }
@@ -466,5 +456,16 @@ public class AgentBuilderUtil {
         boolean loaded) {
       transformedName.remove();
     }
+  }
+
+  // Keep iteration explicit and avoid Collections.disjoint's general collection-selection checks
+  // in this startup matching path.
+  private static boolean containsAny(Set<String> lookup, Set<String> candidates) {
+    for (String candidate : candidates) {
+      if (lookup.contains(candidate)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
