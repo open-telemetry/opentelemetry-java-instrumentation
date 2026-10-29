@@ -371,7 +371,8 @@ public abstract class AbstractThriftTest {
                                             equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
                                             equalTo(
                                                 RPC_METHOD,
-                                                getServerServiceName(handlerClassName) + "/say")))));
+                                                getServerServiceName(handlerClassName)
+                                                    + "/say")))));
     getTesting()
         .waitAndAssertMetrics(
             "io.opentelemetry.thrift-0.13",
