@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.selectSmokeTests
 import java.time.Duration
 
 plugins {
@@ -39,7 +40,7 @@ tasks {
     from(rootProject.file("docs/declarative-configuration-example.yaml"))
   }
 
-  test {
+  withType<Test>().configureEach {
     testLogging.showStandardStreams = true
 
     // this needs to be long enough so that smoke tests that are just running slow don't time out
@@ -49,40 +50,16 @@ tasks {
     // In addition to that we disable them on normal test task to only run when explicitly requested.
     enabled = enabled && gradle.startParameter.taskNames.any { it.startsWith(":smoke-tests:") }
 
-    val suites = mapOf(
-      "payara" to listOf("**/Payara*.*"),
-      "jetty" to listOf("**/Jetty*.*"),
-      "liberty" to listOf("**/Liberty*.*"),
-      "tomcat" to listOf("**/Tomcat*.*"),
-      "tomee" to listOf("**/Tomee*.*"),
-      "websphere" to listOf("**/Websphere*.*"),
-      "wildfly" to listOf("**/Wildfly*.*"),
-      "spring-aot" to listOf("**/SpringBootAotSmokeTest.*"),
+    selectSmokeTests(
+      project.findProperty("smokeTestSuite") as String?,
+      appServerGroup = when (name) {
+        "testRepresentativeAppServers" -> "representative"
+        "testRemainingAppServers" -> "remaining"
+        else -> null
+      },
+      reducedAppServerTests = findProperty("reducedAppServerTests") == "true",
+      skipOpenJ9 = findProperty("skipOpenJ9SmokeTests") == "true",
     )
-
-    val smokeTestSuite = project.findProperty("smokeTestSuite") as String?
-    val skipOpenJ9SmokeTests = (findProperty("skipOpenJ9SmokeTests") as String?) == "true"
-    systemProperty("reducedAppServerTests", findProperty("reducedAppServerTests") == "true")
-    if (smokeTestSuite != null) {
-      val suite = suites[smokeTestSuite]
-      if (suite != null) {
-        include(suite)
-      } else if (smokeTestSuite == "other") {
-        suites.values.forEach {
-          exclude(it)
-        }
-      } else if (smokeTestSuite == "none") {
-        // Exclude all tests. Running this suite will compile everything needed by smoke tests
-        // without executing any tests.
-        exclude("**/*")
-      } else {
-        throw GradleException("Unknown smoke test suite: $smokeTestSuite")
-      }
-    }
-
-    if (skipOpenJ9SmokeTests) {
-      exclude("**/*Openj9*.*")
-    }
 
     val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")
     val agentJarPath = shadowTask.flatMap { it.archiveFile }
@@ -99,6 +76,9 @@ tasks {
     val legacySpringBootTask = project(":smoke-tests:images:spring-boot-1.3").tasks.named<Jar>("jar")
     val legacySpringBootJarPath = legacySpringBootTask.flatMap { it.archiveFile }
     inputs.files(extensionJarPath).withPropertyName("smokeTestExtension")
+    inputs.files(extensionTestAppJarPath)
+      .withPropertyName("smokeTestExtensionApp")
+      .withNormalizer(ClasspathNormalizer::class)
     inputs.files(legacySpringBootJarPath)
       .withPropertyName("legacySpringBootLogCorrelationFixture")
       .withNormalizer(ClasspathNormalizer::class)
@@ -113,5 +93,17 @@ tasks {
         "-Dio.opentelemetry.smoketest.springboot13.path=${legacySpringBootJarPath.get()}"
       )
     }
+  }
+
+  // Keep test/check as full-suite entry points; CI explicitly requests these disjoint partitions.
+  register<Test>("testRepresentativeAppServers") {
+    description = "Runs the representative app-server matrix shared by PRs and main."
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+  }
+  register<Test>("testRemainingAppServers") {
+    description = "Runs app-server cases outside the representative matrix."
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
   }
 }

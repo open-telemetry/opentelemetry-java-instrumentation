@@ -30,6 +30,7 @@ jobs:
     with:
       skip-openj9-tests: ${{ inputs.skip-openj9-tests }}
       skip-windows-smoke-tests: ${{ inputs.skip-windows-smoke-tests }}
+      # Selects whether Linux also runs the remaining task, not a different representative recipe.
       reduced-appserver-tests: ${{ inputs.reduced-appserver-tests }}
       cache-read-only: true
 

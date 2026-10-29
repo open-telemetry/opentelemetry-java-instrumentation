@@ -17,7 +17,6 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OS_TYPE;
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.LINUX;
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.WINDOWS;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -51,13 +50,9 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
     var jdk = appServer.jdk();
     isWindows = TestContainerManager.useWindowsContainers();
 
-    // In reduced app-server mode (PR builds), only run a representative subset of the full matrix.
-    // The full matrix runs on merge to main.
-    assumeTrue(appServer.inReducedMatrix() || !Boolean.getBoolean("reducedAppServerTests"));
-
-    // ibm-semeru-runtimes doesn't publish windows images
-    // adoptopenjdk is deprecated and doesn't publish Windows 2022 images
-    assumeFalse(isWindows && jdk.endsWith("-openj9"));
+    assumeTrue(
+        AppServerTestSelection.includes(
+            appServer, System.getProperty("appServerTestGroup", "all"), isWindows));
 
     serverVersion = appServer.version();
     startWithoutCleanup(new AppServerImage(jdk, serverVersion, isWindows));

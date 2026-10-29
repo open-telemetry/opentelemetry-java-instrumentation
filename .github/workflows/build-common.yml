@@ -17,6 +17,7 @@ on:
         type: boolean
         required: false
       reduced-appserver-tests:
+        description: Run only representative app-server cases on Linux; Windows retains full coverage.
         type: boolean
         required: false
     secrets:
@@ -461,16 +462,39 @@ jobs:
         # --no-daemon is used to free up the memory from the build step before running the test step below
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=none --no-daemon ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
-      - name: Test
+      - name: Test representative app-server matrix
+        if: ${{ !contains(fromJSON('["other", "spring-aot"]'), matrix.smoke-test-suite) }}
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
-        # Reduced app-server mode owns the OpenJ9 policy; disabling it here would make the TomEE suite run no tests.
+        # PRs restore this exact task's trusted-main cache entries, not a second reduced warmup run.
+        # Reduced Linux selection includes TomEE's OpenJ9 representatives even when OpenJ9 jobs are skipped.
+        run: >
+          ./gradlew
+          :smoke-tests:testRepresentativeAppServers
+          -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
+          ${{ inputs.skip-openj9-tests && !inputs.reduced-appserver-tests && matrix.os != 'windows-latest' && matrix.smoke-test-suite != 'websphere' && '-PskipOpenJ9SmokeTests=true' || '' }}
+          ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+
+      - name: Test remaining app-server matrix
+        if: ${{ !contains(fromJSON('["other", "spring-aot"]'), matrix.smoke-test-suite) && (!inputs.reduced-appserver-tests || matrix.os == 'windows-latest') }}
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+        # Windows PRs retain full supported coverage; OpenJ9 containers are excluded by the tests.
+        run: >
+          ./gradlew
+          :smoke-tests:testRemainingAppServers
+          -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
+          ${{ inputs.skip-openj9-tests && !inputs.reduced-appserver-tests && matrix.os != 'windows-latest' && matrix.smoke-test-suite != 'websphere' && '-PskipOpenJ9SmokeTests=true' || '' }}
+          ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+
+      - name: Test non-app-server suite
+        if: ${{ contains(fromJSON('["other", "spring-aot"]'), matrix.smoke-test-suite) }}
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         run: >
           ./gradlew
           :smoke-tests:test
           -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
-          ${{ inputs.reduced-appserver-tests && matrix.os != 'windows-latest' && '-PreducedAppServerTests=true' || '' }}
-          ${{ inputs.skip-openj9-tests && !inputs.reduced-appserver-tests && matrix.smoke-test-suite != 'websphere' && '-PskipOpenJ9SmokeTests=true' || '' }}
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Build scan
