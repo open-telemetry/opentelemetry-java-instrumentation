@@ -38,6 +38,7 @@ public class BridgeCost {
   Context withChild;
 
   @Setup
+  @SuppressWarnings("SystemOut")
   public void setup() {
     /*
     To run without the agent add the sdk dependency to build.gradle.kts
