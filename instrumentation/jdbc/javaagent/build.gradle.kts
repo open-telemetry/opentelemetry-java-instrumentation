@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -41,6 +44,34 @@ dependencies {
   // these dependencies are for SlickTest
   testImplementation("org.scala-lang:scala-library:2.11.12")
   testImplementation("com.typesafe.slick:slick_2.11:3.2.0")
+}
+
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        group {
+          configureEach {
+            filter {
+              excludeTestsMatching("SlickTest")
+              excludeTestsMatching("SqlCommenterTest")
+              excludeTestsMatching("PreparedStatementParametersTest")
+              excludeTestsMatching("*JdbcInstrumentationTest.testCommitTransaction")
+              excludeTestsMatching("*JdbcInstrumentationTest.testRollbackTransaction")
+              excludeTestsMatching("*JdbcInstrumentationTest.testFailedTransaction")
+            }
+            telemetryConfig("otel.instrumentation.jdbc-datasource.enabled", "true")
+          }
+          register("WithServerServiceMapping") {
+            telemetryConfig(
+              "otel.instrumentation.common.server-service-mapping",
+              "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service",
+            )
+          }
+        }
+      }
+    }
+  }
 }
 
 tasks {

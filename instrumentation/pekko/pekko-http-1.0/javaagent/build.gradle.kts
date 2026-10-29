@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -71,6 +74,17 @@ dependencies {
 
 testing {
   suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("WithServerServiceMapping") {
+          filter {
+            includeTestsMatching("*PekkoHttpClientInstrumentationTest")
+          }
+          telemetryConfig("otel.instrumentation.common.server-service-mapping", "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service")
+        }
+      }
+    }
+
     // the agent matches methods of pekko classes by name, some of them are private and scala
     // mangles their names, run the tests against the scala 3 artifacts to catch a name that only
     // holds for scala 2

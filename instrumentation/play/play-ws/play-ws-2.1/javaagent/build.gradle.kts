@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -54,9 +57,33 @@ dependencies {
 
 testing {
   suites {
-    register<JvmTestSuite>("latestDepTest") {
-      dependencies {
-        implementation("com.typesafe.play:play-ahc-ws-standalone_2.13:latest.release")
+    if (otelProps.testLatestDeps) {
+      tasks.named("test") {
+        // Gradle creates this task automatically; skipping suite configuration does not disable it.
+        enabled = false
+      }
+    }
+
+    if (!otelProps.testLatestDeps) {
+      named<JvmTestSuite>("test") {
+        executions {
+          register("WithServerServiceMapping") {
+            telemetryConfig("otel.instrumentation.common.server-service-mapping", "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service")
+          }
+        }
+      }
+    }
+
+    if (otelProps.testLatestDeps) {
+      register<JvmTestSuite>("latestDepTest") {
+        dependencies {
+          implementation("com.typesafe.play:play-ahc-ws-standalone_2.13:latest.release")
+        }
+        executions {
+          register("WithServerServiceMapping") {
+            telemetryConfig("otel.instrumentation.common.server-service-mapping", "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service")
+          }
+        }
       }
     }
 
@@ -70,17 +97,6 @@ testing {
 }
 
 tasks {
-  if (otelProps.testLatestDeps) {
-    // disable regular test running and compiling tasks when latest dep test task is run
-    named("test") {
-      enabled = false
-    }
-  }
-
-  named("latestDepTest") {
-    enabled = otelProps.testLatestDeps
-  }
-
   val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
   if (testJavaVersion.isJava8) {
     named("play3Test") {

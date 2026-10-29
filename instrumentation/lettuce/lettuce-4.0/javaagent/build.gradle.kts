@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -17,6 +20,22 @@ dependencies {
   testInstrumentation(project(":instrumentation:lettuce:lettuce-5.0:javaagent"))
 
   latestDepTestLibrary("biz.paluch.redis:lettuce:4.+") // see lettuce-5.0 module
+}
+
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("WithServerServiceMapping") {
+          telemetryConfig("otel.instrumentation.common.server-service-mapping", "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service")
+        }
+        register("ConnectionTelemetryEnabledWithServerServiceMapping") {
+          telemetryConfig("otel.instrumentation.lettuce.connection-telemetry.enabled", "true")
+          telemetryConfig("otel.instrumentation.common.server-service-mapping", "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service")
+        }
+      }
+    }
+  }
 }
 
 tasks {

@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -23,6 +26,16 @@ testing {
       dependencies {
         implementation(project(":instrumentation:sofa-rpc-5.4:testing"))
         implementation("com.alipay.sofa:sofa-rpc-all:${baseVersion("5.4.0").orLatest()}")
+      }
+    }
+    named<JvmTestSuite>("testSofaRpc") {
+      executions {
+        register("WithServerServiceMapping") {
+          telemetryConfig(
+            "otel.instrumentation.common.server-service-mapping",
+            "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service",
+          )
+        }
       }
     }
   }

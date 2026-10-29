@@ -45,27 +45,49 @@ dependencies {
   testImplementation(project(":instrumentation-annotations"))
 }
 
-tasks {
-  test {
-    filter {
-      excludeTestsMatching("ReactorNettyConnectionSpanTest")
-      excludeTestsMatching("ReactorNettyClientSslTest")
-    }
-  }
-}
-
 testing {
   suites {
     named<JvmTestSuite>("test") {
-      executions {
-        register("ConnectionSpan") {
+      targets.all {
+        testTask.configure {
           filter {
-            includeTestsMatching("ReactorNettyConnectionSpanTest")
-            includeTestsMatching("ReactorNettyClientSslTest")
+            excludeTestsMatching("ReactorNettyConnectionSpanTest")
+            excludeTestsMatching("ReactorNettyClientSslTest")
           }
-          include("**/ReactorNettyConnectionSpanTest.*", "**/ReactorNettyClientSslTest.*")
-          telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
-          telemetryConfig("otel.instrumentation.reactor-netty.connection-telemetry.enabled", "true")
+        }
+      }
+      executions {
+        group {
+          configureEach {
+            filter {
+              excludeTestsMatching("ReactorNettyConnectionSpanTest")
+              excludeTestsMatching("ReactorNettyClientSslTest")
+            }
+          }
+          register("WithServerServiceMapping") {
+            telemetryConfig(
+              "otel.instrumentation.common.server-service-mapping",
+              "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service",
+            )
+          }
+        }
+        group {
+          configureEach {
+            filter {
+              includeTestsMatching("ReactorNettyConnectionSpanTest")
+              includeTestsMatching("ReactorNettyClientSslTest")
+            }
+            include("**/ReactorNettyConnectionSpanTest.*", "**/ReactorNettyClientSslTest.*")
+            telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
+            telemetryConfig("otel.instrumentation.reactor-netty.connection-telemetry.enabled", "true")
+          }
+          register("ConnectionSpan") {}
+          register("ConnectionSpanWithServerServiceMapping") {
+            telemetryConfig(
+              "otel.instrumentation.common.server-service-mapping",
+              "127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service",
+            )
+          }
         }
       }
     }
