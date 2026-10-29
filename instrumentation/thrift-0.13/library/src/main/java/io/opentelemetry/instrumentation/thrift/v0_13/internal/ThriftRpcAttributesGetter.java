@@ -16,31 +16,24 @@ final class ThriftRpcAttributesGetter
     implements RpcAttributesGetter<ThriftRequest, ThriftResponse> {
 
   @Override
-  public String getSystem(ThriftRequest request) {
+  public String getRpcSystemName(ThriftRequest request) {
     return "apache_thrift";
-  }
-
-  @Nullable
-  @Override
-  public String getService(ThriftRequest request) {
-    return request.getServiceName();
-  }
-
-  @Nullable
-  @Override
-  public String getMethod(ThriftRequest request) {
-    return request.getMethodName();
   }
 
   @Override
   @Nullable
   public String getRpcMethod(ThriftRequest request) {
     String service = getService(request);
-    String method = getMethod(request);
+    String method = request.getMethodName();
     if (service != null && method != null) {
       return service + "/" + method;
     }
     return method;
+  }
+
+  @Nullable
+  private static String getService(ThriftRequest request) {
+    return request.getServiceName();
   }
 
   @Override

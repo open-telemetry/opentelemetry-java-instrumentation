@@ -51,7 +51,7 @@ jobs:
       - name: Collect telemetry
         env:
           DEBUG_LOGGING: ${{ inputs.debug_logging || 'false' }}
-        run: ./.github/scripts/metadata-ci-collect.sh
+        run: ./instrumentation-docs/collect.sh
 
       - name: Run documentation analyzer
         run: ./gradlew :instrumentation-docs:runAnalysis
