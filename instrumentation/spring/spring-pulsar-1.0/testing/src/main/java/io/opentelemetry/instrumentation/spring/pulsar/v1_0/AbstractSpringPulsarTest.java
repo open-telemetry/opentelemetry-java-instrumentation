@@ -189,7 +189,7 @@ public abstract class AbstractSpringPulsarTest {
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
         equalTo(SERVER_ADDRESS, brokerHost),
         equalTo(SERVER_PORT, brokerPort),
-        equalTo(stringKey("messaging.pulsar.message.type"), experimental("normal")));
+        equalTo(stringKey("pulsar.message.type"), experimental("normal")));
   }
 
   private static <T> T experimental(T value) {

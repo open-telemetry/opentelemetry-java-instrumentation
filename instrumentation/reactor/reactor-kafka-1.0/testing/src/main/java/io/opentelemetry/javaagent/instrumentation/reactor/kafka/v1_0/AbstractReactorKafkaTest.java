@@ -263,7 +263,7 @@ public abstract class AbstractReactorKafkaTest {
     assertions.add(satisfies(stringKey("kafka.cluster.id"), val -> val.isNotEmpty()));
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
-          equalTo(stringKey("messaging.kafka.bootstrap.servers"), kafka.getBootstrapServers()));
+          equalTo(stringKey("kafka.bootstrap.servers"), kafka.getBootstrapServers()));
     }
     String messageKey = record.key();
     if (messageKey != null) {

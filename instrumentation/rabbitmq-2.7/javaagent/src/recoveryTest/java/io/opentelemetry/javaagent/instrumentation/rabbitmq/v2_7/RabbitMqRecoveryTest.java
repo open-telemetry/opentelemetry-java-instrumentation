@@ -82,9 +82,9 @@ class RabbitMqRecoveryTest extends AbstractRabbitMqTest {
                         satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()),
                         equalTo(stringKey("rabbitmq.command"), experimental("queue.declare")),
                         equalTo(
-                            stringKey("messaging.rabbitmq.vhost.name"), experimental("otel-test")),
+                            stringKey("rabbitmq.vhost.name"), experimental("otel-test")),
                         equalTo(
-                            stringKey("messaging.rabbitmq.cluster.name"),
+                            stringKey("rabbitmq.cluster.name"),
                             experimental("otel-test-cluster")))));
   }
 }

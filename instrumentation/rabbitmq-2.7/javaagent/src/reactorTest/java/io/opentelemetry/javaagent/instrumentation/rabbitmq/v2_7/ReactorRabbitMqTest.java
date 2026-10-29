@@ -55,10 +55,10 @@ class ReactorRabbitMqTest extends AbstractRabbitMqTest {
                             satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
                             satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()),
                             equalTo(
-                                stringKey("messaging.rabbitmq.vhost.name"),
+                                stringKey("rabbitmq.vhost.name"),
                                 experimental("otel-test")),
                             equalTo(
-                                stringKey("messaging.rabbitmq.cluster.name"),
+                                stringKey("rabbitmq.cluster.name"),
                                 experimental("otel-test-cluster")))));
   }
 }

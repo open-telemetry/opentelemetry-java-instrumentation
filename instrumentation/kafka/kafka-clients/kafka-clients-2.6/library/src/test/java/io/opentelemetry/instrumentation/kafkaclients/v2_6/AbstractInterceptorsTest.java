@@ -229,7 +229,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
                 satisfies(
-                    stringKey("messaging.kafka.bootstrap.servers"),
+                    stringKey("kafka.bootstrap.servers"),
                     val -> {
                       if (experimental) {
                         val.matches("^localhost:\\d+(,localhost:\\d+)*$");

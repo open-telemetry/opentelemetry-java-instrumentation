@@ -309,7 +309,7 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 // messaging.message.body.size requires opt-in
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
-                equalTo(stringKey("messaging.pulsar.message.type"), experimental("normal"))));
+                equalTo(stringKey("pulsar.message.type"), experimental("normal"))));
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }

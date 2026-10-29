@@ -176,7 +176,7 @@ public abstract class AbstractVertxKafkaTest {
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(
-              stringKey("messaging.kafka.bootstrap.servers"),
+              stringKey("kafka.bootstrap.servers"),
               val -> val.matches("^localhost:\\d+(,localhost:\\d+)*$")));
     }
     String messageKey = record.key();

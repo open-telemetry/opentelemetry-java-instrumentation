@@ -293,7 +293,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
     assertions.add(equalTo(stringKey("kafka.message.key"), includeKey ? "10" : null));
     assertions.add(
         equalTo(
-            stringKey("messaging.kafka.bootstrap.servers"),
+            stringKey("kafka.bootstrap.servers"),
             EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null));
     assertions.add(equalTo(longKey("kafka.offset"), 0));
     return assertions;

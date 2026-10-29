@@ -515,7 +515,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     assertions.add(satisfies(stringKey("kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     assertions.add(
         equalTo(
-            stringKey("messaging.kafka.bootstrap.servers"),
+            stringKey("kafka.bootstrap.servers"),
             EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null));
     return assertions;
   }

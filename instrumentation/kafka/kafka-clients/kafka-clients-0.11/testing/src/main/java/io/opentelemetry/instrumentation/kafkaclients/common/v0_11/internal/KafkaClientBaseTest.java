@@ -198,7 +198,7 @@ public abstract class KafkaClientBaseTest {
     if (EXPERIMENTAL_ATTRIBUTES) {
       assertions.add(
           satisfies(
-              stringKey("messaging.kafka.bootstrap.servers"),
+              stringKey("kafka.bootstrap.servers"),
               val -> val.matches("^localhost:\\d+(,localhost:\\d+)*$")));
     }
     return assertions;

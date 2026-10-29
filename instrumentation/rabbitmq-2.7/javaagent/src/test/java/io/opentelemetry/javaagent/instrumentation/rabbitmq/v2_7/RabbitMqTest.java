@@ -839,9 +839,9 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                   val.isNotNull();
                 }),
             satisfies(stringKey("rabbitmq.command"), val -> val.isIn(null, "basic." + operation)),
-            equalTo(stringKey("messaging.rabbitmq.vhost.name"), experimental("otel-test")),
+            equalTo(stringKey("rabbitmq.vhost.name"), experimental("otel-test")),
             equalTo(
-                stringKey("messaging.rabbitmq.cluster.name"), experimental("otel-test-cluster")));
+                stringKey("rabbitmq.cluster.name"), experimental("otel-test-cluster")));
   }
 
   private static Stream<Arguments> provideParametersForMessageCountAndTimestamp() {
@@ -1078,8 +1078,8 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                 val.isNull();
               }
             }),
-        equalTo(stringKey("messaging.rabbitmq.vhost.name"), experimental("otel-test")),
-        equalTo(stringKey("messaging.rabbitmq.cluster.name"), experimental("otel-test-cluster")));
+        equalTo(stringKey("rabbitmq.vhost.name"), experimental("otel-test")),
+        equalTo(stringKey("rabbitmq.cluster.name"), experimental("otel-test-cluster")));
   }
 
   private static SpanKind expectedSpanKind(String operation) {
