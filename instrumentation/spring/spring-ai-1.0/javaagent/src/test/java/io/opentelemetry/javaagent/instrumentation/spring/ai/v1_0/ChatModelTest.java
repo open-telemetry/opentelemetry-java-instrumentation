@@ -42,6 +42,7 @@ import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -57,6 +58,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.reactivestreams.Subscription;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.ToolResponseMessage;
@@ -70,6 +72,7 @@ import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.content.Media;
 import reactor.core.Disposable;
+import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
@@ -404,6 +407,88 @@ class ChatModelTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void streamOnSubscribeCanStartIndependentOperation(boolean hasParent) {
+    List<SpanContext> callbackContexts = new ArrayList<>();
+    TestChatModel independent = new TestChatModel(defaultOptions());
+    Context parent = hasParent ? testing.runWithSpan("parent", Context::current) : Context.root();
+
+    try (Scope ignored = parent.makeCurrent()) {
+      chatModel.stream(prompt())
+          .doOnSubscribe(
+              subscription -> {
+                callbackContexts.add(Span.current().getSpanContext());
+                independent.call(prompt());
+              })
+          .blockLast();
+    }
+
+    assertThat(callbackContexts).containsExactly(Span.fromContext(parent).getSpanContext());
+    if (hasParent) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent").hasNoParent(),
+                  span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0)),
+                  span ->
+                      span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
+    } else {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasNoParent()),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasNoParent()));
+    }
+    assertThat(Span.current().getSpanContext().isValid()).isFalse();
+  }
+
+  @Test
+  void delayedStreamRequestSuppressesProviderAndCancellationUsesChatContext() {
+    TestChatModel provider = new TestChatModel(defaultOptions());
+    List<SpanContext> cancellationContexts = new ArrayList<>();
+    List<SpanContext> callbackContexts = new ArrayList<>();
+    chatModel.setStreamPublisher(
+        Flux.<ChatResponse>generate(sink -> sink.next(provider.call(prompt())))
+            .doOnCancel(() -> cancellationContexts.add(Span.current().getSpanContext())));
+    Context parent = testing.runWithSpan("parent", Context::current);
+    BaseSubscriber<ChatResponse> subscriber =
+        new BaseSubscriber<ChatResponse>() {
+          @Override
+          protected void hookOnSubscribe(Subscription subscription) {
+            callbackContexts.add(Span.current().getSpanContext());
+          }
+
+          @Override
+          protected void hookOnNext(ChatResponse response) {
+            callbackContexts.add(Span.current().getSpanContext());
+          }
+        };
+
+    try (Scope ignored = parent.makeCurrent()) {
+      chatModel.stream(prompt()).subscribe(subscriber);
+    }
+    assertThat(provider.getLastSpanContext()).isNull();
+    subscriber.request(1);
+    assertThat(Span.current().getSpanContext().isValid()).isFalse();
+    subscriber.cancel();
+
+    SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
+    assertCurrentSpanContext(provider.getLastSpanContext(), spanContext);
+    assertThat(cancellationContexts)
+        .singleElement()
+        .satisfies(current -> assertCurrentSpanContext(current, spanContext));
+    assertThat(callbackContexts)
+        .containsExactly(
+            Span.fromContext(parent).getSpanContext(), Span.fromContext(parent).getSpanContext());
+    assertTraces("test", true);
+    assertMetrics();
+    assertMessageEvents(spanContext);
+    assertThat(Span.current().getSpanContext().isValid()).isFalse();
   }
 
   @Test

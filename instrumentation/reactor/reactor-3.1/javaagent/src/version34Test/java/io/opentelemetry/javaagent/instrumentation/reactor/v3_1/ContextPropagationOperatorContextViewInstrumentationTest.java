@@ -12,11 +12,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import reactor.util.context.ContextView;
 
 class ContextPropagationOperatorContextViewInstrumentationTest {
 
@@ -71,5 +73,43 @@ class ContextPropagationOperatorContextViewInstrumentationTest {
             reactor.util.context.Context.empty(), fallback);
 
     assertThat(context).isSameAs(fallback);
+  }
+
+  @Test
+  void noCaptureContextViewPreservesMissingContextFallback() {
+    ContextView reactorContext =
+        ContextPropagationOperator.withoutSubscriptionContextCapture(
+                reactor.util.context.Context.of("retained", "value"))
+            .readOnly();
+    ContextKey<String> key = ContextKey.named("fallback");
+    Context fallback = Context.root().with(key, "value");
+
+    assertThat(
+            ContextPropagationOperator.getOpenTelemetryContextFromContextView(reactorContext, null))
+        .isNull();
+    assertThat(
+            ContextPropagationOperator.getOpenTelemetryContextFromContextView(
+                reactorContext, fallback))
+        .isSameAs(fallback);
+    assertThat(reactorContext.<String>get("retained")).isEqualTo("value");
+  }
+
+  @Test
+  void storingExplicitContextOverridesNoCaptureContextView() {
+    ContextKey<String> key = ContextKey.named("explicit");
+    Context explicit = Context.root().with(key, "value");
+    ContextView reactorContext =
+        ContextPropagationOperator.storeOpenTelemetryContext(
+                ContextPropagationOperator.withoutSubscriptionContextCapture(
+                    reactor.util.context.Context.empty()),
+                explicit)
+            .readOnly();
+
+    Context result =
+        ContextPropagationOperator.getOpenTelemetryContextFromContextView(reactorContext, null);
+
+    assertThat(result).isNotNull();
+    assertThat(result.get(key)).isEqualTo("value");
+    assertThat(Span.fromContext(result).getSpanContext().isValid()).isFalse();
   }
 }

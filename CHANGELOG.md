@@ -382,6 +382,9 @@
 - Remove `setSanitizeQuery(boolean)` and `setAddOperationNameToSpanName(boolean)` from the GraphQL
   Java 12.0 and 20.0 library builders. Use `setQuerySanitizationEnabled(boolean)` and
   `setOperationNameInSpanNameEnabled(boolean)` instead.
+- In `opentelemetry-reactor-3.1`, `Context.root()` stored in Reactor context or passed to
+  `TracingSubscriber` now clears active context during signals. To preserve signal-time context
+  without subscription capture, replace storing root with `withoutSubscriptionContextCapture`.
 - In `AbstractHttpServerTest`, shared assertion methods are now final and indexed/concurrency
   helpers are private.
 - Remove the deprecated `DbConnectionPoolMetrics.create(Meter, String)` and

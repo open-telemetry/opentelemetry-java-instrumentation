@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
@@ -62,16 +62,16 @@ public class WebClientTracingFilter implements ExchangeFilterFunction {
       ClientRequest.Builder builder = ClientRequest.from(request);
       propagators.getTextMapPropagator().inject(context, builder, HttpHeadersSetter.INSTANCE);
 
-      try (Scope ignored = context.makeCurrent()) {
-        this.next
-            .exchange(builder.build())
-            .doOnCancel(
-                // no response and no error means that the request has been cancelled
-                () -> instrumenter.end(context, request, null, null))
-            .subscribe(
-                new TraceWebClientSubscriber(
-                    instrumenter, request, subscriber, context, parentContext));
-      }
+      ClientRequest injectedRequest = builder.build();
+      Mono<ClientResponse> response =
+          Mono.defer(() -> next.exchange(injectedRequest))
+              .doOnCancel(
+                  // no response and no error means that the request has been cancelled
+                  () -> instrumenter.end(context, request, null, null));
+      ContextPropagationOperator.runWithContext(response, context, parentContext)
+          .doOnNext(result -> instrumenter.end(context, request, result, null))
+          .doOnError(error -> instrumenter.end(context, request, null, error))
+          .subscribe(subscriber);
     }
   }
 }
