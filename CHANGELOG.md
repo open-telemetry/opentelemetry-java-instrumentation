@@ -350,7 +350,7 @@
   `HttpClientServicePeerAttributesExtractor`, `ServicePeerResolver`, and
   `expectedPeerService()` APIs; use `ServerServiceAttributesExtractor`,
   `HttpClientServerServiceAttributesExtractor`, and `ServiceMappingResolver` instead. Replace
-  `expectedServerServiceName()` with `TestServerServiceMapping.expectedMappedServiceName()` in
+  `expectedPeerService()` with `TestServerServiceMapping.expectedMappedServiceName()` in
   service-mapping tests.
 - In `opentelemetry-instrumentation-api-incubator`, custom `RpcAttributesGetter` implementations
   must implement `getRpcSystemName` and `getRpcMethod`, returning the RPC system name and fully
