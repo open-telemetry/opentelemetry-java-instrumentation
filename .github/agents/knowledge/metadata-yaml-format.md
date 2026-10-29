@@ -68,7 +68,7 @@ optional `example`). The `required` keys must be a subset of `properties`.
 property's `default`, then to a `<property-name>` placeholder. Set it on every property whose
 placeholder would not be self-explanatory.
 
-`server_service_mapping` — flat form is a `host=service` map, declarative form is a list of
+`server_service_mapping` — flat form is a `target=service_name` map, declarative form is a list of
 `{target, service_name, service_namespace}`:
 
 ```yaml
