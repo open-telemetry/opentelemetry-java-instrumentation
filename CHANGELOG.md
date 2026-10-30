@@ -6,6 +6,7 @@
 
 - HTTP header capture now uses exact-name collections via `setRequestCapturedHeaders(Collection)`
   and `setResponseCapturedHeaders(Collection)` instead of selector or deprecated capture setters.
+  Remove HTTP header-name enumeration methods.
   Rename `otel.instrumentation.http.{client,server}.capture-{request,response}-headers` to
   `otel.instrumentation.http.{client,server}.{request,response}-captured-headers`.
 - AWS Lambda invocation spans now replace alias suffixes in `cloud.resource_id` with the resolved

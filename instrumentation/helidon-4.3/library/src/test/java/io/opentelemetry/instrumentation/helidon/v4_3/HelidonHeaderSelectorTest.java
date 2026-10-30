@@ -24,6 +24,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
+import java.util.Collection;
 import org.junit.jupiter.api.Test;
 
 class HelidonHeaderSelectorTest {
@@ -43,7 +44,7 @@ class HelidonHeaderSelectorTest {
     ServerResponse response = mock(ServerResponse.class, RETURNS_DEEP_STUBS);
     when(response.headers()).thenReturn(responseHeaders);
 
-    java.util.Collection<String> headers = asList("x-test-request", "x-test-response");
+    Collection<String> headers = asList("x-test-request", "x-test-response");
     AttributesExtractor<ServerRequest, ServerResponse> extractor =
         HttpServerAttributesExtractor.builder(new HelidonAttributesGetter())
             .setRequestCapturedHeaders(headers)

@@ -6,7 +6,10 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -227,23 +230,23 @@ public final class OtelSpringProperties {
        * change at any time.
        */
       public static final class Client {
-        private List<String> captureRequestHeaders = emptyList();
-        private List<String> captureResponseHeaders = emptyList();
+        private Collection<String> requestCapturedHeaders = emptyList();
+        private Collection<String> responseCapturedHeaders = emptyList();
 
-        public List<String> getCaptureRequestHeaders() {
-          return captureRequestHeaders;
+        public Collection<String> getRequestCapturedHeaders() {
+          return requestCapturedHeaders;
         }
 
-        public void setCaptureRequestHeaders(List<String> captureRequestHeaders) {
-          this.captureRequestHeaders = captureRequestHeaders;
+        public void setRequestCapturedHeaders(Collection<String> requestCapturedHeaders) {
+          this.requestCapturedHeaders = unmodifiableList(new ArrayList<>(requestCapturedHeaders));
         }
 
-        public List<String> getCaptureResponseHeaders() {
-          return captureResponseHeaders;
+        public Collection<String> getResponseCapturedHeaders() {
+          return responseCapturedHeaders;
         }
 
-        public void setCaptureResponseHeaders(List<String> captureResponseHeaders) {
-          this.captureResponseHeaders = captureResponseHeaders;
+        public void setResponseCapturedHeaders(Collection<String> responseCapturedHeaders) {
+          this.responseCapturedHeaders = unmodifiableList(new ArrayList<>(responseCapturedHeaders));
         }
       }
 
@@ -252,23 +255,23 @@ public final class OtelSpringProperties {
        * change at any time.
        */
       public static final class Server {
-        private List<String> captureRequestHeaders = emptyList();
-        private List<String> captureResponseHeaders = emptyList();
+        private Collection<String> requestCapturedHeaders = emptyList();
+        private Collection<String> responseCapturedHeaders = emptyList();
 
-        public List<String> getCaptureRequestHeaders() {
-          return captureRequestHeaders;
+        public Collection<String> getRequestCapturedHeaders() {
+          return requestCapturedHeaders;
         }
 
-        public void setCaptureRequestHeaders(List<String> captureRequestHeaders) {
-          this.captureRequestHeaders = captureRequestHeaders;
+        public void setRequestCapturedHeaders(Collection<String> requestCapturedHeaders) {
+          this.requestCapturedHeaders = unmodifiableList(new ArrayList<>(requestCapturedHeaders));
         }
 
-        public List<String> getCaptureResponseHeaders() {
-          return captureResponseHeaders;
+        public Collection<String> getResponseCapturedHeaders() {
+          return responseCapturedHeaders;
         }
 
-        public void setCaptureResponseHeaders(List<String> captureResponseHeaders) {
-          this.captureResponseHeaders = captureResponseHeaders;
+        public void setResponseCapturedHeaders(Collection<String> responseCapturedHeaders) {
+          this.responseCapturedHeaders = unmodifiableList(new ArrayList<>(responseCapturedHeaders));
         }
       }
 
@@ -412,20 +415,20 @@ public final class OtelSpringProperties {
     return traces.getExporter();
   }
 
-  public List<String> getHttpClientCaptureRequestHeaders() {
-    return instrumentation.getHttp().getClient().getCaptureRequestHeaders();
+  public Collection<String> getHttpClientRequestCapturedHeaders() {
+    return instrumentation.getHttp().getClient().getRequestCapturedHeaders();
   }
 
-  public List<String> getHttpClientCaptureResponseHeaders() {
-    return instrumentation.getHttp().getClient().getCaptureResponseHeaders();
+  public Collection<String> getHttpClientResponseCapturedHeaders() {
+    return instrumentation.getHttp().getClient().getResponseCapturedHeaders();
   }
 
-  public List<String> getHttpServerCaptureRequestHeaders() {
-    return instrumentation.getHttp().getServer().getCaptureRequestHeaders();
+  public Collection<String> getHttpServerRequestCapturedHeaders() {
+    return instrumentation.getHttp().getServer().getRequestCapturedHeaders();
   }
 
-  public List<String> getHttpServerCaptureResponseHeaders() {
-    return instrumentation.getHttp().getServer().getCaptureResponseHeaders();
+  public Collection<String> getHttpServerResponseCapturedHeaders() {
+    return instrumentation.getHttp().getServer().getResponseCapturedHeaders();
   }
 
   public List<String> getHttpKnownMethods() {

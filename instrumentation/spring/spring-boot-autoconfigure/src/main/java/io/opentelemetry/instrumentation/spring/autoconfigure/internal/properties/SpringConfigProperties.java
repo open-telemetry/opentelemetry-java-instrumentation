@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.resources.internal.ResourceProviderPrope
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,16 +87,16 @@ public class SpringConfigProperties implements ConfigProperties {
     // instrumentations
     values.put(
         "otel.instrumentation.http.client.request-captured-headers",
-        otelSpringProperties.getHttpClientCaptureRequestHeaders());
+        new ArrayList<>(otelSpringProperties.getHttpClientRequestCapturedHeaders()));
     values.put(
         "otel.instrumentation.http.client.response-captured-headers",
-        otelSpringProperties.getHttpClientCaptureResponseHeaders());
+        new ArrayList<>(otelSpringProperties.getHttpClientResponseCapturedHeaders()));
     values.put(
         "otel.instrumentation.http.server.request-captured-headers",
-        otelSpringProperties.getHttpServerCaptureRequestHeaders());
+        new ArrayList<>(otelSpringProperties.getHttpServerRequestCapturedHeaders()));
     values.put(
         "otel.instrumentation.http.server.response-captured-headers",
-        otelSpringProperties.getHttpServerCaptureResponseHeaders());
+        new ArrayList<>(otelSpringProperties.getHttpServerResponseCapturedHeaders()));
     values.put(
         "otel.instrumentation.http.known-methods", otelSpringProperties.getHttpKnownMethods());
 

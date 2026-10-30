@@ -15,6 +15,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
+import java.util.Collection;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
@@ -39,7 +40,7 @@ class ApacheHttpClientHeaderSelectorTest {
     response.setHeader("X-Test-Response", "response-value");
     response.setHeader("Other-Response", "other-value");
 
-    java.util.Collection<String> headers = asList("x-test-request", "x-test-response");
+    Collection<String> headers = asList("x-test-request", "x-test-response");
     AttributesExtractor<ApacheHttpClientRequest, HttpResponse> extractor =
         HttpClientAttributesExtractor.builder(new ApacheHttpClientHttpAttributesGetter())
             .setRequestCapturedHeaders(headers)
