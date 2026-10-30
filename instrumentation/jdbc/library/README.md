@@ -30,15 +30,14 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-jdbc:OPENTELEMETR
 
 ### Usage
 
-There are two possible ways to activate the OpenTelemetry JDBC instrumentation. The first way is more preferable for
-DI frameworks which uses connection pools, as it wraps a `DataSource` with a special OpenTelemetry wrapper. The second
-one requires to change the connection URL and switch to use a special OpenTelemetry driver.
+There are two possible ways to activate the OpenTelemetry JDBC instrumentation. Instrumenting a `DataSource` is
+preferable for DI frameworks which use connection pools. The other way requires changing the connection URL and using
+a special OpenTelemetry driver.
 
 #### Datasource way
 
-If your application uses a DataSource, simply wrap your current DataSource object with `OpenTelemetryDataSource`.
-`OpenTelemetryDataSource` has a constructor method that accepts the `DataSource` to wrap. This is by far the simplest
-method especially if you use a dependency injection (DI) frameworks such as
+If your application uses a `DataSource`, instrument it with `JdbcTelemetry`. This works well with dependency injection
+(DI) frameworks such as
 [Spring Framework](https://spring.io/projects/spring-framework), [Micronaut](https://micronaut.io),
 [Quarkus](https://quarkus.io), or [Guice](https://github.com/google/guice).
 
@@ -57,7 +56,7 @@ public class DataSourceConfig {
     dataSource.setUrl("jdbc:postgresql://127.0.0.1:5432/example");
     dataSource.setUsername("postgres");
     dataSource.setPassword("root");
-    return JdbcTelemetry.create(openTelemetry).wrap(dataSource);
+    return JdbcTelemetry.create(openTelemetry).instrument(dataSource);
   }
 
 }

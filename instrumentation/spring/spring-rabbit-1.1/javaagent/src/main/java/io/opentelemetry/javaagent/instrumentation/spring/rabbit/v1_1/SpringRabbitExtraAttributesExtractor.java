@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_1;
 
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -23,10 +23,10 @@ class SpringRabbitExtraAttributesExtractor
     Message message = request.getMessage();
     String routingKey = message.getMessageProperties().getReceivedRoutingKey();
     if (routingKey != null && !routingKey.isEmpty()) {
-      attributes.put(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
+      attributes.put(stringKey("rabbitmq.destination.routing_key"), routingKey);
     }
     attributes.put(
-        MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, message.getMessageProperties().getDeliveryTag());
+        longKey("rabbitmq.message.delivery_tag"), message.getMessageProperties().getDeliveryTag());
   }
 
   @Override

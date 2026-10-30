@@ -4,6 +4,11 @@
 
 ### ⚠️ Breaking changes
 
+- Rename `messaging.system` to `messaging.system.name` (`aws_sqs` becomes `aws.sqs`) and adopt
+  the system-specific attribute renames from
+  [semantic-conventions #4250](https://github.com/open-telemetry/semantic-conventions/pull/4250).
+  Experimental messaging attributes also lose the `messaging.` prefix (for example,
+  `messaging.kafka.bootstrap.servers` becomes `kafka.bootstrap.servers`).
 - AWS Lambda invocation spans now replace alias suffixes in `cloud.resource_id` with the resolved
   function version when available.
 - AWS Lambda spans now use `faas.invocation.id` instead of `faas.invocation_id` for invocation IDs.
@@ -357,7 +362,10 @@
   `io.opentelemetry.instrumentation.resources.HostIdResourceProvider` with
   `io.opentelemetry.instrumentation.resources.HostResourceProvider`. Disabling
   the consolidated provider also disables host name and architecture collection.
-  Host ID detection is now enabled by default in the Java agent and Spring Boot starter. Remove `otel.resource.providers.host-id.enabled`, which is no longer supported.
+  Host ID detection is now enabled by default in the Java agent and Spring Boot starter.
+  Remove `otel.resource.providers.host-id.enabled`, which is no longer supported.
+- Rename public library instrumentation entrypoints from `wrap`/`wrapXxx` to `instrument`
+  overloads, retaining distinct `instrumentXxx` names where required.
 - In `opentelemetry-instrumentation-api-incubator`, custom `RpcAttributesGetter` implementations
   must implement `getRpcSystemName` and `getRpcMethod`, returning the RPC system name and fully
   qualified method name such as `my.Service/Method`, respectively. The legacy `getSystem`,

@@ -5966,6 +5966,10 @@ libraries:
         type: STRING
       - name: http.response.status_code
         type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
       - name: network.protocol.version
         type: STRING
       - name: peer.service
@@ -5989,6 +5993,10 @@ libraries:
       - name: http.request.method_original
         type: STRING
       - name: http.response.status_code
+        type: LONG
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
         type: LONG
       - name: network.protocol.version
         type: STRING
@@ -6466,6 +6474,8 @@ libraries:
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: error.type
+        type: STRING
       - name: rpc.method
         type: STRING
       - name: rpc.status_code
@@ -6721,7 +6731,7 @@ libraries:
 - name: aws-lambda-core-1.0
   display_name: AWS Lambda Core
   description: |
-    Provides lightweight instrumentation of the Lambda core library, supporting all versions. It generates FaaS server spans with the `faas.invocation_id` attribute. Use this package if you only use `RequestStreamHandler` or know you don't use any event classes from `aws-lambda-java-events`. This also includes when you are using `aws-serverless-java-container` to run e.g., a Spring Boot application on Lambda.
+    Provides lightweight instrumentation of the Lambda core library, supporting all versions. It generates FaaS server spans with the `faas.invocation.id` attribute. Use this package if you only use `RequestStreamHandler` or know you don't use any event classes from `aws-lambda-java-events`. This also includes when you are using `aws-serverless-java-container` to run e.g., a Spring Boot application on Lambda.
     For custom wrappers when using library instrumentation, you can configure the `OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER` environment variable to contain your lambda handler method (in the format `package.ClassName::methodName`) and use one of wrappers as your lambda `Handler`.
   semantic_conventions:
   - FAAS_SERVER_SPANS
@@ -6741,13 +6751,13 @@ libraries:
     spans:
     - span_kind: SERVER
       attributes:
-      - name: faas.invocation_id
+      - name: faas.invocation.id
         type: STRING
   - when: otel.semconv.exception.signal.preview=logs
     spans:
     - span_kind: SERVER
       attributes:
-      - name: faas.invocation_id
+      - name: faas.invocation.id
         type: STRING
     event_refs:
     - faas.invocation.exception-55d44725
@@ -6791,7 +6801,7 @@ libraries:
       attributes:
       - name: error.type
         type: STRING
-      - name: faas.invocation_id
+      - name: faas.invocation.id
         type: STRING
       - name: faas.trigger
         type: STRING
@@ -6856,7 +6866,7 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
-      - name: faas.invocation_id
+      - name: faas.invocation.id
         type: STRING
       - name: faas.trigger
         type: STRING
@@ -10241,6 +10251,8 @@ libraries:
         type: STRING
       - name: rpc.method
         type: STRING
+      - name: rpc.method_original
+        type: STRING
       - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
@@ -10288,6 +10300,8 @@ libraries:
         type: STRING
       - name: rpc.method
         type: STRING
+      - name: rpc.method_original
+        type: STRING
       - name: rpc.status_code
         type: STRING
       - name: rpc.system.name
@@ -10326,6 +10340,8 @@ libraries:
       - name: network.type
         type: STRING
       - name: rpc.method
+        type: STRING
+      - name: rpc.method_original
         type: STRING
       - name: rpc.status_code
         type: STRING

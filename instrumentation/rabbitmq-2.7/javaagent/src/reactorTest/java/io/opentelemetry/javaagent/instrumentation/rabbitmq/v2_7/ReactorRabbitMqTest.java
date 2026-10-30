@@ -11,7 +11,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.RABBITMQ;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -31,6 +30,7 @@ import reactor.rabbitmq.SenderOptions;
     disabledReason =
         "reactor-rabbitmq 1.5.6 (and earlier) still calls `void useNio()` which was removed in 5.27.0")
 class ReactorRabbitMqTest extends AbstractRabbitMqTest {
+
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -48,17 +48,15 @@ class ReactorRabbitMqTest extends AbstractRabbitMqTest {
                     span.hasName("exchange.declare")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, RABBITMQ),
+                            equalTo(stringKey("messaging.system.name"), RABBITMQ),
                             equalTo(
                                 stringKey("rabbitmq.command"), experimental("exchange.declare")),
                             satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(rabbitMqIp, null)),
                             satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
                             satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()),
+                            equalTo(stringKey("rabbitmq.vhost.name"), experimental("otel-test")),
                             equalTo(
-                                stringKey("messaging.rabbitmq.vhost.name"),
-                                experimental("otel-test")),
-                            equalTo(
-                                stringKey("messaging.rabbitmq.cluster.name"),
+                                stringKey("rabbitmq.cluster.name"),
                                 experimental("otel-test-cluster")))));
   }
 }

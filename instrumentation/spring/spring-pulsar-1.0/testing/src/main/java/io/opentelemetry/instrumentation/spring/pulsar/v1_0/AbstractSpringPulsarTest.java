@@ -18,7 +18,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -129,7 +128,8 @@ public abstract class AbstractSpringPulsarTest {
                                             .hasSumGreaterThan(0.0)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "pulsar"),
                                                 equalTo(
                                                     MESSAGING_DESTINATION_NAME, OTEL_TOPIC))))));
 
@@ -151,7 +151,8 @@ public abstract class AbstractSpringPulsarTest {
                                             .hasValue(1)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "pulsar"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
                                                 equalTo(
                                                     MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
@@ -173,21 +174,22 @@ public abstract class AbstractSpringPulsarTest {
                                             .hasValue(1)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "pulsar"),
                                                 equalTo(
                                                     MESSAGING_DESTINATION_NAME, OTEL_TOPIC))))));
   }
 
   protected List<AttributeAssertion> publishAttributes() {
     return asList(
-        equalTo(MESSAGING_SYSTEM, "pulsar"),
+        equalTo(stringKey("messaging.system.name"), "pulsar"),
         equalTo(MESSAGING_OPERATION_NAME, "send"),
         equalTo(MESSAGING_OPERATION_TYPE, "send"),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
         equalTo(SERVER_ADDRESS, brokerHost),
         equalTo(SERVER_PORT, brokerPort),
-        equalTo(stringKey("messaging.pulsar.message.type"), experimental("normal")));
+        equalTo(stringKey("pulsar.message.type"), experimental("normal")));
   }
 
   private static <T> T experimental(T value) {
@@ -196,7 +198,7 @@ public abstract class AbstractSpringPulsarTest {
 
   protected List<AttributeAssertion> processAttributes() {
     return asList(
-        equalTo(MESSAGING_SYSTEM, "pulsar"),
+        equalTo(stringKey("messaging.system.name"), "pulsar"),
         equalTo(MESSAGING_OPERATION_NAME, "process"),
         equalTo(MESSAGING_OPERATION_TYPE, "process"),
         equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
@@ -206,7 +208,7 @@ public abstract class AbstractSpringPulsarTest {
 
   protected List<AttributeAssertion> receiveAttributes() {
     return asList(
-        equalTo(MESSAGING_SYSTEM, "pulsar"),
+        equalTo(stringKey("messaging.system.name"), "pulsar"),
         equalTo(MESSAGING_OPERATION_NAME, "receive"),
         equalTo(MESSAGING_OPERATION_TYPE, "receive"),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),

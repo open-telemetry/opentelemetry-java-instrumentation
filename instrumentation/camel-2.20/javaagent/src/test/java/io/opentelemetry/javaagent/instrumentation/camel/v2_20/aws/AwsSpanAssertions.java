@@ -22,8 +22,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
@@ -116,7 +114,8 @@ class AwsSpanAssertions {
         || deleteMessage) {
       attributeAssertions.addAll(
           asList(
-              equalTo(MESSAGING_DESTINATION_NAME, queueName), equalTo(MESSAGING_SYSTEM, AWS_SQS)));
+              equalTo(MESSAGING_DESTINATION_NAME, queueName),
+              equalTo(stringKey("messaging.system.name"), "aws.sqs")));
       if (deleteMessage) {
         attributeAssertions.add(equalTo(MESSAGING_OPERATION_NAME, "delete"));
         attributeAssertions.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));

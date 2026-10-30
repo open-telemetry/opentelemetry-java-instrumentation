@@ -20,12 +20,12 @@ final class KafkaConsumerAttributesExtractor
       AttributeKey.stringKey("messaging.destination.partition.id");
   private static final AttributeKey<String> MESSAGING_CONSUMER_GROUP_NAME =
       AttributeKey.stringKey("messaging.consumer.group.name");
-  private static final AttributeKey<String> MESSAGING_KAFKA_MESSAGE_KEY =
-      AttributeKey.stringKey("messaging.kafka.message.key");
-  private static final AttributeKey<Long> MESSAGING_KAFKA_OFFSET =
-      AttributeKey.longKey("messaging.kafka.offset");
-  private static final AttributeKey<Boolean> MESSAGING_KAFKA_MESSAGE_TOMBSTONE =
-      AttributeKey.booleanKey("messaging.kafka.message.tombstone");
+  // copied from KafkaIncubatingAttributes
+  private static final AttributeKey<String> KAFKA_MESSAGE_KEY =
+      AttributeKey.stringKey("kafka.message.key");
+  private static final AttributeKey<Long> KAFKA_OFFSET = AttributeKey.longKey("kafka.offset");
+  private static final AttributeKey<Boolean> KAFKA_MESSAGE_TOMBSTONE =
+      AttributeKey.booleanKey("kafka.message.tombstone");
 
   @Override
   public void onStart(
@@ -34,10 +34,10 @@ final class KafkaConsumerAttributesExtractor
     ConsumerRecord<?, ?> record = request.getRecord();
 
     attributes.put(MESSAGING_DESTINATION_PARTITION_ID, String.valueOf(record.partition()));
-    attributes.put(MESSAGING_KAFKA_OFFSET, record.offset());
-    attributes.put(MESSAGING_KAFKA_MESSAGE_KEY, KafkaUtil.serializeKey(record.key()));
+    attributes.put(KAFKA_OFFSET, record.offset());
+    attributes.put(KAFKA_MESSAGE_KEY, KafkaUtil.serializeKey(record.key()));
     if (record.value() == null) {
-      attributes.put(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
+      attributes.put(KAFKA_MESSAGE_TOMBSTONE, true);
     }
 
     attributes.put(MESSAGING_CONSUMER_GROUP_NAME, request.getConsumerGroup());

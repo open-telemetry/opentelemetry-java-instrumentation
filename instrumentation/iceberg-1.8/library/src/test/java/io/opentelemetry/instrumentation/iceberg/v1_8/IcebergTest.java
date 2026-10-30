@@ -24,6 +24,6 @@ class IcebergTest extends AbstractIcebergTest {
   protected TableScan configure(TableScan tableScan) {
     OpenTelemetry openTelemetry = testing.getOpenTelemetry();
     IcebergTelemetry icebergTelemetry = IcebergTelemetry.create(openTelemetry);
-    return icebergTelemetry.wrapScan(tableScan);
+    return icebergTelemetry.instrument(tableScan);
   }
 }

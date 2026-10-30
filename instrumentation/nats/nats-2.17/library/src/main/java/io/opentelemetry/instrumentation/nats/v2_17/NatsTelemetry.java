@@ -49,7 +49,7 @@ public final class NatsTelemetry {
    * {@link #createConnection(Options.Builder, ConnectionFactory)} or {@link
    * #createConnection(Options, ConnectionFactory)} instead.
    */
-  public Connection wrap(Connection connection) {
+  public Connection instrument(Connection connection) {
     return OpenTelemetryConnection.wrap(
         connection,
         publishInstrumenter,
@@ -61,9 +61,9 @@ public final class NatsTelemetry {
   /**
    * Returns a {@link Options.Builder} configured with telemetry instrumentation.
    *
-   * <p>This method should be used together with {@link #wrap(Connection)}. Consider using {@link
-   * #createConnection(Options.Builder, ConnectionFactory)} or {@link #createConnection(Options,
-   * ConnectionFactory)} instead.
+   * <p>This method should be used together with {@link #instrument(Connection)}. Consider using
+   * {@link #createConnection(Options.Builder, ConnectionFactory)} or {@link
+   * #createConnection(Options, ConnectionFactory)} instead.
    */
   public Options.Builder configure(Options.Builder options) {
     DispatcherFactory factory = options.build().getDispatcherFactory();
@@ -79,14 +79,14 @@ public final class NatsTelemetry {
   /** Returns a {@link Connection} with telemetry instrumentation. */
   public Connection createConnection(Options options, ConnectionFactory<Options> connectionFactory)
       throws IOException, InterruptedException {
-    return wrap(connectionFactory.create(configure(new Options.Builder(options)).build()));
+    return instrument(connectionFactory.create(configure(new Options.Builder(options)).build()));
   }
 
   /** Returns a {@link Connection} with telemetry instrumentation. */
   public Connection createConnection(
       Options.Builder builder, ConnectionFactory<Options.Builder> connectionFactory)
       throws IOException, InterruptedException {
-    return wrap(connectionFactory.create(configure(builder)));
+    return instrument(connectionFactory.create(configure(builder)));
   }
 
   public interface ConnectionFactory<T> {
