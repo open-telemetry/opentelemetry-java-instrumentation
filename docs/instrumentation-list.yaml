@@ -1348,6 +1348,11 @@ definitions:
       default: ''
       examples:
       - jvm.memory.*,jvm.thread.count
+    otel.resource.providers.host-id.enabled:
+      name: otel.resource.providers.host-id.enabled
+      description: Enables host ID resource detection in the Java agent.
+      type: boolean
+      default: false
     sanitization.url.sensitive-query-parameters:
       name: otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters
       declarative_name: general.sanitization.url.sensitive_query_parameters
@@ -17565,6 +17570,7 @@ libraries:
   has_standalone_library: true
   configuration_refs:
   - otel.instrumentation.resources.experimental.process-command-attributes.enabled
+  - otel.resource.providers.host-id.enabled
 - name: restlet-1.1
   display_name: Restlet
   description: This instrumentation enables HTTP server spans and HTTP server metrics
