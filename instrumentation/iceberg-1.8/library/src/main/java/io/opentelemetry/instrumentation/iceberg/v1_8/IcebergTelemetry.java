@@ -24,18 +24,17 @@ public final class IcebergTelemetry {
   }
 
   /**
-   * Creates a new {@link Scan} instance based on an existing {@link Scan} instance. The new
-   * instance is associated with a custom {@link org.apache.iceberg.metrics.MetricsReporter} that
-   * reports scan metrics using the configured {@link OpenTelemetry} instance.
+   * Returns an instrumented {@link Scan} that reports scan metrics using the configured {@link
+   * OpenTelemetry} instance.
    *
    * @param <T1> the child class, returned by method chaining, e.g., {@link
    *     Scan#project(org.apache.iceberg.Schema)}
    * @param <T2> the type of tasks produced by this scan
    * @param <T3> the type of task groups produced by this scan
-   * @param scan the original scan instance that will be instrumented
-   * @return an instrumented {@link Scan} instance based on the provided instance
+   * @param scan the scan to instrument
+   * @return an instrumented {@link Scan}
    */
-  public <T1, T2 extends ScanTask, T3 extends ScanTaskGroup<T2>> T1 wrapScan(
+  public <T1, T2 extends ScanTask, T3 extends ScanTaskGroup<T2>> T1 instrument(
       Scan<T1, T2, T3> scan) {
     return scan.metricsReporter(new IcebergMetricsReporter(openTelemetry));
   }

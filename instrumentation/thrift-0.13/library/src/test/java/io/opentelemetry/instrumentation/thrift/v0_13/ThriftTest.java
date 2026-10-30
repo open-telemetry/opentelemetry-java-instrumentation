@@ -37,37 +37,37 @@ class ThriftTest extends AbstractThriftTest {
 
   @Override
   protected TProcessor configure(TProcessor processor, String serviceName) {
-    return telemetry.wrapServerProcessor(processor, serviceName);
+    return telemetry.instrument(processor, serviceName);
   }
 
   @Override
   protected TProtocol configure(TProtocol protocol) {
-    return telemetry.wrapClientProtocol(protocol);
+    return telemetry.instrument(protocol);
   }
 
   @Override
   protected TProtocolFactory configure(TProtocolFactory protocolFactory) {
-    return telemetry.wrapClientProtocolFactory(protocolFactory);
+    return telemetry.instrumentClientProtocolFactory(protocolFactory);
   }
 
   @Override
   protected CustomService.AsyncIface configure(CustomService.AsyncClient asyncClient) {
-    return telemetry.wrapAsyncClient(asyncClient, CustomService.AsyncIface.class);
+    return telemetry.instrument(asyncClient, CustomService.AsyncIface.class);
   }
 
   @Override
   protected CustomService.Iface configure(CustomService.Client client) {
-    return telemetry.wrapClient(client, CustomService.Iface.class);
+    return telemetry.instrument(client, CustomService.Iface.class);
   }
 
   @Override
   protected TProtocolFactory configureServerInProtocolFactory(TProtocolFactory protocolFactory) {
-    return telemetry.wrapServerInProtocolFactory(protocolFactory);
+    return telemetry.instrumentServerInProtocolFactory(protocolFactory);
   }
 
   @Override
   protected TProtocolFactory configureServerOutProtocolFactory(TProtocolFactory protocolFactory) {
-    return telemetry.wrapServerOutProtocolFactory(protocolFactory);
+    return telemetry.instrumentServerOutProtocolFactory(protocolFactory);
   }
 
   @Override

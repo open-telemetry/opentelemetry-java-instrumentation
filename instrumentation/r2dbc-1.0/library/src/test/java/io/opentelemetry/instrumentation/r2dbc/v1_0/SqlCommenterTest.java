@@ -103,7 +103,7 @@ class SqlCommenterTest {
     ConnectionFactory connectionFactory =
         builder
             .build()
-            .wrapConnectionFactory(
+            .instrument(
                 ProxyConnectionFactory.builder(original)
                     .listener(
                         new ProxyExecutionListener() {
