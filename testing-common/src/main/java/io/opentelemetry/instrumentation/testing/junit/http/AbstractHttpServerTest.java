@@ -47,7 +47,9 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static java.nio.charset.StandardCharsets.US_ASCII;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.unmodifiableList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
@@ -62,7 +64,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
@@ -132,12 +133,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   public static final String TEST_REQUEST_HEADER = "X-Test-Request";
   public static final String TEST_RESPONSE_HEADER = "X-Test-Response";
 
-  /**
-   * Header selector that the shared server tests configure. The wildcard pattern makes the tests
-   * exercise capturing headers by name enumeration.
-   */
-  public static final IncludeExclude TEST_HEADERS =
-      IncludeExclude.builder().setIncluded("X-Test-*").build();
+  public static final List<String> TEST_HEADERS =
+      unmodifiableList(asList(TEST_REQUEST_HEADER, TEST_RESPONSE_HEADER));
 
   private final HttpServerTestOptions options = new HttpServerTestOptions();
 

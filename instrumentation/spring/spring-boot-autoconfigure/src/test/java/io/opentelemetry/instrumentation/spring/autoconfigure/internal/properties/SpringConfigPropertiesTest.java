@@ -117,10 +117,12 @@ class SpringConfigPropertiesTest {
         Arguments.of("otel.logs.exporter", singletonList("console")),
         Arguments.of("otel.metrics.exporter", singletonList("console")),
         Arguments.of("otel.traces.exporter", singletonList("console")),
-        Arguments.of("otel.instrumentation.http.client.capture-request-headers", asList("a", "b")),
-        Arguments.of("otel.instrumentation.http.client.capture-response-headers", asList("a", "b")),
-        Arguments.of("otel.instrumentation.http.server.capture-request-headers", asList("a", "b")),
-        Arguments.of("otel.instrumentation.http.server.capture-response-headers", asList("a", "b")),
+        Arguments.of("otel.instrumentation.http.client.request-captured-headers", asList("a", "b")),
+        Arguments.of(
+            "otel.instrumentation.http.client.response-captured-headers", asList("a", "b")),
+        Arguments.of("otel.instrumentation.http.server.request-captured-headers", asList("a", "b")),
+        Arguments.of(
+            "otel.instrumentation.http.server.response-captured-headers", asList("a", "b")),
         Arguments.of("otel.instrumentation.http.known-methods", asList("a", "b")));
   }
 

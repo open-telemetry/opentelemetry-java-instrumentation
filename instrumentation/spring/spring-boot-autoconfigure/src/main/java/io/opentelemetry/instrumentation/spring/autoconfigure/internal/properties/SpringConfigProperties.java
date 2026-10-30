@@ -85,16 +85,16 @@ public class SpringConfigProperties implements ConfigProperties {
 
     // instrumentations
     values.put(
-        "otel.instrumentation.http.client.capture-request-headers",
+        "otel.instrumentation.http.client.request-captured-headers",
         otelSpringProperties.getHttpClientCaptureRequestHeaders());
     values.put(
-        "otel.instrumentation.http.client.capture-response-headers",
+        "otel.instrumentation.http.client.response-captured-headers",
         otelSpringProperties.getHttpClientCaptureResponseHeaders());
     values.put(
-        "otel.instrumentation.http.server.capture-request-headers",
+        "otel.instrumentation.http.server.request-captured-headers",
         otelSpringProperties.getHttpServerCaptureRequestHeaders());
     values.put(
-        "otel.instrumentation.http.server.capture-response-headers",
+        "otel.instrumentation.http.server.response-captured-headers",
         otelSpringProperties.getHttpServerCaptureResponseHeaders());
     values.put(
         "otel.instrumentation.http.known-methods", otelSpringProperties.getHttpKnownMethods());

@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -140,18 +141,21 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
         .containsExactly("jvm.*");
   }
 
-  @Test
-  void testGeneralHttpListMapping() {
+  @ParameterizedTest
+  @CsvSource({"client,request", "client,response", "server,request", "server,response"})
+  void testGeneralHttpListMapping(String role, String direction) {
     DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.http.client.capture-request-headers", "header1,header2");
+        createConfig(
+            "otel.instrumentation.http." + role + "." + direction + "-captured-headers",
+            "X-Header,header2,*,Test-?");
 
     assertThat(
             config
                 .getStructured("general")
                 .getStructured("http")
-                .getStructured("client")
-                .getScalarList("request_captured_headers", String.class))
-        .containsExactly("header1", "header2");
+                .getStructured(role)
+                .getScalarList(direction + "_captured_headers", String.class))
+        .containsExactly("X-Header", "header2", "*", "Test-?");
   }
 
   @Test
@@ -159,7 +163,7 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
     Map<String, String> properties = new HashMap<>();
     properties.put("component.general.http.client.request-captured-headers", "component-header");
     properties.put(
-        "otel.instrumentation.http.client.capture-request-headers", "instrumentation-header");
+        "otel.instrumentation.http.client.request-captured-headers", "instrumentation-header");
     properties.put("component.java.jmx.discovery.delay", "42");
     properties.put("otel.jmx.discovery.delay", "30s");
     properties.put(

@@ -21,8 +21,8 @@ class ArmeriaHttpClientTest extends AbstractArmeriaHttpClientTest {
   protected WebClientBuilder configureClient(WebClientBuilder clientBuilder) {
     return clientBuilder.decorator(
         ArmeriaClientTelemetry.builder(testing.getOpenTelemetry())
-            .setRequestHeaders(AbstractHttpClientTest.TEST_HEADERS)
-            .setResponseHeaders(AbstractHttpClientTest.TEST_HEADERS)
+            .setRequestCapturedHeaders(AbstractHttpClientTest.TEST_HEADERS)
+            .setResponseCapturedHeaders(AbstractHttpClientTest.TEST_HEADERS)
             .build()
             .createDecorator());
   }

@@ -6,11 +6,11 @@
 package io.opentelemetry.instrumentation.jetty.httpclient.v12_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sun.net.httpserver.HttpServer;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.net.InetSocketAddress;
@@ -46,26 +46,12 @@ class JettyHttpClient12HeaderSelectorTest {
   }
 
   @Test
-  void capturesHeadersMatchingSelectorPatterns() throws Exception {
-    HttpClient client =
-        createClient(
-            JettyClientTelemetry.builder(testing.getOpenTelemetry())
-                .setRequestHeaders(IncludeExclude.builder().setIncluded("x-test-*").build())
-                .setResponseHeaders(IncludeExclude.builder().setExcluded("x-ignored-*").build()));
-
-    sendRequest(client);
-
-    assertCapturedHeaders();
-  }
-
-  @Test
   void capturesHeadersConfiguredByName() throws Exception {
     HttpClient client =
         createClient(
             JettyClientTelemetry.builder(testing.getOpenTelemetry())
-                .setRequestHeaders(IncludeExclude.builder().setIncluded("x-test-request").build())
-                .setResponseHeaders(
-                    IncludeExclude.builder().setIncluded("x-test-response").build()));
+                .setRequestCapturedHeaders(asList("x-test-request"))
+                .setResponseCapturedHeaders(asList("x-test-response")));
 
     sendRequest(client);
 

@@ -29,8 +29,8 @@ class KtorHttpServerTest : AbstractKtorHttpServerTest() {
     application.apply {
       install(KtorServerTelemetry) {
         openTelemetry(testing.openTelemetry)
-        requestHeaders(AbstractHttpServerTest.TEST_HEADERS)
-        responseHeaders(AbstractHttpServerTest.TEST_HEADERS)
+        setRequestCapturedHeaders(AbstractHttpServerTest.TEST_HEADERS)
+        setResponseCapturedHeaders(AbstractHttpServerTest.TEST_HEADERS)
       }
 
       install(createRouteScopedPlugin("Failure handler, that can mask exceptions if exception handling is in the wrong phase", ServerEndpoint.EXCEPTION.path, {}) {

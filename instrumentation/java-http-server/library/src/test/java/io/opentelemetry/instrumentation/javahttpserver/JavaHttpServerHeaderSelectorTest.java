@@ -7,13 +7,13 @@ package io.opentelemetry.instrumentation.javahttpserver;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sun.net.httpserver.Filter;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.io.IOException;
@@ -35,47 +35,11 @@ class JavaHttpServerHeaderSelectorTest {
   private HttpServer server;
 
   @Test
-  void capturesHeadersMatchingSelectorPatterns() throws Exception {
-    start(
-        JavaHttpServerTelemetry.builder(testing.getOpenTelemetry())
-            .setRequestHeaders(IncludeExclude.builder().setIncluded("x-test-*").build())
-            .setResponseHeaders(IncludeExclude.builder().setExcluded("x-secret-*").build())
-            .build()
-            .createFilter());
-
-    send();
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasAttributesSatisfying(
-                        attributes -> {
-                          // matched by a wildcard include pattern, which requires enumerating the
-                          // request header names
-                          assertThat(headerValues(attributes, "http.request.header.x-test-request"))
-                              .containsExactly("request-value");
-                          assertThat(
-                                  headerValues(attributes, "http.request.header.x-other-request"))
-                              .isNull();
-                          // matched by an exclude-only selector, which requires enumerating the
-                          // response header names
-                          assertThat(
-                                  headerValues(attributes, "http.response.header.x-test-response"))
-                              .containsExactly("response-value");
-                          assertThat(
-                                  headerValues(
-                                      attributes, "http.response.header.x-secret-response"))
-                              .isNull();
-                        })));
-  }
-
-  @Test
   void capturesHeadersConfiguredByName() throws Exception {
     start(
         JavaHttpServerTelemetry.builder(testing.getOpenTelemetry())
-            .setRequestHeaders(IncludeExclude.builder().setIncluded("X-Test-Request").build())
-            .setResponseHeaders(IncludeExclude.builder().setIncluded("X-Test-Response").build())
+            .setRequestCapturedHeaders(asList("X-Test-Request"))
+            .setResponseCapturedHeaders(asList("X-Test-Response"))
             .build()
             .createFilter());
 

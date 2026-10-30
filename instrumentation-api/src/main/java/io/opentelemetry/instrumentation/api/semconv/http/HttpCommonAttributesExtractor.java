@@ -17,7 +17,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -66,11 +65,7 @@ abstract class HttpCommonAttributesExtractor<
     if (capturedRequestHeaders.isEmpty()) {
       return;
     }
-    Collection<String> names =
-        capturedRequestHeaders.enumerateNames()
-            ? capturedRequestHeaders.matchingNames(getter.getHttpRequestHeaderNames(request))
-            : capturedRequestHeaders.exactNames();
-    for (String name : names) {
+    for (String name : capturedRequestHeaders.exactNames()) {
       List<String> values = getter.getHttpRequestHeader(request, name);
       if (!values.isEmpty()) {
         attributes.put(capturedRequestHeaders.attributeKey(name), values);
@@ -112,12 +107,7 @@ abstract class HttpCommonAttributesExtractor<
     if (capturedResponseHeaders.isEmpty()) {
       return;
     }
-    Collection<String> names =
-        capturedResponseHeaders.enumerateNames()
-            ? capturedResponseHeaders.matchingNames(
-                getter.getHttpResponseHeaderNames(request, response))
-            : capturedResponseHeaders.exactNames();
-    for (String name : names) {
+    for (String name : capturedResponseHeaders.exactNames()) {
       List<String> values = getter.getHttpResponseHeader(request, response, name);
       if (!values.isEmpty()) {
         attributes.put(capturedResponseHeaders.attributeKey(name), values);

@@ -6,7 +6,7 @@ semantic_conventions:
 library_link: https://docs.oracle.com/en/java/javase/21/docs/api/jdk.httpserver/module-summary.html
 configurations:
   - ref: http.known-methods
-  - ref: http.server.capture-request-headers
-  - ref: http.server.capture-response-headers
+  - ref: http.server.request-captured-headers
+  - ref: http.server.response-captured-headers
   - ref: common.peer-service-mapping
   - ref: http.server.emit-experimental-telemetry

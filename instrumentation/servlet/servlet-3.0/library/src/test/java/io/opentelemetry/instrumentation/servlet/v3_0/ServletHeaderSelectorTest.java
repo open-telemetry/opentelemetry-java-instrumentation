@@ -19,7 +19,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletHttpAttributesGetter;
@@ -49,17 +48,12 @@ class ServletHeaderSelectorTest {
       extractor =
           HttpServerAttributesExtractor.builder(
                   new ServletHttpAttributesGetter<>(Servlet3Accessor.INSTANCE))
-              .setRequestHeaders(
-                  IncludeExclude.builder()
-                      .setIncluded(singletonList("x-*"))
-                      .setExcluded(singletonList("x-secret"))
-                      .build())
-              .setResponseHeaders(
-                  IncludeExclude.builder().setExcluded(singletonList("x-secret")).build())
+              .setRequestCapturedHeaders(asList("X-Test-Request"))
+              .setResponseCapturedHeaders(asList("X-Test-Response"))
               .build();
 
   @Test
-  void capturesHeadersMatchingSelectorPatterns() {
+  void capturesExactHeaderNames() {
     HttpServletRequest request = mock(HttpServletRequest.class);
     when(request.getMethod()).thenReturn("GET");
     when(request.getHeaderNames()).thenReturn(enumeration(asList("X-Test-Request", "X-Secret")));

@@ -22,8 +22,8 @@ class JavaHttpClientTest {
     @Override
     protected HttpClient configureHttpClient(HttpClient httpClient) {
       return JavaHttpClientTelemetry.builder(testing.getOpenTelemetry())
-          .setRequestHeaders(AbstractHttpClientTest.TEST_HEADERS)
-          .setResponseHeaders(AbstractHttpClientTest.TEST_HEADERS)
+          .setRequestCapturedHeaders(AbstractHttpClientTest.TEST_HEADERS)
+          .setResponseCapturedHeaders(AbstractHttpClientTest.TEST_HEADERS)
           .build()
           .wrap(httpClient);
     }

@@ -6,8 +6,8 @@ semantic_conventions:
 library_link: https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/package-summary.html
 configurations:
   - ref: http.known-methods
-  - ref: http.client.capture-request-headers
-  - ref: http.client.capture-response-headers
+  - ref: http.client.request-captured-headers
+  - ref: http.client.response-captured-headers
   - ref: common.peer-service-mapping
   - ref: http.client.emit-experimental-telemetry
   - declarative_name: java.common.http.client.url_template_rules

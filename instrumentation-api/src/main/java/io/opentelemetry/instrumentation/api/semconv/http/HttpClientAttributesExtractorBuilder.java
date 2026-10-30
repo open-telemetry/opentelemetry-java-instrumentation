@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.semconv.http;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
@@ -19,7 +18,6 @@ import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalSer
 import io.opentelemetry.instrumentation.api.semconv.network.internal.ServerAddressAndPortExtractor;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.ToIntFunction;
 
@@ -53,147 +51,45 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Configures which HTTP request headers are captured as span attributes, as described in <a
+   * Configures the HTTP request headers that will be captured as span attributes as described in <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#http-client">HTTP
    * semantic conventions</a>.
    *
-   * <p>Header values are captured under the {@code http.request.header.<key>} attribute key. The
-   * {@code <key>} part in the attribute key is the lowercase header name.
+   * <p>The HTTP request header values will be captured under the {@code http.request.header.<key>}
+   * attribute key. The {@code <key>} part in the attribute key is the lowercase header name.
    *
-   * <p>Selector patterns are matched case-insensitively, since HTTP header names are
-   * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
-   * characters, including none. Excluded patterns take precedence over included patterns. A
-   * selector with no included patterns captures every header that is not excluded, and an
-   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
+   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
+   * patterns. Header names are case-insensitive. An empty collection captures no headers.
    *
-   * <p>Header names that are not listed as exact included names are resolved through {@link
-   * HttpCommonAttributesGetter#getHttpRequestHeaderNames(Object)}, so wildcard and exclude-only
-   * selectors only capture headers when the getter implements that method.
-   *
-   * @since 2.31.0
+   * @param requestHeaders A collection of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setRequestHeaders(
-      IncludeExclude requestHeaders) {
+  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setRequestCapturedHeaders(
+      Collection<String> requestHeaders) {
     this.capturedRequestHeaders = CapturedHttpHeaders.create("request", requestHeaders);
     return this;
   }
 
   /**
-   * Configures the HTTP request headers that will be captured as span attributes as described in <a
-   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#http-client">HTTP
-   * semantic conventions</a>.
-   *
-   * <p>The HTTP request header values will be captured under the {@code http.request.header.<key>}
-   * attribute key. The {@code <key>} part in the attribute key is the lowercase header name.
-   *
-   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
-   * patterns.
-   *
-   * @param requestHeaders A list of HTTP header names.
-   * @deprecated Use {@link #setRequestHeaders(IncludeExclude)} instead. To be removed in 3.0.
-   */
-  @Deprecated // to be removed in 3.0
-  @CanIgnoreReturnValue
-  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
-      Collection<String> requestHeaders) {
-    this.capturedRequestHeaders = CapturedHttpHeaders.createExact("request", requestHeaders);
-    return this;
-  }
-
-  /**
-   * Configures the HTTP request headers that will be captured as span attributes as described in <a
-   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#http-client">HTTP
-   * semantic conventions</a>.
-   *
-   * <p>The HTTP request header values will be captured under the {@code http.request.header.<key>}
-   * attribute key. The {@code <key>} part in the attribute key is the lowercase header name.
-   *
-   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
-   * patterns.
-   *
-   * @param requestHeaders A list of HTTP header names.
-   * @deprecated Use {@link #setRequestHeaders(IncludeExclude)} instead. To be removed in 3.0.
-   */
-  @Deprecated // to be removed in 3.0
-  @CanIgnoreReturnValue
-  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
-      List<String> requestHeaders) {
-    return setCapturedRequestHeaders((Collection<String>) requestHeaders);
-  }
-
-  /**
-   * Configures which HTTP response headers are captured as span attributes, as described in <a
+   * Configures the HTTP response headers that will be captured as span attributes as described in
+   * <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#common-attributes">HTTP
    * semantic conventions</a>.
    *
-   * <p>Header values are captured under the {@code http.response.header.<key>} attribute key. The
-   * {@code <key>} part in the attribute key is the lowercase header name.
+   * <p>The HTTP response header values will be captured under the {@code
+   * http.response.header.<key>} attribute key. The {@code <key>} part in the attribute key is the
+   * lowercase header name.
    *
-   * <p>Selector patterns are matched case-insensitively, since HTTP header names are
-   * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
-   * characters, including none. Excluded patterns take precedence over included patterns. A
-   * selector with no included patterns captures every header that is not excluded, and an
-   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
+   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
+   * patterns. Header names are case-insensitive. An empty collection captures no headers.
    *
-   * <p>Header names that are not listed as exact included names are resolved through {@link
-   * HttpCommonAttributesGetter#getHttpResponseHeaderNames(Object, Object)}, so wildcard and
-   * exclude-only selectors only capture headers when the getter implements that method.
-   *
-   * @since 2.31.0
+   * @param responseHeaders A collection of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setResponseHeaders(
-      IncludeExclude responseHeaders) {
+  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setResponseCapturedHeaders(
+      Collection<String> responseHeaders) {
     this.capturedResponseHeaders = CapturedHttpHeaders.create("response", responseHeaders);
     return this;
-  }
-
-  /**
-   * Configures the HTTP response headers that will be captured as span attributes as described in
-   * <a
-   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#common-attributes">HTTP
-   * semantic conventions</a>.
-   *
-   * <p>The HTTP response header values will be captured under the {@code
-   * http.response.header.<key>} attribute key. The {@code <key>} part in the attribute key is the
-   * lowercase header name.
-   *
-   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
-   * patterns.
-   *
-   * @param responseHeaders A list of HTTP header names.
-   * @deprecated Use {@link #setResponseHeaders(IncludeExclude)} instead. To be removed in 3.0.
-   */
-  @Deprecated // to be removed in 3.0
-  @CanIgnoreReturnValue
-  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
-      Collection<String> responseHeaders) {
-    this.capturedResponseHeaders = CapturedHttpHeaders.createExact("response", responseHeaders);
-    return this;
-  }
-
-  /**
-   * Configures the HTTP response headers that will be captured as span attributes as described in
-   * <a
-   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#common-attributes">HTTP
-   * semantic conventions</a>.
-   *
-   * <p>The HTTP response header values will be captured under the {@code
-   * http.response.header.<key>} attribute key. The {@code <key>} part in the attribute key is the
-   * lowercase header name.
-   *
-   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
-   * patterns.
-   *
-   * @param responseHeaders A list of HTTP header names.
-   * @deprecated Use {@link #setResponseHeaders(IncludeExclude)} instead. To be removed in 3.0.
-   */
-  @Deprecated // to be removed in 3.0
-  @CanIgnoreReturnValue
-  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
-      List<String> responseHeaders) {
-    return setCapturedResponseHeaders((Collection<String>) responseHeaders);
   }
 
   /**

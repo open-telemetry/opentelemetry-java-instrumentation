@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.armeria.v1_3;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,7 +20,6 @@ import com.linecorp.armeria.common.RequestHeaders;
 import com.linecorp.armeria.common.ResponseHeaders;
 import com.linecorp.armeria.server.Server;
 import com.linecorp.armeria.server.ServerBuilder;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.function.UnaryOperator;
@@ -34,48 +34,6 @@ class ArmeriaHeaderSelectorTest {
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
-  void clientCapturesHeadersMatchingSelectorPatterns() {
-    int port = startServer(UnaryOperator.identity());
-
-    WebClient client =
-        WebClient.builder("http://localhost:" + port)
-            .decorator(
-                ArmeriaClientTelemetry.builder(testing.getOpenTelemetry())
-                    .setRequestHeaders(IncludeExclude.builder().setExcluded("x-ignored-*").build())
-                    .setResponseHeaders(IncludeExclude.builder().setIncluded("x-test-*").build())
-                    .build()
-                    .createDecorator())
-            .build();
-
-    sendRequest(client);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasAttribute(
-                            stringArrayKey("http.request.header.x-test-request"),
-                            singletonList("request-value"))
-                        .hasAttribute(
-                            stringArrayKey("http.response.header.x-test-response"),
-                            singletonList("response-value"))
-                        // an excluded header is not captured
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getAttributes().asMap())
-                                    .doesNotContainKey(
-                                        stringArrayKey("http.request.header.x-ignored-request"))
-                                    .doesNotContainKey(
-                                        stringArrayKey("http.response.header.x-ignored-response")))
-                        // pseudo-headers are not HTTP headers
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getAttributes().asMap())
-                                    .doesNotContainKey(
-                                        stringArrayKey("http.request.header.:method")))));
-  }
-
-  @Test
   void clientCapturesHeadersConfiguredByName() {
     int port = startServer(UnaryOperator.identity());
 
@@ -83,33 +41,13 @@ class ArmeriaHeaderSelectorTest {
         WebClient.builder("http://localhost:" + port)
             .decorator(
                 ArmeriaClientTelemetry.builder(testing.getOpenTelemetry())
-                    .setRequestHeaders(
-                        IncludeExclude.builder().setIncluded("x-test-request").build())
-                    .setResponseHeaders(
-                        IncludeExclude.builder().setIncluded("x-test-response").build())
+                    .setRequestCapturedHeaders(asList("x-test-request"))
+                    .setResponseCapturedHeaders(asList("x-test-response"))
                     .build()
                     .createDecorator())
             .build();
 
     sendRequest(client);
-
-    assertCapturedHeaders();
-  }
-
-  @Test
-  void serverCapturesHeadersMatchingSelectorPatterns() {
-    int port =
-        startServer(
-            sb ->
-                sb.decorator(
-                    ArmeriaServerTelemetry.builder(testing.getOpenTelemetry())
-                        .setRequestHeaders(IncludeExclude.builder().setIncluded("x-test-*").build())
-                        .setResponseHeaders(
-                            IncludeExclude.builder().setExcluded("x-ignored-*").build())
-                        .build()
-                        .createDecorator()));
-
-    sendRequest(WebClient.of("http://localhost:" + port));
 
     assertCapturedHeaders();
   }
@@ -121,10 +59,8 @@ class ArmeriaHeaderSelectorTest {
             sb ->
                 sb.decorator(
                     ArmeriaServerTelemetry.builder(testing.getOpenTelemetry())
-                        .setRequestHeaders(
-                            IncludeExclude.builder().setIncluded("x-test-request").build())
-                        .setResponseHeaders(
-                            IncludeExclude.builder().setIncluded("x-test-response").build())
+                        .setRequestCapturedHeaders(asList("x-test-request"))
+                        .setResponseCapturedHeaders(asList("x-test-response"))
                         .build()
                         .createDecorator()));
 

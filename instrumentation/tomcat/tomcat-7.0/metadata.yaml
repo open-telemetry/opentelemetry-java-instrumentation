@@ -8,8 +8,8 @@ features:
   - HTTP_ROUTE
 configurations:
   - ref: http.known-methods
-  - ref: http.server.capture-request-headers
-  - ref: http.server.capture-response-headers
+  - ref: http.server.request-captured-headers
+  - ref: http.server.response-captured-headers
   - ref: http.server.emit-experimental-telemetry
   - name: otel.instrumentation.servlet.experimental-span-attributes
     declarative_name: java.servlet.experimental_span_attributes/development

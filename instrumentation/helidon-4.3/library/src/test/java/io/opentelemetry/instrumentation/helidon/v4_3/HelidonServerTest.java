@@ -20,8 +20,8 @@ class HelidonServerTest extends AbstractHelidonTest {
   protected void configureRoutes(HttpRouting.Builder routing) {
     var feature =
         HelidonTelemetry.builder(testing.getOpenTelemetry())
-            .setRequestHeaders(AbstractHttpServerTest.TEST_HEADERS)
-            .setResponseHeaders(AbstractHttpServerTest.TEST_HEADERS)
+            .setRequestCapturedHeaders(AbstractHttpServerTest.TEST_HEADERS)
+            .setResponseCapturedHeaders(AbstractHttpServerTest.TEST_HEADERS)
             .build();
     routing.addFilter(feature.createFilter());
   }

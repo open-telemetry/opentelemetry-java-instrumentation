@@ -42,17 +42,17 @@ configurations:
           description: "Peer service name to record for matching peers."
           example: serviceName
 
-  http.client.capture-request-headers:
-    name: otel.instrumentation.http.client.capture-request-headers
+  http.client.request-captured-headers:
+    name: otel.instrumentation.http.client.request-captured-headers
     declarative_name: general.http.client.request_captured_headers
-    description: "List of HTTP request headers to capture in HTTP client telemetry."
+    description: "List of exact, case-insensitive HTTP request header names to capture in HTTP client telemetry. `*` and `?` are literal characters."
     type: list
     default: ""
 
-  http.client.capture-response-headers:
-    name: otel.instrumentation.http.client.capture-response-headers
+  http.client.response-captured-headers:
+    name: otel.instrumentation.http.client.response-captured-headers
     declarative_name: general.http.client.response_captured_headers
-    description: "List of HTTP response headers to capture in HTTP client telemetry."
+    description: "List of exact, case-insensitive HTTP response header names to capture in HTTP client telemetry. `*` and `?` are literal characters."
     type: list
     default: ""
 
@@ -63,17 +63,17 @@ configurations:
     type: boolean
     default: false
 
-  http.server.capture-request-headers:
-    name: otel.instrumentation.http.server.capture-request-headers
+  http.server.request-captured-headers:
+    name: otel.instrumentation.http.server.request-captured-headers
     declarative_name: general.http.server.request_captured_headers
-    description: "List of HTTP request headers to capture in HTTP server telemetry."
+    description: "List of exact, case-insensitive HTTP request header names to capture in HTTP server telemetry. `*` and `?` are literal characters."
     type: list
     default: ""
 
-  http.server.capture-response-headers:
-    name: otel.instrumentation.http.server.capture-response-headers
+  http.server.response-captured-headers:
+    name: otel.instrumentation.http.server.response-captured-headers
     declarative_name: general.http.server.response_captured_headers
-    description: "List of HTTP response headers to capture in HTTP server telemetry."
+    description: "List of exact, case-insensitive HTTP response header names to capture in HTTP server telemetry. `*` and `?` are literal characters."
     type: list
     default: ""
 

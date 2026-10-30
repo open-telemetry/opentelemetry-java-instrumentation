@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.servlet.v5_0.tomcat;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.servlet.v5_0.ServletTelemetry;
 import io.opentelemetry.instrumentation.servlet.v5_0.ServletTelemetryBuilder;
 import io.opentelemetry.instrumentation.servlet.v5_0.internal.Experimental;
@@ -23,10 +22,9 @@ class ServletTestUtil {
   static Filter newFilter(OpenTelemetry openTelemetry) {
     ServletTelemetryBuilder builder =
         ServletTelemetry.builder(openTelemetry)
-            .setRequestHeaders(AbstractHttpServerTest.TEST_HEADERS)
-            .setResponseHeaders(AbstractHttpServerTest.TEST_HEADERS);
-    Experimental.setRequestParameters(
-        builder, IncludeExclude.builder().setIncluded(singletonList("test-parameter")).build());
+            .setRequestCapturedHeaders(AbstractHttpServerTest.TEST_HEADERS)
+            .setResponseCapturedHeaders(AbstractHttpServerTest.TEST_HEADERS);
+    Experimental.setRequestParameters(builder, singletonList("test-parameter"));
     Experimental.setTraceIdRequestAttributeEnabled(builder, true);
     return builder.build().createFilter();
   }

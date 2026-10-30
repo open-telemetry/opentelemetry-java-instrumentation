@@ -12,7 +12,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServicePeerAttributesExtractor;
@@ -118,50 +117,17 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Configures which HTTP request headers are captured as span attributes.
-   *
-   * <p>Selector patterns are matched case-insensitively, since HTTP header names are
-   * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
-   * characters, including none. Excluded patterns take precedence over included patterns. A
-   * selector with no included patterns captures every header that is not excluded, and an
-   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
-   */
-  @CanIgnoreReturnValue
-  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setRequestHeaders(
-      IncludeExclude requestHeaders) {
-    httpAttributesExtractorBuilder.setRequestHeaders(requestHeaders);
-    return this;
-  }
-
-  /**
    * Configures the HTTP request headers that will be captured as span attributes.
    *
    * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
-   * patterns.
+   * patterns. Header names are case-insensitive. An empty collection captures no headers.
    *
-   * @param requestHeaders A list of HTTP header names.
+   * @param requestHeaders A collection of HTTP header names.
    */
-  @SuppressWarnings("deprecation") // this is the exact-name API, so it calls the deprecated setter
   @CanIgnoreReturnValue
-  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setRequestCapturedHeaders(
       Collection<String> requestHeaders) {
-    httpAttributesExtractorBuilder.setCapturedRequestHeaders(requestHeaders);
-    return this;
-  }
-
-  /**
-   * Configures which HTTP response headers are captured as span attributes.
-   *
-   * <p>Selector patterns are matched case-insensitively, since HTTP header names are
-   * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
-   * characters, including none. Excluded patterns take precedence over included patterns. A
-   * selector with no included patterns captures every header that is not excluded, and an
-   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
-   */
-  @CanIgnoreReturnValue
-  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setResponseHeaders(
-      IncludeExclude responseHeaders) {
-    httpAttributesExtractorBuilder.setResponseHeaders(responseHeaders);
+    httpAttributesExtractorBuilder.setRequestCapturedHeaders(requestHeaders);
     return this;
   }
 
@@ -169,15 +135,14 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
    * Configures the HTTP response headers that will be captured as span attributes.
    *
    * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
-   * patterns.
+   * patterns. Header names are case-insensitive. An empty collection captures no headers.
    *
-   * @param responseHeaders A list of HTTP header names.
+   * @param responseHeaders A collection of HTTP header names.
    */
-  @SuppressWarnings("deprecation") // this is the exact-name API, so it calls the deprecated setter
   @CanIgnoreReturnValue
-  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setResponseCapturedHeaders(
       Collection<String> responseHeaders) {
-    httpAttributesExtractorBuilder.setCapturedResponseHeaders(responseHeaders);
+    httpAttributesExtractorBuilder.setResponseCapturedHeaders(responseHeaders);
     return this;
   }
 
@@ -304,8 +269,8 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> configure(CommonConfig config) {
     set(config::getKnownHttpRequestMethods, this::setKnownMethods);
-    set(config::getClientRequestHeaders, this::setCapturedRequestHeaders);
-    set(config::getClientResponseHeaders, this::setCapturedResponseHeaders);
+    set(config::getClientRequestHeaders, this::setRequestCapturedHeaders);
+    set(config::getClientResponseHeaders, this::setResponseCapturedHeaders);
     set(
         config::shouldEmitExperimentalHttpClientTelemetry,
         this::setEmitExperimentalHttpClientTelemetry);

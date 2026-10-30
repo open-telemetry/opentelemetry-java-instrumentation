@@ -10,7 +10,6 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.hc.core5.http.Header;
@@ -38,11 +37,6 @@ class ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
-  public Collection<String> getHttpRequestHeaderNames(ApacheHttpClientRequest request) {
-    return headerNamesToList(request.getRequest().getHeaders());
-  }
-
-  @Override
   public Integer getHttpResponseStatusCode(
       ApacheHttpClientRequest request, HttpResponse response, @Nullable Throwable error) {
     return response.getCode();
@@ -52,12 +46,6 @@ class ApacheHttpClientHttpAttributesGetter
   public List<String> getHttpResponseHeader(
       ApacheHttpClientRequest request, HttpResponse response, String name) {
     return getHeader(response, name);
-  }
-
-  @Override
-  public Collection<String> getHttpResponseHeaderNames(
-      ApacheHttpClientRequest request, HttpResponse response) {
-    return headerNamesToList(response.getHeaders());
   }
 
   private static List<String> getHeader(MessageHeaders messageHeaders, String name) {
@@ -78,18 +66,6 @@ class ApacheHttpClientHttpAttributesGetter
       headersList.add(header.getValue());
     }
     return headersList;
-  }
-
-  // minimize memory overhead by not using streams
-  private static List<String> headerNamesToList(Header[] headers) {
-    if (headers.length == 0) {
-      return emptyList();
-    }
-    List<String> headerNames = new ArrayList<>(headers.length);
-    for (Header header : headers) {
-      headerNames.add(header.getName());
-    }
-    return headerNames;
   }
 
   @Nullable

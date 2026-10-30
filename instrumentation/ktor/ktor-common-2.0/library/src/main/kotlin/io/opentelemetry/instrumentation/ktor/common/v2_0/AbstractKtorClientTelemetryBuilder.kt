@@ -11,7 +11,6 @@ import io.ktor.http.*
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.common.AttributesBuilder
 import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.api.config.IncludeExclude
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor
@@ -49,14 +48,11 @@ abstract class AbstractKtorClientTelemetryBuilder(
    * Header values are captured under the `http.request.header.<key>` attribute key. The `<key>`
    * part in the attribute key is the lowercase header name.
    *
-   * Selector patterns are matched case-insensitively, since HTTP header names are case-insensitive.
-   * `?` matches one character and `*` matches any number of characters, including none. Excluded
-   * patterns take precedence over included patterns. A selector with no included patterns captures
-   * every header that is not excluded, and an [empty][IncludeExclude.isEmpty] selector captures no
-   * headers.
+   * Header names are case-insensitive and matched literally; `*` and `?` are not glob patterns.
+   * An empty collection captures no headers.
    */
-  fun requestHeaders(requestHeaders: IncludeExclude) {
-    builder.setRequestHeaders(requestHeaders)
+  fun setRequestCapturedHeaders(requestHeaders: Collection<String>) {
+    builder.setRequestCapturedHeaders(requestHeaders)
   }
 
   /**
@@ -65,14 +61,11 @@ abstract class AbstractKtorClientTelemetryBuilder(
    * Header values are captured under the `http.response.header.<key>` attribute key. The `<key>`
    * part in the attribute key is the lowercase header name.
    *
-   * Selector patterns are matched case-insensitively, since HTTP header names are case-insensitive.
-   * `?` matches one character and `*` matches any number of characters, including none. Excluded
-   * patterns take precedence over included patterns. A selector with no included patterns captures
-   * every header that is not excluded, and an [empty][IncludeExclude.isEmpty] selector captures no
-   * headers.
+   * Header names are case-insensitive and matched literally; `*` and `?` are not glob patterns.
+   * An empty collection captures no headers.
    */
-  fun responseHeaders(responseHeaders: IncludeExclude) {
-    builder.setResponseHeaders(responseHeaders)
+  fun setResponseCapturedHeaders(responseHeaders: Collection<String>) {
+    builder.setResponseCapturedHeaders(responseHeaders)
   }
 
   fun knownMethods(vararg methods: String) = knownMethods(methods.asIterable())

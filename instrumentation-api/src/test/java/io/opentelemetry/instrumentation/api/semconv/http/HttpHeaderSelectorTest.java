@@ -15,17 +15,17 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-/** Tests for the HTTP header selectors applied by {@link HttpCommonAttributesExtractor}. */
+/** Tests for exact-name HTTP header capture by {@link HttpCommonAttributesExtractor}. */
 class HttpHeaderSelectorTest {
 
   private static final Map<String, String> REQUEST = new LinkedHashMap<>();
@@ -35,201 +35,101 @@ class HttpHeaderSelectorTest {
     REQUEST.put("Test-Request-Header", "one");
     REQUEST.put("Test-Request-Other", "two");
     REQUEST.put("Authorization", "secret");
+    REQUEST.put("*", "literal-star");
+    REQUEST.put("Test-?", "literal-question");
+    REQUEST.put("Test-Multiple", "one,two");
 
     RESPONSE.put("Test-Response-Header", "three");
     RESPONSE.put("Test-Response-Other", "four");
     RESPONSE.put("Set-Cookie", "secret");
+    RESPONSE.put("*", "literal-star");
+    RESPONSE.put("Test-?", "literal-question");
+    RESPONSE.put("Test-Multiple", "three,four");
   }
 
-  @Test
-  void capturesExactIncludedNames() {
-    assertThat(captureRequest(selector(singletonList("Test-Request-Header"), emptyList())))
-        .containsOnly(requestHeaderEntry("test-request-header", "one"));
-    assertThat(captureResponse(selector(singletonList("Test-Response-Header"), emptyList())))
-        .containsOnly(responseHeaderEntry("test-response-header", "three"));
-  }
-
-  @Test
-  void capturesWildcardIncludedNames() {
-    assertThat(captureRequest(selector(singletonList("Test-Request-*"), emptyList())))
-        .containsOnly(
-            requestHeaderEntry("test-request-header", "one"),
-            requestHeaderEntry("test-request-other", "two"));
-    assertThat(captureResponse(selector(singletonList("Test-Response-*"), emptyList())))
-        .containsOnly(
-            responseHeaderEntry("test-response-header", "three"),
-            responseHeaderEntry("test-response-other", "four"));
-  }
-
-  @Test
-  void capturesSingleCharacterWildcardIncludedNames() {
-    assertThat(captureRequest(selector(singletonList("Test-Request-Othe?"), emptyList())))
-        .containsOnly(requestHeaderEntry("test-request-other", "two"));
-  }
-
-  @Test
-  void matchesHeaderNamesCaseInsensitively() {
-    assertThat(captureRequest(selector(singletonList("TEST-REQUEST-HEADER"), emptyList())))
-        .containsOnly(requestHeaderEntry("test-request-header", "one"));
-    assertThat(captureRequest(selector(singletonList("test-request-*"), emptyList())))
-        .containsOnly(
-            requestHeaderEntry("test-request-header", "one"),
-            requestHeaderEntry("test-request-other", "two"));
-    assertThat(captureRequest(selector(singletonList("*"), singletonList("AUTHORIZATION"))))
-        .containsOnly(
-            requestHeaderEntry("test-request-header", "one"),
-            requestHeaderEntry("test-request-other", "two"));
-  }
-
-  @Test
-  void exclusionTakesPrecedenceOverInclusion() {
-    assertThat(captureRequest(selector(singletonList("*"), singletonList("Authorization"))))
-        .containsOnly(
-            requestHeaderEntry("test-request-header", "one"),
-            requestHeaderEntry("test-request-other", "two"));
-    assertThat(
-            captureRequest(
-                selector(
-                    asList("Test-Request-Header", "Authorization"),
-                    singletonList("Authorization"))))
-        .containsOnly(requestHeaderEntry("test-request-header", "one"));
-  }
-
-  @Test
-  void excludeOnlySelectorCapturesEveryOtherHeader() {
-    assertThat(captureResponse(selector(emptyList(), singletonList("Set-Cookie"))))
-        .containsOnly(
-            responseHeaderEntry("test-response-header", "three"),
-            responseHeaderEntry("test-response-other", "four"));
-  }
-
-  @Test
-  void emptySelectorCapturesNothing() {
-    assertThat(captureRequest(selector(emptyList(), emptyList()))).isEmpty();
-    assertThat(captureResponse(selector(emptyList(), emptyList()))).isEmpty();
-  }
-
-  @Test
-  void absentSelectorCapturesNothing() {
-    assertThat(captureRequest(null)).isEmpty();
-    assertThat(captureResponse(null)).isEmpty();
-  }
-
-  @Test
-  void matchingHeaderNameIsCapturedOnlyOnce() {
-    assertThat(
-            captureRequest(selector(asList("Test-Request-Header", "Test-Request-*"), emptyList())))
-        .containsOnly(
-            requestHeaderEntry("test-request-header", "one"),
-            requestHeaderEntry("test-request-other", "two"));
-  }
-
-  @Test
-  void exactNamesAreCapturedWithoutHeaderNameEnumeration() {
-    // simulates a third party getter that implements only getHttpRequestHeader
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void capturesOnlyExactNamesCaseInsensitively(boolean client) {
     assertThat(
             capture(
-                new MapGetter(false),
-                selector(singletonList("Test-Request-Header"), emptyList()),
-                null))
-        .containsOnly(requestHeaderEntry("test-request-header", "one"));
-  }
-
-  @Test
-  void wildcardCapturesNothingWithoutHeaderNameEnumeration() {
-    // a third party getter that implements only getHttpRequestHeader cannot resolve wildcards
-    assertThat(
-            capture(
-                new MapGetter(false), selector(singletonList("Test-Request-*"), emptyList()), null))
-        .isEmpty();
-  }
-
-  @SuppressWarnings("deprecation") // testing deprecated API
-  @Test
-  void deprecatedCapturedHeadersSettersSelectExactNames() {
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.builder(new MapGetter(true))
-            .setCapturedRequestHeaders(singletonList("Test-Request-Header"))
-            .setCapturedResponseHeaders(singletonList("Test-Response-Header"))
-            .build();
-
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), REQUEST);
-    extractor.onEnd(attributes, Context.root(), REQUEST, RESPONSE, null);
-
-    assertThat(headerAttributes(attributes.build()))
+                client,
+                new LinkedHashSet<>(asList("TEST-REQUEST-HEADER", "test-request-header")),
+                singletonList("TEST-RESPONSE-HEADER")))
         .containsOnly(
             requestHeaderEntry("test-request-header", "one"),
             responseHeaderEntry("test-response-header", "three"));
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
-  @Test
-  void deprecatedCapturedHeadersSettersMatchHeaderNamesLiterally() {
-    Map<String, String> request = new LinkedHashMap<>(REQUEST);
-    request.put("*", "literal");
-
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.builder(new MapGetter(true))
-            .setCapturedRequestHeaders(singletonList("*"))
-            .build();
-
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), request);
-
-    assertThat(headerAttributes(attributes.build()))
-        .containsOnly(requestHeaderEntry("*", "literal"));
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void absentListsCaptureNothing(boolean client) {
+    assertThat(capture(client, null, null)).isEmpty();
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
-  @Test
-  void deprecatedCapturedHeadersSettersOnlyCapturePresentLiteralNames() {
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.builder(new MapGetter(true))
-            .setCapturedRequestHeaders(asList("Test-Request-Header", "Test-Request-*", "Test-?"))
-            .build();
-
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), REQUEST);
-
-    assertThat(headerAttributes(attributes.build()))
-        .containsOnly(requestHeaderEntry("test-request-header", "one"));
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void emptyListsCaptureNothing(boolean client) {
+    assertThat(capture(client, emptyList(), emptyList())).isEmpty();
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
-  @Test
-  void deprecatedCapturedHeadersSettersCaptureListedNames() {
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
-        HttpServerAttributesExtractor.builder(new MapGetter(true))
-            .setCapturedRequestHeaders(singletonList("Test-Request-Header"))
-            .build();
-
-    AttributesBuilder attributes = Attributes.builder();
-    extractor.onStart(attributes, Context.root(), REQUEST);
-
-    assertThat(headerAttributes(attributes.build()))
-        .containsOnly(requestHeaderEntry("test-request-header", "one"));
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void capturesLiteralStarAndQuestionMarkWithoutExpansion(boolean client) {
+    assertThat(capture(client, asList("*", "Test-?"), asList("*", "Test-?")))
+        .containsOnly(
+            requestHeaderEntry("*", "literal-star"),
+            requestHeaderEntry("test-?", "literal-question"),
+            responseHeaderEntry("*", "literal-star"),
+            responseHeaderEntry("test-?", "literal-question"));
   }
 
-  private static Map<AttributeKey<?>, Object> captureRequest(IncludeExclude headers) {
-    return capture(new MapGetter(true), headers, null);
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void doesNotExpandPatterns(boolean client) {
+    assertThat(
+            capture(
+                client,
+                asList("Test-Request-*", "Test-Request-Othe?"),
+                asList("Test-Response-*", "Test-Response-Othe?")))
+        .isEmpty();
   }
 
-  private static Map<AttributeKey<?>, Object> captureResponse(IncludeExclude headers) {
-    return capture(new MapGetter(true), null, headers);
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void preservesMultipleValues(boolean client) {
+    assertThat(capture(client, singletonList("Test-Multiple"), singletonList("Test-Multiple")))
+        .containsOnly(
+            new SimpleEntry<>(
+                stringArrayKey("http.request.header.test-multiple"), asList("one", "two")),
+            new SimpleEntry<>(
+                stringArrayKey("http.response.header.test-multiple"), asList("three", "four")));
   }
 
   private static Map<AttributeKey<?>, Object> capture(
-      MapGetter getter, IncludeExclude requestHeaders, IncludeExclude responseHeaders) {
-    HttpServerAttributesExtractorBuilder<Map<String, String>, Map<String, String>> builder =
-        HttpServerAttributesExtractor.builder(getter);
-    if (requestHeaders != null) {
-      builder.setRequestHeaders(requestHeaders);
+      boolean client, Collection<String> requestHeaders, Collection<String> responseHeaders) {
+    MapGetter getter = new MapGetter();
+    AttributesExtractor<Map<String, String>, Map<String, String>> extractor;
+    if (client) {
+      HttpClientAttributesExtractorBuilder<Map<String, String>, Map<String, String>> builder =
+          HttpClientAttributesExtractor.builder(getter);
+      if (requestHeaders != null) {
+        builder.setRequestCapturedHeaders(requestHeaders);
+      }
+      if (responseHeaders != null) {
+        builder.setResponseCapturedHeaders(responseHeaders);
+      }
+      extractor = builder.build();
+    } else {
+      HttpServerAttributesExtractorBuilder<Map<String, String>, Map<String, String>> builder =
+          HttpServerAttributesExtractor.builder(getter);
+      if (requestHeaders != null) {
+        builder.setRequestCapturedHeaders(requestHeaders);
+      }
+      if (responseHeaders != null) {
+        builder.setResponseCapturedHeaders(responseHeaders);
+      }
+      extractor = builder.build();
     }
-    if (responseHeaders != null) {
-      builder.setResponseHeaders(responseHeaders);
-    }
-    AttributesExtractor<Map<String, String>, Map<String, String>> extractor = builder.build();
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), REQUEST);
@@ -249,10 +149,6 @@ class HttpHeaderSelectorTest {
     return headers;
   }
 
-  private static IncludeExclude selector(List<String> included, List<String> excluded) {
-    return IncludeExclude.builder().setIncluded(included).setExcluded(excluded).build();
-  }
-
   private static Map.Entry<AttributeKey<?>, Object> requestHeaderEntry(String name, String value) {
     return new SimpleEntry<>(stringArrayKey("http.request.header." + name), singletonList(value));
   }
@@ -262,12 +158,28 @@ class HttpHeaderSelectorTest {
   }
 
   private static final class MapGetter
-      implements HttpServerAttributesGetter<Map<String, String>, Map<String, String>> {
+      implements HttpServerAttributesGetter<Map<String, String>, Map<String, String>>,
+          HttpClientAttributesGetter<Map<String, String>, Map<String, String>> {
 
-    private final boolean enumerateNames;
+    @Override
+    public String getUrlFull(Map<String, String> request) {
+      return "http://localhost/";
+    }
 
-    MapGetter(boolean enumerateNames) {
-      this.enumerateNames = enumerateNames;
+    @Override
+    public String getServerAddress(Map<String, String> request) {
+      return "localhost";
+    }
+
+    @Override
+    public Integer getServerPort(Map<String, String> request) {
+      return 80;
+    }
+
+    @Override
+    public String getErrorType(
+        Map<String, String> request, Map<String, String> response, Throwable error) {
+      return null;
     }
 
     @Override
@@ -296,11 +208,6 @@ class HttpHeaderSelectorTest {
     }
 
     @Override
-    public Collection<String> getHttpRequestHeaderNames(Map<String, String> request) {
-      return headerNames(request);
-    }
-
-    @Override
     public Integer getHttpResponseStatusCode(
         Map<String, String> request, Map<String, String> response, Throwable error) {
       return 200;
@@ -312,22 +219,12 @@ class HttpHeaderSelectorTest {
       return headerValue(response, name);
     }
 
-    @Override
-    public Collection<String> getHttpResponseHeaderNames(
-        Map<String, String> request, Map<String, String> response) {
-      return headerNames(response);
-    }
-
-    private Collection<String> headerNames(Map<String, String> message) {
-      return enumerateNames ? new ArrayList<>(message.keySet()) : emptyList();
-    }
-
     // the extractor always looks headers up by their lowercase name, which mirrors the
     // case-insensitive lookup that real HTTP libraries provide
     private static List<String> headerValue(Map<String, String> message, String name) {
       for (Map.Entry<String, String> entry : message.entrySet()) {
         if (entry.getKey().equalsIgnoreCase(name)) {
-          return singletonList(entry.getValue());
+          return asList(entry.getValue().split(","));
         }
       }
       return emptyList();

@@ -39,18 +39,6 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS = new HashMap<>();
     // mapping of general configs to old property names
     SPECIAL_MAPPINGS.put(
-        "general.http.client.request_captured_headers",
-        "otel.instrumentation.http.client.capture-request-headers");
-    SPECIAL_MAPPINGS.put(
-        "general.http.client.response_captured_headers",
-        "otel.instrumentation.http.client.capture-response-headers");
-    SPECIAL_MAPPINGS.put(
-        "general.http.server.request_captured_headers",
-        "otel.instrumentation.http.server.capture-request-headers");
-    SPECIAL_MAPPINGS.put(
-        "general.http.server.response_captured_headers",
-        "otel.instrumentation.http.server.capture-response-headers");
-    SPECIAL_MAPPINGS.put(
         "general.sanitization.url.sensitive_query_parameters",
         "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters");
     // general.stability_opt_in_list is the name in the declarative configuration schema; the
@@ -280,11 +268,15 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
       }
     }
 
-    if (!declarativePrefix.isEmpty() && !fullPath.startsWith(declarativePrefix)) {
+    String prefix = declarativePrefix;
+    if (instrumentationConfig && fullPath.startsWith("general.http.")) {
+      prefix = "general.";
+    }
+    if (!prefix.isEmpty() && !fullPath.startsWith(prefix)) {
       return "";
     }
 
-    String[] segments = fullPath.substring(declarativePrefix.length()).split("\\.");
+    String[] segments = fullPath.substring(prefix.length()).split("\\.");
     StringBuilder translatedPath = new StringBuilder();
 
     for (int i = 0; i < segments.length; i++) {
