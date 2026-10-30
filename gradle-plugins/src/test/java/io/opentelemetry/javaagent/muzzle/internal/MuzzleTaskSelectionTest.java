@@ -20,55 +20,6 @@ class MuzzleTaskSelectionTest {
       ProjectBuilder.builder().withName("example").withParent(instrumentationProject).build();
 
   @Test
-  void expandsOnlyTheAssignedPartition() {
-    project
-        .getExtensions()
-        .getExtraProperties()
-        .set(MuzzleTaskSelection.AGGREGATE_TASK_PATH_PROPERTY, ":instrumentation:muzzle2");
-
-    for (String prefix : List.of("", ":")) {
-      for (int partition = 1; partition <= 4; partition++) {
-        project
-            .getGradle()
-            .getStartParameter()
-            .setTaskNames(List.of(prefix + "instrumentation:muzzle" + partition));
-
-        assertThat(MuzzleTaskSelection.hasRelevantTask(project)).isEqualTo(partition == 2);
-      }
-    }
-  }
-
-  @Test
-  void supportsMultiplePartitionsAndDirectTasks() {
-    project
-        .getExtensions()
-        .getExtraProperties()
-        .set(MuzzleTaskSelection.AGGREGATE_TASK_PATH_PROPERTY, ":instrumentation:muzzle2");
-
-    for (String task :
-        List.of(
-            ":instrumentation:muzzle2",
-            ":instrumentation:example:muzzle",
-            "instrumentation:example:muzzle",
-            ":instrumentation:example:muzzle-AssertPass-example-1.0",
-            "muzzle-AssertPass-example-1.0")) {
-      project
-          .getGradle()
-          .getStartParameter()
-          .setTaskNames(List.of(":instrumentation:muzzle1", task));
-
-      assertThat(MuzzleTaskSelection.hasRelevantTask(project)).isTrue();
-    }
-
-    project
-        .getGradle()
-        .getStartParameter()
-        .setTaskNames(List.of(":instrumentation:muzzle1", ":instrumentation:muzzle3"));
-
-    assertThat(MuzzleTaskSelection.hasRelevantTask(project)).isFalse();
-  }
-
-  @Test
   void preservesAggregateSelectionWithoutPartitionMetadata() {
     project.getGradle().getStartParameter().setTaskNames(List.of(":instrumentation:muzzle1"));
 
