@@ -8,6 +8,8 @@
   `otel.instrumentation.grpc.{client,server}.request-headers.{included,excluded}`.
 - Captured gRPC request attributes now use `rpc.request.header.<key>` instead of
   `rpc.request.metadata.<key>`.
+- AWS Lambda invocation spans now replace alias suffixes in `cloud.resource_id` with the resolved
+  function version when available.
 - AWS Lambda spans now use `faas.invocation.id` instead of `faas.invocation_id` for invocation IDs.
 - Replace `SpringWebfluxClientTelemetry.addFilter(list)` and
   `addFilterAndRegisterReactorHook(list)` with `createFilter()` and

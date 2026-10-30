@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
+package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.annotations;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.JaxrsServerSpanNaming.serverSpanName;
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.JaxrsSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.annotations.JaxrsServerSpanNaming.serverSpanName;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.annotations.JaxrsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
