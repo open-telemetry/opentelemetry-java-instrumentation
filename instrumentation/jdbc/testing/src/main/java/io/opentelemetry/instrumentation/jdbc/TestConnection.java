@@ -32,6 +32,7 @@ public class TestConnection implements Connection {
   private final String url;
   private final Consumer<String> sqlConsumer;
   private SQLWarning statementWarning;
+  private boolean throwOnGetWarnings;
 
   public TestConnection() {
     this(null, unused -> {});
@@ -61,8 +62,13 @@ public class TestConnection implements Connection {
     this.statementWarning = statementWarning;
   }
 
+  public void setThrowOnGetWarnings(boolean throwOnGetWarnings) {
+    this.throwOnGetWarnings = throwOnGetWarnings;
+  }
+
   private <T extends TestStatement> T withStatementWarning(T statement) {
     statement.setWarning(statementWarning);
+    statement.setThrowOnGetWarnings(throwOnGetWarnings);
     return statement;
   }
 
