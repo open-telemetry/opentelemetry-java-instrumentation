@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
+import java.sql.SQLWarning;
 import java.util.Collection;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -68,10 +69,25 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public String getDbResponseStatusCode(
       DbRequest request, @Nullable Void response, @Nullable Throwable error) {
+    if (error == null) {
+      SQLWarning sqlWarning = request.getSqlWarning();
+      while (sqlWarning != null) {
+        String statusCode = getDbResponseStatusCode(request, sqlWarning);
+        if (statusCode != null) {
+          return statusCode;
+        }
+        sqlWarning = sqlWarning.getNextWarning();
+      }
+      return null;
+    }
     if (!(error instanceof SQLException)) {
       return null;
     }
-    SQLException sqlException = (SQLException) error;
+    return getDbResponseStatusCode(request, (SQLException) error);
+  }
+
+  @Nullable
+  private String getDbResponseStatusCode(DbRequest request, SQLException sqlException) {
     String dbSystemName = getDbSystemName(request);
     String sqlState = getAvailableSqlState(sqlException);
     int errorCode = sqlException.getErrorCode();

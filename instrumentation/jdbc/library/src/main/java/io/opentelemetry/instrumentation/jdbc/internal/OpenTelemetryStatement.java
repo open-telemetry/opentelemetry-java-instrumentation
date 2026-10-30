@@ -412,7 +412,7 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
       this.instrumenter.end(context, request, null, t);
       throw t;
     }
-    this.instrumenter.end(context, request, null, null);
+    this.instrumenter.end(context, request.withSqlWarningFromStatement(delegate), null, null);
     return result;
   }
 
