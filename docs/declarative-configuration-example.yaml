@@ -378,7 +378,7 @@ instrumentation/development:
       experimental_span_attributes/development: false
     kafka:
       # Enables the capture of the experimental consumer attributes `kafka.record.queue_time_ms` and
-      # `messaging.kafka.bootstrap.servers`.
+      # `kafka.bootstrap.servers`.
       experimental_span_attributes/development: false
       producer_propagation:
         # Enable context propagation for Kafka message producers.
@@ -525,7 +525,7 @@ instrumentation/development:
       # `scheduling.powerjob.job.type`.
       experimental_span_attributes/development: false
     pulsar:
-      # Enables capturing experimental span attribute `messaging.pulsar.message.type` on PRODUCER
+      # Enables capturing experimental span attribute `pulsar.message.type` on PRODUCER
       # spans.
       experimental_span_attributes/development: false
     quartz:
@@ -533,8 +533,8 @@ instrumentation/development:
       experimental_span_attributes/development: false
     rabbitmq:
       # Enables experimental span attributes `rabbitmq.command`, `rabbitmq.delivery_mode`,
-      # `rabbitmq.queue`, `rabbitmq.record.queue_time_ms`, `messaging.rabbitmq.vhost.name`, and
-      # `messaging.rabbitmq.cluster.name`.
+      # `rabbitmq.queue`, `rabbitmq.record.queue_time_ms`, `rabbitmq.vhost.name`, and
+      # `rabbitmq.cluster.name`.
       experimental_span_attributes/development: false
     reactor:
       # Enables the capture of the experimental `reactor.canceled` attribute on spans when reactive
@@ -545,9 +545,9 @@ instrumentation/development:
         # Enables the creation of Connect and DNS spans.
         enabled: false
     rocketmq_client:
-      # Enables capturing experimental span attributes `messaging.rocketmq.message.tag`,
-      # `messaging.rocketmq.broker_address`, `messaging.rocketmq.send_result`,
-      # `messaging.rocketmq.queue_id`, and `messaging.rocketmq.queue_offset`.
+      # Enables capturing experimental span attributes `rocketmq.message.tag`,
+      # `rocketmq.broker_address`, `rocketmq.send_result`,
+      # `rocketmq.queue_id`, and `rocketmq.queue_offset`.
       experimental_span_attributes/development: false
       message_create_spans:
         # Enables per-message Create spans for batch sends. Overrides the common messaging setting.

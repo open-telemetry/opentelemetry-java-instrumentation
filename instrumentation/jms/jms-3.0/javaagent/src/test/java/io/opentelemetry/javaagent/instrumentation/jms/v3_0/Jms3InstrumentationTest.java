@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
@@ -20,7 +21,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -186,7 +186,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasParent(trace.getSpan(0))
                         .hasStatusSatisfying(status -> status.hasCode(ERROR))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, destinationName),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -212,7 +212,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, destinationName),
                             equalTo(MESSAGING_DESTINATION_TEMPORARY, true),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
@@ -228,7 +228,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                       .hasKind(PRODUCER)
                       .hasNoParent()
                       .hasAttributesSatisfying(
-                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(stringKey("messaging.system.name"), "jms"),
                           equalTo(MESSAGING_DESTINATION_NAME, destinationName),
                           equalTo(MESSAGING_OPERATION_NAME, "send"),
                           equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -252,7 +252,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         histogram.hasPointsSatisfying(
                             point ->
                                 point.hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_SYSTEM, "jms"),
+                                    equalTo(stringKey("messaging.system.name"), "jms"),
                                     equalTo(MESSAGING_OPERATION_NAME, "send"),
                                     equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                     equalTo(
@@ -270,7 +270,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                                     point
                                         .hasValue(1)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_SYSTEM, "jms"),
+                                            equalTo(stringKey("messaging.system.name"), "jms"),
                                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                                             equalTo(
                                                 ERROR_TYPE,
@@ -410,7 +410,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                     span.hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, "durable-topic"),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -420,7 +420,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                     span.hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, "durable-topic"),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -466,7 +466,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                     span.hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, topicName),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -502,7 +502,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                     span.hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, topicName),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -537,7 +537,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                     span.hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, topicName),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -551,7 +551,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                     span.hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, topicName),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -586,7 +586,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                     span.hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, topicName),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -645,7 +645,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                   span.hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(stringKey("messaging.system.name"), "jms"),
                           equalTo(MESSAGING_DESTINATION_NAME, "shared-receive-topic"),
                           equalTo(MESSAGING_OPERATION_NAME, "send"),
                           equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -661,7 +661,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, "shared-receive-topic"),
                             equalTo(MESSAGING_OPERATION_NAME, "receive"),
                             equalTo(MESSAGING_OPERATION_TYPE, "receive"),
@@ -693,7 +693,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, "shared-listener-topic"),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -726,7 +726,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                     span.hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, "reused-listener-topic"),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -777,7 +777,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(stringKey("messaging.system.name"), "jms"),
                           equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
                           equalTo(MESSAGING_OPERATION_NAME, "send"),
                           equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -798,7 +798,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
                             equalTo(MESSAGING_OPERATION_NAME, "receive"),
                             equalTo(MESSAGING_OPERATION_TYPE, "receive"),
@@ -871,7 +871,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(stringKey("messaging.system.name"), "jms"),
                           equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
                           equalTo(MESSAGING_OPERATION_NAME, "send"),
                           equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -889,7 +889,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
                             equalTo(MESSAGING_OPERATION_NAME, "receive"),
                             equalTo(MESSAGING_OPERATION_TYPE, "receive"),

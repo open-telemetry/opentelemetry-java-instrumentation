@@ -208,8 +208,8 @@ across versions). For example:
 
 ```java
 // copied from MessagingIncubatingAttributes
-private static final AttributeKey<String> MESSAGING_SYSTEM =
-    AttributeKey.stringKey("messaging.system");
+private static final AttributeKey<String> MESSAGING_SYSTEM_NAME =
+    AttributeKey.stringKey("messaging.system.name");
 ```
 
 **Javaagent instrumentation**: Use the semconv constants from the semconv artifact directly. The

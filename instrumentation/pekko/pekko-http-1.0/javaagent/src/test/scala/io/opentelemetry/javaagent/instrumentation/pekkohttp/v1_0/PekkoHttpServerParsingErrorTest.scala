@@ -17,6 +17,8 @@ import io.opentelemetry.semconv.{ErrorAttributes, HttpAttributes}
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.model.{HttpRequest, HttpResponse}
+import org.apache.pekko.http.scaladsl.settings.ServerSettings
+import org.apache.pekko.stream.scaladsl.Flow
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -194,6 +196,95 @@ class PekkoHttpServerParsingErrorTest {
             trace.hasSpansSatisfyingExactly(new Consumer[SpanDataAssert] {
               override def accept(span: SpanDataAssert): Unit = {
                 assertParsingErrorSpan(span, 400)
+                ()
+              }
+            })
+        })
+      } finally Await.result(binding.unbind(), 10.seconds)
+    } finally Await.result(system.terminate(), 10.seconds)
+  }
+
+  /** A user written handler is instrumented too, and the span reports the
+    * response that handler built. This handler delegates to the default one,
+    * which is instrumented as well, and the rejection still produces a single
+    * span.
+    */
+  @Test def customHandlerIsTraced(): Unit = {
+    implicit val system: ActorSystem = ActorSystem(
+      "parsing-error-custom-handler-test"
+    )
+    try {
+      val handler: HttpRequest => HttpResponse = _ => HttpResponse()
+      val settings = ServerSettings(system).withParsingErrorHandler(
+        classOf[DelegatingParsingErrorHandler].getName
+      )
+      val binding =
+        Await.result(
+          Http().bindAndHandleSync(
+            handler,
+            "localhost",
+            0,
+            settings = settings
+          ),
+          10.seconds
+        )
+      val port = binding.localAddress.getPort
+
+      try {
+        val response = send(
+          port,
+          "GET /%% HTTP/1.1\r\nHost: localhost:" + port + "\r\n\r\n"
+        )
+        assertThat(response.head).contains("418")
+
+        testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+          override def accept(trace: TraceAssert): Unit =
+            trace.hasSpansSatisfyingExactly(new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit = {
+                assertParsingErrorSpan(span, 418)
+                assertResponseHasCustomizedHeaders(span, response)
+                ()
+              }
+            })
+        })
+      } finally Await.result(binding.unbind(), 10.seconds)
+    } finally Await.result(system.terminate(), 10.seconds)
+  }
+
+  /** A request entity that fails to parse is answered by the parsing error
+    * handler as well, but that request was delivered and already has a span, so
+    * the failure must not add another one.
+    */
+  @Test def malformedRequestEntityIsNotTracedAgain(): Unit = {
+    implicit val system: ActorSystem = ActorSystem(
+      "parsing-error-malformed-entity-test"
+    )
+    try {
+      // the handler reads the entity, so the entity failure fails the response stream
+      val handler =
+        Flow[HttpRequest].flatMapConcat(request =>
+          request.entity.dataBytes.map(_ => HttpResponse())
+        )
+      val binding =
+        Await.result(
+          Http().bindAndHandle(handler, "localhost", 0),
+          10.seconds
+        )
+      val port = binding.localAddress.getPort
+
+      try {
+        val response = send(
+          port,
+          "POST / HTTP/1.1\r\nHost: localhost:" + port +
+            "\r\nTransfer-Encoding: chunked\r\n\r\ninvalid-chunk-size\r\n"
+        )
+        assertThat(response.head).contains("400 Bad Request")
+
+        testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+          override def accept(trace: TraceAssert): Unit =
+            trace.hasSpansSatisfyingExactly(new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit = {
+                span.hasName("POST").hasKind(SpanKind.SERVER).hasNoParent()
                 ()
               }
             })

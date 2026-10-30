@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.jms.v2_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
@@ -18,7 +19,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
@@ -46,7 +46,7 @@ public abstract class AbstractJmsTest {
     List<AttributeAssertion> attributeAssertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_SYSTEM, "jms"),
+                equalTo(stringKey("messaging.system.name"), "jms"),
                 messagingDestinationName(destinationName),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -115,7 +115,7 @@ public abstract class AbstractJmsTest {
     List<AttributeAssertion> attributeAssertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_SYSTEM, "jms"),
+                equalTo(stringKey("messaging.system.name"), "jms"),
                 messagingDestinationName(destinationName),
                 equalTo(MESSAGING_OPERATION_NAME, operation),
                 equalTo(MESSAGING_OPERATION_TYPE, operation)));

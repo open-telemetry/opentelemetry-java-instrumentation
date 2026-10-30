@@ -17,6 +17,6 @@ configurations:
   - name: otel.instrumentation.pulsar.experimental-span-attributes
     declarative_name: java.pulsar.experimental_span_attributes/development
     description: >
-      Enables the experimental span attribute `messaging.pulsar.message.type` for producer spans.
+      Enables the experimental span attribute `pulsar.message.type` for producer spans.
     type: boolean
     default: false

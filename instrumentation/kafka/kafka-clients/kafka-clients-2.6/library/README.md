@@ -104,7 +104,7 @@ are likely to double count. The implementation detects this scenario and only re
 granular set of attributes available. In the case
 of `records-consumed-total`, it reports `[client-id, topic]` and ignores `[client-id]`.
 
-`messaging.kafka.cluster.id` is added to these metrics once the client resolves cluster metadata,
+`kafka.cluster.id` is added to these metrics once the client resolves cluster metadata,
 so data points emitted before the first metadata response are reported without it. The same applies
 to spans produced by the interceptors: the cluster id becomes available when Kafka invokes
 `ClusterResourceListener.onUpdate`, so a producer's very first span may not carry the attribute.
