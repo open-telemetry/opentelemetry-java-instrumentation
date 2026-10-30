@@ -8,6 +8,7 @@ import io.opentelemetry.javaagent.muzzle.AcceptableVersions
 import io.opentelemetry.javaagent.muzzle.MuzzleBenchmarkSupport
 import io.opentelemetry.javaagent.muzzle.MuzzleDirective
 import io.opentelemetry.javaagent.muzzle.MuzzleExtension
+import io.opentelemetry.javaagent.muzzle.internal.MuzzleClassLoaderService
 import io.opentelemetry.javaagent.muzzle.internal.MuzzleTaskSelection
 import io.opentelemetry.javaagent.muzzle.matcher.MuzzleGradlePluginUtil
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils
@@ -232,6 +233,18 @@ tasks.register("printMuzzleReferences") {
 afterEvaluate {
   // Partition metadata is supplied by the parent project's plugin callback.
   if (MuzzleTaskSelection.hasRelevantTask(project)) {
+    val classLoaderService = gradle.sharedServices.registerIfAbsent("muzzleClassLoader$path", MuzzleClassLoaderService::class.java) {
+      parameters.moduleJar.set(shadowModule.flatMap { it.archiveFile })
+      parameters.toolingJar.set(shadowMuzzleTooling.flatMap { it.archiveFile })
+      maxParallelUsages.set(1)
+    }
+    val closeClassLoader = tasks.register("closeMuzzleClassLoader") {
+      usesService(classLoaderService)
+      doLast {
+        classLoaderService.get().close()
+      }
+    }
+
     val system = newRepositorySystem()
     val session = newRepositorySystemSession(system)
     var runAfter = muzzle
@@ -243,20 +256,22 @@ afterEvaluate {
       logger.info("configured $muzzleDirective")
 
       if (muzzleDirective.coreJdk.get()) {
-        runAfter = addMuzzleTask(muzzleDirective, null, runAfter)
+        runAfter = addMuzzleTask(muzzleDirective, null, runAfter, classLoaderService)
       } else {
         for (singleVersion in muzzleDirectiveToArtifacts(muzzleDirective, system, session, projectRepositories)) {
-          runAfter = addMuzzleTask(muzzleDirective, singleVersion, runAfter)
+          runAfter = addMuzzleTask(muzzleDirective, singleVersion, runAfter, classLoaderService)
         }
         if (muzzleDirective.assertInverse.get()) {
           for (inverseDirective in inverseOf(muzzleDirective, system, session, projectRepositories)) {
             for (singleVersion in muzzleDirectiveToArtifacts(inverseDirective, system, session, projectRepositories)) {
-              runAfter = addMuzzleTask(inverseDirective, singleVersion, runAfter)
+              runAfter = addMuzzleTask(inverseDirective, singleVersion, runAfter, classLoaderService)
             }
           }
         }
       }
     }
+    // Release module classes promptly instead of retaining every module until the build ends.
+    runAfter.configure { finalizedBy(closeClassLoader) }
   }
 }
 
@@ -328,7 +343,12 @@ fun newRepositorySystemSession(system: RepositorySystem): RepositorySystemSessio
   }
 }
 
-fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, runAfter: TaskProvider<Task>): TaskProvider<Task> {
+fun addMuzzleTask(
+  muzzleDirective: MuzzleDirective,
+  versionArtifact: Artifact?,
+  runAfter: TaskProvider<Task>,
+  classLoaderService: Provider<MuzzleClassLoaderService>
+): TaskProvider<Task> {
   val taskName = if (versionArtifact == null) {
     "muzzle-Assert$muzzleDirective"
   } else {
@@ -385,8 +405,6 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
     // Keep resolution lazy; ArtifactCollection can be stored in the configuration cache.
     val artifacts = config.incoming.artifactView { lenient(true) }.artifacts
     val configFiles = artifacts.artifactFiles
-    val muzzleShadowJarFile = shadowModule.flatMap { it.archiveFile }
-    val muzzleToolingShadowJarFile = shadowMuzzleTooling.flatMap { it.archiveFile }
     val muzzleBootstrapShadowJarFile = shadowMuzzleBootstrap.flatMap { it.archiveFile }
     val excludedNames = muzzleDirective.excludedInstrumentationNames.get()
     val excludedModules = muzzleDirective.excludedInstrumentationModules.get()
@@ -397,35 +415,29 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
     dependsOn(shadowModule)
     dependsOn(shadowMuzzleTooling)
     dependsOn(shadowMuzzleBootstrap)
+    usesService(classLoaderService)
 
     doLast {
-      // Create instrumentation classloader
-      val instrumentationUrls = arrayOf(
-        muzzleShadowJarFile.get().asFile.toURI().toURL(),
-        muzzleToolingShadowJarFile.get().asFile.toURI().toURL()
-      )
-      URLClassLoader(instrumentationUrls, ClassLoader.getPlatformClassLoader()).use { instrumentationCL ->
-        // Create user classloader
-        val userUrls = (configFiles + muzzleBootstrapShadowJarFile.get().asFile).map { it.toURI().toURL() }.toTypedArray()
-        URLClassLoader(userUrls, ClassLoader.getPlatformClassLoader()).use { userCL ->
-          try {
-            MuzzleGradlePluginUtil.assertInstrumentationMuzzled(
-              instrumentationCL,
-              userCL,
-              excludedNames,
-              excludedModules,
-              shouldAssertPass
-            )
-          } catch (e: Exception) {
-            val resolutionFailures = artifacts.failures
-            val expectation = if (shouldAssertPass) "acceptance (assertPass)" else "rejection (assertFail)"
-            logger.error("Muzzle validation failed for $path; expected $expectation")
-            logger.error("Dependency resolution failures (lenient resolution): ${resolutionFailures.size}")
-            resolutionFailures.forEach { logger.error(it.stackTraceToString()) }
-            logger.error("Resolved dependency JARs used for $path:")
-            configFiles.map { it.absolutePath }.sorted().forEach { logger.error(it) }
-            throw e
-          }
+      val instrumentationCL = classLoaderService.get().classLoader
+      val userUrls = (configFiles + muzzleBootstrapShadowJarFile.get().asFile).map { it.toURI().toURL() }.toTypedArray()
+      URLClassLoader(userUrls, ClassLoader.getPlatformClassLoader()).use { userCL ->
+        try {
+          MuzzleGradlePluginUtil.assertInstrumentationMuzzled(
+            instrumentationCL,
+            userCL,
+            excludedNames,
+            excludedModules,
+            shouldAssertPass
+          )
+        } catch (e: Exception) {
+          val resolutionFailures = artifacts.failures
+          val expectation = if (shouldAssertPass) "acceptance (assertPass)" else "rejection (assertFail)"
+          logger.error("Muzzle validation failed for $path; expected $expectation")
+          logger.error("Dependency resolution failures (lenient resolution): ${resolutionFailures.size}")
+          resolutionFailures.forEach { logger.error(it.stackTraceToString()) }
+          logger.error("Resolved dependency JARs used for $path:")
+          configFiles.map { it.absolutePath }.sorted().forEach { logger.error(it) }
+          throw e
         }
       }
       if (benchmarkReportDirectory != null) {
