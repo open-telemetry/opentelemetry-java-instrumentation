@@ -77,7 +77,7 @@ class WebApplicationContextInstrumentation implements TypeInstrumentation {
               dispatcherServletClass
                   .getClassLoader()
                   .loadClass(
-                      "org.springframework.web.servlet.v3_1.OpenTelemetryHandlerMappingFilter");
+                      "io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.OpenTelemetryHandlerMappingFilter");
           GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
           beanDefinition.setScope(SCOPE_SINGLETON);
           beanDefinition.setBeanClass(clazz);

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.springframework.web.servlet.v3_1;
+package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
 import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.SpringWebMvcServerSpanNaming.serverSpanName;
@@ -46,6 +46,9 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
 
   private final HttpServerRouteGetter<HttpServletRequest> serverSpanName =
       (context, request) -> {
+        if (request == null) {
+          return null;
+        }
         if (this.parseRequestPath) {
           // sets new value for PATH_ATTRIBUTE of request
           if (!parseAndCache(request)) {
