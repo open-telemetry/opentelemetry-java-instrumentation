@@ -14,15 +14,9 @@ on:
         description: Optional space-separated benchmark-support commits, applied in order
         type: string
       partitions:
-        description: Muzzle partitions
-        type: choice
+        description: JSON array of Muzzle partitions, for example [1,2,3,4]
+        type: string
         default: '[1]'
-        options:
-          - '[1]'
-          - '[2]'
-          - '[3]'
-          - '[4]'
-          - '[1,2,3,4]'
       rounds:
         description: Measured baseline/control/candidate rounds, 1 to 10
         type: string
@@ -81,7 +75,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     needs: validate
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 240
     strategy:
       fail-fast: false
       matrix:
@@ -117,7 +111,7 @@ jobs:
         if: inputs.workload-run-id != ''
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: muzzle-benchmark-inputs-${{ matrix.partition }}
+          name: muzzle-benchmark-results-${{ matrix.partition }}
           path: ${{ runner.temp }}/muzzle-workload
           run-id: ${{ inputs.workload-run-id }}
           github-token: ${{ github.token }}
@@ -138,7 +132,7 @@ jobs:
             arguments+=(--support-commit "$commit")
           done
           if [ -n "$WORKLOAD_RUN_ID" ]; then
-            arguments+=(--inputs "$RUNNER_TEMP/muzzle-workload")
+            arguments+=(--inputs "$RUNNER_TEMP/muzzle-workload/reports/inputs")
           fi
           if [ "$PROFILE" = true ]; then
             arguments+=(--profile)

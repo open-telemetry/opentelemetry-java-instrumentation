@@ -40,7 +40,7 @@ def run(command, *, cwd=None, env=None, log=None, input=None):
             command, cwd=cwd, env=env, input=input, check=True,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs,
         ).stdout
-    print(f"Running {log.name}", flush=True)
+    print(f"Running {log}", flush=True)
     with log.open("wb") as output:
         subprocess.run(
             command, cwd=cwd, env=env, input=input, check=True,

@@ -22,7 +22,8 @@ The default is partition 1. Each partition runs on its own `ubuntu-24.04` runner
 baseline and candidate always share that runner. Five rounds execute fifteen
 measured builds per partition, plus untimed preparation. Each round includes an
 identical-revision baseline control. Baseline/candidate order alternates.
-Jobs have a two-hour limit.
+Jobs have a four-hour limit, including preparation and Profiler setup between samples.
+Pass a subset such as `partitions='[3,4]'` to run only those partitions.
 
 Use one round for a functional check, not a performance conclusion.
 Set `profile=true` to collect separate, untimed JFR profiles.
@@ -63,12 +64,15 @@ properties, JDK requirement, and pinned latest-dependency versions. This prevent
 changes to the instrumentation fixtures from being mistaken for faster matching.
 The workflow pins Temurin and Gradle Profiler.
 
-For later comparisons, reuse the `muzzle-benchmark-inputs-N` artifact from an
-earlier run by passing `workload-run-id`. It contains frozen metadata and the
-expected assertion/dependency records. The runner refuses changed inputs instead
-of silently refreshing them. Artifacts expire after 30 days, so download and retain
-important workload snapshots. Local runs can pass the retained directory with
-`--inputs`.
+For later comparisons, pass `workload-run-id` to reuse an earlier run's frozen
+metadata and expected assertion/dependency records. The workflow loads `reports/inputs`
+from the retained `muzzle-benchmark-results-N` artifact. This also works for interrupted
+runs that finished preparation. The runner refuses changed inputs instead of silently
+refreshing them.
+
+Successful runs also publish a smaller `muzzle-benchmark-inputs-N` artifact for local
+reuse with `--inputs`. Artifacts expire after 30 days, so download and retain important
+workload snapshots.
 
 Omitting that input explicitly creates a new workload snapshot. Do not compare
 absolute results across different workload identities.
