@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -294,6 +295,10 @@ class Jedis30ClientTest {
     assertThat(pipeline.syncAndReturnAll()).containsExactly("PONG", "OK");
     assertNestedErrors(nestedErrors);
     assertBatchErrorType(null, "PIPELINE");
+
+    testing.clearData();
+    jedis.set("after-nested-error", "value");
+    assertSuccessfulOperationDoesNotInheritError();
   }
 
   @ParameterizedTest
@@ -451,11 +456,14 @@ class Jedis30ClientTest {
   private static void assertBatchErrorType(String errorType, String batchOperation) {
     testing.waitForTraces(1);
     assertThat(testing.spans())
-        .anySatisfy(
-            span ->
-                assertThat(span.getAttributes().get(DB_OPERATION_NAME)).isEqualTo(batchOperation));
-    assertThat(testing.spans())
-        .allSatisfy(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType));
+        .filteredOn(span -> batchOperation.equals(span.getAttributes().get(DB_OPERATION_NAME)))
+        .singleElement()
+        .satisfies(
+            span -> {
+              assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType);
+              assertThat(span.getStatus().getStatusCode())
+                  .isEqualTo(errorType == null ? StatusCode.UNSET : StatusCode.ERROR);
+            });
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jedis-3.0",
         "db.client.operation.duration",
@@ -469,6 +477,32 @@ class Jedis30ClientTest {
                                   .isEqualTo(batchOperation);
                               assertThat(point.getAttributes().get(ERROR_TYPE))
                                   .isEqualTo(errorType);
+                            })));
+  }
+
+  private static void assertSuccessfulOperationDoesNotInheritError() {
+    testing.waitForTraces(1);
+    assertThat(testing.spans())
+        .singleElement()
+        .satisfies(
+            span -> {
+              assertThat(span.getAttributes().get(DB_OPERATION_NAME)).isEqualTo("SET");
+              assertThat(span.getAttributes().get(ERROR_TYPE)).isNull();
+              assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.UNSET);
+            });
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-3.0",
+        "db.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .singleElement()
+                        .satisfies(
+                            point -> {
+                              assertThat(point.getAttributes().get(DB_OPERATION_NAME))
+                                  .isEqualTo("SET");
+                              assertThat(point.getAttributes().get(ERROR_TYPE)).isNull();
                             })));
   }
 

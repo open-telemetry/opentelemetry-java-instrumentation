@@ -11,6 +11,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -77,6 +78,10 @@ class Jedis23ReplyIsolationTest {
     assertThat(pipeline.syncAndReturnAll()).containsExactly("PONG", "OK");
     assertNestedErrors(nestedErrors);
     assertBatchErrorType(null, "PIPELINE");
+
+    testing.clearData();
+    jedis.set("after-nested-error", "value");
+    assertSuccessfulOperationDoesNotInheritError();
   }
 
   @ParameterizedTest
@@ -278,7 +283,12 @@ class Jedis23ReplyIsolationTest {
     assertThat(testing.spans())
         .filteredOn(span -> batchOperation.equals(span.getAttributes().get(DB_OPERATION_NAME)))
         .singleElement()
-        .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType));
+        .satisfies(
+            span -> {
+              assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType);
+              assertThat(span.getStatus().getStatusCode())
+                  .isEqualTo(errorType == null ? StatusCode.UNSET : StatusCode.ERROR);
+            });
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jedis-2.0",
         "db.client.operation.duration",
@@ -294,6 +304,32 @@ class Jedis23ReplyIsolationTest {
                             point ->
                                 assertThat(point.getAttributes().get(ERROR_TYPE))
                                     .isEqualTo(errorType))));
+  }
+
+  private static void assertSuccessfulOperationDoesNotInheritError() {
+    testing.waitForTraces(1);
+    assertThat(testing.spans())
+        .singleElement()
+        .satisfies(
+            span -> {
+              assertThat(span.getAttributes().get(DB_OPERATION_NAME)).isEqualTo("SET");
+              assertThat(span.getAttributes().get(ERROR_TYPE)).isNull();
+              assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.UNSET);
+            });
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-2.0",
+        "db.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .singleElement()
+                        .satisfies(
+                            point -> {
+                              assertThat(point.getAttributes().get(DB_OPERATION_NAME))
+                                  .isEqualTo("SET");
+                              assertThat(point.getAttributes().get(ERROR_TYPE)).isNull();
+                            })));
   }
 
   private static class ReplyPipeline extends Pipeline {
