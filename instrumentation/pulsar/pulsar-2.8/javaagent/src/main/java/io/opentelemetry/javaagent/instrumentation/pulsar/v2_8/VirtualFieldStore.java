@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarRequest;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
@@ -24,6 +23,8 @@ public class VirtualFieldStore {
       VirtualField.find(Consumer.class, String.class);
   private static final VirtualField<SendCallback, SendCallbackData> CALLBACK_FIELD =
       VirtualField.find(SendCallback.class, SendCallbackData.class);
+  private static final VirtualField<Message<?>, SendCallbackData> MESSAGE_SEND_CALLBACK_FIELD =
+      VirtualField.find(Message.class, SendCallbackData.class);
 
   private VirtualFieldStore() {}
 
@@ -35,9 +36,25 @@ public class VirtualFieldStore {
     CONSUMER_FIELD.set(instance, serviceUrl);
   }
 
-  public static void inject(SendCallback instance, Context context, PulsarRequest request) {
+  public static void inject(SendCallback instance, SendCallbackData data) {
     if (instance != null) {
-      CALLBACK_FIELD.set(instance, SendCallbackData.create(context, request));
+      CALLBACK_FIELD.set(instance, data);
+      data.associateCallback(instance);
+      Message<?> message = data.request.getMessage();
+      if (message != null) {
+        MESSAGE_SEND_CALLBACK_FIELD.set(message, data);
+      }
+    }
+  }
+
+  static void clearSendCallbackData(SendCallbackData data) {
+    SendCallback callback = data.callback();
+    if (callback != null && CALLBACK_FIELD.get(callback) == data) {
+      CALLBACK_FIELD.set(callback, null);
+    }
+    Message<?> message = data.request.getMessage();
+    if (message != null && MESSAGE_SEND_CALLBACK_FIELD.get(message) == data) {
+      MESSAGE_SEND_CALLBACK_FIELD.set(message, null);
     }
   }
 
@@ -78,6 +95,16 @@ public class VirtualFieldStore {
   @Nullable
   public static String extract(Consumer<?> instance) {
     return CONSUMER_FIELD.get(instance);
+  }
+
+  @Nullable
+  public static SendCallbackData extractSendCallbackData(Message<?> instance) {
+    return MESSAGE_SEND_CALLBACK_FIELD.get(instance);
+  }
+
+  @Nullable
+  public static SendCallbackData extractSendCallbackData(SendCallback instance) {
+    return CALLBACK_FIELD.get(instance);
   }
 
   @Nullable
