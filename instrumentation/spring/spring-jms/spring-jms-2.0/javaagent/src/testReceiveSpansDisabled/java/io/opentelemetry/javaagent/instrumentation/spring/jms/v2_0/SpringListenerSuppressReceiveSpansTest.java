@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertCounter;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertHistogram;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoMetric;
@@ -12,7 +13,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.common.Attributes;
@@ -72,7 +72,7 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractJmsTest {
         Attributes.of(
             MESSAGING_OPERATION_NAME,
             "send",
-            MESSAGING_SYSTEM,
+            stringKey("messaging.system.name"),
             "jms",
             MESSAGING_DESTINATION_NAME,
             "SpringListenerJms2");
@@ -86,7 +86,7 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractJmsTest {
     Attributes processAttributes =
         Attributes.builder()
             .put(MESSAGING_OPERATION_NAME, "process")
-            .put(MESSAGING_SYSTEM, "jms")
+            .put(stringKey("messaging.system.name"), "jms")
             .put(MESSAGING_DESTINATION_NAME, "SpringListenerJms2")
             .put(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription")
             .build();

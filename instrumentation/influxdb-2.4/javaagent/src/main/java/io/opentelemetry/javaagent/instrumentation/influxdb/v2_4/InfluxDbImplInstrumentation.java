@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
-import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.queryInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.requestInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isEnum;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,15 +16,20 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbQueryAdviceScope.QueryMethod;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import okhttp3.HttpUrl;
 import org.influxdb.dto.BatchPoints;
 import org.influxdb.dto.Query;
+import org.influxdb.dto.QueryResult;
 import org.influxdb.impl.InfluxDBImpl;
 import retrofit2.Retrofit;
 
@@ -39,8 +43,56 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("query").and(takesArgument(0, named("org.influxdb.dto.Query"))),
+        named("query")
+            .and(takesArguments(1).or(takesArguments(2).and(takesArgument(1, TimeUnit.class))))
+            .and(takesArgument(0, named("org.influxdb.dto.Query"))),
         getClass().getName() + "$InfluxDbQueryAdvice");
+    transformer.applyAdviceToMethod(
+        named("query")
+            .and(takesArguments(3))
+            .and(takesArgument(0, named("org.influxdb.dto.Query")))
+            .and(takesArgument(1, Consumer.class))
+            .and(takesArgument(2, Consumer.class)),
+        getClass().getName() + "$InfluxDbAsyncQueryAdvice");
+    transformer.applyAdviceToMethod(
+        named("query")
+            .and(takesArguments(3))
+            .and(takesArgument(0, named("org.influxdb.dto.Query")))
+            .and(takesArgument(1, int.class))
+            .and(takesArgument(2, Consumer.class)),
+        getClass().getName() + "$InfluxDbChunkedConsumerQueryAdvice");
+    transformer.applyAdviceToMethod(
+        named("query")
+            .and(takesArguments(3))
+            .and(takesArgument(0, named("org.influxdb.dto.Query")))
+            .and(takesArgument(1, int.class))
+            .and(takesArgument(2, BiConsumer.class)),
+        getClass().getName() + "$InfluxDbChunkedBiConsumerQueryAdvice");
+    transformer.applyAdviceToMethod(
+        named("query")
+            .and(takesArguments(4))
+            .and(takesArgument(0, named("org.influxdb.dto.Query")))
+            .and(takesArgument(1, int.class))
+            .and(takesArgument(2, Consumer.class))
+            .and(takesArgument(3, Runnable.class)),
+        getClass().getName() + "$InfluxDbChunkedConsumerCompletionQueryAdvice");
+    transformer.applyAdviceToMethod(
+        named("query")
+            .and(takesArguments(4))
+            .and(takesArgument(0, named("org.influxdb.dto.Query")))
+            .and(takesArgument(1, int.class))
+            .and(takesArgument(2, BiConsumer.class))
+            .and(takesArgument(3, Runnable.class)),
+        getClass().getName() + "$InfluxDbChunkedBiConsumerCompletionQueryAdvice");
+    transformer.applyAdviceToMethod(
+        named("query")
+            .and(takesArguments(5))
+            .and(takesArgument(0, named("org.influxdb.dto.Query")))
+            .and(takesArgument(1, int.class))
+            .and(takesArgument(2, BiConsumer.class))
+            .and(takesArgument(3, Runnable.class))
+            .and(takesArgument(4, Consumer.class)),
+        getClass().getName() + "$InfluxDbChunkedBiConsumerCompletionErrorQueryAdvice");
 
     transformer.applyAdviceToMethod(
         named("write")
@@ -69,50 +121,238 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
   public static class InfluxDbQueryAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Advice.AssignReturned.ToAllArguments(index = 0, typing = Assigner.Typing.DYNAMIC)
-    public static Object[] onEnter(
-        @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] arguments,
+    @Nullable
+    public static InfluxDbQueryAdviceScope onEnter(
+        @Advice.Argument(0) @Nullable Query query,
         @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
-      CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return null;
+      return InfluxDbQueryAdviceScope.start(query, retrofit, false, QueryMethod.SYNCHRONOUS);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Return @Nullable QueryResult result,
+        @Advice.Enter @Nullable InfluxDbQueryAdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable, result);
       }
+    }
+  }
 
-      Query query = arguments[0] instanceof Query ? (Query) arguments[0] : null;
-      if (query == null) {
-        return null;
-      }
-      Context parentContext = Context.current();
+  @SuppressWarnings("unused")
+  public static class InfluxDbAsyncQueryAdvice {
 
-      HttpUrl httpUrl = retrofit.baseUrl();
-      InfluxDbQuery influxDbQuery =
-          InfluxDbQuery.create(
-              httpUrl.host(), httpUrl.port(), query.getDatabase(), query.getCommand());
-
-      if (!queryInstrumenter().shouldStart(parentContext, influxDbQuery)) {
-        return null;
-      }
-
-      // wrap callbacks so they'd run in the context of the parent span
-      Object[] newArguments = new Object[arguments.length];
-      for (int i = 0; i < arguments.length; i++) {
-        newArguments[i] = InfluxDbObjectWrapper.wrap(arguments[i], parentContext);
+    @AssignReturned.ToArguments({
+      @ToArgument(value = 1, index = 1),
+      @ToArgument(value = 2, index = 2)
+    })
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
+    public static Object[] onEnter(
+        @Advice.Argument(0) @Nullable Query query,
+        @Advice.Argument(1) @Nullable Consumer<?> successCallback,
+        @Advice.Argument(2) @Nullable Consumer<?> failureCallback,
+        @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
+      InfluxDbQueryAdviceScope adviceScope =
+          InfluxDbQueryAdviceScope.start(query, retrofit, true, QueryMethod.ASYNCHRONOUS);
+      Context parentContext = adviceScope.parentContext();
+      InfluxDbQueryState queryState = adviceScope.queryState();
+      if (parentContext == null || queryState == null) {
+        return new Object[] {adviceScope, successCallback, failureCallback};
       }
 
       return new Object[] {
-        newArguments, InfluxDbScope.start(queryInstrumenter(), parentContext, influxDbQuery)
+        adviceScope,
+        InfluxDbObjectWrapper.wrapConsumer(successCallback, parentContext, queryState),
+        InfluxDbObjectWrapper.wrapConsumer(failureCallback, parentContext, queryState)
       };
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
-      CallDepth callDepth = CallDepth.forClass(InfluxDBImpl.class);
-      if (callDepth.decrementAndGet() > 0 || enterArgs == null) {
-        return;
+      if (enterArgs != null) {
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable, null);
       }
+    }
+  }
 
-      ((InfluxDbScope<?>) enterArgs[1]).end(throwable);
+  @SuppressWarnings("unused")
+  public static class InfluxDbChunkedConsumerQueryAdvice {
+
+    @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
+    public static Object[] onEnter(
+        @Advice.Argument(0) @Nullable Query query,
+        @Advice.Argument(2) @Nullable Consumer<?> callback,
+        @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
+      InfluxDbQueryAdviceScope adviceScope =
+          InfluxDbQueryAdviceScope.start(query, retrofit, true, QueryMethod.CHUNKED_CONSUMER);
+      Context parentContext = adviceScope.parentContext();
+      InfluxDbQueryState queryState = adviceScope.queryState();
+      if (parentContext == null || queryState == null) {
+        return new Object[] {adviceScope, callback};
+      }
+      return new Object[] {
+        adviceScope, InfluxDbObjectWrapper.wrapConsumer(callback, parentContext, queryState)
+      };
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
+      if (enterArgs != null) {
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable, null);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InfluxDbChunkedBiConsumerQueryAdvice {
+
+    @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
+    public static Object[] onEnter(
+        @Advice.Argument(0) @Nullable Query query,
+        @Advice.Argument(2) @Nullable BiConsumer<?, ?> callback,
+        @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
+      InfluxDbQueryAdviceScope adviceScope =
+          InfluxDbQueryAdviceScope.start(query, retrofit, true, QueryMethod.CHUNKED_BI_CONSUMER);
+      Context parentContext = adviceScope.parentContext();
+      InfluxDbQueryState queryState = adviceScope.queryState();
+      if (parentContext == null || queryState == null) {
+        return new Object[] {adviceScope, callback};
+      }
+      return new Object[] {
+        adviceScope, InfluxDbObjectWrapper.wrapBiConsumer(callback, parentContext, queryState)
+      };
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
+      if (enterArgs != null) {
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable, null);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InfluxDbChunkedConsumerCompletionQueryAdvice {
+
+    @AssignReturned.ToArguments({
+      @ToArgument(value = 2, index = 1),
+      @ToArgument(value = 3, index = 2)
+    })
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
+    public static Object[] onEnter(
+        @Advice.Argument(0) @Nullable Query query,
+        @Advice.Argument(2) @Nullable Consumer<?> callback,
+        @Advice.Argument(3) @Nullable Runnable completionCallback,
+        @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
+      InfluxDbQueryAdviceScope adviceScope =
+          InfluxDbQueryAdviceScope.start(
+              query, retrofit, true, QueryMethod.CHUNKED_CONSUMER_COMPLETION);
+      Context parentContext = adviceScope.parentContext();
+      InfluxDbQueryState queryState = adviceScope.queryState();
+      if (parentContext == null || queryState == null) {
+        return new Object[] {adviceScope, callback, completionCallback};
+      }
+      return new Object[] {
+        adviceScope,
+        InfluxDbObjectWrapper.wrapConsumer(callback, parentContext, queryState),
+        InfluxDbObjectWrapper.wrapRunnable(completionCallback, parentContext, queryState)
+      };
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
+      if (enterArgs != null) {
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable, null);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InfluxDbChunkedBiConsumerCompletionQueryAdvice {
+
+    @AssignReturned.ToArguments({
+      @ToArgument(value = 2, index = 1),
+      @ToArgument(value = 3, index = 2)
+    })
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
+    public static Object[] onEnter(
+        @Advice.Argument(0) @Nullable Query query,
+        @Advice.Argument(2) @Nullable BiConsumer<?, ?> callback,
+        @Advice.Argument(3) @Nullable Runnable completionCallback,
+        @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
+      InfluxDbQueryAdviceScope adviceScope =
+          InfluxDbQueryAdviceScope.start(
+              query, retrofit, true, QueryMethod.CHUNKED_BI_CONSUMER_COMPLETION);
+      Context parentContext = adviceScope.parentContext();
+      InfluxDbQueryState queryState = adviceScope.queryState();
+      if (parentContext == null || queryState == null) {
+        return new Object[] {adviceScope, callback, completionCallback};
+      }
+      return new Object[] {
+        adviceScope,
+        InfluxDbObjectWrapper.wrapBiConsumer(callback, parentContext, queryState),
+        InfluxDbObjectWrapper.wrapRunnable(completionCallback, parentContext, queryState)
+      };
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
+      if (enterArgs != null) {
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable, null);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InfluxDbChunkedBiConsumerCompletionErrorQueryAdvice {
+
+    @AssignReturned.ToArguments({
+      @ToArgument(value = 2, index = 1),
+      @ToArgument(value = 3, index = 2),
+      @ToArgument(value = 4, index = 3)
+    })
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
+    public static Object[] onEnter(
+        @Advice.Argument(0) @Nullable Query query,
+        @Advice.Argument(2) @Nullable BiConsumer<?, ?> callback,
+        @Advice.Argument(3) @Nullable Runnable completionCallback,
+        @Advice.Argument(4) @Nullable Consumer<?> errorCallback,
+        @Advice.FieldValue(value = "retrofit") Retrofit retrofit) {
+      InfluxDbQueryAdviceScope adviceScope =
+          InfluxDbQueryAdviceScope.start(
+              query, retrofit, true, QueryMethod.CHUNKED_BI_CONSUMER_COMPLETION_ERROR);
+      Context parentContext = adviceScope.parentContext();
+      InfluxDbQueryState queryState = adviceScope.queryState();
+      if (parentContext == null || queryState == null) {
+        return new Object[] {adviceScope, callback, completionCallback, errorCallback};
+      }
+      return new Object[] {
+        adviceScope,
+        InfluxDbObjectWrapper.wrapBiConsumer(callback, parentContext, queryState),
+        InfluxDbObjectWrapper.wrapRunnable(completionCallback, parentContext, queryState),
+        InfluxDbObjectWrapper.wrapConsumer(errorCallback, parentContext, queryState)
+      };
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter @Nullable Object[] enterArgs) {
+      if (enterArgs != null) {
+        ((InfluxDbQueryAdviceScope) enterArgs[0]).end(throwable, null);
+      }
     }
   }
 
@@ -136,11 +376,15 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
       Context parentContext = Context.current();
 
       HttpUrl httpUrl = retrofit.baseUrl();
-      String database =
-          (arg0 instanceof BatchPoints)
-              ? ((BatchPoints) arg0).getDatabase()
-              // write data by UDP protocol, in this way, can't get database name.
-              : arg0 instanceof Integer ? null : String.valueOf(arg0);
+      String database;
+      if (arg0 instanceof BatchPoints) {
+        database = ((BatchPoints) arg0).getDatabase();
+      } else if (arg0 instanceof Integer) {
+        // write data by UDP protocol, in this way, can't get database name.
+        database = null;
+      } else {
+        database = String.valueOf(arg0);
+      }
 
       String operationName;
       if ("createDatabase".equals(methodName)) {

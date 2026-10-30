@@ -20,17 +20,19 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_NAMESPACE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.base.BaseConf;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -73,6 +75,7 @@ abstract class AbstractRocketMqClientTest {
 
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.rocketmq-client.experimental-span-attributes");
+  private static final ContextKey<String> CALLER_MARKER = ContextKey.named("caller-marker");
   private static final String CONSUMER_GROUP = "consumerGroup";
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractRocketMqClientTest.class);
@@ -191,27 +194,26 @@ abstract class AbstractRocketMqClientTest {
                         span.hasName("send " + sharedTopic)
                             .hasKind(SpanKind.PRODUCER)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
+                                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                equalTo(stringKey("rocketmq.namespace"), NAMESPACE),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
+                                equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
                                 satisfies(
-                                    stringKey("messaging.rocketmq.broker_address"),
+                                    stringKey("rocketmq.broker_address"),
                                     val -> experimentalString(val)),
                                 equalTo(
-                                    stringKey("messaging.rocketmq.send_result"),
-                                    experimental("SEND_OK"))),
+                                    stringKey("rocketmq.send_result"), experimental("SEND_OK"))),
                     span ->
                         span.hasName("process " + sharedTopic)
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
+                                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                equalTo(stringKey("rocketmq.namespace"), NAMESPACE),
                                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
@@ -219,20 +221,114 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
+                                equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
                                 satisfies(
-                                    stringKey("messaging.rocketmq.broker_address"),
+                                    stringKey("rocketmq.broker_address"),
                                     val -> experimentalString(val)),
                                 satisfies(
-                                    longKey("messaging.rocketmq.queue_id"),
-                                    val -> experimentalLong(val)),
+                                    longKey("rocketmq.queue_id"), val -> experimentalLong(val)),
                                 satisfies(
-                                    longKey("messaging.rocketmq.queue_offset"),
+                                    longKey("rocketmq.queue_offset"),
                                     val -> experimentalLong(val))),
                     span ->
                         span.hasName("messageListener")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(1))));
+  }
+
+  @Test
+  void testRocketmqBatchProduceCallbackContext() throws Exception {
+    String topic = BaseConf.initTopic();
+    CompletableFuture<SendResult> sendResult = new CompletableFuture<>();
+    CompletableFuture<Context> callbackContext = new CompletableFuture<>();
+    CompletableFuture<SpanContext> callbackSpanContext = new CompletableFuture<>();
+    SendCallback callback =
+        new SendCallback() {
+          @Override
+          public void onSuccess(SendResult result) {
+            sendResult.complete(result);
+            captureCallbackContext(callbackContext, callbackSpanContext);
+          }
+
+          @Override
+          public void onException(Throwable throwable) {
+            sendResult.completeExceptionally(throwable);
+            callbackContext.completeExceptionally(throwable);
+            callbackSpanContext.completeExceptionally(throwable);
+          }
+        };
+
+    Span parent =
+        testing()
+            .getOpenTelemetry()
+            .getTracer("test")
+            .spanBuilder("parent")
+            .setParent(Context.root())
+            .startSpan();
+    Context caller = Context.root().with(parent).with(CALLER_MARKER, "caller");
+    SpanContext actualCallbackSpanContext;
+    try {
+      try (Scope ignored = caller.makeCurrent()) {
+        sendingProducer.send(
+            asList(
+                new Message(topic, "first".getBytes(Charset.defaultCharset())),
+                new Message(topic, "second".getBytes(Charset.defaultCharset()))),
+            callback);
+      }
+
+      assertThat(sendResult.get(10, SECONDS).getSendStatus()).isEqualTo(SendStatus.SEND_OK);
+      Context actualCallbackContext = callbackContext.get(10, SECONDS);
+      actualCallbackSpanContext = callbackSpanContext.get(10, SECONDS);
+      assertThat(actualCallbackContext.get(CALLER_MARKER)).isEqualTo("caller");
+      assertThat(Span.fromContext(actualCallbackContext).getSpanContext())
+          .isEqualTo(parent.getSpanContext());
+    } finally {
+      parent.end();
+    }
+
+    int createSpanCount = hasBatchCreateSpans() ? 2 : 0;
+    List<Consumer<SpanDataAssert>> spans = new ArrayList<>();
+    spans.add(span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent());
+    for (int i = 0; i < createSpanCount; i++) {
+      spans.add(
+          span ->
+              span.hasName("create " + topic)
+                  .hasKind(SpanKind.PRODUCER)
+                  .hasParentSpanId(parent.getSpanContext().getSpanId()));
+    }
+    spans.add(
+        span ->
+            span.hasName("send " + topic)
+                .hasKind(hasBatchCreateSpans() ? SpanKind.CLIENT : SpanKind.PRODUCER)
+                .hasParentSpanId(parent.getSpanContext().getSpanId()));
+    spans.add(
+        span ->
+            span.hasName("callback")
+                .hasKind(SpanKind.INTERNAL)
+                .hasSpanId(actualCallbackSpanContext.getSpanId())
+                .hasParentSpanId(parent.getSpanContext().getSpanId()));
+    testing()
+        .waitAndAssertTraces(
+            trace -> trace.hasSize(spans.size()).hasSpansSatisfyingExactlyInAnyOrder(spans));
+  }
+
+  private void captureCallbackContext(
+      CompletableFuture<Context> callbackContext,
+      CompletableFuture<SpanContext> callbackSpanContext) {
+    try {
+      Context context = Context.current();
+      Span callback =
+          testing().getOpenTelemetry().getTracer("test").spanBuilder("callback").startSpan();
+      try {
+        callbackContext.complete(context);
+        callbackSpanContext.complete(callback.getSpanContext());
+      } finally {
+        callback.end();
+      }
+    } catch (Throwable t) {
+      callbackContext.completeExceptionally(t);
+      callbackSpanContext.completeExceptionally(t);
+    }
   }
 
   @Test
@@ -257,27 +353,26 @@ abstract class AbstractRocketMqClientTest {
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
+                                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                equalTo(stringKey("rocketmq.namespace"), NAMESPACE),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
+                                equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
                                 satisfies(
-                                    stringKey("messaging.rocketmq.broker_address"),
+                                    stringKey("rocketmq.broker_address"),
                                     val -> experimentalString(val)),
                                 equalTo(
-                                    stringKey("messaging.rocketmq.send_result"),
-                                    experimental("SEND_OK"))),
+                                    stringKey("rocketmq.send_result"), experimental("SEND_OK"))),
                     span ->
                         span.hasName("process " + sharedTopic)
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
+                                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                equalTo(stringKey("rocketmq.namespace"), NAMESPACE),
                                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
@@ -285,15 +380,14 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
+                                equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
                                 satisfies(
-                                    stringKey("messaging.rocketmq.broker_address"),
+                                    stringKey("rocketmq.broker_address"),
                                     val -> experimentalString(val)),
                                 satisfies(
-                                    longKey("messaging.rocketmq.queue_id"),
-                                    val -> experimentalLong(val)),
+                                    longKey("rocketmq.queue_id"), val -> experimentalLong(val)),
                                 satisfies(
-                                    longKey("messaging.rocketmq.queue_offset"),
+                                    longKey("rocketmq.queue_offset"),
                                     val -> experimentalLong(val))),
                     span ->
                         span.hasName("messageListener")
@@ -395,7 +489,10 @@ abstract class AbstractRocketMqClientTest {
             trace -> {
               messageCreationContexts.clear();
               boolean hasBatchCreateSpans = hasBatchCreateSpans();
-              int size = hasBatchCreateSpans ? (existingCreationContext ? 3 : 4) : 2;
+              int size = 2;
+              if (hasBatchCreateSpans) {
+                size = existingCreationContext ? 3 : 4;
+              }
               trace.hasSize(size);
               SpanContext spanContext =
                   spanNamed(trace, size, "send " + sharedTopic).getSpanContext();
@@ -431,9 +528,9 @@ abstract class AbstractRocketMqClientTest {
                               .hasKind(SpanKind.PRODUCER)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                  equalTo(stringKey("messaging.system.name"), "rocketmq"),
                                   equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
-                                  equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
+                                  equalTo(stringKey("rocketmq.namespace"), NAMESPACE),
                                   equalTo(MESSAGING_OPERATION_NAME, "create"),
                                   equalTo(MESSAGING_OPERATION_TYPE, "create"),
                                   satisfies(
@@ -447,19 +544,17 @@ abstract class AbstractRocketMqClientTest {
                         .hasKind(hasBatchCreateSpans ? SpanKind.CLIENT : SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                            equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
+                            equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                            equalTo(stringKey("rocketmq.namespace"), NAMESPACE),
                             equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(2)),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             equalTo(MESSAGING_MESSAGE_ID, null),
                             satisfies(
-                                stringKey("messaging.rocketmq.broker_address"),
+                                stringKey("rocketmq.broker_address"),
                                 val -> experimentalString(val)),
-                            equalTo(
-                                stringKey("messaging.rocketmq.send_result"),
-                                experimental("SEND_OK")));
+                            equalTo(stringKey("rocketmq.send_result"), experimental("SEND_OK")));
                     if (hasBatchCreateSpans) {
                       span.hasLinksSatisfying(
                           links(messageCreationContexts.toArray(new SpanContext[0])));
@@ -477,8 +572,8 @@ abstract class AbstractRocketMqClientTest {
                         .hasNoParent()
                         .hasStatus(failConsumption ? StatusData.error() : StatusData.unset())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                            equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
+                            equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                            equalTo(stringKey("rocketmq.namespace"), NAMESPACE),
                             equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
                             equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2L),
@@ -528,20 +623,18 @@ abstract class AbstractRocketMqClientTest {
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
+                                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                equalTo(stringKey("rocketmq.namespace"), NAMESPACE),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
+                                equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
                                 satisfies(
-                                    stringKey("messaging.rocketmq.broker_address"),
+                                    stringKey("rocketmq.broker_address"),
                                     val -> experimentalString(val)),
-                                equalTo(
-                                    stringKey("messaging.rocketmq.send_result"),
-                                    experimental("SEND_OK")),
+                                equalTo(stringKey("rocketmq.send_result"), experimental("SEND_OK")),
                                 equalTo(
                                     headerAttributeKey("Test-Message-Header"),
                                     singletonList("test"))),
@@ -550,8 +643,8 @@ abstract class AbstractRocketMqClientTest {
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
+                                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                equalTo(stringKey("rocketmq.namespace"), NAMESPACE),
                                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
@@ -559,16 +652,14 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
+                                equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
                                 satisfies(
-                                    stringKey("messaging.rocketmq.broker_address"),
+                                    stringKey("rocketmq.broker_address"),
                                     val -> experimentalString(val)),
                                 satisfies(
-                                    longKey("messaging.rocketmq.queue_id"),
-                                    val -> experimentalLong(val)),
+                                    longKey("rocketmq.queue_id"), val -> experimentalLong(val)),
                                 satisfies(
-                                    longKey("messaging.rocketmq.queue_offset"),
-                                    val -> experimentalLong(val)),
+                                    longKey("rocketmq.queue_offset"), val -> experimentalLong(val)),
                                 equalTo(
                                     headerAttributeKey("Test-Message-Header"),
                                     singletonList("test"))),
@@ -594,22 +685,22 @@ abstract class AbstractRocketMqClientTest {
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
+                                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                equalTo(stringKey("rocketmq.namespace"), NAMESPACE),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
+                                equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
                                 satisfies(
-                                    stringKey("messaging.rocketmq.broker_address"),
+                                    stringKey("rocketmq.broker_address"),
                                     val -> experimentalString(val))),
                     span ->
                         span.hasName("process " + sharedTopic)
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, NAMESPACE),
+                                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                equalTo(stringKey("rocketmq.namespace"), NAMESPACE),
                                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
                                 equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
@@ -617,15 +708,14 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, experimental("TagA")),
+                                equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
                                 satisfies(
-                                    stringKey("messaging.rocketmq.broker_address"),
+                                    stringKey("rocketmq.broker_address"),
                                     val -> experimentalString(val)),
                                 satisfies(
-                                    longKey("messaging.rocketmq.queue_id"),
-                                    val -> experimentalLong(val)),
+                                    longKey("rocketmq.queue_id"), val -> experimentalLong(val)),
                                 satisfies(
-                                    longKey("messaging.rocketmq.queue_offset"),
+                                    longKey("rocketmq.queue_offset"),
                                     val -> experimentalLong(val))),
                     span ->
                         span.hasName("messageListener")

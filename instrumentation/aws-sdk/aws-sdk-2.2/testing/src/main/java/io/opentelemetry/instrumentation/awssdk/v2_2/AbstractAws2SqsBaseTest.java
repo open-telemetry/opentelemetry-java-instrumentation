@@ -20,15 +20,12 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.net.URI;
@@ -82,10 +79,7 @@ public abstract class AbstractAws2SqsBaseTest extends AbstractAwsSdkTest {
   protected SendMessageBatchRequest sendMessageBatchRequest;
 
   protected boolean receiveTelemetryEnabled() {
-    return getTesting() instanceof AgentInstrumentationExtension
-        ? Boolean.getBoolean(
-            "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled")
-        : Boolean.getBoolean("test.messagingReceiveTelemetryEnabled");
+    return Boolean.getBoolean("test.messagingReceiveTelemetryEnabled");
   }
 
   protected abstract SqsClient configureSqsClient(SqsClient sqsClient);
@@ -290,7 +284,7 @@ public abstract class AbstractAws2SqsBaseTest extends AbstractAwsSdkTest {
             satisfies(URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
             equalTo(SERVER_ADDRESS, "localhost"),
             equalTo(SERVER_PORT, sqsPort),
-            equalTo(MESSAGING_SYSTEM, AWS_SQS),
+            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
             equalTo(MESSAGING_OPERATION_NAME, "process"),
             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -336,7 +330,7 @@ public abstract class AbstractAws2SqsBaseTest extends AbstractAwsSdkTest {
             satisfies(URL_FULL, val -> val.startsWith("http://localhost:" + sqsPort)),
             equalTo(SERVER_ADDRESS, "localhost"),
             equalTo(SERVER_PORT, sqsPort),
-            equalTo(MESSAGING_SYSTEM, AWS_SQS),
+            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
             equalTo(MESSAGING_OPERATION_NAME, "send"),
             equalTo(MESSAGING_OPERATION_TYPE, "send"),

@@ -61,8 +61,8 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       AttributeKey.stringKey("messaging.operation.name");
   private static final AttributeKey<String> MESSAGING_OPERATION_TYPE =
       AttributeKey.stringKey("messaging.operation.type");
-  private static final AttributeKey<String> MESSAGING_SYSTEM =
-      AttributeKey.stringKey("messaging.system");
+  private static final AttributeKey<String> MESSAGING_SYSTEM_NAME =
+      AttributeKey.stringKey("messaging.system.name");
 
   /**
    * Creates the messaging attributes extractor for the given operation type.
@@ -138,7 +138,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    attributes.put(MESSAGING_SYSTEM, getter.getSystem(request));
+    attributes.put(MESSAGING_SYSTEM_NAME, getter.getSystem(request));
     boolean isTemporaryDestination = getter.isTemporaryDestination(request);
     if (isTemporaryDestination) {
       attributes.put(MESSAGING_DESTINATION_TEMPORARY, true);
@@ -167,11 +167,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
     attributes.put(MESSAGING_MESSAGE_ID, getter.getMessageId(request, response));
     attributes.put(MESSAGING_BATCH_MESSAGE_COUNT, getter.getBatchMessageCount(request, response));
-    String errorType = getter.getErrorType(request, response, error);
-    if (errorType == null && error != null) {
-      errorType = error.getClass().getName();
-    }
-    attributes.put(ERROR_TYPE, errorType);
+    attributes.put(ERROR_TYPE, getter.getErrorType(request, response, error));
 
     for (String name : headerNames(request)) {
       List<String> values = getter.getMessageHeader(request, name);

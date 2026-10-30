@@ -67,6 +67,10 @@ public class Bridging {
 
   private static application.io.opentelemetry.api.trace.TraceState toApplication(
       TraceState agentTraceState) {
+    if (agentTraceState.isEmpty()) {
+      return application.io.opentelemetry.api.trace.TraceState.getDefault();
+    }
+
     application.io.opentelemetry.api.trace.TraceStateBuilder applicationTraceState =
         application.io.opentelemetry.api.trace.TraceState.builder();
     agentTraceState.forEach(applicationTraceState::put);
@@ -75,11 +79,12 @@ public class Bridging {
 
   @Nullable
   public static Span toAgentOrNull(application.io.opentelemetry.api.trace.Span applicationSpan) {
-    if (!applicationSpan.getSpanContext().isValid()) {
+    if (applicationSpan instanceof ApplicationSpan) {
+      Span agentSpan = ((ApplicationSpan) applicationSpan).getAgentSpan();
+      return agentSpan.getSpanContext().isValid() ? agentSpan : Span.getInvalid();
+    } else if (!applicationSpan.getSpanContext().isValid()) {
       // no need to wrap
       return Span.getInvalid();
-    } else if (applicationSpan instanceof ApplicationSpan) {
-      return ((ApplicationSpan) applicationSpan).getAgentSpan();
     } else {
       return null;
     }
@@ -186,6 +191,10 @@ public class Bridging {
 
   private static TraceState toAgent(
       application.io.opentelemetry.api.trace.TraceState applicationTraceState) {
+    if (applicationTraceState.isEmpty()) {
+      return TraceState.getDefault();
+    }
+
     TraceStateBuilder agentTraceState = TraceState.builder();
     applicationTraceState.forEach(agentTraceState::put);
     return agentTraceState.build();

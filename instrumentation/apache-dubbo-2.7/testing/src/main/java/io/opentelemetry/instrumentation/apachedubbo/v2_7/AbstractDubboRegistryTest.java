@@ -7,9 +7,8 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import static io.opentelemetry.instrumentation.apachedubbo.v2_7.AbstractDubboTest.assertLatestDeps;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -18,10 +17,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -30,6 +26,7 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import org.apache.curator.test.TestingServer;
@@ -47,12 +44,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
  * Integration test that verifies the registry-mode end-to-end flow: provider registers to
- * ZooKeeper, consumer discovers via ZooKeeper, and, under the preview rpc semconv, the {@code
- * SERVER_ADDRESS} span attribute contains the registry address (with service interface, version,
- * and group) instead of the provider host. Under the old rpc semconv the resolved provider host is
- * kept.
+ * ZooKeeper, consumer discovers via ZooKeeper, and the {@code SERVER_ADDRESS} span attribute
+ * contains the registry address (with service interface, version, and group) instead of the
+ * provider host.
  */
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractDubboRegistryTest {
 
   private static final String SERVICE_VERSION = "1.0.0";
@@ -92,6 +87,7 @@ public abstract class AbstractDubboRegistryTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // ReferenceConfig.setInjvm()
   void testRegistryModeServerAddress() throws Exception {
     int port = PortUtils.findOpenPort();
     String zkAddr = zkAddress();
@@ -148,9 +144,7 @@ public abstract class AbstractDubboRegistryTest {
 
     assertThat(response).isEqualTo("hello");
 
-    // Under the preview rpc semconv, SERVER_ADDRESS =
-    // "registryProtocol://host:port/interface:version:group" and SERVER_PORT is absent (null).
-    // Under the old rpc semconv the resolved provider host/port are kept.
+    // SERVER_ADDRESS is "registryProtocol://host:port/interface:version:group".
     // See https://github.com/open-telemetry/semantic-conventions/pull/3317
     String expectedServiceTarget =
         HelloService.class.getName() + ":" + SERVICE_VERSION + ":" + SERVICE_GROUP;
@@ -164,43 +158,14 @@ public abstract class AbstractDubboRegistryTest {
                     span ->
                         span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
                             .hasKind(SpanKind.CLIENT)
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "dubbo" : null),
-                                equalTo(
-                                    RPC_SERVICE,
-                                    emitOldRpcSemconv()
-                                        ? "org.apache.dubbo.rpc.service.GenericService"
-                                        : null),
+                                equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitPreviewRpcSemconv()
-                                        ? "org.apache.dubbo.rpc.service.GenericService/$invoke"
-                                        : "$invoke"),
-                                equalTo(
-                                    maybeStablePeerService(),
-                                    testLatestDeps() && !emitPreviewRpcSemconv()
-                                        ? testing().expectedPeerService()
-                                        : null),
-                                satisfies(
-                                    SERVER_ADDRESS,
-                                    val -> {
-                                      if (emitPreviewRpcSemconv()) {
-                                        val.isEqualTo(expectedServerAddress);
-                                      } else {
-                                        // registry override is gated behind the preview rpc
-                                        // semconv;
-                                        // under the old semconv the bare provider host is used, not
-                                        // the registry target (the exact host is environment
-                                        // dependent, so assert it is a plain host, not a registry
-                                        // url/target)
-                                        val.asString()
-                                            .isNotEqualTo(expectedServerAddress)
-                                            .doesNotContain("/");
-                                      }
-                                    }),
-                                equalTo(SERVER_PORT, emitPreviewRpcSemconv() ? null : (long) port),
+                                    "org.apache.dubbo.rpc.service.GenericService/$invoke"),
+                                equalTo(SERVER_ADDRESS, expectedServerAddress),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
                                     val ->
@@ -213,20 +178,13 @@ public abstract class AbstractDubboRegistryTest {
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
                             .hasKind(SpanKind.SERVER)
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "apache_dubbo" : null),
-                                equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "dubbo" : null),
-                                equalTo(
-                                    RPC_SERVICE,
-                                    emitOldRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"
-                                        : null),
+                                equalTo(RPC_SYSTEM_NAME, "dubbo"),
                                 equalTo(
                                     RPC_METHOD,
-                                    emitPreviewRpcSemconv()
-                                        ? "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"
-                                        : "hello"),
+                                    "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"),
                                 equalTo(
                                     maybeStablePeerService(),
                                     testLatestDeps() ? testing().expectedPeerService() : null),

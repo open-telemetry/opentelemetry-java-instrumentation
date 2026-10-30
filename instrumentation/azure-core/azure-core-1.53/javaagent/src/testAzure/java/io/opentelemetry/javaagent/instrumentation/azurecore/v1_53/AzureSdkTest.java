@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_53;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -75,6 +76,31 @@ class AzureSdkTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("hello")
+                        .satisfies(hasScopeSchemaUrl("https://opentelemetry.io/schemas/1.23.1"))
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(equalTo(AZ_NAMESPACE, "otel.tests"))));
+  }
+
+  @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  void testSpanWithCustomSchemaUrl() {
+    String schemaUrl = "https://example.com/schemas/custom";
+    LibraryTelemetryOptions options = new LibraryTelemetryOptions("test-lib");
+    options.setLibraryVersion("test-version");
+    options.setResourceProviderNamespace("otel.tests");
+    options.setSchemaUrl(schemaUrl);
+    Tracer azTracer =
+        TracerProvider.getDefaultProvider().createTracer(options, new TracingOptions());
+    Context context = azTracer.start("hello", Context.NONE);
+    azTracer.end(null, null, context);
+
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("hello")
+                        .satisfies(hasScopeSchemaUrl(schemaUrl))
                         .hasKind(SpanKind.INTERNAL)
                         .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(equalTo(AZ_NAMESPACE, "otel.tests"))));

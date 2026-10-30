@@ -25,7 +25,7 @@ abstract class JettySmokeTest extends AppServerTest {
         .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Started Server.*"));
   }
 
-  @AppServer(version = "9.4.58", jdk = "8", inReducedMatrix = true)
+  @AppServer(version = "9.4.58", jdk = "8", inLimitedMatrix = true)
   static class Jetty9Jdk8 extends JettySmokeTest {}
 
   @AppServer(version = "9.4.58", jdk = "8-openj9")
@@ -61,7 +61,7 @@ abstract class JettySmokeTest extends AppServerTest {
   @AppServer(version = "9.4.58", jdk = "27-openj9")
   static class Jetty9Jdk27Openj9 extends JettySmokeTest {}
 
-  @AppServer(version = "10.0.26", jdk = "11", inReducedMatrix = true)
+  @AppServer(version = "10.0.26", jdk = "11", inLimitedMatrix = true)
   static class Jetty10Jdk11 extends JettySmokeTest {}
 
   @AppServer(version = "10.0.26", jdk = "11-openj9")
@@ -91,7 +91,7 @@ abstract class JettySmokeTest extends AppServerTest {
   @AppServer(version = "10.0.26", jdk = "27-openj9")
   static class Jetty10Jdk27Openj9 extends JettySmokeTest {}
 
-  @AppServer(version = "11.0.26", jdk = "11", inReducedMatrix = true)
+  @AppServer(version = "11.0.26", jdk = "11", inLimitedMatrix = true)
   static class Jetty11Jdk11 extends JettySmokeTest {}
 
   @AppServer(version = "11.0.26", jdk = "11-openj9")
@@ -121,7 +121,7 @@ abstract class JettySmokeTest extends AppServerTest {
   @AppServer(version = "11.0.26", jdk = "27-openj9")
   static class Jetty11Jdk27Openj9 extends JettySmokeTest {}
 
-  @AppServer(version = "12.0.28", jdk = "17", inReducedMatrix = true)
+  @AppServer(version = "12.0.28", jdk = "17", inLimitedMatrix = true)
   static class Jetty12Jdk17 extends JettySmokeTest {}
 
   @AppServer(version = "12.0.28", jdk = "17-openj9")
@@ -139,7 +139,7 @@ abstract class JettySmokeTest extends AppServerTest {
   @AppServer(version = "12.0.28", jdk = "25-openj9")
   static class Jetty12Jdk25Openj9 extends JettySmokeTest {}
 
-  @AppServer(version = "12.0.28", jdk = "27", inReducedMatrix = true)
+  @AppServer(version = "12.0.28", jdk = "27", inLimitedMatrix = true)
   static class Jetty12Jdk27 extends JettySmokeTest {}
 
   @AppServer(version = "12.0.28", jdk = "27-openj9")

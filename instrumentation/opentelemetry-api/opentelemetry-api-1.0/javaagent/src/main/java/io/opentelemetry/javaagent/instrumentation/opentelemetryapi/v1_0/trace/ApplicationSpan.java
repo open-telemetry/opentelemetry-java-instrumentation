@@ -16,6 +16,8 @@ public class ApplicationSpan implements application.io.opentelemetry.api.trace.S
 
   private final Span agentSpan;
 
+  @Nullable private volatile application.io.opentelemetry.api.trace.SpanContext spanContext;
+
   public ApplicationSpan(Span agentSpan) {
     this.agentSpan = agentSpan;
   }
@@ -171,7 +173,13 @@ public class ApplicationSpan implements application.io.opentelemetry.api.trace.S
 
   @Override
   public application.io.opentelemetry.api.trace.SpanContext getSpanContext() {
-    return Bridging.toApplication(agentSpan.getSpanContext());
+    application.io.opentelemetry.api.trace.SpanContext context = spanContext;
+    if (context == null) {
+      // SpanContext is immutable. Concurrent first calls may safely convert it more than once.
+      context = Bridging.toApplication(agentSpan.getSpanContext());
+      spanContext = context;
+    }
+    return context;
   }
 
   @Override

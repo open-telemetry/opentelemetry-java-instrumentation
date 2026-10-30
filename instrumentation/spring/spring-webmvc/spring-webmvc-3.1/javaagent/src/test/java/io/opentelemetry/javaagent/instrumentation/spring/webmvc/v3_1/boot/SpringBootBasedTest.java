@@ -72,7 +72,7 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
             getClass()
                 .getClassLoader()
                 .getResource(
-                    "org/springframework/web/servlet/v3_1/OpenTelemetryHandlerMappingFilter.class"))
+                    "io/opentelemetry/javaagent/instrumentation/spring/webmvc/v3_1/OpenTelemetryHandlerMappingFilter.class"))
         .isNotNull();
   }
 }

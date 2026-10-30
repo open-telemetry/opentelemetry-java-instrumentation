@@ -81,10 +81,12 @@ convention not caught by CI.
 - Test methods do not need `throws Exception` clauses unless actually required.
 - Prefer the nearest common parent in `catch` (including `Exception` /
   `Throwable`) over multi-catch.
-- Allocate test ports through `PortUtils` so allocations are coordinated across
-  the test process. Use `findOpenPorts(count)` when a service needs a consecutive
-  range instead of assuming ports adjacent to a separately allocated port are
-  available.
+- Prefer binding test servers to port `0` when they expose the actual bound port.
+  Wait for binding to complete before reading the port and connecting clients;
+  keep the server bound rather than probing and releasing a port.
+  When ports must be chosen before the server starts, use `PortUtils` to coordinate
+  allocations across test processes. Use `findOpenPorts(count)` for a consecutive
+  range instead of assuming adjacent ports are available.
 - Prefer plain `@AfterEach` or `@AfterAll` teardown when direct cleanup is
   safe. Introduce `AutoCleanupExtension` when deferred cleanup improves
   clarity or protects partially completed setup. Register it with the
@@ -107,23 +109,29 @@ convention not caught by CI.
   Use unordered assertions only when supported concurrency or asynchronous
   execution makes the order nondeterministic.
 
-## [Testing] Trace Clearing After Asynchronous Operations
+## [Testing] Discarding setup and cleanup telemetry
 
-- When test setup or cleanup performs an operation that can complete or export
-  spans asynchronously, call `testing.waitForTraces(expectedTraceCount)` before
-  its captured telemetry is cleared, whether by `testing.clearData()` or an
-  `InstrumentationExtension` lifecycle clear. Keep the wait at the end of setup
-  or cleanup even when removing a redundant explicit clear. Use the total trace
-  count expected at that point so spans exported after the clear cannot leak
-  into the next assertion or test.
-- Add the wait only when the exact trace count is deterministic. Do not guess
-  when retries, concurrent/background work, timing, or external-system behavior
-  can vary the count.
+- Inspect setup and cleanup operations before each `testing.clearData()` and
+  before an `InstrumentationExtension` lifecycle clear, not just the final
+  telemetry assertions. When an operation can complete or export spans
+  asynchronously, wait for its traces before clearing. A synchronous client
+  call returning does not by itself establish that all telemetry was captured.
+- For telemetry that is only being discarded, use
+  `testing.waitForTraces(expectedTraceCount)`. Do not introduce span-name or
+  attribute assertions, `waitAndAssertTraces(...)`, or assertion helpers solely
+  to wait for setup telemetry. Keep assertions when that telemetry's contents
+  are themselves part of the behavior under test.
+- Use the total trace count expected at that point and wait for all setup
+  traces, not just the first one. Add a count-based wait only when the count
+  is deterministic. If retries, concurrent/background work, or external-system
+  behavior can vary it, use an appropriate completion signal rather than
+  guessing a count or adding a sleep.
 - `InstrumentationExtension` already clears captured telemetry before each
-  test. Do not add or keep a setup/cleanup `clearData()` solely for per-test
-  isolation when that lifecycle clear is sufficient. Keep explicit clears only
-  for a required mid-test reset, including to discard telemetry from a
-  preceding asynchronous operation after its exports have been drained.
+  test. Keep any necessary wait at the end of setup or cleanup even when
+  removing a redundant explicit clear. Do not add or keep an explicit clear
+  solely for per-test isolation; keep explicit clears for required mid-test resets.
+- Do not wait for spans that intentionally remain open until the operation
+  under test completes, such as an unfinished pipeline or transaction.
 
 ## [Testing] AssertJ Idiomatic Simplifications
 
@@ -165,34 +173,50 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 
 ## [Testing] Mode-Dependent Expected Values
 
-- Use the shared static `TestLatestDeps.testLatestDeps()` and
-  `SemconvStability.emitOld*Semconv()`, `emitStable*Semconv()`, or `emitPreview*Semconv()` accessors,
-  preferably via static imports, rather than repeating inline
-  `Boolean.getBoolean(...)` calls with the mode property names. A
+- When a feature supports distinct telemetry emission modes, exercise each
+  supported mode in a separate test JVM: DEFAULT-only, PREVIEW-only, and
+  combined emission only where supported. Do not require variants for features
+  without distinct modes or presume every feature supports combined emission.
+- DEFAULT telemetry covered by the [repository compatibility policy](../../VERSIONING.md)
+  remains backward compatible until the next major version, subject to the
+  telemetry changes that policy permits. PREVIEW telemetry is provisional.
+  These emission-mode labels do not establish formal semantic-convention
+  stability or extend compatibility guarantees to alpha artifacts.
+- Use the shared static `TestLatestDeps.testLatestDeps()` and reuse existing
+  appropriate shared mode accessors when available, preferably via static imports,
+  rather than repeating inline `Boolean.getBoolean(...)` calls with mode property names. A
   module-specific experimental flag may use a per-class constant such as
   `EXPERIMENTAL_ATTRIBUTES`; keep the conventional `experimental(value)`
   helper for attribute values absent when the flag is off.
-- Name stable-selection accessors `emitStable*Semconv()` and preview-selection
-  accessors `emitPreview*Semconv()`.
 - Assert keys and values directly when expectations do not depend on a mode:
 
   ```java
-  equalTo(DB_SYSTEM_NAME, ELASTICSEARCH);
-  equalTo(DB_OPERATION_NAME, "info");
-  equalTo(ERROR_TYPE, "42601");
+  equalTo(stringKey("example.invariant"), "value");
   ```
 
 - Keep short conditional expected values directly in the assertion when the
-  expected values differ by mode or an attribute exists in only one mode:
+  expected values differ by mode or an attribute exists in only one mode.
+  In these examples, `emitDefault` and `emitPreview` are illustrative booleans,
+  not required accessor names or new helpers. `null` means assert absence;
+  both flags can be true in a supported combined mode:
 
   ```java
-  span.hasName(emitPreviewRpcSemconv() ? "Greeter/SayHello" : "helloworld.Greeter/SayHello");
-  equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null);
+  equalTo(stringKey("example.default"), emitDefault ? "value" : null);
+  equalTo(stringKey("example.preview"), emitPreview ? "value" : null);
   ```
 
+- When a value changes between mutually exclusive DEFAULT and PREVIEW modes,
+  keep both expected values inline:
+
+  ```java
+  equalTo(stringKey("example.name"), emitPreview ? "preview-value" : "default-value");
+  ```
+
+- Nested ternaries are allowed directly in attribute-assertion expected values. Other test code follows
+  the normal conditional-expression rule.
 - Do not extract the ternary into a helper such as `spanName(...)`,
-  `oldOrExperimental(value)`, or `expectedNamespace()` when no established
-  semconv utility applies. Seeing both expected values at the assertion is more
+  `modeValue(...)`, or `expectedNamespace()` when no established
+  mode utility applies. Seeing both expected values at the assertion is more
   useful than deduplicating a short expression.
 - Do not conditionally build a `List<AttributeAssertion>` and then pass that
   list to `hasAttributesSatisfyingExactly(...)`. Pass each assertion directly
@@ -201,22 +225,22 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 
   ```java
   // Bad: the helper conditionally builds a list and hides the expected shape.
-  private static List<AttributeAssertion> rpcAttributes() {
+  private static List<AttributeAssertion> modeAttributes() {
     List<AttributeAssertion> attributes = new ArrayList<>();
-    if (emitOldRpcSemconv()) {
-      attributes.add(equalTo(RPC_GRPC_STATUS_CODE, 0L));
+    if (emitDefault) {
+      attributes.add(equalTo(stringKey("example.default"), "value"));
     }
-    if (emitPreviewRpcSemconv()) {
-      attributes.add(equalTo(RPC_RESPONSE_STATUS_CODE, "OK"));
+    if (emitPreview) {
+      attributes.add(equalTo(stringKey("example.preview"), "value"));
     }
     return attributes;
   }
-  span.hasAttributesSatisfyingExactly(rpcAttributes());
+  span.hasAttributesSatisfyingExactly(modeAttributes());
 
   // Good: pass each assertion directly and keep its mode check visible.
   span.hasAttributesSatisfyingExactly(
-      equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null),
-      equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null));
+      equalTo(stringKey("example.default"), emitDefault ? "value" : null),
+      equalTo(stringKey("example.preview"), emitPreview ? "value" : null));
   ```
 
 - The conventional `experimental(value)` helper is the one exception: keep it.

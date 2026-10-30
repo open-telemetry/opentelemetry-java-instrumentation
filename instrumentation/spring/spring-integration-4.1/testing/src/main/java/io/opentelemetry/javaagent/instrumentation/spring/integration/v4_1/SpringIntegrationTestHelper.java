@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -12,7 +13,6 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -31,7 +31,7 @@ final class SpringIntegrationTestHelper {
       String operationName, String destinationName, AttributeAssertion... additionalAssertions) {
     AttributeAssertion[] standard =
         new AttributeAssertion[] {
-          equalTo(MESSAGING_SYSTEM, "spring_integration"),
+          equalTo(stringKey("messaging.system.name"), "spring_integration"),
           equalTo(MESSAGING_DESTINATION_NAME, destinationName),
           equalTo(MESSAGING_OPERATION_NAME, operationName),
           equalTo(MESSAGING_OPERATION_TYPE, operationName)
@@ -75,7 +75,9 @@ final class SpringIntegrationTestHelper {
                                             .hasCount(expectedCount)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, "spring_integration"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"),
+                                                    "spring_integration"),
                                                 equalTo(
                                                     MESSAGING_DESTINATION_NAME, destinationName),
                                                 errorType)))));
@@ -97,7 +99,9 @@ final class SpringIntegrationTestHelper {
                                             .hasValue(expectedCount)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, "spring_integration"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"),
+                                                    "spring_integration"),
                                                 equalTo(
                                                     MESSAGING_DESTINATION_NAME, destinationName),
                                                 errorType)))));
@@ -122,7 +126,9 @@ final class SpringIntegrationTestHelper {
                                             .hasCount(1)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                                equalTo(MESSAGING_SYSTEM, "spring_integration"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"),
+                                                    "spring_integration"),
                                                 equalTo(
                                                     MESSAGING_DESTINATION_NAME, destinationName),
                                                 equalTo(MESSAGING_OPERATION_TYPE, "send"))))));
@@ -144,7 +150,9 @@ final class SpringIntegrationTestHelper {
                                             .hasValue(1)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                                equalTo(MESSAGING_SYSTEM, "spring_integration"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"),
+                                                    "spring_integration"),
                                                 equalTo(
                                                     MESSAGING_DESTINATION_NAME,
                                                     destinationName))))));

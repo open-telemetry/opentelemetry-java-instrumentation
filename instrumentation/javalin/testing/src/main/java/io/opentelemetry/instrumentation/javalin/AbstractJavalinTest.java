@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
 import io.javalin.Javalin;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
@@ -49,8 +48,8 @@ public abstract class AbstractJavalinTest {
 
   @BeforeAll
   void setup() {
-    port = PortUtils.findOpenPort();
-    app = setupJavalin(port);
+    app = setupJavalin(0);
+    port = app.port();
     client = WebClient.of("h1c://localhost:" + port);
   }
 

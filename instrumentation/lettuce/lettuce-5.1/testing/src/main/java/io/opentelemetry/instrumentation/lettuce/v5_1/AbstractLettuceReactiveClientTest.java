@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
@@ -253,9 +254,10 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "LPUSH " + WRONG_TYPE_KEY + " ?"),
                                     equalTo(DB_OPERATION_NAME, "LPUSH"),
-                                    equalTo(ERROR_TYPE, "WRONGTYPE")))));
+                                    equalTo(
+                                        ERROR_TYPE, testLatestDeps() ? "WRONGTYPE" : "_OTHER")))));
 
-    assertCommandErrorMetric("WRONGTYPE");
+    assertCommandMetric("LPUSH", testLatestDeps() ? "WRONGTYPE" : "_OTHER");
   }
 
   @Test

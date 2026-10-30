@@ -72,7 +72,7 @@ public class WebClientConfig {
   @Bean
   public WebClient.Builder webClient() {
     WebClient webClient = WebClient.create();
-    return webClient.mutate().filters(webfluxClientTelemetry::addFilter);
+    return webClient.mutate().filter(webfluxClientTelemetry.createFilter());
   }
 
   // Adds instrumentation to Webflux server
@@ -89,8 +89,8 @@ Spring WebFlux runs on Project Reactor, which can switch threads across a reacti
 OpenTelemetry context is stored in a `ThreadLocal` and will not survive these switches without the Reactor context propagation hook.
 
 **When you need the hook:**
-Use `createWebFilterAndRegisterReactorHook()` or `addFilterAndRegisterReactorHook()` when application code or downstream instrumentation needs the current OpenTelemetry context to be available inside Reactor callbacks and the OpenTelemetry Reactor hook has not already been registered.
-Otherwise, use `createWebFilter()` or `addFilter()`.
+Use `createWebFilterAndRegisterReactorHook()` or `createFilterAndRegisterReactorHook()` when application code or downstream instrumentation needs the current OpenTelemetry context to be available inside Reactor callbacks and the OpenTelemetry Reactor hook has not already been registered.
+Otherwise, use `createWebFilter()` or `createFilter()`.
 
 ## Starter Guide
 

@@ -204,7 +204,7 @@ class SqsProcessMetricsIsolationTest {
                 executeReceive(
                     interceptor, invocation.getArgument(0, ReceiveMessageRequest.class)));
 
-    SqsClient client = telemetry.wrap(sdkClient);
+    SqsClient client = telemetry.instrument(sdkClient);
     return client.receiveMessage(ReceiveMessageRequest.builder().queueUrl(QUEUE_URL).build());
   }
 

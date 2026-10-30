@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
@@ -14,7 +15,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -39,10 +39,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("deprecation")
 class Jms1InstrumentationTest extends AbstractJms1Test {
 
-  @SuppressWarnings("deprecation") // using deprecated JMS and semconv APIs
   @Test
   void capturesDurableSubscriberName() throws Exception {
     Topic topic = session.createTopic("durable-topic");
@@ -67,7 +65,7 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                     span.hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             messagingDestinationName("durable-topic", false),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -77,7 +75,7 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                     span.hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             messagingDestinationName("durable-topic", false),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -124,7 +122,7 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                     span.hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             messagingDestinationName(topicName, false),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -160,7 +158,7 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                     span.hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             messagingDestinationName(topicName, false),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -196,7 +194,7 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                     span.hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             messagingDestinationName(topicName, false),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -210,7 +208,7 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                     span.hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             messagingDestinationName(topicName, false),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -246,7 +244,7 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                     span.hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             messagingDestinationName(topicName, false),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -319,7 +317,7 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(stringKey("messaging.system.name"), "jms"),
                           messagingDestinationName(destinationName, isTemporary),
                           equalTo(MESSAGING_OPERATION_NAME, "send"),
                           equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -340,7 +338,7 @@ class Jms1InstrumentationTest extends AbstractJms1Test {
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             messagingDestinationName(destinationName, isTemporary),
                             equalTo(MESSAGING_OPERATION_NAME, "receive"),
                             equalTo(MESSAGING_OPERATION_TYPE, "receive"),

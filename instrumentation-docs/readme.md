@@ -81,20 +81,26 @@ names. A full-suite `testReceiveSpansDisabled` may document default telemetry; a
 regression task does not. Keep regression tasks in `check`, but omit them from the collection script.
 Keep `metadataConfig` labels on the tasks that document non-default telemetry.
 
-For a module collecting its default profile and an RPC preview profile:
+When a feature supports distinct telemetry emission modes, collect its DEFAULT profile and
+each supported non-default profile in separate test JVMs. The following schematic example adds
+a PREVIEW profile without changing the default test JVM. Substitute the feature's actual supported
+property and value for `<feature-mode-property>` and `<preview-mode-value>`, and choose a task name
+appropriate to the module; `examplePreviewTest` is illustrative, not a task available in every module.
+Use additional variants for combined emission only when the feature supports it. Keep variants
+scoped to suites exercising the feature and preserve the source suite's JVM settings.
 
 ```kotlin
 tasks {
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+  val examplePreviewTest = register<Test>("examplePreviewTest") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.preview=rpc")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
+    systemProperty("<feature-mode-property>", "<preview-mode-value>")
+    systemProperty("metadataConfig", "<feature-mode-property>=<preview-mode-value>")
   }
 
   check {
-    dependsOn(testPreviewSemconv)
+    dependsOn(examplePreviewTest)
   }
 }
 ```
@@ -103,17 +109,35 @@ Generate `.telemetry` files with the selected tasks, then run the analyzer. Runn
 does not execute a separately registered variant:
 
 ```bash
-./gradlew :instrumentation:<module>:javaagent:test :instrumentation:<module>:javaagent:testPreviewSemconv -PcollectMetadata=true
+./gradlew :instrumentation:<module>:javaagent:test :instrumentation:<module>:javaagent:<additional-mode-task> -PcollectMetadata=true
 ./gradlew :instrumentation-docs:runAnalysis
 ```
 
-Replace `<module>` with the instrumentation's Gradle project path.
+Replace `<module>` with the instrumentation's Gradle project path and `<additional-mode-task>`
+with the actual registered task for the supported additional mode.
 
-Or use the helper script that runs the tasks registered for metadata collection:
+Or use the same collector as daily CI to run all tasks registered for metadata collection:
 
 ```bash
 ./instrumentation-docs/collect.sh
 ```
+
+The collector clears stale `.telemetry` directories only in selected modules, once before
+collection, and preserves profiles across all passes. Latest-dependency tasks run separately with
+`-PtestLatestDeps=true`. Set `DEBUG_LOGGING=true` for full Gradle output.
+
+On ARM (`arm64` or `aarch64`), the suites in `COLIMA_INSTRUMENTATIONS` require x86_64 containers.
+Install Colima and start a dedicated profile before collecting:
+
+```bash
+colima start --profile otel-metadata --arch x86_64 --memory 4 --activate=false
+./instrumentation-docs/collect.sh
+```
+
+The other suites use your normal Docker environment. Only the x86-only pass uses the
+`otel-metadata` Docker socket. The collector does not start or stop Colima profiles; when finished,
+you can stop this profile with `colima stop --profile otel-metadata`. On x86_64, Colima is not used.
+Missing prerequisites and failed collection tasks cause the collector to exit unsuccessfully.
 
 ## Instrumentation Hierarchy
 

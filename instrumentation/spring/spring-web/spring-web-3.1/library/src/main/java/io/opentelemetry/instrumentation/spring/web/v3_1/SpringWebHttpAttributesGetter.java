@@ -31,10 +31,18 @@ class SpringWebHttpAttributesGetter
     Class<?> httpStatusCodeClass = null;
 
     try {
-      httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatusCode");
+      httpStatusCodeClass =
+          Class.forName(
+              "org.springframework.http.HttpStatusCode",
+              false,
+              ClientHttpResponse.class.getClassLoader());
     } catch (ClassNotFoundException ignored) {
       try {
-        httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatus");
+        httpStatusCodeClass =
+            Class.forName(
+                "org.springframework.http.HttpStatus",
+                false,
+                ClientHttpResponse.class.getClassLoader());
       } catch (ClassNotFoundException ignore) {
         // ignored
       }

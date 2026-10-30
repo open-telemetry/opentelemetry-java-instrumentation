@@ -21,6 +21,11 @@ class Aws2RdsDataTest extends AbstractAws2RdsDataTest {
   }
 
   @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return EXPERIMENTAL_ATTRIBUTES;
+  }
+
+  @Override
   protected ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
     return ClientOverrideConfiguration.builder();
   }

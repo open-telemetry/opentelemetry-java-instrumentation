@@ -74,6 +74,25 @@ copied into pre-Java-8 class files. Call them through a Java-8-compiled helper i
 Helpers called by advice are ordinary compiled methods and are not copied into the instrumented
 method, even when the helper is nested in an advice class.
 
+## Returned-value assignment typing
+
+Both `TypeTransformerImpl` and `IndyTypeTransformerImpl` install
+`ForceDynamicallyTypedAssignReturnedFactory`. It forces dynamic typing for
+`@Advice.AssignReturned` mappings, including nested `@ToArgument` and `@ToField` annotations.
+Omit explicit `typing = Assigner.Typing.DYNAMIC` on these mappings:
+
+```java
+@AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
+```
+
+This does not configure advice parameter bindings such as `@Advice.Argument` or `@Advice.Return`.
+Those may still need explicit dynamic typing. Matchers and replacement values must remain
+compatible with the supported signatures; dynamic typing does not make an invalid cast safe.
+For custom transformation pipelines, verify that the factory is installed before omitting typing.
+
+See [the factory](../../../javaagent-tooling/src/main/java/io/opentelemetry/javaagent/tooling/instrumentation/indy/ForceDynamicallyTypedAssignReturnedFactory.java)
+and [its test](../../../javaagent-tooling/src/test/java/io/opentelemetry/javaagent/tooling/instrumentation/indy/ForceDynamicallyTypedAssignReturnedFactoryTest.java).
+
 ## Use `suppress = Throwable.class` by Default
 
 Before applying this rule, trace how the advice class is registered in `transform()`. Advice

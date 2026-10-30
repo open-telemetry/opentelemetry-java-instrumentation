@@ -32,12 +32,13 @@ public class SpringWebMvcInstrumentationModule extends InstrumentationModule {
   public boolean isHelperClass(String className) {
     // filter on prefix due to inner classes
     return className.startsWith(
-        "org.springframework.web.servlet.v3_1.OpenTelemetryHandlerMappingFilter");
+        "io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.OpenTelemetryHandlerMappingFilter");
   }
 
   @Override
   public List<String> exposedClassNames() {
-    return singletonList("org.springframework.web.servlet.v3_1.OpenTelemetryHandlerMappingFilter");
+    return singletonList(
+        "io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.OpenTelemetryHandlerMappingFilter");
   }
 
   @Override
