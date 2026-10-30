@@ -118,7 +118,7 @@ class DbClientMetricsTest {
   }
 
   @Test
-  void responseStatusCodeIsRecordedOnlyForFailedOperationsWithAvailableCode() {
+  void responseStatusCodeIsRecordedWhenAvailable() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
@@ -165,6 +165,7 @@ class DbClientMetricsTest {
                                   Attributes.builder()
                                       .put(DB_SYSTEM_NAME, "myDb")
                                       .put(DB_OPERATION_NAME, "successfulWithCode")
+                                      .put(DB_RESPONSE_STATUS_CODE, "200")
                                       .build()
                                       .asMap()),
                       point ->

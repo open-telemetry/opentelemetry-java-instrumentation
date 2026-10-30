@@ -523,13 +523,15 @@ public abstract class AbstractJdbcInstrumentationTest {
     Statement statementWithWarning = createStatement(connectionWithWarning, statementType);
     cleanup.deferCleanup(statementWithWarning);
 
-    testing()
-        .runWithSpan(
-            "parent",
-            () -> {
-              executeStatement(statementWithoutWarning);
-              executeStatement(statementWithWarning);
-            });
+    boolean result =
+        testing()
+            .runWithSpan(
+                "parent",
+                () -> {
+                  assertThat(executeStatement(statementWithoutWarning)).isTrue();
+                  return executeStatement(statementWithWarning);
+                });
+    assertThat(result).isTrue();
     assertThat((Object) statementWithWarning.getWarnings()).isSameAs(warning);
     assertThat(statementWithWarning.getWarnings().getNextWarning().getSQLState())
         .isEqualTo("01001");
@@ -551,13 +553,39 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(DB_RESPONSE_STATUS_CODE, "01001"),
                                 equalTo(ERROR_TYPE, null))));
 
-    assertDurationMetric(
-        testing(),
-        "io.opentelemetry.jdbc",
-        DB_SYSTEM_NAME,
-        DB_NAMESPACE,
-        DB_QUERY_SUMMARY,
-        SERVER_ADDRESS);
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.jdbc",
+            metric ->
+                metric
+                    .hasName("db.client.operation.duration")
+                    .hasUnit("s")
+                    .hasDescription("Duration of database client operations.")
+                    .satisfies(
+                        data -> {
+                          assertThat(data.getHistogramData().getPoints())
+                              .hasSize(2)
+                              .anySatisfy(
+                                  point ->
+                                      assertThat(point.getAttributes().asMap())
+                                          .containsOnlyKeys(
+                                              DB_SYSTEM_NAME,
+                                              DB_NAMESPACE,
+                                              DB_QUERY_SUMMARY,
+                                              SERVER_ADDRESS));
+                          assertThat(data.getHistogramData().getPoints())
+                              .anySatisfy(
+                                  point ->
+                                      assertThat(point.getAttributes().asMap())
+                                          .containsOnlyKeys(
+                                              DB_SYSTEM_NAME,
+                                              DB_NAMESPACE,
+                                              DB_QUERY_SUMMARY,
+                                              SERVER_ADDRESS,
+                                              DB_RESPONSE_STATUS_CODE)
+                                          .containsEntry(DB_RESPONSE_STATUS_CODE, "01001")
+                                          .doesNotContainKey(ERROR_TYPE));
+                        }));
   }
 
   @ParameterizedTest
