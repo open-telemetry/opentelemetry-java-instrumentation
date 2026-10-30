@@ -113,7 +113,7 @@ public final class HostResource {
     try {
       hostId = detectHostId();
     } catch (SecurityException e) {
-      logger.log(FINE, "Failed to detect host ID", e);
+      logger.log(FINE, "Skipping host ID detection: {0}", e.toString());
       return get();
     }
     return Resource.create(
