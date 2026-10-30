@@ -54,16 +54,9 @@ dependencies {
 
 testing {
   suites {
-    if (otelProps.testLatestDeps) {
-      tasks.named("test") {
-        // Gradle creates this task automatically; skipping suite configuration does not disable it.
-        enabled = false
-      }
-
-      register<JvmTestSuite>("latestDepTest") {
-        dependencies {
-          implementation("com.typesafe.play:play-ahc-ws-standalone_2.13:latest.release")
-        }
+    register<JvmTestSuite>("latestDepTest") {
+      dependencies {
+        implementation("com.typesafe.play:play-ahc-ws-standalone_2.13:latest.release")
       }
     }
 
@@ -77,6 +70,17 @@ testing {
 }
 
 tasks {
+  if (otelProps.testLatestDeps) {
+    // disable regular test running and compiling tasks when latest dep test task is run
+    named("test") {
+      enabled = false
+    }
+  }
+
+  named("latestDepTest") {
+    enabled = otelProps.testLatestDeps
+  }
+
   val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
   if (testJavaVersion.isJava8) {
     named("play3Test") {
