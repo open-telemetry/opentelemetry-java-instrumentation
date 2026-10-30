@@ -81,7 +81,7 @@ public final class DbClientMetrics implements OperationListener {
     }
 
     Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
-    if (attributes.get(ERROR_TYPE) == null) {
+    if (attributes.get(ERROR_TYPE) == null && attributes.get(DB_RESPONSE_STATUS_CODE) != null) {
       attributes = attributes.toBuilder().remove(DB_RESPONSE_STATUS_CODE).build();
     }
 

@@ -560,6 +560,32 @@ public abstract class AbstractJdbcInstrumentationTest {
         SERVER_ADDRESS);
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {"statement", "prepared", "callable"})
+  void testStatementWarningReadFailure(String statementType) throws SQLException {
+    TestConnection testConnection = new TestConnection();
+    testConnection.setThrowOnGetWarnings(true);
+    Connection connection = wrap(testConnection);
+    cleanup.deferCleanup(connection);
+    Statement statement = createStatement(connection, statementType);
+    cleanup.deferCleanup(statement);
+
+    boolean result = testing().runWithSpan("parent", () -> executeStatement(statement));
+
+    assertThat(result).isTrue();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasKind(SpanKind.CLIENT)
+                            .hasStatus(StatusData.unset())
+                            .hasAttributesSatisfying(
+                                equalTo(DB_RESPONSE_STATUS_CODE, null),
+                                equalTo(ERROR_TYPE, null))));
+  }
+
   private static Statement createStatement(Connection connection, String statementType)
       throws SQLException {
     switch (statementType) {
@@ -574,12 +600,11 @@ public abstract class AbstractJdbcInstrumentationTest {
     }
   }
 
-  private static void executeStatement(Statement statement) throws SQLException {
+  private static boolean executeStatement(Statement statement) throws SQLException {
     if (statement instanceof PreparedStatement) {
-      ((PreparedStatement) statement).execute();
-    } else {
-      statement.execute("SELECT 1");
+      return ((PreparedStatement) statement).execute();
     }
+    return statement.execute("SELECT 1");
   }
 
   static Stream<Arguments> preparedStatementStream() throws SQLException {
