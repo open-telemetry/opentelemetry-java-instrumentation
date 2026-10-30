@@ -22,10 +22,10 @@ public class CapturedHttpHeadersTestConfigSupplier implements AutoConfigurationC
 
   private static Map<String, String> getTestProperties() {
     Map<String, String> testConfig = new HashMap<>();
-    testConfig.put("otel.instrumentation.http.client.capture-request-headers", "X-Test-Request");
-    testConfig.put("otel.instrumentation.http.client.capture-response-headers", "X-Test-Response");
-    testConfig.put("otel.instrumentation.http.server.capture-request-headers", "X-Test-Request");
-    testConfig.put("otel.instrumentation.http.server.capture-response-headers", "X-Test-Response");
+    testConfig.put("otel.instrumentation.http.client.request-captured-headers", "X-Test-Request");
+    testConfig.put("otel.instrumentation.http.client.response-captured-headers", "X-Test-Response");
+    testConfig.put("otel.instrumentation.http.server.request-captured-headers", "X-Test-Request");
+    testConfig.put("otel.instrumentation.http.server.response-captured-headers", "X-Test-Response");
     return testConfig;
   }
 }

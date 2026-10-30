@@ -23,8 +23,8 @@ class ServletTestUtil {
   static Filter newFilter(OpenTelemetry openTelemetry) {
     ServletTelemetryBuilder builder =
         ServletTelemetry.builder(openTelemetry)
-            .setRequestHeaders(AbstractHttpServerTest.TEST_HEADERS)
-            .setResponseHeaders(AbstractHttpServerTest.TEST_HEADERS);
+            .setRequestCapturedHeaders(AbstractHttpServerTest.TEST_HEADERS)
+            .setResponseCapturedHeaders(AbstractHttpServerTest.TEST_HEADERS);
     Experimental.setRequestParameters(
         builder, IncludeExclude.builder().setIncluded(singletonList("test-parameter")).build());
     Experimental.setTraceIdRequestAttributeEnabled(builder, true);

@@ -55,8 +55,8 @@ class TestWebSpringBootApp {
   @Bean
   Filter telemetryFilter() {
     return SpringWebMvcTelemetry.builder(GlobalOpenTelemetry.get())
-        .setRequestHeaders(AbstractHttpServerTest.TEST_HEADERS)
-        .setResponseHeaders(AbstractHttpServerTest.TEST_HEADERS)
+        .setRequestCapturedHeaders(AbstractHttpServerTest.TEST_HEADERS)
+        .setResponseCapturedHeaders(AbstractHttpServerTest.TEST_HEADERS)
         .build()
         .createServletFilter();
   }

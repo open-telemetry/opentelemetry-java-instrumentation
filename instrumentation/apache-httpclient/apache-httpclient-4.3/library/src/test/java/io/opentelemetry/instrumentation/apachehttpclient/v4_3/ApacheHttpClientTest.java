@@ -27,8 +27,8 @@ class ApacheHttpClientTest extends AbstractApacheHttpClientTest {
   protected CloseableHttpClient createClient(boolean readTimeout) {
     HttpClientBuilder builder =
         ApacheHttpClientTelemetry.builder(testing.getOpenTelemetry())
-            .setRequestHeaders(AbstractHttpClientTest.TEST_HEADERS)
-            .setResponseHeaders(AbstractHttpClientTest.TEST_HEADERS)
+            .setRequestCapturedHeaders(AbstractHttpClientTest.TEST_HEADERS)
+            .setResponseCapturedHeaders(AbstractHttpClientTest.TEST_HEADERS)
             .build()
             .createHttpClientBuilder();
     RequestConfig.Builder requestConfigBuilder =

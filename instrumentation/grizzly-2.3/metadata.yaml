@@ -6,7 +6,7 @@ semantic_conventions:
 library_link: https://javaee.github.io/grizzly/httpserverframework.html
 configurations:
   - ref: http.known-methods
-  - ref: http.server.capture-request-headers
-  - ref: http.server.capture-response-headers
+  - ref: http.server.request-captured-headers
+  - ref: http.server.response-captured-headers
   - ref: http.server.emit-experimental-telemetry
   - ref: common.user.name.enabled

@@ -11,7 +11,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.URI;
-import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.springframework.http.HttpRequest;
@@ -57,11 +56,6 @@ class SpringWebHttpAttributesGetter
   }
 
   @Override
-  public Collection<String> getHttpRequestHeaderNames(HttpRequest httpRequest) {
-    return HeaderUtil.getHeaderNames(httpRequest.getHeaders());
-  }
-
-  @Override
   @Nullable
   public Integer getHttpResponseStatusCode(
       HttpRequest httpRequest, ClientHttpResponse clientHttpResponse, @Nullable Throwable error) {
@@ -82,12 +76,6 @@ class SpringWebHttpAttributesGetter
   public List<String> getHttpResponseHeader(
       HttpRequest httpRequest, ClientHttpResponse clientHttpResponse, String name) {
     return HeaderUtil.getHeader(clientHttpResponse.getHeaders(), name);
-  }
-
-  @Override
-  public Collection<String> getHttpResponseHeaderNames(
-      HttpRequest httpRequest, ClientHttpResponse clientHttpResponse) {
-    return HeaderUtil.getHeaderNames(clientHttpResponse.getHeaders());
   }
 
   @Override

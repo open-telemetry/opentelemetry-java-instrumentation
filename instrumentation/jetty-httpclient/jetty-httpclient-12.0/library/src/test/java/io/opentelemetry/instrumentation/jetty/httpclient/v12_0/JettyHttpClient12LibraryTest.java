@@ -21,8 +21,8 @@ class JettyHttpClient12LibraryTest extends AbstractJettyClient12Test {
   @Override
   protected HttpClient createStandardClient() {
     return JettyClientTelemetry.builder(testing.getOpenTelemetry())
-        .setRequestHeaders(AbstractHttpClientTest.TEST_HEADERS)
-        .setResponseHeaders(AbstractHttpClientTest.TEST_HEADERS)
+        .setRequestCapturedHeaders(AbstractHttpClientTest.TEST_HEADERS)
+        .setResponseCapturedHeaders(AbstractHttpClientTest.TEST_HEADERS)
         .build()
         .createHttpClient();
   }

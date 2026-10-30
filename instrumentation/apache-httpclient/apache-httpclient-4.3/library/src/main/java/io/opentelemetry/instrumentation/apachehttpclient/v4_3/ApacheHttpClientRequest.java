@@ -50,10 +50,6 @@ public final class ApacheHttpClientRequest {
     return headersToList(delegate.getHeaders(name));
   }
 
-  List<String> getHeaderNames() {
-    return headerNamesToList(delegate.getAllHeaders());
-  }
-
   // minimize memory overhead by not using streams
   static List<String> headersToList(Header[] headers) {
     if (headers.length == 0) {
@@ -64,18 +60,6 @@ public final class ApacheHttpClientRequest {
       headersList.add(headers[i].getValue());
     }
     return headersList;
-  }
-
-  // minimize memory overhead by not using streams
-  static List<String> headerNamesToList(Header[] headers) {
-    if (headers.length == 0) {
-      return emptyList();
-    }
-    List<String> headerNames = new ArrayList<>(headers.length);
-    for (int i = 0; i < headers.length; ++i) {
-      headerNames.add(headers[i].getName());
-    }
-    return headerNames;
   }
 
   void setHeader(String name, String value) {

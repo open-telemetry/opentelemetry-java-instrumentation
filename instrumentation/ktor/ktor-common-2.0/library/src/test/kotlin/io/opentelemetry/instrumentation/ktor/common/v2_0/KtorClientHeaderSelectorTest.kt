@@ -12,7 +12,6 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.api.config.IncludeExclude
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension
 import io.opentelemetry.sdk.trace.data.SpanData
@@ -35,26 +34,24 @@ class KtorClientHeaderSelectorTest {
   }
 
   @Test
-  fun capturesHeadersMatchingSelectorPatterns() {
+  fun capturesOnlyConfiguredHeaders() {
     val span = record { telemetryBuilder ->
-      telemetryBuilder.requestHeaders(
-        IncludeExclude.builder().setIncluded("X-Test-*").setExcluded("*-secret").build()
+      telemetryBuilder.setRequestCapturedHeaders(
+        listOf("X-Test-Request")
       )
-      telemetryBuilder.responseHeaders(IncludeExclude.builder().setExcluded("Content-*").build())
+      telemetryBuilder.setResponseCapturedHeaders(listOf("X-Test-Response"))
     }
 
     assertThat(span.attributes.get(REQUEST_HEADER)).containsExactly("request-value")
     assertThat(span.attributes.get(RESPONSE_HEADER)).containsExactly("response-value")
-    // excluded patterns take precedence over included patterns, and header matching is
-    // case-insensitive
     assertThat(span.attributes.get(SECRET_REQUEST_HEADER)).isNull()
   }
 
   @Test
   fun capturesHeadersConfiguredByName() {
     val span = record { telemetryBuilder ->
-      telemetryBuilder.requestHeaders(IncludeExclude.builder().setIncluded("X-Test-Request", "Authorization").build())
-      telemetryBuilder.responseHeaders(IncludeExclude.builder().setIncluded("X-Test-Response").build())
+      telemetryBuilder.setRequestCapturedHeaders(listOf("X-Test-Request", "Authorization"))
+      telemetryBuilder.setResponseCapturedHeaders(listOf("X-Test-Response"))
     }
 
     assertThat(span.attributes.get(REQUEST_HEADER)).containsExactly("request-value")

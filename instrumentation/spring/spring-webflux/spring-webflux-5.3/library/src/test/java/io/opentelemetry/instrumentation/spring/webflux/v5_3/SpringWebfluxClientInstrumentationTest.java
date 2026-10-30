@@ -22,8 +22,8 @@ class SpringWebfluxClientInstrumentationTest
   protected WebClient.Builder instrument(WebClient.Builder builder) {
     SpringWebfluxClientTelemetry instrumentation =
         SpringWebfluxClientTelemetry.builder(testing.getOpenTelemetry())
-            .setRequestHeaders(AbstractHttpClientTest.TEST_HEADERS)
-            .setResponseHeaders(AbstractHttpClientTest.TEST_HEADERS)
+            .setRequestCapturedHeaders(AbstractHttpClientTest.TEST_HEADERS)
+            .setResponseCapturedHeaders(AbstractHttpClientTest.TEST_HEADERS)
             .build();
     return builder.filter(instrumentation.createFilterAndRegisterReactorHook());
   }

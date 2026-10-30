@@ -44,8 +44,8 @@ class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEntity<Str
         .getInterceptors()
         .add(
             SpringWebTelemetry.builder(testing.getOpenTelemetry())
-                .setRequestHeaders(AbstractHttpClientTest.TEST_HEADERS)
-                .setResponseHeaders(AbstractHttpClientTest.TEST_HEADERS)
+                .setRequestCapturedHeaders(AbstractHttpClientTest.TEST_HEADERS)
+                .setResponseCapturedHeaders(AbstractHttpClientTest.TEST_HEADERS)
                 .build()
                 .createInterceptor());
   }

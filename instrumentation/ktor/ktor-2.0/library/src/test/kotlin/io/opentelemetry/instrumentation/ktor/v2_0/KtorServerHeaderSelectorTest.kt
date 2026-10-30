@@ -12,7 +12,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
-import io.opentelemetry.instrumentation.api.config.IncludeExclude
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension
@@ -64,8 +63,8 @@ class KtorServerHeaderSelectorTest : AbstractHttpServerUsingTest<ApplicationEngi
   @Test
   fun capturesHeadersConfiguredByName() {
     val attributes = captureAttributes { telemetry ->
-      telemetry.requestHeaders(IncludeExclude.builder().setIncluded("X-Test-Request", "Authorization").build())
-      telemetry.responseHeaders(IncludeExclude.builder().setIncluded("X-Test-Response").build())
+      telemetry.setRequestCapturedHeaders(listOf("X-Test-Request", "Authorization"))
+      telemetry.setResponseCapturedHeaders(listOf("X-Test-Response"))
     }
 
     assertThat(attributes.get(REQUEST_HEADER)).containsExactly("request-value")
@@ -76,7 +75,7 @@ class KtorServerHeaderSelectorTest : AbstractHttpServerUsingTest<ApplicationEngi
   @Test
   fun capturesOnlyConfiguredHeaders() {
     val attributes = captureAttributes { telemetry ->
-      telemetry.requestHeaders(IncludeExclude.builder().setIncluded("X-Test-Request").build())
+      telemetry.setRequestCapturedHeaders(listOf("X-Test-Request"))
     }
 
     assertThat(attributes.get(AUTHORIZATION_HEADER)).isNull()

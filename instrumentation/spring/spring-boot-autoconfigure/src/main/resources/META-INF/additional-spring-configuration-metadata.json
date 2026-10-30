@@ -296,12 +296,12 @@
       "defaultValue": false
     },
     {
-      "name": "otel.instrumentation.http.client.capture-request-headers",
+      "name": "otel.instrumentation.http.client.request-captured-headers",
       "type": "java.util.List<java.lang.String>",
       "description": "List of HTTP request headers to capture in HTTP clients."
     },
     {
-      "name": "otel.instrumentation.http.client.capture-response-headers",
+      "name": "otel.instrumentation.http.client.response-captured-headers",
       "type": "java.util.List<java.lang.String>",
       "description": "List of HTTP response headers to capture in HTTP clients."
     },
@@ -318,12 +318,12 @@
       "defaultValue": "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"
     },
     {
-      "name": "otel.instrumentation.http.server.capture-request-headers",
+      "name": "otel.instrumentation.http.server.request-captured-headers",
       "type": "java.util.List<java.lang.String>",
       "description": "List of HTTP request headers to capture in HTTP servers."
     },
     {
-      "name": "otel.instrumentation.http.server.capture-response-headers",
+      "name": "otel.instrumentation.http.server.response-captured-headers",
       "type": "java.util.List<java.lang.String>",
       "description": "List of HTTP response headers to capture in HTTP servers."
     },

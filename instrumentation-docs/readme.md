@@ -29,10 +29,10 @@ metadata-collection tests are not a substitute.
 
 | Property | Synthetic selector |
 | -------- | ------------------ |
-| `otel.instrumentation.http.client.capture-request-headers` | `X-Test-Request` |
-| `otel.instrumentation.http.client.capture-response-headers` | `X-Test-Response` |
-| `otel.instrumentation.http.server.capture-request-headers` | `X-Test-Request` |
-| `otel.instrumentation.http.server.capture-response-headers` | `X-Test-Response` |
+| `otel.instrumentation.http.client.request-captured-headers` | `X-Test-Request` |
+| `otel.instrumentation.http.client.response-captured-headers` | `X-Test-Response` |
+| `otel.instrumentation.http.server.request-captured-headers` | `X-Test-Request` |
+| `otel.instrumentation.http.server.response-captured-headers` | `X-Test-Response` |
 | `otel.instrumentation.common.messaging.headers.included` | `Test-Message-Header`, `Test-Message-Int-Header`, `Test_Message_Header`, `Test_Message_Int_Header` |
 
 These synthetic selectors are fixture values, not production defaults. Their attributes may appear

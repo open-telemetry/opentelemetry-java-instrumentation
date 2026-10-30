@@ -41,8 +41,8 @@ abstract class AbstractSpringServerLibraryTest extends AbstractSpringServerTest 
   protected Restlet wrapRestlet(Restlet restlet, String path) {
     RestletTelemetry telemetry =
         RestletTelemetry.builder(testing.getOpenTelemetry())
-            .setRequestHeaders(AbstractHttpServerTest.TEST_HEADERS)
-            .setResponseHeaders(AbstractHttpServerTest.TEST_HEADERS)
+            .setRequestCapturedHeaders(AbstractHttpServerTest.TEST_HEADERS)
+            .setResponseCapturedHeaders(AbstractHttpServerTest.TEST_HEADERS)
             .build();
 
     Filter tracingFilter = telemetry.createFilter(path);

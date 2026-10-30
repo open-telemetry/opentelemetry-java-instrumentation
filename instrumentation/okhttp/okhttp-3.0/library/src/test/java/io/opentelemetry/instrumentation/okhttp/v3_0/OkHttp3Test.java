@@ -24,8 +24,8 @@ class OkHttp3Test extends AbstractOkHttp3Test {
   public Call.Factory createCallFactory(OkHttpClient.Builder clientBuilder) {
     clientBuilder.protocols(singletonList(Protocol.HTTP_1_1));
     return OkHttpTelemetry.builder(testing.getOpenTelemetry())
-        .setRequestHeaders(AbstractHttpClientTest.TEST_HEADERS)
-        .setResponseHeaders(AbstractHttpClientTest.TEST_HEADERS)
+        .setRequestCapturedHeaders(AbstractHttpClientTest.TEST_HEADERS)
+        .setResponseCapturedHeaders(AbstractHttpClientTest.TEST_HEADERS)
         .build()
         .createCallFactory(clientBuilder.build());
   }

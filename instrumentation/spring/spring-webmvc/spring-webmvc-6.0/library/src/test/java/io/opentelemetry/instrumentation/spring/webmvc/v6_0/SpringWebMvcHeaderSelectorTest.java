@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.spring.webmvc.v6_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import jakarta.servlet.Filter;
@@ -25,32 +25,11 @@ class SpringWebMvcHeaderSelectorTest {
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Test
-  void capturesHeadersMatchingSelectorPatterns() throws Exception {
-    Filter filter =
-        SpringWebMvcTelemetry.builder(testing.getOpenTelemetry())
-            .setRequestHeaders(IncludeExclude.builder().setIncluded("X-Test-*").build())
-            .setResponseHeaders(IncludeExclude.builder().setExcluded("x-secret-*").build())
-            .build()
-            .createServletFilter();
-
-    handleRequest(filter);
-
-    Attributes attributes = testing.waitForTraces(1).get(0).get(0).getAttributes();
-    assertThat(attributes.get(stringArrayKey("http.request.header.x-test-request")))
-        .containsExactly("request-value");
-    assertThat(attributes.get(stringArrayKey("http.request.header.x-secret-token"))).isNull();
-    assertThat(attributes.get(stringArrayKey("http.response.header.x-test-response")))
-        .containsExactly("response-value");
-    assertThat(attributes.get(stringArrayKey("http.response.header.x-secret-token"))).isNull();
-  }
-
-  @Test
   void capturesHeadersConfiguredByName() throws Exception {
     Filter filter =
         SpringWebMvcTelemetry.builder(testing.getOpenTelemetry())
-            .setRequestHeaders(
-                IncludeExclude.builder().setIncluded("X-Test-Request", "Authorization").build())
-            .setResponseHeaders(IncludeExclude.builder().setIncluded("X-Test-Response").build())
+            .setRequestCapturedHeaders(asList("X-Test-Request", "Authorization"))
+            .setResponseCapturedHeaders(asList("X-Test-Response"))
             .build()
             .createServletFilter();
 

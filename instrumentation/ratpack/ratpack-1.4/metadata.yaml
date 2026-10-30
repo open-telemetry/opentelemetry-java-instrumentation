@@ -12,8 +12,8 @@ features:
 library_link: https://ratpack.io/
 configurations:
   - ref: common.controller-telemetry.enabled
-  - ref: http.client.capture-request-headers
-  - ref: http.client.capture-response-headers
+  - ref: http.client.request-captured-headers
+  - ref: http.client.response-captured-headers
   - ref: http.known-methods
   - ref: common.peer-service-mapping
   - ref: http.client.emit-experimental-telemetry

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.restlet.v1_1.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
@@ -13,7 +14,6 @@ import static org.assertj.core.api.Assertions.entry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ import org.restlet.data.Response;
 class RestletHttpAttributesGetterTest {
 
   @Test
-  void capturesHeadersMatchingWildcardPattern() {
+  void capturesOnlyConfiguredHeaders() {
     Request request = newRequest();
     request.getAttributes().put("org.restlet.http.headers", headers("X-Test-Request", "X-Secret"));
     Response response = new Response(request);
@@ -34,12 +34,8 @@ class RestletHttpAttributesGetterTest {
 
     AttributesExtractor<Request, Response> extractor =
         HttpServerAttributesExtractor.builder(new RestletHttpAttributesGetter())
-            .setRequestHeaders(
-                IncludeExclude.builder()
-                    .setIncluded(singletonList("x-*"))
-                    .setExcluded(singletonList("x-secret"))
-                    .build())
-            .setResponseHeaders(IncludeExclude.builder().setIncluded(singletonList("*")).build())
+            .setRequestCapturedHeaders(asList("X-Test-Request"))
+            .setResponseCapturedHeaders(asList("X-Test-Response"))
             .build();
 
     AttributesBuilder attributes = Attributes.builder();
@@ -58,13 +54,13 @@ class RestletHttpAttributesGetterTest {
   }
 
   @Test
-  void capturesEveryHeaderNotExcluded() {
+  void capturesExactHeaderName() {
     Request request = newRequest();
     request.getAttributes().put("org.restlet.http.headers", headers("X-One", "X-Two"));
 
     AttributesExtractor<Request, Response> extractor =
         HttpServerAttributesExtractor.builder(new RestletHttpAttributesGetter())
-            .setRequestHeaders(IncludeExclude.builder().setExcluded(singletonList("x-two")).build())
+            .setRequestCapturedHeaders(singletonList("X-One"))
             .build();
 
     AttributesBuilder attributes = Attributes.builder();

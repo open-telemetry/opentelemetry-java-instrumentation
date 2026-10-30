@@ -13,8 +13,8 @@ internal object KtorTestUtil {
   fun installOpenTelemetry(application: Application, openTelemetry: OpenTelemetry) {
     application.install(KtorServerTelemetry) {
       openTelemetry(openTelemetry)
-      requestHeaders(AbstractHttpServerTest.TEST_HEADERS)
-      responseHeaders(AbstractHttpServerTest.TEST_HEADERS)
+      setRequestCapturedHeaders(AbstractHttpServerTest.TEST_HEADERS)
+      setResponseCapturedHeaders(AbstractHttpServerTest.TEST_HEADERS)
     }
   }
 }

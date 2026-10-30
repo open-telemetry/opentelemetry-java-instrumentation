@@ -22,8 +22,8 @@ class JavaHttpServerTest extends AbstractJavaHttpServerTest {
   protected void configureContexts(List<HttpContext> contexts) {
     Filter filter =
         JavaHttpServerTelemetry.builder(testing.getOpenTelemetry())
-            .setRequestHeaders(AbstractHttpServerTest.TEST_HEADERS)
-            .setResponseHeaders(AbstractHttpServerTest.TEST_HEADERS)
+            .setRequestCapturedHeaders(AbstractHttpServerTest.TEST_HEADERS)
+            .setResponseCapturedHeaders(AbstractHttpServerTest.TEST_HEADERS)
             .build()
             .createFilter();
     contexts.forEach(ctx -> ctx.getFilters().add(filter));

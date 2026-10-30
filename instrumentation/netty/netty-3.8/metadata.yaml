@@ -10,8 +10,8 @@ semantic_conventions:
 library_link: https://netty.io/
 configurations:
   - ref: http.known-methods
-  - ref: http.client.capture-request-headers
-  - ref: http.client.capture-response-headers
+  - ref: http.client.request-captured-headers
+  - ref: http.client.response-captured-headers
   - ref: common.peer-service-mapping
   - ref: http.client.emit-experimental-telemetry
   - declarative_name: java.common.http.client.url_template_rules
@@ -39,7 +39,7 @@ configurations:
           type: boolean
           default: false
           description: Whether this rule overrides an already-applied template.
-  - ref: http.server.capture-request-headers
-  - ref: http.server.capture-response-headers
+  - ref: http.server.request-captured-headers
+  - ref: http.server.response-captured-headers
   - ref: http.server.emit-experimental-telemetry
   - ref: sanitization.url.sensitive-query-parameters

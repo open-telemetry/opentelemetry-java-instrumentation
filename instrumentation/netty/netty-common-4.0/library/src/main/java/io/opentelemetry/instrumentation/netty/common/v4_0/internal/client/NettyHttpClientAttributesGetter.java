@@ -16,7 +16,6 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -56,11 +55,6 @@ final class NettyHttpClientAttributesGetter
   }
 
   @Override
-  public Collection<String> getHttpRequestHeaderNames(NettyCommonRequest requestAndChannel) {
-    return requestAndChannel.getRequest().headers().names();
-  }
-
-  @Override
   public Integer getHttpResponseStatusCode(
       NettyCommonRequest requestAndChannel, HttpResponse response, @Nullable Throwable error) {
     return response.getStatus().code();
@@ -70,12 +64,6 @@ final class NettyHttpClientAttributesGetter
   public List<String> getHttpResponseHeader(
       NettyCommonRequest requestAndChannel, HttpResponse response, String name) {
     return response.headers().getAll(name);
-  }
-
-  @Override
-  public Collection<String> getHttpResponseHeaderNames(
-      NettyCommonRequest requestAndChannel, HttpResponse response) {
-    return response.headers().names();
   }
 
   @Override

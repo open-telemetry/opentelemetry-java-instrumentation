@@ -15,8 +15,8 @@ otel:
     http:
       known-methods: [ a,b ]
       client:
-        capture-request-headers: [ a,b ]
-        capture-response-headers: [ a,b ]
+        request-captured-headers: [ a,b ]
+        response-captured-headers: [ a,b ]
       server:
-        capture-request-headers: [ a,b ]
-        capture-response-headers: [ a,b ]
+        request-captured-headers: [ a,b ]
+        response-captured-headers: [ a,b ]

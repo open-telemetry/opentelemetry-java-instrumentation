@@ -29,7 +29,6 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.net.ConnectException;
@@ -165,14 +164,8 @@ class HttpClientAttributesExtractorTest {
 
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.builder(new TestHttpClientAttributesGetter())
-            .setRequestHeaders(
-                IncludeExclude.builder()
-                    .setIncluded(singletonList("Custom-Request-Header"))
-                    .build())
-            .setResponseHeaders(
-                IncludeExclude.builder()
-                    .setIncluded(singletonList("Custom-Response-Header"))
-                    .build())
+            .setRequestCapturedHeaders(singletonList("Custom-Request-Header"))
+            .setResponseCapturedHeaders(singletonList("Custom-Response-Header"))
             .setResendCountIncrementer(resendCountFromContext)
             .build();
 

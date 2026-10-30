@@ -9,7 +9,6 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -68,15 +67,12 @@ public final class HelidonTelemetryBuilder {
    * <p>Header values are captured under the {@code http.request.header.<key>} attribute key. The
    * {@code <key>} part in the attribute key is the lowercase header name.
    *
-   * <p>Selector patterns are matched case-insensitively, since HTTP header names are
-   * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
-   * characters, including none. Excluded patterns take precedence over included patterns. A
-   * selector with no included patterns captures every header that is not excluded, and an
-   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
+   * <p>Header names are case-insensitive and matched literally; {@code *} and {@code ?} are not
+   * treated as glob patterns. An empty collection captures no headers.
    */
   @CanIgnoreReturnValue
-  public HelidonTelemetryBuilder setRequestHeaders(IncludeExclude requestHeaders) {
-    builder.setRequestHeaders(requestHeaders);
+  public HelidonTelemetryBuilder setRequestCapturedHeaders(Collection<String> requestHeaders) {
+    builder.setRequestCapturedHeaders(requestHeaders);
     return this;
   }
 
@@ -86,15 +82,12 @@ public final class HelidonTelemetryBuilder {
    * <p>Header values are captured under the {@code http.response.header.<key>} attribute key. The
    * {@code <key>} part in the attribute key is the lowercase header name.
    *
-   * <p>Selector patterns are matched case-insensitively, since HTTP header names are
-   * case-insensitive. {@code ?} matches one character and {@code *} matches any number of
-   * characters, including none. Excluded patterns take precedence over included patterns. A
-   * selector with no included patterns captures every header that is not excluded, and an
-   * {@linkplain IncludeExclude#isEmpty() empty} selector captures no headers.
+   * <p>Header names are case-insensitive and matched literally; {@code *} and {@code ?} are not
+   * treated as glob patterns. An empty collection captures no headers.
    */
   @CanIgnoreReturnValue
-  public HelidonTelemetryBuilder setResponseHeaders(IncludeExclude responseHeaders) {
-    builder.setResponseHeaders(responseHeaders);
+  public HelidonTelemetryBuilder setResponseCapturedHeaders(Collection<String> responseHeaders) {
+    builder.setResponseCapturedHeaders(responseHeaders);
     return this;
   }
 

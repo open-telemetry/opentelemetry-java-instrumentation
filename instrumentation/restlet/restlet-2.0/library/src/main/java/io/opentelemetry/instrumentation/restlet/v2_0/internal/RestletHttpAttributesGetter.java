@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
-import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.restlet.Request;
@@ -52,11 +51,6 @@ final class RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
   }
 
   @Override
-  public Collection<String> getHttpRequestHeaderNames(Request request) {
-    return headerNames(getHeaders(request));
-  }
-
-  @Override
   public Integer getHttpResponseStatusCode(
       Request request, Response response, @Nullable Throwable error) {
     return response.getStatus().getCode();
@@ -69,15 +63,6 @@ final class RestletHttpAttributesGetter implements HttpServerAttributesGetter<Re
       return emptyList();
     }
     return asList(headers.getValuesArray(name, true));
-  }
-
-  @Override
-  public Collection<String> getHttpResponseHeaderNames(Request request, Response response) {
-    return headerNames(getHeaders(response));
-  }
-
-  private static Collection<String> headerNames(@Nullable Series<?> headers) {
-    return headers == null ? emptyList() : headers.getNames();
   }
 
   @Nullable
