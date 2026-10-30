@@ -30,8 +30,6 @@ class MuzzlePartitionFunctionalTest {
     Files.writeString(
         directory.resolve("build.gradle"),
         """
-        import io.opentelemetry.javaagent.muzzle.internal.MuzzleTaskSelection
-
         plugins {
           id 'io.opentelemetry.instrumentation.muzzle-check' apply false
         }
@@ -40,8 +38,6 @@ class MuzzlePartitionFunctionalTest {
           def partition = tasks.register('muzzle1')
           subprojects { child ->
             child.plugins.withId('io.opentelemetry.instrumentation.muzzle-check') {
-              child.extensions.extraProperties.set(
-                MuzzleTaskSelection.AGGREGATE_TASK_PATH_PROPERTY, partition.get().path)
               partition.configure { dependsOn(child.tasks.named('muzzle')) }
             }
           }

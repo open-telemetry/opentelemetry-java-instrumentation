@@ -8,7 +8,6 @@ import io.opentelemetry.javaagent.muzzle.AcceptableVersions
 import io.opentelemetry.javaagent.muzzle.MuzzleDirective
 import io.opentelemetry.javaagent.muzzle.MuzzleExtension
 import io.opentelemetry.javaagent.muzzle.internal.MuzzleClassLoaderService
-import io.opentelemetry.javaagent.muzzle.internal.MuzzleTaskSelection
 import io.opentelemetry.javaagent.muzzle.matcher.MuzzleGradlePluginUtil
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils
 import org.eclipse.aether.RepositorySystem
@@ -221,23 +220,35 @@ tasks.register("printMuzzleReferences") {
   }
 }
 
-afterEvaluate {
-  // Partition metadata is supplied by the parent project's plugin callback.
-  if (MuzzleTaskSelection.hasRelevantTask(project)) {
-    val classLoaderService = gradle.sharedServices.registerIfAbsent("muzzleClassLoader$path", MuzzleClassLoaderService::class.java) {
-      parameters.moduleJar.set(shadowModule.flatMap { it.archiveFile })
-      parameters.toolingJar.set(shadowMuzzleTooling.flatMap { it.archiveFile })
-      maxParallelUsages.set(1)
-    }
-    val closeClassLoader = tasks.register("closeMuzzleClassLoader") {
-      usesService(classLoaderService)
-      doLast {
-        classLoaderService.get().close()
-      }
-    }
+val hasRelevantTask = gradle.startParameter.taskNames.any {
+  // removing leading ':' if present
+  val taskName = it.removePrefix(":")
+  val projectPath = project.path.removePrefix(":")
+  val muzzleTaskName = if (projectPath.isEmpty()) "muzzle" else "$projectPath:muzzle"
+  // Either the specific muzzle task in this project or a top level muzzle task.
+  taskName == muzzleTaskName ||
+    taskName.startsWith("instrumentation:muzzle") ||
+    taskName.startsWith("muzzle-Assert") ||
+    taskName.contains(":muzzle-Assert")
+}
 
-    val system = newRepositorySystem()
-    val session = newRepositorySystemSession(system)
+if (hasRelevantTask) {
+  val classLoaderService = gradle.sharedServices.registerIfAbsent("muzzleClassLoader$path", MuzzleClassLoaderService::class.java) {
+    parameters.moduleJar.set(shadowModule.flatMap { it.archiveFile })
+    parameters.toolingJar.set(shadowMuzzleTooling.flatMap { it.archiveFile })
+    maxParallelUsages.set(1)
+  }
+  val closeClassLoader = tasks.register("closeMuzzleClassLoader") {
+    usesService(classLoaderService)
+    doLast {
+      classLoaderService.get().close()
+    }
+  }
+
+  val system = newRepositorySystem()
+  val session = newRepositorySystemSession(system)
+
+  afterEvaluate {
     var runAfter = muzzle
 
     // the project repositories need to be retrieved after evaluation, before that the list is just empty
