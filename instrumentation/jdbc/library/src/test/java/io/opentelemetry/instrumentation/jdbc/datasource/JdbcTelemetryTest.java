@@ -175,14 +175,26 @@ class JdbcTelemetryTest {
                             equalTo(ERROR_TYPE, expectedErrorType),
                             equalTo(DB_RESPONSE_STATUS_CODE, expectedStatusCode))));
 
-    assertDurationMetric(
-        testing,
-        "io.opentelemetry.jdbc",
-        DB_NAMESPACE,
-        DB_QUERY_SUMMARY,
-        DB_SYSTEM_NAME,
-        ERROR_TYPE,
-        SERVER_ADDRESS);
+    if (expectedStatusCode == null) {
+      assertDurationMetric(
+          testing,
+          "io.opentelemetry.jdbc",
+          DB_NAMESPACE,
+          DB_QUERY_SUMMARY,
+          DB_SYSTEM_NAME,
+          ERROR_TYPE,
+          SERVER_ADDRESS);
+    } else {
+      assertDurationMetric(
+          testing,
+          "io.opentelemetry.jdbc",
+          DB_NAMESPACE,
+          DB_QUERY_SUMMARY,
+          DB_SYSTEM_NAME,
+          DB_RESPONSE_STATUS_CODE,
+          ERROR_TYPE,
+          SERVER_ADDRESS);
+    }
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jdbc",
         metric ->

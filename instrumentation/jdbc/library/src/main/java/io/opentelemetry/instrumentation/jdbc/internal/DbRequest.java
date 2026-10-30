@@ -15,6 +15,7 @@ import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.Collection;
 import java.util.Map;
@@ -118,7 +119,8 @@ public abstract class DbRequest {
         batchSize,
         operationName,
         preparedStatementParameters,
-        parameterizedQuery);
+        parameterizedQuery,
+        null);
   }
 
   @Nullable
@@ -149,4 +151,26 @@ public abstract class DbRequest {
   public abstract Map<String, String> getPreparedStatementParameters();
 
   public abstract boolean isParameterizedQuery();
+
+  @Nullable
+  public abstract SQLWarning getSqlWarning();
+
+  public DbRequest withSqlWarningFromStatement(Statement statement) {
+    try {
+      SQLWarning sqlWarning = statement.getWarnings();
+      if (sqlWarning == null) {
+        return this;
+      }
+      return new AutoValue_DbRequest(
+          getDbInfo(),
+          getQueryTexts(),
+          getBatchSize(),
+          getOperationName(),
+          getPreparedStatementParameters(),
+          isParameterizedQuery(),
+          sqlWarning);
+    } catch (Throwable ignored) {
+      return this;
+    }
+  }
 }

@@ -22,37 +22,42 @@ import javax.annotation.Nullable;
 public class JdbcAdviceScope {
   private final CallDepth callDepth;
   @Nullable private final DbRequest request;
+  private final Statement statement;
   @Nullable private final Context context;
   @Nullable private final Scope scope;
 
   private JdbcAdviceScope(
       CallDepth callDepth,
       @Nullable DbRequest request,
+      Statement statement,
       @Nullable Context context,
       @Nullable Scope scope) {
     this.callDepth = callDepth;
     this.request = request;
+    this.statement = statement;
     this.context = context;
     this.scope = scope;
   }
 
   public static JdbcAdviceScope startBatch(CallDepth callDepth, Statement statement) {
-    return start(callDepth, () -> createBatchRequest(statement));
+    return start(callDepth, statement, () -> createBatchRequest(statement));
   }
 
   public static JdbcAdviceScope startStatement(
       CallDepth callDepth, String sql, Statement statement) {
-    return start(callDepth, () -> DbRequest.create(statement, sql));
+    return start(callDepth, statement, () -> DbRequest.create(statement, sql));
   }
 
   public static JdbcAdviceScope startPreparedStatement(
       CallDepth callDepth, PreparedStatement preparedStatement) {
     return start(
         callDepth,
+        preparedStatement,
         () -> DbRequest.create(preparedStatement, JdbcData.getParameters(preparedStatement)));
   }
 
-  private static JdbcAdviceScope start(CallDepth callDepth, Supplier<DbRequest> requestSupplier) {
+  private static JdbcAdviceScope start(
+      CallDepth callDepth, Statement statement, Supplier<DbRequest> requestSupplier) {
     // Connection#getMetaData() may execute a Statement or PreparedStatement to retrieve DB info
     // this happens before the DB CLIENT span is started (and put in the current context), so this
     // instrumentation runs again and the shouldStartSpan() check always returns true - and so on
@@ -61,17 +66,17 @@ public class JdbcAdviceScope {
     // is called - the first recursive Statement call is just skipped and we do not create a span
     // for it
     if (callDepth.getAndIncrement() > 0) {
-      return new JdbcAdviceScope(callDepth, null, null, null);
+      return new JdbcAdviceScope(callDepth, null, statement, null, null);
     }
 
     Context parentContext = Context.current();
     DbRequest request = requestSupplier.get();
     if (request == null || !statementInstrumenter().shouldStart(parentContext, request)) {
-      return new JdbcAdviceScope(callDepth, null, null, null);
+      return new JdbcAdviceScope(callDepth, null, statement, null, null);
     }
 
     Context context = statementInstrumenter().start(parentContext, request);
-    return new JdbcAdviceScope(callDepth, request, context, context.makeCurrent());
+    return new JdbcAdviceScope(callDepth, request, statement, context, context.makeCurrent());
   }
 
   @Nullable
@@ -96,6 +101,10 @@ public class JdbcAdviceScope {
   }
 
   public void end(@Nullable Throwable throwable) {
+    DbRequest completedRequest = request;
+    if (scope != null && throwable == null && request != null) {
+      completedRequest = request.withSqlWarningFromStatement(statement);
+    }
     if (callDepth.decrementAndGet() > 0) {
       return;
     }
@@ -103,6 +112,6 @@ public class JdbcAdviceScope {
       return;
     }
     scope.close();
-    statementInstrumenter().end(context, request, null, throwable);
+    statementInstrumenter().end(context, completedRequest, null, throwable);
   }
 }
