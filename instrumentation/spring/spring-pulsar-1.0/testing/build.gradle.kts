@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  implementation("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
+  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   implementation("org.testcontainers:testcontainers-pulsar")
 
   compileOnly("org.springframework.pulsar:spring-pulsar:1.0.0")

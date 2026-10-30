@@ -20,7 +20,7 @@ dependencies {
   extensionLibs(project(":testing:javaagent-test-exporters", configuration = "shadow"))
   agent(project(":javaagent", configuration = "baseJar"))
 
-  testImplementation("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("io.opentelemetry:opentelemetry-api")
 }
 

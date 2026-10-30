@@ -5,7 +5,7 @@ plugins {
 dependencies {
   testInstrumentation(project(":instrumentation:http-url-connection:javaagent"))
 
-  testImplementation(project(":testing:instrumentation-testing"))
+  testImplementation(project(":testing:testing-common"))
 }
 
 tasks {

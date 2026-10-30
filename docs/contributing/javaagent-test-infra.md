@@ -1,6 +1,6 @@
 # Instrumentation testing infrastructure
 
-`:testing:instrumentation-testing` is this repository's shared infrastructure for testing both
+`:testing:testing-common` is this repository's shared infrastructure for testing both
 javaagent and library instrumentation. It provides JUnit extensions, assertions, and reusable suites
 such as the shared HTTP tests. The same support artifact is useful to external javaagent
 instrumentation and extension authors; library-mode testing is supported by this artifact as well.
@@ -9,9 +9,9 @@ The central projects keep distinct roles:
 
 - `:testing:javaagent-test-exporters` contains in-memory exporters and helpers loaded by the agent.
 - `:testing:javaagent-for-testing` is the testing agent distribution that embeds those exporters.
-- `:testing:instrumentation-testing` provides the shared test APIs and handles the agent class-loader
+- `:testing:testing-common` provides the shared test APIs and handles the agent class-loader
   boundary for captured telemetry.
-- `:testing:instrumentation-testing:with-shaded-dependencies` is a dependency wrapper for IDEs and
+- `:testing:testing-common:with-shaded-dependencies` is a dependency wrapper for IDEs and
   Gradle substitution. `:testing:shaded-dependencies` produces the relocated third-party dependency
   bundle consumed by that wrapper and the testing support.
 
@@ -27,7 +27,7 @@ val testAgent = configurations.create("testAgent") {
 }
 
 dependencies {
-  testImplementation("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing:$version")
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common:$version")
   testAgent("io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing:$version")
 }
 ```
@@ -40,7 +40,7 @@ agent initializer:
 -Dotel.javaagent.experimental.initializer.jar=<instrumentation-test.jar>
 ```
 
-Adding `opentelemetry-instrumentation-testing` alone does not attach an agent. The
+Adding `opentelemetry-testing-common` alone does not attach an agent. The
 [`examples/distro` testing-agent project](../../examples/distro/testing/agent-for-testing) shows a
 consumer setup.
 

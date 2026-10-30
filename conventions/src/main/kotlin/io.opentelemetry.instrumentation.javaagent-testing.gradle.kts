@@ -46,7 +46,7 @@ dependencies {
 testing {
   suites.withType(JvmTestSuite::class).configureEach {
     dependencies {
-      implementation("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
+      implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
     }
   }
 }

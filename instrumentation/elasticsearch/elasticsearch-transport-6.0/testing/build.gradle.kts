@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   implementation("org.elasticsearch.client:transport:6.0.0")
   implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing"))

@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   api("org.apache.logging.log4j:log4j-core:2.7")
 

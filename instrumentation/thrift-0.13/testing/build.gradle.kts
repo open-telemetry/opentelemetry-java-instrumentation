@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  implementation("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
+  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   val thriftVersion = baseVersion("0.13.0").orLatest()
   implementation("org.apache.thrift:libthrift:$thriftVersion")
 }

@@ -32,7 +32,7 @@ dependencies {
   testWebApp(project(":instrumentation:jmx-metrics:testing-apps:testing-webapp", configuration = "testWebApp"))
   camelTestApp(project(":instrumentation:jmx-metrics:testing-apps:camel-testing-app", configuration = "camelTestApp"))
 
-  testImplementation("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("org.testcontainers:testcontainers")
 
   testImplementation("org.testcontainers:testcontainers-junit-jupiter")

@@ -180,7 +180,7 @@ class ContextBridgeTest {
 
   // TODO (trask)
   // more tests are needed here, not sure how to implement, probably need to write some test
-  // instrumentation to help test, similar to :testing:instrumentation-testing:integration-tests
+  // instrumentation to help test, similar to :testing:testing-common:integration-tests
   //
   // * "application propagates agent's baggage"
   // * "agent uses application's span"

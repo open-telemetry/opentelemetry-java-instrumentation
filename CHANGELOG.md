@@ -4,9 +4,7 @@
 
 ### ⚠️ Breaking changes
 
-- Rename `io.opentelemetry.javaagent:opentelemetry-testing-common` to
-  `io.opentelemetry.javaagent:opentelemetry-instrumentation-testing` and
-  `io.opentelemetry.javaagent:opentelemetry-agent-for-testing` to
+- Rename `io.opentelemetry.javaagent:opentelemetry-agent-for-testing` to
   `io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing`.
 - AWS Lambda invocation spans now replace alias suffixes in `cloud.resource_id` with the resolved
   function version when available.

@@ -45,7 +45,7 @@ targets:
       target: ':sdk-autoconfigure-support'
     - type: gradle
       path: ./
-      target: ':testing:instrumentation-testing'
+      target: ':testing:testing-common'
     - type: gradle
       path: ./
       target: ':javaagent-tooling:javaagent-tooling-java9'

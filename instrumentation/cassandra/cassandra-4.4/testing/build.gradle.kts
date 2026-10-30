@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   compileOnly("com.datastax.oss:java-driver-core:4.4.0")
   implementation("io.projectreactor:reactor-core:3.5.3")

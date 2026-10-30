@@ -11,7 +11,7 @@ dependencies {
       classifier = "tests"
     }
   }
-  api(project(":testing:instrumentation-testing"))
+  api(project(":testing:testing-common"))
 }
 
 tasks {

@@ -17,7 +17,7 @@ dependencies {
   // the javaagent that is going to be used when running instrumentation unit tests
   testAgent(project(path = ":testing:agent-for-testing", configuration = "shadow"))
   // test dependencies
-  testImplementation("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.assertj:assertj-core:3.27.7")
 }

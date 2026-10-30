@@ -63,7 +63,7 @@ dependencies {
   compileOnly("com.google.code.findbugs:annotations")
   testCompileOnly("com.google.code.findbugs:annotations")
 
-  testImplementation("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
 }
 
 testing {

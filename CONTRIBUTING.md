@@ -140,7 +140,7 @@ See [Understanding the javaagent structure](docs/contributing/javaagent-structur
 
 ## Understanding the instrumentation testing infrastructure
 
-See [Understanding the javaagent instrumentation testing components](docs/contributing/javaagent-test-infra.md)
+See [Understanding the instrumentation testing infrastructure](docs/contributing/javaagent-test-infra.md)
 
 ## Debugging
 
