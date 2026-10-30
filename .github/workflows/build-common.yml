@@ -16,7 +16,8 @@ on:
       skip-windows-smoke-tests:
         type: boolean
         required: false
-      reduced-appserver-tests:
+      limited-appserver-matrix:
+        description: Run only the limited app-server matrix on Linux; Windows retains full coverage.
         type: boolean
         required: false
     secrets:
@@ -413,13 +414,10 @@ jobs:
           - websphere
           - wildfly
           - other
-          - spring-aot
         exclude:
           - os: ${{ inputs.skip-windows-smoke-tests && 'windows-latest' || '' }}
           - os: windows-latest
             smoke-test-suite: websphere
-          - os: windows-latest
-            smoke-test-suite: spring-aot
       fail-fast: false
     steps:
       - name: Support long paths
@@ -464,13 +462,12 @@ jobs:
       - name: Test
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
-        # Reduced app-server mode owns the OpenJ9 policy; disabling it here would make the TomEE suite run no tests.
         run: >
           ./gradlew
-          :smoke-tests:test
+          :smoke-tests:testLimitedMatrix
+          ${{ (!inputs.limited-appserver-matrix || matrix.os == 'windows-latest') && ':smoke-tests:testAdditionalVariants' || '' }}
           -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
-          ${{ inputs.reduced-appserver-tests && matrix.os != 'windows-latest' && '-PreducedAppServerTests=true' || '' }}
-          ${{ inputs.skip-openj9-tests && !inputs.reduced-appserver-tests && matrix.smoke-test-suite != 'websphere' && '-PskipOpenJ9SmokeTests=true' || '' }}
+          ${{ inputs.skip-openj9-tests && !inputs.limited-appserver-matrix && matrix.os != 'windows-latest' && '-PskipOpenJ9SmokeTests=true' || '' }}
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Build scan

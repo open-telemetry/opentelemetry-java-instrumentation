@@ -71,7 +71,6 @@ class RocketMqInstrumenterFactoryTest {
                             equalTo(MESSAGING_DESTINATION_NAME, "topic"),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                            equalTo(stringKey("rocketmq.namespace"), ""),
                             equalTo(
                                 stringKey("rocketmq.message.tag"),
                                 captureExperimentalSpanAttributes ? "tag" : null))));

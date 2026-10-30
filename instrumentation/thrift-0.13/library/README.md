@@ -31,10 +31,11 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-thrift-0.13:OPENT
 The instrumentation library provides wrappers for thrift servers and clients that provide OpenTelemetry-based spans and context propagation.
 
 ```java
-// For server-side, decorate processor with a tracing wrapper.
-TProcessor configureServer(OpenTelemetry openTelemetry, TProcessor processor, String serviceName) {
+// For server-side, decorate the generated processor with a tracing wrapper.
+TProcessor configureServer(OpenTelemetry openTelemetry, CustomService.Iface handler) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
-  return thriftTelemetry.wrapServerProcessor(processor, serviceName);
+  return thriftTelemetry.wrapServerProcessor(
+      new CustomService.Processor<>(handler), CustomService.class.getName());
 }
 
 // When using AsyncProcessor also wrap input and output protocol factories.
@@ -67,3 +68,7 @@ CustomService.AsyncIface configureClient(OpenTelemetry openTelemetry, CustomServ
   return thriftTelemetry.wrapAsyncClient(asyncClient, CustomService.AsyncIface.class);
 }
 ```
+
+The `rpcMethodPrefix` passed to `wrapServerProcessor` is combined with the method name as
+`prefix/method` for server span names and the `rpc.method` attribute on server spans and duration
+metrics. Use the generated service class name, as above, to match client telemetry.

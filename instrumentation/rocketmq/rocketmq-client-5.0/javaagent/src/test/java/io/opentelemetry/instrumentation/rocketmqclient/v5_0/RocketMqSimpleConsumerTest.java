@@ -19,7 +19,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
@@ -316,7 +315,6 @@ class RocketMqSimpleConsumerTest {
         .hasAttributesSatisfyingExactly(
             equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
             equalTo(stringKey("messaging.system.name"), "rocketmq"),
-            equalTo(stringKey("rocketmq.namespace"), ""),
             equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
             equalTo(MESSAGING_OPERATION_NAME, "receive"),
             equalTo(MESSAGING_OPERATION_TYPE, "receive"),
