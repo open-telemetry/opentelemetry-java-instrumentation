@@ -12,7 +12,6 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -42,7 +41,7 @@ class RocketMqInstrumenterFactoryTest {
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Test
-  void usesEmptyProducerNamespaceByDefault() {
+  void omitsProducerNamespaceByDefault() {
     SendMessageContext request = mock(SendMessageContext.class);
     when(request.getMessage()).thenReturn(new Message("topic", new byte[0]));
     Instrumenter<SendMessageContext, Void> instrumenter =
@@ -64,8 +63,7 @@ class RocketMqInstrumenterFactoryTest {
                             equalTo(MESSAGING_SYSTEM, "rocketmq"),
                             equalTo(MESSAGING_DESTINATION_NAME, "topic"),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                            equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""))));
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"))));
   }
 
   @Test

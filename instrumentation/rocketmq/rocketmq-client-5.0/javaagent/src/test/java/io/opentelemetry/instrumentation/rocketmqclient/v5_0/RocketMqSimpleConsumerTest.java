@@ -17,7 +17,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -316,7 +315,6 @@ class RocketMqSimpleConsumerTest {
         .hasAttributesSatisfyingExactly(
             equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
             equalTo(MESSAGING_SYSTEM, "rocketmq"),
-            equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
             equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
             equalTo(MESSAGING_OPERATION_NAME, "receive"),
             equalTo(MESSAGING_OPERATION_TYPE, "receive"),

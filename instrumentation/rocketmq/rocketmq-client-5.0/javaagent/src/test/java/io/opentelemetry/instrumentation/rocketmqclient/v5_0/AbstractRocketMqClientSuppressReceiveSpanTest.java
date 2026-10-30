@@ -16,7 +16,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues.NORMAL;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -121,7 +120,6 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                               equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                               equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL),
                               equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                              equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                               equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                               equalTo(MESSAGING_DESTINATION_NAME, topic),
                               equalTo(MESSAGING_OPERATION_NAME, "send"),
@@ -137,7 +135,6 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                               equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                               equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                               equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                              equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                               equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                               equalTo(MESSAGING_DESTINATION_NAME, topic),
                               equalTo(MESSAGING_OPERATION_NAME, "process"),

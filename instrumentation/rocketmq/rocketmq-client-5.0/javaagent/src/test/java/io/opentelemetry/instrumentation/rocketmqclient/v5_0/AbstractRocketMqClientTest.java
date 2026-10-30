@@ -24,7 +24,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues.DELAY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues.FIFO;
@@ -502,7 +501,6 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, NORMAL),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
@@ -532,7 +530,6 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, FIFO),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
@@ -562,7 +559,6 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_TYPE, DELAY),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
@@ -586,7 +582,6 @@ abstract class AbstractRocketMqClientTest {
             .hasAttributesSatisfyingExactly(
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION_NAME, "receive"),
                 equalTo(MESSAGING_OPERATION_TYPE, "receive"),
@@ -674,7 +669,6 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(keys)),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
@@ -708,7 +702,6 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_GROUP, messageGroup),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
@@ -742,7 +735,6 @@ abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, deliveryTimestamp),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
