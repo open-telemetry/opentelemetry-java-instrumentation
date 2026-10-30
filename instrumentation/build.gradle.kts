@@ -1,3 +1,5 @@
+import io.opentelemetry.javaagent.muzzle.internal.MuzzleTaskSelection
+
 plugins {
   id("otel.java-conventions")
 }
@@ -26,6 +28,8 @@ subprojects {
     // relying on predictable ordering of subprojects
     // (see https://docs.gradle.org/current/dsl/org.gradle.api.Project.html#N14CB4)
     // since we are splitting these muzzleX tasks across different github action jobs
-    instrumentationProjectMuzzle[counter++ % 4].get().dependsOn(subProj.tasks.named("muzzle"))
+    val aggregateTask = instrumentationProjectMuzzle[counter++ % 4].get()
+    subProj.extensions.extraProperties.set(MuzzleTaskSelection.AGGREGATE_TASK_PATH_PROPERTY, aggregateTask.path)
+    aggregateTask.dependsOn(subProj.tasks.named("muzzle"))
   }
 }

@@ -8,6 +8,7 @@ import io.opentelemetry.javaagent.muzzle.AcceptableVersions
 import io.opentelemetry.javaagent.muzzle.MuzzleBenchmarkSupport
 import io.opentelemetry.javaagent.muzzle.MuzzleDirective
 import io.opentelemetry.javaagent.muzzle.MuzzleExtension
+import io.opentelemetry.javaagent.muzzle.internal.MuzzleTaskSelection
 import io.opentelemetry.javaagent.muzzle.matcher.MuzzleGradlePluginUtil
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils
 import org.eclipse.aether.RepositorySystem
@@ -228,23 +229,11 @@ tasks.register("printMuzzleReferences") {
   }
 }
 
-val hasRelevantTask = gradle.startParameter.taskNames.any {
-  // removing leading ':' if present
-  val taskName = it.removePrefix(":")
-  val projectPath = project.path.removePrefix(":")
-  val muzzleTaskName = if (projectPath.isEmpty()) "muzzle" else "$projectPath:muzzle"
-  // Either the specific muzzle task in this project or a top level muzzle task.
-  taskName == muzzleTaskName ||
-    taskName.startsWith("instrumentation:muzzle") ||
-    taskName.startsWith("muzzle-Assert") ||
-    taskName.contains(":muzzle-Assert")
-}
-
-if (hasRelevantTask) {
-  val system = newRepositorySystem()
-  val session = newRepositorySystemSession(system)
-
-  afterEvaluate {
+afterEvaluate {
+  // Partition metadata is supplied by the parent project's plugin callback.
+  if (MuzzleTaskSelection.hasRelevantTask(project)) {
+    val system = newRepositorySystem()
+    val session = newRepositorySystemSession(system)
     var runAfter = muzzle
 
     // the project repositories need to be retrieved after evaluation, before that the list is just empty
