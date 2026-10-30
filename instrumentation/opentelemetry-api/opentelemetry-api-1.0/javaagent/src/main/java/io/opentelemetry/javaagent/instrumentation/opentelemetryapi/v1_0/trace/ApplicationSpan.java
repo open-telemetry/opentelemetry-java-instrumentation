@@ -21,7 +21,7 @@ public class ApplicationSpan implements application.io.opentelemetry.api.trace.S
 
   public ApplicationSpan(Span agentSpan) {
     this.agentSpan = agentSpan;
-    // we add FieldHolder interface to span implementations used in agent via instrumentation
+    // we add ApplicationSpanHolder interface to span implementations used in agent via instrumentation
     // this lets us associate the original application span with the agent span so we can convert
     // the agent span back to exactly the same application span that the agent span was created for
     if (agentSpan instanceof ApplicationSpanHolder && agentSpan != Span.getInvalid()) {
