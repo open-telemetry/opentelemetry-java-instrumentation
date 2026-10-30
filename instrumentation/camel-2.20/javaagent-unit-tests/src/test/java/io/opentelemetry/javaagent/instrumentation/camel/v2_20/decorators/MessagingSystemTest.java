@@ -34,6 +34,7 @@ class MessagingSystemTest {
             .add(argumentSet("legacy AMQP alias", "ampq", "amqp"))
             .add(argumentSet("CometD secure alias", "cometds", "cometd"))
             .add(argumentSet("Paho MQTT alias", "paho", "mqtt"))
+            .add(argumentSet("AWS SQS component", "aws-sqs", "aws.sqs"))
             .add(argumentSet("simple JMS alias", "sjms", "jms"));
     mappings.add(argumentSet("stable AMQP component", "amqp", "amqp"));
     return mappings.build();
