@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -189,6 +190,38 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
                 .getStructured("common")
                 .getStructuredList("service_peer_mapping"))
         .isNull();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"client", "server"})
+  void testGrpcRequestCapturedHeadersMapping(String side) {
+    DeclarativeConfigProperties config =
+        createConfig(
+            "otel.instrumentation.grpc." + side + ".request-captured-headers",
+            "X-Request-Id,some-*-key,some-?-key");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("grpc")
+                .getStructured(side)
+                .getScalarList("request_captured_headers", String.class))
+        .containsExactly("X-Request-Id", "some-*-key", "some-?-key");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"client", "server"})
+  void testGrpcRequestCapturedHeadersEmpty(String side) {
+    DeclarativeConfigProperties config =
+        createConfig("otel.instrumentation.grpc." + side + ".request-captured-headers", "");
+
+    assertThat(
+            config
+                .getStructured("java")
+                .getStructured("grpc")
+                .getStructured(side)
+                .getScalarList("request_captured_headers", String.class, emptyList()))
+        .isEmpty();
   }
 
   @Test

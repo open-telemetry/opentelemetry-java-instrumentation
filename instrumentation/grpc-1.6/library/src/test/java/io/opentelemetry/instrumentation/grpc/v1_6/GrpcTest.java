@@ -9,6 +9,8 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,7 +41,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.Experimental;
@@ -63,10 +64,8 @@ class GrpcTest extends AbstractGrpcTest {
   protected ServerBuilder<?> configureServer(ServerBuilder<?> server) {
     GrpcTelemetry telemetry =
         GrpcTelemetry.builder(testing.getOpenTelemetry())
-            .setServerRequestHeaders(
-                IncludeExclude.builder()
-                    .setIncluded(singletonList(SERVER_REQUEST_HEADER_KEY))
-                    .build())
+            .setServerRequestCapturedHeaders(
+                asList("SOME-SERVER-KEY", "*", "some-*-key", "some-?erver-key"))
             .build();
     telemetry.configureServerBuilder(server);
     // A server can be configured more than once.
@@ -78,10 +77,8 @@ class GrpcTest extends AbstractGrpcTest {
   protected ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client) {
     Experimental.addClientInterceptor(
         GrpcTelemetry.builder(testing.getOpenTelemetry())
-            .setClientRequestHeaders(
-                IncludeExclude.builder()
-                    .setIncluded(singletonList(CLIENT_REQUEST_HEADER_KEY))
-                    .build())
+            .setClientRequestCapturedHeaders(
+                asList("SOME-CLIENT-KEY", "*", "some-*-key", "some-?lient-key"))
             .build(),
         client);
     return client;
@@ -95,6 +92,67 @@ class GrpcTest extends AbstractGrpcTest {
   @Override
   protected InstrumentationExtension testing() {
     return testing;
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void defaultAndEmptyCapturedHeadersCaptureNothing(boolean explicitlyEmpty) throws Exception {
+    GrpcTelemetryBuilder builder = GrpcTelemetry.builder(testing.getOpenTelemetry());
+    if (explicitlyEmpty) {
+      builder
+          .setClientRequestCapturedHeaders(singletonList("authorization"))
+          .setServerRequestCapturedHeaders(singletonList("authorization"))
+          .setClientRequestCapturedHeaders(emptyList())
+          .setServerRequestCapturedHeaders(emptyList());
+    }
+    GrpcTelemetry telemetry = builder.build();
+    ServerBuilder<?> serverBuilder =
+        ServerBuilder.forPort(0)
+            .addService(
+                new GreeterGrpc.GreeterImplBase() {
+                  @Override
+                  public void sayHello(
+                      Helloworld.Request request,
+                      StreamObserver<Helloworld.Response> responseObserver) {
+                    responseObserver.onNext(Helloworld.Response.getDefaultInstance());
+                    responseObserver.onCompleted();
+                  }
+                });
+    telemetry.configureServerBuilder(serverBuilder);
+    Server server = serverBuilder.build().start();
+    closer.add(() -> server.shutdownNow().awaitTermination());
+
+    ManagedChannelBuilder<?> channelBuilder =
+        ManagedChannelBuilder.forAddress("localhost", server.getPort());
+    Experimental.addClientInterceptor(telemetry, channelBuilder);
+    ManagedChannel channel = createChannel(channelBuilder);
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
+
+    Metadata headers = new Metadata();
+    headers.put(Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER), "******");
+    headers.put(Metadata.Key.of("some-key", Metadata.ASCII_STRING_MARSHALLER), "value");
+    GreeterGrpc.newBlockingStub(channel)
+        .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(headers))
+        .sayHello(Helloworld.Request.getDefaultInstance());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getAttributes().asMap().keySet())
+                                    .noneMatch(
+                                        key -> key.getKey().startsWith("rpc.request.header."))),
+                span ->
+                    span.hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(0))
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getAttributes().asMap().keySet())
+                                    .noneMatch(
+                                        key -> key.getKey().startsWith("rpc.request.header.")))));
   }
 
   @Test

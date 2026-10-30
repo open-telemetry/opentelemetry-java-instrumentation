@@ -8,12 +8,12 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcServerExceptionEventExtractor;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.grpc.Status;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
@@ -30,9 +30,9 @@ import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcClientNetworkAttributesGetter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.UnaryOperator;
-import javax.annotation.Nullable;
 
 /** A builder of {@link GrpcTelemetry}. */
 public final class GrpcTelemetryBuilder {
@@ -61,8 +61,8 @@ public final class GrpcTelemetryBuilder {
 
   private boolean captureExperimentalSpanAttributes;
   private boolean emitMessageEvents = true;
-  @Nullable private IncludeExclude clientRequestHeaders;
-  @Nullable private IncludeExclude serverRequestHeaders;
+  private List<String> clientRequestCapturedHeaders = emptyList();
+  private List<String> serverRequestCapturedHeaders = emptyList();
 
   GrpcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -150,30 +150,30 @@ public final class GrpcTelemetryBuilder {
   /**
    * Sets which ASCII request headers should be captured as span attributes on client spans.
    *
-   * <p>Header keys and selector patterns are matched case-insensitively. {@code ?} matches any
-   * single character and {@code *} matches any number of characters, including none. Excluded
-   * patterns take precedence over included patterns. No headers are captured unless a selector is
-   * configured; a selector with only excluded patterns captures every ASCII header key that it does
-   * not exclude.
+   * <p>Header names are matched exactly, ignoring case. Wildcards are not supported. By default, no
+   * headers are captured. An empty collection disables capture. Binary metadata and HTTP/2
+   * pseudo-headers are never captured.
    */
   @CanIgnoreReturnValue
-  public GrpcTelemetryBuilder setClientRequestHeaders(IncludeExclude clientRequestHeaders) {
-    this.clientRequestHeaders = clientRequestHeaders;
+  public GrpcTelemetryBuilder setClientRequestCapturedHeaders(
+      Collection<String> clientRequestCapturedHeaders) {
+    this.clientRequestCapturedHeaders =
+        unmodifiableList(new ArrayList<>(clientRequestCapturedHeaders));
     return this;
   }
 
   /**
    * Sets which ASCII request headers should be captured as span attributes on server spans.
    *
-   * <p>Header keys and selector patterns are matched case-insensitively. {@code ?} matches any
-   * single character and {@code *} matches any number of characters, including none. Excluded
-   * patterns take precedence over included patterns. No headers are captured unless a selector is
-   * configured; a selector with only excluded patterns captures every ASCII header key that it does
-   * not exclude.
+   * <p>Header names are matched exactly, ignoring case. Wildcards are not supported. By default, no
+   * headers are captured. An empty collection disables capture. Binary metadata and HTTP/2
+   * pseudo-headers are never captured.
    */
   @CanIgnoreReturnValue
-  public GrpcTelemetryBuilder setServerRequestHeaders(IncludeExclude serverRequestHeaders) {
-    this.serverRequestHeaders = serverRequestHeaders;
+  public GrpcTelemetryBuilder setServerRequestCapturedHeaders(
+      Collection<String> serverRequestCapturedHeaders) {
+    this.serverRequestCapturedHeaders =
+        unmodifiableList(new ArrayList<>(serverRequestCapturedHeaders));
     return this;
   }
 
@@ -206,7 +206,7 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
         .addAttributesExtractors(additionalClientExtractors)
         .addAttributesExtractor(
-            new GrpcAttributesExtractor(clientRpcAttributesGetter, clientRequestHeaders))
+            new GrpcAttributesExtractor(clientRpcAttributesGetter, clientRequestCapturedHeaders))
         .addOperationMetrics(RpcClientMetrics.get(GRPC_DURATION_SECONDS_BUCKETS));
     setRpcClientExceptionEventExtractor(clientInstrumenterBuilder);
     Experimental.addOperationListenerAttributesExtractor(
@@ -219,7 +219,7 @@ public final class GrpcTelemetryBuilder {
         .addAttributesExtractor(ServerAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
         .addAttributesExtractor(
-            new GrpcAttributesExtractor(serverRpcAttributesGetter, serverRequestHeaders))
+            new GrpcAttributesExtractor(serverRpcAttributesGetter, serverRequestCapturedHeaders))
         .addAttributesExtractors(additionalServerExtractors)
         .addOperationMetrics(RpcServerMetrics.get(GRPC_DURATION_SECONDS_BUCKETS));
     setRpcServerExceptionEventExtractor(serverInstrumenterBuilder);
