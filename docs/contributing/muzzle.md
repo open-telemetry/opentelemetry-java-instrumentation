@@ -1,5 +1,7 @@
 # Muzzle
 
+For repeatable build-performance comparisons, see the [Muzzle benchmark](../../benchmark-muzzle/README.md).
+
 Muzzle is a safety feature of the Java agent that prevents applying instrumentation when a mismatch
 between the instrumentation code and the instrumented application code is detected.
 It ensures API compatibility between symbols (classes, methods, fields) on the application classpath
