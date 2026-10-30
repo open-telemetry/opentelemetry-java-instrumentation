@@ -39,7 +39,7 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
   void testWrappers() throws InterruptedException {
     KafkaTelemetry telemetry = kafkaTelemetryBuilder().build();
 
-    Producer<Integer, String> wrappedProducer = telemetry.wrap(producer);
+    Producer<Integer, String> wrappedProducer = telemetry.instrument(producer);
 
     testing.runWithSpan(
         "parent",
@@ -60,7 +60,7 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
         });
 
     awaitUntilConsumerIsReady();
-    Consumer<Integer, String> wrappedConsumer = telemetry.wrap(consumer);
+    Consumer<Integer, String> wrappedConsumer = telemetry.instrument(consumer);
     ConsumerRecords<?, ?> records = wrappedConsumer.poll(Duration.ofSeconds(10));
     assertThat(records.count()).isEqualTo(1);
     for (ConsumerRecord<?, ?> record : records) {

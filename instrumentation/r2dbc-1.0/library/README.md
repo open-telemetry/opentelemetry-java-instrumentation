@@ -29,18 +29,21 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-r2dbc-1.0:OPENTEL
 
 ### Usage
 
-The instrumentation library provides a R2dbc `ProxyConnectionFactory` that gets wrapped around the original
-`ConnectionFactory`.
+The instrumentation library provides OpenTelemetry spans for R2DBC `ConnectionFactory` operations.
 
 ```java
-ConnectionFactory wrapWithProxyFactory(OpenTelemetry openTelemetry, ConnectionFactory originalFactory, ConnectionFactoryOptions factoryOptions) {
+ConnectionFactory createInstrumentedConnectionFactory(
+    OpenTelemetry openTelemetry,
+    ConnectionFactory originalFactory,
+    ConnectionFactoryOptions factoryOptions) {
   return R2dbcTelemetryBuilder
     .create(openTelemetry)
-    .wrapConnectionFactory(originalFactory, factoryOptions);
+    .instrument(originalFactory, factoryOptions);
 }
 ```
 
-If you use R2dbc in a Spring Boot application you can wrap the `ConnectionFactory` using a custom `BeanPostProcessor` implementation:
+If you use R2DBC in a Spring Boot application, you can instrument the `ConnectionFactory` using a custom
+`BeanPostProcessor` implementation:
 
 ```java
 @Configuration
@@ -68,7 +71,7 @@ class R2dbcInstrumentingPostProcessor implements BeanPostProcessor {
     }
     ConnectionFactory connectionFactory = (ConnectionFactory) bean;
     return R2dbcTelemetry.create(openTelemetry)
-        .wrapConnectionFactory(connectionFactory, getConnectionFactoryOptions(connectionFactory));
+        .instrument(connectionFactory, getConnectionFactoryOptions(connectionFactory));
   }
 
   private static ConnectionFactoryOptions getConnectionFactoryOptions(ConnectionFactory connectionFactory) {

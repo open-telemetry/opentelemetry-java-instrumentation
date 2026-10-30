@@ -33,6 +33,6 @@ public class ProducerFactoryCustomizerConfiguration {
   static DefaultKafkaProducerFactoryCustomizer otelKafkaProducerFactoryCustomizer(
       OpenTelemetry openTelemetry) {
     KafkaTelemetry kafkaTelemetry = KafkaTelemetry.create(openTelemetry);
-    return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap);
+    return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::instrument);
   }
 }

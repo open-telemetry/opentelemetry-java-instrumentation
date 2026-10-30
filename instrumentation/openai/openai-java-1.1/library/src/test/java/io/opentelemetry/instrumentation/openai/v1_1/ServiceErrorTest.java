@@ -192,7 +192,7 @@ class ServiceErrorTest {
             .build();
     if (async) {
       OpenAIClientAsync client =
-          telemetry.wrap(
+          telemetry.instrument(
               OpenAIOkHttpClientAsync.builder()
                   .baseUrl(server.baseUrl())
                   .apiKey("unused")
@@ -216,7 +216,7 @@ class ServiceErrorTest {
       }
     } else {
       OpenAIClient client =
-          telemetry.wrap(
+          telemetry.instrument(
               OpenAIOkHttpClient.builder()
                   .baseUrl(server.baseUrl())
                   .apiKey("unused")

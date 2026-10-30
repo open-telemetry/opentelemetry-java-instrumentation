@@ -355,6 +355,8 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Rename public library instrumentation entrypoints from `wrap`/`wrapXxx` to `instrument`
+  overloads, retaining distinct `instrumentXxx` names where required.
 - In `opentelemetry-instrumentation-api-incubator`, custom `RpcAttributesGetter` implementations
   must implement `getRpcSystemName` and `getRpcMethod`, returning the RPC system name and fully
   qualified method name such as `my.Service/Method`, respectively. The legacy `getSystem`,

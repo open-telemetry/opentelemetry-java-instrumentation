@@ -29,7 +29,7 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-java-http-client:
 
 ### Usage
 
-The instrumentation library contains an `HttpClient` wrapper that provides OpenTelemetry-based spans
+The instrumentation library instruments `HttpClient` instances to provide OpenTelemetry-based spans
 and context propagation.
 
 ```java
@@ -43,7 +43,7 @@ public class JavaHttpClientConfiguration {
 
   //Use this HttpClient implementation for making standard http client calls.
   public HttpClient createTracedClient(OpenTelemetry openTelemetry) {
-    return JavaHttpClientTelemetry.builder(openTelemetry).build().wrap(createClient());
+    return JavaHttpClientTelemetry.builder(openTelemetry).build().instrument(createClient());
   }
 
   //your configuration of the Java HTTP Client goes here:
