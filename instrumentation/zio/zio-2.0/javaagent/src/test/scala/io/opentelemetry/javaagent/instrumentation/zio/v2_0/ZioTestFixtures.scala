@@ -140,7 +140,7 @@ object ZioTestFixtures {
 
   private val tracer: Tracer = GlobalOpenTelemetry.getTracer("test")
 
-  private def childSpan[A](opName: String)(op: UIO[A]): UIO[A] =
+  def childSpan[A](opName: String)(op: UIO[A]): UIO[A] =
     ZIO.scoped {
       for {
         scope <- ZIO.scope
