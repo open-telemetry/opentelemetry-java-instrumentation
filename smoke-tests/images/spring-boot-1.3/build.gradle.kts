@@ -7,7 +7,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath("org.springframework.boot:spring-boot-loader-tools:1.3.8.RELEASE")
+    classpath("org.springframework.boot:spring-boot-loader-tools:1.5.22.RELEASE")
   }
 }
 
