@@ -41,7 +41,7 @@ public class KafkaInstrumentationAutoConfiguration {
                 .getBoolean("experimental_span_attributes/development", false))
         .setMessagingReceiveTelemetryEnabled(
             MessagingConfig.isReceiveTelemetryEnabled(openTelemetry, false))
-        .setHeaders(MessagingConfig.getHeaders(openTelemetry))
+        .setCapturedHeaders(MessagingConfig.getCapturedHeaders(openTelemetry))
         .build();
   }
 

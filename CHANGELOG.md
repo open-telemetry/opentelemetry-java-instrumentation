@@ -258,13 +258,12 @@
   Use `otel.instrumentation.grpc.client.request-metadata.included` and
   `otel.instrumentation.grpc.server.request-metadata.included`.
 - Captured messaging header attribute keys now preserve dashes unconditionally; for example,
-  `messaging.header.Test_Message_Id` is now `messaging.header.Test-Message-Id`. Replace
-  `otel.instrumentation.messaging.experimental.headers.included=Test-Message-*` with
-  `otel.instrumentation.common.messaging.headers.included=Test-Message-*`.
-  The deprecated `otel.instrumentation.messaging.experimental.headers.included`,
-  `otel.instrumentation.messaging.experimental.headers.excluded`, and
-  `otel.instrumentation.messaging.experimental.capture-headers` settings are no longer supported;
-  use `otel.instrumentation.common.messaging.headers.included` / `.excluded` instead.
+  `messaging.header.Test_Message_Id` is now `messaging.header.Test-Message-Id`.
+  Replace `otel.instrumentation.common.messaging.headers.included` / `.excluded` and deprecated
+  messaging header capture settings with `otel.instrumentation.common.messaging.captured-headers`
+  (`java.common.messaging.captured_headers` in YAML). Only explicitly named headers are captured,
+  without wildcard expansion. Use `setCapturedHeaders(Collection<String>)` instead of header
+  selector setters on messaging extractor and telemetry builders.
   `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` is also no longer
   supported; use `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`.
 - Disable native Kafka client metrics by default. Enable them with

@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -75,11 +74,5 @@ final class SpringMessagingAttributesGetter
       return singletonList(value.toString());
     }
     return emptyList();
-  }
-
-  @Override
-  public Collection<String> getMessageHeaderNames(MessageWithChannel request) {
-    // MessageHeaders is immutable
-    return request.getMessage().getHeaders().keySet();
   }
 }

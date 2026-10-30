@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,7 +22,6 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -499,7 +499,7 @@ class SqsTracingListTest {
 
   private static Instrumenter<SqsProcessRequest, Response> newConsumerProcessInstrumenter() {
     return new AwsSdkInstrumenterFactory(
-            testing.getOpenTelemetry(), null, IncludeExclude.builder().build(), false, false, false)
+            testing.getOpenTelemetry(), null, emptyList(), false, false, false)
         .consumerProcessInstrumenter();
   }
 

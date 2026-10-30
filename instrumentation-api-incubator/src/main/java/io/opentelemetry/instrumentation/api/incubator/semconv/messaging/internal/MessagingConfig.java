@@ -6,12 +6,13 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -23,49 +24,36 @@ import javax.annotation.Nullable;
  */
 public final class MessagingConfig {
 
-  private static final IncludeExclude NONE = IncludeExclude.builder().build();
   private static final String COMMON_MESSAGING_PROPERTY_PREFIX =
       "otel.instrumentation.common.messaging";
 
   /**
-   * Returns the configured messaging header selector, or an {@linkplain IncludeExclude#isEmpty()
-   * empty} selector when no headers are configured to be captured.
+   * Returns the exact messaging header names to capture, or an empty list when none are configured.
    */
-  public static IncludeExclude getHeaders(OpenTelemetry openTelemetry) {
-    return getHeaders(openTelemetry, false);
+  public static List<String> getCapturedHeaders(OpenTelemetry openTelemetry) {
+    return getCapturedHeaders(openTelemetry, false);
   }
 
   /**
-   * Returns the configured messaging header selector, or an {@linkplain IncludeExclude#isEmpty()
-   * empty} selector when no headers are configured to be captured.
+   * Returns the exact messaging header names to capture, or an empty list when none are configured.
    *
    * @param systemPropertyFallback whether to fall back to the flat system properties when the
    *     declarative configuration does not contain a value. This is needed by library
    *     instrumentation entry points that have no programmatic configuration surface.
    */
-  public static IncludeExclude getHeaders(
+  public static List<String> getCapturedHeaders(
       OpenTelemetry openTelemetry, boolean systemPropertyFallback) {
     DeclarativeConfigProperties messagingConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common").get("messaging");
-    DeclarativeConfigProperties headers = messagingConfig.get("headers");
-    List<String> included = headers.getScalarList("included", String.class);
-    List<String> excluded = headers.getScalarList("excluded", String.class);
-    if (systemPropertyFallback) {
-      if (included == null) {
-        included = SystemProperty.getList(COMMON_MESSAGING_PROPERTY_PREFIX + ".headers.included");
-      }
-      if (excluded == null) {
-        excluded = SystemProperty.getList(COMMON_MESSAGING_PROPERTY_PREFIX + ".headers.excluded");
-      }
+    List<String> capturedHeaders = messagingConfig.getScalarList("captured_headers", String.class);
+    if (capturedHeaders == null && systemPropertyFallback) {
+      capturedHeaders =
+          SystemProperty.getList(COMMON_MESSAGING_PROPERTY_PREFIX + ".captured-headers");
     }
 
-    if (included == null && excluded == null) {
-      return NONE;
-    }
-    return IncludeExclude.builder()
-        .setIncluded(included == null ? emptyList() : included)
-        .setExcluded(excluded == null ? emptyList() : excluded)
-        .build();
+    return capturedHeaders == null
+        ? emptyList()
+        : unmodifiableList(new ArrayList<>(capturedHeaders));
   }
 
   /**

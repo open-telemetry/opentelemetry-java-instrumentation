@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
-import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -23,7 +22,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -470,14 +468,6 @@ public final class SqsImpl {
       return value != null ? value.stringValue() : null;
     }
     return null;
-  }
-
-  static Collection<String> getMessageAttributeNames(SdkRequest request) {
-    if (request instanceof SendMessageRequest) {
-      // the SDK request is immutable, so its attribute names can be returned directly
-      return ((SendMessageRequest) request).messageAttributes().keySet();
-    }
-    return emptyList();
   }
 
   static String getMessageId(SdkResponse response) {

@@ -43,7 +43,7 @@ public class SpringPulsarSingletons {
             .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builder(getter, operationType, PROCESS_OPERATION_NAME)
-                    .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
+                    .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build())
             .addOperationMetrics(MessagingProcessMetrics.get());
     builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());

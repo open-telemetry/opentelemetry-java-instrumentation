@@ -19,8 +19,7 @@ configurations:
       only a span link connecting it to the producer trace.
     type: boolean
     default: false
-  - ref: messaging.headers.included
-  - ref: messaging.headers.excluded
+  - ref: messaging.captured-headers
   - name: otel.instrumentation.aws-sdk.experimental-span-attributes
     declarative_name: java.aws_sdk.experimental_span_attributes/development
     description: >

@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
@@ -22,6 +21,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import java.util.Collection;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -36,17 +36,17 @@ public final class NatsInstrumenterFactory {
   private static final String PROCESS_OPERATION_NAME = "process";
 
   public static Instrumenter<NatsRequest, NatsRequest> createPublishInstrumenter(
-      OpenTelemetry openTelemetry, IncludeExclude headers) {
+      OpenTelemetry openTelemetry, Collection<String> headers) {
     return createProducerInstrumenter(openTelemetry, headers, PUBLISH_OPERATION_NAME);
   }
 
   public static Instrumenter<NatsRequest, NatsRequest> createRequestInstrumenter(
-      OpenTelemetry openTelemetry, IncludeExclude headers) {
+      OpenTelemetry openTelemetry, Collection<String> headers) {
     return createProducerInstrumenter(openTelemetry, headers, REQUEST_OPERATION_NAME);
   }
 
   private static Instrumenter<NatsRequest, NatsRequest> createProducerInstrumenter(
-      OpenTelemetry openTelemetry, IncludeExclude headers, String operationName) {
+      OpenTelemetry openTelemetry, Collection<String> headers, String operationName) {
     NatsRequestMessagingAttributesGetter getter = new NatsRequestMessagingAttributesGetter(true);
     InstrumenterBuilder<NatsRequest, NatsRequest> builder =
         Instrumenter.<NatsRequest, NatsRequest>builder(
@@ -64,7 +64,7 @@ public final class NatsInstrumenterFactory {
   }
 
   public static Instrumenter<NatsRequest, NatsRequest> createSettleInstrumenter(
-      OpenTelemetry openTelemetry, IncludeExclude headers) {
+      OpenTelemetry openTelemetry, Collection<String> headers) {
     NatsRequestMessagingAttributesGetter getter = new NatsRequestMessagingAttributesGetter(true);
     InstrumenterBuilder<NatsRequest, NatsRequest> builder =
         Instrumenter.<NatsRequest, NatsRequest>builder(
@@ -82,7 +82,7 @@ public final class NatsInstrumenterFactory {
   }
 
   public static Instrumenter<NatsRequest, Void> createConsumerProcessInstrumenter(
-      OpenTelemetry openTelemetry, IncludeExclude headers) {
+      OpenTelemetry openTelemetry, Collection<String> headers) {
     NatsRequestMessagingAttributesGetter getter = new NatsRequestMessagingAttributesGetter(false);
     InstrumenterBuilder<NatsRequest, Void> builder =
         Instrumenter.<NatsRequest, Void>builder(
@@ -108,9 +108,9 @@ public final class NatsInstrumenterFactory {
       NatsRequestMessagingAttributesGetter getter,
       MessagingOperationType operationType,
       String operationName,
-      IncludeExclude headers) {
+      Collection<String> headers) {
     return MessagingAttributesExtractor.builder(getter, operationType, operationName)
-        .setHeaders(headers)
+        .setCapturedHeaders(headers)
         .build();
   }
 

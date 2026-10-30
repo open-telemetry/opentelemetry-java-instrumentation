@@ -8,268 +8,158 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import org.junit.jupiter.api.Test;
 
-/** Tests for the message header selector applied by {@link MessagingAttributesExtractor}. */
 class MessagingHeadersTest {
 
-  private static final Map<String, String> MESSAGE = new LinkedHashMap<>();
+  private static final Map<String, List<String>> MESSAGE = new LinkedHashMap<>();
 
   static {
-    MESSAGE.put("Test-Message-Header", "one");
-    MESSAGE.put("Test-Message-Other", "two");
-    MESSAGE.put("Authorization", "secret");
+    MESSAGE.put("Test-Message-Header", asList("one", "two"));
+    MESSAGE.put("Test-Message-Other", singletonList("other"));
+    MESSAGE.put("Authorization", singletonList("secret"));
+    MESSAGE.put("*", singletonList("literal-star"));
+    MESSAGE.put("Test-?", singletonList("literal-question"));
   }
 
   @Test
-  void capturesExactIncludedNames() {
-    assertThat(capture(selector(singletonList("Test-Message-Header"), emptyList())))
-        .containsOnly(headerEntry("Test-Message-Header", "one"));
+  void defaultCapturesNothing() {
+    assertThat(capture(builder().build(), MESSAGE)).isEmpty();
   }
 
   @Test
-  void capturesWildcardIncludedNames() {
-    assertThat(capture(selector(singletonList("Test-Message-*"), emptyList())))
+  void emptyListCapturesNothing() {
+    assertThat(capture(emptyList())).isEmpty();
+  }
+
+  @Test
+  void capturesOnlyExactNamesPreservingSpellingAndMultipleValues() {
+    assertThat(capture(asList("Test-Message-Header", "missing", "Test-Message-Header")))
         .containsOnly(
-            headerEntry("Test-Message-Header", "one"), headerEntry("Test-Message-Other", "two"));
+            entry(stringArrayKey("messaging.header.Test-Message-Header"), asList("one", "two")));
   }
 
   @Test
-  void capturesSingleCharacterWildcardIncludedNames() {
-    assertThat(capture(selector(singletonList("Test-Message-Othe?"), emptyList())))
-        .containsOnly(headerEntry("Test-Message-Other", "two"));
-  }
-
-  @Test
-  void exclusionTakesPrecedenceOverInclusion() {
-    assertThat(capture(selector(singletonList("*"), singletonList("Authorization"))))
+  void wildcardCharactersAreLiteralAndDoNotExpandToSensitiveHeaders() {
+    assertThat(capture(asList("*", "Test-?", "Test-Message-*", "Authorizatio?")))
         .containsOnly(
-            headerEntry("Test-Message-Header", "one"), headerEntry("Test-Message-Other", "two"));
+            entry(stringArrayKey("messaging.header.*"), singletonList("literal-star")),
+            entry(stringArrayKey("messaging.header.Test-?"), singletonList("literal-question")));
+  }
+
+  @Test
+  void respectsCaseSensitiveLibraryLookup() {
+    assertThat(capture(singletonList("test-message-header"))).isEmpty();
+  }
+
+  @Test
+  void respectsCaseInsensitiveLibraryLookupWithoutChangingConfiguredName() {
+    Map<String, List<String>> message = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    message.putAll(MESSAGE);
     assertThat(
             capture(
-                selector(
-                    asList("Test-Message-Header", "Authorization"),
-                    singletonList("Authorization"))))
-        .containsOnly(headerEntry("Test-Message-Header", "one"));
-  }
-
-  @Test
-  void excludeOnlySelectorCapturesEveryOtherHeader() {
-    assertThat(capture(selector(emptyList(), singletonList("Authorization"))))
+                builder().setCapturedHeaders(singletonList("test-message-header")).build(),
+                message))
         .containsOnly(
-            headerEntry("Test-Message-Header", "one"), headerEntry("Test-Message-Other", "two"));
+            entry(stringArrayKey("messaging.header.test-message-header"), asList("one", "two")));
   }
 
   @Test
-  void emptySelectorCapturesNothing() {
-    assertThat(capture(selector(emptyList(), emptyList()))).isEmpty();
-  }
-
-  @Test
-  void absentSelectorCapturesNothing() {
-    assertThat(capture(null)).isEmpty();
-  }
-
-  @Test
-  void matchingHeaderNameIsCapturedOnlyOnce() {
-    assertThat(capture(selector(asList("Test-Message-Header", "Test-Message-*"), emptyList())))
+  void snapshotsConfiguredHeaders() {
+    Collection<String> headers = new ArrayList<>(singletonList("Test-Message-Header"));
+    MessagingAttributesExtractorBuilder<Map<String, List<String>>, Void> builder =
+        builder().setCapturedHeaders(headers);
+    headers.add("Authorization");
+    AttributesExtractor<Map<String, List<String>>, Void> extractor = builder.build();
+    builder.setCapturedHeaders(singletonList("Authorization"));
+    assertThat(capture(extractor, MESSAGE))
         .containsOnly(
-            headerEntry("Test-Message-Header", "one"), headerEntry("Test-Message-Other", "two"));
+            entry(stringArrayKey("messaging.header.Test-Message-Header"), asList("one", "two")));
   }
 
-  @Test
-  void exactNamesAreCapturedWithoutHeaderNameEnumeration() {
-    MapGetter getter = new MapGetter(true);
+  private static Map<AttributeKey<?>, Object> capture(Collection<String> headers) {
+    return capture(builder().setCapturedHeaders(headers).build(), MESSAGE);
+  }
 
+  private static Map<AttributeKey<?>, Object> capture(
+      AttributesExtractor<Map<String, List<String>>, Void> extractor,
+      Map<String, List<String>> message) {
     AttributesBuilder attributes = Attributes.builder();
-    extractor(getter, selector(singletonList("Test-Message-Header"), emptyList()))
-        .onEnd(attributes, Context.root(), MESSAGE, null, null);
-
-    assertThat(attributes.build().asMap()).containsOnly(headerEntry("Test-Message-Header", "one"));
-  }
-
-  @Test
-  void wildcardCapturesNothingWithoutHeaders() {
-    AttributesBuilder attributes = Attributes.builder();
-    extractor(new MapGetter(false), selector(singletonList("Test-Message-*"), emptyList()))
-        .onEnd(attributes, Context.root(), emptyMap(), null, null);
-
-    assertThat(attributes.build().asMap()).isEmpty();
-  }
-
-  @Test
-  void excludeOnlyCapturesNothingWithoutHeaders() {
-    AttributesBuilder attributes = Attributes.builder();
-    extractor(new MapGetter(false), selector(emptyList(), singletonList("Authorization")))
-        .onEnd(attributes, Context.root(), emptyMap(), null, null);
-
-    assertThat(attributes.build().asMap()).isEmpty();
-  }
-
-  @Test
-  void exactNamesAreNotNormalized() {
-    assertThat(capture(selector(singletonList("test-message-header"), emptyList()))).isEmpty();
-  }
-
-  @SuppressWarnings("deprecation") // testing deprecated API
-  @Test
-  void deprecatedCapturedHeadersSetterSelectsExactNames() {
-    AttributesBuilder attributes = Attributes.builder();
-    builder()
-        .setCapturedHeaders(singletonList("Test-Message-Header"))
-        .build()
-        .onEnd(attributes, Context.root(), MESSAGE, null, null);
-
-    assertThat(attributes.build().asMap()).containsOnly(headerEntry("Test-Message-Header", "one"));
-  }
-
-  @SuppressWarnings("deprecation") // testing deprecated API
-  @Test
-  void deprecatedCapturedHeadersSetterWithEmptyCollectionCapturesNothing() {
-    AttributesBuilder attributes = Attributes.builder();
-    builder()
-        .setCapturedHeaders(emptyList())
-        .build()
-        .onEnd(attributes, Context.root(), MESSAGE, null, null);
-
-    assertThat(attributes.build().asMap()).isEmpty();
-  }
-
-  @SuppressWarnings("deprecation") // testing deprecated API
-  @Test
-  void deprecatedCapturedHeadersSetterIgnoresWildcards() {
-    AttributesBuilder attributes = Attributes.builder();
-    builder()
-        .setCapturedHeaders(asList("Test-Message-Header", "Test-Message-*", "Authorizatio?"))
-        .build()
-        .onEnd(attributes, Context.root(), MESSAGE, null, null);
-
-    assertThat(attributes.build().asMap()).containsOnly(headerEntry("Test-Message-Header", "one"));
-  }
-
-  @SuppressWarnings("deprecation") // testing deprecated API
-  @Test
-  void deprecatedCapturedHeadersSetterWithOnlyWildcardsCapturesNothing() {
-    AttributesBuilder attributes = Attributes.builder();
-    builder()
-        .setCapturedHeaders(singletonList("*"))
-        .build()
-        .onEnd(attributes, Context.root(), MESSAGE, null, null);
-
-    assertThat(attributes.build().asMap()).isEmpty();
-  }
-
-  private static Map<AttributeKey<?>, Object> capture(IncludeExclude headers) {
-    AttributesBuilder attributes = Attributes.builder();
-    extractor(new MapGetter(false), headers).onEnd(attributes, Context.root(), MESSAGE, null, null);
+    extractor.onEnd(attributes, Context.root(), message, null, null);
     return attributes.build().asMap();
   }
 
-  private static AttributesExtractor<Map<String, String>, Void> extractor(
-      MapGetter getter, IncludeExclude headers) {
-    MessagingAttributesExtractorBuilder<Map<String, String>, Void> builder =
-        MessagingAttributesExtractor.builder(getter, MessagingOperationType.PROCESS, "process");
-    if (headers != null) {
-      builder.setHeaders(headers);
-    }
-    return builder.build();
-  }
-
-  private static MessagingAttributesExtractorBuilder<Map<String, String>, Void> builder() {
+  private static MessagingAttributesExtractorBuilder<Map<String, List<String>>, Void> builder() {
     return MessagingAttributesExtractor.builder(
-        new MapGetter(false), MessagingOperationType.PROCESS, "process");
-  }
-
-  private static IncludeExclude selector(List<String> included, List<String> excluded) {
-    return IncludeExclude.builder().setIncluded(included).setExcluded(excluded).build();
-  }
-
-  private static Map.Entry<AttributeKey<?>, Object> headerEntry(String name, String value) {
-    return new SimpleEntry<>(stringArrayKey("messaging.header." + name), singletonList(value));
+        new MapGetter(), MessagingOperationType.PROCESS, "process");
   }
 
   private static final class MapGetter
-      implements MessagingAttributesGetter<Map<String, String>, Void> {
-
-    private final boolean failOnEnumeration;
-
-    MapGetter(boolean failOnEnumeration) {
-      this.failOnEnumeration = failOnEnumeration;
-    }
+      implements MessagingAttributesGetter<Map<String, List<String>>, Void> {
 
     @Override
-    public String getSystem(Map<String, String> request) {
+    public String getSystem(Map<String, List<String>> request) {
       return null;
     }
 
     @Override
-    public String getDestination(Map<String, String> request) {
+    public String getDestination(Map<String, List<String>> request) {
       return null;
     }
 
     @Override
-    public String getDestinationTemplate(Map<String, String> request) {
+    public String getDestinationTemplate(Map<String, List<String>> request) {
       return null;
     }
 
     @Override
-    public boolean isTemporaryDestination(Map<String, String> request) {
+    public boolean isTemporaryDestination(Map<String, List<String>> request) {
       return false;
     }
 
     @Override
-    public boolean isAnonymousDestination(Map<String, String> request) {
+    public boolean isAnonymousDestination(Map<String, List<String>> request) {
       return false;
     }
 
     @Override
-    public String getConversationId(Map<String, String> request) {
+    public String getConversationId(Map<String, List<String>> request) {
       return null;
     }
 
     @Override
-    public String getMessageId(Map<String, String> request, Void response) {
+    public String getMessageId(Map<String, List<String>> request, Void response) {
       return null;
     }
 
     @Override
-    public String getClientId(Map<String, String> request) {
+    public String getClientId(Map<String, List<String>> request) {
       return null;
     }
 
     @Override
-    public Long getBatchMessageCount(Map<String, String> request, Void response) {
+    public Long getBatchMessageCount(Map<String, List<String>> request, Void response) {
       return null;
     }
 
     @Override
-    public List<String> getMessageHeader(Map<String, String> request, String name) {
-      String value = request.get(name);
-      return value == null ? emptyList() : singletonList(value);
-    }
-
-    @Override
-    public Collection<String> getMessageHeaderNames(Map<String, String> request) {
-      if (failOnEnumeration) {
-        throw new AssertionError("Exact header names must not require enumeration");
-      }
-      return new ArrayList<>(request.keySet());
+    public List<String> getMessageHeader(Map<String, List<String>> request, String name) {
+      return request.getOrDefault(name, emptyList());
     }
   }
 }

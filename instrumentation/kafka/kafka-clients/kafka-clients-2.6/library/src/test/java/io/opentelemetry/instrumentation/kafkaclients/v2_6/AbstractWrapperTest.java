@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -76,11 +76,7 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
   protected KafkaTelemetryBuilder kafkaTelemetryBuilder() {
     KafkaTelemetryBuilder telemetryBuilder =
         KafkaTelemetry.builder(testing.getOpenTelemetry())
-            .setHeaders(
-                IncludeExclude.builder()
-                    .setIncluded("Test-Message-*")
-                    .setExcluded("*-Excluded-Header")
-                    .build());
+            .setCapturedHeaders(asList("Test-Message-Header", "Test-Message-Int-Header"));
     if (MESSAGING_RECEIVE_TELEMETRY_ENABLED) {
       telemetryBuilder.setMessagingReceiveTelemetryEnabled(true);
     }

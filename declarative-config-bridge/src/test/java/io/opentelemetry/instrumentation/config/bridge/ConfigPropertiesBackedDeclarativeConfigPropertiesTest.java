@@ -192,10 +192,10 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void testMessagingHeadersSelectorMapping() {
+  void testMessagingCapturedHeadersMapping() {
     Map<String, String> properties = new HashMap<>();
-    properties.put("otel.instrumentation.common.messaging.headers.included", "a,b");
-    properties.put("otel.instrumentation.common.messaging.headers.excluded", "c");
+    properties.put(
+        "otel.instrumentation.common.messaging.captured-headers", "Test-Header,*,Test-?");
 
     DeclarativeConfigProperties messaging =
         DeclarativeConfigBridge.createInstrumentationConfig(
@@ -205,10 +205,8 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
             .getStructured("common")
             .getStructured("messaging");
 
-    assertThat(messaging.getStructured("headers").getScalarList("included", String.class))
-        .containsExactly("a", "b");
-    assertThat(messaging.getStructured("headers").getScalarList("excluded", String.class))
-        .containsExactly("c");
+    assertThat(messaging.getScalarList("captured_headers", String.class))
+        .containsExactly("Test-Header", "*", "Test-?");
   }
 
   @Test

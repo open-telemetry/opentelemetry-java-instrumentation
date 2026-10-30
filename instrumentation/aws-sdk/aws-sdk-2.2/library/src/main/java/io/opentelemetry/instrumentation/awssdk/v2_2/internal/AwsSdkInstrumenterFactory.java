@@ -26,7 +26,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
@@ -57,6 +56,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -186,7 +186,7 @@ public final class AwsSdkInstrumenterFactory {
 
   private final OpenTelemetry openTelemetry;
   @Nullable private final TextMapPropagator messagingPropagator;
-  private final IncludeExclude headers;
+  private final Collection<String> headers;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean messagingReceiveInstrumentationEnabled;
   private final boolean useXrayPropagator;
@@ -194,7 +194,7 @@ public final class AwsSdkInstrumenterFactory {
   public AwsSdkInstrumenterFactory(
       OpenTelemetry openTelemetry,
       @Nullable TextMapPropagator messagingPropagator,
-      IncludeExclude headers,
+      Collection<String> headers,
       boolean captureExperimentalSpanAttributes,
       boolean messagingReceiveInstrumentationEnabled,
       boolean useXrayPropagator) {
@@ -241,7 +241,7 @@ public final class AwsSdkInstrumenterFactory {
       MessagingOperationType operationType,
       String operationName) {
     return MessagingAttributesExtractor.builder(getter, operationType, operationName)
-        .setHeaders(headers)
+        .setCapturedHeaders(headers)
         .build();
   }
 

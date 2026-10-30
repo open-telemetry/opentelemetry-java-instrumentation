@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.M
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.PROCESS_DURATION;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.contains;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -19,7 +20,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -69,12 +69,7 @@ class SqsProcessMetricsIsolationTest {
   void overlappingProcessOperationsCountDeliveryOnce() {
     Instrumenter<SqsProcessRequest, Response> instrumenter =
         new AwsSdkInstrumenterFactory(
-                testing.getOpenTelemetry(),
-                null,
-                IncludeExclude.builder().build(),
-                false,
-                false,
-                false)
+                testing.getOpenTelemetry(), null, emptyList(), false, false, false)
             .consumerProcessInstrumenter();
     SqsProcessRequest request =
         SqsProcessRequest.create(

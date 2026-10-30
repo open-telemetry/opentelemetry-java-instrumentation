@@ -33,7 +33,7 @@ metadata-collection tests are not a substitute.
 | `otel.instrumentation.http.client.capture-response-headers` | `X-Test-Response` |
 | `otel.instrumentation.http.server.capture-request-headers` | `X-Test-Request` |
 | `otel.instrumentation.http.server.capture-response-headers` | `X-Test-Response` |
-| `otel.instrumentation.common.messaging.headers.included` | `Test-Message-Header`, `Test-Message-Int-Header`, `Test_Message_Header`, `Test_Message_Int_Header` |
+| `otel.instrumentation.common.messaging.captured-headers` | `Test-Message-Header`, `Test-Message-Int-Header`, `Test_Message_Header`, `Test_Message_Int_Header` |
 
 These synthetic selectors are fixture values, not production defaults. Their attributes may appear
 in raw `.telemetry` files under `when: default`, but the analyzer excludes them from generated

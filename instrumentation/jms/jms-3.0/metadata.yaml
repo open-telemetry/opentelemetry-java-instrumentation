@@ -6,5 +6,4 @@ semantic_conventions:
   - MESSAGING_SPANS
 library_link: https://jakarta.ee/specifications/messaging/3.0/
 configurations:
-  - ref: messaging.headers.included
-  - ref: messaging.headers.excluded
+  - ref: messaging.captured-headers

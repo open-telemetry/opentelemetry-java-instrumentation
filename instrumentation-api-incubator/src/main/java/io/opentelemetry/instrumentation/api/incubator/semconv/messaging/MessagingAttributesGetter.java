@@ -83,20 +83,4 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   default List<String> getMessageHeader(REQUEST request, String name) {
     return emptyList();
   }
-
-  /**
-   * Extracts the names of all headers present on the request, or an empty iterable if there were
-   * none.
-   *
-   * <p>This is used to resolve header selectors that cannot be turned into a list of exact header
-   * names, such as selectors containing wildcard patterns or selectors that only exclude headers.
-   * Selectors that only list exact header names are resolved with {@link #getMessageHeader(Object,
-   * String)} alone.
-   *
-   * <p>Implementations of this method <b>must not</b> return a null value; an empty iterable should
-   * be returned instead. The returned iterable is only read, so implementations may return a view
-   * over the underlying header names as long as that view cannot change while the returned iterable
-   * is being read.
-   */
-  Iterable<String> getMessageHeaderNames(REQUEST request);
 }

@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.jms.common.v1_1;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
+import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
+import java.util.Collection;
 
 public class JmsInstrumenterFactory {
 
@@ -34,7 +35,7 @@ public class JmsInstrumenterFactory {
 
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
-  private IncludeExclude headers = IncludeExclude.builder().build();
+  private Collection<String> headers = emptyList();
 
   public JmsInstrumenterFactory(OpenTelemetry openTelemetry, String instrumentationName) {
     this.openTelemetry = openTelemetry;
@@ -42,7 +43,7 @@ public class JmsInstrumenterFactory {
   }
 
   @CanIgnoreReturnValue
-  public JmsInstrumenterFactory setHeaders(IncludeExclude headers) {
+  public JmsInstrumenterFactory setCapturedHeaders(Collection<String> headers) {
     this.headers = headers;
     return this;
   }
@@ -112,7 +113,7 @@ public class JmsInstrumenterFactory {
       MessagingOperationType operationType, String operationName) {
     return MessagingAttributesExtractor.builder(
             new JmsMessageAttributesGetter(), operationType, operationName)
-        .setHeaders(headers)
+        .setCapturedHeaders(headers)
         .build();
   }
 }

@@ -19,12 +19,11 @@ class SqsCreateRequestTest {
   }
 
   @Test
-  void exposesMessageAttributeNames() {
+  void exposesMessageAttributeValue() {
     SqsCreateRequest request =
         new SqsCreateRequest("https://example.com/queue", singletonMap("header", "value"));
 
     SqsCreateRequestAttributesGetter getter = new SqsCreateRequestAttributesGetter();
-    assertThat(getter.getMessageHeaderNames(request)).containsExactly("header");
     assertThat(getter.getMessageHeader(request, "header")).containsExactly("value");
   }
 }

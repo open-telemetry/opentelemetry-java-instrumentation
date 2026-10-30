@@ -11,8 +11,6 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -182,10 +180,5 @@ class SpringRabbitMessageAttributesGetter
       return singletonList(value.toString());
     }
     return emptyList();
-  }
-
-  @Override
-  public Collection<String> getMessageHeaderNames(SpringRabbitRequest request) {
-    return new ArrayList<>(request.getMessage().getMessageProperties().getHeaders().keySet());
   }
 }

@@ -16,7 +16,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
@@ -34,6 +33,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import java.util.Collection;
 import java.util.function.ToLongFunction;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -80,7 +80,7 @@ public final class KafkaInstrumenterFactory {
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
   private ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
-  private IncludeExclude headers = IncludeExclude.builder().build();
+  private Collection<String> headers = emptyList();
   private boolean captureExperimentalSpanAttributes = false;
   private boolean messagingReceiveInstrumentationEnabled = false;
 
@@ -96,7 +96,7 @@ public final class KafkaInstrumenterFactory {
   }
 
   @CanIgnoreReturnValue
-  public KafkaInstrumenterFactory setHeaders(IncludeExclude headers) {
+  public KafkaInstrumenterFactory setCapturedHeaders(Collection<String> headers) {
     this.headers = headers;
     return this;
   }
@@ -333,9 +333,9 @@ public final class KafkaInstrumenterFactory {
           MessagingAttributesGetter<REQUEST, RESPONSE> getter,
           MessagingOperationType operationType,
           String operationName,
-          IncludeExclude headers) {
+          Collection<String> headers) {
     return MessagingAttributesExtractor.builder(getter, operationType, operationName)
-        .setHeaders(headers)
+        .setCapturedHeaders(headers)
         .build();
   }
 }

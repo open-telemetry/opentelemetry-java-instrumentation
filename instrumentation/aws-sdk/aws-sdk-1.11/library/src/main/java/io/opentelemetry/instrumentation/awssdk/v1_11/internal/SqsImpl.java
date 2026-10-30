@@ -26,7 +26,6 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -242,15 +241,6 @@ public final class SqsImpl {
       }
     }
     return null;
-  }
-
-  static Collection<String> getMessageAttributeNames(Request<?> request) {
-    if (request.getOriginalRequest() instanceof SendMessageRequest) {
-      // the request is owned by the caller, so its attribute names are snapshotted
-      return new ArrayList<>(
-          ((SendMessageRequest) request.getOriginalRequest()).getMessageAttributes().keySet());
-    }
-    return emptyList();
   }
 
   @Nullable

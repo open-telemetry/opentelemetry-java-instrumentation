@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkInstrumenterFactory;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.BedrockRuntimeImpl;
@@ -19,6 +18,7 @@ import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsProcessRequest;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsReceiveRequest;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
+import java.util.Collection;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
@@ -80,7 +80,7 @@ public class AwsSdkTelemetry {
 
   AwsSdkTelemetry(
       OpenTelemetry openTelemetry,
-      IncludeExclude headers,
+      Collection<String> headers,
       boolean captureExperimentalSpanAttributes,
       boolean useMessagingPropagator,
       boolean useXrayPropagator,
