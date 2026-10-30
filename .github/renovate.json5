@@ -238,7 +238,10 @@
       matchPackageNames: [
         'net.bytebuddy:**',
       ],
-      allowedVersions: '!/\\-jdk5/'
+      allowedVersions: '!/\\-jdk5/',
+      // Maven's latest tag can point to a -jdk5 variant that sorts below the regular release.
+      // TODO remove once Mend-hosted Renovate includes https://github.com/renovatebot/renovate/pull/46472
+      respectLatest: false,
     },
     {
       groupName: 'gradle shadow packages',
