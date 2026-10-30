@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-"""Compare real Muzzle partitions with frozen inputs and restored build state."""
+"""Compare direct Gradle Muzzle runs with frozen inputs and warmed checkouts."""
 
 import argparse
 import csv
 import hashlib
 import json
-import math
 import os
 from pathlib import Path
 import platform
@@ -14,14 +13,9 @@ import shutil
 import statistics
 import subprocess
 import sys
+import time
 
 
-PROFILER_VERSION = "0.26.0"
-PROFILER_SHA256 = "c573cdaffac8ecfa60cdd0624274511f46cbdde77fbba39ce35eae0fae7c9877"
-PLUGIN = Path(
-    "gradle-plugins/src/main/kotlin/"
-    "io.opentelemetry.instrumentation.muzzle-check.gradle.kts"
-)
 CONTROLS = Path(
     "gradle-plugins/src/main/java/io/opentelemetry/javaagent/muzzle/MuzzleBenchmark.java"
 )
@@ -95,22 +89,6 @@ def require_equal(expected, actual, label):
         raise ValueError(f"{label} mismatch")
 
 
-def measurements(path):
-    with path.open(encoding="utf-8", newline="") as stream:
-        rows = [row for row in csv.DictReader(stream) if row["Phase"] == "MEASURE"]
-    values = {}
-    for row in rows:
-        if row["Iteration"] != "1" or row["Sample"] in values:
-            raise ValueError(f"Expected exactly one measured invocation in {path}")
-        value = float(row["Duration"])
-        if not math.isfinite(value) or value < 0:
-            raise ValueError(f"Invalid duration in {path}")
-        values[row["Sample"]] = value
-    if values.get("total execution time", 0) <= 0 or values.get("task start", 0) <= 0:
-        raise ValueError(f"Missing wall-clock or task-start measurement in {path}")
-    return values
-
-
 def task_outcomes(text):
     tasks = {}
     for task, outcome in re.findall(
@@ -119,7 +97,7 @@ def task_outcomes(text):
     ):
         tasks[task] = outcome or "EXECUTED"
     if not tasks:
-        raise ValueError("No Gradle task outcomes in profiler log")
+        raise ValueError("No Gradle task outcomes in build log")
     return tasks
 
 
@@ -153,6 +131,7 @@ def summary(samples):
 
 class Benchmark:
     def __init__(self, args):
+        self.started = time.perf_counter()
         self.args = args
         self.source = args.repository.resolve()
         self.root = args.work_dir.resolve()
@@ -162,15 +141,16 @@ class Benchmark:
         ):
             raise ValueError("--work-dir must be a new directory outside the source checkout")
         self.root.mkdir(parents=True)
-        self.checkout = self.root / "checkout"
+        self.checkouts = {
+            label: self.root / label for label in ("baseline", "candidate")
+        }
         self.home = self.root / "gradle-home"
         self.repository = self.root / "metadata"
         self.audit = self.root / "audit"
-        self.profiler_output = self.root / "profiler-output"
         self.reports = self.root / "reports"
-        self.snapshots = self.root / "snapshots"
         self.reports.mkdir()
-        self.snapshots.mkdir()
+        self.phases = []
+        self.preparation_ms = 0
         self.init_script = self.root / "benchmark.init.gradle"
         self.init_script.write_text(
             "settingsEvaluated { settings ->\n"
@@ -251,8 +231,7 @@ class Benchmark:
                 "harness_revision": self.revision("HEAD"),
                 "support_patch_sha256": hashlib.sha256(b"".join(self.support)).hexdigest(),
                 "workload": self.input_identity,
-                "profiler_version": PROFILER_VERSION,
-                "profiler_sha256": PROFILER_SHA256,
+                "measurement": "direct Gradle command wall time",
                 "platform": platform.platform(),
                 "cpu_count": os.cpu_count(),
                 "cpu": json.loads(run(["lscpu", "--json"])),
@@ -264,6 +243,7 @@ class Benchmark:
                 "cache_conditions": "cold daemon, fresh configuration cache, warm workspace and dependencies",
             }, indent=2) + "\n", encoding="utf-8",
         )
+        self.setup_ms = (time.perf_counter() - self.started) * 1000
 
     def git(self, *arguments):
         return run(["git", "-C", str(self.source), *arguments])
@@ -274,20 +254,14 @@ class Benchmark:
         ).decode().strip()
 
     def remove(self, path):
-        allowed = path.parent == self.root and path.name in {
-            "checkout", "gradle-home", "audit", "profiler-output",
-        }
-        allowed |= path.parent == self.snapshots and path.name in {
-            "baseline", "candidate", "gradle-home",
+        allowed = path == self.audit or path in {
+            checkout / ".gradle" / "configuration-cache"
+            for checkout in self.checkouts.values()
         }
         if not allowed or path.is_symlink():
             raise ValueError(f"Refusing to remove unmanaged path {path}")
         if path.exists():
             shutil.rmtree(path)
-
-    def copy(self, source, target):
-        self.remove(target)
-        shutil.copytree(source, target, symlinks=True)
 
     def properties(self, *, offline):
         return [
@@ -301,65 +275,50 @@ class Benchmark:
             "--init-script", str(self.init_script),
         ]
 
-    def gradle(self, label, *, offline):
-        run(
-            [str(self.checkout / "gradlew"), self.task, "--no-daemon",
-             *self.properties(offline=offline)],
-            cwd=self.checkout, env=self.env, log=self.reports / f"prepare-{label}.log",
-        )
-        self.stop_daemons()
-
-    def stop_daemons(self):
-        run(
-            [str(self.checkout / "gradlew"), "--stop", "--console=plain"],
-            cwd=self.checkout, env=self.env,
-        )
-
-    def reset_configuration(self):
-        configuration = self.checkout / ".gradle" / "configuration-cache"
-        if configuration.exists():
-            shutil.rmtree(configuration)
-
-    def invoke_profiler(self, destination, *, profile=False, preparation=False):
-        self.remove(self.audit)
-        self.remove(self.profiler_output)
-        self.reset_configuration()
-        scenario = self.root / "muzzle.scenarios"
-        scenario.write_text(
-            "muzzle {\n"
-            f"  tasks = {json.dumps([self.task])}\n"
-            f"  gradle-args = {json.dumps(['--offline', '--configuration-cache', *self.properties(offline=True)])}\n"
-            "}\n", encoding="utf-8",
-        )
-        command = [
-            str(self.args.profiler.resolve()), "--benchmark", "--single-shot", "--no-daemon",
-            "--measure-config-time", "--csv-format", "long",
-            "--project-dir", str(self.checkout), "--gradle-user-home", str(self.home),
-            "--scenario-file", str(scenario), "--output-dir", str(self.profiler_output),
-        ]
-        if profile:
-            command.extend(["--profile", "jfr"])
-        command.append("muzzle")
+    def build(self, label, name, *, offline, preparation=False):
+        if offline and self.frozen_metadata is None:
+            raise ValueError("Offline builds require a captured metadata snapshot")
+        checkout = self.checkouts[label]
+        destination = self.reports / name
         destination.mkdir(parents=True)
-        run(command, cwd=self.checkout, env=self.env, log=destination / "console.log")
-        self.stop_daemons()
-        shutil.copytree(self.profiler_output, destination / "profiler")
+        self.remove(self.audit)
+        self.remove(checkout / ".gradle" / "configuration-cache")
+        command = [
+            str(checkout / "gradlew"), self.task, "--no-daemon", "--configuration-cache",
+            *self.properties(offline=self.frozen_metadata is not None),
+        ]
+        if offline:
+            command.append("--offline")
+        started = time.perf_counter()
+        success = False
+        try:
+            run(command, cwd=checkout, env=self.env, log=destination / "console.log")
+            success = True
+        finally:
+            elapsed_ms = (time.perf_counter() - started) * 1000
+            self.phases.append({
+                "name": name, "label": label, "elapsed_ms": elapsed_ms,
+                "process_success": success,
+            })
+            (self.reports / "phases.json").write_text(
+                json.dumps(self.phases, indent=2) + "\n", encoding="utf-8",
+            )
+            print(f"{name}: {elapsed_ms / 1000:.2f}s, process_success={success}", flush=True)
         shutil.copytree(self.audit, destination / "assertions")
         text = (destination / "console.log").read_text(encoding="utf-8", errors="replace")
-        logs = [path for path in self.profiler_output.rglob("*") if path.suffix in {".log", ".txt"}]
-        for log in logs:
-            text += "\n" + log.read_text(encoding="utf-8", errors="replace")
         if "Reusing configuration cache" in text:
             raise ValueError("Fresh-configuration scenario reused the configuration cache")
         if "Configuration cache entry stored" not in text:
             raise ValueError("Missing confirmation of fresh configuration cache storage")
         actual = manifests(self.audit)
-        if self.expected is None:
-            self.expected = actual
-        require_equal(self.expected, actual, "Assertion/dependency workload")
-        require_equal(self.frozen_metadata, inventory(self.repository), "Frozen version metadata")
+        if offline:
+            if self.expected is None:
+                self.expected = actual
+            require_equal(self.expected, actual, "Assertion/dependency workload")
+        if self.frozen_metadata is not None:
+            require_equal(self.frozen_metadata, inventory(self.repository), "Frozen version metadata")
         outcomes = task_outcomes(text)
-        if not preparation and not profile:
+        if not preparation:
             cold_compilations = [
                 task for task, outcome in outcomes.items()
                 if re.fullmatch(r"compile.*(?:Java|Kotlin)", task.rsplit(":", 1)[-1])
@@ -372,38 +331,31 @@ class Benchmark:
             if ":muzzle-Assert" in task and outcome == "EXECUTED"
         }
         require_equal(set(actual), assertion_tasks, "Executed assertions")
-        return measurements(self.profiler_output / "benchmark.csv"), outcomes
+        return {"total execution time": elapsed_ms}, outcomes
 
     def prepare(self):
         control_hash = None
         for label in ("baseline", "candidate"):
-            self.remove(self.checkout)
+            checkout = self.checkouts[label]
             run(["git", "clone", "--shared", "--quiet", "--no-checkout",
-                 str(self.source), str(self.checkout)])
-            run(["git", "-C", str(self.checkout), "checkout", "--quiet", "--detach",
+                 str(self.source), str(checkout)])
+            run(["git", "-C", str(checkout), "checkout", "--quiet", "--detach",
                  self.revisions[label]])
-            if not (self.checkout / CONTROLS).exists():
+            if not (checkout / CONTROLS).exists():
                 if not self.support:
                     raise ValueError("Revision lacks benchmark support; pass --support-commit")
                 for support in self.support:
-                    run(["git", "-C", str(self.checkout), "apply", "--3way", "-"], input=support)
+                    run(["git", "-C", str(checkout), "apply", "--3way", "-"], input=support)
             if control_hash is None:
-                control_hash = digest(self.checkout / CONTROLS)
-            require_equal(control_hash, digest(self.checkout / CONTROLS), "Benchmark controls")
-            self.remove(self.audit)
-            self.gradle(label, offline=self.frozen_metadata is not None)
+                control_hash = digest(checkout / CONTROLS)
+            require_equal(control_hash, digest(checkout / CONTROLS), "Benchmark controls")
+            self.build(label, f"bootstrap-{label}", offline=False, preparation=True)
             if self.frozen_metadata is None:
                 self.frozen_metadata = inventory(self.repository)
                 if not self.frozen_metadata:
                     raise ValueError("No Aether version metadata captured")
-            self.reset_configuration()
-            self.copy(self.checkout, self.snapshots / label)
         for label in ("baseline", "candidate"):
-            self.copy(self.snapshots / label, self.checkout)
-            self.invoke_profiler(self.reports / "preparation" / label, preparation=True)
-            self.reset_configuration()
-            self.copy(self.checkout, self.snapshots / label)
-        self.copy(self.home, self.snapshots / "gradle-home")
+            self.build(label, f"warmup-{label}", offline=True, preparation=True)
         inputs = self.reports / "inputs"
         inputs.mkdir()
         shutil.copytree(self.repository, inputs / "metadata")
@@ -415,14 +367,17 @@ class Benchmark:
         )
 
     def measure(self):
-        self.prepare()
+        started = time.perf_counter()
+        try:
+            self.prepare()
+        finally:
+            self.preparation_ms = (time.perf_counter() - started) * 1000
+        self.write_results()
         for round_number in range(self.args.rounds):
             for label in order(round_number):
                 source = "baseline" if label == "control" else label
-                self.copy(self.snapshots / source, self.checkout)
-                self.copy(self.snapshots / "gradle-home", self.home)
-                metrics, outcomes = self.invoke_profiler(
-                    self.reports / f"round-{round_number + 1}-{label}"
+                metrics, outcomes = self.build(
+                    source, f"round-{round_number + 1}-{label}", offline=True,
                 )
                 self.samples.append({
                     "round": round_number + 1, "label": label,
@@ -430,17 +385,27 @@ class Benchmark:
                     "task_outcomes": outcomes,
                 })
                 self.write_results()
-        if self.args.profile:
-            for label in ("baseline", "candidate"):
-                self.copy(self.snapshots / label, self.checkout)
-                self.copy(self.snapshots / "gradle-home", self.home)
-                self.invoke_profiler(self.reports / "profiles" / label, profile=True)
         self.write_results(complete=True)
 
     def write_results(self, *, complete=False):
         (self.reports / "samples.json").write_text(
             json.dumps({"complete": complete, "samples": self.samples}, indent=2) + "\n",
             encoding="utf-8",
+        )
+        total_ms = (time.perf_counter() - self.started) * 1000
+        measured_ms = sum(
+            phase["elapsed_ms"] for phase in self.phases
+            if phase["name"].startswith("round-")
+        )
+        timing = {
+            "setup_ms": self.setup_ms,
+            "preparation_ms": self.preparation_ms,
+            "measured_gradle_ms": measured_ms,
+            "overhead_ms": total_ms - self.setup_ms - self.preparation_ms - measured_ms,
+            "total_ms": total_ms,
+        }
+        (self.reports / "timing.json").write_text(
+            json.dumps(timing, indent=2) + "\n", encoding="utf-8",
         )
         if not complete:
             return
@@ -463,12 +428,11 @@ class Benchmark:
         )
         with (self.reports / "samples.csv").open("w", encoding="utf-8", newline="") as stream:
             writer = csv.writer(stream)
-            writer.writerow(["round", "label", "revision", "total_ms", "task_start_ms"])
+            writer.writerow(["round", "label", "revision", "total_ms"])
             for sample in self.samples:
                 writer.writerow([
                     sample["round"], sample["label"], sample["revision"],
                     sample["metrics"]["total execution time"],
-                    sample["metrics"]["task start"],
                 ])
         baseline = stats["baseline"]["total execution time"]["median_ms"]
         candidate = stats["candidate"]["total execution time"]["median_ms"]
@@ -482,6 +446,7 @@ class Benchmark:
             "",
             "Cold daemon, fresh configuration cache, warm workspace and dependencies. "
             "External dependency resolution is offline. Timings include workload auditing.",
+            "These results do not measure live Maven downloads or establish fresh-checkout CI savings.",
             "",
             "| Revision | Samples | Median | Min | Max |",
             "| --- | ---: | ---: | ---: | ---: |",
@@ -503,8 +468,17 @@ class Benchmark:
             f"Assertions with unresolved dependencies: {unresolved}. "
             "Each resolution failure is retained in the assertion records.",
             "",
-            "Task-start measurements and task-cache outcomes are in the raw reports. "
-            "Task start includes more than version enumeration and is not a pure Muzzle configuration metric.",
+            "## Run time",
+            "",
+            "| Phase | Time |",
+            "| --- | ---: |",
+            *[
+                f"| {phase.removesuffix('_ms').replace('_', ' ')} | {duration / 1000:.2f}s |"
+                for phase, duration in timing.items()
+            ],
+            "",
+            "Each Gradle command is timed directly. Setup, preparation, and runner overhead "
+            "are separate from the measured builds. Individual command durations are in phases.json.",
             "",
             "No samples were retried or removed. Median differences alone do not establish a speedup. "
             "Compare the paired samples and the A/A control, and repeat noisy comparisons.",
@@ -520,13 +494,11 @@ def main():
     parser.add_argument("--baseline", required=True)
     parser.add_argument("--candidate", required=True)
     parser.add_argument("--support-commit", action="append", default=[])
-    parser.add_argument("--profiler", type=Path, required=True)
     parser.add_argument("--work-dir", type=Path, required=True)
     parser.add_argument("--partition", type=int, choices=range(1, 5), required=True)
     parser.add_argument("--rounds", type=int, choices=range(1, 11), default=5)
     parser.add_argument("--inputs", type=Path)
     parser.add_argument("--seed-gradle-home", type=Path)
-    parser.add_argument("--profile", action="store_true")
     args = parser.parse_args()
     if sys.platform != "linux":
         parser.error("Build measurements run on Linux; runner unit tests also support Windows")
@@ -535,6 +507,7 @@ def main():
         benchmark.measure()
     except (OSError, ValueError, subprocess.CalledProcessError) as error:
         (benchmark.reports / "failure.txt").write_text(str(error) + "\n", encoding="utf-8")
+        benchmark.write_results()
         raise
 
 

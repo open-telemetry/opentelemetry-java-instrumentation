@@ -1,9 +1,9 @@
 # Muzzle benchmark
 
-This opt-in benchmark compares real Muzzle partitions in GitHub Actions.
+This opt-in benchmark times direct Gradle Muzzle commands in GitHub Actions.
 It measures fresh configuration and all selected assertions with a cold Gradle daemon,
-warm workspace outputs, and warm dependency caches. It does not predict the duration
-of a cold checkout or live Maven downloads.
+warm workspace outputs, and warm dependency caches. This is a repeatable tuning
+scenario, not a prediction of fresh-checkout CI time or live Maven downloads.
 
 ## Running a comparison
 
@@ -14,7 +14,7 @@ gh workflow run muzzle-performance-comparison.yml \
   --ref my-benchmark-branch \
   -f baseline-ref=BASELINE_SHA \
   -f candidate-ref=CANDIDATE_SHA \
-  -f partitions='[1,2,3,4]' \
+  -f partitions='[1]' \
   -f rounds=5
 ```
 
@@ -22,12 +22,12 @@ The default is partition 1. Each partition runs on its own `ubuntu-24.04` runner
 baseline and candidate always share that runner. Five rounds execute fifteen
 measured builds per partition, plus untimed preparation. Each round includes an
 identical-revision baseline control. Baseline/candidate order alternates.
-Jobs have a four-hour limit, including preparation and Profiler setup between samples.
+Jobs have a two-hour limit, including preparation.
 Pass a subset such as `partitions='[3,4]'` to run only those partitions.
 
-Use one round for a functional check, not a performance conclusion.
-Set `profile=true` to collect separate, untimed JFR profiles.
-Normal Muzzle CI remains unchanged.
+Start with identical baseline/candidate revisions, one partition, and one round.
+Then verify a baseline/candidate comparison before expanding to all four partitions.
+One round is a functional check, not a performance conclusion. Normal Muzzle CI remains unchanged.
 
 Both revisions must contain the benchmark controls. To compare older revisions,
 pass `support-commit` with the commit that introduces those controls, followed by
@@ -48,8 +48,8 @@ It does not replay a precomputed task graph or replace Muzzle with a synthetic f
 Preparation captures Aether's Maven metadata once. Both revisions then use that
 same metadata offline. Online, untimed builds fetch the selected library dependencies,
 build each revision's shared build logic, and prepare workspace outputs.
-After both online builds finish, an offline Gradle Profiler invocation verifies
-each prepared revision against the same dependency cache.
+After both online builds finish, an offline warmup verifies each prepared revision
+against the same dependency cache.
 
 Every successful assertion records its path, pass/fail mode, instrumentation
 exclusions, ordered classpath identities and SHA-256 hashes, and unresolved dependency outcomes.
@@ -62,11 +62,12 @@ outside that range, such as a future stable release with only prereleases publis
 The revisions must also agree on instrumentation main sources, the wrapper, Gradle
 properties, JDK requirement, and pinned latest-dependency versions. This prevents
 changes to the instrumentation fixtures from being mistaken for faster matching.
-The workflow pins Temurin and Gradle Profiler.
+The workflow pins Temurin.
 
 For later comparisons, pass `workload-run-id` to reuse an earlier run's frozen
-metadata and expected assertion/dependency records. The workflow loads `reports/inputs`
-from the retained `muzzle-benchmark-results-N` artifact. This also works for interrupted
+metadata and expected assertion/dependency records. The workflow loads `inputs`
+from the retained `muzzle-benchmark-results-N` artifact, and also accepts the older
+`reports/inputs` layout. This works for interrupted
 runs that finished preparation. The runner refuses changed inputs instead of silently
 refreshing them.
 
@@ -79,16 +80,15 @@ absolute results across different workload identities.
 
 ## Cache conditions
 
-The runner uses the same absolute checkout and Gradle user-home paths for both
-revisions. After preparation, it snapshots each workspace and a shared, fully
-warmed Gradle user home. Before every measured invocation it restores those
-snapshots and removes the root configuration-cache entry.
-It stops daemons in its private Gradle user home before copying state.
+Each revision has one fixed checkout for the whole run. Both use a shared, private
+Gradle user home, seeded once if requested. Preparation warms each checkout at its
+final path. There are no workspace snapshots or per-sample cache copies.
 
-This keeps build outputs, Kotlin DSL caches, dependency artifacts, and the initial
-task state fixed. It also avoids checkout relocation as a source of cache misses.
-The benchmark rejects configuration-cache reuse. It deliberately does not measure
-the configuration-cache-hit case.
+Before each command, the runner removes only that checkout's root configuration-cache
+entry and previous assertion records. It uses `--no-daemon` for a cold Gradle process.
+The warmed checkouts and caches stay in place between samples. Measured builds
+must reuse compilation outputs, execute every expected assertion, and store a fresh
+configuration-cache entry. Cache outcomes remain in the reports.
 
 Gradle's dependency resolution and Muzzle's direct Aether resolution both run
 offline during measurement. `--offline` alone does not control Aether.
@@ -97,9 +97,11 @@ There are no timed downloads, cache-clearing builds, or forced task reruns.
 
 ## Reading the results
 
-The Actions summary reports the median and full range of total execution times.
-Results artifacts contain every raw Gradle Profiler CSV/JSON/HTML report, build
-logs, task-cache outcomes, successful assertion records, and environment identity.
+The runner measures each Gradle command with a monotonic wall clock. It does not
+launch Gradle Profiler, inspection builds, or extra shutdown commands per sample.
+The Actions summary reports the median and full range of command durations.
+Results artifacts contain raw CSV/JSON samples, build logs, task-cache outcomes,
+successful assertion records, and environment identity.
 Failed runs retain diagnostics and do not publish a successful comparison.
 No measured build is retried and no outlier is discarded.
 
@@ -108,11 +110,16 @@ A small baseline/candidate difference comparable to that noise is inconclusive.
 Use more rounds and independent workflow runs before making a small performance
 claim. A functional one-round run is explicitly labeled as such.
 
-Gradle Profiler's `task start` measures elapsed time before task execution,
-including work beyond Muzzle version enumeration. It is not a pure version-expansion
-timer. Cumulative build-operation durations are not elapsed critical-path time.
-Artifact auditing is part of each measured build, so compare this benchmark's
-results with each other rather than substituting them for ordinary CI step times.
+`timing.json` separates initial setup, preparation, measured Gradle commands, and
+runner overhead. `phases.json` records every command's duration and process outcome,
+including failed commands. Preparation and setup are not performance samples.
+
+There is no configuration-only timing claim. Artifact auditing is part of each
+measured build, so compare this benchmark's results with each other rather than
+substituting them for ordinary CI step times. Measuring real CI savings requires
+a separate experiment that includes its checkout and network conditions.
+Both revisions in a comparison must use the same runner. Earlier Profiler-based
+durations are not interchangeable with direct-command timings.
 
 ## Local maintenance
 
@@ -124,19 +131,18 @@ cd benchmark-muzzle
 python3 -m unittest -v
 ```
 
-On Linux, use the same runner directly with a checksum-verified Gradle Profiler
-distribution:
+On Linux, use the same runner directly:
 
 ```sh
 python3 benchmark-muzzle/benchmark.py \
   --baseline BASELINE_SHA --candidate CANDIDATE_SHA \
   --partition 1 --rounds 5 \
-  --profiler /absolute/path/to/gradle-profiler \
   --work-dir /absolute/path/to/new-benchmark-directory
 ```
 
-The work directory must be new. It retains snapshots for diagnostics; remove only
-that named directory when finished. Do not run competing builds during measurement.
+The work directory must be new. It retains both checkouts and the Gradle cache for
+diagnostics; remove only that named directory when finished.
+Do not run competing builds during measurement.
 
 Format and test changes to the plugin controls with the repository's existing tools:
 

@@ -1,4 +1,4 @@
-import csv
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -22,28 +22,6 @@ class BenchmarkTest(unittest.TestCase):
         self.assertEqual(benchmark.order(0), ("baseline", "control", "candidate"))
         self.assertEqual(benchmark.order(1), ("candidate", "control", "baseline"))
         self.assertEqual(benchmark.order(2), benchmark.order(0))
-
-    def test_measurements_require_one_real_wall_clock_sample(self):
-        with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "benchmark.csv"
-            self.write_csv(path, [
-                ["MEASURE", "1", "total execution time", "120.50"],
-                ["MEASURE", "1", "task start", "80.20"],
-                ["WARM_UP", "1", "total execution time", "999"],
-            ])
-            self.assertEqual(benchmark.measurements(path), {
-                "total execution time": 120.5, "task start": 80.2,
-            })
-            for rows in (
-                [["MEASURE", "1", "total execution time", "NaN"]],
-                [["MEASURE", "1", "total execution time", "-1"]],
-                [["MEASURE", "2", "total execution time", "120"]],
-                [["MEASURE", "1", "total execution time", "120"]],
-            ):
-                with self.subTest(rows=rows):
-                    self.write_csv(path, rows)
-                    with self.assertRaises(ValueError):
-                        benchmark.measurements(path)
 
     def test_manifests_include_contents_not_just_assertion_counts(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -121,15 +99,21 @@ class BenchmarkTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             runner = object.__new__(benchmark.Benchmark)
             runner.root = Path(directory)
-            runner.snapshots = runner.root / "snapshots"
+            runner.checkouts = {
+                label: runner.root / label for label in ("baseline", "candidate")
+            }
+            runner.audit = runner.root / "audit"
             with self.assertRaises(ValueError):
                 runner.remove(runner.root)
             with self.assertRaises(ValueError):
                 runner.remove(runner.root / "source")
-            checkout = runner.root / "checkout"
-            checkout.mkdir()
-            runner.remove(checkout)
-            self.assertFalse(checkout.exists())
+            for checkout in runner.checkouts.values():
+                checkout.mkdir()
+                with self.assertRaises(ValueError):
+                    runner.remove(checkout)
+            runner.audit.mkdir()
+            runner.remove(runner.audit)
+            self.assertFalse(runner.audit.exists())
 
     def test_summary_retains_all_samples(self):
         samples = [
@@ -148,13 +132,20 @@ class BenchmarkTest(unittest.TestCase):
             runner = object.__new__(benchmark.Benchmark)
             runner.reports = Path(directory)
             runner.args = SimpleNamespace(partition=1, rounds=1)
+            runner.started = benchmark.time.perf_counter() - 3
+            runner.setup_ms = 100
+            runner.preparation_ms = 200
+            runner.phases = [
+                {"name": f"round-1-{label}", "elapsed_ms": 100}
+                for label in benchmark.order(0)
+            ]
             runner.expected = {
                 "first": "assertPass\ttrue\nunresolved\tmissing dependency\n",
                 "second": "assertPass\tfalse\n",
             }
             runner.samples = [
                 {"round": 1, "label": label, "revision": "fixture",
-                 "metrics": {"total execution time": 100, "task start": 20}}
+                 "metrics": {"total execution time": 100}}
                 for label in benchmark.order(0)
             ]
             runner.write_results(complete=True)
@@ -163,14 +154,25 @@ class BenchmarkTest(unittest.TestCase):
             self.assertIn("Functional run only", text)
             self.assertTrue((runner.reports / "statistics.json").is_file())
             self.assertEqual(len((runner.reports / "samples.csv").read_text().splitlines()), 4)
+            timing = json.loads((runner.reports / "timing.json").read_text(encoding="utf-8"))
+            self.assertEqual(timing["setup_ms"], 100)
+            self.assertEqual(timing["preparation_ms"], 200)
+            self.assertEqual(timing["measured_gradle_ms"], 300)
+            self.assertAlmostEqual(
+                sum(timing[key] for key in ("setup_ms", "preparation_ms", "measured_gradle_ms", "overhead_ms")),
+                timing["total_ms"],
+            )
 
-    def test_preparation_applies_support_in_order_before_shared_cache_audits(self):
+    def test_preparation_warms_fixed_checkouts_before_offline_audits(self):
         with tempfile.TemporaryDirectory() as directory:
             runner = object.__new__(benchmark.Benchmark)
             runner.root = Path(directory)
-            for name in ("source", "checkout", "home", "repository", "audit", "snapshots", "reports"):
+            for name in ("source", "home", "repository", "audit", "reports"):
                 setattr(runner, name, runner.root / name)
-            for path in (runner.source, runner.home, runner.snapshots, runner.reports):
+            runner.checkouts = {
+                label: runner.root / label for label in ("baseline", "candidate")
+            }
+            for path in (runner.source, runner.home, runner.reports):
                 path.mkdir()
             runner.revisions = {"baseline": "before", "candidate": "after"}
             runner.support = [b"first", b"second"]
@@ -181,88 +183,120 @@ class BenchmarkTest(unittest.TestCase):
 
             def fake_git(command, **kwargs):
                 if "clone" in command:
-                    runner.checkout.mkdir()
+                    Path(command[-1]).mkdir()
                 elif "apply" in command:
-                    control = runner.checkout / benchmark.CONTROLS
+                    control = Path(command[2]) / benchmark.CONTROLS
                     control.parent.mkdir(parents=True, exist_ok=True)
                     with control.open("ab") as stream:
                         stream.write(kwargs["input"])
                     applied.append(kwargs["input"])
                 return b""
 
-            def bootstrap(label, *, offline):
-                phases.append(f"bootstrap-{label}")
-                self.assertEqual(offline, label == "candidate")
+            def build(label, name, *, offline, preparation):
+                phases.append(name)
+                self.assertTrue(preparation)
+                self.assertEqual(offline, name.startswith("warmup"))
+                if label == "candidate" or offline:
+                    self.assertIsNotNone(runner.frozen_metadata)
+                if offline:
+                    self.assertEqual(len(applied), 4)
                 runner.repository.mkdir(exist_ok=True)
                 (runner.repository / "metadata.xml").write_text("frozen", encoding="utf-8")
-
-            def audit(destination, *, preparation):
-                phases.append(f"audit-{destination.name}")
-                self.assertTrue(preparation)
-                self.assertEqual(len(applied), 4)
                 runner.remove(runner.audit)
                 runner.audit.mkdir()
                 (runner.audit / "assertion.txt").write_text("verified", encoding="utf-8")
 
             with (
                 patch.object(benchmark, "run", side_effect=fake_git),
-                patch.object(runner, "gradle", side_effect=bootstrap),
-                patch.object(runner, "invoke_profiler", side_effect=audit),
+                patch.object(runner, "build", side_effect=build),
             ):
                 runner.prepare()
             self.assertEqual(applied, [b"first", b"second", b"first", b"second"])
             self.assertEqual(phases, [
-                "bootstrap-baseline", "bootstrap-candidate", "audit-baseline", "audit-candidate",
+                "bootstrap-baseline", "bootstrap-candidate", "warmup-baseline", "warmup-candidate",
             ])
-            self.assertTrue((runner.snapshots / "gradle-home").is_dir())
+            self.assertTrue(all(path.is_dir() for path in runner.checkouts.values()))
             self.assertTrue((runner.reports / "inputs" / "identity.json").is_file())
 
-    def test_invocations_are_offline_and_reject_invalid_measurements(self):
+    def test_measurement_loop_does_not_copy_caches_or_checkouts(self):
+        runner = object.__new__(benchmark.Benchmark)
+        runner.args = SimpleNamespace(rounds=2)
+        runner.revisions = {"baseline": "before", "candidate": "after"}
+        runner.samples = []
+        with (
+            patch.object(runner, "prepare"),
+            patch.object(runner, "write_results"),
+            patch.object(runner, "build", return_value=({"total execution time": 100}, {})) as build,
+            patch.object(benchmark.shutil, "copytree") as copy,
+            patch.object(benchmark, "run") as child,
+        ):
+            runner.measure()
+            copy.assert_not_called()
+            child.assert_not_called()
+            self.assertEqual([call.args[:2] for call in build.call_args_list], [
+                ("baseline", "round-1-baseline"), ("baseline", "round-1-control"),
+                ("candidate", "round-1-candidate"), ("candidate", "round-2-candidate"),
+                ("baseline", "round-2-control"), ("baseline", "round-2-baseline"),
+            ])
+            self.assertEqual(len(runner.samples), 6)
+            runner.write_results.assert_called_with(complete=True)
+
+    def test_offline_build_requires_frozen_aether_metadata(self):
+        runner = object.__new__(benchmark.Benchmark)
+        runner.frozen_metadata = None
+        with self.assertRaisesRegex(ValueError, "captured metadata snapshot"):
+            runner.build("baseline", "sample", offline=True)
+
+    def test_direct_builds_are_offline_timed_and_reject_invalid_measurements(self):
         for failure in (
             "none", "configuration-reused", "changed-metadata", "changed-workload",
-            "compile-cache-miss",
+            "compile-cache-miss", "configuration-not-stored", "assertion-not-executed",
+            "command-failed",
         ):
             with self.subTest(failure=failure), tempfile.TemporaryDirectory() as directory:
                 runner = object.__new__(benchmark.Benchmark)
                 runner.root = Path(directory)
-                runner.checkout = runner.root / "checkout"
+                runner.checkouts = {
+                    label: runner.root / label for label in ("baseline", "candidate")
+                }
                 runner.repository = runner.root / "metadata"
                 runner.audit = runner.root / "audit"
-                runner.profiler_output = runner.root / "profiler-output"
-                runner.snapshots = runner.root / "snapshots"
                 runner.home = runner.root / "gradle-home"
-                runner.args = SimpleNamespace(profiler=runner.root / "profiler")
+                runner.reports = runner.root / "reports"
+                runner.phases = []
                 runner.init_script = runner.root / "benchmark.init.gradle"
                 runner.env = {}
                 runner.workload = {"seed": 1729, "versions_limit": 10}
                 runner.task = ":instrumentation:muzzle1"
-                runner.checkout.mkdir()
+                checkout = runner.checkouts["baseline"]
+                checkout.mkdir()
                 runner.repository.mkdir()
                 (runner.repository / "metadata.xml").write_text("frozen", encoding="utf-8")
                 runner.frozen_metadata = benchmark.inventory(runner.repository)
                 task = ":example:muzzle-AssertPass-library"
                 record = f"{task}\nassertPass\ttrue\n"
                 runner.expected = {task: record}
-                configuration_cache = runner.checkout / ".gradle" / "configuration-cache"
+                configuration_cache = checkout / ".gradle" / "configuration-cache"
                 configuration_cache.mkdir(parents=True)
                 (configuration_cache / "state").write_text("stale", encoding="utf-8")
 
-                def fake_profiler(command, **kwargs):
-                    if "--stop" in command:
-                        return b""
-                    self.assertIn("--single-shot", command)
+                def fake_gradle(command, **kwargs):
+                    self.assertEqual(command[0], str(checkout / "gradlew"))
+                    self.assertEqual(command[1], runner.task)
                     self.assertIn("--no-daemon", command)
+                    self.assertIn("--configuration-cache", command)
+                    self.assertIn("--offline", command)
+                    self.assertIn("--no-scan", command)
+                    self.assertIn("-PmuzzleBenchmarkRepositoryOffline=true", command)
+                    self.assertNotIn("--stop", command)
+                    self.assertNotIn("help", command)
+                    self.assertEqual(kwargs["cwd"], checkout)
                     self.assertFalse(configuration_cache.exists())
-                    scenario = (runner.root / "muzzle.scenarios").read_text(encoding="utf-8")
-                    self.assertIn('"--offline"', scenario)
-                    self.assertIn("muzzleBenchmarkRepositoryOffline=true", scenario)
-                    runner.profiler_output.mkdir()
                     runner.audit.mkdir()
-                    self.write_csv(runner.profiler_output / "benchmark.csv", [
-                        ["MEASURE", "1", "total execution time", "120.50"],
-                        ["MEASURE", "1", "task start", "80.20"],
-                    ])
-                    log = "Configuration cache entry stored.\n" + f"> Task {task}\n"
+                    log = "Configuration cache entry stored.\n"
+                    if failure == "configuration-not-stored":
+                        log = ""
+                    log += f"> Task {task}" + (" UP-TO-DATE" if failure == "assertion-not-executed" else "") + "\n"
                     if failure == "configuration-reused":
                         log += "Reusing configuration cache.\n"
                     if failure == "compile-cache-miss":
@@ -274,22 +308,25 @@ class BenchmarkTest(unittest.TestCase):
                         record + ("changed" if failure == "changed-workload" else ""),
                         encoding="utf-8",
                     )
+                    if failure == "command-failed":
+                        raise subprocess.CalledProcessError(1, command)
 
-                with patch.object(benchmark, "run", side_effect=fake_profiler):
+                with (
+                    patch.object(benchmark, "run", side_effect=fake_gradle) as child,
+                    patch.object(benchmark.time, "perf_counter", side_effect=[10.0, 11.25]),
+                ):
                     if failure == "none":
-                        metrics, tasks = runner.invoke_profiler(runner.root / "reports" / "sample")
-                        self.assertEqual(metrics["total execution time"], 120.5)
+                        metrics, tasks = runner.build("baseline", "round-1-baseline", offline=True)
+                        self.assertEqual(metrics, {"total execution time": 1250})
                         self.assertEqual(tasks, {task: "EXECUTED"})
+                        child.assert_called_once()
                     else:
-                        with self.assertRaises(ValueError):
-                            runner.invoke_profiler(runner.root / "reports" / "sample")
-
-    @staticmethod
-    def write_csv(path, rows):
-        with path.open("w", encoding="utf-8", newline="") as stream:
-            writer = csv.writer(stream)
-            writer.writerow(["Phase", "Iteration", "Sample", "Duration"])
-            writer.writerows(rows)
+                        with self.assertRaises(
+                            subprocess.CalledProcessError if failure == "command-failed" else ValueError
+                        ):
+                            runner.build("baseline", "round-1-baseline", offline=True)
+                self.assertEqual(runner.phases[0]["elapsed_ms"], 1250)
+                self.assertEqual(runner.phases[0]["process_success"], failure != "command-failed")
 
 
 if __name__ == "__main__":

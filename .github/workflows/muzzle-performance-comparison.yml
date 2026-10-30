@@ -24,10 +24,6 @@ on:
       workload-run-id:
         description: Optional earlier benchmark run whose frozen workload to reuse
         type: string
-      profile:
-        description: Collect separate untimed JFR profiles
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -75,7 +71,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     needs: validate
     runs-on: ubuntu-24.04
-    timeout-minutes: 240
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
@@ -98,15 +94,6 @@ jobs:
         with:
           cache-read-only: true
 
-      - name: Install pinned Gradle Profiler
-        run: |
-          version=$(python3 -c 'import sys; sys.path.insert(0, "benchmark-muzzle"); import benchmark; print(benchmark.PROFILER_VERSION)')
-          sha=$(python3 -c 'import sys; sys.path.insert(0, "benchmark-muzzle"); import benchmark; print(benchmark.PROFILER_SHA256)')
-          curl --fail --location --retry 3 "https://github.com/gradle/gradle-profiler/releases/download/v$version/gradle-profiler-$version.zip" --output "$RUNNER_TEMP/profiler.zip"
-          echo "$sha  $RUNNER_TEMP/profiler.zip" | sha256sum --check
-          unzip -q "$RUNNER_TEMP/profiler.zip" -d "$RUNNER_TEMP/profiler"
-          echo "PROFILER=$RUNNER_TEMP/profiler/gradle-profiler-$version/bin/gradle-profiler" >> "$GITHUB_ENV"
-
       - name: Download frozen workload
         if: inputs.workload-run-id != ''
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -124,7 +111,6 @@ jobs:
           PARTITION: ${{ matrix.partition }}
           ROUNDS: ${{ inputs.rounds }}
           WORKLOAD_RUN_ID: ${{ inputs.workload-run-id }}
-          PROFILE: ${{ inputs.profile }}
         run: |
           arguments=()
           read -r -a support_commits <<< "$SUPPORT_COMMIT"
@@ -132,15 +118,19 @@ jobs:
             arguments+=(--support-commit "$commit")
           done
           if [ -n "$WORKLOAD_RUN_ID" ]; then
-            arguments+=(--inputs "$RUNNER_TEMP/muzzle-workload/reports/inputs")
-          fi
-          if [ "$PROFILE" = true ]; then
-            arguments+=(--profile)
+            if [ -f "$RUNNER_TEMP/muzzle-workload/inputs/identity.json" ]; then
+              arguments+=(--inputs "$RUNNER_TEMP/muzzle-workload/inputs")
+            elif [ -f "$RUNNER_TEMP/muzzle-workload/reports/inputs/identity.json" ]; then
+              arguments+=(--inputs "$RUNNER_TEMP/muzzle-workload/reports/inputs")
+            else
+              echo "::error::Saved run does not contain a prepared workload."
+              exit 1
+            fi
           fi
           python3 benchmark-muzzle/benchmark.py \
             --baseline "$BASELINE" --candidate "$CANDIDATE" \
             --partition "$PARTITION" --rounds "$ROUNDS" \
-            --profiler "$PROFILER" --work-dir "$RUNNER_TEMP/muzzle-benchmark" \
+            --work-dir "$RUNNER_TEMP/muzzle-benchmark" \
             --seed-gradle-home "$HOME/.gradle" "${arguments[@]}"
 
       - name: Publish summary
@@ -157,8 +147,6 @@ jobs:
         if: always()
         with:
           name: muzzle-benchmark-results-${{ matrix.partition }}
-          path: |
-            ${{ runner.temp }}/muzzle-benchmark/reports
-            ${{ runner.temp }}/muzzle-benchmark/profiler-output
+          path: ${{ runner.temp }}/muzzle-benchmark/reports
           if-no-files-found: error
           retention-days: 30
