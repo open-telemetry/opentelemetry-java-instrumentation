@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetricWithResponseStatus;
 import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -295,9 +295,10 @@ public abstract class AbstractOpenSearchRestTest {
 
     getTesting().waitForTraces(1);
 
-    assertDurationMetric(
+    assertDurationMetricWithResponseStatus(
         getTesting(),
         getInstrumentationName(),
+        "200",
         DB_OPERATION_NAME,
         DB_SYSTEM_NAME,
         SERVER_ADDRESS,

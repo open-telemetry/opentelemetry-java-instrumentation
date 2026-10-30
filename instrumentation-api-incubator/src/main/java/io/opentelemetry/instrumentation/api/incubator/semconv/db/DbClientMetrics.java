@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
-import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.FINE;
 
@@ -81,10 +79,6 @@ public final class DbClientMetrics implements OperationListener {
     }
 
     Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
-    if (attributes.get(ERROR_TYPE) == null && attributes.get(DB_RESPONSE_STATUS_CODE) != null) {
-      attributes = attributes.toBuilder().remove(DB_RESPONSE_STATUS_CODE).build();
-    }
-
     duration.record((endNanos - state.startTimeNanos()) / NANOS_PER_S, attributes, context);
   }
 
