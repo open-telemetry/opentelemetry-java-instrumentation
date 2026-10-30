@@ -72,12 +72,12 @@ class ChatTest extends AbstractChatTest {
 
   @Override
   protected OpenAIClient wrap(OpenAIClient client) {
-    return telemetry.wrap(client);
+    return telemetry.instrument(client);
   }
 
   @Override
   protected OpenAIClientAsync wrap(OpenAIClientAsync client) {
-    return telemetry.wrap(client);
+    return telemetry.instrument(client);
   }
 
   @Override
@@ -87,11 +87,13 @@ class ChatTest extends AbstractChatTest {
   }
 
   private OpenAIClient clientNoCaptureContent() {
-    return OpenAITelemetry.builder(testing.getOpenTelemetry()).build().wrap(getRawClient());
+    return OpenAITelemetry.builder(testing.getOpenTelemetry()).build().instrument(getRawClient());
   }
 
   private OpenAIClientAsync clientAsyncNoCaptureContent() {
-    return OpenAITelemetry.builder(testing.getOpenTelemetry()).build().wrap(getRawClientAsync());
+    return OpenAITelemetry.builder(testing.getOpenTelemetry())
+        .build()
+        .instrument(getRawClientAsync());
   }
 
   @Test

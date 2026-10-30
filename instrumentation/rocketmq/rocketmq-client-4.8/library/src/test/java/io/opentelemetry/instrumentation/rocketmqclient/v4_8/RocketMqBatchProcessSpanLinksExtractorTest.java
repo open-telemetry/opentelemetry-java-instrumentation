@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,7 +50,7 @@ class RocketMqBatchProcessSpanLinksExtractorTest {
     assertThat(getter.getDestination(request)).isEqualTo("topic");
     assertThat(getter.getMessageId(request, null)).isNull();
     assertThat(batchAttributes(request).asMap())
-        .containsOnly(entry(MESSAGING_ROCKETMQ_MESSAGE_TAG, "tag"));
+        .containsOnly(entry(stringKey("rocketmq.message.tag"), "tag"));
 
     assertThat(linkAttributes(request))
         .extracting(Attributes::asMap)
@@ -80,12 +80,12 @@ class RocketMqBatchProcessSpanLinksExtractorTest {
         .containsOnly(
             entry(MESSAGING_DESTINATION_NAME, "topic-1"),
             entry(MESSAGING_MESSAGE_ID, "message-1"),
-            entry(MESSAGING_ROCKETMQ_MESSAGE_TAG, "tag-1"));
+            entry(stringKey("rocketmq.message.tag"), "tag-1"));
     assertThat(linkAttributes.get(1).asMap())
         .containsOnly(
             entry(MESSAGING_DESTINATION_NAME, "topic-2"),
             entry(MESSAGING_MESSAGE_ID, "message-2"),
-            entry(MESSAGING_ROCKETMQ_MESSAGE_TAG, "tag-2"));
+            entry(stringKey("rocketmq.message.tag"), "tag-2"));
   }
 
   private static MessageExt message(

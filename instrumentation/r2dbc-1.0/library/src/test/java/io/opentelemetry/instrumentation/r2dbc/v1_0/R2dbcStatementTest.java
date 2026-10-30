@@ -51,7 +51,7 @@ class R2dbcStatementTest extends AbstractR2dbcStatementTest {
         .addAttributesExtractor(
             AttributesExtractor.constant(maybeStablePeerService(), expectedPeerService()))
         .build()
-        .wrapConnectionFactory(
+        .instrument(
             super.createProxyConnectionFactory(connectionFactoryOptions), connectionFactoryOptions);
   }
 }

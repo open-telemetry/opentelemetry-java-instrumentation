@@ -28,42 +28,48 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-thrift-0.13:OPENT
 
 ### Usage
 
-The instrumentation library provides wrappers for thrift servers and clients that provide OpenTelemetry-based spans and context propagation.
+The instrumentation library instruments Thrift servers and clients to provide OpenTelemetry-based
+spans and context propagation.
 
 ```java
-// For server-side, decorate processor with a tracing wrapper.
-TProcessor configureServer(OpenTelemetry openTelemetry, TProcessor processor, String serviceName) {
+// For server-side, decorate the generated processor with a tracing wrapper.
+TProcessor configureServer(OpenTelemetry openTelemetry, CustomService.Iface handler) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
-  return thriftTelemetry.wrapServerProcessor(processor, serviceName);
+  return thriftTelemetry.instrument(
+      new CustomService.Processor<>(handler), CustomService.class.getName());
 }
 
-// When using AsyncProcessor also wrap input and output protocol factories.
+// When using AsyncProcessor, also instrument the input and output protocol factories.
 void configureServer(OpenTelemetry openTelemetry, TNonblockingServer.Args tnbArgs) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
   // TBinaryProtocol.Factory is the default
-  tnbArgs.inputProtocolFactory(thriftTelemetry.wrapServerInProtocolFactory(new TBinaryProtocol.Factory()));
-  tnbArgs.outputProtocolFactory(thriftTelemetry.wrapServerOutProtocolFactory(new TBinaryProtocol.Factory()));
+  tnbArgs.inputProtocolFactory(thriftTelemetry.instrumentServerInProtocolFactory(new TBinaryProtocol.Factory()));
+  tnbArgs.outputProtocolFactory(thriftTelemetry.instrumentServerOutProtocolFactory(new TBinaryProtocol.Factory()));
 }
 
-// For client-side, decorate protocol and client with a tracing wrappers.
+// For client-side, instrument the protocol and client.
 TProtocol configureClient(OpenTelemetry openTelemetry, TProtocol protocol) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
-  return thriftTelemetry.wrapClientProtocol(protocol);
+  return thriftTelemetry.instrument(protocol);
 }
 
 CustomService.Iface configureClient(OpenTelemetry openTelemetry, CustomService.Client client) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
-  return thriftTelemetry.wrapClient(client, CustomService.Iface.class);
+  return thriftTelemetry.instrument(client, CustomService.Iface.class);
 }
 
-// For non-blocking client, decorate protocol factory and the async client with a tracing wrappers.
+// For non-blocking clients, instrument the protocol factory and async client.
 TProtocolFactory configureClient(OpenTelemetry openTelemetry, TProtocolFactory protocolFactory) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
-  return thriftTelemetry.wrapClientProtocolFactory(protocolFactory);
+  return thriftTelemetry.instrumentClientProtocolFactory(protocolFactory);
 }
 
 CustomService.AsyncIface configureClient(OpenTelemetry openTelemetry, CustomService.AsyncClient asyncClient) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
-  return thriftTelemetry.wrapAsyncClient(asyncClient, CustomService.AsyncIface.class);
+  return thriftTelemetry.instrument(asyncClient, CustomService.AsyncIface.class);
 }
 ```
+
+The `rpcMethodPrefix` passed to `instrument` is combined with the method name as
+`prefix/method` for server span names and the `rpc.method` attribute on server spans and duration
+metrics. Use the generated service class name, as above, to match client telemetry.

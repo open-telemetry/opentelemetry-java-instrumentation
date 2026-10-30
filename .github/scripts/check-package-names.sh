@@ -68,8 +68,6 @@ check_source_set() {
         instrumentation/redisson/redisson-3.0/javaagent/src/main/java/org/redisson/config) continue ;;
         instrumentation/redisson/redisson-3.17/javaagent/src/main/java/org/redisson/config) continue ;;
         instrumentation/rocketmq/rocketmq-client-4.8/javaagent/src/main/java/io/opentelemetry/instrumentation/rocketmqclient/v4_8) continue ;;
-        instrumentation/spring/spring-webmvc/spring-webmvc-3.1/javaagent/src/main/java/org/springframework/web/servlet/v3_1 | instrumentation/spring/spring-webmvc/spring-webmvc-3.1/javaagent/src/main/java/org/springframework/web/servlet/v3_1/*) continue ;;
-        instrumentation/spring/spring-webmvc/spring-webmvc-6.0/javaagent/src/main/java/org/springframework/web/servlet/v6_0 | instrumentation/spring/spring-webmvc/spring-webmvc-6.0/javaagent/src/main/java/org/springframework/web/servlet/v6_0/*) continue ;;
         instrumentation/tomcat/tomcat-dbcp-8.0/javaagent/src/main/java/org/apache/tomcat/dbcp/dbcp2) continue ;;
         instrumentation/vertx/vertx-redis-client/vertx-redis-client-4.0/javaagent/src/main/java/io/vertx/redis/client/impl | instrumentation/vertx/vertx-redis-client/vertx-redis-client-4.0/javaagent/src/main/java/io/vertx/redis/client/impl/*) continue ;;
         instrumentation/vertx/vertx-sql-client/vertx-sql-client-common-4.0/javaagent/src/main/java/io/vertx/sqlclient/impl | instrumentation/vertx/vertx-sql-client/vertx-sql-client-common-4.0/javaagent/src/main/java/io/vertx/sqlclient/impl/*) continue ;;
@@ -88,7 +86,6 @@ check_source_set() {
       # javaagent modules with package layouts that differ from their module names
       case "$dir" in
         instrumentation/java-util-logging/javaagent/*) continue ;;
-        instrumentation/jaxrs/jaxrs-1.0-annotations/javaagent/src/main/java/io/opentelemetry/javaagent/instrumentation/jaxrs/v1_0) continue ;;
       esac
     fi
 

@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 final class GrpcSpanNameExtractor implements SpanNameExtractor<GrpcRequest> {
   @Override
   public String extract(GrpcRequest request) {
-    return request.getMethod().getFullMethodName();
+    String fullMethodName = request.getFullMethodName();
+    return fullMethodName.equals("_OTHER") ? "grpc" : fullMethodName;
   }
 }

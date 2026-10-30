@@ -17,7 +17,7 @@ class SqsCreateRequestAttributesGetter
     implements MessagingAttributesGetter<SqsCreateRequest, Void> {
 
   // copied from MessagingIncubatingAttributes.MessagingSystemIncubatingValues
-  private static final String AWS_SQS = "aws_sqs";
+  private static final String AWS_SQS = "aws.sqs";
 
   @Override
   public String getSystem(SqsCreateRequest request) {

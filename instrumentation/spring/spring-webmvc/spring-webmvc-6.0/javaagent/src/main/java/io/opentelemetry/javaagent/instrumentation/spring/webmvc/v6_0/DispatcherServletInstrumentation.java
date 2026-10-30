@@ -23,7 +23,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.v6_0.OpenTelemetryHandlerMappingFilter;
 
 class DispatcherServletInstrumentation implements TypeInstrumentation {
 

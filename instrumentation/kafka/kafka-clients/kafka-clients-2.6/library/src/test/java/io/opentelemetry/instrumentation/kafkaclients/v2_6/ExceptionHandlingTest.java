@@ -40,7 +40,7 @@ class ExceptionHandlingTest {
                 });
 
     KafkaTelemetry telemetry = KafkaTelemetry.builder(testing.getOpenTelemetry()).build();
-    Consumer<?, ?> wrappedConsumer = telemetry.wrap(consumer);
+    Consumer<?, ?> wrappedConsumer = telemetry.instrument(consumer);
 
     assertThatThrownBy(() -> wrappedConsumer.poll(Duration.ofMillis(1)))
         .isInstanceOf(IllegalStateException.class)
@@ -59,7 +59,7 @@ class ExceptionHandlingTest {
                 });
 
     KafkaTelemetry telemetry = KafkaTelemetry.builder(testing.getOpenTelemetry()).build();
-    Producer<?, ?> wrappedProducer = telemetry.wrap(producer);
+    Producer<?, ?> wrappedProducer = telemetry.instrument(producer);
     assertThatThrownBy(wrappedProducer::flush)
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("can't invoke");
@@ -72,7 +72,7 @@ class ExceptionHandlingTest {
     when(producer.send(any(), any())).thenReturn(CompletableFuture.completedFuture(null));
 
     KafkaTelemetry telemetry = KafkaTelemetry.builder(testing.getOpenTelemetry()).build();
-    Producer<String, String> wrappedProducer = telemetry.wrap(producer);
+    Producer<String, String> wrappedProducer = telemetry.instrument(producer);
 
     ProducerRecord<String, String> record =
         new ProducerRecord<>(

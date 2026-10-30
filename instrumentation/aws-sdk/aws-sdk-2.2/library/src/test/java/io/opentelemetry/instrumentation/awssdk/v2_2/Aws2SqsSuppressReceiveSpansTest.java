@@ -26,12 +26,12 @@ abstract class Aws2SqsSuppressReceiveSpansTest extends AbstractAws2SqsSuppressRe
 
   @Override
   protected SqsClient configureSqsClient(SqsClient sqsClient) {
-    return telemetry.wrap(sqsClient);
+    return telemetry.instrument(sqsClient);
   }
 
   @Override
   protected SqsAsyncClient configureSqsClient(SqsAsyncClient sqsClient) {
-    return telemetry.wrap(sqsClient);
+    return telemetry.instrument(sqsClient);
   }
 
   @Override
