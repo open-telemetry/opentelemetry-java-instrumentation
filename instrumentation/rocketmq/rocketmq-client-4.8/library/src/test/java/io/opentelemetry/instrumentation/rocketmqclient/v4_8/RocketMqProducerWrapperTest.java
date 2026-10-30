@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -26,7 +27,6 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -306,7 +306,7 @@ class RocketMqProducerWrapperTest {
             });
     Instrumenter<SendMessageContext, Void> outer =
         RocketMqInstrumenterFactory.createProducerInstrumenter(
-            testing.getOpenTelemetry(), IncludeExclude.builder().build(), false);
+            testing.getOpenTelemetry(), emptyList(), false);
     SendMessageContext request = new SendMessageContext();
     request.setMessage(new Message("outer", new byte[0]));
     Context context = outer.start(Context.root(), request);

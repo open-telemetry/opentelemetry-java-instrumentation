@@ -158,21 +158,11 @@ instrumentation/development:
         # list of attribute keys.
         resource_attributes: []
       messaging:
-        headers:
-          # A comma-separated list of case-sensitive message header name glob patterns to exclude
-          # from span attributes. Captured attribute keys preserve the header name's original
-          # spelling, including dashes. `?` matches one character and `*` matches zero or more
-          # characters. Excluded patterns take precedence over included patterns. An absent or empty
-          # selector captures no headers; an exclude-only selector captures every header not
-          # excluded, which may expose sensitive information.
-          excluded: []
-
-          # A comma-separated list of case-sensitive message header name glob patterns to capture as
-          # span attributes. Captured attribute keys preserve the header name's original spelling,
-          # including dashes. `?` matches one character and `*` matches zero or more characters.
-          # Excluded patterns take precedence over included patterns. An absent or empty selector
-          # captures no headers; an exclude-only selector captures every header not excluded.
-          included: []
+        # A comma-separated list of message header names to capture as span attributes. Names are
+        # matched literally using the messaging library's header lookup semantics, without wildcard
+        # expansion. Attribute keys preserve the configured name's casing and dashes. No headers are
+        # captured by default.
+        captured_headers: []
         message_create_spans:
           # Provides the default for whether to create a producer span for each eligible message in
           # a batch send. An instrumentation-specific setting takes precedence.

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import static java.util.Arrays.asList;
 
 class InterceptorsTest extends AbstractInterceptorsTest {
 
@@ -18,11 +18,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
   private static KafkaTelemetry createKafkaTelemetry() {
     KafkaTelemetryBuilder builder =
         KafkaTelemetry.builder(testing.getOpenTelemetry())
-            .setHeaders(
-                IncludeExclude.builder()
-                    .setIncluded("Test-Message-*")
-                    .setExcluded("*-Excluded-Header")
-                    .build());
+            .setCapturedHeaders(asList("Test-Message-Header", "Test-Message-Int-Header"));
     if (MESSAGING_RECEIVE_TELEMETRY_ENABLED) {
       builder.setMessagingReceiveTelemetryEnabled(true);
     }

@@ -340,14 +340,9 @@
       "defaultValue": false
     },
     {
-      "name": "otel.instrumentation.common.messaging.headers.included",
+      "name": "otel.instrumentation.common.messaging.captured-headers",
       "type": "java.util.List<java.lang.String>",
-      "description": "A comma-separated list of case-sensitive message header name glob patterns to capture as span attributes. Captured attribute keys preserve the header name's original spelling, including dashes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded."
-    },
-    {
-      "name": "otel.instrumentation.common.messaging.headers.excluded",
-      "type": "java.util.List<java.lang.String>",
-      "description": "A comma-separated list of case-sensitive message header name glob patterns to exclude from span attributes. Captured attribute keys preserve the header name's original spelling, including dashes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded, which may expose sensitive information."
+      "description": "A comma-separated list of message header names to capture as span attributes. Names are matched literally using the messaging library's header lookup semantics, without wildcard expansion. Attribute keys preserve the configured name's casing and dashes. No headers are captured by default."
     },
     {
       "name": "otel.instrumentation.jdbc.enabled",

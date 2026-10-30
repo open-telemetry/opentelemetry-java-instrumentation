@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
@@ -84,10 +83,5 @@ class RocketMqConsumerProcessAttributeGetter
       return singletonList(value);
     }
     return emptyList();
-  }
-
-  @Override
-  public Collection<String> getMessageHeaderNames(MessageView messageView) {
-    return messageView.getProperties().keySet();
   }
 }

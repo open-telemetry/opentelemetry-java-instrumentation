@@ -23,7 +23,7 @@ public class SpringIntegrationSingletons {
 
   private static final ChannelInterceptor interceptor =
       SpringIntegrationTelemetry.builder(GlobalOpenTelemetry.get())
-          .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
+          .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .setProducerSpanEnabled(
               DeclarativeConfigUtil.getInstrumentationConfig(
                       GlobalOpenTelemetry.get(), "spring_integration")

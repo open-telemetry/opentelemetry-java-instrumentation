@@ -6,23 +6,18 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -97,43 +92,20 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   private final MessagingAttributesGetter<REQUEST, RESPONSE> getter;
   private final MessagingOperationType operationType;
   private final String operationName;
-  @Nullable private final IncludeExclude headers;
-  // exact header names that the selector includes, queried directly so that getters which only
-  // implement getMessageHeader() keep working
-  private final List<String> exactHeaderNames;
-  private final Map<String, AttributeKey<List<String>>> exactHeaderAttributeKeys;
-  // whether the selector can match header names that are not listed in exactHeaderNames, which
-  // requires enumerating the header names of each message
-  private final boolean enumerateHeaderNames;
+  private final Map<String, AttributeKey<List<String>>> capturedHeaders;
 
   MessagingAttributesExtractor(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter,
       MessagingOperationType operationType,
       String operationName,
-      @Nullable IncludeExclude headers) {
+      Collection<String> capturedHeaders) {
     this.getter = getter;
     this.operationType = operationType;
     this.operationName = operationName;
-    this.headers = headers;
-
-    Set<String> exactNames = new LinkedHashSet<>();
-    boolean enumerate = false;
-    if (headers != null) {
-      List<String> included = headers.getIncluded();
-      // a selector without included patterns matches every header name that is not excluded
-      enumerate = included.isEmpty();
-      for (String pattern : included) {
-        if (pattern.indexOf('*') != -1 || pattern.indexOf('?') != -1) {
-          enumerate = true;
-        } else if (headers.matches(pattern)) {
-          exactNames.add(pattern);
-        }
-      }
+    this.capturedHeaders = new LinkedHashMap<>();
+    for (String name : capturedHeaders) {
+      this.capturedHeaders.put(name, AttributeKey.stringArrayKey("messaging.header." + name));
     }
-    this.exactHeaderNames = unmodifiableList(new ArrayList<>(exactNames));
-    this.exactHeaderAttributeKeys =
-        CapturedMessageHeadersUtil.createLiteralAttributeKeys(exactHeaderNames);
-    this.enumerateHeaderNames = enumerate;
   }
 
   @Override
@@ -169,29 +141,12 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(MESSAGING_BATCH_MESSAGE_COUNT, getter.getBatchMessageCount(request, response));
     attributes.put(ERROR_TYPE, getter.getErrorType(request, response, error));
 
-    for (String name : headerNames(request)) {
-      List<String> values = getter.getMessageHeader(request, name);
+    for (Map.Entry<String, AttributeKey<List<String>>> header : capturedHeaders.entrySet()) {
+      List<String> values = getter.getMessageHeader(request, header.getKey());
       if (!values.isEmpty()) {
-        attributes.put(
-            CapturedMessageHeadersUtil.attributeKey(name, exactHeaderAttributeKeys), values);
+        attributes.put(header.getValue(), values);
       }
     }
-  }
-
-  private Collection<String> headerNames(REQUEST request) {
-    if (headers == null) {
-      return emptyList();
-    }
-    if (!enumerateHeaderNames) {
-      return exactHeaderNames;
-    }
-    Set<String> names = new LinkedHashSet<>(exactHeaderNames);
-    for (String name : getter.getMessageHeaderNames(request)) {
-      if (headers.matches(name)) {
-        names.add(name);
-      }
-    }
-    return names;
   }
 
   /**

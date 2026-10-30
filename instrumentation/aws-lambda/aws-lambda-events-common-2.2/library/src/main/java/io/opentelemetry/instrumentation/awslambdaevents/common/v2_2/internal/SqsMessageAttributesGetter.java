@@ -10,7 +10,6 @@ import static java.util.Collections.singletonList;
 
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.MessageAttribute;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -35,11 +34,5 @@ final class SqsMessageAttributesGetter extends SqsAttributesGetter<SQSMessage, B
     MessageAttribute attribute = attributes == null ? null : attributes.get(name);
     String value = attribute == null ? null : attribute.getStringValue();
     return value == null ? emptyList() : singletonList(value);
-  }
-
-  @Override
-  public Iterable<String> getMessageHeaderNames(SQSMessage message) {
-    Map<String, MessageAttribute> attributes = message.getMessageAttributes();
-    return attributes == null ? emptyList() : new ArrayList<>(attributes.keySet());
   }
 }

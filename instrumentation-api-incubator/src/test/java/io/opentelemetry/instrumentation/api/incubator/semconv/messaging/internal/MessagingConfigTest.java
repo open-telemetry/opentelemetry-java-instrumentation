@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,9 +14,9 @@ import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.ResourceLock;
@@ -28,78 +29,74 @@ import org.junit.jupiter.params.provider.MethodSource;
 class MessagingConfigTest {
 
   @Test
-  void readsSelectorFromCommonMessagingConfig() {
+  void readsExactNamesFromCommonMessagingConfig() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    when(messagingConfig(openTelemetry).get("headers").getScalarList("included", String.class))
-        .thenReturn(singletonList("Test-*"));
+    when(messagingConfig(openTelemetry).getScalarList("captured_headers", String.class))
+        .thenReturn(asList("Test-Header", "*", "Test-?"));
 
-    assertThat(MessagingConfig.getHeaders(openTelemetry).getIncluded()).containsExactly("Test-*");
+    assertThat(MessagingConfig.getCapturedHeaders(openTelemetry))
+        .containsExactly("Test-Header", "*", "Test-?");
   }
 
   @Test
-  void stableSelectorUsesCaseSensitiveGlobsAndExclusionPrecedence() {
-    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    when(messagingConfig(openTelemetry).get("headers").getScalarList("included", String.class))
-        .thenReturn(singletonList("Test-?*"));
-    when(messagingConfig(openTelemetry).get("headers").getScalarList("excluded", String.class))
-        .thenReturn(singletonList("Test-secret"));
-
-    IncludeExclude headers = MessagingConfig.getHeaders(openTelemetry);
-
-    assertThat(headers.matches("Test-public")).isTrue();
-    assertThat(headers.matches("test-public")).isFalse();
-    assertThat(headers.matches("Test-secret")).isFalse();
+  void defaultsToNoCapturedHeaders() {
+    assertThat(MessagingConfig.getCapturedHeaders(mockOpenTelemetry())).isEmpty();
   }
 
   @Test
-  void stableExcludeOnlySelectorCapturesAllOtherHeaders() {
+  void emptyListCapturesNothing() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    when(messagingConfig(openTelemetry).get("headers").getScalarList("excluded", String.class))
-        .thenReturn(singletonList("Secret-*"));
-
-    IncludeExclude headers = MessagingConfig.getHeaders(openTelemetry);
-
-    assertThat(headers.matches("public")).isTrue();
-    assertThat(headers.matches("Secret-token")).isFalse();
-  }
-
-  @Test
-  void emptyStableSelectorCapturesNothing() {
-    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    when(messagingConfig(openTelemetry).get("headers").getScalarList("included", String.class))
+    when(messagingConfig(openTelemetry).getScalarList("captured_headers", String.class))
         .thenReturn(emptyList());
 
-    assertThat(MessagingConfig.getHeaders(openTelemetry).isEmpty()).isTrue();
+    assertThat(MessagingConfig.getCapturedHeaders(openTelemetry)).isEmpty();
   }
 
   @Test
   void systemPropertyFallbackIsOnlyUsedWhenEnabled() {
     ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    String property = "otel.instrumentation.common.messaging.headers.included";
-    System.setProperty(property, "from-prop");
+    String property = "otel.instrumentation.common.messaging.captured-headers";
+    System.setProperty(property, "Test-Header,*,Test-?");
     try {
-      assertThat(MessagingConfig.getHeaders(openTelemetry, false).isEmpty()).isTrue();
-      assertThat(MessagingConfig.getHeaders(openTelemetry, true).getIncluded())
-          .containsExactly("from-prop");
+      assertThat(MessagingConfig.getCapturedHeaders(openTelemetry, false)).isEmpty();
+      assertThat(MessagingConfig.getCapturedHeaders(openTelemetry, true))
+          .containsExactly("Test-Header", "*", "Test-?");
     } finally {
       System.clearProperty(property);
     }
   }
 
   @Test
-  void flatSelectorLeavesResolveIndependently() {
-    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
-    String stableIncluded = "otel.instrumentation.common.messaging.headers.included";
-    String stableExcluded = "otel.instrumentation.common.messaging.headers.excluded";
-    System.setProperty(stableIncluded, "*");
-    System.setProperty(stableExcluded, "excluded");
+  void systemPropertyFallbackWithoutDeclarativeConfigProvider() {
+    String property = "otel.instrumentation.common.messaging.captured-headers";
+    System.setProperty(property, "Test-Header,*,Test-?");
     try {
-      IncludeExclude headers = MessagingConfig.getHeaders(openTelemetry, true);
-      assertThat(headers.getIncluded()).containsExactly("*");
-      assertThat(headers.getExcluded()).containsExactly("excluded");
+      assertThat(MessagingConfig.getCapturedHeaders(OpenTelemetry.noop())).isEmpty();
+      assertThat(MessagingConfig.getCapturedHeaders(OpenTelemetry.noop(), true))
+          .containsExactly("Test-Header", "*", "Test-?");
+      System.setProperty(property, "");
+      assertThat(MessagingConfig.getCapturedHeaders(OpenTelemetry.noop(), true)).isEmpty();
     } finally {
-      System.clearProperty(stableIncluded);
-      System.clearProperty(stableExcluded);
+      System.clearProperty(property);
+    }
+  }
+
+  @Test
+  void declarativeConfigurationTakesPrecedenceOverSystemPropertyFallback() {
+    ExtendedOpenTelemetry openTelemetry = mockOpenTelemetry();
+    String property = "otel.instrumentation.common.messaging.captured-headers";
+    System.setProperty(property, "Authorization");
+    try {
+      when(messagingConfig(openTelemetry).getScalarList("captured_headers", String.class))
+          .thenReturn(singletonList("Test-Header"));
+      assertThat(MessagingConfig.getCapturedHeaders(openTelemetry, true))
+          .containsExactly("Test-Header");
+
+      when(messagingConfig(openTelemetry).getScalarList("captured_headers", String.class))
+          .thenReturn(emptyList());
+      assertThat(MessagingConfig.getCapturedHeaders(openTelemetry, true)).isEmpty();
+    } finally {
+      System.clearProperty(property);
     }
   }
 
@@ -193,8 +190,7 @@ class MessagingConfigTest {
         .thenReturn(null);
     when(messageCreateSpansConfig(instrumentationConfig).getBoolean("enabled")).thenReturn(null);
     when(messageCreateSpansConfig(messagingConfig).getBoolean("enabled")).thenReturn(null);
-    when(messagingConfig.get("headers").getScalarList("included", String.class)).thenReturn(null);
-    when(messagingConfig.get("headers").getScalarList("excluded", String.class)).thenReturn(null);
+    when(messagingConfig.getScalarList("captured_headers", String.class)).thenReturn(null);
     return openTelemetry;
   }
 

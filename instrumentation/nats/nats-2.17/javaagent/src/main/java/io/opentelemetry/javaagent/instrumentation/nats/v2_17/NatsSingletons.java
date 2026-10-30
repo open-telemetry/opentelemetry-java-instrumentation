@@ -11,14 +11,14 @@ import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumen
 import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory.createSettleInstrumenter;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import java.util.Collection;
 
 class NatsSingletons {
 
-  private static final IncludeExclude headers = ExperimentalConfig.get().getMessagingHeaders();
+  private static final Collection<String> headers = ExperimentalConfig.get().getMessagingHeaders();
 
   private static final Instrumenter<NatsRequest, NatsRequest> publishInstrumenter =
       createPublishInstrumenter(GlobalOpenTelemetry.get(), headers);

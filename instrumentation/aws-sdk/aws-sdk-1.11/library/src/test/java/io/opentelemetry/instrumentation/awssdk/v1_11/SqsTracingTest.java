@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -18,7 +19,6 @@ import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.awssdk.v1_11.internal.SqsProcessTracing;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -51,11 +51,7 @@ class SqsTracingTest extends AbstractSqsTracingTest {
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
             .setMessagingReceiveTelemetryEnabled(receiveTelemetryEnabled())
-            .setHeaders(
-                IncludeExclude.builder()
-                    .setIncluded("Test-Message-*")
-                    .setExcluded("*-Excluded-Header")
-                    .build())
+            .setCapturedHeaders(asList("Test-Message-Header", "Test-Message-Int-Header"))
             .build()
             .createRequestHandler());
   }

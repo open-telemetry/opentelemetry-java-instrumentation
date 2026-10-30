@@ -24,7 +24,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
@@ -45,6 +44,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
@@ -73,13 +73,13 @@ public final class AwsSdkInstrumenterFactory {
       createAttributesExtractors(true);
 
   private final OpenTelemetry openTelemetry;
-  private final IncludeExclude headers;
+  private final Collection<String> headers;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean messagingReceiveInstrumentationEnabled;
 
   public AwsSdkInstrumenterFactory(
       OpenTelemetry openTelemetry,
-      IncludeExclude headers,
+      Collection<String> headers,
       boolean captureExperimentalSpanAttributes,
       boolean messagingReceiveInstrumentationEnabled) {
     this.openTelemetry = openTelemetry;
@@ -123,7 +123,7 @@ public final class AwsSdkInstrumenterFactory {
       MessagingOperationType operationType,
       String operationName) {
     return MessagingAttributesExtractor.builder(getter, operationType, operationName)
-        .setHeaders(headers)
+        .setCapturedHeaders(headers)
         .build();
   }
 

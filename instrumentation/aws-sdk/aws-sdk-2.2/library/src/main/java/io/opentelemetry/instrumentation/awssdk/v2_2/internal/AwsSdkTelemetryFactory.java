@@ -40,8 +40,8 @@ public final class AwsSdkTelemetryFactory {
 
     AwsSdkTelemetryBuilder builder =
         AwsSdkTelemetry.builder(openTelemetry)
-            .setHeaders(
-                MessagingConfig.getHeaders(
+            .setCapturedHeaders(
+                MessagingConfig.getCapturedHeaders(
                     openTelemetry, systemProperties == SystemProperties.ENABLED))
             .setCaptureExperimentalSpanAttributes(
                 awsSdk.getBoolean(

@@ -6,10 +6,8 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
@@ -85,12 +83,5 @@ class SqsReceiveRequestAttributesGetter
         .map(message -> message.getMessageAttribute(name))
         .filter(value -> value != null)
         .collect(toList());
-  }
-
-  @Override
-  public Collection<String> getMessageHeaderNames(SqsReceiveRequest request) {
-    return StreamSupport.stream(request.getMessages().spliterator(), false)
-        .flatMap(message -> message.getMessageAttributeNames().stream())
-        .collect(toSet());
   }
 }

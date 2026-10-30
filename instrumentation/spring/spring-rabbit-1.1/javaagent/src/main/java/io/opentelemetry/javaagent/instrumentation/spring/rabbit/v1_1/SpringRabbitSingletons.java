@@ -49,7 +49,7 @@ public class SpringRabbitSingletons {
             .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builder(getter, operationType, PROCESS_OPERATION_NAME)
-                    .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
+                    .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build())
             .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(new SpringRabbitExtraAttributesExtractor())

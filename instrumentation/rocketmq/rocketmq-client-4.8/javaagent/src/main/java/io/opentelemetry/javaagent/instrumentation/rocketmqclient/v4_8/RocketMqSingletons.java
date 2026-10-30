@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingConfig;
 import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
@@ -14,19 +13,20 @@ import io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqBatchSendHel
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqBatchSendHelper.BatchSendState;
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqTelemetry;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import java.util.Collection;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
 import org.apache.rocketmq.client.hook.SendMessageHook;
 
 public class RocketMqSingletons {
 
-  private static final IncludeExclude headers = ExperimentalConfig.get().getMessagingHeaders();
+  private static final Collection<String> headers = ExperimentalConfig.get().getMessagingHeaders();
   private static final boolean captureExperimentalSpanAttributes =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "rocketmq_client")
           .getBoolean("experimental_span_attributes/development", false);
 
   private static final RocketMqTelemetry telemetry =
       RocketMqTelemetry.builder(GlobalOpenTelemetry.get())
-          .setHeaders(headers)
+          .setCapturedHeaders(headers)
           .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
           .build();
 

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
 import io.opentelemetry.context.Context;
-import java.util.Collection;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -22,8 +21,6 @@ interface SqsMessage {
 
   @Nullable
   String getMessageAttribute(String name);
-
-  Collection<String> getMessageAttributeNames();
 
   String getMessageId();
 }

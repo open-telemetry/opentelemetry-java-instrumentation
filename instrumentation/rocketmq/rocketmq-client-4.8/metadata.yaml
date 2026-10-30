@@ -15,8 +15,7 @@ configurations:
     type: boolean
     default: true
   - ref: messaging.batch-send.message-creation-spans.enabled
-  - ref: messaging.headers.included
-  - ref: messaging.headers.excluded
+  - ref: messaging.captured-headers
   - name: otel.instrumentation.rocketmq-client.experimental-span-attributes
     declarative_name: java.rocketmq_client.experimental_span_attributes/development
     description: >

@@ -13,10 +13,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
@@ -39,7 +39,7 @@ public final class RocketMqBatchSendHelper {
 
   public RocketMqBatchSendHelper(
       OpenTelemetry openTelemetry,
-      IncludeExclude headers,
+      Collection<String> headers,
       boolean captureExperimentalSpanAttributes,
       boolean messageCreationSpansEnabled) {
     singleSendInstrumenter =

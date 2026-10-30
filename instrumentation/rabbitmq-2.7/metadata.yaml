@@ -12,5 +12,4 @@ configurations:
       `messaging.rabbitmq.cluster.name`.
     type: boolean
     default: false
-  - ref: messaging.headers.included
-  - ref: messaging.headers.excluded
+  - ref: messaging.captured-headers

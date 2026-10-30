@@ -37,7 +37,7 @@ testing {
       executions {
         configureEach {
           systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-          systemProperty("otel.instrumentation.common.messaging.headers.included", "Test-Message-Header")
+          systemProperty("otel.instrumentation.common.messaging.captured-headers", "Test-Message-Header")
           systemProperty("testLatestDeps", otelProps.testLatestDeps)
         }
         register("ReceiveSpansDisabled") {

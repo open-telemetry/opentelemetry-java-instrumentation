@@ -16,7 +16,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.DecoratorRegistry;
@@ -41,17 +40,10 @@ class CamelMessagingAttributesGetterTest {
     headers.put("Null", null);
     request.getExchange().getIn().setHeaders(headers);
 
-    assertThat(getter.getMessageHeaderNames(request))
-        .containsExactlyInAnyOrder("Test-Header", "Number", "Null");
     assertThat(getter.getMessageHeader(request, "Test-Header")).containsExactly("value");
     assertThat(getter.getMessageHeader(request, "Number")).containsExactly("42");
     assertThat(getter.getMessageHeader(request, "Null")).isEmpty();
     assertThat(getter.getMessageHeader(request, "missing")).isEmpty();
-
-    Iterable<String> names = getter.getMessageHeaderNames(request);
-    request.getExchange().getIn().getHeaders().clear();
-    assertThat(names).containsExactlyInAnyOrder("Test-Header", "Number", "Null");
-    assertThat(getter.getMessageHeaderNames(request)).isEmpty();
   }
 
   @Test
@@ -66,25 +58,20 @@ class CamelMessagingAttributesGetterTest {
   }
 
   @Test
-  void selectors() {
+  void capturesOnlyExactHeaderNames() {
     CamelRequest request = request();
     request.getExchange().getIn().setHeader("Test-Header", "value");
     request.getExchange().getIn().setHeader("Authorization", "private");
 
-    IncludeExclude wildcard = IncludeExclude.builder().setIncluded(singletonList("Test-*")).build();
-    IncludeExclude excludeOnly =
-        IncludeExclude.builder().setExcluded(singletonList("Authorization")).build();
-    for (IncludeExclude selector : new IncludeExclude[] {wildcard, excludeOnly}) {
-      AttributesBuilder attributes = Attributes.builder();
-      MessagingAttributesExtractor.builder(getter, MessagingOperationType.PROCESS, "process")
-          .setHeaders(selector)
-          .build()
-          .onEnd(attributes, Context.root(), request, null, null);
+    AttributesBuilder attributes = Attributes.builder();
+    MessagingAttributesExtractor.builder(getter, MessagingOperationType.PROCESS, "process")
+        .setCapturedHeaders(singletonList("Test-Header"))
+        .build()
+        .onEnd(attributes, Context.root(), request, null, null);
 
-      assertThat(attributes.build().asMap())
-          .containsOnly(
-              entry(stringArrayKey("messaging.header.Test-Header"), singletonList("value")));
-    }
+    assertThat(attributes.build().asMap())
+        .containsOnly(
+            entry(stringArrayKey("messaging.header.Test-Header"), singletonList("value")));
   }
 
   private static CamelRequest request() {

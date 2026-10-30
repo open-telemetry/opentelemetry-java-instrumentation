@@ -19,7 +19,7 @@ public class SpringKafkaSingletons {
 
   private static final SpringKafkaTelemetry telemetry =
       SpringKafkaTelemetry.builder(GlobalOpenTelemetry.get())
-          .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
+          .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .setCaptureExperimentalSpanAttributes(
               DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "kafka")
                   .getBoolean("experimental_span_attributes/development", false))
@@ -31,7 +31,7 @@ public class SpringKafkaSingletons {
   static {
     KafkaInstrumenterFactory factory =
         new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
-            .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
+            .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
             .setCaptureExperimentalSpanAttributes(
                 DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "kafka")
                     .getBoolean("experimental_span_attributes/development", false))

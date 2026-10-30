@@ -159,7 +159,7 @@ class MessagingAttributesExtractorTest {
   void shouldReturnSpanKey(MessagingOperationType operationType, SpanKey spanKey) {
     MessagingAttributesExtractor<Map<String, String>, String> underTest =
         new MessagingAttributesExtractor<>(
-            TestGetter.INSTANCE, operationType, operationType.value(), null);
+            TestGetter.INSTANCE, operationType, operationType.value(), emptyList());
 
     assertThat(underTest.internalGetSpanKey()).isSameAs(spanKey);
   }
@@ -322,11 +322,6 @@ class MessagingAttributesExtractorTest {
         return response;
       }
       return error == null ? null : error.getClass().getName();
-    }
-
-    @Override
-    public Iterable<String> getMessageHeaderNames(Map<String, String> request) {
-      return emptyList();
     }
   }
 }

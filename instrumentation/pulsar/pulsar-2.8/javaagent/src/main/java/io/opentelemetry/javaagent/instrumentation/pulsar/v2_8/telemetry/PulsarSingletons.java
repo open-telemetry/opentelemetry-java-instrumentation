@@ -15,7 +15,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
@@ -37,6 +36,7 @@ import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.VirtualFieldStore;
+import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Consumer;
@@ -55,7 +55,7 @@ public class PulsarSingletons {
   private static final OpenTelemetry telemetry = GlobalOpenTelemetry.get();
   private static final TextMapPropagator propagator =
       telemetry.getPropagators().getTextMapPropagator();
-  private static final IncludeExclude headers = ExperimentalConfig.get().getMessagingHeaders();
+  private static final Collection<String> headers = ExperimentalConfig.get().getMessagingHeaders();
   private static final boolean receiveInstrumentationEnabled =
       ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
 
@@ -190,7 +190,7 @@ public class PulsarSingletons {
       MessagingOperationType operationType,
       String operationName) {
     return MessagingAttributesExtractor.builder(getter, operationType, operationName)
-        .setHeaders(headers)
+        .setCapturedHeaders(headers)
         .build();
   }
 

@@ -43,7 +43,7 @@ public final class TracingRequestHandler extends RequestHandler2 {
             MessagingConfig.isBatchSendMessageCreationSpansEnabled(openTelemetry, "aws_sdk", true))
         .setMessagingReceiveTelemetryEnabled(
             MessagingConfig.isReceiveTelemetryEnabled(openTelemetry, true))
-        .setHeaders(MessagingConfig.getHeaders(openTelemetry, true))
+        .setCapturedHeaders(MessagingConfig.getCapturedHeaders(openTelemetry, true))
         .build()
         .createRequestHandler();
   }
