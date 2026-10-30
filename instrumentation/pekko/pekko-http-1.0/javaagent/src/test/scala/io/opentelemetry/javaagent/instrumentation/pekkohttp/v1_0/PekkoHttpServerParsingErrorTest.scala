@@ -15,6 +15,7 @@ import io.opentelemetry.sdk.trace.data.StatusData
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.semconv.{ErrorAttributes, HttpAttributes}
 import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.model.{HttpRequest, HttpResponse}
 import org.apache.pekko.http.scaladsl.settings.ServerSettings
 import org.apache.pekko.stream.scaladsl.Flow
@@ -219,12 +220,12 @@ class PekkoHttpServerParsingErrorTest {
       )
       val binding =
         Await.result(
-          Http().bindAndHandleSync(
-            handler,
-            "localhost",
-            0,
-            settings = settings
-          ),
+          // newServerAt is in both pekko-http 1.x and 2.x and is the only one of the two binding
+          // apis that takes custom settings in both
+          Http()
+            .newServerAt("localhost", 0)
+            .withSettings(settings)
+            .bindSync(handler),
           10.seconds
         )
       val port = binding.localAddress.getPort
@@ -266,7 +267,7 @@ class PekkoHttpServerParsingErrorTest {
         )
       val binding =
         Await.result(
-          Http().bindAndHandle(handler, "localhost", 0),
+          Http().newServerAt("localhost", 0).bindFlow(handler),
           10.seconds
         )
       val port = binding.localAddress.getPort
