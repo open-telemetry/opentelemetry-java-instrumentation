@@ -43,8 +43,7 @@ final class RocketMqProducerExperimentalAttributeExtractor
       @Nullable Throwable error) {
     attributes.put(ROCKETMQ_BROKER_ADDRESS, request.getBrokerAddr());
     if (request.getSendResult() != null) {
-      attributes.put(
-          ROCKETMQ_SEND_RESULT, request.getSendResult().getSendStatus().name());
+      attributes.put(ROCKETMQ_SEND_RESULT, request.getSendResult().getSendStatus().name());
     }
   }
 }
