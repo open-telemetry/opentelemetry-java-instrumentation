@@ -353,6 +353,16 @@
       enabled: false
     },
     {
+      // preserves the Spring Boot 1.3.8 classloader regression fixture
+      matchFileNames: [
+        'smoke-tests/images/spring-boot-1.3/build.gradle.kts',
+      ],
+      matchPackageNames: [
+        'org.springframework.boot:spring-boot-loader-tools',
+      ],
+      enabled: false,
+    },
+    {
       // Spring Boot 2 smoke tests are intentionally using slf4j 1.x
       matchFileNames: [
         'smoke-tests/images/spring-boot/build.gradle.kts',
