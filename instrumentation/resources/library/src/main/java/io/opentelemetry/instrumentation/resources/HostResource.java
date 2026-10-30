@@ -284,7 +284,7 @@ public final class HostResource {
       }
       return lines;
     } catch (IOException e) {
-      logger.log(FINE, "Failed to read " + path, e);
+      logger.log(FINE, "Failed to read {0}: {1}", new Object[] {path, e.toString()});
       return emptyList();
     }
   }
@@ -320,11 +320,12 @@ public final class HostResource {
       logger.log(FINE, "Timed out running command {0}", command);
       return emptyList();
     } catch (IOException | ExecutionException e) {
-      logger.log(FINE, "Failed to run command " + command, e);
+      logger.log(FINE, "Failed to run command {0}: {1}", new Object[] {command, e.toString()});
       return emptyList();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      logger.log(FINE, "Interrupted running command " + command, e);
+      logger.log(
+          FINE, "Interrupted running command {0}: {1}", new Object[] {command, e.toString()});
       return emptyList();
     } finally {
       abandoned.set(true);
