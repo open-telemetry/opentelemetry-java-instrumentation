@@ -11,8 +11,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.Response;
+import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.util.thread.Invocable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -28,22 +31,18 @@ public final class JettyClientWrapUtil {
     Response.ContentListener.class,
     Response.HeadersListener.class,
     Response.HeaderListener.class,
-    Response.BeginListener.class
+    Response.BeginListener.class,
+    Response.Listener.class
   };
 
   private JettyClientWrapUtil() {}
 
-  /**
-   * Utility to wrap the response listeners only, this includes the important CompleteListener.
-   *
-   * @param context top level context that is above the Jetty client span context
-   * @param listener listener passed to Jetty client send() method
-   * @return wrapped listener
-   */
   @Nullable
-  public static Response.CompleteListener wrapTheListener(
-      @Nullable Response.CompleteListener listener, Context context) {
-    if (listener == null) {
+  // Callers use the supported response-listener interfaces implemented by the proxy.
+  @SuppressWarnings("unchecked")
+  public static <T extends Response.ResponseListener> T wrapListener(
+      @Nullable T listener, Supplier<Context> contextSupplier) {
+    if (listener == null || listener instanceof JettyClientTracingListener) {
       return listener;
     }
 
@@ -58,16 +57,73 @@ public final class JettyClientWrapUtil {
       return listener;
     }
 
-    return (Response.CompleteListener)
+    return (T)
         Proxy.newProxyInstance(
             listenerClass.getClassLoader(),
             interfaces.toArray(new Class<?>[0]),
             (proxy, method, args) -> {
+              Context context = contextSupplier.get();
               try (Scope ignored = context.makeCurrent()) {
+                if (method.getName().equals("onContentSource")) {
+                  args[1] = wrapContentSource((Content.Source) args[1], context);
+                }
                 return method.invoke(listener, args);
               } catch (InvocationTargetException e) {
                 throw e.getCause();
               }
             });
+  }
+
+  public static Content.Source wrapContentSource(Content.Source source, Context context) {
+    if (source instanceof ContextAwareContentSource) {
+      return source;
+    }
+    return new ContextAwareContentSource(source, context);
+  }
+
+  private static final class ContextAwareContentSource implements Content.Source, Invocable {
+    private final Content.Source delegate;
+    private final Context context;
+
+    private ContextAwareContentSource(Content.Source delegate, Context context) {
+      this.delegate = delegate;
+      this.context = context;
+    }
+
+    @Override
+    public InvocationType getInvocationType() {
+      return Invocable.getInvocationType(delegate);
+    }
+
+    @Override
+    public Content.Chunk read() {
+      return delegate.read();
+    }
+
+    @Override
+    public void demand(Runnable callback) {
+      delegate.demand(
+          Invocable.from(Invocable.getInvocationType(callback), context.wrap(callback)));
+    }
+
+    @Override
+    public long getLength() {
+      return delegate.getLength();
+    }
+
+    @Override
+    public boolean rewind() {
+      return delegate.rewind();
+    }
+
+    @Override
+    public void fail(Throwable failure) {
+      delegate.fail(failure);
+    }
+
+    @Override
+    public void fail(Throwable failure, boolean close) {
+      delegate.fail(failure, close);
+    }
   }
 }
