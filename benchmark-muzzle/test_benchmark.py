@@ -94,6 +94,17 @@ class BenchmarkTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 benchmark.require_equal(expected, benchmark.inventory(root), "metadata")
 
+    def test_fixture_identity_rejects_source_changes_but_allows_build_logic_changes(self):
+        source = b"100644 blob abc\tinstrumentation/example/src/main/java/Example.java\0"
+        build = b"100644 blob def\tinstrumentation/build.gradle.kts\0"
+        expected = benchmark.fixture_identity(source + build)
+        self.assertEqual(expected, benchmark.fixture_identity(build.replace(b"def", b"ghi") + source))
+        self.assertNotEqual(
+            expected, benchmark.fixture_identity(source.replace(b"abc", b"xyz") + build),
+        )
+        with self.assertRaises(ValueError):
+            benchmark.fixture_identity(build)
+
     def test_subprocesses_are_hidden_on_windows_and_failures_propagate(self):
         with patch.object(benchmark.subprocess, "run") as child:
             child.return_value.stdout = b"output"
@@ -131,6 +142,27 @@ class BenchmarkTest(unittest.TestCase):
             "median_ms": 11, "min_ms": 10, "max_ms": 1000, "samples": 3,
             "stdev_ms": benchmark.statistics.stdev([10, 11, 1000]),
         })
+
+    def test_completed_report_identifies_functional_runs_and_unresolved_dependencies(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runner = object.__new__(benchmark.Benchmark)
+            runner.reports = Path(directory)
+            runner.args = SimpleNamespace(partition=1, rounds=1)
+            runner.expected = {
+                "first": "assertPass\ttrue\nunresolved\tmissing dependency\n",
+                "second": "assertPass\tfalse\n",
+            }
+            runner.samples = [
+                {"round": 1, "label": label, "revision": "fixture",
+                 "metrics": {"total execution time": 100, "task start": 20}}
+                for label in benchmark.order(0)
+            ]
+            runner.write_results(complete=True)
+            text = (runner.reports / "summary.md").read_text(encoding="utf-8")
+            self.assertIn("Assertions with unresolved dependencies: 1.", text)
+            self.assertIn("Functional run only", text)
+            self.assertTrue((runner.reports / "statistics.json").is_file())
+            self.assertEqual(len((runner.reports / "samples.csv").read_text().splitlines()), 4)
 
     def test_preparation_applies_support_in_order_before_shared_cache_audits(self):
         with tempfile.TemporaryDirectory() as directory:

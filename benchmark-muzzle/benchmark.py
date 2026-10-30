@@ -61,6 +61,16 @@ def inventory(directory):
     }
 
 
+def fixture_identity(tree):
+    sources = [
+        entry for entry in tree.split(b"\0")
+        if entry and b"/src/main" in entry.split(b"\t", 1)[1]
+    ]
+    if not sources:
+        raise ValueError("No instrumentation main sources found")
+    return hashlib.sha256(b"\0".join(sorted(sources))).hexdigest()
+
+
 def manifests(directory):
     result = {}
     for path in sorted(directory.glob("*.txt")):
@@ -214,6 +224,11 @@ class Benchmark:
                 hashlib.sha256(self.git("show", f"{self.revisions['candidate']}:{path}")).hexdigest(),
                 path,
             )
+        fixtures = {
+            label: fixture_identity(self.git("ls-tree", "-rz", ref, "--", "instrumentation"))
+            for label, ref in self.revisions.items()
+        }
+        require_equal(fixtures["baseline"], fixtures["candidate"], "Instrumentation fixture sources")
         java_version = run([str(java), "--version"], env=self.env).decode("utf-8")
         required_java = self.git("show", f"{self.revisions['baseline']}:.java-version").decode().strip()
         actual_java = re.search(r"\b(?:openjdk|java) (\d+)", java_version)
@@ -221,6 +236,7 @@ class Benchmark:
             raise ValueError(f"PATH must select the repository's required JDK {required_java}")
         self.input_identity = dict(
             self.workload, partition=args.partition, runtime=runtime,
+            instrumentation_sources_sha256=fixtures["baseline"],
         )
         if args.inputs:
             saved = json.loads((args.inputs / "identity.json").read_text(encoding="utf-8"))
@@ -457,6 +473,10 @@ class Benchmark:
         baseline = stats["baseline"]["total execution time"]["median_ms"]
         candidate = stats["candidate"]["total execution time"]["median_ms"]
         control = stats["control"]["total execution time"]["median_ms"]
+        unresolved = sum(
+            any(line.startswith("unresolved\t") for line in text.splitlines())
+            for text in self.expected.values()
+        )
         lines = [
             f"# Muzzle partition {self.args.partition}",
             "",
@@ -479,6 +499,9 @@ class Benchmark:
             "",
             f"Verified {len(self.expected)} identical successful assertions, "
             "including resolved artifact hashes and unresolved dependency outcomes.",
+            "",
+            f"Assertions with unresolved dependencies: {unresolved}. "
+            "Each resolution failure is retained in the assertion records.",
             "",
             "Task-start measurements and task-cache outcomes are in the raw reports. "
             "Task start includes more than version enumeration and is not a pure Muzzle configuration metric.",

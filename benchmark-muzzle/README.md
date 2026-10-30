@@ -58,8 +58,10 @@ failures, missing metadata, or changed dependency graphs invalidate the comparis
 An empty version range is valid when the captured metadata contains releases
 outside that range, such as a future stable release with only prereleases published.
 
-The revisions must also agree on the wrapper, Gradle properties, JDK requirement,
-and pinned latest-dependency versions. The workflow pins Temurin and Gradle Profiler.
+The revisions must also agree on instrumentation main sources, the wrapper, Gradle
+properties, JDK requirement, and pinned latest-dependency versions. This prevents
+changes to the instrumentation fixtures from being mistaken for faster matching.
+The workflow pins Temurin and Gradle Profiler.
 
 For later comparisons, reuse the `muzzle-benchmark-inputs-N` artifact from an
 earlier run by passing `workload-run-id`. It contains frozen metadata and the
