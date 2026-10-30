@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.internal.ServiceLoaderUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMapCleaner;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
-import io.opentelemetry.javaagent.bootstrap.FieldHolder;
+import io.opentelemetry.javaagent.bootstrap.ApplicationSpanHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.io.File;
@@ -130,7 +130,7 @@ public class AgentStarterImpl implements AgentStarter {
     // security manager wouldn't deny these calls
     instrumentation.addTransformer(new CallbackRegistrationClassFileTransformer(), true);
     // transforms SdkSpan in agent class loader and PropagatedSpan in boot loader by adding them an
-    // extra filed that can be used to store
+    // extra field that can be used to store the application span
     instrumentation.addTransformer(new SdkSpanClassFileTransformer(), true);
   }
 
@@ -393,7 +393,7 @@ public class AgentStarterImpl implements AgentStarter {
                 String signature,
                 String superName,
                 String[] interfaces) {
-              // add CacheFieldHolder interface
+              // add ApplicationSpanHolder interface
               if (interfaces == null) {
                 interfaces = new String[1];
               } else {
@@ -401,7 +401,7 @@ public class AgentStarterImpl implements AgentStarter {
                 System.arraycopy(interfaces, 0, newInterfaces, 0, interfaces.length);
                 interfaces = newInterfaces;
               }
-              interfaces[interfaces.length - 1] = Type.getInternalName(FieldHolder.class);
+              interfaces[interfaces.length - 1] = Type.getInternalName(ApplicationSpanHolder.class);
               super.visit(version, access, name, signature, superName, interfaces);
             }
 
@@ -409,7 +409,7 @@ public class AgentStarterImpl implements AgentStarter {
             public void visitEnd() {
               visitField(
                   Opcodes.ACC_PRIVATE | Opcodes.ACC_VOLATILE | Opcodes.ACC_SYNTHETIC,
-                  "__value",
+                  "__applicationSpan",
                   "Ljava/lang/Object;",
                   null,
                   null);
@@ -419,13 +419,14 @@ public class AgentStarterImpl implements AgentStarter {
                 MethodVisitor mv =
                     super.visitMethod(
                         Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC,
-                        "getFieldValue",
+                        "getApplicationSpan",
                         "()Ljava/lang/Object;",
                         null,
                         null);
                 mv.visitCode();
                 mv.visitVarInsn(Opcodes.ALOAD, 0);
-                mv.visitFieldInsn(Opcodes.GETFIELD, className, "__value", "Ljava/lang/Object;");
+                mv.visitFieldInsn(
+                    Opcodes.GETFIELD, className, "__applicationSpan", "Ljava/lang/Object;");
                 mv.visitInsn(Opcodes.ARETURN);
                 mv.visitMaxs(1, 1);
                 mv.visitEnd();
@@ -435,14 +436,15 @@ public class AgentStarterImpl implements AgentStarter {
                 MethodVisitor mv =
                     super.visitMethod(
                         Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC,
-                        "setFieldValue",
+                        "setApplicationSpan",
                         "(Ljava/lang/Object;)V",
                         null,
                         null);
                 mv.visitCode();
                 mv.visitVarInsn(Opcodes.ALOAD, 0);
                 mv.visitVarInsn(Opcodes.ALOAD, 1);
-                mv.visitFieldInsn(Opcodes.PUTFIELD, className, "__value", "Ljava/lang/Object;");
+                mv.visitFieldInsn(
+                    Opcodes.PUTFIELD, className, "__applicationSpan", "Ljava/lang/Object;");
                 mv.visitInsn(Opcodes.RETURN);
                 mv.visitMaxs(2, 2);
                 mv.visitEnd();

@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.javaagent.bootstrap.FieldHolder;
+import io.opentelemetry.javaagent.bootstrap.ApplicationSpanHolder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.ValueBridging;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
@@ -24,8 +24,8 @@ public class ApplicationSpan implements application.io.opentelemetry.api.trace.S
     // we add FieldHolder interface to span implementations used in agent via instrumentation
     // this lets us associate the original application span with the agent span so we can convert
     // the agent span back to exactly the same application span that the agent span was created for
-    if (agentSpan instanceof FieldHolder && agentSpan != Span.getInvalid()) {
-      ((FieldHolder) agentSpan).setFieldValue(this);
+    if (agentSpan instanceof ApplicationSpanHolder && agentSpan != Span.getInvalid()) {
+      ((ApplicationSpanHolder) agentSpan).setApplicationSpan(this);
     }
   }
 
