@@ -211,7 +211,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api(project(":testing:instrumentation-testing"))
 
   // ...
 }
@@ -239,7 +239,7 @@ pass, the library instrumentation is working.
 
 ### JUnit
 
-The `testing-common` module exposes several JUnit extensions that facilitate writing instrumentation
+The `instrumentation-testing` module exposes several JUnit extensions that facilitate writing instrumentation
 tests. In particular, we'll take a look at `LibraryInstrumentationExtension`
 , `AgentInstrumentationExtension`, and their parent class `InstrumentationExtension`. The extension
 class implements several useful methods, such as `waitAndAssertTraces` and `waitAndAssertMetrics`,
@@ -331,13 +331,17 @@ method. Unlike the library instrumentation, the javaagent instrumentation is sup
 without any explicit user code modification. Add an `AgentInstrumentationExtension` and try running
 tests in this class. All tests should pass.
 
-Note that all the tests inside the `javaagent` module are run using the `agent-for-testing`
+Note that all the tests inside the `javaagent` module are run using the `javaagent-for-testing`
 javaagent, with the instrumentation being loaded as an extension. This is done to perform the same
 bytecode instrumentation as when the agent is run against a normal app, and means that the javaagent
 instrumentation will be hidden inside the javaagent (loaded by the `AgentClassLoader`) and will not
 be directly accessible in your test code. Make sure not to use the classes from the javaagent
 instrumentation in your test code. If for some reason you need to write unit tests for the javaagent
 code, see [this section](#writing-java-agent-unit-tests).
+
+Shared support and reusable suites for agent and library instrumentation tests live in
+[:testing:instrumentation-testing](javaagent-test-infra.md). The repository's javaagent test plugin
+configures the agent and instrumentation initializer for you.
 
 ## Additional considerations regarding instrumentations
 

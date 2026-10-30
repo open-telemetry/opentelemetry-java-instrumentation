@@ -17,10 +17,10 @@ val extensionLibs = configurations.create("extensionLibs") {
 }
 
 dependencies {
-  extensionLibs(project(":testing:agent-exporter", configuration = "shadow"))
+  extensionLibs(project(":testing:javaagent-test-exporters", configuration = "shadow"))
   agent(project(":javaagent", configuration = "baseJar"))
 
-  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
   testImplementation("io.opentelemetry:opentelemetry-api")
 }
 

@@ -5,8 +5,8 @@ plugins {
 }
 
 dependencies {
-  compileOnly(project(":testing-common:library-for-integration-tests"))
-  testImplementation(project(":testing-common:library-for-integration-tests"))
+  compileOnly(project(":testing:instrumentation-testing:test-library"))
+  testImplementation(project(":testing:instrumentation-testing:test-library"))
 
   testCompileOnly(project(":instrumentation-api"))
   testCompileOnly(project(":javaagent-tooling"))

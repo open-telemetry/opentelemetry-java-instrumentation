@@ -17,7 +17,7 @@ testing {
         implementation(project(":javaagent-extension-api"))
         implementation(project(":instrumentation:jmx-metrics:library"))
         implementation(project(":declarative-config-bridge"))
-        implementation(project(":testing-common"))
+        implementation(project(":testing:instrumentation-testing"))
         implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
       }

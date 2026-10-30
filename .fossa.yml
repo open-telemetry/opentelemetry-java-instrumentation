@@ -45,13 +45,13 @@ targets:
       target: ':sdk-autoconfigure-support'
     - type: gradle
       path: ./
-      target: ':testing-common'
+      target: ':testing:instrumentation-testing'
     - type: gradle
       path: ./
       target: ':javaagent-tooling:javaagent-tooling-java9'
     - type: gradle
       path: ./
-      target: ':testing:agent-for-testing'
+      target: ':testing:javaagent-for-testing'
     - type: gradle
       path: ./
       target: ':instrumentation:activej-http-6.0:javaagent'

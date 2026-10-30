@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
   api("org.mockito:mockito-core")
   api("org.mockito:mockito-junit-jupiter")
 

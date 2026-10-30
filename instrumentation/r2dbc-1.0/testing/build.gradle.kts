@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
 
   implementation("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
 

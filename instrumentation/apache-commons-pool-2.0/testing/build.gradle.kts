@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
 
   compileOnly("org.apache.commons:commons-pool2:2.0")
 }

@@ -15,7 +15,7 @@ dependencies {
   compileOnly(project(":instrumentation:micrometer:micrometer-1.5:library"))
   compileOnly(project(":instrumentation:spring:spring-boot-autoconfigure"))
   compileOnly("io.micrometer:micrometer-core:1.5.0")
-  compileOnly("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  compileOnly("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
   compileOnly("io.opentelemetry:opentelemetry-sdk")
   compileOnly("io.opentelemetry:opentelemetry-sdk-testing")
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")

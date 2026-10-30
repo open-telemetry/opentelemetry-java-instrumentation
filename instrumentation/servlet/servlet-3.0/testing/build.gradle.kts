@@ -5,7 +5,7 @@ plugins {
 dependencies {
   compileOnly(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
-  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  implementation("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
   implementation("javax.servlet:javax.servlet-api:3.0.1")
 
   implementation("org.eclipse.jetty:jetty-server:8.0.0.v20110901")

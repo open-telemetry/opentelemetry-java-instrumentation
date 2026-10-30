@@ -5,7 +5,7 @@ plugins {
 dependencies {
   compileOnly("javax:javaee-api:7.0")
 
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
   implementation("io.opentelemetry:opentelemetry-api")
 
   val arquillianVersion = "1.7.0.Alpha10"

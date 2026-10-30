@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
 
   api("org.eclipse.jetty:jetty-client:12.0.0")
 

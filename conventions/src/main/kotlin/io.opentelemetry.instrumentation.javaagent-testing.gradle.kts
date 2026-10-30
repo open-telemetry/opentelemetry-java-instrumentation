@@ -46,7 +46,7 @@ dependencies {
 testing {
   suites.withType(JvmTestSuite::class).configureEach {
     dependencies {
-      implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+      implementation("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
     }
   }
 }
@@ -68,7 +68,7 @@ val agentForTesting = configurations.create("agentForTesting") {
 }
 
 dependencies {
-  agentForTesting("io.opentelemetry.javaagent:opentelemetry-agent-for-testing")
+  agentForTesting("io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing")
 }
 
 class JavaagentTestArgumentsProvider(

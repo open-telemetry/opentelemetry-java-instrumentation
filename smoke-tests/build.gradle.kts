@@ -15,7 +15,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
 
   implementation(platform("io.grpc:grpc-bom:1.85.1"))
   implementation("org.slf4j:slf4j-api")

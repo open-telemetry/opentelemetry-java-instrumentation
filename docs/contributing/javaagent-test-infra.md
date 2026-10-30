@@ -1,38 +1,49 @@
-# Understanding the javaagent instrumentation testing components
+# Instrumentation testing infrastructure
 
-Javaagent instrumentation tests are run using a fully shaded `-javaagent` in order to perform
-the same bytecode instrumentation as when the agent is run against a normal app.
+`:testing:instrumentation-testing` is this repository's shared infrastructure for testing both
+javaagent and library instrumentation. It provides JUnit extensions, assertions, and reusable suites
+such as the shared HTTP tests. The same support artifact is useful to external javaagent
+instrumentation and extension authors; library-mode testing is supported by this artifact as well.
 
-There are a few key components that make this possible, described below.
+The central projects keep distinct roles:
 
-## gradle/instrumentation.gradle
+- `:testing:javaagent-test-exporters` contains in-memory exporters and helpers loaded by the agent.
+- `:testing:javaagent-for-testing` is the testing agent distribution that embeds those exporters.
+- `:testing:instrumentation-testing` provides the shared test APIs and handles the agent class-loader
+  boundary for captured telemetry.
+- `:testing:instrumentation-testing:with-shaded-dependencies` is a dependency wrapper for IDEs and
+  Gradle substitution. `:testing:shaded-dependencies` produces the relocated third-party dependency
+  bundle consumed by that wrapper and the testing support.
 
-- shades the instrumentation
-- adds jvm args to the test configuration
-  - -javaagent:[agent for testing]
-  - -Dotel.javaagent.experimental.initializer.jar=[shaded instrumentation jar]
+## Running javaagent tests
 
-The `otel.javaagent.experimental.initializer.jar` property is used to load the shaded instrumentation jar into the
-`AgentClassLoader`, so that the javaagent jar doesn't need to be re-built each time.
+The repository's `otel.javaagent-testing` plugin configures javaagent tests automatically. Outside
+the repository, use the support and testing-agent artifacts from the same release:
 
-## :testing:agent-exporter
+```kotlin
+val testAgent = configurations.create("testAgent") {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+}
 
-This contains the span and metric exporters that are used.
+dependencies {
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing:$version")
+  testAgent("io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing:$version")
+}
+```
 
-These are in-memory exporters, so that the tests can verify the spans and metrics being exported.
+The test JVM must run with the resolved testing-agent JAR and the instrumentation test JAR as the
+agent initializer:
 
-These exporters and the in-memory data live in the `AgentClassLoader`, so tests must access them
-using reflection. To simplify this, they store the in-memory data using the OTLP protobuf objects,
-so that they can be serialized into byte arrays inside the `AgentClassLoader`, then passed back
-to the tests and deserialized inside their class loader where they can be verified. The
-`:testing-common` module (described below) hides this complexity from instrumentation test authors.
+```text
+-javaagent:<javaagent-for-testing.jar>
+-Dotel.javaagent.experimental.initializer.jar=<instrumentation-test.jar>
+```
 
-## :agent-for-testing
+Adding `opentelemetry-instrumentation-testing` alone does not attach an agent. The
+[`examples/distro` testing-agent project](../../examples/distro/testing/agent-for-testing) shows a
+consumer setup.
 
-This is a custom distro of the javaagent that embeds the `:testing:agent-exporter`.
-
-## :testing-common
-
-This module provides methods to help verify the span and metric data produced by the
-instrumentation, hiding the complexity of accessing the in-memory exporters that live in the
-`AgentClassLoader`.
+For ordinary tests that need an SDK, in-memory telemetry, and assertions without javaagent
+instrumentation, use `io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension` from
+`io.opentelemetry:opentelemetry-sdk-testing`.

@@ -5,7 +5,7 @@ plugins {
 val apacheDubboVersion = "2.7.5"
 
 dependencies {
-  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  api("io.opentelemetry.javaagent:opentelemetry-instrumentation-testing")
 
   api("org.apache.dubbo:dubbo:$apacheDubboVersion")
   api("org.apache.dubbo:dubbo-config-api:$apacheDubboVersion")
