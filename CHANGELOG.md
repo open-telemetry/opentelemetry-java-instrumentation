@@ -4,6 +4,12 @@
 
 ### ⚠️ Breaking changes
 
+- AWS Lambda invocation spans now replace alias suffixes in `cloud.resource_id` with the resolved
+  function version when available.
+- AWS Lambda spans now use `faas.invocation.id` instead of `faas.invocation_id` for invocation IDs.
+- Replace `SpringWebfluxClientTelemetry.addFilter(list)` and
+  `addFilterAndRegisterReactorHook(list)` with `createFilter()` and
+  `createFilterAndRegisterReactorHook()`, used with `WebClient.Builder.filter(...)`.
 - RPC telemetry now uses only the conventions with schema version 1.44.0: `rpc.system.name`,
   fully qualified `rpc.method`, `rpc.status_code`, and `error.type`, with updated span names.
   RPC duration metrics use `rpc.client.call.duration` and `rpc.server.call.duration` in seconds.

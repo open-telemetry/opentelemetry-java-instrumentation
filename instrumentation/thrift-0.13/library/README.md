@@ -32,10 +32,11 @@ The instrumentation library instruments Thrift servers and clients to provide Op
 spans and context propagation.
 
 ```java
-// For server-side, instrument the processor.
-TProcessor configureServer(OpenTelemetry openTelemetry, TProcessor processor, String serviceName) {
+// For server-side, decorate the generated processor with a tracing wrapper.
+TProcessor configureServer(OpenTelemetry openTelemetry, CustomService.Iface handler) {
   ThriftTelemetry thriftTelemetry = ThriftTelemetry.create(openTelemetry);
-  return thriftTelemetry.instrument(processor, serviceName);
+  return thriftTelemetry.instrument(
+      new CustomService.Processor<>(handler), CustomService.class.getName());
 }
 
 // When using AsyncProcessor, also instrument the input and output protocol factories.
@@ -68,3 +69,7 @@ CustomService.AsyncIface configureClient(OpenTelemetry openTelemetry, CustomServ
   return thriftTelemetry.instrument(asyncClient, CustomService.AsyncIface.class);
 }
 ```
+
+The `rpcMethodPrefix` passed to `instrument` is combined with the method name as
+`prefix/method` for server span names and the `rpc.method` attribute on server spans and duration
+metrics. Use the generated service class name, as above, to match client telemetry.

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static java.util.Collections.singletonMap;
 import static org.mockito.Mockito.when;
 
@@ -50,7 +50,8 @@ class AwsLambdaRequestHandlerTest implements Opcodes {
                 span ->
                     span.hasName("my_function")
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})

@@ -81,20 +81,26 @@ names. A full-suite `testReceiveSpansDisabled` may document default telemetry; a
 regression task does not. Keep regression tasks in `check`, but omit them from the collection script.
 Keep `metadataConfig` labels on the tasks that document non-default telemetry.
 
-For a module collecting its default profile and a service-peer preview profile:
+When a feature supports distinct telemetry emission modes, collect its DEFAULT profile and
+each supported non-default profile in separate test JVMs. The following schematic example adds
+a PREVIEW profile without changing the default test JVM. Substitute the feature's actual supported
+property and value for `<feature-mode-property>` and `<preview-mode-value>`, and choose a task name
+appropriate to the module; `examplePreviewTest` is illustrative, not a task available in every module.
+Use additional variants for combined emission only when the feature supports it. Keep variants
+scoped to suites exercising the feature and preserve the source suite's JVM settings.
 
 ```kotlin
 tasks {
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+  val examplePreviewTest = register<Test>("examplePreviewTest") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
+    systemProperty("<feature-mode-property>", "<preview-mode-value>")
+    systemProperty("metadataConfig", "<feature-mode-property>=<preview-mode-value>")
   }
 
   check {
-    dependsOn(testPreviewSemconv)
+    dependsOn(examplePreviewTest)
   }
 }
 ```
@@ -103,11 +109,12 @@ Generate `.telemetry` files with the selected tasks, then run the analyzer. Runn
 does not execute a separately registered variant:
 
 ```bash
-./gradlew :instrumentation:<module>:javaagent:test :instrumentation:<module>:javaagent:testPreviewSemconv -PcollectMetadata=true
+./gradlew :instrumentation:<module>:javaagent:test :instrumentation:<module>:javaagent:<additional-mode-task> -PcollectMetadata=true
 ./gradlew :instrumentation-docs:runAnalysis
 ```
 
-Replace `<module>` with the instrumentation's Gradle project path.
+Replace `<module>` with the instrumentation's Gradle project path and `<additional-mode-task>`
+with the actual registered task for the supported additional mode.
 
 Or use the same collector as daily CI to run all tasks registered for metadata collection:
 
