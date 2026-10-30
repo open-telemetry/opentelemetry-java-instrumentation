@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadSuppression;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 import redis.clients.jedis.Connection;
@@ -24,6 +25,8 @@ public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-4.0";
 
   private static final Instrumenter<JedisRequest, Void> instrumenter;
+  private static final ScopedThreadSuppression transactionFramingSuppression =
+      new ScopedThreadSuppression();
   private static final VirtualField<Connection, JedisConnectionInfo> CONNECTION_INFO =
       VirtualField.find(Connection.class, JedisConnectionInfo.class);
 
@@ -45,6 +48,10 @@ public class JedisSingletons {
 
   public static Instrumenter<JedisRequest, Void> instrumenter() {
     return instrumenter;
+  }
+
+  public static ScopedThreadSuppression transactionFramingSuppression() {
+    return transactionFramingSuppression;
   }
 
   @Nullable

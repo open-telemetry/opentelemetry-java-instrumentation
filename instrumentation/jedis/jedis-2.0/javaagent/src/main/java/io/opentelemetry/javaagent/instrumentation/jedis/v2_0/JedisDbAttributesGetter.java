@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
@@ -39,6 +40,26 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   @Nullable
   public Long getDbOperationBatchSize(JedisRequest request) {
     return request.getBatchSize();
+  }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      JedisRequest request, @Nullable Void unused, @Nullable Throwable error) {
+    Throwable originalError = error;
+    // Jedis 2.3's Response.get() wraps protocol errors in another JedisDataException.
+    if (error != null
+        && error.getClass() == JedisDataException.class
+        && !request.isServerError(error)) {
+      error = error.getCause();
+    }
+    if (request.isServerError(error)) {
+      String serverErrorType = JedisServerError.errorType(error);
+      if (serverErrorType != null) {
+        return serverErrorType;
+      }
+    }
+    return originalError != null ? originalError.getClass().getName() : null;
   }
 
   @Override

@@ -51,6 +51,23 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("redis.clients.jedis.commands.ProtocolCommand")))
             .and(takesArgument(1, is(byte[][].class))),
         getClass().getName() + "$SendCommandAdvice");
+
+    transformer.applyAdviceToMethod(
+        named("executeCommand"), getClass().getName() + "$ExecuteCommandAdvice");
+
+    transformer.applyAdviceToMethod(
+        named("initializeFromClientConfig"), getClass().getName() + "$InitializationAdvice");
+
+    transformer.applyAdviceToMethod(
+        named("getMany").and(takesArguments(1)), getClass().getName() + "$ManyResponseAdvice");
+
+    transformer.applyAdviceToMethod(
+        named("getObjectMultiBulkReply").and(takesArguments(0)),
+        getClass().getName() + "$TransactionResponseAdvice");
+
+    transformer.applyAdviceToMethod(
+        named("readProtocolWithCheckingBroken").and(takesArguments(0)),
+        getClass().getName() + "$ConnectionReplyAdvice");
   }
 
   public static class AdviceScope {
@@ -66,18 +83,18 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
     @Nullable
     public static AdviceScope start(JedisRequest request) {
-      if (JedisPipelineContext.inTransactionFraming()) {
-        // MULTI/EXEC/DISCARD frame a batched transaction; they are represented by the MULTI batch
-        // span rather than getting their own spans.
-        return null;
-      }
-      Context parentContext = Context.current();
       if (JedisPipelineContext.capture(request)) {
         // A pipeline or transaction is active, so this command is captured and aggregated into the
         // batch span created at sync()/exec() rather than getting its own span.
         // Return a scope so method exit can capture the socket after sendCommand connects.
         return new AdviceScope(null, null, request);
       }
+      if (JedisPipelineContext.inTransactionFraming()) {
+        // MULTI/EXEC/DISCARD frame a batched transaction; they are represented by the MULTI batch
+        // span rather than getting their own spans.
+        return null;
+      }
+      Context parentContext = Context.current();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
@@ -104,6 +121,61 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("socketFactory") JedisSocketFactory socketFactory,
         @Advice.Argument(value = 1, optional = true) @Nullable Object clientConfig) {
       setConnectionInfo(connection, socketFactory, clientConfig);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InitializationAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static JedisRequestContext<JedisRequest> onEnter() {
+      return JedisRequestContext.attachForConnectionInitialization();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable JedisRequestContext<JedisRequest> requestContext) {
+      if (requestContext != null) {
+        requestContext.detachAndEnd(throwable);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ConnectionReplyAdvice {
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static JedisRequestContext<JedisRequest> onEnter(@Advice.This Connection connection) {
+      return JedisRequestContext.attachForConnectionReply(connection);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable JedisRequestContext<JedisRequest> requestContext) {
+      if (requestContext != null) {
+        requestContext.detachAndEnd(throwable);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ManyResponseAdvice {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This Connection connection,
+        @Advice.Return @Nullable Object responses,
+        @Advice.Thrown @Nullable Throwable throwable) {
+      JedisRequestContext.completePipelineReplies(connection);
+      JedisRequestContext.completeConnectionInitializationCommands(responses, throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class TransactionResponseAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Connection connection) {
+      JedisRequestContext.completeTransactionReplies(connection);
     }
   }
 
@@ -147,6 +219,25 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.end(socket, throwable);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ExecuteCommandAdvice {
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static JedisRequestContext<JedisRequest> onEnter() {
+      return JedisRequestContext.attach();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable JedisRequestContext<JedisRequest> requestContext) {
+      if (requestContext != null) {
+        requestContext.detachAndEnd(throwable);
       }
     }
   }
