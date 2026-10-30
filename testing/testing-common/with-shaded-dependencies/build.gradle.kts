@@ -7,6 +7,6 @@ plugins {
 // we use dependency substitution to replace io.opentelemetry.javaagent:opentelemetry-testing-common
 // with this module
 dependencies {
-  api(project(":testing-common"))
-  api(project(":testing:dependencies-shaded-for-testing", configuration = "shadow"))
+  api(project(":testing:testing-common"))
+  api(project(":testing:shaded-dependencies", configuration = "shadow"))
 }

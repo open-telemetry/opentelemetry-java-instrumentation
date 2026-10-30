@@ -5,5 +5,5 @@ plugins {
 dependencies {
   bootstrapLibs(project(":bootstrap"))
   // and finally include everything from otel agent for testing
-  upstreamAgent("io.opentelemetry.javaagent:opentelemetry-agent-for-testing:$opentelemetryJavaagentAlphaVersion")
+  upstreamAgent("io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing:$opentelemetryJavaagentAlphaVersion")
 }
