@@ -32,6 +32,8 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.assertj.core.api.AbstractLongAssert;
@@ -41,9 +43,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.Builder;
+import redis.clients.jedis.Connection;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -267,6 +272,275 @@ class Jedis30ClientTest {
     assertThat(outer.syncAndReturnAll()).containsExactly("OK");
     assertThat(outer.nestedMultiError).hasMessageStartingWith("NOPERM");
     assertErrorType(null);
+  }
+
+  @ParameterizedTest
+  @CsvSource({"false, false", "false, true", "true, false", "true, true"})
+  void caughtRawPipelineReplyDoesNotFailSuccessfulBatch(boolean readMany, boolean sameConnection) {
+    jedis.lpush("nested-wrong-type", "value");
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    nestedClient.ping();
+    testing.waitForTraces(2);
+    testing.clearData();
+
+    List<Throwable> nestedErrors = new ArrayList<>();
+    Connection connection = sameConnection ? jedis.getClient() : nestedClient.getClient();
+    ReplyPipeline pipeline = new ReplyPipeline(connection, readMany, false, nestedErrors);
+    pipeline.setClient(jedis.getClient());
+    pipeline.ping();
+    pipeline.set("outer-pipeline", "value");
+
+    assertThat(pipeline.syncAndReturnAll()).containsExactly("PONG", "OK");
+    assertNestedErrors(nestedErrors);
+    assertBatchErrorType(null, "PIPELINE");
+  }
+
+  @ParameterizedTest
+  @CsvSource({"false, false", "false, true", "true, false", "true, true"})
+  void escapingRawPipelineReplyFailsOuterBatch(boolean readMany, boolean sameConnection) {
+    jedis.lpush("nested-wrong-type", "value");
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    nestedClient.ping();
+    testing.waitForTraces(2);
+    testing.clearData();
+
+    List<Throwable> nestedErrors = new ArrayList<>();
+    Connection connection = sameConnection ? jedis.getClient() : nestedClient.getClient();
+    ReplyPipeline pipeline = new ReplyPipeline(connection, readMany, true, nestedErrors);
+    pipeline.setClient(jedis.getClient());
+    pipeline.ping();
+    pipeline.set("outer-pipeline", "value");
+
+    List<Object> results = pipeline.syncAndReturnAll();
+
+    assertThat(results.get(0))
+        .isInstanceOf(JedisDataException.class)
+        .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
+    assertThat(results.get(1)).isEqualTo("OK");
+    assertNestedErrors(nestedErrors);
+    assertBatchErrorType("WRONGTYPE", "PIPELINE");
+  }
+
+  @ParameterizedTest
+  @CsvSource({"false, false", "false, true", "true, false", "true, true"})
+  void caughtRawTransactionReplyDoesNotFailSuccessfulBatch(
+      boolean readMany, boolean sameConnection) {
+    jedis.lpush("nested-wrong-type", "value");
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    nestedClient.ping();
+    testing.waitForTraces(2);
+    testing.clearData();
+
+    List<Throwable> nestedErrors = new ArrayList<>();
+    Connection connection = sameConnection ? jedis.getClient() : nestedClient.getClient();
+    jedis.getClient().multi();
+    assertThat(jedis.getClient().getStatusCodeReply()).isEqualTo("OK");
+    ReplyTransaction transaction = new ReplyTransaction(connection, readMany, false, nestedErrors);
+    transaction.ping();
+    transaction.set("outer-transaction", "value");
+    testing.clearData();
+
+    assertThat(transaction.exec()).containsExactly("PONG", "OK");
+    assertNestedErrors(nestedErrors);
+    assertBatchErrorType(null, "MULTI");
+  }
+
+  @ParameterizedTest
+  @CsvSource({"false, false", "false, true", "true, false", "true, true"})
+  void escapingRawTransactionReplyFailsOuterBatch(boolean readMany, boolean sameConnection) {
+    jedis.lpush("nested-wrong-type", "value");
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    nestedClient.ping();
+    testing.waitForTraces(2);
+    testing.clearData();
+
+    List<Throwable> nestedErrors = new ArrayList<>();
+    Connection connection = sameConnection ? jedis.getClient() : nestedClient.getClient();
+    jedis.getClient().multi();
+    assertThat(jedis.getClient().getStatusCodeReply()).isEqualTo("OK");
+    ReplyTransaction transaction = new ReplyTransaction(connection, readMany, true, nestedErrors);
+    transaction.ping();
+    transaction.set("outer-transaction", "value");
+    testing.clearData();
+
+    List<Object> results = transaction.exec();
+
+    assertThat(results.get(0))
+        .isInstanceOf(JedisDataException.class)
+        .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
+    assertThat(results.get(1)).isEqualTo("OK");
+    assertNestedErrors(nestedErrors);
+    assertBatchErrorType("WRONGTYPE", "MULTI");
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void outerPipelineErrorsRemainCaptured(boolean returnAll) {
+    jedis.lpush("outer-wrong-type", "value");
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    Pipeline pipeline = jedis.pipelined();
+    Response<String> response = pipeline.get("outer-wrong-type");
+    pipeline.set("after-error", "value");
+
+    if (returnAll) {
+      List<Object> results = pipeline.syncAndReturnAll();
+      assertThat(results.get(0))
+          .isInstanceOf(JedisDataException.class)
+          .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
+      assertThat(results.get(1)).isEqualTo("OK");
+    } else {
+      pipeline.sync();
+      assertThatThrownBy(response::get).hasMessageStartingWith("WRONGTYPE");
+    }
+
+    assertBatchErrorType("WRONGTYPE", "PIPELINE");
+  }
+
+  @Test
+  void outerTransactionErrorsRemainCaptured() {
+    jedis.lpush("outer-wrong-type", "value");
+    testing.waitForTraces(1);
+    testing.clearData();
+    jedis.getClient().multi();
+    assertThat(jedis.getClient().getStatusCodeReply()).isEqualTo("OK");
+    Transaction transaction = new Transaction(jedis.getClient());
+    transaction.get("outer-wrong-type");
+    transaction.set("after-error", "value");
+    testing.clearData();
+
+    List<Object> results = transaction.exec();
+
+    assertThat(results.get(0))
+        .isInstanceOf(JedisDataException.class)
+        .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
+    assertThat(results.get(1)).isEqualTo("OK");
+    assertBatchErrorType("WRONGTYPE", "MULTI");
+  }
+
+  private static Throwable readNestedError(Connection connection, boolean readMany) {
+    if (readMany) {
+      connection.sendCommand(Protocol.Command.PING);
+      connection.sendCommand(Protocol.Command.GET, "nested-wrong-type".getBytes(UTF_8));
+      List<Object> replies = connection.getMany(2);
+      assertThat(replies).hasSize(2);
+      assertThat(new String((byte[]) replies.get(0), UTF_8)).isEqualTo("PONG");
+      return (Throwable) replies.get(1);
+    }
+
+    connection.sendCommand(Protocol.Command.GET, "nested-wrong-type".getBytes(UTF_8));
+    try {
+      connection.getBulkReply();
+      throw new AssertionError("Expected WRONGTYPE");
+    } catch (JedisDataException error) {
+      return error;
+    }
+  }
+
+  private static void assertNestedErrors(List<Throwable> nestedErrors) {
+    assertThat(nestedErrors)
+        .singleElement()
+        .satisfies(error -> assertThat(error).hasMessageStartingWith("WRONGTYPE"));
+  }
+
+  private static void assertBatchErrorType(String errorType, String batchOperation) {
+    testing.waitForTraces(1);
+    assertThat(testing.spans())
+        .anySatisfy(
+            span ->
+                assertThat(span.getAttributes().get(DB_OPERATION_NAME)).isEqualTo(batchOperation));
+    assertThat(testing.spans())
+        .allSatisfy(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-3.0",
+        "db.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .anySatisfy(
+                            point -> {
+                              assertThat(point.getAttributes().get(DB_OPERATION_NAME))
+                                  .isEqualTo(batchOperation);
+                              assertThat(point.getAttributes().get(ERROR_TYPE))
+                                  .isEqualTo(errorType);
+                            })));
+  }
+
+  private static class ReplyPipeline extends Pipeline {
+    private final Connection connection;
+    private final boolean readMany;
+    private final boolean throwError;
+    private final List<Throwable> nestedErrors;
+    private boolean read;
+
+    private ReplyPipeline(
+        Connection connection, boolean readMany, boolean throwError, List<Throwable> nestedErrors) {
+      this.connection = connection;
+      this.readMany = readMany;
+      this.throwError = throwError;
+      this.nestedErrors = nestedErrors;
+    }
+
+    @Override
+    protected <T> Response<T> getResponse(Builder<T> builder) {
+      return super.getResponse(
+          new Builder<T>() {
+            @Override
+            public T build(Object response) {
+              if (!read) {
+                read = true;
+                Throwable error = readNestedError(connection, readMany);
+                nestedErrors.add(error);
+                if (throwError) {
+                  throw (JedisDataException) error;
+                }
+              }
+              return builder.build(response);
+            }
+          });
+    }
+  }
+
+  private static class ReplyTransaction extends Transaction {
+    private final Connection connection;
+    private final boolean readMany;
+    private final boolean throwError;
+    private final List<Throwable> nestedErrors;
+    private boolean read;
+
+    private ReplyTransaction(
+        Connection connection, boolean readMany, boolean throwError, List<Throwable> nestedErrors) {
+      super(jedis.getClient());
+      this.connection = connection;
+      this.readMany = readMany;
+      this.throwError = throwError;
+      this.nestedErrors = nestedErrors;
+    }
+
+    @Override
+    protected <T> Response<T> getResponse(Builder<T> builder) {
+      return super.getResponse(
+          new Builder<T>() {
+            @Override
+            public T build(Object response) {
+              if (!read) {
+                read = true;
+                Throwable error = readNestedError(connection, readMany);
+                nestedErrors.add(error);
+                if (throwError) {
+                  throw (JedisDataException) error;
+                }
+              }
+              return builder.build(response);
+            }
+          });
+    }
   }
 
   private static class NestedMultiPipeline extends Pipeline {
