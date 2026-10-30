@@ -51,6 +51,11 @@ passed around correctly.
 The `WebClient` instrumentation will emit the `error.type` attribute with value `cancelled` whenever
 an outgoing HTTP request is cancelled.
 
+When experimental HTTP client telemetry is enabled, `url.template` is captured only if the URI
+template contains at least one variable. Literal path, query, and fragment text is preserved without
+sanitization in both `url.template` and the span name. Pass sensitive values as URI variables rather
+than embedding them in the template.
+
 ### Setup
 
 Here is how to set up client and server instrumentation respectively:
