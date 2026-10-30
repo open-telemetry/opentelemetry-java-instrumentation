@@ -66,7 +66,15 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$SendCommandWithArgsAdvice");
 
     transformer.applyAdviceToMethod(
-        namedOneOf("getOne", "getBulkReply", "getStatusCodeReply", "getIntegerReply")
+        namedOneOf(
+                "getOne",
+                "getBulkReply",
+                "getStatusCodeReply",
+                "getIntegerReply",
+                "getBinaryBulkReply",
+                "getBinaryMultiBulkReply",
+                "getRawObjectMultiBulkReply",
+                "getIntegerMultiBulkReply")
             .and(takesArguments(0)),
         getClass().getName() + "$ConnectionReplyAdvice");
     transformer.applyAdviceToMethod(

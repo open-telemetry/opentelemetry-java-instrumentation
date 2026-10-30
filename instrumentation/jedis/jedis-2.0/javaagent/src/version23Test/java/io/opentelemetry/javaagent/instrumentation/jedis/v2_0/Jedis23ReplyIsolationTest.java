@@ -80,6 +80,35 @@ class Jedis23ReplyIsolationTest {
   }
 
   @ParameterizedTest
+  @CsvSource({
+    "BINARY_BULK, false",
+    "BINARY_BULK, true",
+    "BINARY_MULTI_BULK, false",
+    "BINARY_MULTI_BULK, true",
+    "RAW_OBJECT_MULTI_BULK, false",
+    "RAW_OBJECT_MULTI_BULK, true",
+    "INTEGER_MULTI_BULK, false",
+    "INTEGER_MULTI_BULK, true"
+  })
+  void caughtRawBinaryPipelineReplyDoesNotFailSuccessfulBatch(
+      ReplyReader replyReader, boolean sameConnection) {
+    jedis.lpush(WRONG_TYPE_KEY, "value");
+    ReplyClient outerConnection = createReplyClient();
+    ReplyClient nestedClient = sameConnection ? outerConnection : createReplyClient();
+    testing.clearData();
+    List<Throwable> nestedErrors = new ArrayList<>();
+    Client connection = sameConnection ? outerConnection : nestedClient;
+    ReplyPipeline pipeline = new ReplyPipeline(connection, replyReader, false, nestedErrors);
+    pipeline.setClient(outerConnection);
+    pipeline.ping();
+    pipeline.set("outer-pipeline", "value");
+
+    assertThat(pipeline.syncAndReturnAll()).containsExactly("PONG", "OK");
+    assertNestedErrors(nestedErrors);
+    assertBatchErrorType(null, "PIPELINE");
+  }
+
+  @ParameterizedTest
   @CsvSource({"false, false", "false, true", "true, false", "true, true"})
   void escapingRawPipelineReplyFailsOuterBatch(boolean readMany, boolean sameConnection) {
     Jedis nestedClient = prepareNestedClient();
@@ -193,7 +222,11 @@ class Jedis23ReplyIsolationTest {
   }
 
   private static Throwable readNestedError(Client connection, boolean readMany) {
-    if (readMany) {
+    return readNestedError(connection, readMany ? ReplyReader.ALL : ReplyReader.BULK);
+  }
+
+  private static Throwable readNestedError(Client connection, ReplyReader replyReader) {
+    if (replyReader == ReplyReader.ALL) {
       connection.ping();
       connection.get(WRONG_TYPE_KEY);
       List<Object> replies = connection.getAll();
@@ -204,7 +237,30 @@ class Jedis23ReplyIsolationTest {
 
     connection.get(WRONG_TYPE_KEY);
     try {
-      connection.getBulkReply();
+      switch (replyReader) {
+        case BULK:
+          connection.getBulkReply();
+          break;
+        case BINARY_BULK:
+          connection.getBinaryBulkReply();
+          break;
+        case BINARY_MULTI_BULK:
+          connection.getBinaryMultiBulkReply();
+          break;
+        case RAW_OBJECT_MULTI_BULK:
+          ((ReplyClient) connection).flushPendingCommands();
+          try {
+            connection.getRawObjectMultiBulkReply();
+          } finally {
+            connection.resetPipelinedCount();
+          }
+          break;
+        case INTEGER_MULTI_BULK:
+          connection.getIntegerMultiBulkReply();
+          break;
+        default:
+          throw new AssertionError("Unexpected reply reader: " + replyReader);
+      }
       throw new AssertionError("Expected WRONGTYPE");
     } catch (JedisDataException error) {
       return error;
@@ -242,15 +298,23 @@ class Jedis23ReplyIsolationTest {
 
   private static class ReplyPipeline extends Pipeline {
     private final Client connection;
-    private final boolean readMany;
+    private final ReplyReader replyReader;
     private final boolean throwError;
     private final List<Throwable> nestedErrors;
     private boolean read;
 
     private ReplyPipeline(
         Client connection, boolean readMany, boolean throwError, List<Throwable> nestedErrors) {
+      this(connection, readMany ? ReplyReader.ALL : ReplyReader.BULK, throwError, nestedErrors);
+    }
+
+    private ReplyPipeline(
+        Client connection,
+        ReplyReader replyReader,
+        boolean throwError,
+        List<Throwable> nestedErrors) {
       this.connection = connection;
-      this.readMany = readMany;
+      this.replyReader = replyReader;
       this.throwError = throwError;
       this.nestedErrors = nestedErrors;
     }
@@ -263,7 +327,7 @@ class Jedis23ReplyIsolationTest {
             public T build(Object response) {
               if (!read) {
                 read = true;
-                Throwable error = readNestedError(connection, readMany);
+                Throwable error = readNestedError(connection, replyReader);
                 nestedErrors.add(error);
                 if (throwError) {
                   throw (JedisDataException) error;
@@ -273,6 +337,31 @@ class Jedis23ReplyIsolationTest {
             }
           });
     }
+  }
+
+  private static ReplyClient createReplyClient() {
+    ReplyClient client = new ReplyClient(host, port);
+    cleanup.deferCleanup(client::disconnect);
+    return client;
+  }
+
+  private static class ReplyClient extends Client {
+    private ReplyClient(String host, int port) {
+      super(host, port);
+    }
+
+    private void flushPendingCommands() {
+      flush();
+    }
+  }
+
+  private enum ReplyReader {
+    ALL,
+    BULK,
+    BINARY_BULK,
+    BINARY_MULTI_BULK,
+    RAW_OBJECT_MULTI_BULK,
+    INTEGER_MULTI_BULK
   }
 
   private static class ReplyTransaction extends Transaction {
