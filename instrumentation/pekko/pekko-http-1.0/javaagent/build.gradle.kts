@@ -137,8 +137,19 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
+  val pekko11NoSpanSuppressionTest = register<Test>("pekko11NoSpanSuppressionTest") {
+    testClassesDirs = sourceSets["pekko11Test"].output.classesDirs
+    classpath = sourceSets["pekko11Test"].runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.common.span-suppression-strategy=none")
+
+    filter {
+      includeTestsMatching("*PekkoHttpServerInstrumentationTestAsync.successfulGetRequest")
+    }
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, pekko11NoSpanSuppressionTest)
   }
 
   if (otelProps.denyUnsafe) {

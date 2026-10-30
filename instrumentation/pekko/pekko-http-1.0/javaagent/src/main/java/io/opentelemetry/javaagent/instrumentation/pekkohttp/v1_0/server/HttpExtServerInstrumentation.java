@@ -14,6 +14,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.pekko.http.Version;
 import org.apache.pekko.http.scaladsl.HttpExt;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
@@ -51,12 +52,16 @@ class HttpExtServerInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PekkoBindAndHandleAsyncAdvice {
+    private static final boolean SHOULD_WRAP_HANDLER = Version.current().startsWith("1.1.");
 
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Function1<HttpRequest, Future<HttpResponse>> wrapHandler(
         @Advice.Argument(0) Function1<HttpRequest, Future<HttpResponse>> handler,
         @Advice.This HttpExt thiz) {
+      if (!SHOULD_WRAP_HANDLER) {
+        return handler;
+      }
       return PekkoHttpServerHandlerWrapper.wrap(handler, thiz.system().dispatcher());
     }
   }

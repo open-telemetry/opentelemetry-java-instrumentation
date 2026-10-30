@@ -54,6 +54,10 @@ public class PekkoHttpServerHandlerWrapper
     HttpRequest serverRequest = request;
     PekkoTracingRequest tracedRequest =
         serverRequest.getAttribute(PekkoTracingRequest.ATTR_KEY).orElse(null);
+    if (tracedRequest == null && !isHttp2(serverRequest)) {
+      // http/1.1 requests are already handled by PekkoFlowWrapper
+      return handler.apply(serverRequest);
+    }
     if (tracedRequest != null) {
       // remove the attribute before the request is passed to user code
       serverRequest = (HttpRequest) serverRequest.removeAttribute(PekkoTracingRequest.ATTR_KEY);
