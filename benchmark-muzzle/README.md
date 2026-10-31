@@ -5,7 +5,7 @@ It measures fresh configuration and all selected assertions with a cold Gradle d
 warm workspace outputs, and warm dependency caches. This is a repeatable tuning
 scenario, not a prediction of fresh-checkout CI time or live Maven downloads.
 
-There is one benchmark runner, `benchmark.py`. The Gradle plugin's
+The comparison runner is `benchmark.py`. The Gradle plugin's
 `MuzzleBenchmarkSupport` class controls and records its workload; it is not a
 separate benchmark. This tooling is for performance research and leaves normal
 Muzzle CI unchanged.
@@ -164,7 +164,8 @@ gh workflow run muzzle-cache-benchmark.yml \
 Start with one partition, one round, one warm seed, and the local backend. Remote
 measurements require the repository's existing `DEVELOCITY_ACCESS_KEY` secret.
 The local backend disables remote task caching. The remote backend disables
-local task caching and permits remote writes under an isolated assertion namespace.
+local task caching in the main build and permits remote writes under an isolated
+assertion namespace. Its included build-logic projects retain their existing cache settings.
 Both retain the dependency cache restored by `setup-gradle`.
 
 Each measured command starts in a newly checked-out repository with a cold daemon

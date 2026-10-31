@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import tempfile
 from types import SimpleNamespace
@@ -12,6 +13,42 @@ class CacheBenchmarkTest(unittest.TestCase):
         with patch.dict(cache_benchmark.os.environ, {}, clear=True):
             with self.assertRaisesRegex(ValueError, "DEVELOCITY_ACCESS_KEY"):
                 cache_benchmark.CacheBenchmark(SimpleNamespace(backend="remote"))
+
+    def test_remote_cache_override_leaves_included_builds_unchanged(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+
+            def initialize(runner, args):
+                runner.workload = {"seed": 42}
+                runner.expected = None
+                runner.revisions = {"baseline": "revision"}
+                runner.init_script = root / "benchmark.init.gradle"
+                runner.reports = root
+                (root / "identity.json").write_text("{}\n", encoding="utf-8")
+
+            with (
+                patch.dict(cache_benchmark.os.environ, {"DEVELOCITY_ACCESS_KEY": "fixture"}),
+                patch.object(
+                    cache_benchmark.benchmark.Benchmark, "__init__", new=initialize,
+                ),
+            ):
+                runner = cache_benchmark.CacheBenchmark(SimpleNamespace(
+                    backend="remote", revision="revision", warm_seeds=1, rounds=5,
+                ))
+            self.assertEqual(runner.init_script.read_text(encoding="utf-8"), (
+                "settingsEvaluated { settings ->\n"
+                "  if (settings.gradle.parent == null) {\n"
+                "    settings.buildCache.local.enabled = false\n"
+                "    def remote = settings.buildCache.remote\n"
+                "    if (remote == null) { throw new GradleException('Remote cache is missing') }\n"
+                "    remote.enabled = true\n"
+                "    remote.push = true\n"
+                "  }\n"
+                "}\n"
+            ))
+            self.assertTrue(json.loads(
+                (root / "identity.json").read_text(encoding="utf-8"),
+            )["remote_build_cache"])
 
     def test_cross_job_probe_requires_remote_inputs_and_no_warmup_writers(self):
         for changes in (

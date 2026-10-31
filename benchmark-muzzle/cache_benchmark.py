@@ -41,11 +41,13 @@ class CacheBenchmark(benchmark.Benchmark):
         if args.backend == "remote":
             self.init_script.write_text(
                 "settingsEvaluated { settings ->\n"
-                "  settings.buildCache.local.enabled = false\n"
-                "  def remote = settings.buildCache.remote\n"
-                "  if (remote == null) { throw new GradleException('Remote cache is missing') }\n"
-                "  remote.enabled = true\n"
-                "  remote.push = true\n"
+                "  if (settings.gradle.parent == null) {\n"
+                "    settings.buildCache.local.enabled = false\n"
+                "    def remote = settings.buildCache.remote\n"
+                "    if (remote == null) { throw new GradleException('Remote cache is missing') }\n"
+                "    remote.enabled = true\n"
+                "    remote.push = true\n"
+                "  }\n"
                 "}\n", encoding="utf-8",
             )
         identity_file = self.reports / "identity.json"
