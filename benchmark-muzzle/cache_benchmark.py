@@ -18,11 +18,20 @@ class CacheBenchmark(benchmark.Benchmark):
     def __init__(self, args):
         if args.backend == "remote" and not os.environ.get("DEVELOCITY_ACCESS_KEY"):
             raise ValueError("Remote-cache measurements require DEVELOCITY_ACCESS_KEY")
+        probe_namespace = getattr(args, "probe_namespace", None)
+        if probe_namespace is not None and (
+            not probe_namespace or args.backend != "remote" or args.inputs is None
+            or args.rounds != 1 or args.warm_seeds != 0
+        ):
+            raise ValueError(
+                "A cross-job cache probe requires a namespace, remote backend, frozen inputs, "
+                "one round, and zero warm seeds"
+            )
         args.baseline = args.candidate = args.revision
         super().__init__(args)
         self.seed = self.workload["seed"]
         self.cache_assertions = False
-        self.namespace = f"muzzle-research-{uuid.uuid4().hex}"
+        self.namespace = probe_namespace or f"muzzle-research-{uuid.uuid4().hex}"
         self.active_namespace = self.namespace
         self.expected_by_seed = {self.seed: self.expected} if self.expected is not None else {}
         self.prior_manifests = {}
@@ -48,6 +57,7 @@ class CacheBenchmark(benchmark.Benchmark):
                 "backend": args.backend, "namespace": self.namespace,
                 "warm_seeds": args.warm_seeds, "rounds": args.rounds,
                 "revision": self.revisions["baseline"],
+                "cross_job_probe": probe_namespace is not None,
             },
         )
         identity_file.write_text(json.dumps(identity, indent=2) + "\n", encoding="utf-8")
@@ -117,6 +127,8 @@ class CacheBenchmark(benchmark.Benchmark):
             writers = self.writers
         expected = self.expected_by_seed[self.seed]
         overlap = sum(prior.get(task) == record for task, record in expected.items())
+        if scenario == "cross-job":
+            overlap = writers = None
         for label in benchmark.order(number - 1):
             self.cache_assertions = label == "candidate"
             source = "candidate" if self.cache_assertions else "baseline"
@@ -133,7 +145,7 @@ class CacheBenchmark(benchmark.Benchmark):
                 "namespace": self.active_namespace,
                 "metrics": metrics, "assertions": dict(assertions), "task_outcomes": outcomes,
             })
-            if self.cache_assertions and scenario != "empty":
+            if self.cache_assertions and scenario not in ("empty", "cross-job"):
                 self.prior_manifests.update(expected)
                 self.writers += 1
             self.write_results()
@@ -145,6 +157,16 @@ class CacheBenchmark(benchmark.Benchmark):
         finally:
             self.preparation_ms += (time.perf_counter() - started) * 1000
         self.expected_by_seed[self.seed] = self.expected
+        if getattr(self.args, "probe_namespace", None) is not None:
+            self.measured_round("cross-job", 1)
+            assertions = next(
+                sample["assertions"] for sample in self.cache_samples
+                if sample["label"] == "candidate"
+            )
+            if assertions.get("FROM-CACHE", 0) != len(self.expected):
+                raise ValueError(f"The cross-job probe did not restore every assertion: {assertions}")
+            self.write_results(complete=True)
+            return
         for number in range(1, self.args.rounds + 1):
             self.measured_round("empty", number)
         self.active_namespace = self.namespace
@@ -200,7 +222,7 @@ class CacheBenchmark(benchmark.Benchmark):
             "| --- | --- | ---: | ---: | ---: | ---: | ---: |",
         ]
         stats = {}
-        for scenario in ("empty", "same", "random"):
+        for scenario in ("empty", "same", "random", "cross-job"):
             stats[scenario] = {}
             for label in ("baseline", "control", "candidate"):
                 samples = [
@@ -235,12 +257,19 @@ class CacheBenchmark(benchmark.Benchmark):
         (self.reports / "statistics.json").write_text(
             json.dumps(stats, indent=2) + "\n", encoding="utf-8",
         )
-        lines += [
-            "",
+        history = (
+            "The cross-job probe reuses an earlier remote namespace. No assertion writer runs "
+            "in this job before measurement. Every candidate assertion must restore from the "
+            "remote cache and match the uncached reference."
+            if getattr(self.args, "probe_namespace", None) is not None else
             "Empty-cache candidates have independent namespaces. Same-sample measurements follow "
             "one writer. Random-sample measurements follow that writer and "
             f"{self.args.warm_seeds} distinct prior seeds; each measured candidate also contributes "
-            "to subsequent cache history. Exact writer counts and manifest overlap are in the CSV.",
+            "to subsequent cache history. Exact writer counts and manifest overlap are in the CSV."
+        )
+        lines += [
+            "",
+            history,
             "",
             "Fresh-checkout compilation and shading outcomes are retained, not assumed away. "
             "Preparation and checkout creation are excluded from command timings. This isolates "
@@ -262,6 +291,7 @@ def main():
     parser.add_argument("--rounds", type=int, choices=range(1, 11), default=5)
     parser.add_argument("--warm-seeds", type=int, choices=range(0, 101), default=10)
     parser.add_argument("--backend", choices=("local", "remote"), default="local")
+    parser.add_argument("--probe-namespace")
     parser.add_argument("--inputs", type=Path)
     parser.add_argument("--seed-gradle-home", type=Path)
     args = parser.parse_args()

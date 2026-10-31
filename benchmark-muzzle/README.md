@@ -157,7 +157,8 @@ and on. Normal Muzzle jobs and version sampling are unchanged.
 ```sh
 gh workflow run muzzle-cache-benchmark.yml \
   --ref my-cache-research-branch \
-  -f partitions='[1]' -f rounds=5 -f warm-seeds=10 -f backend=both
+  -f partitions='[1]' -f rounds=5 -f warm-seeds=10 -f backend=both \
+  -f workload-run-id=LOCAL_SMOKE_RUN_ID
 ```
 
 Start with one partition, one round, one warm seed, and the local backend. Remote
@@ -190,3 +191,9 @@ Results include raw command logs, per-seed assertion reports, cache outcomes,
 potential manifest overlap, paired timing differences, and preparation costs.
 These experiments isolate task-result caching, not live network or Gradle-home
 restore costs. Artifacts have a 30-day retention period.
+
+To verify reuse across jobs, dispatch the remote backend with one round, zero warm
+seeds, the original `workload-run-id`, and `probe-namespace` from the earlier remote
+run's `identity.json`. The probe prepares only uncached references before
+measurement. Every candidate assertion must restore from the earlier remote cache;
+one miss invalidates the probe.

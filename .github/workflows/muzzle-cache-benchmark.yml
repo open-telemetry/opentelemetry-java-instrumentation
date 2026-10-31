@@ -31,6 +31,9 @@ on:
       workload-run-id:
         description: Optional earlier local cache benchmark run whose frozen inputs to reuse
         type: string
+      probe-namespace:
+        description: Optional earlier remote namespace for a cross-job probe, requires one round and zero warm seeds
+        type: string
 
 permissions:
   contents: read
@@ -106,10 +109,14 @@ jobs:
           ROUNDS: ${{ inputs.rounds }}
           WARM_SEEDS: ${{ inputs.warm-seeds }}
           WORKLOAD_RUN_ID: ${{ inputs.workload-run-id }}
+          PROBE_NAMESPACE: ${{ inputs.probe-namespace }}
         run: |
           arguments=()
           if [ -n "$WORKLOAD_RUN_ID" ]; then
             arguments+=(--inputs "$RUNNER_TEMP/muzzle-cache-inputs")
+          fi
+          if [ -n "$PROBE_NAMESPACE" ]; then
+            arguments+=(--probe-namespace "$PROBE_NAMESPACE")
           fi
           python3 benchmark-muzzle/cache_benchmark.py \
             --revision "$GITHUB_SHA" --partition "$PARTITION" --backend "$BACKEND" \

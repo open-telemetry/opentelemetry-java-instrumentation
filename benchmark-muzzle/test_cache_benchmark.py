@@ -13,6 +13,49 @@ class CacheBenchmarkTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "DEVELOCITY_ACCESS_KEY"):
                 cache_benchmark.CacheBenchmark(SimpleNamespace(backend="remote"))
 
+    def test_cross_job_probe_requires_remote_inputs_and_no_warmup_writers(self):
+        for changes in (
+            {"backend": "local"}, {"inputs": None}, {"rounds": 5},
+            {"warm_seeds": 1}, {"probe_namespace": ""},
+        ):
+            args = SimpleNamespace(
+                backend="remote", inputs=Path("frozen"), rounds=1, warm_seeds=0,
+                probe_namespace="earlier-namespace",
+            )
+            args.__dict__.update(changes)
+            with (
+                patch.dict(cache_benchmark.os.environ, {"DEVELOCITY_ACCESS_KEY": "fixture"}),
+                self.assertRaisesRegex(ValueError, "cross-job cache probe requires"),
+            ):
+                cache_benchmark.CacheBenchmark(args)
+
+    def test_cross_job_probe_rejects_misses_without_running_a_writer(self):
+        for outcome in ("FROM-CACHE", "EXECUTED"):
+            runner = object.__new__(cache_benchmark.CacheBenchmark)
+            runner.args = SimpleNamespace(probe_namespace="earlier-namespace")
+            runner.preparation_ms = 0
+            runner.seed = 42
+            runner.expected = {"task": "independent"}
+            runner.expected_by_seed = {}
+            runner.cache_samples = [{
+                "label": "candidate", "assertions": {outcome: 1},
+            }]
+            with (
+                patch.object(cache_benchmark.benchmark.Benchmark, "prepare"),
+                patch.object(runner, "measured_round") as measured,
+                patch.object(runner, "prepare_seed") as writer,
+                patch.object(runner, "write_results") as results,
+            ):
+                if outcome == "EXECUTED":
+                    with self.assertRaisesRegex(ValueError, "did not restore every assertion"):
+                        runner.measure()
+                    results.assert_not_called()
+                else:
+                    runner.measure()
+                    results.assert_called_once_with(complete=True)
+                measured.assert_called_once_with("cross-job", 1)
+                writer.assert_not_called()
+
     def test_cache_hits_require_reports_and_up_to_date_is_not_a_fresh_checkout(self):
         runner = object.__new__(cache_benchmark.CacheBenchmark)
         task = ":example:muzzle-AssertPass-library-1.0"
