@@ -64,20 +64,22 @@ describe selectable behavior, not Muzzle implementation identities.
   class needs class-level `@SuppressWarnings("unused")`. In `transform()`, reference nested
   advice by `getClass().getName() + "$AdviceName"`; resolving
   `InnerAdvice.class` or a library class literal from the agent loader can cause premature
-  class loading. Do not name an exit advice method `onEnter` or vice versa. Method
-  signature matchers may use accessible `java.base` types available at the minimum
+  class loading. Do not name an exit advice method `onEnter` or vice versa. Positional
+  argument and return-type matchers may use accessible `java.base` types available at the minimum
   supported Java version; keep `named(...)` for instrumented-library types.
   With dynamic advice typing, match only signatures that guarantee assignability.
 - Omit explicit `typing = Assigner.Typing.DYNAMIC` on `@Advice.AssignReturned` mappings,
   including nested argument and field mappings, when using the standard transformation pipeline;
   its postprocessor supplies dynamic typing. This does not apply to advice parameter bindings.
   Verify custom pipelines separately.
-- For a fixed signature consisting of primitive types or accessible `java.base` types available
-  at the minimum supported Java version, use `takesArguments(Type...)`, including parameters
-  the advice does not use. Do not expand it into positional matchers to remove unused checks.
-- Use positional `takesArgument` matchers for instrumented-library types or parameter types that
-  vary across supported versions. Retain type checks only for arguments the advice uses or that
-  distinguish supported methods.
+- For a complete, nonempty signature of exact parameter types, use
+  `AgentElementMatchers.takesArgumentsNamed(...)` instead of `takesArguments(Type...)` or an
+  argument count combined with positional type checks. Use exact erased type names, including
+  primitive names such as `"int"`. For a zero-parameter signature, use `takesArguments(0)`.
+- Keep positional `takesArgument(...)` matchers for intentionally partial signatures or predicates
+  that cannot be expressed as exact type names, such as subtype checks or parameter-type
+  alternatives across supported versions. Do not add otherwise unnecessary parameter checks
+  merely to use `takesArgumentsNamed(...)`.
 - When advice binds a library argument as `Object` to support different known parameter types
   across versions, use `takesArgument(index, namedOneOf(...))` with those type names instead of
   `any()` or a custom argument-count check. The positional matcher already guarantees that the

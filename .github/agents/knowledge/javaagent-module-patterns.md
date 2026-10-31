@@ -567,7 +567,11 @@ supported signatures or concrete-type assumption when the choice is not obvious.
   `extendsClass(...)` and `implementsInterface(...)` are appropriate when the instrumentation
   targets subclasses or implementors of a type.
 - `transform()` wires method matchers to advice classes via `applyAdviceToMethod()`.
-- Direct argument and return-type matchers inside `transform()` use `Type.class` only when the type
+- For complete, nonempty exact signatures, use `takesArgumentsNamed(...)`, for example
+  `takesArgumentsNamed("org.influxdb.dto.Query", "int", "java.util.function.Consumer")`.
+  Use `takesArguments(0)` for zero-parameter signatures. Keep positional matchers for partial
+  signatures and non-exact type predicates.
+- Positional argument and return-type matchers inside `transform()` use `Type.class` only when the type
   is loadable from the agent class loader. For JDK types, use class literals only for primitives and
   primitive arrays, or types from these exact package names: `java.io`, `java.lang`,
   `java.lang.reflect`, `java.net`, `java.nio`, `java.time`, `java.util`, `java.util.concurrent`, and
@@ -584,7 +588,7 @@ supported signatures or concrete-type assumption when the choice is not obvious.
   Keep `named(...)` for `typeMatcher()`, class-loader optimization, hierarchy matchers
   (`extendsClass`, `implementsInterface`), all instrumented-library types, JDK types outside the
   allowlist or unavailable at the module's minimum Java version, inaccessible JDK-internal classes,
-  and advice-class name strings. This method-signature convention does not change the type-level and
+  and advice-class name strings. This positional/return-type convention does not change the type-level and
   advice-class classloading guidance above and below.
 - `isMethod()` in method matchers inside `transform()` is redundant when the matcher
   already names a specific, non-empty method — e.g. `named("foo")` or `namedOneOf("foo", "bar")`.
