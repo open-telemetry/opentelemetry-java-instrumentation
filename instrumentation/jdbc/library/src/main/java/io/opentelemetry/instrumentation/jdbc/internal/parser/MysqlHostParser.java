@@ -16,8 +16,10 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -40,12 +42,8 @@ final class MysqlHostParser {
     boolean hostProperties = false;
     for (String segment : splitHostList(authority)) {
       String entry = stripUserInfo(segment.trim(), mysql);
-      if (entry == null) {
-        logger.fine("Unable to parse a configured MySQL/MariaDB host");
-        return null;
-      }
-      HostPort host = parseHost(entry, mysql);
-      if (host == null) {
+      HostPort host = entry == null ? null : parseHost(entry, mysql);
+      if (entry == null || host == null) {
         logger.fine("Unable to parse a configured MySQL/MariaDB host");
         return null;
       }
@@ -112,11 +110,10 @@ final class MysqlHostParser {
 
   @Nullable
   private static HostPort parseHost(String entry, boolean mysql) {
-    if (entry.startsWith("(")) {
-      return mysql ? parseKeyValueHost(entry) : null;
-    }
     HostPort host =
-        isAddressHost(entry) ? parseAddressHost(entry, mysql) : parseHostPort(entry, mysql);
+        entry.startsWith("(") || isAddressHost(entry)
+            ? parseHostProperties(entry, mysql)
+            : parseHostPort(entry, mysql);
     return host != null && DbServerTargetBuilder.isValidHost(host.host()) ? host : null;
   }
 
@@ -157,45 +154,80 @@ final class MysqlHostParser {
   }
 
   @Nullable
-  private static HostPort parseAddressHost(String entry, boolean mysql) {
-    HostProperties properties = new HostProperties(mysql, true);
-    int start = "address=".length();
-    while (start < entry.length()) {
-      while (start < entry.length() && Character.isWhitespace(entry.charAt(start))) {
-        start++;
+  private static HostPort parseHostProperties(String entry, boolean mysql) {
+    boolean address = isAddressHost(entry);
+    if (!address
+        && (!mysql
+            || !entry.endsWith(")")
+            || !hasBalancedParentheses(entry)
+            || entry.indexOf('@') >= 0
+            || entry.indexOf('#') >= 0)) {
+      return null;
+    }
+    Map<String, String> properties = new HashMap<>();
+    int limit = address ? entry.length() : entry.length() - 1;
+    int start = address ? "address=".length() : 1;
+    Pattern keyPattern = address ? ADDRESS_KEY_PATTERN : PROPERTY_KEY_PATTERN;
+    while (start < limit) {
+      if (address) {
+        while (start < limit && Character.isWhitespace(entry.charAt(start))) {
+          start++;
+        }
+        if (start == limit) {
+          break;
+        }
+        if (entry.charAt(start++) != '(') {
+          return null;
+        }
       }
-      if (start == entry.length()) {
-        break;
+      int end = entry.indexOf(address ? ')' : ',', start);
+      if (end < 0) {
+        if (address) {
+          return null;
+        }
+        end = limit;
       }
-      if (entry.charAt(start) != '(') {
+      String property = entry.substring(start, end);
+      int equals = property.indexOf('=');
+      String key = (equals < 0 ? property : property.substring(0, equals)).trim();
+      if (!keyPattern.matcher(key).matches()) {
         return null;
       }
-      int end = entry.indexOf(')', start + 1);
-      if (end < 0 || !properties.add(entry.substring(start + 1, end), ADDRESS_KEY_PATTERN)) {
+      key = mysql ? decodeProperty(key) : key;
+      if (key == null) {
         return null;
+      }
+      if (key.equalsIgnoreCase("host")) {
+        key = "host";
+      } else if (key.equalsIgnoreCase("port")) {
+        key = "port";
+      }
+      String value = equals < 0 ? "" : property.substring(equals + 1).trim();
+      value = key.equals("host") ? value.toLowerCase(Locale.ROOT) : value;
+      value = mysql ? decodeProperty(value) : value;
+      if (value == null || (key.isEmpty() && !value.isEmpty())) {
+        return null;
+      }
+      if (key.equals("host") || key.equals("port")) {
+        // Repeated endpoint keys can have case-sensitive driver precedence.
+        if (properties.containsKey(key)) {
+          return null;
+        }
+        properties.put(key, value);
       }
       start = end + 1;
     }
-    return properties.endpoint();
-  }
-
-  @Nullable
-  private static HostPort parseKeyValueHost(String entry) {
-    if (!entry.endsWith(")") || !hasBalancedParentheses(entry)) {
+    String host = properties.get("host");
+    String port = properties.get("port");
+    port = port == null || port.isEmpty() ? null : port;
+    if (host == null
+        || !host.equals(host.trim())
+        || !DbServerTargetBuilder.isValidHost(host)
+        || (!address && host.indexOf('%') >= 0)
+        || (port != null && !isValidPort(port))) {
       return null;
     }
-    String properties = entry.substring(1, entry.length() - 1);
-    // Connector/J treats an unencoded @ as a user-info separator, even inside host properties.
-    if (properties.indexOf('@') >= 0 || properties.indexOf('#') >= 0) {
-      return null;
-    }
-    HostProperties parsed = new HostProperties(true, false);
-    for (String property : properties.split(",", -1)) {
-      if (!parsed.add(property, PROPERTY_KEY_PATTERN)) {
-        return null;
-      }
-    }
-    return parsed.endpoint();
+    return new HostPort(stripIpv6Brackets(host), port == null ? null : Integer.valueOf(port), null);
   }
 
   private static boolean hasBalancedParentheses(String entry) {
@@ -245,71 +277,6 @@ final class MysqlHostParser {
 
     boolean hasHostProperties() {
       return hostProperties;
-    }
-  }
-
-  private static final class HostProperties {
-    private final boolean decode;
-    private final boolean allowZoneIds;
-    @Nullable private String host;
-    @Nullable private String port;
-    private boolean hasHost;
-    private boolean hasPort;
-
-    private HostProperties(boolean decode, boolean allowZoneIds) {
-      this.decode = decode;
-      this.allowZoneIds = allowZoneIds;
-    }
-
-    private boolean add(String property, Pattern keyPattern) {
-      int equals = property.indexOf('=');
-      String rawKey = equals < 0 ? property : property.substring(0, equals);
-      if (!keyPattern.matcher(rawKey.trim()).matches()) {
-        return false;
-      }
-      String key = decode ? decodeProperty(rawKey.trim()) : rawKey.trim();
-      if (key == null) {
-        return false;
-      }
-      String rawValue = equals < 0 ? null : property.substring(equals + 1).trim();
-      if (rawValue != null && key.equalsIgnoreCase("host")) {
-        rawValue = rawValue.toLowerCase(Locale.ROOT);
-      }
-      String value = decode && rawValue != null ? decodeProperty(rawValue) : rawValue;
-      if (rawValue != null && value == null) {
-        return false;
-      }
-      if (key.isEmpty()) {
-        return value == null || value.isEmpty();
-      }
-      // Repeated endpoint keys can have case-sensitive driver precedence.
-      if (key.equalsIgnoreCase("host")) {
-        if (hasHost) {
-          return false;
-        }
-        hasHost = true;
-        host = value;
-      } else if (key.equalsIgnoreCase("port")) {
-        if (hasPort) {
-          return false;
-        }
-        hasPort = true;
-        port = value == null || value.isEmpty() ? null : value;
-      }
-      return true;
-    }
-
-    @Nullable
-    private HostPort endpoint() {
-      if (host == null
-          || !host.equals(host.trim())
-          || !DbServerTargetBuilder.isValidHost(host)
-          || (!allowZoneIds && host.indexOf('%') >= 0)
-          || (port != null && !isValidPort(port))) {
-        return null;
-      }
-      return new HostPort(
-          stripIpv6Brackets(host), port == null ? null : Integer.valueOf(port), null);
     }
   }
 }

@@ -18,17 +18,97 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServ
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class MysqlUrlParserTest {
+
+  @ParameterizedTest
+  @CsvSource(
+      value = {
+        "h1|h1|",
+        "h1:1111|h1|1111",
+        "h1:3306|h1|3306",
+        "[::1]:1111|::1|1111",
+        "::1|::1|",
+        "user:example@h1:1111|h1|1111",
+        "address=example@h1:1111|h1|1111",
+        "us(er):ex(ample)@h1:1111|h1|1111",
+        "(user):example@h1:1111|h1|1111",
+        "(user):ex(ample@h1:1111|h1|1111",
+        "address=(user):example@h1:1111|h1|1111",
+        "address=ex(ample@h1:1111|h1|1111",
+        "user:ex(ample@h1:1111|h1|1111",
+        "address=(host=h1)|h1|",
+        "address=(host=h1)(port=1111)|h1|1111",
+        "address=(HOST= h1 )(port= 1111 )(user=other)(password=example%40value)|h1|1111",
+        "address=(host=::1)(port=1111)|::1|1111",
+        "address=(host=h1)(port=1111)(user=other%40example)|h1|1111",
+        "(host=h1)|h1|",
+        "(host=h1,port=1111)|h1|1111",
+        "(port=1111,host=h1)|h1|1111",
+        "\" ( host = h1 , port = 1111 ) \"|h1|1111",
+        "\"(\t host \r =h1,port=1111)\"|h1|1111",
+        "(,,host=h1,=,,)|h1|",
+        "(host=h1,port=)|h1|",
+        "(host=h1,port)|h1|",
+        "(%48ost=h%31,port=%31%31%31%31)|h1|1111",
+        "(ho%C5%BFt=h1,port=1111)|h1|1111",
+        "(host=::1,port=1111)|::1|1111",
+        "(host=%5B::1%5D,port=1111)|::1|1111",
+        "(host=h1,user=other,password=example%40value,other=a(b)c,flag)|h1|"
+      },
+      delimiter = '|',
+      quoteCharacter = '"')
+  void parsedHostAndOptionalPort(String authority, String host, Integer port) {
+    assertThat(MysqlHostParser.parseHostList(authority, true))
+        .isNotNull()
+        .satisfies(
+            hosts ->
+                assertThat(hosts.hosts())
+                    .extracting(HostPort::host, HostPort::port)
+                    .containsExactly(tuple(host, port)));
+  }
+
+  @Test
+  void emptyAuthorityHasNoConfiguredHosts() {
+    assertThat(MysqlHostParser.parseHostList("", true))
+        .isNotNull()
+        .satisfies(hosts -> assertThat(hosts.hosts()).isEmpty());
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "h1:1111",
+        "us(er):ex(ample)@h1:1111",
+        "(user):example@h1:1111",
+        "(user):ex(ample@h1:1111",
+        "address=(user):example@h1:1111",
+        "address=ex(ample@h1:1111",
+        "user:ex(ample@h1:1111",
+        "address=(host=h1)(port=1111)",
+        "address=(host=h1)(port=1111)(user=other@example)"
+      })
+  void mariaDbUsesTheSameOrdinaryAndAddressHostParsing(String authority) {
+    assertThat(MysqlHostParser.parseHostList(authority, false))
+        .isNotNull()
+        .satisfies(
+            hosts ->
+                assertThat(hosts.hosts())
+                    .extracting(HostPort::host, HostPort::port)
+                    .containsExactly(tuple("h1", 1111)));
+  }
 
   @ParameterizedTest
   @MethodSource("connectorUrls")
@@ -108,7 +188,9 @@ class MysqlUrlParserTest {
                 "jdbc:mysql://user:example@h1:1111,(other):example@h2:2222/db",
                 "jdbc:mysql://(host=h1,other=(value),port=1111)/db",
                 "jdbc:mysql://h1,h2,h3,h4,h5,(host=h6,port=1111)/db",
-                "jdbc:mysql://h1:1111,h1:1111,(host=h1,port=1111)/db"))
+                "jdbc:mysql://h1:1111,h1:1111,(host=h1,port=1111)/db",
+                "jdbc:mysql://h1:1111,(host=h2,port=2222),address=(host=::1)(user=other%40example),h1:1111/db",
+                "jdbc:mysql://(host=h1),address=(host=h2)(port=2222)/db"))
         .map(url -> argumentSet(url, url));
   }
 
@@ -178,13 +260,70 @@ class MysqlUrlParserTest {
         "h1:1111,(host=h2,other=bad%encoding)",
         "h1:1111,[(host=h2),(host=h3)]",
         "h1,h2,h3,h4,h5,(host=h6,port=65536)",
-        "h1,h2,h3,h4,h5,user:example@other@h6"
+        "h1,h2,h3,h4,h5,user:example@other@h6",
+        " ",
+        "h1,",
+        "h1:invalid",
+        "h1:",
+        "h1:0",
+        "h1:65536",
+        "[::1]:invalid",
+        "[::1]extra",
+        "[h1]",
+        "not a host",
+        "unexpected=value",
+        "address=(port=1111)",
+        "address=(host=h1)(host=h2)",
+        "address=(host=h1)(port=1111)(port=2222)",
+        "address=(host=h1)(port=65536)",
+        "address=(host=h1",
+        "(host=h1",
+        "(host=h1))",
+        "(host=h1)(port=1111)",
+        "(host=(h1),port=1111)",
+        "(host=h1,(port)=1111)",
+        "(port=1111)",
+        "(host=)",
+        "(host)",
+        "(host=h1,host=h2)",
+        "(host=h1,%68ost=h2)",
+        "(host=h1,ho%C5%BFt=h2)",
+        "(Host=h1,host=h2)",
+        "(host=h1,port=1111,port)",
+        "(host=h1,port=65536)",
+        "(host=h1,port=-1)",
+        "(host=h1,port=+1111)",
+        "(host=h1,port=not-a-port)",
+        "(host=h1,=value)",
+        "(host=h1,$key=value)",
+        "(host=h1,\u2003key=value)",
+        "(host=h1,other=bad%encoding)",
+        "(%host=h1)",
+        "(host=h1%20)",
+        "(host=%09h1)",
+        "(host=h1%29%28port%3d1111)",
+        "(host=fe80::1%25eth0)",
+        "(host=h1,other=value@h2)",
+        "(host=h1,other=value@h2",
+        "h1,address=(host=h2)(user=other@h3",
+        "h1,(host=h2,other=value@h3",
+        "(host=h1,other=value#h2)",
+        "user:example@(host=h1)",
+        "user:ex(ample)@(host=h1)",
+        "[(host=h1),(host=h2)]",
+        "(host=h1),address=(port=1111)"
       })
   void unsafeEntriesInvalidateTheWholeTargetWithoutDiscardingTheDatabase(String authority) {
+    assertThat(MysqlHostParser.parseHostList(authority, true)).isNull();
     DbInfo info = JdbcConnectionUrlParser.parse("jdbc:mysql://" + authority + "/db", null);
 
     assertThat(info.getConfiguredServerTarget()).isNull();
-    assertThat(info.getDbNamespace()).isEqualTo("db");
+    assertThat(info.getDbNamespace()).isEqualTo(authority.indexOf('#') < 0 ? "db" : null);
+  }
+
+  @Test
+  void mariaDbRejectsKeyValueHostsEvenInMixedLists() {
+    assertThat(MysqlHostParser.parseHostList("h1:1111,(host=h2,port=2222)", false)).isNull();
   }
 
   @ParameterizedTest

@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -302,26 +303,6 @@ class JdbcConnectionUrlParserTest {
             .setName("stdDatabaseName")
             .build(),
         arg("jdbc:mysql://my.host").setSystem(MYSQL).setHost("my.host").setPort(3306).build(),
-        arg("jdbc:mysql://(user):example@h1:1111/db")
-            .setSystem(MYSQL)
-            .setConfiguredServerTarget("h1", 1111)
-            .setName("db")
-            .build(),
-        arg("jdbc:mysql://(user):example@h1:1111,h2:2222/db")
-            .setSystem(MYSQL)
-            .setServerAddressGroup("h1:1111,h2:2222")
-            .setName("db")
-            .build(),
-        arg("jdbc:mysql://us(er):ex(ample)@h1:1111/db")
-            .setSystem(MYSQL)
-            .setConfiguredServerTarget("h1", 1111)
-            .setName("db")
-            .build(),
-        arg("jdbc:mysql://user:ex(am,ple@h1:1111,h2:2222/db")
-            .setSystem(MYSQL)
-            .setNoConfiguredTarget()
-            .setName("db")
-            .build(),
         arg("jdbc:mysql://my.host?user=myuser&password=PW")
             .setSystem(MYSQL)
             .setHost("my.host")
@@ -395,20 +376,11 @@ class JdbcConnectionUrlParserTest {
             .setPort(33)
             .setName("mydb")
             .build(),
-        arg("jdbc:mysql:replication://address=(host=h1)/db%2bname")
-            .setSystem(MYSQL)
-            .setConfiguredServerTarget("h1", 3306)
-            .setName("db%2bname")
-            .build(),
         arg("jdbc:mysql://address=(host=mdb.host)(port=33)/mdbdb")
             .setSystem(MYSQL)
             .setHost("mdb.host")
             .setPort(33)
             .setName("mdbdb")
-            .build(),
-        arg("jdbc:mysql://address=(host=h1)(port=1111)/db name")
-            .setSystem(MYSQL)
-            .setConfiguredServerTarget("h1", 1111)
             .build(),
         arg("jdbc:mysql://address=(host=mdb.host)(port=33)/mdb%2ddb")
             .setSystem(MYSQL)
@@ -434,194 +406,6 @@ class JdbcConnectionUrlParserTest {
             .setPort(33)
             .setName("mdbdb")
             .setServerAddressGroup("mdb.host:33,mdb.host2:3306")
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host,port=33,key1=value1)/mdbdb")
-            .setSystem(MYSQL)
-            .setHost("mdb.host")
-            .setPort(33)
-            .setName("mdbdb")
-            .build(),
-        arg("jdbc:mysql://(port=33,host=mdb.host)/mdb%2ddb")
-            .setSystem(MYSQL)
-            .setHost("mdb.host")
-            .setPort(33)
-            .setName("mdb-db")
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host)/mdbdb?password=(port=33)")
-            .setSystem(MYSQL)
-            .setHost("mdb.host")
-            .setPort(3306)
-            .setName("mdbdb")
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host,user=mdbuser,password=PW)")
-            .setSystem(MYSQL)
-            .setHost("mdb.host")
-            .setPort(3306)
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host,password=P,W)/mdbdb")
-            .setSystem(MYSQL)
-            .setHost("mdb.host")
-            .setPort(3306)
-            .setName("mdbdb")
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host,%68ost=mdb.host2,port=33)/mdbdb")
-            .setSystem(MYSQL)
-            .setName("mdbdb")
-            .setNoConfiguredTarget()
-            .build(),
-        arg("jdbc:mysql://(Host=mdb.host,host=mdb.host2)/mdbdb")
-            .setSystem(MYSQL)
-            .setName("mdbdb")
-            .setNoConfiguredTarget()
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host%20)/mdbdb")
-            .setSystem(MYSQL)
-            .setName("mdbdb")
-            .setNoConfiguredTarget()
-            .build(),
-        arg("jdbc:mysql:loadbalance://(host=mdb.host%20,port=33)/mdbdb")
-            .setSystem(MYSQL)
-            .setName("mdbdb")
-            .setNoConfiguredTarget()
-            .build(),
-        arg("jdbc:mysql://(host=%09mdb.host)/mdbdb")
-            .setSystem(MYSQL)
-            .setName("mdbdb")
-            .setNoConfiguredTarget()
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host,)/mdbdb")
-            .setSystem(MYSQL)
-            .setHost("mdb.host")
-            .setPort(3306)
-            .setName("mdbdb")
-            .build(),
-        arg("jdbc:mysql://(host=mdb%2ehost,port=%333)/mdbdb")
-            .setSystem(MYSQL)
-            .setHost("mdb.host")
-            .setPort(33)
-            .setName("mdbdb")
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host%29%28port%3d1)/mdbdb")
-            .setSystem(MYSQL)
-            .setName("mdbdb")
-            .setNoConfiguredTarget()
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host,port=33), (host=mdb.host2,port=3306)/mdbdb")
-            .setSystem(MYSQL)
-            .setHost("mdb.host")
-            .setPort(33)
-            .setName("mdbdb")
-            .setServerAddressGroup("mdb.host:33,mdb.host2:3306")
-            .build(),
-        arg("jdbc:mysql://mdb.host,mdb.host2,(host=mdb.host3/mdbdb")
-            .setSystem(MYSQL)
-            .setName("mdbdb")
-            .setMultiTarget()
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host,port=65536)/mdbdb")
-            .setSystem(MYSQL)
-            .setName("mdbdb")
-            .setNoConfiguredTarget()
-            .build(),
-        arg("jdbc:mysql://(host=%5B::1%5D,port=33)/mdbdb")
-            .setSystem(MYSQL)
-            .setHost("::1")
-            .setPort(33)
-            .setName("mdbdb")
-            .build(),
-        arg("jdbc:mysql://(host=fe80::1%25eth0,port=33)/mdbdb")
-            .setSystem(MYSQL)
-            .setName("mdbdb")
-            .setNoConfiguredTarget()
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host,port=33,password=(pw))/mdbdb")
-            .setSystem(MYSQL)
-            .setHost("mdb.host")
-            .setPort(33)
-            .setName("mdbdb")
-            .build(),
-        arg("jdbc:mysql://(host=(mdb.host),port=33)/mdbdb")
-            .setSystem(MYSQL)
-            .setName("mdbdb")
-            .setNoConfiguredTarget()
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host,(port)=33)/mdbdb")
-            .setSystem(MYSQL)
-            .setName("mdbdb")
-            .setNoConfiguredTarget()
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host,foo=x#y,port=33)/mdbdb")
-            .setSystem(MYSQL)
-            .setNoConfiguredTarget()
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host,foo=x@y,port=33)/mdbdb")
-            .setSystem(MYSQL)
-            .setName("mdbdb")
-            .setNoConfiguredTarget()
-            .build(),
-        arg("jdbc:mysql://(%48ost=mdb.host,host=mdb.host2)/mdbdb")
-            .setSystem(MYSQL)
-            .setName("mdbdb")
-            .setNoConfiguredTarget()
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host,$x=y)/mdbdb")
-            .setSystem(MYSQL)
-            .setName("mdbdb")
-            .setNoConfiguredTarget()
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host,\u2003x=y)/mdbdb")
-            .setSystem(MYSQL)
-            .setName("mdbdb")
-            .setNoConfiguredTarget()
-            .build(),
-        arg("jdbc:mysql://(%48ost=mdb.host,port=33)/mdbdb")
-            .setSystem(MYSQL)
-            .setHost("mdb.host")
-            .setPort(33)
-            .setName("mdbdb")
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host,port=33,port)/mdbdb")
-            .setSystem(MYSQL)
-            .setName("mdbdb")
-            .setNoConfiguredTarget()
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host,port=)/mdbdb")
-            .setSystem(MYSQL)
-            .setHost("mdb.host")
-            .setPort(3306)
-            .setName("mdbdb")
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host,port=33),(port=3306)/mdbdb")
-            .setSystem(MYSQL)
-            .setName("mdbdb")
-            .setMultiTarget()
-            .build(),
-        arg("jdbc:mysql://(host=mdb.host,port=33),(host=mdb.host2,port=3306)/mdbdb")
-            .setSystem(MYSQL)
-            .setHost("mdb.host")
-            .setPort(33)
-            .setName("mdbdb")
-            .setServerAddressGroup("mdb.host:33,mdb.host2:3306")
-            .build(),
-        arg("jdbc:mysql://mdb.host:33,(host=mdb.host2,port=3306,key2=value2)/mdbdb")
-            .setSystem(MYSQL)
-            .setHost("mdb.host")
-            .setPort(33)
-            .setName("mdbdb")
-            .setServerAddressGroup("mdb.host:33,mdb.host2:3306")
-            .build(),
-        arg("jdbc:mysql:loadbalance://(host=mdb.host,port=33)/mdbdb")
-            .setSystem(MYSQL)
-            .setHost("mdb.host")
-            .setPort(33)
-            .setName("mdbdb")
-            .build(),
-        arg("jdbc:mysql:replication://(host=mdb.host),(host=anotherhost,user=wrong,password=PW)/mdbdb")
-            .setSystem(MYSQL)
-            .setHost("mdb.host")
-            .setPort(3306)
-            .setName("mdbdb")
-            .setServerAddressGroup("mdb.host,anotherhost")
             .build(),
         arg("jdbc:mysql:loadbalance://localhost")
             .setSystem(MYSQL)
@@ -661,113 +445,6 @@ class JdbcConnectionUrlParserTest {
             .setSystem(MYSQL)
             .setHost("my.host")
             .setPort(3306)
-            .build(),
-        arg("jdbc:mysql://h1:1111,(host=h2),address=(host=::1)(port=2222)/db")
-            .setSystem(MYSQL)
-            .setServerAddressGroup("h1:1111,h2:3306,[::1]:2222")
-            .setName("db")
-            .build(),
-        arg("jdbc:mysql:loadbalance://h1:1111,(host=h2),address=(host=::1)(port=2222)/db")
-            .setSystem(MYSQL)
-            .setServerAddressGroup("h1:1111,h2:3306,[::1]:2222")
-            .setName("db")
-            .build(),
-        arg("jdbc:mysql:replication://h1:1111,(host=h2),address=(host=::1)(port=2222)/db")
-            .setSystem(MYSQL)
-            .setServerAddressGroup("h1:1111,h2:3306,[::1]:2222")
-            .setName("db")
-            .build(),
-        arg("jdbc:mysql://(host=h1,port=1111),address=(port=2222)/db")
-            .setSystem(MYSQL)
-            .setNoConfiguredTarget()
-            .setName("db")
-            .build(),
-        arg("jdbc:mysql:loadbalance://(host=h1,port=1111),address=(port=2222)/db")
-            .setSystem(MYSQL)
-            .setNoConfiguredTarget()
-            .setName("db")
-            .build(),
-        arg("jdbc:mysql:replication://(host=h1,port=1111),address=(port=2222)/db")
-            .setSystem(MYSQL)
-            .setNoConfiguredTarget()
-            .setName("db")
-            .build(),
-        arg("jdbc:mysql://(host=h1,port=1111)/db+name%2Bextra%2fpart"
-                + "?other=(host=wrong,port=2222)")
-            .setSystem(MYSQL)
-            .setConfiguredServerTarget("h1", 1111)
-            .setName("db+name+extra/part")
-            .build(),
-        arg("jdbc:mysql://(host=h1,port=1111)/db?serverName=wrong&portNumber=2222")
-            .setProperties(stdProps())
-            .setSystem(MYSQL)
-            .setConfiguredServerTarget("h1", 1111)
-            .setName("db")
-            .build(),
-        arg("jdbc:mysql://(host=h1)/db?portNumber=2222")
-            .setProperties(stdProps())
-            .setSystem(MYSQL)
-            .setConfiguredServerTarget("h1", 2222)
-            .setName("db")
-            .build(),
-        arg("jdbc:mysql://(host=h1,port=1111)"
-                + "?sessionVariables=email='user@example.com',sql_mode=ANSI")
-            .setSystem(MYSQL)
-            .setConfiguredServerTarget("h1", 1111)
-            .build(),
-        arg("jdbc:mysql://(host=h1,port=1111)//db")
-            .setSystem(MYSQL)
-            .setConfiguredServerTarget("h1", 1111)
-            .setName("/db")
-            .build(),
-        arg("jdbc:mysql://h1,h2,h3,h4,h5,(host=h6,port=1111)/db")
-            .setSystem(MYSQL)
-            .setServerAddressGroup("h1:3306,h2:3306,h3:3306,h4:3306,h5:3306")
-            .setName("db")
-            .build(),
-        arg("jdbc:mysql://h1,h2,h3,h4,h5,(host=h6,port=65536)/db")
-            .setSystem(MYSQL)
-            .setNoConfiguredTarget()
-            .setName("db")
-            .build(),
-        arg("jdbc:mysql://(host=h1,port=1111)/db name")
-            .setSystem(MYSQL)
-            .setConfiguredServerTarget("h1", 1111)
-            .build(),
-        arg("jdbc:mysql:replication://(host=h1,port=1111)/db%2bname")
-            .setSystem(MYSQL)
-            .setConfiguredServerTarget("h1", 1111)
-            .setName("db%2bname")
-            .build(),
-        arg("jdbc:mysql://h1:1111/db?serverName=h2&portNumber=2222")
-            .setProperties(stdProps())
-            .setSystem(MYSQL)
-            .setConfiguredServerTarget("h2", 2222)
-            .setName("db")
-            .build(),
-        arg("jdbc:mysql://(user):example@h1:1111/db?serverName=h2&portNumber=2222")
-            .setProperties(stdProps())
-            .setSystem(MYSQL)
-            .setConfiguredServerTarget("h2", 2222)
-            .setName("db")
-            .build(),
-        arg("jdbc:mysql://address=(user):example@h1:1111/db?serverName=h2&portNumber=2222")
-            .setProperties(stdProps())
-            .setSystem(MYSQL)
-            .setConfiguredServerTarget("h2", 2222)
-            .setName("db")
-            .build(),
-        arg("jdbc:mysql://address=example@h1:1111/db?serverName=h2&portNumber=2222")
-            .setProperties(stdProps())
-            .setSystem(MYSQL)
-            .setConfiguredServerTarget("h2", 2222)
-            .setName("db")
-            .build(),
-        arg("jdbc:mysql://address=(host=h1)(port=1111)/db?serverName=h2&portNumber=2222")
-            .setProperties(stdProps())
-            .setSystem(MYSQL)
-            .setConfiguredServerTarget("h1", 1111)
-            .setName("db")
             .build());
   }
 
@@ -775,6 +452,99 @@ class JdbcConnectionUrlParserTest {
   @MethodSource("mySqlArguments")
   void testMySqlParsing(ParseTestArgument argument) {
     testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+      value = {
+        // URL | configured address | port | namespace | DataSource properties
+        "jdbc:mysql://(user):example@h1:1111/db|h1|1111|db|false",
+        "jdbc:mysql://(user):example@h1:1111,h2:2222/db|h1:1111,h2:2222||db|false",
+        "jdbc:mysql://us(er):ex(ample)@h1:1111/db|h1|1111|db|false",
+        "jdbc:mysql://user:ex(am,ple@h1:1111,h2:2222/db|||db|false",
+        "jdbc:mysql:replication://address=(host=h1)/db%2bname|h1||db%2bname|false",
+        "jdbc:mysql://address=(host=h1)(port=1111)/db name|h1|1111||false",
+        "jdbc:mysql://(host=mdb.host,port=33,key1=value1)/mdbdb|mdb.host|33|mdbdb|false",
+        "jdbc:mysql://(port=33,host=mdb.host)/mdb%2ddb|mdb.host|33|mdb-db|false",
+        "jdbc:mysql://(host=mdb.host)/mdbdb?password=(port=33)|mdb.host||mdbdb|false",
+        "jdbc:mysql://(host=mdb.host,user=mdbuser,password=PW)|mdb.host|||false",
+        "jdbc:mysql://(host=mdb.host,password=P,W)/mdbdb|mdb.host||mdbdb|false",
+        "jdbc:mysql://(host=mdb.host,%68ost=mdb.host2,port=33)/mdbdb|||mdbdb|false",
+        "jdbc:mysql://(Host=mdb.host,host=mdb.host2)/mdbdb|||mdbdb|false",
+        "jdbc:mysql://(host=mdb.host%20)/mdbdb|||mdbdb|false",
+        "jdbc:mysql:loadbalance://(host=mdb.host%20,port=33)/mdbdb|||mdbdb|false",
+        "jdbc:mysql://(host=%09mdb.host)/mdbdb|||mdbdb|false",
+        "jdbc:mysql://(host=mdb.host,)/mdbdb|mdb.host||mdbdb|false",
+        "jdbc:mysql://(host=mdb%2ehost,port=%333)/mdbdb|mdb.host|33|mdbdb|false",
+        "jdbc:mysql://(host=mdb.host%29%28port%3d1)/mdbdb|||mdbdb|false",
+        "jdbc:mysql://(host=mdb.host,port=33), (host=mdb.host2,port=3306)/mdbdb|mdb.host:33,mdb.host2:3306||mdbdb|false",
+        "jdbc:mysql://mdb.host,mdb.host2,(host=mdb.host3/mdbdb|||mdbdb|false",
+        "jdbc:mysql://(host=mdb.host,port=65536)/mdbdb|||mdbdb|false",
+        "jdbc:mysql://(host=%5B::1%5D,port=33)/mdbdb|::1|33|mdbdb|false",
+        "jdbc:mysql://(host=fe80::1%25eth0,port=33)/mdbdb|||mdbdb|false",
+        "jdbc:mysql://(host=mdb.host,port=33,password=(pw))/mdbdb|mdb.host|33|mdbdb|false",
+        "jdbc:mysql://(host=(mdb.host),port=33)/mdbdb|||mdbdb|false",
+        "jdbc:mysql://(host=mdb.host,(port)=33)/mdbdb|||mdbdb|false",
+        "jdbc:mysql://(host=mdb.host,foo=x#y,port=33)/mdbdb||||false",
+        "jdbc:mysql://(host=mdb.host,foo=x@y,port=33)/mdbdb|||mdbdb|false",
+        "jdbc:mysql://(%48ost=mdb.host,host=mdb.host2)/mdbdb|||mdbdb|false",
+        "jdbc:mysql://(host=mdb.host,$x=y)/mdbdb|||mdbdb|false",
+        "jdbc:mysql://(host=mdb.host,\u2003x=y)/mdbdb|||mdbdb|false",
+        "jdbc:mysql://(%48ost=mdb.host,port=33)/mdbdb|mdb.host|33|mdbdb|false",
+        "jdbc:mysql://(host=mdb.host,port=33,port)/mdbdb|||mdbdb|false",
+        "jdbc:mysql://(host=mdb.host,port=)/mdbdb|mdb.host||mdbdb|false",
+        "jdbc:mysql://(host=mdb.host,port=33),(port=3306)/mdbdb|||mdbdb|false",
+        "jdbc:mysql://(host=mdb.host,port=33),(host=mdb.host2,port=3306)/mdbdb|mdb.host:33,mdb.host2:3306||mdbdb|false",
+        "jdbc:mysql://mdb.host:33,(host=mdb.host2,port=3306,key2=value2)/mdbdb|mdb.host:33,mdb.host2:3306||mdbdb|false",
+        "jdbc:mysql:loadbalance://(host=mdb.host,port=33)/mdbdb|mdb.host|33|mdbdb|false",
+        "jdbc:mysql:replication://(host=mdb.host),(host=anotherhost,user=wrong,password=PW)/mdbdb|mdb.host,anotherhost||mdbdb|false",
+        "jdbc:mysql://h1:1111,(host=h2),address=(host=::1)(port=2222)/db|h1:1111,h2:3306,[::1]:2222||db|false",
+        "jdbc:mysql:loadbalance://h1:1111,(host=h2),address=(host=::1)(port=2222)/db|h1:1111,h2:3306,[::1]:2222||db|false",
+        "jdbc:mysql:replication://h1:1111,(host=h2),address=(host=::1)(port=2222)/db|h1:1111,h2:3306,[::1]:2222||db|false",
+        "jdbc:mysql://(host=h1,port=1111),address=(port=2222)/db|||db|false",
+        "jdbc:mysql:loadbalance://(host=h1,port=1111),address=(port=2222)/db|||db|false",
+        "jdbc:mysql:replication://(host=h1,port=1111),address=(port=2222)/db|||db|false",
+        "jdbc:mysql://(host=h1,port=1111)/db+name%2Bextra%2fpart?other=(host=wrong,port=2222)|h1|1111|db+name+extra/part|false",
+        "jdbc:mysql://(host=h1,port=1111)/db?serverName=wrong&portNumber=2222|h1|1111|db|true",
+        "jdbc:mysql://(host=h1)/db?portNumber=2222|h1|2222|db|true",
+        "jdbc:mysql://(host=h1,port=1111)?sessionVariables=email='user@example.com',sql_mode=ANSI|h1|1111||false",
+        "jdbc:mysql://(host=h1,port=1111)//db|h1|1111|/db|false",
+        "jdbc:mysql://h1,h2,h3,h4,h5,(host=h6,port=1111)/db|h1:3306,h2:3306,h3:3306,h4:3306,h5:3306||db|false",
+        "jdbc:mysql://h1,h2,h3,h4,h5,(host=h6,port=65536)/db|||db|false",
+        "jdbc:mysql://(host=h1,port=1111)/db name|h1|1111||false",
+        "jdbc:mysql:replication://(host=h1,port=1111)/db%2bname|h1|1111|db%2bname|false",
+        "jdbc:mysql://h1:1111/db?serverName=h2&portNumber=2222|h2|2222|db|true",
+        "jdbc:mysql://(user):example@h1:1111/db?serverName=h2&portNumber=2222|h2|2222|db|true",
+        "jdbc:mysql://address=(user):example@h1:1111/db?serverName=h2&portNumber=2222|h2|2222|db|true",
+        "jdbc:mysql://address=example@h1:1111/db?serverName=h2&portNumber=2222|h2|2222|db|true",
+        "jdbc:mysql://address=(host=h1)(port=1111)/db?serverName=h2&portNumber=2222|h1|1111|db|true",
+        "jdbc:mariadb://us(er):ex(ample)@h1:1111/db|h1|1111|db|false",
+        "jdbc:mariadb://user:ex(am,ple@h1:1111,h2:2222/db|||db|false",
+        "jdbc:mariadb://(user):example@h1:1111/db|h1|1111|db|false",
+        "jdbc:mariadb://(user):example@h1:1111,h2:2222/db|h1:1111,h2:2222||db|false",
+        "jdbc:mariadb://address=(host=h1)(port=1111)/db name|h1|1111||false",
+        "jdbc:mariadb:replication://address=(host=h1)/db%2bname|h1||db%2bname|false",
+        "jdbc:mariadb://(host=h1,port=1111)/db|||db|false",
+        "jdbc:mariadb:loadbalance://(host=h1,port=1111)/db|||db|false",
+        "jdbc:mariadb:replication://(host=h1,port=1111)/db|||db|false",
+        "jdbc:mariadb://h1:1111/db?serverName=h2&portNumber=2222|h2|2222|db|true",
+        "jdbc:mariadb://(user):example@h1:1111/db?serverName=h2&portNumber=2222|h2|2222|db|true",
+        "jdbc:mariadb://address=(user):example@h1:1111/db?serverName=h2&portNumber=2222|h2|2222|db|true",
+        "jdbc:mariadb://address=example@h1:1111/db?serverName=h2&portNumber=2222|h2|2222|db|true",
+        "jdbc:mariadb://address=(host=h1)(port=1111)/db?serverName=h2&portNumber=2222|h1|1111|db|true"
+      },
+      delimiter = '|',
+      quoteCharacter = '"')
+  void mySqlAndMariaDbConfiguredTargets(
+      String url, String address, Integer port, String namespace, boolean withProperties) {
+    assertThat(parse(url, withProperties ? stdProps() : null))
+        .isEqualTo(
+            DbInfo.builder()
+                .dbSystemName(url.startsWith("jdbc:mysql:") ? MYSQL : MARIADB)
+                .configuredServerTarget(
+                    address == null ? null : DbServerTarget.create(address, port))
+                .dbNamespace(namespace)
+                .build());
   }
 
   private static Stream<Arguments> clickHouseArguments() {
@@ -935,26 +705,6 @@ class JdbcConnectionUrlParserTest {
             .setPort(33)
             .setName("mdbdb")
             .build(),
-        arg("jdbc:mariadb://us(er):ex(ample)@h1:1111/db")
-            .setSystem(MARIADB)
-            .setConfiguredServerTarget("h1", 1111)
-            .setName("db")
-            .build(),
-        arg("jdbc:mariadb://user:ex(am,ple@h1:1111,h2:2222/db")
-            .setSystem(MARIADB)
-            .setNoConfiguredTarget()
-            .setName("db")
-            .build(),
-        arg("jdbc:mariadb://(user):example@h1:1111/db")
-            .setSystem(MARIADB)
-            .setConfiguredServerTarget("h1", 1111)
-            .setName("db")
-            .build(),
-        arg("jdbc:mariadb://(user):example@h1:1111,h2:2222/db")
-            .setSystem(MARIADB)
-            .setServerAddressGroup("h1:1111,h2:2222")
-            .setName("db")
-            .build(),
         arg("jdbc:mariadb:aurora://mdb.host/mdbdb")
             .setSystem(MARIADB)
             .setHost("mdb.host")
@@ -1001,15 +751,6 @@ class JdbcConnectionUrlParserTest {
             .setPort(33)
             .setName("mdbdb")
             .build(),
-        arg("jdbc:mariadb://address=(host=h1)(port=1111)/db name")
-            .setSystem(MARIADB)
-            .setConfiguredServerTarget("h1", 1111)
-            .build(),
-        arg("jdbc:mariadb:replication://address=(host=h1)/db%2bname")
-            .setSystem(MARIADB)
-            .setConfiguredServerTarget("h1", 3306)
-            .setName("db%2bname")
-            .build(),
         arg("jdbc:mariadb:replication://localhost:33,anotherhost:3306/mdbdb")
             .setSystem(MARIADB)
             .setHost("localhost")
@@ -1031,51 +772,6 @@ class JdbcConnectionUrlParserTest {
             .setSystem(MARIADB)
             .setHost("::1")
             .setPort(3306)
-            .build(),
-        arg("jdbc:mariadb://(host=h1,port=1111)/db")
-            .setSystem(MARIADB)
-            .setNoConfiguredTarget()
-            .setName("db")
-            .build(),
-        arg("jdbc:mariadb:loadbalance://(host=h1,port=1111)/db")
-            .setSystem(MARIADB)
-            .setNoConfiguredTarget()
-            .setName("db")
-            .build(),
-        arg("jdbc:mariadb:replication://(host=h1,port=1111)/db")
-            .setSystem(MARIADB)
-            .setNoConfiguredTarget()
-            .setName("db")
-            .build(),
-        arg("jdbc:mariadb://h1:1111/db?serverName=h2&portNumber=2222")
-            .setProperties(stdProps())
-            .setSystem(MARIADB)
-            .setConfiguredServerTarget("h2", 2222)
-            .setName("db")
-            .build(),
-        arg("jdbc:mariadb://(user):example@h1:1111/db?serverName=h2&portNumber=2222")
-            .setProperties(stdProps())
-            .setSystem(MARIADB)
-            .setConfiguredServerTarget("h2", 2222)
-            .setName("db")
-            .build(),
-        arg("jdbc:mariadb://address=(user):example@h1:1111/db?serverName=h2&portNumber=2222")
-            .setProperties(stdProps())
-            .setSystem(MARIADB)
-            .setConfiguredServerTarget("h2", 2222)
-            .setName("db")
-            .build(),
-        arg("jdbc:mariadb://address=example@h1:1111/db?serverName=h2&portNumber=2222")
-            .setProperties(stdProps())
-            .setSystem(MARIADB)
-            .setConfiguredServerTarget("h2", 2222)
-            .setName("db")
-            .build(),
-        arg("jdbc:mariadb://address=(host=h1)(port=1111)/db?serverName=h2&portNumber=2222")
-            .setProperties(stdProps())
-            .setSystem(MARIADB)
-            .setConfiguredServerTarget("h1", 1111)
-            .setName("db")
             .build());
   }
 
