@@ -525,8 +525,7 @@ instrumentation/development:
       # `scheduling.powerjob.job.type`.
       experimental_span_attributes/development: false
     pulsar:
-      # Enables capturing experimental span attribute `pulsar.message.type` on PRODUCER
-      # spans.
+      # Enables capturing experimental span attribute `pulsar.message.type` on PRODUCER spans.
       experimental_span_attributes/development: false
     quartz:
       # Enables the experimental `job.system` span attribute.
@@ -546,8 +545,8 @@ instrumentation/development:
         enabled: false
     rocketmq_client:
       # Enables capturing experimental span attributes `rocketmq.message.tag`,
-      # `rocketmq.broker_address`, `rocketmq.send_result`,
-      # `rocketmq.queue_id`, and `rocketmq.queue_offset`.
+      # `rocketmq.broker_address`, `rocketmq.send_result`, `rocketmq.queue_id`, and
+      # `rocketmq.queue_offset`.
       experimental_span_attributes/development: false
       message_create_spans:
         # Enables per-message Create spans for batch sends. Overrides the common messaging setting.
