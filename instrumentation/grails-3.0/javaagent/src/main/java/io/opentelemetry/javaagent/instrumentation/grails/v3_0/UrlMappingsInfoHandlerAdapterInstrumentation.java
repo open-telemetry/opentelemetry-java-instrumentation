@@ -32,8 +32,8 @@ class UrlMappingsInfoHandlerAdapterInstrumentation implements TypeInstrumentatio
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("handle"))
-            .and(takesArgument(2, named(Object.class.getName())))
-            .and(takesArguments(3)),
+            .and(takesArguments(3))
+            .and(takesArgument(2, named(Object.class.getName()))),
         getClass().getName() + "$ServerSpanNameAdvice");
   }
 
