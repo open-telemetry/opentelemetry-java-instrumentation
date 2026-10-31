@@ -5,14 +5,30 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+
+import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Map;
 import org.apache.http.HttpEntity;
@@ -20,12 +36,15 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.protocol.BasicHttpContext;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -116,6 +135,92 @@ public abstract class AbstractApacheHttpClientTest {
 
   @Nested
   class ApacheClientHostRequestTest extends ApacheHttpClientTest<BasicHttpRequest> {
+
+    @Test
+    void requestWithInetAddress() throws IOException {
+      int serverPort = resolveAddress("/success").getPort();
+      HttpHost target =
+          new HttpHost(
+              InetAddress.getByAddress("127.0.0.1", new byte[] {127, 0, 0, 1}), serverPort, "http");
+      URI expectedUri = URI.create(target.toURI() + "/success");
+
+      int responseCode =
+          getClient(expectedUri)
+              .execute(
+                  target,
+                  new BasicHttpRequest("GET", "/success"),
+                  AbstractApacheHttpClientTest::getResponseCode);
+      assertThat(responseCode).isEqualTo(200);
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> assertClientSpanWithoutPeer(span, expectedUri),
+                  span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
+    }
+
+    @Test
+    void requestWithInetAddressThroughProxy() throws IOException {
+      // The shared HTTP server does not accept absolute-form proxy requests.
+      HttpServer proxy =
+          HttpServer.create(
+              new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 0), 0);
+      cleanup.deferCleanup(() -> proxy.stop(0));
+      proxy.createContext(
+          "/success",
+          exchange -> {
+            try {
+              exchange.sendResponseHeaders(200, -1);
+            } finally {
+              exchange.close();
+            }
+          });
+      proxy.start();
+
+      HttpHost target =
+          new HttpHost(
+              InetAddress.getByAddress("192.0.2.7", new byte[] {(byte) 192, 0, 2, 7}),
+              8080,
+              "http");
+      URI expectedUri = URI.create(target.toURI() + "/success");
+
+      HttpClientContext context = HttpClientContext.create();
+      context.setRequestConfig(
+          RequestConfig.custom()
+              .setConnectTimeout((int) CONNECTION_TIMEOUT.toMillis())
+              .setSocketTimeout((int) READ_TIMEOUT.toMillis())
+              .setProxy(new HttpHost("127.0.0.1", proxy.getAddress().getPort()))
+              .build());
+
+      int responseCode =
+          getClient(expectedUri)
+              .execute(
+                  target,
+                  new BasicHttpRequest("GET", "/success"),
+                  AbstractApacheHttpClientTest::getResponseCode,
+                  context);
+      assertThat(responseCode).isEqualTo(200);
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> assertClientSpanWithoutPeer(span, expectedUri)));
+    }
+
+    private SpanDataAssert assertClientSpanWithoutPeer(SpanDataAssert span, URI uri) {
+      return assertClientSpan(span, uri, "GET", 200, null)
+          .hasNoParent()
+          .hasStatus(StatusData.unset())
+          .hasAttributesSatisfyingExactly(
+              equalTo(HTTP_REQUEST_METHOD, "GET"),
+              equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+              equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+              equalTo(SERVER_ADDRESS, uri.getHost()),
+              equalTo(SERVER_PORT, uri.getPort()),
+              equalTo(URL_FULL, uri.toString()),
+              equalTo(NETWORK_PEER_ADDRESS, null),
+              equalTo(NETWORK_PEER_PORT, null));
+    }
 
     @Override
     public BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {

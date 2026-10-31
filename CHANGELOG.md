@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes
 
+- Apache HttpClient 4.3 library instrumentation no longer automatically emits
+  `network.peer.address` or `network.peer.port` inferred from the route target.
+  Use `server.address` and `server.port` for logical destination grouping.
 - Rename `otel.instrumentation.grpc.{client,server}.request-metadata.{included,excluded}` to
   `otel.instrumentation.grpc.{client,server}.request-headers.{included,excluded}`.
 - Captured gRPC request attributes now use `rpc.request.header.<key>` instead of
