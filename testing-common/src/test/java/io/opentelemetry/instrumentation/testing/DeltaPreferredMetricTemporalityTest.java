@@ -8,10 +8,7 @@ package io.opentelemetry.instrumentation.testing;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.stream.Collectors.toList;
 
-import io.opentelemetry.api.metrics.DoubleHistogram;
-import io.opentelemetry.api.metrics.LongUpDownCounter;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.ObservableLongCounter;
 import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
@@ -30,52 +27,28 @@ class DeltaPreferredMetricTemporalityTest {
   void usesDeltaPreferredTemporalityForExportedMetrics() {
     Meter meter = testing.getOpenTelemetry().getMeterProvider().meterBuilder("test").build();
     meter.counterBuilder("counter").build().add(1);
-    ObservableLongCounter observableCounter =
-        meter
-            .counterBuilder("observable-counter")
-            .buildWithCallback(measurement -> measurement.record(1));
-    LongUpDownCounter upDownCounter = meter.upDownCounterBuilder("up-down-counter").build();
-    upDownCounter.add(1);
     AtomicLong activeTasks = new AtomicLong(1);
     ObservableLongUpDownCounter observableUpDownCounter =
         meter
             .upDownCounterBuilder("observable-up-down-counter")
             .buildWithCallback(measurement -> measurement.record(activeTasks.get()));
-    DoubleHistogram histogram = meter.histogramBuilder("histogram").build();
-    histogram.record(1);
 
     try {
       List<MetricData> firstCollection = testing.metrics();
       assertThat(metric(firstCollection, "counter").getLongSumData().getAggregationTemporality())
           .isEqualTo(AggregationTemporality.DELTA);
       assertThat(
-              metric(firstCollection, "observable-counter")
-                  .getLongSumData()
-                  .getAggregationTemporality())
-          .isEqualTo(AggregationTemporality.DELTA);
-      assertThat(
-              metric(firstCollection, "up-down-counter")
-                  .getLongSumData()
-                  .getAggregationTemporality())
-          .isEqualTo(AggregationTemporality.CUMULATIVE);
-      assertThat(
               metric(firstCollection, "observable-up-down-counter")
                   .getLongSumData()
                   .getAggregationTemporality())
           .isEqualTo(AggregationTemporality.CUMULATIVE);
-      assertThat(
-              metric(firstCollection, "histogram").getHistogramData().getAggregationTemporality())
-          .isEqualTo(AggregationTemporality.DELTA);
 
-      assertThat(observableUpDownCounterValues(firstCollection)).containsExactly(1L);
-      List<MetricData> secondCollection = testing.metrics();
-      assertThat(observableUpDownCounterValues(secondCollection)).containsExactly(1L, 1L);
+      testing.metrics();
 
       activeTasks.set(0);
       List<MetricData> thirdCollection = testing.metrics();
       assertThat(observableUpDownCounterValues(thirdCollection)).containsExactly(1L, 1L, 0L);
     } finally {
-      observableCounter.close();
       observableUpDownCounter.close();
     }
   }

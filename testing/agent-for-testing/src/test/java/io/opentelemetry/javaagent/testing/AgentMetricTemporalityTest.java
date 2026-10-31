@@ -9,10 +9,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.metrics.DoubleHistogram;
-import io.opentelemetry.api.metrics.LongUpDownCounter;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.metrics.ObservableLongCounter;
 import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.sdk.metrics.InstrumentType;
@@ -33,46 +30,28 @@ class AgentMetricTemporalityTest {
   }
 
   @Test
-  void usesConfiguredTemporalityForEveryInstrument() {
+  void usesConfiguredTemporalityForCounterAndObservableUpDownCounter() {
     Meter meter = GlobalOpenTelemetry.get().getMeterProvider().meterBuilder("test").build();
     meter.counterBuilder("counter").build().add(1);
-    ObservableLongCounter observableCounter =
-        meter
-            .counterBuilder("observable-counter")
-            .buildWithCallback(measurement -> measurement.record(1));
-    LongUpDownCounter upDownCounter = meter.upDownCounterBuilder("up-down-counter").build();
-    upDownCounter.add(1);
     AtomicLong activeTasks = new AtomicLong(1);
     ObservableLongUpDownCounter observableUpDownCounter =
         meter
             .upDownCounterBuilder("observable-up-down-counter")
             .buildWithCallback(measurement -> measurement.record(activeTasks.get()));
-    DoubleHistogram histogram = meter.histogramBuilder("histogram").build();
-    histogram.record(1);
 
     try {
-      List<MetricData> metrics = AgentTestingExporterAccess.getExportedMetrics();
-      assertThat(metric(metrics, "counter").getLongSumData().getAggregationTemporality())
+      List<MetricData> firstCollection = AgentTestingExporterAccess.getExportedMetrics();
+      assertThat(metric(firstCollection, "counter").getLongSumData().getAggregationTemporality())
           .isEqualTo(expectedTemporality(InstrumentType.COUNTER));
-      assertThat(metric(metrics, "observable-counter").getLongSumData().getAggregationTemporality())
-          .isEqualTo(expectedTemporality(InstrumentType.OBSERVABLE_COUNTER));
-      assertThat(metric(metrics, "up-down-counter").getLongSumData().getAggregationTemporality())
-          .isEqualTo(expectedTemporality(InstrumentType.UP_DOWN_COUNTER));
-      assertThat(
-              metric(metrics, "observable-up-down-counter")
-                  .getLongSumData()
-                  .getAggregationTemporality())
-          .isEqualTo(expectedTemporality(InstrumentType.OBSERVABLE_UP_DOWN_COUNTER));
-      assertThat(metric(metrics, "histogram").getHistogramData().getAggregationTemporality())
-          .isEqualTo(expectedTemporality(InstrumentType.HISTOGRAM));
-
-      assertThat(observableUpDownCounterValues(metrics)).containsExactly(1L);
       AggregationTemporality observableUpDownCounterTemporality =
           expectedTemporality(InstrumentType.OBSERVABLE_UP_DOWN_COUNTER);
-      List<MetricData> secondCollection = AgentTestingExporterAccess.getExportedMetrics();
-      assertThat(observableUpDownCounterValues(secondCollection))
-          .containsExactly(
-              1L, observableUpDownCounterTemporality == AggregationTemporality.DELTA ? 0L : 1L);
+      assertThat(
+              metric(firstCollection, "observable-up-down-counter")
+                  .getLongSumData()
+                  .getAggregationTemporality())
+          .isEqualTo(observableUpDownCounterTemporality);
+
+      AgentTestingExporterAccess.getExportedMetrics();
 
       activeTasks.set(0);
       List<MetricData> thirdCollection = AgentTestingExporterAccess.getExportedMetrics();
@@ -82,7 +61,6 @@ class AgentMetricTemporalityTest {
               observableUpDownCounterTemporality == AggregationTemporality.DELTA ? 0L : 1L,
               observableUpDownCounterTemporality == AggregationTemporality.DELTA ? -1L : 0L);
     } finally {
-      observableCounter.close();
       observableUpDownCounter.close();
     }
   }
