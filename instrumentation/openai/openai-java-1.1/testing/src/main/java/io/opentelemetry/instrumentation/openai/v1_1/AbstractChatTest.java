@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -41,6 +42,8 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.OpenAIClientAsync;
@@ -66,6 +69,8 @@ import com.openai.models.chat.completions.ChatCompletionSystemMessageParam;
 import com.openai.models.chat.completions.ChatCompletionTool;
 import com.openai.models.chat.completions.ChatCompletionToolMessageParam;
 import com.openai.models.chat.completions.ChatCompletionUserMessageParam;
+import com.openai.services.async.chat.ChatCompletionServiceAsync;
+import com.openai.services.blocking.chat.ChatCompletionService;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.Span;
@@ -84,8 +89,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractChatTest extends AbstractOpenAiTest {
@@ -278,6 +288,66 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                           KeyValue.of(
                               "message", Value.of(KeyValue.of("content", Value.of(content))))));
             });
+  }
+
+  @ParameterizedTest
+  @MethodSource("withOptionsCases")
+  void withOptions(
+      Function<OpenAIClient, ChatCompletionService> sync,
+      Function<OpenAIClientAsync, ChatCompletionServiceAsync> async) {
+    // withOptions was added in SDK 2.x
+    assumeTrue(testLatestDeps());
+    ChatCompletionCreateParams params =
+        ChatCompletionCreateParams.builder()
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .model(TEST_CHAT_MODEL)
+            .build();
+
+    ChatCompletion response =
+        call(
+            client -> sync.apply(client).create(params),
+            client -> async.apply(client).create(params));
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    maybeWithTransportSpan(
+                        span ->
+                            assertChatSpan(span)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                    equalTo(GEN_AI_RESPONSE_ID, response.id()),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
+                                    satisfies(
+                                        GEN_AI_RESPONSE_FINISH_REASONS,
+                                        val -> val.containsExactly("stop")),
+                                    equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
+                                    equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L)))));
+  }
+
+  private static Stream<Arguments> withOptionsCases() {
+    return Stream.of(
+        argumentSet(
+            "client",
+            (Function<OpenAIClient, ChatCompletionService>)
+                client -> testHelper.withoutRetries(client).chat().completions(),
+            (Function<OpenAIClientAsync, ChatCompletionServiceAsync>)
+                client -> testHelper.withoutRetries(client).chat().completions()),
+        argumentSet(
+            "chat service",
+            (Function<OpenAIClient, ChatCompletionService>)
+                client -> testHelper.withoutRetries(client.chat()).completions(),
+            (Function<OpenAIClientAsync, ChatCompletionServiceAsync>)
+                client -> testHelper.withoutRetries(client.chat()).completions()),
+        argumentSet(
+            "chat completion service",
+            (Function<OpenAIClient, ChatCompletionService>)
+                client -> testHelper.withoutRetries(client.chat().completions()),
+            (Function<OpenAIClientAsync, ChatCompletionServiceAsync>)
+                client -> testHelper.withoutRetries(client.chat().completions())));
   }
 
   @Test
