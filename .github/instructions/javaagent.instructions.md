@@ -73,13 +73,13 @@ describe selectable behavior, not Muzzle implementation identities.
   its postprocessor supplies dynamic typing. This does not apply to advice parameter bindings.
   Verify custom pipelines separately.
 - For a complete, nonempty signature of exact parameter types, use
-  `AgentElementMatchers.takesArgumentsNamed(...)` instead of `takesArguments(Type...)` or an
+  `AgentElementMatchers.takesArgumentsExactly(...)` instead of `takesArguments(Type...)` or an
   argument count combined with positional type checks. Use exact erased type names, including
   primitive names such as `"int"`. For a zero-parameter signature, use `takesArguments(0)`.
 - Keep positional `takesArgument(...)` matchers for intentionally partial signatures or predicates
   that cannot be expressed as exact type names, such as subtype checks or parameter-type
   alternatives across supported versions. Do not add otherwise unnecessary parameter checks
-  merely to use `takesArgumentsNamed(...)`.
+  merely to use `takesArgumentsExactly(...)`.
 - When advice binds a library argument as `Object` to support different known parameter types
   across versions, use `takesArgument(index, namedOneOf(...))` with those type names instead of
   `any()` or a custom argument-count check. The positional matcher already guarantees that the

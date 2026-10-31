@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArgumentsNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArgumentsExactly;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.requestInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isEnum;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -51,7 +51,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("query")
             .and(
-                takesArgumentsNamed(
+                takesArgumentsExactly(
                     "org.influxdb.dto.Query",
                     "java.util.function.Consumer",
                     "java.util.function.Consumer")),
@@ -59,19 +59,19 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("query")
             .and(
-                takesArgumentsNamed(
+                takesArgumentsExactly(
                     "org.influxdb.dto.Query", "int", "java.util.function.Consumer")),
         getClass().getName() + "$InfluxDbChunkedConsumerQueryAdvice");
     transformer.applyAdviceToMethod(
         named("query")
             .and(
-                takesArgumentsNamed(
+                takesArgumentsExactly(
                     "org.influxdb.dto.Query", "int", "java.util.function.BiConsumer")),
         getClass().getName() + "$InfluxDbChunkedBiConsumerQueryAdvice");
     transformer.applyAdviceToMethod(
         named("query")
             .and(
-                takesArgumentsNamed(
+                takesArgumentsExactly(
                     "org.influxdb.dto.Query",
                     "int",
                     "java.util.function.Consumer",
@@ -80,7 +80,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("query")
             .and(
-                takesArgumentsNamed(
+                takesArgumentsExactly(
                     "org.influxdb.dto.Query",
                     "int",
                     "java.util.function.BiConsumer",
@@ -89,7 +89,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("query")
             .and(
-                takesArgumentsNamed(
+                takesArgumentsExactly(
                     "org.influxdb.dto.Query",
                     "int",
                     "java.util.function.BiConsumer",

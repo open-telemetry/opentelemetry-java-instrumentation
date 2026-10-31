@@ -89,9 +89,9 @@ public final class AgentElementMatchers {
    * @param names the exact ordered parameter type names to match.
    * @return a matcher for methods with the specified parameter types.
    */
-  public static <T extends MethodDescription> ElementMatcher.Junction<T> takesArgumentsNamed(
+  public static <T extends MethodDescription> ElementMatcher.Junction<T> takesArgumentsExactly(
       String... names) {
-    return new TakesArgumentsNamedMatcher<>(names);
+    return new TakesArgumentsExactlyMatcher<>(names);
   }
 
   /**

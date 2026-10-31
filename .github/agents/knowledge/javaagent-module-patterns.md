@@ -567,8 +567,8 @@ supported signatures or concrete-type assumption when the choice is not obvious.
   `extendsClass(...)` and `implementsInterface(...)` are appropriate when the instrumentation
   targets subclasses or implementors of a type.
 - `transform()` wires method matchers to advice classes via `applyAdviceToMethod()`.
-- For complete, nonempty exact signatures, use `takesArgumentsNamed(...)`, for example
-  `takesArgumentsNamed("org.influxdb.dto.Query", "int", "java.util.function.Consumer")`.
+- For complete, nonempty exact signatures, use `takesArgumentsExactly(...)`, for example
+  `takesArgumentsExactly("org.influxdb.dto.Query", "int", "java.util.function.Consumer")`.
   Use `takesArguments(0)` for zero-parameter signatures. Keep positional matchers for partial
   signatures and non-exact type predicates.
 - Positional argument and return-type matchers inside `transform()` use `Type.class` only when the type
