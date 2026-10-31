@@ -45,7 +45,7 @@ import org.objectweb.asm.Type;
  *       ↑ └───────── IndyBootstrapDispatcher ─ ↑ ──→ └────────────── {@link IndyBootstrap#bootstrap}
  *     Ext/Platform CL               ↑          │                        ╷
  *       ↑                           ╷          │                        ↓
- *     System CL                     ╷          │        {@link IndyModuleRegistry#getInstrumentationClassLoader(String, ClassLoader)}
+ *     System CL                     ╷          │        {@link InstrumentationModuleClassLoaderRegistry#getInstrumentationClassLoader(String, ClassLoader)}
  *       ↑                           ╷          │                        ╷
  *     Common               linking of CallSite │                        ╷
  *     ↑    ↑             (on first invocation) │                        ╷
@@ -179,7 +179,7 @@ public class IndyBootstrap {
       }
 
       InstrumentationModuleClassLoader instrumentationClassloader =
-          IndyModuleRegistry.getInstrumentationClassLoader(
+          InstrumentationModuleClassLoaderRegistry.getInstrumentationClassLoader(
               moduleClassName, lookup.lookupClass().getClassLoader());
 
       // Advices are not inlined. They are loaded as normal classes by the
