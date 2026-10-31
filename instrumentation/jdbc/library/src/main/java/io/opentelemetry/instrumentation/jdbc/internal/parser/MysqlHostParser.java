@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
@@ -28,7 +29,7 @@ final class MysqlHostParser {
   private static final Logger logger = Logger.getLogger(MysqlHostParser.class.getName());
   private static final Pattern PROPERTY_KEY_PATTERN = Pattern.compile("[a-zA-Z0-9_.%\\s-]*");
   private static final Pattern HOST_PROPERTIES_PATTERN =
-      Pattern.compile("(^|,)\\s*(?:address\\s*=|\\()", Pattern.CASE_INSENSITIVE);
+      Pattern.compile("(^|,)\\s*(?:address\\s*=\\s*)?\\(", Pattern.CASE_INSENSITIVE);
 
   /** Returns all configured endpoints, or null if any host entry cannot be parsed safely. */
   @Nullable
@@ -40,7 +41,7 @@ final class MysqlHostParser {
     // Parentheses in ordinary user info are not host-property blocks.
     if (userInfoEnd >= 0
         && authority.indexOf('(', userInfoEnd + 1) < 0
-        && (authority.indexOf('(') < 0 || !HOST_PROPERTIES_PATTERN.matcher(authority).find())) {
+        && !isAtInHostProperties(authority, userInfoEnd)) {
       authority = authority.substring(userInfoEnd + 1);
     }
     List<HostPort> hosts = new ArrayList<>();
@@ -53,6 +54,28 @@ final class MysqlHostParser {
       hosts.add(host);
     }
     return Collections.unmodifiableList(hosts);
+  }
+
+  private static boolean isAtInHostProperties(String authority, int at) {
+    Matcher properties = HOST_PROPERTIES_PATTERN.matcher(authority);
+    while (properties.find() && properties.end() <= at) {
+      int depth = 1;
+      for (int i = properties.end(); i < at; i++) {
+        char c = authority.charAt(i);
+        if (depth == 0 && c != '(' && !Character.isWhitespace(c)) {
+          break;
+        }
+        if (c == '(') {
+          depth++;
+        } else if (c == ')') {
+          depth--;
+        }
+      }
+      if (depth > 0) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Nullable

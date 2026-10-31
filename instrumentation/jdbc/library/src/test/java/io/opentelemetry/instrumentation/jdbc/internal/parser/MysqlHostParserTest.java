@@ -37,6 +37,14 @@ class MysqlHostParserTest {
         argumentSet("ordinary user info", "user:example@h1:1111", "h1", 1111),
         argumentSet("equals in ordinary user info", "address=example@h1:1111", "h1", 1111),
         argumentSet("parentheses in ordinary user info", "us(er):ex(ample)@h1:1111", "h1", 1111),
+        argumentSet("leading username parentheses", "(user):example@h1:1111", "h1", 1111),
+        argumentSet(
+            "leading username and unbalanced password parentheses",
+            "(user):ex(ample@h1:1111",
+            "h1",
+            1111),
+        argumentSet("address-like user info", "address=(user):example@h1:1111", "h1", 1111),
+        argumentSet("unbalanced address-like user info", "address=ex(ample@h1:1111", "h1", 1111),
         argumentSet("unbalanced credential parentheses", "user:ex(ample@h1:1111", "h1", 1111),
         argumentSet("address host", "address=(host=h1)", "h1", null),
         argumentSet("address host and port", "address=(host=h1)(port=1111)", "h1", 1111),
@@ -97,6 +105,10 @@ class MysqlHostParserTest {
       strings = {
         "h1:1111",
         "us(er):ex(ample)@h1:1111",
+        "(user):example@h1:1111",
+        "(user):ex(ample@h1:1111",
+        "address=(user):example@h1:1111",
+        "address=ex(ample@h1:1111",
         "user:ex(ample@h1:1111",
         "address=(host=h1)(port=1111)",
         "address=(host=h1)(port=1111)(user=other@example)"

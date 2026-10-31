@@ -302,6 +302,16 @@ class JdbcConnectionUrlParserTest {
             .setName("stdDatabaseName")
             .build(),
         arg("jdbc:mysql://my.host").setSystem(MYSQL).setHost("my.host").setPort(3306).build(),
+        arg("jdbc:mysql://(user):example@h1:1111/db")
+            .setSystem(MYSQL)
+            .setConfiguredServerTarget("h1", 1111)
+            .setName("db")
+            .build(),
+        arg("jdbc:mysql://(user):example@h1:1111,h2:2222/db")
+            .setSystem(MYSQL)
+            .setServerAddressGroup("h1:1111,h2:2222")
+            .setName("db")
+            .build(),
         arg("jdbc:mysql://us(er):ex(ample)@h1:1111/db")
             .setSystem(MYSQL)
             .setConfiguredServerTarget("h1", 1111)
@@ -912,6 +922,16 @@ class JdbcConnectionUrlParserTest {
             .setName("db")
             .build(),
         arg("jdbc:mariadb://user:ex(am,ple@h1:1111,h2:2222/db")
+            .setSystem(MARIADB)
+            .setServerAddressGroup("h1:1111,h2:2222")
+            .setName("db")
+            .build(),
+        arg("jdbc:mariadb://(user):example@h1:1111/db")
+            .setSystem(MARIADB)
+            .setConfiguredServerTarget("h1", 1111)
+            .setName("db")
+            .build(),
+        arg("jdbc:mariadb://(user):example@h1:1111,h2:2222/db")
             .setSystem(MARIADB)
             .setServerAddressGroup("h1:1111,h2:2222")
             .setName("db")
