@@ -61,7 +61,7 @@ public void onEnter(/* ... */) { /* ... */ }
 
 Advice classes should also have **no instance fields** — they are never instantiated.
 
-## Set `inline = false` on production advice
+## Set `inline = false` on advice
 
 Set `inline = false` explicitly on every `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` method
 in production modules. Byte Buddy defaults `inline` to `true`. Mixing inlined and non-inlined advice
