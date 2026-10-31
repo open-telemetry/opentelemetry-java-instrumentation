@@ -67,11 +67,11 @@ class ClassInstrumentation implements TypeInstrumentation {
   }
 
   private static class ClassClassVisitor extends ClassVisitor {
-    private final boolean isIndy;
+    private final boolean useIsolatedAdvice;
 
-    ClassClassVisitor(ClassVisitor cv, boolean isIndy) {
+    ClassClassVisitor(ClassVisitor cv, boolean useIsolatedAdvice) {
       super(AsmApi.VERSION, cv);
-      this.isIndy = isIndy;
+      this.useIsolatedAdvice = useIsolatedAdvice;
     }
 
     @Override
@@ -97,9 +97,10 @@ class ClassInstrumentation implements TypeInstrumentation {
                         && "java/lang/J9VMInternals".equals(owner)
                         && "(Ljava/lang/Class;)[Ljava/lang/Class;".equals(descriptor))) {
                   super.visitVarInsn(Opcodes.ALOAD, 0);
-                  if (isIndy) {
+                  if (useIsolatedAdvice) {
                     // ReflectionHelper is in a separate class loader that is not visible to the
-                    // instrumented class, so we need to invoke it via indy bootstrap method
+                    // instrumented class, so invoke it through the advice bootstrap's invokedynamic
+                    // call
                     AdviceBootstrap.emitHelperStaticCall(
                         mv,
                         "filterInterfaces",

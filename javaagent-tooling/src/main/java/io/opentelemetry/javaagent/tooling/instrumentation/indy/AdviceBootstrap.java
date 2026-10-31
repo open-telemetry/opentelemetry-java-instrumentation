@@ -42,7 +42,7 @@ import org.objectweb.asm.Type;
  * <pre>
  *
  *   Bootstrap CL ←──────────────────────────── Agent CL
- *       ↑ └──────── AdviceBootstrapDispatcher ↑ ──→ └────────────── {@link AdviceBootstrap#bootstrap}
+ *       ↑ └─────── AdviceBootstrapDispatcher ─ ↑ ──→ └────────────── {@link AdviceBootstrap#bootstrap}
  *     Ext/Platform CL               ↑          │                        ╷
  *       ↑                           ╷          │                        ↓
  *     System CL                     ╷          │        {@link IndyModuleRegistry#getInstrumentationClassLoader(String, ClassLoader)}
