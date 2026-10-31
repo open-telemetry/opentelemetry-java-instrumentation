@@ -4,8 +4,11 @@
 
 ### ⚠️ Breaking changes
 
-- Rename `otel.instrumentation.grpc.{client,server}.request-metadata.{included,excluded}` to
-  `otel.instrumentation.grpc.{client,server}.request-headers.{included,excluded}`.
+- Replace gRPC request metadata/header selectors with exact-name lists:
+  `otel.instrumentation.grpc.{client,server}.request-captured-headers`,
+  declarative `java.grpc.{client,server}.request_captured_headers`, and
+  `GrpcTelemetryBuilder.set{Client,Server}RequestCapturedHeaders(Collection<String>)`.
+  Wildcard and exclusion selection are no longer supported; unset or empty lists capture no headers.
 - Captured gRPC request attributes now use `rpc.request.header.<key>` instead of
   `rpc.request.metadata.<key>`.
 - Rename `messaging.system` to `messaging.system.name` (`aws_sqs` becomes `aws.sqs`) and adopt

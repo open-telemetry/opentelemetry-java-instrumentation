@@ -5,18 +5,14 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
-import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcRequestHeadersUtil.createLiteralRequestHeaderAttributeKeys;
-import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcRequestHeadersUtil.lowercase;
-import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcRequestHeadersUtil.requestHeaderAttributeKey;
-import static java.util.Collections.emptyMap;
-
 import io.grpc.Metadata;
 import io.grpc.Status;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -28,24 +24,18 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
   private static final AttributeKey<String> RPC_STATUS_CODE =
       AttributeKey.stringKey("rpc.status_code");
   private final GrpcRpcAttributesGetter getter;
-  @Nullable private final IncludeExclude requestHeaders;
+  private final Map<String, AttributeKey<List<String>>> requestHeaderAttributeKeys =
+      new HashMap<>();
 
-  // Only literal included names are stored here. We intentionally do not cache wildcard or
-  // exclude-only matches, even in a bounded cache: peer-controlled names could churn its entries,
-  // making allocation behavior depend on prior traffic. Creating those attribute keys on demand
-  // provides a fixed per-capture cost with no peer-controlled retained state, while literal
-  // configured keys remain allocation-free.
-  private final Map<String, AttributeKey<List<String>>> literalRequestHeaderAttributeKeys;
-
-  GrpcAttributesExtractor(GrpcRpcAttributesGetter getter, @Nullable IncludeExclude requestHeaders) {
+  GrpcAttributesExtractor(
+      GrpcRpcAttributesGetter getter, Collection<String> requestCapturedHeaders) {
     this.getter = getter;
-    if (requestHeaders == null || requestHeaders.isEmpty()) {
-      this.requestHeaders = null;
-      literalRequestHeaderAttributeKeys = emptyMap();
-    } else {
-      this.requestHeaders = lowercase(requestHeaders);
-      literalRequestHeaderAttributeKeys =
-          createLiteralRequestHeaderAttributeKeys(this.requestHeaders);
+    for (String name : requestCapturedHeaders) {
+      String key = name.toLowerCase(Locale.ROOT);
+      if (isAsciiMetadataKey(key)) {
+        requestHeaderAttributeKeys.put(
+            key, AttributeKey.stringArrayKey("rpc.request.header." + key));
+      }
     }
   }
 
@@ -64,33 +54,19 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
     if (status != null) {
       attributes.put(RPC_STATUS_CODE, status.getCode().name());
     }
-    if (requestHeaders == null || request.getMetadata() == null) {
+    if (request.getMetadata() == null) {
       return;
     }
-    for (String key : request.getMetadata().keys()) {
-      // binary metadata and HTTP/2 pseudo-headers are never captured, even when the selector
-      // matches, because reading them below with Metadata.Key.of() would throw
-      if (!isAsciiMetadataKey(key)) {
-        continue;
-      }
-      // gRPC lowercases metadata key names, but normalize defensively so that matching is
-      // case-insensitive as documented and an excluded key cannot be captured because a transport
-      // surfaced its name with different casing
-      String metadataKey = key.toLowerCase(Locale.ROOT);
-      if (!requestHeaders.matches(metadataKey)) {
-        continue;
-      }
-      List<String> value = getter.metadataValue(request, metadataKey);
+    for (Map.Entry<String, AttributeKey<List<String>>> entry :
+        requestHeaderAttributeKeys.entrySet()) {
+      List<String> value = getter.metadataValue(request, entry.getKey());
       if (!value.isEmpty()) {
-        attributes.put(
-            requestHeaderAttributeKey(metadataKey, literalRequestHeaderAttributeKeys), value);
+        attributes.put(entry.getValue(), value);
       }
     }
   }
 
-  // Returns whether the key names ASCII metadata that Metadata.Key.of() accepts. Metadata received
-  // from a peer can contain HTTP/2 pseudo-headers and header names built from HTTP token characters
-  // that gRPC does not allow in a metadata key.
+  // Metadata.Key.of() rejects binary and pseudo-headers as well as invalid ASCII metadata names.
   private static boolean isAsciiMetadataKey(String key) {
     if (key.isEmpty() || key.endsWith(Metadata.BINARY_HEADER_SUFFIX)) {
       return false;

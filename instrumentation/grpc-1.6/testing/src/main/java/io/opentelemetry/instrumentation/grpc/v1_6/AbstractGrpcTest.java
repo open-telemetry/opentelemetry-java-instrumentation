@@ -28,7 +28,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_ME
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD_ORIGINAL;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -102,7 +101,7 @@ public abstract class AbstractGrpcTest {
 
   protected static final String SERVER_REQUEST_HEADER_KEY = "some-server-key";
 
-  private static final String EXCLUDED_REQUEST_HEADER_KEY = "some-excluded-key";
+  private static final String UNLISTED_REQUEST_HEADER_KEY = "some-unlisted-key";
 
   protected abstract ServerBuilder<?> configureServer(ServerBuilder<?> server);
 
@@ -1593,11 +1592,20 @@ public abstract class AbstractGrpcTest {
         Metadata.Key.of(SERVER_REQUEST_HEADER_KEY, Metadata.ASCII_STRING_MARSHALLER),
         serverHeaderValue);
     extraMetadata.put(
+        Metadata.Key.of(SERVER_REQUEST_HEADER_KEY, Metadata.ASCII_STRING_MARSHALLER),
+        "second-server-value");
+    extraMetadata.put(
         Metadata.Key.of(CLIENT_REQUEST_HEADER_KEY, Metadata.ASCII_STRING_MARSHALLER),
         clientHeaderValue);
     extraMetadata.put(
-        Metadata.Key.of(EXCLUDED_REQUEST_HEADER_KEY, Metadata.ASCII_STRING_MARSHALLER),
-        "excluded-value");
+        Metadata.Key.of(CLIENT_REQUEST_HEADER_KEY, Metadata.ASCII_STRING_MARSHALLER),
+        "second-client-value");
+    extraMetadata.put(
+        Metadata.Key.of(UNLISTED_REQUEST_HEADER_KEY, Metadata.ASCII_STRING_MARSHALLER),
+        "unlisted-value");
+    extraMetadata.put(Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER), "******");
+    extraMetadata.put(
+        Metadata.Key.of("cookie", Metadata.ASCII_STRING_MARSHALLER), "session=secret");
 
     GreeterGrpc.GreeterBlockingStub client =
         GreeterGrpc.newBlockingStub(channel)
@@ -1624,11 +1632,17 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     stringArrayKey(
                                         "rpc.request.header." + CLIENT_REQUEST_HEADER_KEY),
-                                    singletonList(clientHeaderValue)),
+                                    asList(clientHeaderValue, "second-client-value")),
                                 equalTo(
                                     stringArrayKey(
-                                        "rpc.request.header." + EXCLUDED_REQUEST_HEADER_KEY),
-                                    null)),
+                                        "rpc.request.header." + UNLISTED_REQUEST_HEADER_KEY),
+                                    null),
+                                equalTo(
+                                    stringArrayKey(
+                                        "rpc.request.header." + SERVER_REQUEST_HEADER_KEY),
+                                    null),
+                                equalTo(stringArrayKey("rpc.request.header.authorization"), null),
+                                equalTo(stringArrayKey("rpc.request.header.cookie"), null)),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -1637,11 +1651,17 @@ public abstract class AbstractGrpcTest {
                                 equalTo(
                                     stringArrayKey(
                                         "rpc.request.header." + SERVER_REQUEST_HEADER_KEY),
-                                    singletonList(serverHeaderValue)),
+                                    asList(serverHeaderValue, "second-server-value")),
                                 equalTo(
                                     stringArrayKey(
-                                        "rpc.request.header." + EXCLUDED_REQUEST_HEADER_KEY),
-                                    null))));
+                                        "rpc.request.header." + UNLISTED_REQUEST_HEADER_KEY),
+                                    null),
+                                equalTo(
+                                    stringArrayKey(
+                                        "rpc.request.header." + CLIENT_REQUEST_HEADER_KEY),
+                                    null),
+                                equalTo(stringArrayKey("rpc.request.header.authorization"), null),
+                                equalTo(stringArrayKey("rpc.request.header.cookie"), null))));
   }
 
   private ManagedChannel createChannel(Server server) throws Exception {

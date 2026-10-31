@@ -11,11 +11,9 @@ import io.grpc.ServerBuilder;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
-import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetryBuilder;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.Experimental;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcConfig;
@@ -46,20 +44,13 @@ public class GrpcSingletons {
     boolean experimentalSpanAttributes =
         config.getBoolean("experimental_span_attributes/development", false);
 
-    GrpcTelemetryBuilder telemetryBuilder =
+    telemetry =
         GrpcTelemetry.builder(openTelemetry)
             .setEmitMessageEvents(emitMessageEvents)
-            .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes);
-    IncludeExclude clientRequestHeaders = grpcConfig.getClientRequestHeaders();
-    if (clientRequestHeaders != null) {
-      telemetryBuilder.setClientRequestHeaders(clientRequestHeaders);
-    }
-
-    IncludeExclude serverRequestHeaders = grpcConfig.getServerRequestHeaders();
-    if (serverRequestHeaders != null) {
-      telemetryBuilder.setServerRequestHeaders(serverRequestHeaders);
-    }
-    telemetry = telemetryBuilder.build();
+            .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
+            .setClientRequestCapturedHeaders(grpcConfig.getClientRequestCapturedHeaders())
+            .setServerRequestCapturedHeaders(grpcConfig.getServerRequestCapturedHeaders())
+            .build();
   }
 
   @Nullable
