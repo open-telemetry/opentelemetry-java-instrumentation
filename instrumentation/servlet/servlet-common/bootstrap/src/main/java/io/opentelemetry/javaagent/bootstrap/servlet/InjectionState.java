@@ -62,13 +62,19 @@ public final class InjectionState {
   }
 
   public void resetBuffer() {
+    wrapper.resetContentLengthIfPreviouslyAdjusted();
     headTagBytesSeen = 0;
   }
 
   public void reset() {
-    resetBuffer();
+    headTagBytesSeen = 0;
     contentLength = -1;
     contentLengthAdjusted = false;
+    writer = false;
+  }
+
+  public void resetForForward() {
+    resetBuffer();
     writer = false;
   }
 
