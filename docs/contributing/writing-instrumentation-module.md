@@ -239,7 +239,10 @@ In production javaagent modules, explicitly set `inline = false` on every
 `instrumentation/internal/internal-lambda`.
 
 Byte Buddy's `inline` attribute defaults to `true`, which copies advice code into the instrumented
-method. Production advice explicitly sets `inline = false`; inlined advice is the alternative.
+method.
+
+These exceptions use inlined advice. Static interface calls from it cannot be copied into pre-Java-8
+class files, so call them through a Java-8-compiled helper.
 
 By default, the agent loads advice into a special `InstrumentationModuleClassLoader`,
 which can see classes from both the instrumented application classloader and the agent classloader.
@@ -301,12 +304,8 @@ caught and handled by the javaagent's exception handler, which logs unexpected e
 
 ### Modifying method arguments
 
-With inlined advice, using the `@Advice.Argument` annotation on method parameter with `readOnly = false`
-allows modifying instrumented method arguments.
-
-With non-inlined advice, reading the argument values is still done with `@Advice.Argument`
-annotated parameters, however modifying the values is done through the advice method return value
-and `@Advice.AssignReturned.ToArguments` annotation:
+Use `@Advice.Argument` to read method arguments. To modify them, return the replacement value from
+advice and use `@Advice.AssignReturned.ToArguments`:
 
 ```java
 @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
@@ -321,12 +320,8 @@ It is possible to modify multiple arguments at once by using an array, see usage
 
 ### Modifying method return value
 
-With inlined advice, using the `@Advice.Return` annotation on method parameter with `readOnly = false`
-allows modifying instrumented method return value on exit advice.
-
-With non-inlined advice, reading the original return value is still done with the `@Advice.Return`
-annotated parameter, however modifying the value is done through the advice method return value
-and `@Advice.AssignReturned.ToReturned`.
+Use `@Advice.Return` to read the original return value. To modify it, return the replacement value
+from exit advice and use `@Advice.AssignReturned.ToReturned`:
 
 ```java
 @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
@@ -338,12 +333,8 @@ public static Object onExit(@Advice.Return Object returnValue) {
 
 ### Writing to internal class fields
 
-With inlined advice, using the `@Advice.FieldValue(value = "fieldName", readOnly = false)` annotation
-on advice method parameters allows modifying the `fieldName` field of the instrumented class.
-
-With non-inlined advice, reading the original field value is still done with the `@Advice.FieldValue`
-annotated parameter, however modifying the value is done through the advice method return value
-and `@Advice.AssignReturned.ToFields` annotation.
+Use `@Advice.FieldValue` to read an internal field. To modify it, return the replacement value from
+advice and use `@Advice.AssignReturned.ToFields`:
 
 ```java
 @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
@@ -355,6 +346,9 @@ public static Object onEnter(@Advice.FieldValue("fieldName") Object originalFiel
 
 It is possible to modify multiple fields at once by using an array, see usages of
 `@Advice.AssignReturned.ToFields` for detailed examples.
+
+Only `internal-class-loader` and `internal-lambda` may use inlined advice with `readOnly = false` on
+`@Advice.Argument`, `@Advice.Return`, or `@Advice.FieldValue`.
 
 [suppress]: https://opentelemetry.io/docs/zero-code/java/agent/disable/#suppressing-specific-agent-instrumentation
 
