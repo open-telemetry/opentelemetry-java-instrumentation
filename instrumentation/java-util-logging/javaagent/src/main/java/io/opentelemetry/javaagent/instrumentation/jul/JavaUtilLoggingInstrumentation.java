@@ -6,10 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.jul;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
@@ -30,10 +29,7 @@ class JavaUtilLoggingInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("log"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("java.util.logging.LogRecord"))),
+        isPublic().and(named("log")).and(takesArguments("java.util.logging.LogRecord")),
         getClass().getName() + "$LogAdvice");
   }
 

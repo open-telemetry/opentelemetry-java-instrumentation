@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.webmvc.v4_3;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -31,8 +30,7 @@ class GatewayDelegatingRouterFunctionInstrumentation implements TypeInstrumentat
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("route"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("org.springframework.web.servlet.function.ServerRequest"))),
+            .and(takesArguments("org.springframework.web.servlet.function.ServerRequest")),
         getClass().getName() + "$RouteAdvice");
   }
 

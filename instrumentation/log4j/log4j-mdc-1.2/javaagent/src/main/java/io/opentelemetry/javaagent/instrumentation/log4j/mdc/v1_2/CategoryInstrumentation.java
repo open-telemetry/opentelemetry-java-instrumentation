@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.log4j.mdc.v1_2;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -29,8 +28,7 @@ class CategoryInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("callAppenders"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("org.apache.log4j.spi.LoggingEvent"))),
+            .and(takesArguments("org.apache.log4j.spi.LoggingEvent")),
         getClass().getName() + "$CallAppendersAdvice");
   }
 

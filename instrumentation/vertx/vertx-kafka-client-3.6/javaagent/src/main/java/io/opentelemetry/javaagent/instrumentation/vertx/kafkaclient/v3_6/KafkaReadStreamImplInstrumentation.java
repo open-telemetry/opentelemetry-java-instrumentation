@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.kafkaclient.v3_6;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaProcessingOwnershipUtil.markProcessingOwnedOutsideKafkaClient;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.isSynthetic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -35,14 +35,10 @@ class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("handler")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("io.vertx.core.Handler"))),
+        named("handler").and(takesArguments("io.vertx.core.Handler")),
         getClass().getName() + "$HandlerAdvice");
     transformer.applyAdviceToMethod(
-        named("batchHandler")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("io.vertx.core.Handler"))),
+        named("batchHandler").and(takesArguments("io.vertx.core.Handler")),
         getClass().getName() + "$BatchHandlerAdvice");
     transformer.applyAdviceToMethod(
         nameStartsWith("lambda$run$")

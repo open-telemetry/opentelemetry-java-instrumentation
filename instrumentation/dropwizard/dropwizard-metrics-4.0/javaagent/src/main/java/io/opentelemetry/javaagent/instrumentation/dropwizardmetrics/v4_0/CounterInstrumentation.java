@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.dropwizardmetrics.v4_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.dropwizardmetrics.v4_0.DropwizardSingletons.metrics;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.codahale.metrics.Counter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -26,9 +26,9 @@ class CounterInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("inc").and(takesArguments(long.class)), getClass().getName() + "$IncAdvice");
+        named("inc").and(takesArguments("long")), getClass().getName() + "$IncAdvice");
     transformer.applyAdviceToMethod(
-        named("dec").and(takesArguments(long.class)), getClass().getName() + "$DecAdvice");
+        named("dec").and(takesArguments("long")), getClass().getName() + "$DecAdvice");
   }
 
   @SuppressWarnings("unused")

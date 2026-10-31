@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.mongo.v3_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.mongo.v3_1.Mongo31Singletons.tracingListener;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
@@ -56,9 +56,7 @@ public class Mongo31InstrumentationModule extends InstrumentationModule {
               declaresMethod(
                   named("addCommandListener")
                       .and(isPublic())
-                      .and(
-                          takesArguments(1)
-                              .and(takesArgument(0, named("com.mongodb.event.CommandListener"))))));
+                      .and(takesArguments("com.mongodb.event.CommandListener"))));
     }
 
     @Override

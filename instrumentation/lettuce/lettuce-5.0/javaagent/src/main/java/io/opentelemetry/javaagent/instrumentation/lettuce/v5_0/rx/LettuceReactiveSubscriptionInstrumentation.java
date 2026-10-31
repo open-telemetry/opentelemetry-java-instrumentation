@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -30,9 +29,7 @@ public class LettuceReactiveSubscriptionInstrumentation implements TypeInstrumen
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("subscribe")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("org.reactivestreams.Subscriber"))),
+        named("subscribe").and(takesArguments("org.reactivestreams.Subscriber")),
         getClass().getName() + "$SubscribeAdvice");
   }
 

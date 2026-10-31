@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.dropwizardmetrics.v4_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.dropwizardmetrics.v4_0.DropwizardSingletons.metrics;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.codahale.metrics.Histogram;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -26,7 +26,7 @@ class HistogramInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("update").and(takesArguments(long.class)), getClass().getName() + "$UpdateAdvice");
+        named("update").and(takesArguments("long")), getClass().getName() + "$UpdateAdvice");
   }
 
   @SuppressWarnings("unused")

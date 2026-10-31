@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -38,9 +39,7 @@ class DefaultJedisSocketFactoryInstrumentation implements TypeInstrumentation {
         isConstructor().and(takesArgument(0, named("redis.clients.jedis.HostAndPort"))),
         getClass().getName() + "$HostAndPortAdvice");
     transformer.applyAdviceToMethod(
-        named("updateHostAndPort")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("redis.clients.jedis.HostAndPort"))),
+        named("updateHostAndPort").and(takesArguments("redis.clients.jedis.HostAndPort")),
         getClass().getName() + "$HostAndPortAdvice");
   }
 

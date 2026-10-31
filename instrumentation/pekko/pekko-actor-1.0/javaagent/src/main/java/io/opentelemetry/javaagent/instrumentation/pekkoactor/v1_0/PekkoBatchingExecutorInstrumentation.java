@@ -6,10 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0.VirtualFields.RUNNABLE_PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
@@ -45,7 +44,7 @@ class PekkoBatchingExecutorInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("execute").and(takesArguments(1)).and(takesArgument(0, Runnable.class)),
+        named("execute").and(takesArguments("java.lang.Runnable")),
         getClass().getName() + "$ExecuteAdvice");
   }
 

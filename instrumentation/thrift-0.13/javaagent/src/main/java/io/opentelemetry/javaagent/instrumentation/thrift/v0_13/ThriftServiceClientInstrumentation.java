@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.thrift.v0_13;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.thrift.v0_13.ThriftSingletons.clientInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.thrift.v0_13.ThriftSingletons.propagators;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -15,7 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ClientCallContext;
 import io.opentelemetry.instrumentation.thrift.v0_13.internal.ClientProtocolDecorator;
@@ -46,9 +46,7 @@ class ThriftServiceClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor()
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("org.apache.thrift.protocol.TProtocol"))),
+        isConstructor().and(takesArguments("org.apache.thrift.protocol.TProtocol")),
         getClass().getName() + "$Constructor1Advice");
     transformer.applyAdviceToMethod(
         isConstructor()

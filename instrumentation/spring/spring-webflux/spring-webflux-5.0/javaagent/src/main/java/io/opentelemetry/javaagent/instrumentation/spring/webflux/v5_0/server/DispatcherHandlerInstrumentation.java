@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -31,8 +31,7 @@ class DispatcherHandlerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("handle"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange"))),
+            .and(takesArguments("org.springframework.web.server.ServerWebExchange")),
         getClass().getName() + "$HandleAdvice");
     transformer.applyAdviceToMethod(
         named("handleResult")

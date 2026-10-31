@@ -7,12 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -49,69 +48,75 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("org.apache.hc.core5.http.ClassicHttpRequest"))),
+            .and(takesArguments("org.apache.hc.core5.http.ClassicHttpRequest")),
         getClass().getName() + "$RequestAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("org.apache.hc.core5.http.ClassicHttpRequest")))
-            .and(takesArgument(1, named("org.apache.hc.core5.http.protocol.HttpContext"))),
+            .and(
+                takesArguments(
+                    "org.apache.hc.core5.http.ClassicHttpRequest",
+                    "org.apache.hc.core5.http.protocol.HttpContext")),
         getClass().getName() + "$RequestAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("org.apache.hc.core5.http.HttpHost")))
-            .and(takesArgument(1, named("org.apache.hc.core5.http.ClassicHttpRequest"))),
+            .and(
+                takesArguments(
+                    "org.apache.hc.core5.http.HttpHost",
+                    "org.apache.hc.core5.http.ClassicHttpRequest")),
         getClass().getName() + "$RequestWithHostAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments(3))
-            .and(takesArgument(0, named("org.apache.hc.core5.http.HttpHost")))
-            .and(takesArgument(1, named("org.apache.hc.core5.http.ClassicHttpRequest")))
-            .and(takesArgument(2, named("org.apache.hc.core5.http.protocol.HttpContext"))),
+            .and(
+                takesArguments(
+                    "org.apache.hc.core5.http.HttpHost",
+                    "org.apache.hc.core5.http.ClassicHttpRequest",
+                    "org.apache.hc.core5.http.protocol.HttpContext")),
         getClass().getName() + "$RequestWithHostAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("org.apache.hc.core5.http.ClassicHttpRequest")))
-            .and(takesArgument(1, named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
+            .and(
+                takesArguments(
+                    "org.apache.hc.core5.http.ClassicHttpRequest",
+                    "org.apache.hc.core5.http.io.HttpClientResponseHandler")),
         getClass().getName() + "$RequestWithHandlerAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments(3))
-            .and(takesArgument(0, named("org.apache.hc.core5.http.ClassicHttpRequest")))
-            .and(takesArgument(1, named("org.apache.hc.core5.http.protocol.HttpContext")))
-            .and(takesArgument(2, named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
+            .and(
+                takesArguments(
+                    "org.apache.hc.core5.http.ClassicHttpRequest",
+                    "org.apache.hc.core5.http.protocol.HttpContext",
+                    "org.apache.hc.core5.http.io.HttpClientResponseHandler")),
         getClass().getName() + "$RequestWithContextAndHandlerAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments(3))
-            .and(takesArgument(0, named("org.apache.hc.core5.http.HttpHost")))
-            .and(takesArgument(1, named("org.apache.hc.core5.http.ClassicHttpRequest")))
-            .and(takesArgument(2, named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
+            .and(
+                takesArguments(
+                    "org.apache.hc.core5.http.HttpHost",
+                    "org.apache.hc.core5.http.ClassicHttpRequest",
+                    "org.apache.hc.core5.http.io.HttpClientResponseHandler")),
         getClass().getName() + "$RequestWithHostAndHandlerAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments(4))
-            .and(takesArgument(0, named("org.apache.hc.core5.http.HttpHost")))
-            .and(takesArgument(1, named("org.apache.hc.core5.http.ClassicHttpRequest")))
-            .and(takesArgument(2, named("org.apache.hc.core5.http.protocol.HttpContext")))
-            .and(takesArgument(3, named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
+            .and(
+                takesArguments(
+                    "org.apache.hc.core5.http.HttpHost",
+                    "org.apache.hc.core5.http.ClassicHttpRequest",
+                    "org.apache.hc.core5.http.protocol.HttpContext",
+                    "org.apache.hc.core5.http.io.HttpClientResponseHandler")),
         getClass().getName() + "$RequestWithHostAndContextAndHandlerAdvice");
   }
 

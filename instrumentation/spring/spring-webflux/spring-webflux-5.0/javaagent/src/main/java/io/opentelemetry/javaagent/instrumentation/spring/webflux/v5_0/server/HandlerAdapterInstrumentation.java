@@ -7,14 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.WebfluxSingletons.httpRouteGetter;
 import static io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.WebfluxSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -49,9 +48,9 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("handle"))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange")))
-            .and(takesArgument(1, Object.class)),
+            .and(
+                takesArguments(
+                    "org.springframework.web.server.ServerWebExchange", "java.lang.Object")),
         getClass().getName() + "$HandleAdvice");
   }
 

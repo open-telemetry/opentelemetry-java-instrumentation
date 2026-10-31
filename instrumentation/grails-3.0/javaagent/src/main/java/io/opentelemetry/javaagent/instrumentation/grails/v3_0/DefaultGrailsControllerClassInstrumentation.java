@@ -5,11 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.grails.v3_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.grails.v3_0.GrailsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -31,9 +30,7 @@ class DefaultGrailsControllerClassInstrumentation implements TypeInstrumentation
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("invoke"))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named(Object.class.getName())))
-            .and(takesArgument(1, named(String.class.getName()))),
+            .and(takesArguments("java.lang.Object", "java.lang.String")),
         getClass().getName() + "$ControllerAdvice");
   }
 

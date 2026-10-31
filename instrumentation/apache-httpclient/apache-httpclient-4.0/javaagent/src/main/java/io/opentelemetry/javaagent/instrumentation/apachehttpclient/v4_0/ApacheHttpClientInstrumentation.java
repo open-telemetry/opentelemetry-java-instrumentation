@@ -7,12 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0.ApacheHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -51,69 +50,72 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest"))),
+            .and(takesArguments("org.apache.http.client.methods.HttpUriRequest")),
         getClass().getName() + "$UriRequestAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest")))
-            .and(takesArgument(1, named("org.apache.http.protocol.HttpContext"))),
+            .and(
+                takesArguments(
+                    "org.apache.http.client.methods.HttpUriRequest",
+                    "org.apache.http.protocol.HttpContext")),
         getClass().getName() + "$UriRequestAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest")))
-            .and(takesArgument(1, named("org.apache.http.client.ResponseHandler"))),
+            .and(
+                takesArguments(
+                    "org.apache.http.client.methods.HttpUriRequest",
+                    "org.apache.http.client.ResponseHandler")),
         getClass().getName() + "$UriRequestWithHandlerAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments(3))
-            .and(takesArgument(0, named("org.apache.http.client.methods.HttpUriRequest")))
-            .and(takesArgument(1, named("org.apache.http.client.ResponseHandler")))
-            .and(takesArgument(2, named("org.apache.http.protocol.HttpContext"))),
+            .and(
+                takesArguments(
+                    "org.apache.http.client.methods.HttpUriRequest",
+                    "org.apache.http.client.ResponseHandler",
+                    "org.apache.http.protocol.HttpContext")),
         getClass().getName() + "$UriRequestWithHandlerAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("org.apache.http.HttpHost")))
-            .and(takesArgument(1, named("org.apache.http.HttpRequest"))),
+            .and(takesArguments("org.apache.http.HttpHost", "org.apache.http.HttpRequest")),
         getClass().getName() + "$RequestAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments(3))
-            .and(takesArgument(0, named("org.apache.http.HttpHost")))
-            .and(takesArgument(1, named("org.apache.http.HttpRequest")))
-            .and(takesArgument(2, named("org.apache.http.protocol.HttpContext"))),
+            .and(
+                takesArguments(
+                    "org.apache.http.HttpHost",
+                    "org.apache.http.HttpRequest",
+                    "org.apache.http.protocol.HttpContext")),
         getClass().getName() + "$RequestAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments(3))
-            .and(takesArgument(0, named("org.apache.http.HttpHost")))
-            .and(takesArgument(1, named("org.apache.http.HttpRequest")))
-            .and(takesArgument(2, named("org.apache.http.client.ResponseHandler"))),
+            .and(
+                takesArguments(
+                    "org.apache.http.HttpHost",
+                    "org.apache.http.HttpRequest",
+                    "org.apache.http.client.ResponseHandler")),
         getClass().getName() + "$RequestWithHandlerAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments(4))
-            .and(takesArgument(0, named("org.apache.http.HttpHost")))
-            .and(takesArgument(1, named("org.apache.http.HttpRequest")))
-            .and(takesArgument(2, named("org.apache.http.client.ResponseHandler")))
-            .and(takesArgument(3, named("org.apache.http.protocol.HttpContext"))),
+            .and(
+                takesArguments(
+                    "org.apache.http.HttpHost",
+                    "org.apache.http.HttpRequest",
+                    "org.apache.http.client.ResponseHandler",
+                    "org.apache.http.protocol.HttpContext")),
         getClass().getName() + "$RequestWithHandlerAdvice");
   }
 

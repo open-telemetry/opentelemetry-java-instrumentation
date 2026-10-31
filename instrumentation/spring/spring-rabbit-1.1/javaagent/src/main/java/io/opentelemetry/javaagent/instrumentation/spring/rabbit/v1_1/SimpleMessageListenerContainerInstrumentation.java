@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_1;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -31,7 +32,7 @@ class SimpleMessageListenerContainerInstrumentation implements TypeInstrumentati
         named("createBlockingQueueConsumer").and(takesArguments(0)),
         getClass().getName() + "$CreateConsumerAdvice");
     transformer.applyAdviceToMethod(
-        named("setConsumerBatchEnabled").and(takesArguments(boolean.class)),
+        named("setConsumerBatchEnabled").and(takesArguments("boolean")),
         getClass().getName() + "$SetConsumerBatchEnabledAdvice");
   }
 

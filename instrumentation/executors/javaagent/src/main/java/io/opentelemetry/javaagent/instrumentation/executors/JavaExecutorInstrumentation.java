@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.executors;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.executors.ExecutorMatchers.executorNameMatcher;
 import static io.opentelemetry.javaagent.instrumentation.executors.ExecutorMatchers.isExecutor;
 import static io.opentelemetry.javaagent.instrumentation.executors.VirtualFieldHelper.CALLABLE_PROPAGATED_CONTEXT;
@@ -17,7 +18,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
@@ -50,12 +50,12 @@ class JavaExecutorInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("execute").and(takesArguments(1)).and(takesArgument(0, Runnable.class)),
+        named("execute").and(takesArguments("java.lang.Runnable")),
         getClass().getName() + "$SetExecuteRunnableStateAdvice");
     // Netty uses addTask as the actual core of their submission; there are non-standard variations
     // like execute(Runnable,boolean) that aren't caught by standard instrumentation
     transformer.applyAdviceToMethod(
-        named("addTask").and(takesArguments(1)).and(takesArgument(0, Runnable.class)),
+        named("addTask").and(takesArguments("java.lang.Runnable")),
         getClass().getName() + "$SetExecuteRunnableStateAdvice");
     transformer.applyAdviceToMethod(
         named("execute").and(takesArgument(0, ForkJoinTask.class)),

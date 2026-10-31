@@ -7,12 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isBridge;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import akka.http.scaladsl.model.ErrorInfo;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -40,11 +39,12 @@ class ParsingErrorHandlerInstrumentation implements TypeInstrumentation {
         named("handle")
             .and(not(isAbstract()))
             .and(not(isBridge()))
-            .and(takesArguments(4))
-            .and(takesArgument(0, named("akka.http.scaladsl.model.StatusCode")))
-            .and(takesArgument(1, named("akka.http.scaladsl.model.ErrorInfo")))
-            .and(takesArgument(2, named("akka.event.LoggingAdapter")))
-            .and(takesArgument(3, named("akka.http.scaladsl.settings.ServerSettings"))),
+            .and(
+                takesArguments(
+                    "akka.http.scaladsl.model.StatusCode",
+                    "akka.http.scaladsl.model.ErrorInfo",
+                    "akka.event.LoggingAdapter",
+                    "akka.http.scaladsl.settings.ServerSettings")),
         getClass().getName() + "$HandleAdvice");
   }
 
