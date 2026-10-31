@@ -5,17 +5,24 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.names;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArgumentsNamed;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
 import java.util.List;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.method.ParameterList;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.description.type.TypeList;
+import net.bytebuddy.matcher.ElementMatcher;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings({"UnusedMethod", "UnusedVariable"})
-class NamesMatcherTest {
+class TakesArgumentsNamedMatcherTest {
 
   @Test
   void exactNamesMatch() throws NoSuchMethodException {
@@ -86,12 +93,66 @@ class NamesMatcherTest {
     assertThat(matches("generic", new Class<?>[] {List.class}, "java.util.List")).isTrue();
   }
 
+  @Test
+  void expectedNamesAreCopiedOnConstruction() throws NoSuchMethodException {
+    String[] names = {"java.lang.String"};
+    ElementMatcher.Junction<MethodDescription> matcher = takesArgumentsNamed(names);
+    names[0] = "java.lang.Integer";
+
+    assertThat(matches(matcher, "string", new Class<?>[] {String.class})).isTrue();
+  }
+
+  @Test
+  void wrongArityRejectsBeforeAccessingParameterTypes() {
+    MethodDescription method = mock(MethodDescription.class);
+    ParameterList<?> parameters = mock(ParameterList.class);
+    when(method.getParameters()).thenAnswer(invocation -> parameters);
+    when(parameters.size()).thenReturn(1);
+
+    assertThat(takesArgumentsNamed("java.lang.String", "java.lang.Integer").matches(method))
+        .isFalse();
+
+    verify(method).getParameters();
+    verify(parameters).size();
+    verifyNoMoreInteractions(method, parameters);
+  }
+
+  @Test
+  void typeMismatchStopsFurtherTypeExtraction() {
+    MethodDescription method = mock(MethodDescription.class);
+    ParameterList<?> parameters = mock(ParameterList.class);
+    TypeList.Generic parameterTypes = mock(TypeList.Generic.class);
+    TypeDescription.Generic firstType = mock(TypeDescription.Generic.class);
+    TypeDescription erasedFirstType = mock(TypeDescription.class);
+    when(method.getParameters()).thenAnswer(invocation -> parameters);
+    when(parameters.size()).thenReturn(2);
+    when(parameters.asTypeList()).thenReturn(parameterTypes);
+    when(parameterTypes.get(0)).thenReturn(firstType);
+    when(firstType.asErasure()).thenReturn(erasedFirstType);
+    when(erasedFirstType.getName()).thenReturn("java.lang.Long");
+
+    assertThat(takesArgumentsNamed("java.lang.String", "java.lang.Integer").matches(method))
+        .isFalse();
+
+    verify(parameterTypes).get(0);
+    verifyNoMoreInteractions(parameterTypes);
+  }
+
   private static boolean matches(
       String methodName, Class<?>[] parameterTypes, String... parameterNames)
       throws NoSuchMethodException {
-    Method method = NamesMatcherTest.class.getDeclaredMethod(methodName, parameterTypes);
+    return matches(takesArgumentsNamed(parameterNames), methodName, parameterTypes);
+  }
+
+  private static boolean matches(
+      ElementMatcher.Junction<MethodDescription> matcher,
+      String methodName,
+      Class<?>[] parameterTypes)
+      throws NoSuchMethodException {
+    Method method =
+        TakesArgumentsNamedMatcherTest.class.getDeclaredMethod(methodName, parameterTypes);
     MethodDescription description = new MethodDescription.ForLoadedMethod(method);
-    return takesArguments(names(parameterNames)).matches(description);
+    return matcher.matches(description);
   }
 
   private static void exact(String string, Integer integer) {}
@@ -109,4 +170,6 @@ class NamesMatcherTest {
   private static void noArguments() {}
 
   private static void generic(List<String> values) {}
+
+  private static void string(String value) {}
 }
