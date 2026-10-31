@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.grpc.Context.CancellableContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
@@ -118,6 +119,40 @@ class ContextBridgeTest {
     } finally {
       grpcContext.detach(root);
     }
+  }
+
+  @Test
+  void otelOnlyWrapUsesContextAttachedOnDestination() throws Exception {
+    AtomicReference<String> grpcValue = new AtomicReference<>();
+    AtomicReference<String> otelValue = new AtomicReference<>();
+    AtomicReference<Boolean> cancelled = new AtomicReference<>();
+    Runnable wrapped =
+        Context.root()
+            .with(ANIMAL, "cat")
+            .wrap(
+                () -> {
+                  grpcValue.set(COUNTRY.get());
+                  otelValue.set(Context.current().get(ANIMAL));
+                  cancelled.set(io.grpc.Context.current().isCancelled());
+                });
+
+    otherThread.submit(() -> io.grpc.Context.ROOT.run(wrapped)).get();
+    assertThat(grpcValue).hasValue(null);
+    assertThat(otelValue).hasValue("cat");
+    assertThat(cancelled).hasValue(false);
+
+    CancellableContext destination =
+        io.grpc.Context.ROOT.withValue(COUNTRY, "france").withCancellation();
+    otherThread.submit(() -> destination.run(wrapped)).get();
+    assertThat(grpcValue).hasValue("france");
+    assertThat(otelValue).hasValue("cat");
+    assertThat(cancelled).hasValue(false);
+
+    destination.cancel(null);
+    otherThread.submit(() -> destination.run(wrapped)).get();
+    assertThat(grpcValue).hasValue("france");
+    assertThat(otelValue).hasValue("cat");
+    assertThat(cancelled).hasValue(true);
   }
 
   @Test

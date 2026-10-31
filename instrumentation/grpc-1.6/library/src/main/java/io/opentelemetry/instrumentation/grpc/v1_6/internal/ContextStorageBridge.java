@@ -125,7 +125,9 @@ public final class ContextStorageBridge extends Context.Storage {
     io.opentelemetry.context.Context otelContext = io.opentelemetry.context.Context.current();
     Context current = otelContext.get(GRPC_CONTEXT);
     if (current == null) {
-      return Context.ROOT.withValue(OTEL_CONTEXT, otelContext);
+      // An OpenTelemetry context with no gRPC context does not hide one attached on this thread.
+      Context base = forkGrpcContext ? Context.ROOT : attachedContext(originalStorage.current());
+      return base.withValue(OTEL_CONTEXT, otelContext);
     }
     // Store the current OTel context in the gRPC context so that gRPC context propagation
     // mechanisms will also propagate the OTel context.
