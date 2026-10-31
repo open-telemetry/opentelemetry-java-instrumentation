@@ -8,12 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.pekko.http.scaladsl.HttpExt;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import org.apache.pekko.stream.scaladsl.Flow;
@@ -30,6 +32,13 @@ class HttpExtServerInstrumentation implements TypeInstrumentation {
         named("bindAndHandle")
             .and(takesArgument(0, named("org.apache.pekko.stream.scaladsl.Flow"))),
         getClass().getName() + "$PekkoBindAndHandleAdvice");
+    // pekko-http 2.x removed bindAndHandle, newServerAt binds through bindAndHandleImpl, which in
+    // pekko-http 1.x delegates to bindAndHandle, the advice only wraps the handler in the outermost
+    // call so that it is not wrapped twice
+    transformer.applyAdviceToMethod(
+        named("bindAndHandleImpl")
+            .and(takesArgument(0, named("org.apache.pekko.stream.scaladsl.Flow"))),
+        getClass().getName() + "$PekkoBindAndHandleAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -39,7 +48,15 @@ class HttpExtServerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Flow<HttpRequest, HttpResponse, ?> wrapHandler(
         @Advice.Argument(value = 0) Flow<HttpRequest, HttpResponse, ?> handler) {
+      if (CallDepth.forClass(HttpExt.class).getAndIncrement() > 0) {
+        return handler;
+      }
       return PekkoFlowWrapper.wrap(handler);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit() {
+      CallDepth.forClass(HttpExt.class).decrementAndGet();
     }
   }
 }
