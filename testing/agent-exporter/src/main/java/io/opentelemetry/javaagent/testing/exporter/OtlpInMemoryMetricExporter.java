@@ -29,25 +29,22 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
 
   private static final Logger logger = Logger.getLogger(OtlpInMemoryMetricExporter.class.getName());
 
-  private static final AggregationTemporalitySelector defaultTemporalitySelector =
-      AggregationTemporalitySelector.deltaPreferred();
-  private static final AggregationTemporality aggregationTemporalityOverride;
-  private static final boolean hasAggregationTemporalityOverride;
+  private static final AggregationTemporalitySelector temporalitySelector =
+      initTemporalitySelector();
 
-  static {
+  private static AggregationTemporalitySelector initTemporalitySelector() {
     // this configuration setting is for external users
     // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7902
     String temporalityProperty = System.getProperty("otel.javaagent.testing.exporter.temporality");
     if (temporalityProperty == null) {
       logger.log(CONFIG, "Setting aggregation temporality selector to deltaPreferred");
-      aggregationTemporalityOverride = AggregationTemporality.DELTA;
-      hasAggregationTemporalityOverride = false;
-    } else {
-      aggregationTemporalityOverride =
-          AggregationTemporality.valueOf(temporalityProperty.toUpperCase(Locale.ROOT));
-      logger.log(CONFIG, "Setting aggregation temporality to {0}", aggregationTemporalityOverride);
-      hasAggregationTemporalityOverride = true;
+      return AggregationTemporalitySelector.deltaPreferred();
     }
+
+    AggregationTemporality aggregationTemporality =
+        AggregationTemporality.valueOf(temporalityProperty.toUpperCase(Locale.ROOT));
+    logger.log(CONFIG, "Setting aggregation temporality to {0}", aggregationTemporality);
+    return instrumentType -> aggregationTemporality;
   }
 
   private final Queue<byte[]> collectedRequests = new ConcurrentLinkedQueue<>();
@@ -62,10 +59,7 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
 
   @Override
   public AggregationTemporality getAggregationTemporality(InstrumentType instrumentType) {
-    if (hasAggregationTemporalityOverride) {
-      return aggregationTemporalityOverride;
-    }
-    return defaultTemporalitySelector.getAggregationTemporality(instrumentType);
+    return temporalitySelector.getAggregationTemporality(instrumentType);
   }
 
   @Override

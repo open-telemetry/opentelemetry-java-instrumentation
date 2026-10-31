@@ -21,6 +21,9 @@ import java.util.List;
  */
 public final class DeltaPreferredInMemoryMetricExporter implements MetricExporter {
 
+  // TODO: Replace this adapter with the SDK selector overload once all supported test runtimes
+  // provide it:
+  // https://github.com/open-telemetry/opentelemetry-java/pull/8993
   private final InMemoryMetricExporter delegate;
 
   public static DeltaPreferredInMemoryMetricExporter create() {
@@ -33,17 +36,8 @@ public final class DeltaPreferredInMemoryMetricExporter implements MetricExporte
 
   @Override
   public AggregationTemporality getAggregationTemporality(InstrumentType instrumentType) {
-    try {
-      return AggregationTemporalitySelector.deltaPreferred()
-          .getAggregationTemporality(instrumentType);
-    } catch (NoClassDefFoundError | NoSuchMethodError ignored) {
-      // The SDK selector is not available in some supported test SDK versions.
-      if (instrumentType == InstrumentType.UP_DOWN_COUNTER
-          || instrumentType == InstrumentType.OBSERVABLE_UP_DOWN_COUNTER) {
-        return AggregationTemporality.CUMULATIVE;
-      }
-      return AggregationTemporality.DELTA;
-    }
+    return AggregationTemporalitySelector.deltaPreferred()
+        .getAggregationTemporality(instrumentType);
   }
 
   @Override
