@@ -31,13 +31,13 @@ val aetherVersion = "1.1.0"
 dependencies {
   implementation("com.google.guava:guava:33.7.2-jre")
   // we need to use byte buddy variant that does not shade asm
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}") {
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:$byteBuddyVersion") {
     exclude("net.bytebuddy", "byte-buddy")
   }
-  implementation("net.bytebuddy:byte-buddy-dep:${byteBuddyVersion}")
+  implementation("net.bytebuddy:byte-buddy-dep:$byteBuddyVersion")
 
-  implementation("org.eclipse.aether:aether-connector-basic:${aetherVersion}")
-  implementation("org.eclipse.aether:aether-transport-http:${aetherVersion}")
+  implementation("org.eclipse.aether:aether-connector-basic:$aetherVersion")
+  implementation("org.eclipse.aether:aether-transport-http:$aetherVersion")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   implementation("com.gradleup.shadow:shadow-gradle-plugin:9.6.1") {
@@ -48,6 +48,7 @@ dependencies {
   }
 
   testImplementation("org.assertj:assertj-core:3.27.7")
+  testImplementation(gradleTestKit())
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.4"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")

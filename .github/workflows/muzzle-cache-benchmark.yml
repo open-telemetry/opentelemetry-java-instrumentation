@@ -1,0 +1,127 @@
+name: Muzzle cache benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      partitions:
+        description: JSON array of Muzzle partitions
+        type: string
+        default: '[1]'
+      rounds:
+        description: Measured rounds per cache scenario, 1 to 10
+        type: string
+        default: '5'
+      warm-seeds:
+        description: Distinct prior random samples, 0 to 100
+        type: string
+        default: '10'
+      backend:
+        description: Task output cache backend
+        type: choice
+        options:
+          - local
+          - remote
+          - both
+        default: local
+      workload-run-id:
+        description: Optional earlier local cache benchmark run whose frozen inputs to reuse
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: muzzle-cache-benchmark-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 25.0.5+8
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: true
+      - name: Validate benchmark runner
+        working-directory: benchmark-muzzle
+        run: python3 -m unittest -v
+      - name: Validate caching controls
+        run: ./gradlew -p gradle-plugins test --tests '*MuzzleBenchmarkSupportTest' --tests '*MuzzleCacheFunctionalTest' --max-workers=2 --no-scan
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: muzzle-cache-validation
+          path: gradle-plugins/build/reports/tests
+
+  benchmark:
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: ${{ fromJSON(inputs.partitions) }}
+        backend: ${{ fromJSON(inputs.backend == 'both' && '["local","remote"]' || format('["{0}"]', inputs.backend)) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 25.0.5+8
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-read-only: true
+      - name: Download frozen inputs
+        if: inputs.workload-run-id != ''
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: muzzle-cache-inputs-${{ matrix.partition }}-local
+          path: ${{ runner.temp }}/muzzle-cache-inputs
+          run-id: ${{ inputs.workload-run-id }}
+          github-token: ${{ github.token }}
+      - name: Measure fresh-checkout cache scenarios
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
+          PARTITION: ${{ matrix.partition }}
+          BACKEND: ${{ matrix.backend }}
+          ROUNDS: ${{ inputs.rounds }}
+          WARM_SEEDS: ${{ inputs.warm-seeds }}
+          WORKLOAD_RUN_ID: ${{ inputs.workload-run-id }}
+        run: |
+          arguments=()
+          if [ -n "$WORKLOAD_RUN_ID" ]; then
+            arguments+=(--inputs "$RUNNER_TEMP/muzzle-cache-inputs")
+          fi
+          python3 benchmark-muzzle/cache_benchmark.py \
+            --revision "$GITHUB_SHA" --partition "$PARTITION" --backend "$BACKEND" \
+            --rounds "$ROUNDS" --warm-seeds "$WARM_SEEDS" \
+            --work-dir "$RUNNER_TEMP/muzzle-cache-benchmark" \
+            --seed-gradle-home "$HOME/.gradle" "${arguments[@]}"
+      - name: Publish summary
+        run: cat "$RUNNER_TEMP/muzzle-cache-benchmark/reports/summary.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: muzzle-cache-results-${{ matrix.partition }}-${{ matrix.backend }}
+          path: ${{ runner.temp }}/muzzle-cache-benchmark/reports
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: muzzle-cache-inputs-${{ matrix.partition }}-${{ matrix.backend }}
+          path: ${{ runner.temp }}/muzzle-cache-benchmark/reports/inputs
+          if-no-files-found: error
+          retention-days: 30

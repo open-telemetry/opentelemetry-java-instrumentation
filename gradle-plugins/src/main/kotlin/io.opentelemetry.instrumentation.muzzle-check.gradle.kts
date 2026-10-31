@@ -5,6 +5,7 @@
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.opentelemetry.javaagent.muzzle.AcceptableVersions
+import io.opentelemetry.javaagent.muzzle.MuzzleBenchmarkSupport
 import io.opentelemetry.javaagent.muzzle.MuzzleDirective
 import io.opentelemetry.javaagent.muzzle.MuzzleExtension
 import io.opentelemetry.javaagent.muzzle.matcher.MuzzleGradlePluginUtil
@@ -26,7 +27,9 @@ import org.eclipse.aether.version.Version
 import java.io.File
 import java.net.URL
 import java.net.URLClassLoader
+import java.nio.file.Files
 import java.util.stream.StreamSupport
+import kotlin.random.Random
 
 plugins {
   `java-library`
@@ -35,6 +38,18 @@ plugins {
 
 // Select a random set of versions to test
 val RANGE_COUNT_LIMIT = Integer.getInteger("otel.javaagent.muzzle.versions.limit", 10)
+
+val muzzleBenchmarkSeed = providers.gradleProperty("muzzleBenchmarkSeed").orNull?.toLong()
+val muzzleBenchmarkRepository = providers.gradleProperty("muzzleBenchmarkRepository").orNull
+val muzzleBenchmarkReportDirectory = providers.gradleProperty("muzzleBenchmarkReportDirectory").orNull?.let(::File)
+val muzzleBenchmarkCache = providers.gradleProperty("muzzleBenchmarkCache").map(String::toBooleanStrict).getOrElse(false)
+val muzzleBenchmarkCacheNamespace = providers.gradleProperty("muzzleBenchmarkCacheNamespace").getOrElse("local-research")
+check(muzzleBenchmarkSeed != null || (muzzleBenchmarkRepository == null && muzzleBenchmarkReportDirectory == null)) {
+  "Muzzle benchmark repository and reporting require muzzleBenchmarkSeed"
+}
+check(!muzzleBenchmarkCache || (muzzleBenchmarkSeed != null && muzzleBenchmarkReportDirectory != null)) {
+  "Muzzle assertion caching requires benchmark sampling and reporting"
+}
 
 // Read pinned latest-dep versions to cap muzzle's open-ended version ranges,
 // preventing failures when new library versions are released to Maven Central.
@@ -316,6 +331,13 @@ fun newRepositorySystem(): RepositorySystem = MavenRepositorySystemUtils.newServ
 }
 
 fun newRepositorySystemSession(system: RepositorySystem): RepositorySystemSession {
+  if (muzzleBenchmarkRepository != null) {
+    return MuzzleBenchmarkSupport.repositorySession(
+      system,
+      File(muzzleBenchmarkRepository, path.removePrefix(":").replace(':', File.separatorChar)),
+      providers.gradleProperty("muzzleBenchmarkRepositoryOffline").map(String::toBooleanStrict).getOrElse(false)
+    )
+  }
   val muzzleRepo = layout.buildDirectory.dir("muzzleRepo")
   val localRepo = LocalRepository(muzzleRepo.get().asFile)
   return MavenRepositorySystemUtils.newSession().apply {
@@ -386,6 +408,36 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
     val excludedNames = muzzleDirective.excludedInstrumentationNames.get()
     val excludedModules = muzzleDirective.excludedInstrumentationModules.get()
     val shouldAssertPass = muzzleDirective.assertPass.get()
+    val benchmarkReportDirectory = muzzleBenchmarkReportDirectory
+    val cacheAssertions = muzzleBenchmarkCache
+    val taskPath = path
+
+    if (cacheAssertions) {
+      val reportDirectory = checkNotNull(benchmarkReportDirectory)
+      inputs.files(muzzleShadowJarFile, muzzleToolingShadowJarFile)
+        .withPropertyName("instrumentationClasspath")
+        .withNormalizer(ClasspathNormalizer::class.java)
+      inputs.files(muzzleBootstrapShadowJarFile)
+        .withPropertyName("bootstrapClasspath")
+        .withNormalizer(ClasspathNormalizer::class.java)
+      inputs.files(configFiles)
+        .withPropertyName("applicationClasspath")
+        .withNormalizer(ClasspathNormalizer::class.java)
+      inputs.property("assertionManifest", providers.provider {
+        MuzzleBenchmarkSupport.manifest(taskPath, shouldAssertPass, excludedNames, excludedModules, artifacts)
+      })
+      inputs.property("namespace", muzzleBenchmarkCacheNamespace)
+      for (property in listOf("java.runtime.version", "java.vm.version", "java.vm.name", "java.vendor", "os.name", "os.arch")) {
+        inputs.property(property, providers.systemProperty(property))
+      }
+      inputs.property("otelProperties", providers.systemPropertiesPrefixedBy("otel.").map {
+        it.filterKeys { key -> !key.startsWith("otel.javaagent.muzzle.") }
+      })
+      inputs.property("byteBuddyProperties", providers.systemPropertiesPrefixedBy("net.bytebuddy."))
+      inputs.property("otelEnvironment", providers.environmentVariablesPrefixedBy("OTEL_"))
+      outputs.file(MuzzleBenchmarkSupport.reportFile(reportDirectory, taskPath)).withPropertyName("assertionReport")
+      outputs.cacheIf("Opt-in Muzzle caching research") { true }
+    }
 
     dependsOn(configurations.named("runtimeClasspath"))
     dependsOn(shadowModule)
@@ -393,6 +445,9 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
     dependsOn(shadowMuzzleBootstrap)
 
     doLast {
+      if (cacheAssertions) {
+        Files.deleteIfExists(MuzzleBenchmarkSupport.reportFile(checkNotNull(benchmarkReportDirectory), taskPath).toPath())
+      }
       // Create instrumentation classloader
       val instrumentationUrls = arrayOf(
         muzzleShadowJarFile.get().asFile.toURI().toURL(),
@@ -421,6 +476,9 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
             throw e
           }
         }
+      }
+      if (benchmarkReportDirectory != null) {
+        MuzzleBenchmarkSupport.record(benchmarkReportDirectory, path, shouldAssertPass, excludedNames, excludedModules, artifacts)
       }
     }
   }
@@ -460,6 +518,9 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
     artifact = allVersionsArtifact
   }
   val allRangeResult = system.resolveVersionRange(session, allRangeRequest)
+  if (muzzleBenchmarkSeed != null) {
+    MuzzleBenchmarkSupport.requireVersionMetadata(system, session, allRangeResult, upperBound?.toString() == "0.0")
+  }
 
   val rangeRequest = VersionRangeRequest().apply {
     repositories = repos
@@ -498,7 +559,9 @@ fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>, upperBo
     yield(range.highestVersion.toString())
   }
 
-  val copy: List<Version> = range.versions.shuffled()
+  val seed = muzzleBenchmarkSeed
+  val random = if (seed == null) Random.Default else MuzzleBenchmarkSupport.randomFor("$path:${range.request.artifact}", seed)
+  val copy: List<Version> = range.versions.shuffled(random)
   for (version in copy) {
     if (accept(version)) {
       yield(version.toString())
@@ -524,6 +587,9 @@ fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: Reposit
   }
   val rangeResult = system.resolveVersionRange(session, rangeRequest)
 
+  if (muzzleBenchmarkSeed != null) {
+    MuzzleBenchmarkSupport.requireVersionMetadata(system, session, rangeResult, upperBound?.toString() == "0.0")
+  }
   val allVersionArtifacts = filterVersions(rangeResult, muzzleDirective.normalizedSkipVersions, upperBound)
     .map {
       DefaultArtifact(
