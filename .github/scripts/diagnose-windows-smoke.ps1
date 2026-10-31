@@ -12,6 +12,9 @@ New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
 $initScript = Join-Path $OutputDirectory "diagnostic.init.gradle"
 @'
 gradle.projectsEvaluated {
+  if (gradle.rootProject.name != "opentelemetry-java-instrumentation") {
+    return
+  }
   def smoke = gradle.rootProject.project(":smoke-tests")
   smoke.tasks.withType(org.gradle.api.tasks.testing.Test).configureEach {
     timeout.set(java.time.Duration.ofMinutes(20))
