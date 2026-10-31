@@ -42,6 +42,18 @@ dependencies {
   testImplementation("software.amazon.awssdk:regions:2.26.0")
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation-api-incubator"))
+        implementation("org.opensearch.client:opensearch-java:3.0.0")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
@@ -70,6 +82,6 @@ tasks {
   }
 
   check {
-    dependsOn(testQuerySanitizationDisabled)
+    dependsOn(testing.suites, testQuerySanitizationDisabled)
   }
 }

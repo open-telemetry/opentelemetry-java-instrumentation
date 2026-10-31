@@ -41,15 +41,22 @@ final class LettuceDbAttributesGetter
 
   @Nullable
   @Override
+  public String getDbResponseStatusCode(
+      LettuceRequest request, @Nullable LettuceResponse response, @Nullable Throwable error) {
+    return response == null ? null : response.getRedisErrorCode();
+  }
+
+  @Nullable
+  @Override
   public String getErrorType(
       LettuceRequest request, @Nullable LettuceResponse response, @Nullable Throwable error) {
-    if (response == null) {
+    if (response == null || error != null) {
       return null;
     }
-    String errorType = response.getRedisErrorType();
+    String errorCode = response.getRedisErrorCode();
     // Older Lettuce tracing can report a failure without exposing its exception.
     // Leave exception-class fallback to the shared extractor when an exception is available.
-    return errorType == null && response.isFailed() && error == null ? "_OTHER" : errorType;
+    return errorCode == null && response.isFailed() ? "_OTHER" : errorCode;
   }
 
   @Nullable

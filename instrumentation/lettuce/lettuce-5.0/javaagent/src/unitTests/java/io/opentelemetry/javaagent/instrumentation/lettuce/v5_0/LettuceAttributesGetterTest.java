@@ -32,6 +32,22 @@ import org.junit.jupiter.api.Test;
 class LettuceAttributesGetterTest {
 
   @Test
+  void responseStatusUsesOnlyServerErrorPrefixes() {
+    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
+    LettuceBatchAttributesGetter batchGetter = new LettuceBatchAttributesGetter();
+    Throwable serverError = new RedisCommandExecutionException("WRONGTYPE detail");
+    Throwable clientError = new RedisCommandTimeoutException("WRONGTYPE client timeout");
+    Throwable blankError = new RedisCommandExecutionException(" ");
+
+    assertThat(getter.getDbResponseStatusCode(null, null, serverError)).isEqualTo("WRONGTYPE");
+    assertThat(batchGetter.getDbResponseStatusCode(null, null, serverError)).isEqualTo("WRONGTYPE");
+    for (Throwable error : new Throwable[] {null, clientError, blankError}) {
+      assertThat(getter.getDbResponseStatusCode(null, null, error)).isNull();
+      assertThat(batchGetter.getDbResponseStatusCode(null, null, error)).isNull();
+    }
+  }
+
+  @Test
   void commandWithoutTargetOmitsServerAttributes() {
     RedisCommand<String, String, String> command = command();
     try (DefaultEndpoint endpoint = new DefaultEndpoint(ClientOptions.create())) {

@@ -128,11 +128,13 @@ class MongoDbAttributesGetterTest {
 
   @ParameterizedTest
   @MethodSource("errorTypes")
-  void getErrorTypeReturnsServerCodeOrFallsBack(Throwable error, String expectedErrorType) {
+  void getErrorTypeAndResponseStatusKeepDistinctPolicies(
+      Throwable error, String expectedErrorType, String expectedStatus) {
     MongoDbAttributesGetter getter =
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
 
     assertThat(getter.getErrorType(null, null, error)).isEqualTo(expectedErrorType);
+    assertThat(getter.getDbResponseStatusCode(null, null, error)).isEqualTo(expectedStatus);
   }
 
   @Test
@@ -148,6 +150,75 @@ class MongoDbAttributesGetterTest {
             1);
 
     assertThat(getter.getErrorType(null, response, null)).isEqualTo("64");
+    assertThat(getter.getDbResponseStatusCode(null, response, null)).isEqualTo("64");
+  }
+
+  @ParameterizedTest
+  @MethodSource("writeErrorStatuses")
+  void keepsWriteErrorStatusAndErrorTypePoliciesDistinct(
+      String document, String expectedStatus, String expectedErrorType) {
+    MongoDbAttributesGetter getter =
+        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
+    CommandSucceededEvent response =
+        new CommandSucceededEvent(
+            1,
+            new ConnectionDescription(new ServerId(new ClusterId(), new ServerAddress())),
+            "insert",
+            BsonDocument.parse(document),
+            1);
+
+    assertThat(getter.getDbResponseStatusCode(null, response, null)).isEqualTo(expectedStatus);
+    assertThat(getter.getErrorType(null, response, null)).isEqualTo(expectedErrorType);
+  }
+
+  private static Stream<Arguments> writeErrorStatuses() {
+    return Stream.of(
+        argumentSet("no error code", "{\"ok\": 1}", null, null),
+        argumentSet(
+            "negative write error code",
+            "{\"ok\": 1, \"writeErrors\": [{\"code\": -3}]}",
+            "-3",
+            null),
+        argumentSet(
+            "zero write concern error code",
+            "{\"ok\": 1, \"writeConcernError\": {\"code\": 0}}",
+            "0",
+            null),
+        argumentSet(
+            "negative write error before positive write error",
+            "{\"ok\": 1, \"writeErrors\": [{\"code\": -3}, {\"code\": 11000}]}",
+            "-3",
+            "11000"),
+        argumentSet(
+            "zero write error before positive write error",
+            "{\"ok\": 1, \"writeErrors\": [{\"code\": 0}, {\"code\": 11000}]}",
+            "0",
+            "11000"),
+        argumentSet(
+            "nonpositive write error before positive write concern error",
+            "{\"ok\": 1, \"writeErrors\": [{\"code\": -3}], \"writeConcernError\": {\"code\": 64}}",
+            "-3",
+            "64"),
+        argumentSet(
+            "minimum int64 write error code",
+            "{\"ok\": 1, \"writeErrors\": [{\"code\": {\"$numberLong\": \"-2147483648\"}}]}",
+            "-2147483648",
+            null),
+        argumentSet(
+            "below minimum int64 write error code",
+            "{\"ok\": 1, \"writeErrors\": [{\"code\": {\"$numberLong\": \"-2147483649\"}}]}",
+            null,
+            null),
+        argumentSet(
+            "string code is unavailable",
+            "{\"ok\": 1, \"writeErrors\": [{\"code\": \"3\"}]}",
+            null,
+            null),
+        argumentSet(
+            "out-of-range code is unavailable",
+            "{\"ok\": 1, \"writeErrors\": [{\"code\": 2147483648}]}",
+            null,
+            null));
   }
 
   @Test
@@ -217,19 +288,23 @@ class MongoDbAttributesGetterTest {
 
   private static Stream<Arguments> errorTypes() {
     return Stream.of(
-        argumentSet("server error code", new MongoException(11000, "duplicate key"), "11000"),
-        argumentSet("zero code falls back", new MongoException(0, "boom"), null),
-        argumentSet("client message sentinel (-3)", new MongoException("boom"), null),
+        argumentSet(
+            "server error code", new MongoException(11000, "duplicate key"), "11000", "11000"),
+        argumentSet("zero code", new MongoException(0, "boom"), null, "0"),
+        argumentSet("missing code sentinel", new MongoException(-1, "boom"), null, "-1"),
+        argumentSet("client message sentinel (-3)", new MongoException("boom"), null, "-3"),
         argumentSet(
             "client message-and-cause sentinel (-4)",
             new MongoException("boom", new RuntimeException()),
-            null),
+            null,
+            "-4"),
         argumentSet(
             "socket exception sentinel (-2)",
             new MongoSocketException("boom", new ServerAddress()),
-            null),
-        argumentSet("non-mongo exception", new IllegalStateException("boom"), null),
-        argumentSet("no error", null, null));
+            null,
+            "-2"),
+        argumentSet("non-mongo exception", new IllegalStateException("boom"), null, null),
+        argumentSet("no error", null, null, null));
   }
 
   private static CommandStartedEvent commandStartedEvent() {

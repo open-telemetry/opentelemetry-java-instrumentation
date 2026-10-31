@@ -6,12 +6,17 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MARIADB;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
+import java.sql.SQLWarning;
 import java.util.Collection;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -21,6 +26,11 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
+
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
+  private static final String IBM_DB2 = "ibm.db2";
+  private static final String ORACLE_DB = "oracle.db";
+  private static final String SQLITE = "sqlite";
 
   @Override
   public String getDbSystemName(DbRequest request) {
@@ -52,19 +62,82 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public String getErrorType(
       DbRequest request, @Nullable Void response, @Nullable Throwable error) {
-    if (error instanceof SQLException) {
-      SQLException sqlException = (SQLException) error;
-      int errorCode = sqlException.getErrorCode();
-      if (errorCode != 0) {
-        return Integer.toString(errorCode);
+    return getSqlExceptionCode(error);
+  }
+
+  @Nullable
+  @Override
+  public String getDbResponseStatusCode(
+      DbRequest request, @Nullable Void response, @Nullable Throwable error) {
+    if (error == null) {
+      SQLWarning sqlWarning = request.getSqlWarning();
+      while (sqlWarning != null) {
+        String statusCode = getDbResponseStatusCode(request, sqlWarning);
+        if (statusCode != null) {
+          return statusCode;
+        }
+        sqlWarning = sqlWarning.getNextWarning();
       }
-      String sqlState = sqlException.getSQLState();
-      if (sqlState == null || sqlState.isEmpty() || sqlState.equals("00000")) {
-        return null;
-      }
+      return null;
+    }
+    if (!(error instanceof SQLException)) {
+      return null;
+    }
+    return getDbResponseStatusCode(request, (SQLException) error);
+  }
+
+  @Nullable
+  private String getDbResponseStatusCode(DbRequest request, SQLException sqlException) {
+    String dbSystemName = getDbSystemName(request);
+    String sqlState = getAvailableSqlState(sqlException);
+    int errorCode = sqlException.getErrorCode();
+    boolean hasErrorCode = errorCode != 0;
+
+    if (prefersVendorCode(dbSystemName) && hasErrorCode) {
+      return Integer.toString(errorCode);
+    }
+    if (POSTGRESQL.equals(dbSystemName) && sqlState != null) {
       return sqlState;
     }
-    return null;
+    if (sqlState != null && hasErrorCode) {
+      return sqlState + "/" + errorCode;
+    }
+    if (sqlState != null) {
+      return sqlState;
+    }
+    return hasErrorCode ? Integer.toString(errorCode) : null;
+  }
+
+  private static boolean prefersVendorCode(String dbSystemName) {
+    return IBM_DB2.equals(dbSystemName)
+        || MARIADB.equals(dbSystemName)
+        || MICROSOFT_SQL_SERVER.equals(dbSystemName)
+        || MYSQL.equals(dbSystemName)
+        || ORACLE_DB.equals(dbSystemName)
+        || SQLITE.equals(dbSystemName);
+  }
+
+  @Nullable
+  private static String getAvailableSqlState(SQLException sqlException) {
+    String sqlState = sqlException.getSQLState();
+    return sqlState == null || sqlState.isEmpty() ? null : sqlState;
+  }
+
+  @Nullable
+  private static String getSqlExceptionCode(@Nullable Throwable error) {
+    if (!(error instanceof SQLException)) {
+      return null;
+    }
+    SQLException sqlException = (SQLException) error;
+    int errorCode = sqlException.getErrorCode();
+    if (errorCode != 0) {
+      return Integer.toString(errorCode);
+    }
+    String sqlState = sqlException.getSQLState();
+    if (sqlState == null || sqlState.isEmpty() || sqlState.equals("00000")) {
+      return null;
+    }
+    return sqlState;
   }
 
   @Override

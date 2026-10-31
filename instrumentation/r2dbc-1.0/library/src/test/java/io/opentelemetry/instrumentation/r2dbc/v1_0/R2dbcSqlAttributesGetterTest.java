@@ -18,6 +18,8 @@ import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.proxy.test.MockConnectionInfo;
 import io.r2dbc.proxy.test.MockQueryExecutionInfo;
 import io.r2dbc.spi.ConnectionFactoryOptions;
+import io.r2dbc.spi.R2dbcBadGrammarException;
+import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -29,6 +31,161 @@ import org.junit.jupiter.params.provider.ValueSource;
 class R2dbcSqlAttributesGetterTest {
 
   private final R2dbcSqlAttributesGetter getter = new R2dbcSqlAttributesGetter();
+
+  @ParameterizedTest
+  @MethodSource("responseStatuses")
+  void responseStatus(Throwable error, String expectedErrorType, String expectedStatus) {
+    DbExecution request =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.parse("r2dbc:postgresql://localhost/db"));
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo(expectedStatus);
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo(expectedErrorType);
+  }
+
+  private static Stream<Arguments> responseStatuses() {
+    return Stream.of(
+        argumentSet(
+            "SQLSTATE takes precedence for PostgreSQL",
+            new R2dbcBadGrammarException("test", "42601", 42),
+            "42601",
+            "42601"),
+        argumentSet("no SQLSTATE", new R2dbcBadGrammarException("test"), null, null),
+        argumentSet("non-database failure", new IllegalStateException("test"), null, null),
+        argumentSet("success", null, null, null));
+  }
+
+  @Test
+  void capturesPostgresqlClosedConnectionCodeWithoutChangingErrorType()
+      throws ReflectiveOperationException {
+    DbExecution request =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.parse("r2dbc:postgresql://localhost/db"));
+    Throwable error = postgresqlConnectionClosedException();
+
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("08006");
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("08006");
+  }
+
+  @Test
+  void keepsPostgresqlServerConnectionFailureCode() throws ReflectiveOperationException {
+    DbExecution request =
+        new DbExecution(
+            queryExecutionInfo(),
+            ConnectionFactoryOptions.parse("r2dbc:postgresql://localhost/db"));
+    Throwable error = postgresqlServerConnectionFailure();
+
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("08006");
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("08006");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"mysql", "mariadb", "oracle", "mssql", "db2"})
+  void prefersVendorCodeWithoutChangingErrorType(String dbSystemName) {
+    DbExecution request = request(dbSystemName);
+    Throwable error = new R2dbcBadGrammarException("test", "42000", 1064);
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("42000");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"mysql", "mariadb", "oracle", "mssql", "db2"})
+  void usesVendorCodeWhenSqlStateIsUnavailable(String dbSystemName) {
+    DbExecution request = request(dbSystemName);
+    Throwable error = new R2dbcBadGrammarException("test", null, 1064);
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
+    assertThat(getter.getErrorType(request, null, error)).isNull();
+  }
+
+  @ParameterizedTest
+  @MethodSource("otherSqlResponseStatuses")
+  void formatsGenericSqlResponseStatus(
+      Throwable error, String expectedStatus, String expectedErrorType) {
+    DbExecution request = request("unknown");
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo(expectedStatus);
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo(expectedErrorType);
+  }
+
+  private static Stream<Arguments> otherSqlResponseStatuses() {
+    return Stream.of(
+        argumentSet(
+            "both codes",
+            new R2dbcBadGrammarException("test", "42000", 1071),
+            "42000/1071",
+            "42000"),
+        argumentSet(
+            "SQLSTATE only", new R2dbcBadGrammarException("test", "42000", 0), "42000", "42000"),
+        argumentSet(
+            "vendor code only", new R2dbcBadGrammarException("test", null, 1071), "1071", null),
+        argumentSet("neither code", new R2dbcBadGrammarException("test"), null, null));
+  }
+
+  @Test
+  void keepsVendorCodeWithoutSqlStateForMappedNonPreferredSystem() {
+    DbExecution request = request("clickhouse");
+    Throwable error = new R2dbcBadGrammarException("test", null, 1071);
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1071");
+    assertThat(getter.getErrorType(request, null, error)).isNull();
+  }
+
+  @Test
+  void combinesCodesForUnknownSystem() {
+    DbExecution request = request("clickhouse");
+    Throwable error = new R2dbcBadGrammarException("test", "42000", 1071);
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("42000/1071");
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("42000");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"mysql", "mariadb", "oracle", "mssql", "db2"})
+  void fallsBackToSqlStateWhenVendorCodeIsUnavailable(String dbSystemName) {
+    DbExecution request = request(dbSystemName);
+    Throwable error = new R2dbcBadGrammarException("test", "42000", 0);
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("42000");
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("42000");
+  }
+
+  @Test
+  void capturesSuccessfulSqlStateWithoutChangingErrorType() {
+    DbExecution request = request("mysql");
+    Throwable error = new R2dbcBadGrammarException("test", "00000", 0);
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("00000");
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("00000");
+  }
+
+  private static Throwable postgresqlConnectionClosedException()
+      throws ReflectiveOperationException {
+    Class<?> exceptionClass =
+        Class.forName(
+            "io.r2dbc.postgresql.client.ReactorNettyClient$PostgresConnectionClosedException");
+    Constructor<?> constructor = exceptionClass.getDeclaredConstructor(String.class);
+    constructor.setAccessible(true);
+    return (Throwable) constructor.newInstance("Connection closed");
+  }
+
+  private static Throwable postgresqlServerConnectionFailure() throws ReflectiveOperationException {
+    Class<?> errorDetailsClass = Class.forName("io.r2dbc.postgresql.api.ErrorDetails");
+    Object errorDetails =
+        errorDetailsClass
+            .getMethod("fromCodeAndMessage", String.class, String.class)
+            .invoke(null, "08006", "Server connection failure");
+    Class<?> exceptionClass =
+        Class.forName(
+            "io.r2dbc.postgresql.ExceptionFactory$PostgresqlNonTransientResourceException");
+    Constructor<?> constructor =
+        exceptionClass.getDeclaredConstructor(errorDetailsClass, String.class);
+    constructor.setAccessible(true);
+    return (Throwable) constructor.newInstance(errorDetails, "SELECT 1");
+  }
 
   @Test
   void rawQueryTextsForSingleQuery() {
@@ -236,5 +393,11 @@ class R2dbcSqlAttributesGetterTest {
         .queryInfo(new QueryInfo("SELECT 1"))
         .connectionInfo(MockConnectionInfo.builder().build())
         .build();
+  }
+
+  private static DbExecution request(String dbSystemName) {
+    return new DbExecution(
+        queryExecutionInfo(),
+        ConnectionFactoryOptions.parse("r2dbc:" + dbSystemName + "://localhost/db"));
   }
 }

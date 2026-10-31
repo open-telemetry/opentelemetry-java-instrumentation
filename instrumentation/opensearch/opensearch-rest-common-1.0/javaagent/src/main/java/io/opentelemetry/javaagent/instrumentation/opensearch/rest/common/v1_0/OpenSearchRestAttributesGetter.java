@@ -13,6 +13,14 @@ import javax.annotation.Nullable;
 final class OpenSearchRestAttributesGetter
     implements DbClientAttributesGetter<OpenSearchRestRequest, OpenSearchRestResponse> {
 
+  private final OpenSearchRestInstrumenterFactory.ExceptionStatusCodeExtractor
+      exceptionStatusCodeExtractor;
+
+  OpenSearchRestAttributesGetter(
+      OpenSearchRestInstrumenterFactory.ExceptionStatusCodeExtractor exceptionStatusCodeExtractor) {
+    this.exceptionStatusCodeExtractor = exceptionStatusCodeExtractor;
+  }
+
   @Override
   public String getDbSystemName(OpenSearchRestRequest request) {
     return DbSystemNameIncubatingValues.OPENSEARCH;
@@ -49,6 +57,21 @@ final class OpenSearchRestAttributesGetter
       }
     }
     return null;
+  }
+
+  @Override
+  @Nullable
+  public String getDbResponseStatusCode(
+      OpenSearchRestRequest request,
+      @Nullable OpenSearchRestResponse response,
+      @Nullable Throwable error) {
+    Integer statusCode = null;
+    if (response != null) {
+      statusCode = response.getStatusCode();
+    } else if (error != null) {
+      statusCode = exceptionStatusCodeExtractor.getStatusCode(error);
+    }
+    return statusCode == null ? null : Integer.toString(statusCode);
   }
 
   @Override

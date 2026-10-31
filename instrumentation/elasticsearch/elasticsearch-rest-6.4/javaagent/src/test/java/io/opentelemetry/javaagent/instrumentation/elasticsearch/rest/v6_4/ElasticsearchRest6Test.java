@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4;
 
-import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetricWithResponseStatus;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -104,6 +105,7 @@ class ElasticsearchRest6Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "200"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -121,9 +123,10 @@ class ElasticsearchRest6Test {
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
 
-    assertDurationMetric(
+    assertDurationMetricWithResponseStatus(
         testing,
         "io.opentelemetry.elasticsearch-rest-6.4",
+        "200",
         DB_SYSTEM_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
@@ -150,6 +153,7 @@ class ElasticsearchRest6Test {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "200"),
                             equalTo(DB_QUERY_TEXT, "{\"query\":{\"match\":{\"title\":\"?\"}}}"),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
@@ -219,6 +223,7 @@ class ElasticsearchRest6Test {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "200"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -291,6 +296,7 @@ class ElasticsearchRest6Test {
                 .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfyingExactly(
                     equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                    equalTo(DB_RESPONSE_STATUS_CODE, "200"),
                     equalTo(HTTP_REQUEST_METHOD, "GET"),
                     equalTo(SERVER_ADDRESS, hasHostList ? hostList : httpHost.getHostName()),
                     equalTo(SERVER_PORT, hasHostList ? null : Long.valueOf(httpHost.getPort())),

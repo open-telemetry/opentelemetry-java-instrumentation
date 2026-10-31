@@ -8,3 +8,20 @@ dependencies {
 
   annotationProcessor("com.google.auto.value:auto-value")
 }
+
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation-api-incubator"))
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+}

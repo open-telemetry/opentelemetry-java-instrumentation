@@ -65,6 +65,18 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   }
 
   /**
+   * Returns an available response status code supplied by the database or client library.
+   *
+   * <p>Return {@code null} when no response status code is available, including errors represented
+   * only by an exception class name or a fallback error type.
+   */
+  @Nullable
+  default String getDbResponseStatusCode(
+      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
+    return null;
+  }
+
+  /**
    * Returns a description of a class of error the operation ended with.
    *
    * <p>If this method returns {@code null}, the exception class name (if any) will be used as error
