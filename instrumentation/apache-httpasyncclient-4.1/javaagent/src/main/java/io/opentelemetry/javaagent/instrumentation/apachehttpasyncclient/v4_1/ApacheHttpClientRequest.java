@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1;
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 
-import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -145,23 +144,5 @@ class ApacheHttpClientRequest {
       logger.log(FINE, e.getMessage(), e);
       return null;
     }
-  }
-
-  @Nullable
-  String getNetworkPeerAddress() {
-    if (target == null) {
-      return null;
-    }
-    InetAddress inetAddress = target.getAddress();
-    return inetAddress == null ? null : inetAddress.getHostAddress();
-  }
-
-  @Nullable
-  Integer getNetworkPeerPort() {
-    if (target == null || target.getAddress() == null) {
-      return null;
-    }
-    int port = target.getPort();
-    return port > 0 ? port : null;
   }
 }

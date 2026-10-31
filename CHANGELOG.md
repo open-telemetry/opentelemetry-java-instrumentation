@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes
 
+- Apache HttpAsyncClient instrumentation no longer emits `network.peer.address`
+  or `network.peer.port` inferred from request targets, including pipelined
+  requests. `server.address` and `server.port` continue to identify the logical
+  destination.
 - Rename `messaging.system` to `messaging.system.name` (`aws_sqs` becomes `aws.sqs`) and adopt
   the system-specific attribute renames from
   [semantic-conventions #4250](https://github.com/open-telemetry/semantic-conventions/pull/4250).
