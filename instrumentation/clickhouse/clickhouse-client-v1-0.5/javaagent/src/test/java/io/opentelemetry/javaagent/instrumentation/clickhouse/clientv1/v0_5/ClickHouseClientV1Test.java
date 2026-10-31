@@ -677,7 +677,7 @@ class ClickHouseClientV1Test {
     } catch (ClassNotFoundException ignored) {
       Class<?> registry =
           AgentClassLoaderAccess.loadClass(
-              "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
+              "io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoaderRegistry");
       Method getInstrumentationClassLoader =
           registry.getMethod("getInstrumentationClassLoader", String.class, ClassLoader.class);
       ClassLoader instrumentationClassLoader =

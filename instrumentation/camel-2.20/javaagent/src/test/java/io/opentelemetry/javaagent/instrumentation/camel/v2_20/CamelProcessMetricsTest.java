@@ -221,7 +221,7 @@ class CamelProcessMetricsTest {
     String className = INSTRUMENTATION_PACKAGE + simpleName;
     Class<?> registryClass =
         AgentClassLoaderAccess.loadClass(
-            "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
+            "io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoaderRegistry");
     ClassLoader moduleClassLoader =
         (ClassLoader)
             registryClass
