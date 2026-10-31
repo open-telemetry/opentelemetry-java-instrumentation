@@ -32,6 +32,43 @@ class GradleParserTest {
   }
 
   @Test
+  void testExtractMuzzleVersions_InterpolatedCoordinates() {
+    String gradleBuildFileContent =
+        """
+            val playGroup = "com.typesafe.play"
+            val scalaVersion = "2.11"
+            val playVersion = "2.6.0"
+
+            muzzle {
+              pass {
+                group.set("$playGroup")
+                module.set("play_$scalaVersion")
+                versions.set("[$playVersion,)")
+                assertInverse.set(true)
+              }
+              pass {
+                // instrumentation-docs:ignore - verification only
+                group.set("$playGroup")
+                module.set("play_$scalaVersion")
+                versions.set("[$playVersion,2.7.0)")
+                assertInverse.set(true)
+              }
+              pass {
+                group.set("org.playframework")
+                module.set("play_3")
+                versions.set("[3.0.0,)")
+                assertInverse.set(true)
+              }
+            }""";
+
+    DependencyInfo info =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+    assertThat(info.versions())
+        .containsExactlyInAnyOrder(
+            "com.typesafe.play:play_2.11:[2.6.0,)", "org.playframework:play_3:[3.0.0,)");
+  }
+
+  @Test
   void testExtractCoreJdk() {
     String gradleBuildFileContent =
         """

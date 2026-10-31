@@ -101,7 +101,12 @@ public class GradleParser {
       String versionRange = extractValue(passBlock, "versions\\.set\\(\"([^\"]+)\"\\)");
 
       if (group != null && module != null && versionRange != null) {
-        String summary = group + ":" + module + ":" + interpolate(versionRange, variables);
+        String summary =
+            interpolate(group, variables)
+                + ":"
+                + interpolate(module, variables)
+                + ":"
+                + interpolate(versionRange, variables);
         results.add(summary);
       }
     }

@@ -27,7 +27,7 @@ muzzle {
   pass {
     group.set("org.playframework")
     module.set("play_3")
-    versions.set("[$playVersion,)")
+    versions.set("[3.0.0,)")
     assertInverse.set(true)
   }
 }
