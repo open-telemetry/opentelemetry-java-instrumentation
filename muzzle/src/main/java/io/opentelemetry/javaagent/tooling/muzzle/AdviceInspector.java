@@ -38,9 +38,9 @@ public class AdviceInspector {
     this.classFileLocator = classFileLocator;
   }
 
-  public boolean useIsolatedAdvice(InstrumentationModule instrumentationModule) {
+  public boolean inferHelperClassIsolation(InstrumentationModule instrumentationModule) {
     Boolean result =
-        useIsolatedAdvice(instrumentationModule, adviceClassNames(instrumentationModule));
+        inferHelperClassIsolation(instrumentationModule, adviceClassNames(instrumentationModule));
 
     // we aren't able to tell whether the instrumentation is ready to use the isolated classloader
     // path, so assume not
@@ -48,7 +48,7 @@ public class AdviceInspector {
   }
 
   @Nullable
-  public Boolean useIsolatedAdvice(
+  public Boolean inferHelperClassIsolation(
       InstrumentationModule instrumentationModule, Collection<String> adviceClassNames) {
     AdviceMode mode = inspect(adviceClassNames);
     if (mode == AdviceMode.MIXED) {
