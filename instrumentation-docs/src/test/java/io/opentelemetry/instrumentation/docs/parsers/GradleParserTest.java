@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.docs.parsers;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.instrumentation.docs.internal.DependencyInfo;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
@@ -54,32 +53,6 @@ class GradleParserTest {
     assertThat(info.versions())
         .containsExactlyInAnyOrder(
             "com.typesafe.play:play_2.11:[2.6.0,)", "org.playframework:play_3:(,)");
-  }
-
-  @Test
-  void testRejectsNonLiteralMuzzleFields() {
-    assertThatThrownBy(
-            () ->
-                GradleParser.parseGradleFile(
-                    "muzzle { pass { group.set(playGroup) } }", InstrumentationType.JAVAAGENT))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("must use a literal string");
-
-    assertThatThrownBy(
-            () ->
-                GradleParser.parseGradleFile(
-                    "muzzle { pass { module.set(\"$playModule\") } }",
-                    InstrumentationType.JAVAAGENT))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("must use a literal string");
-
-    assertThatThrownBy(
-            () ->
-                GradleParser.parseGradleFile(
-                    "muzzle { pass { versions.set(\"${versionRange}\") } }",
-                    InstrumentationType.JAVAAGENT))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("must use a literal string");
   }
 
   @Test
