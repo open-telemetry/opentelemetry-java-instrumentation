@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
+package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0.annotations;
 
 import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 

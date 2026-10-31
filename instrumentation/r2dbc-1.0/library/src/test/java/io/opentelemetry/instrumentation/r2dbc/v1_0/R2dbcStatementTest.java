@@ -52,7 +52,7 @@ class R2dbcStatementTest extends AbstractR2dbcStatementTest {
             AttributesExtractor.constant(
                 stringKey("server.service.name"), expectedMappedServiceName()))
         .build()
-        .wrapConnectionFactory(
+        .instrument(
             super.createProxyConnectionFactory(connectionFactoryOptions), connectionFactoryOptions);
   }
 }

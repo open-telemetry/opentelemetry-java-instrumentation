@@ -61,7 +61,7 @@ class CassandraTelemetryTest {
 
   @Test
   void standardWrapHasNoServerTarget() {
-    CassandraRequest request = execute(telemetry.wrap(session));
+    CassandraRequest request = execute(telemetry.instrument(session));
 
     assertThat(request.getServerTarget()).isNull();
     verify(session, never()).getContext();
@@ -71,7 +71,7 @@ class CassandraTelemetryTest {
   void explicitContactPointsProvideTheCompleteTarget() {
     CassandraRequest request =
         execute(
-            telemetry.wrap(
+            telemetry.instrument(
                 session,
                 asList(
                     InetSocketAddress.createUnresolved("configured.example.com", 9042),
@@ -86,7 +86,7 @@ class CassandraTelemetryTest {
     List<InetSocketAddress> contactPoints =
         new ArrayList<>(
             singletonList(InetSocketAddress.createUnresolved("configured.example.com", 9142)));
-    CqlSession wrappedSession = telemetry.wrap(session, contactPoints);
+    CqlSession wrappedSession = telemetry.instrument(session, contactPoints);
 
     contactPoints.clear();
 
