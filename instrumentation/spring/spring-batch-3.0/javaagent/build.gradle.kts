@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -24,55 +26,53 @@ dependencies {
   latestDepTestLibrary("org.springframework.batch:spring-batch-core:4.+") // documented limitation
 }
 
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureDefault {
+      filter {
+        excludeTestsMatching("*ChunkRootSpanTest")
+        excludeTestsMatching("*ItemLevelSpanTest")
+        excludeTestsMatching("*CustomSpanEventTest")
+      }
+    }
+
+    register("ChunkRootSpan") {
+      filter {
+        includeTestsMatching("*ChunkRootSpanTest")
+      }
+      include("**/*ChunkRootSpanTest.*")
+      jvmArgs("-Dotel.instrumentation.spring-batch.experimental.chunk.new-trace=true")
+      systemProperty(
+        "metadataConfig",
+        "otel.instrumentation.spring-batch.experimental.chunk.new-trace=true",
+      )
+    }
+
+    register("ItemLevelSpan") {
+      filter {
+        includeTestsMatching("*ItemLevelSpanTest")
+        includeTestsMatching("*CustomSpanEventTest")
+      }
+      include("**/*ItemLevelSpanTest.*", "**/*CustomSpanEventTest.*")
+      jvmArgs("-Dotel.instrumentation.spring-batch.item.enabled=true")
+      systemProperty("metadataConfig", "otel.instrumentation.spring-batch.item.enabled=true")
+    }
+
+    register("Experimental") {
+      filter {
+        excludeTestsMatching("*ChunkRootSpanTest")
+        excludeTestsMatching("*ItemLevelSpanTest")
+        excludeTestsMatching("*CustomSpanEventTest")
+      }
+      jvmArgs("-Dotel.instrumentation.spring-batch.experimental-span-attributes=true")
+      systemProperty("metadataConfig", "otel.instrumentation.spring-batch.experimental-span-attributes=true")
+    }
+  }
+}
+
 tasks {
-  val testChunkRootSpan = register<Test>("testChunkRootSpan") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*ChunkRootSpanTest")
-    }
-    include("**/*ChunkRootSpanTest.*")
-    jvmArgs("-Dotel.instrumentation.spring-batch.experimental.chunk.new-trace=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.spring-batch.experimental.chunk.new-trace=true",
-    )
-  }
-
-  val testItemLevelSpan = register<Test>("testItemLevelSpan") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*ItemLevelSpanTest")
-      includeTestsMatching("*CustomSpanEventTest")
-    }
-    include("**/*ItemLevelSpanTest.*", "**/*CustomSpanEventTest.*")
-    jvmArgs("-Dotel.instrumentation.spring-batch.item.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.spring-batch.item.enabled=true")
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      excludeTestsMatching("*ChunkRootSpanTest")
-      excludeTestsMatching("*ItemLevelSpanTest")
-      excludeTestsMatching("*CustomSpanEventTest")
-    }
-    jvmArgs("-Dotel.instrumentation.spring-batch.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.spring-batch.experimental-span-attributes=true")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("*ChunkRootSpanTest")
-      excludeTestsMatching("*ItemLevelSpanTest")
-      excludeTestsMatching("*CustomSpanEventTest")
-    }
-  }
-
   check {
-    dependsOn(testChunkRootSpan, testItemLevelSpan, testExperimental)
+    dependsOn("testChunkRootSpan", "testItemLevelSpan", "testExperimental")
   }
 
   withType<Test>().configureEach {

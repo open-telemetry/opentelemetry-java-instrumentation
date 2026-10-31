@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -19,51 +21,45 @@ dependencies {
   testImplementation(project(":instrumentation:micrometer:micrometer-1.5:testing"))
 }
 
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureDefault {
+      filter {
+        excludeTestsMatching("*TimerMillisecondsTest")
+        excludeTestsMatching("*PrometheusModeTest")
+        excludeTestsMatching("*HistogramGaugesTest")
+      }
+    }
+
+    register("PrometheusMode") {
+      filter {
+        includeTestsMatching("*PrometheusModeTest")
+      }
+      include("**/*PrometheusModeTest.*")
+      jvmArgs("-Dotel.instrumentation.micrometer.prometheus-mode.enabled=true")
+    }
+
+    register("BaseTimeUnit") {
+      filter {
+        includeTestsMatching("*TimerMillisecondsTest")
+      }
+      include("**/*TimerMillisecondsTest.*")
+      jvmArgs("-Dotel.instrumentation.micrometer.base-time-unit=milliseconds")
+    }
+
+    register("HistogramGauges") {
+      filter {
+        includeTestsMatching("*HistogramGaugesTest")
+      }
+      include("**/*HistogramGaugesTest.*")
+      jvmArgs("-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true")
+    }
+  }
+}
+
 tasks {
-  val testPrometheusMode = register<Test>("testPrometheusMode") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*PrometheusModeTest")
-    }
-    include("**/*PrometheusModeTest.*")
-    jvmArgs("-Dotel.instrumentation.micrometer.prometheus-mode.enabled=true")
-  }
-
-  val testBaseTimeUnit = register<Test>("testBaseTimeUnit") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*TimerMillisecondsTest")
-    }
-    include("**/*TimerMillisecondsTest.*")
-    jvmArgs("-Dotel.instrumentation.micrometer.base-time-unit=milliseconds")
-  }
-
-  val testHistogramGauges = register<Test>("testHistogramGauges") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*HistogramGaugesTest")
-    }
-    include("**/*HistogramGaugesTest.*")
-    jvmArgs("-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("*TimerMillisecondsTest")
-      excludeTestsMatching("*PrometheusModeTest")
-      excludeTestsMatching("*HistogramGaugesTest")
-    }
-  }
-
   check {
-    dependsOn(
-      testBaseTimeUnit,
-      testPrometheusMode,
-      testHistogramGauges,
-    )
+    dependsOn("testBaseTimeUnit", "testPrometheusMode", "testHistogramGauges")
   }
 
   withType<Test>().configureEach {
