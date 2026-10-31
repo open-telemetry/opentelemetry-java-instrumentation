@@ -11,6 +11,7 @@ import static java.util.logging.Level.FINE;
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import io.opentelemetry.javaagent.bootstrap.servlet.SnippetInjectingResponseWrapper;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.snippet.SnippetInjectingPrintWriter;
+import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5ResponseInjectionState;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.ServletResponse;
@@ -82,6 +83,14 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
         request.setAttribute(STATE_ATTRIBUTE, injectionState);
       }
     }
+    Servlet5ResponseInjectionState.set(response, injectionState);
+  }
+
+  public static void resetForForward(HttpServletRequest request) {
+    Object state = request.getAttribute(STATE_ATTRIBUTE);
+    if (state instanceof InjectionState) {
+      ((InjectionState) state).resetForForward();
+    }
   }
 
   private static ServletResponse unwrapResponse(ServletResponse response) {
@@ -98,9 +107,6 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
   @Override
   public void resetBuffer() {
     super.resetBuffer();
-    if (injectionState.isContentLengthAdjusted()) {
-      setContentLength((int) injectionState.getContentLength() - snippetLength);
-    }
     injectionState.resetBuffer();
   }
 
@@ -183,6 +189,7 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
 
   @Override
   public PrintWriter getWriter() throws IOException {
+    injectionState.useWriter();
     if (snippetInjectingPrintWriter == null) {
       snippetInjectingPrintWriter =
           new SnippetInjectingPrintWriter(super.getWriter(), snippet, injectionState);
@@ -205,6 +212,13 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
     if (injectionState.hasContentLength()) {
       setContentLength((int) injectionState.getContentLength() + snippetLength);
       injectionState.markContentLengthAdjusted();
+    }
+  }
+
+  @Override
+  public void resetContentLengthIfPreviouslyAdjusted() {
+    if (injectionState.isContentLengthAdjusted()) {
+      setContentLength((int) injectionState.getContentLength() - snippetLength);
     }
   }
 

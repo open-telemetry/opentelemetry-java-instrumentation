@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.servlet.v3_0.jetty;
 
+import static io.opentelemetry.instrumentation.servlet.v3_0.AbstractServlet3Test.HTML_PRINT_WRITER;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
@@ -14,12 +15,18 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.instrumentation.servlet.v3_0.RequestDispatcherServlet;
 import io.opentelemetry.instrumentation.servlet.v3_0.TestServlet3;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import javax.servlet.Servlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.AfterParameterizedClassInvocation;
 import org.junit.jupiter.params.BeforeParameterizedClassInvocation;
 import org.junit.jupiter.params.Parameter;
@@ -29,6 +36,10 @@ import org.junit.jupiter.params.provider.EnumSource;
 @ParameterizedClass
 @EnumSource(BaseJettyDispatchTest.TestType.class)
 public abstract class BaseJettyDispatchTest extends AbstractJettyServlet3Test {
+  private static final ServerEndpoint SNIPPET_FORWARD =
+      new ServerEndpoint("SNIPPET_FORWARD", "snippetForward", 200, "");
+  private static final ServerEndpoint SNIPPET_ASYNC_RESET =
+      new ServerEndpoint("SNIPPET_ASYNC_RESET", "snippetAsyncReset", 200, "");
 
   enum TestType {
     DISPATCH_ASYNC {
@@ -139,6 +150,8 @@ public abstract class BaseJettyDispatchTest extends AbstractJettyServlet3Test {
             context,
             "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.getPath(),
             RequestDispatcherServlet.Forward.class);
+        test.addServlet(context, "/snippetForward", TestServlet3.SnippetForward.class);
+        test.addServlet(context, "/snippetAsyncReset", TestServlet3.SnippetAsyncReset.class);
         test.addServlet(
             context, "/dispatch" + QUERY_PARAM.getPath(), RequestDispatcherServlet.Forward.class);
         test.addServlet(
@@ -260,5 +273,33 @@ public abstract class BaseJettyDispatchTest extends AbstractJettyServlet3Test {
   @Override
   public boolean isAsyncTest() {
     return testType.isAsyncTest();
+  }
+
+  @Test
+  void forwardDiscardsUncommittedSnippetBody() {
+    assumeTrue(testType == TestType.FORWARD);
+    assumeTrue(isAgentTest());
+    assertReplacementBody(SNIPPET_FORWARD);
+  }
+
+  @Test
+  void asyncRawResetBufferDiscardsUncommittedSnippetBody() {
+    assumeTrue(testType == TestType.FORWARD);
+    assumeTrue(isAgentTest());
+    assertReplacementBody(SNIPPET_ASYNC_RESET);
+  }
+
+  private void assertReplacementBody(ServerEndpoint source) {
+    String snippet = "<!-- snippet -->";
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      AggregatedHttpResponse response = client.execute(request(source, "GET")).aggregate().join();
+      String expected = HTML_PRINT_WRITER.getBody().replace("<head>", "<head>" + snippet);
+      assertThat(response.contentUtf8()).isEqualTo(expected);
+      assertThat(response.contentUtf8()).containsOnlyOnce(snippet);
+      assertThat(response.headers().contentLength()).isEqualTo(expected.length());
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
   }
 }
