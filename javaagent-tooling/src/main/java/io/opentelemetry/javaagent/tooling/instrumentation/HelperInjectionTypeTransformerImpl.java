@@ -15,11 +15,11 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class InjectingTypeTransformerImpl implements TypeTransformer {
+final class HelperInjectionTypeTransformerImpl implements TypeTransformer {
   private AgentBuilder.Identified.Extendable agentBuilder;
   private final Advice.WithCustomMapping adviceMapping;
 
-  InjectingTypeTransformerImpl(AgentBuilder.Identified.Extendable agentBuilder) {
+  HelperInjectionTypeTransformerImpl(AgentBuilder.Identified.Extendable agentBuilder) {
     this.agentBuilder = agentBuilder;
     adviceMapping =
         Advice.withCustomMapping()

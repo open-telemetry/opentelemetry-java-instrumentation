@@ -25,7 +25,7 @@ import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceForwardingTransformer;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceCallForwardingTransformer;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry;
 import io.opentelemetry.javaagent.tooling.muzzle.AdviceInspector;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
@@ -189,7 +189,7 @@ public final class InstrumentationModuleInstaller {
           setTypeMatcher(agentBuilder, instrumentationModule, typeInstrumentation)
               .and(muzzleMatcher)
               .transform(ConstantAdjuster.instance())
-              .transform(new AdviceForwardingTransformer(helperInjector));
+              .transform(new AdviceCallForwardingTransformer(helperInjector));
 
       extendableAgentBuilder =
           IndyModuleRegistry.initializeModuleLoaderOnMatch(
@@ -266,8 +266,8 @@ public final class InstrumentationModuleInstaller {
               .transform(helperInjector);
       extendableAgentBuilder = contextProvider.injectHelperClasses(extendableAgentBuilder);
       extendableAgentBuilder = contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder);
-      InjectingTypeTransformerImpl typeTransformer =
-          new InjectingTypeTransformerImpl(extendableAgentBuilder);
+      HelperInjectionTypeTransformerImpl typeTransformer =
+          new HelperInjectionTypeTransformerImpl(extendableAgentBuilder);
       typeInstrumentation.transform(typeTransformer);
       extendableAgentBuilder = typeTransformer.getAgentBuilder();
       extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);
