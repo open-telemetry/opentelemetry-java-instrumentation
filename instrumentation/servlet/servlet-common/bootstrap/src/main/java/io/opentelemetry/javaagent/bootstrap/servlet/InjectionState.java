@@ -7,7 +7,8 @@ package io.opentelemetry.javaagent.bootstrap.servlet;
 
 import java.util.function.BooleanSupplier;
 
-// this is shared by both ServletOutputStream and PrintWriter injection
+// Shared by response wrappers for one response body, including async redispatch.
+// The stream's virtual field can outlive the request when the container recycles the stream.
 public final class InjectionState {
   private static final int HEAD_TAG_WRITTEN_FAKE_VALUE = -1;
   private static final int HEAD_TAG_PREFIX_LENGTH = "<head".length();
@@ -15,6 +16,7 @@ public final class InjectionState {
   private SnippetInjectingResponseWrapper wrapper;
   private int headTagBytesSeen = 0;
   private long contentLength = -1;
+  private boolean contentLengthAdjusted;
   private boolean writer;
 
   public InjectionState(SnippetInjectingResponseWrapper wrapper) {
@@ -40,6 +42,15 @@ public final class InjectionState {
 
   public void setContentLength(long contentLength) {
     this.contentLength = contentLength;
+    contentLengthAdjusted = false;
+  }
+
+  public void markContentLengthAdjusted() {
+    contentLengthAdjusted = true;
+  }
+
+  public boolean isContentLengthAdjusted() {
+    return contentLengthAdjusted;
   }
 
   public long getContentLength() {
@@ -57,6 +68,7 @@ public final class InjectionState {
   public void reset() {
     resetBuffer();
     contentLength = -1;
+    contentLengthAdjusted = false;
     writer = false;
   }
 
@@ -73,7 +85,7 @@ public final class InjectionState {
   }
 
   public boolean shouldProcessWrite() {
-    if (!currentRequest.getAsBoolean() || isHeadTagWritten()) {
+    if (!isCurrentRequest() || isHeadTagWritten()) {
       return false;
     }
     if (!wrapper.isContentTypeTextHtml()) {
@@ -82,6 +94,10 @@ public final class InjectionState {
       return false;
     }
     return true;
+  }
+
+  public boolean isCurrentRequest() {
+    return currentRequest.getAsBoolean();
   }
 
   /**

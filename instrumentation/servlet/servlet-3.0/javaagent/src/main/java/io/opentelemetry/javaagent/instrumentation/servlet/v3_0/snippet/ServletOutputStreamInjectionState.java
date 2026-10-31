@@ -21,7 +21,12 @@ public class ServletOutputStreamInjectionState {
 
   @Nullable
   public static InjectionState getInjectionState(ServletOutputStream servletOutputStream) {
-    return INJECTION_STATE.get(servletOutputStream);
+    InjectionState state = INJECTION_STATE.get(servletOutputStream);
+    if (state != null && !state.isCurrentRequest()) {
+      INJECTION_STATE.set(servletOutputStream, null);
+      return null;
+    }
+    return state;
   }
 
   private ServletOutputStreamInjectionState() {}

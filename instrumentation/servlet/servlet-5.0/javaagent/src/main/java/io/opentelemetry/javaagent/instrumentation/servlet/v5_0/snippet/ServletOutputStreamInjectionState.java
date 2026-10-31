@@ -21,7 +21,12 @@ public class ServletOutputStreamInjectionState {
 
   @Nullable
   public static InjectionState getInjectionState(ServletOutputStream servletOutputStream) {
-    return VIRTUAL_FIELD.get(servletOutputStream);
+    InjectionState state = VIRTUAL_FIELD.get(servletOutputStream);
+    if (state != null && !state.isCurrentRequest()) {
+      VIRTUAL_FIELD.set(servletOutputStream, null);
+      return null;
+    }
+    return state;
   }
 
   private ServletOutputStreamInjectionState() {}
