@@ -8,6 +8,7 @@ package io.opentelemetry.smoketest.appserver;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.smoketest.ResourceMapping;
 import io.opentelemetry.smoketest.SmokeTestOptions;
 import io.opentelemetry.smoketest.TargetWaitStrategy;
 import java.net.Socket;
@@ -77,6 +78,38 @@ abstract class JettySmokeTest extends AppServerTest {
     testing.waitForTraces(2);
   }
 
+  @Test
+  void errorDispatchReplacesSnippetResponse() {
+    Assumptions.assumeTrue(serverVersion.startsWith("10.") || serverVersion.startsWith("11."));
+
+    var response = client().get("/app/jsp?snippetScenario=error-dispatch").aggregate().join();
+    byte[] payload = response.content().array();
+    String body = new String(payload, UTF_8);
+    String snippet = "<script>console.log(hi)</script>";
+    String expected =
+        "<!doctype html>\n"
+            + "<html>\n"
+            + "  <head>"
+            + snippet
+            + "\n"
+            + "    <title>Error page</title>\n"
+            + "  </head>\n"
+            + "  <body>Error page</body>\n"
+            + "</html>\n";
+
+    assertThat(response.status().code()).isEqualTo(500);
+    assertThat(response.headers().get("X-Snippet-Scenario")).isEqualTo("error-dispatch");
+    assertThat(response.headers().get("X-Snippet-Dispatcher")).isEqualTo("ERROR");
+    assertThat(body).isEqualTo(expected);
+    assertThat(body).containsOnlyOnce(snippet);
+    long contentLength = response.headers().contentLength();
+    if (contentLength >= 0) {
+      assertThat(contentLength).isEqualTo(payload.length);
+    }
+
+    testing.waitForTraces(1);
+  }
+
   private void assertJspScenario(String scenario) {
     var response = client().get("/app/jsp?snippetScenario=" + scenario).aggregate().join();
     String jspBody =
@@ -90,18 +123,20 @@ abstract class JettySmokeTest extends AppServerTest {
             + "</html>\n";
     String snippet = "<script>console.log(hi)</script>";
     String expected = jspBody.replace("<head>", "<head>" + snippet);
-    String body = response.contentUtf8().replace("\r\n", "\n");
+    byte[] payload = response.content().array();
+    String body = new String(payload, UTF_8).replace("\r\n", "\n");
 
     assertThat(response.status().code()).isEqualTo(200);
+    assertThat(response.headers().get("X-Snippet-Scenario")).isEqualTo(scenario);
     assertThat(body).isEqualTo(expected);
     assertThat(body).containsOnlyOnce(snippet);
     if (!isWindows) {
       assertThat(jspBody.getBytes(UTF_8)).hasSize(196);
-      assertThat(body.getBytes(UTF_8)).hasSize(228);
+      assertThat(payload).hasSize(228);
     }
     long contentLength = response.headers().contentLength();
     if (contentLength >= 0) {
-      assertThat(contentLength).isEqualTo(body.getBytes(UTF_8).length);
+      assertThat(contentLength).isEqualTo(payload.length);
     }
   }
 
@@ -114,16 +149,28 @@ abstract class JettySmokeTest extends AppServerTest {
 
   @Override
   protected void configure(SmokeTestOptions<AppServerImage> options) {
-    configureOptions(options);
+    configureOptions(options, getClass().getAnnotation(AppServer.class).version());
   }
 
   static SmokeTestOptions<AppServerImage> configureOptions(
       SmokeTestOptions<AppServerImage> options) {
-    return options
+    return configureOptions(options, null);
+  }
+
+  private static SmokeTestOptions<AppServerImage> configureOptions(
+      SmokeTestOptions<AppServerImage> options, String version) {
+    options
         .image(
             appServerImage(
                 "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-jetty"))
         .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Started Server.*"));
+    if (version != null && (version.startsWith("10.") || version.startsWith("11."))) {
+      String servletVersion = version.startsWith("10.") ? "3.0" : "5.0";
+      options.extraResources(
+          ResourceMapping.of(
+              "servlet/servlet-" + servletVersion + ".war", "/base/webapps/app.war"));
+    }
+    return options;
   }
 
   @AppServer(version = "9.4.58", jdk = "8", inLimitedMatrix = true)

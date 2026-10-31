@@ -16,6 +16,10 @@ val appServerSuites = mapOf(
   "wildfly" to "**/Wildfly*.*",
 )
 val smokeTestSuite = project.findProperty("smokeTestSuite") as String?
+evaluationDependsOn(":smoke-tests:images:servlet:servlet-3.0")
+evaluationDependsOn(":smoke-tests:images:servlet:servlet-5.0")
+val servlet3War = project(":smoke-tests:images:servlet:servlet-3.0").tasks.named<War>("war")
+val servlet5War = project(":smoke-tests:images:servlet:servlet-5.0").tasks.named<War>("war")
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
@@ -47,6 +51,16 @@ tasks {
   // makes the generated declarative configuration example available on the test classpath, so that
   // DeclarativeConfigurationExampleSmokeTest can verify that the agent starts up with it
   processTestResources {
+    dependsOn(servlet3War, servlet5War)
+    from(servlet3War.flatMap { it.archiveFile }) {
+      into("servlet")
+      rename { "servlet-3.0.war" }
+    }
+    from(servlet5War.flatMap { it.archiveFile }) {
+      into("servlet")
+      rename { "servlet-5.0.war" }
+    }
+
     from(rootProject.file("docs/declarative-configuration-example.yaml"))
   }
 

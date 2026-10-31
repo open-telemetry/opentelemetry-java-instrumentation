@@ -26,6 +26,10 @@
     <servlet-class>io.opentelemetry.smoketest.matrix.JspServlet</servlet-class>
     <async-supported>true</async-supported>
   </servlet>
+  <servlet>
+    <servlet-name>SnippetError</servlet-name>
+    <servlet-class>io.opentelemetry.smoketest.matrix.SnippetErrorServlet</servlet-class>
+  </servlet>
   <servlet-mapping>
     <servlet-name>Headers</servlet-name>
     <url-pattern>/headers</url-pattern>
@@ -46,4 +50,12 @@
     <servlet-name>Jsp</servlet-name>
     <url-pattern>/jsp</url-pattern>
   </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>SnippetError</servlet-name>
+    <url-pattern>/snippet-error-page</url-pattern>
+  </servlet-mapping>
+  <error-page>
+    <exception-type>io.opentelemetry.smoketest.matrix.SnippetErrorException</exception-type>
+    <location>/snippet-error-page</location>
+  </error-page>
 </web-app>
