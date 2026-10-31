@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -49,19 +51,11 @@ testing {
   }
 }
 
-tasks {
-  val exceptionSignalLogsSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}ExceptionSignalLogs") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-        systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
-      }
+testing.suites.withType(JvmTestSuite::class).configureEach {
+  executions {
+    register("ExceptionSignalLogs") {
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+      systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
     }
-
-  check {
-    dependsOn(testing.suites, exceptionSignalLogsSuites)
   }
 }
