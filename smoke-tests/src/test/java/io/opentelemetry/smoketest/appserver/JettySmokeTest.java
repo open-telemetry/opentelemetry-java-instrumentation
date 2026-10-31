@@ -35,6 +35,10 @@ abstract class JettySmokeTest extends AppServerTest {
         assertThat(response.getCode()).isEqualTo(200);
         byte[] body = EntityUtils.toByteArray(response.getEntity());
         assertThat(new String(body, UTF_8).trim()).isEqualTo("Hello");
+        if (!isWindows) {
+          assertThat(body).isEqualTo("Hello".getBytes(UTF_8));
+        }
+        assertThat(response.getFirstHeader("Content-Length")).isNotNull();
         assertContentLength(response, body);
       }
 

@@ -51,8 +51,6 @@ class InjectionStateLifetimeTest {
     fixture.recycle();
     Servlet5SnippetInjectingResponseWrapper second = fixture.wrap();
     PrintWriter writer = second.getWriter();
-    assertThat(ServletOutputStreamInjectionState.getInjectionState(fixture.stream))
-        .isSameAs(oldState);
     assertThat(oldState.shouldProcessWrite()).isFalse();
     second.setContentType("text/html");
     if (fixedLength) {
@@ -61,6 +59,7 @@ class InjectionStateLifetimeTest {
     writer.write(HTML);
     writer.flush();
 
+    assertThat(ServletOutputStreamInjectionState.getInjectionState(fixture.stream)).isNull();
     assertThat(fixture.content()).isEqualTo(INJECTED);
     assertThat(fixture.content()).containsOnlyOnce(SNIPPET);
     assertThat(fixture.contentLength).isEqualTo(fixedLength ? INJECTED.length() : -1);
@@ -128,7 +127,7 @@ class InjectionStateLifetimeTest {
     Servlet5SnippetInjectingResponseWrapper wrapper = fixture.wrap();
     wrapper.setContentType("text/html");
     wrapper.setContentLength(1000);
-    fixture.write(wrapper, Output.WRITER, "<head>");
+    fixture.write(wrapper, output == Output.WRITER ? Output.STREAM : Output.WRITER, "<head>");
     wrapper.reset();
     fixture.bytes.reset();
     fixture.contentLength = -1;
@@ -149,6 +148,24 @@ class InjectionStateLifetimeTest {
     fixture.bytes.reset();
     fixture.write(fixture.wrap(), output, "ad><head>");
     assertThat(fixture.content()).isEqualTo("ad><head>" + SNIPPET);
+  }
+
+  @ParameterizedTest
+  @EnumSource(Output.class)
+  void resetBufferDoesNotAdjustContentLengthTwice(Output output) throws IOException {
+    Fixture fixture = new Fixture();
+    Servlet5SnippetInjectingResponseWrapper wrapper = fixture.wrap();
+    wrapper.setContentType("text/html");
+    wrapper.setContentLength(HTML.length());
+    fixture.write(wrapper, output, HTML);
+    assertThat(fixture.contentLength).isEqualTo(INJECTED.length());
+
+    wrapper.resetBuffer();
+    fixture.bytes.reset();
+    assertThat(fixture.contentLength).isEqualTo(HTML.length());
+    fixture.write(fixture.wrap(), output, HTML);
+    assertThat(fixture.content()).isEqualTo(INJECTED);
+    assertThat(fixture.contentLength).isEqualTo(INJECTED.length());
   }
 
   enum Output {
