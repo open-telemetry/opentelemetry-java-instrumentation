@@ -35,16 +35,23 @@ public final class ContextStorageBridge extends Context.Storage {
       Context.key("original-to-restore");
 
   private final boolean propagateGrpcDeadline;
+  private final boolean forkGrpcContext;
   // original context storage that would have been used when running without agent
   private final Context.Storage originalStorage;
 
   public ContextStorageBridge(boolean propagateGrpcDeadline) {
     this.propagateGrpcDeadline = propagateGrpcDeadline;
+    this.forkGrpcContext = true;
     this.originalStorage = null;
   }
 
   public ContextStorageBridge(Context.Storage originalStorage) {
+    this(originalStorage, true);
+  }
+
+  public ContextStorageBridge(Context.Storage originalStorage, boolean forkGrpcContext) {
     propagateGrpcDeadline = false;
+    this.forkGrpcContext = forkGrpcContext;
     this.originalStorage = originalStorage;
   }
 
@@ -135,7 +142,7 @@ public final class ContextStorageBridge extends Context.Storage {
           // automatically, and cause that code to fail with a deadline cancellation. While ideally
           // we could propagate deadline as well as gRPC intended, we cannot have existing code fail
           // because it added the javaagent and choose to fork here.
-          current = current.fork();
+          current = forkGrpcContext ? current.fork() : Context.ROOT;
         }
       }
 
