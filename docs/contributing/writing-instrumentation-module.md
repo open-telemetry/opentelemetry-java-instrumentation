@@ -233,23 +233,23 @@ the `transform()` method.
 
 ## Use advice classes to write instrumentation code
 
-## Non-inlined instrumentation
+## Advice
 
-Non-inlined (indy) advice is the repository default. In production javaagent modules, explicitly set
-`inline = false` on every `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` annotation. The only
-exceptions are `instrumentation/internal/internal-class-loader` and
+In production javaagent modules, explicitly set `inline = false` on every
+`@Advice.OnMethodEnter` and `@Advice.OnMethodExit` annotation. The only exceptions are
+`instrumentation/internal/internal-class-loader` and
 `instrumentation/internal/internal-lambda`.
 
-The `inline` attribute defaults to `true`, which copies advice code into the instrumented method.
-Set `inline = false` to load advice as regular classes and use indy instrumentation.
+Byte Buddy's `inline` attribute defaults to `true`, which copies advice code into the instrumented
+method. Set `inline = false` explicitly to run advice as regular classes instead.
 
-With indy, advice classes are loaded alongside all helper classes
-into a special `InstrumentationModuleClassloader`, which sees the classes from both the instrumented
-application classloader and the agent classloader.
-The instrumented classes call the advice classes residing in the `InstrumentationModuleClassloader` via
-invokedynamic bytecode instructions.
+With `inline = false`, the agent loads advice into a special `InstrumentationModuleClassLoader` by
+default, which can see classes from both the instrumented application classloader and the agent
+classloader. Helper placement is a separate choice: helpers can be loaded in that isolated
+classloader or injected into the instrumented classloader. Instrumented classes call advice in the
+isolated classloader via invokedynamic bytecode instructions.
 
-Using indy instrumentation has these advantages:
+Using `inline = false` with isolated loading has these advantages:
 
 - allows instrumentation to have breakpoints set in them and be debugged using standard debugging techniques.
 - provides clean isolation of instrumentation advice from the application and other instrumentations
@@ -257,7 +257,7 @@ Using indy instrumentation has these advantages:
 - advice classes have access to agent code so communicating between advice and agent does not need an api in boot loader
 - advice classes code does not require to be compatible with instrumented class, for example we can call a static interface method in advice when instrumented class is compiled for Java 7 or older.
 
-Advice classes and their static entry points must remain public for indy method-handle dispatch.
+Advice classes and their static entry points must remain public for invokedynamic method-handle dispatch.
 Ordinary helper methods may be private when their callers and classloader boundaries permit it;
 non-inlined advice may also use lambdas.
 

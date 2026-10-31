@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package indy;
+package advice;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -16,14 +16,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings({"unused", "MethodCanBeStatic"})
-class IndyInstrumentationTest {
+class AdviceInstrumentationTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private String privateField;
 
-  // The following methods are instrumented by the IndyInstrumentationTestModule
+  // The following methods are instrumented by the AdviceInstrumentationTestModule
 
   private void assignToFieldViaReturn(String toAssign) {}
 
