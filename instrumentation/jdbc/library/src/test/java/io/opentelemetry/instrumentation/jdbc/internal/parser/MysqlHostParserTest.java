@@ -35,6 +35,9 @@ class MysqlHostParserTest {
         argumentSet("ordinary IPv6", "[::1]:1111", "::1", 1111),
         argumentSet("unbracketed IPv6", "::1", "::1", null),
         argumentSet("ordinary user info", "user:example@h1:1111", "h1", 1111),
+        argumentSet("equals in ordinary user info", "address=example@h1:1111", "h1", 1111),
+        argumentSet("parentheses in ordinary user info", "us(er):ex(ample)@h1:1111", "h1", 1111),
+        argumentSet("unbalanced credential parentheses", "user:ex(ample@h1:1111", "h1", 1111),
         argumentSet("address host", "address=(host=h1)", "h1", null),
         argumentSet("address host and port", "address=(host=h1)(port=1111)", "h1", 1111),
         argumentSet(
@@ -43,6 +46,11 @@ class MysqlHostParserTest {
             "h1",
             1111),
         argumentSet("address IPv6", "address=(host=::1)(port=1111)", "::1", 1111),
+        argumentSet(
+            "at sign in address property",
+            "address=(host=h1)(port=1111)(user=other@example)",
+            "h1",
+            1111),
         argumentSet("key-value host", "(host=h1)", "h1", null),
         argumentSet("key-value host and port", "(host=h1,port=1111)", "h1", 1111),
         argumentSet("reordered properties", "(port=1111,host=h1)", "h1", 1111),
@@ -65,7 +73,8 @@ class MysqlHostParserTest {
   void parsesMixedHostSyntaxesInConfiguredOrder() {
     assertThat(
             MysqlHostParser.parseHostList(
-                "h1:1111, (host=h2,port=2222), address=(host=::1),h1:1111", true))
+                "h1:1111, (host=h2,port=2222), address=(host=::1)(user=other@example),h1:1111",
+                true))
         .extracting(HostPort::host, HostPort::port)
         .containsExactly(
             tuple("h1", 1111), tuple("h2", 2222), tuple("::1", null), tuple("h1", 1111));
@@ -84,7 +93,14 @@ class MysqlHostParserTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"h1:1111", "address=(host=h1)(port=1111)"})
+  @ValueSource(
+      strings = {
+        "h1:1111",
+        "us(er):ex(ample)@h1:1111",
+        "user:ex(ample@h1:1111",
+        "address=(host=h1)(port=1111)",
+        "address=(host=h1)(port=1111)(user=other@example)"
+      })
   void mariaDbUsesTheSameOrdinaryAndAddressHostParsing(String authority) {
     assertThat(MysqlHostParser.parseHostList(authority, false))
         .extracting(HostPort::host, HostPort::port)
@@ -141,8 +157,12 @@ class MysqlHostParserTest {
         "(host=h1%29%28port%3d1111)",
         "(host=fe80::1%25eth0)",
         "(host=h1,other=value@h2)",
+        "(host=h1,other=value@h2",
+        "h1,address=(host=h2)(user=other@h3",
+        "h1,(host=h2,other=value@h3",
         "(host=h1,other=value#h2)",
         "user:example@(host=h1)",
+        "user:ex(ample)@(host=h1)",
         "[(host=h1),(host=h2)]",
         "h1:1111,(host=h2,port=65536)",
         "(host=h1),address=(port=1111)",

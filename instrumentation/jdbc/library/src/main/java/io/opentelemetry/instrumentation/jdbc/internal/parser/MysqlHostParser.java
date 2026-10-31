@@ -27,6 +27,8 @@ final class MysqlHostParser {
 
   private static final Logger logger = Logger.getLogger(MysqlHostParser.class.getName());
   private static final Pattern PROPERTY_KEY_PATTERN = Pattern.compile("[a-zA-Z0-9_.%\\s-]*");
+  private static final Pattern HOST_PROPERTIES_PATTERN =
+      Pattern.compile("(^|,)\\s*(?:address\\s*=|\\()", Pattern.CASE_INSENSITIVE);
 
   /** Returns all configured endpoints, or null if any host entry cannot be parsed safely. */
   @Nullable
@@ -34,8 +36,11 @@ final class MysqlHostParser {
     if (authority.isEmpty()) {
       return emptyList();
     }
-    if (authority.indexOf('(') < 0) {
-      int userInfoEnd = authority.lastIndexOf('@');
+    int userInfoEnd = authority.lastIndexOf('@');
+    // Parentheses in ordinary user info are not host-property blocks.
+    if (userInfoEnd >= 0
+        && authority.indexOf('(', userInfoEnd + 1) < 0
+        && (authority.indexOf('(') < 0 || !HOST_PROPERTIES_PATTERN.matcher(authority).find())) {
       authority = authority.substring(userInfoEnd + 1);
     }
     List<HostPort> hosts = new ArrayList<>();
