@@ -18,12 +18,12 @@ import java.util.List;
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
+ *
+ * <p>TODO: Replace this adapter with the SDK selector overload once all supported test runtimes
+ * provide it: https://github.com/open-telemetry/opentelemetry-java/pull/8993
  */
 public final class DeltaPreferredInMemoryMetricExporter implements MetricExporter {
 
-  // TODO: Replace this adapter with the SDK selector overload once all supported test runtimes
-  // provide it:
-  // https://github.com/open-telemetry/opentelemetry-java/pull/8993
   private final InMemoryMetricExporter delegate;
 
   public static DeltaPreferredInMemoryMetricExporter create() {

@@ -32,6 +32,8 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
   private static final AggregationTemporalitySelector temporalitySelector =
       initTemporalitySelector();
 
+  private final Queue<byte[]> collectedRequests = new ConcurrentLinkedQueue<>();
+
   private static AggregationTemporalitySelector initTemporalitySelector() {
     // this configuration setting is for external users
     // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7902
@@ -46,8 +48,6 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
     logger.log(CONFIG, "Setting aggregation temporality to {0}", aggregationTemporality);
     return instrumentType -> aggregationTemporality;
   }
-
-  private final Queue<byte[]> collectedRequests = new ConcurrentLinkedQueue<>();
 
   List<byte[]> getCollectedExportRequests() {
     return new ArrayList<>(collectedRequests);
