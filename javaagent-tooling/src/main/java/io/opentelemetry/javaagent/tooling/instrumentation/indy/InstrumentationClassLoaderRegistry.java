@@ -17,9 +17,9 @@ import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.utility.JavaModule;
 
-public class InstrumentationModuleClassLoaderRegistry {
+public class InstrumentationClassLoaderRegistry {
 
-  private InstrumentationModuleClassLoaderRegistry() {}
+  private InstrumentationClassLoaderRegistry() {}
 
   private static final ConcurrentHashMap<String, InstrumentationModule> modulesByClassName =
       new ConcurrentHashMap<>();

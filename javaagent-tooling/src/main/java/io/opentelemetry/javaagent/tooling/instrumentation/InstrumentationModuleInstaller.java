@@ -27,7 +27,7 @@ import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstal
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForwardIndyAdviceTransformer;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyTypeTransformerImpl;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoaderRegistry;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationClassLoaderRegistry;
 import io.opentelemetry.javaagent.tooling.muzzle.AdviceInspector;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
@@ -157,7 +157,7 @@ public final class InstrumentationModuleInstaller {
             cl ->
                 // With isolated helpers, muzzle searches application and agent class loaders.
                 // Agent classes are non-helper classes, so muzzle checks their references.
-                InstrumentationModuleClassLoaderRegistry.createInstrumentationClassLoaderForMuzzle(
+                InstrumentationClassLoaderRegistry.createInstrumentationClassLoaderForMuzzle(
                     instrumentationModule, cl));
 
     Function<ClassLoader, List<HelperClassDefinition>> helperGenerator =
@@ -193,7 +193,7 @@ public final class InstrumentationModuleInstaller {
               .transform(new ForwardIndyAdviceTransformer(helperInjector));
 
       extendableAgentBuilder =
-          InstrumentationModuleClassLoaderRegistry.initializeModuleLoaderOnMatch(
+          InstrumentationClassLoaderRegistry.initializeModuleLoaderOnMatch(
               instrumentationModule, extendableAgentBuilder);
       extendableAgentBuilder = extendableAgentBuilder.transform(helperInjector);
       extendableAgentBuilder = contextProvider.injectHelperClasses(extendableAgentBuilder);
