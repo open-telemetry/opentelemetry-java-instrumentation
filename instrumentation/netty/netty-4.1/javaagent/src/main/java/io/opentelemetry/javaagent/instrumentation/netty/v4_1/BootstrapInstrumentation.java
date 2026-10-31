@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.connectionInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -38,9 +39,7 @@ class BootstrapInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArguments(0)), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        named("resolver")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("io.netty.resolver.AddressResolverGroup"))),
+        named("resolver").and(takesArguments("io.netty.resolver.AddressResolverGroup")),
         getClass().getName() + "$SetResolverAdvice");
     transformer.applyAdviceToMethod(
         named("doConnect")

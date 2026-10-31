@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
@@ -50,14 +50,12 @@ class ResponseReceiverInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$ResponseMonoAdvice");
     transformer.applyAdviceToMethod(
         named("response")
-            .and(takesArguments(1))
-            .and(takesArgument(0, BiFunction.class))
+            .and(takesArguments("java.util.function.BiFunction"))
             .and(returns(named("reactor.core.publisher.Flux"))),
         getClass().getName() + "$ResponseFluxAdvice");
     transformer.applyAdviceToMethod(
         named("responseConnection")
-            .and(takesArguments(1))
-            .and(takesArgument(0, BiFunction.class))
+            .and(takesArguments("java.util.function.BiFunction"))
             .and(returns(named("reactor.core.publisher.Flux"))),
         getClass().getName() + "$ResponseConnectionAdvice");
     transformer.applyAdviceToMethod(
@@ -67,8 +65,7 @@ class ResponseReceiverInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$ResponseContentAdvice");
     transformer.applyAdviceToMethod(
         named("responseSingle")
-            .and(takesArguments(1))
-            .and(takesArgument(0, BiFunction.class))
+            .and(takesArguments("java.util.function.BiFunction"))
             .and(returns(named("reactor.core.publisher.Mono"))),
         getClass().getName() + "$ResponseSingleAdvice");
   }

@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4.ElasticsearchRest6Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -37,9 +36,10 @@ class RestClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("performRequestAsyncNoCatch")
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("org.elasticsearch.client.Request")))
-            .and(takesArgument(1, named("org.elasticsearch.client.ResponseListener"))),
+            .and(
+                takesArguments(
+                    "org.elasticsearch.client.Request",
+                    "org.elasticsearch.client.ResponseListener")),
         getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 

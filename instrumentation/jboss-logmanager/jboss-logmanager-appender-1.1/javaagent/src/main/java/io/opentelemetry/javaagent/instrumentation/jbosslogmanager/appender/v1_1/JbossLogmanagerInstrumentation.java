@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.appender.v1_1;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
@@ -32,8 +31,7 @@ class JbossLogmanagerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("logRaw"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("org.jboss.logmanager.ExtLogRecord"))),
+            .and(takesArguments("org.jboss.logmanager.ExtLogRecord")),
         getClass().getName() + "$CallLogRawAdvice");
   }
 

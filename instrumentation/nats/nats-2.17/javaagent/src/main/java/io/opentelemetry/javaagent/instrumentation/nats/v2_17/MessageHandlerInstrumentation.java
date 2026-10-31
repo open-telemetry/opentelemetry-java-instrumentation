@@ -6,11 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.consumerProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.nats.client.Message;
 import io.opentelemetry.context.Context;
@@ -33,10 +32,7 @@ class MessageHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("onMessage"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("io.nats.client.Message"))),
+        isPublic().and(named("onMessage")).and(takesArguments("io.nats.client.Message")),
         getClass().getName() + "$OnMessageAdvice");
   }
 

@@ -6,14 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
@@ -51,12 +50,8 @@ class BootDelegationInstrumentation implements TypeInstrumentation {
     ElementMatcher.Junction<MethodDescription> methodMatcher =
         named("loadClass")
             .and(
-                takesArguments(1)
-                    .and(takesArgument(0, String.class))
-                    .or(
-                        takesArguments(2)
-                            .and(takesArgument(0, String.class))
-                            .and(takesArgument(1, boolean.class))))
+                takesArguments("java.lang.String")
+                    .or(takesArguments("java.lang.String", "boolean")))
             .and(isPublic().or(isProtected()))
             .and(not(isStatic()));
     // Inline instrumentation to prevent problems with invokedynamic-recursion

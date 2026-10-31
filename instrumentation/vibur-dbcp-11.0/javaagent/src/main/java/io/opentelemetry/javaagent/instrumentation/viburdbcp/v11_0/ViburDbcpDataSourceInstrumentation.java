@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.viburdbcp.v11_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.viburdbcp.v11_0.ViburSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -27,7 +28,7 @@ final class ViburDbcpDataSourceInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("configureFromProperties").and(takesArguments(Properties.class)),
+        named("configureFromProperties").and(takesArguments("java.util.Properties")),
         getClass().getName() + "$ConfigureFromPropertiesAdvice");
     transformer.applyAdviceToMethod(
         named("start").and(takesArguments(0)), getClass().getName() + "$StartAdvice");

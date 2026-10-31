@@ -45,8 +45,11 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("query")
-            .and(takesArguments(1).or(takesArguments(2).and(takesArgument(1, TimeUnit.class))))
-            .and(takesArgument(0, named("org.influxdb.dto.Query"))),
+            .and(
+                takesArguments("org.influxdb.dto.Query")
+                    .or(
+                        takesArguments(
+                            "org.influxdb.dto.Query", "java.util.concurrent.TimeUnit"))),
         getClass().getName() + "$InfluxDbQueryAdvice");
     transformer.applyAdviceToMethod(
         named("query")
@@ -96,8 +99,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("write")
             .and(
-                takesArguments(1)
-                    .and(takesArgument(0, named("org.influxdb.dto.BatchPoints")))
+                takesArguments("org.influxdb.dto.BatchPoints")
                     .or(takesArguments(2).and(takesArgument(0, int.class)))
                     .or(
                         takesArguments(4)

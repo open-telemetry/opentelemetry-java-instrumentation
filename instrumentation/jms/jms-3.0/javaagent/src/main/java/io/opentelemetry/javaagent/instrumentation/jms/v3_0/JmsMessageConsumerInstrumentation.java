@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.JmsReceiveSpanUtil.createReceiveSpan;
 import static io.opentelemetry.javaagent.instrumentation.jms.v3_0.JmsSingletons.consumerReceiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.instrumentation.api.internal.Timer;
@@ -56,8 +56,7 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$ConsumerAdvice");
     transformer.applyAdviceToMethod(
         named("setMessageListener")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("jakarta.jms.MessageListener")))
+            .and(takesArguments("jakarta.jms.MessageListener"))
             .and(isPublic()),
         getClass().getName() + "$SetMessageListenerAdvice");
   }

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.hikaricp.v3_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -30,9 +30,7 @@ final class HikariConfigInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("setPoolName"), getClass().getName() + "$SetPoolNameAdvice");
     transformer.applyAdviceToMethod(
-        named("copyStateTo")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("com.zaxxer.hikari.HikariConfig"))),
+        named("copyStateTo").and(takesArguments("com.zaxxer.hikari.HikariConfig")),
         getClass().getName() + "$CopyStateToAdvice");
   }
 

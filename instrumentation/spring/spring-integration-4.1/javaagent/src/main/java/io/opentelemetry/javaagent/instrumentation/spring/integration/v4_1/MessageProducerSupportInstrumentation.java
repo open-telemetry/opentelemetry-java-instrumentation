@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.instrumentation.spring.integration.v4_1.internal.SpringIntegrationHandoff;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -28,9 +27,7 @@ class MessageProducerSupportInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("sendMessage")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("org.springframework.messaging.Message"))),
+        named("sendMessage").and(takesArguments("org.springframework.messaging.Message")),
         getClass().getName() + "$SendMessageAdvice");
   }
 

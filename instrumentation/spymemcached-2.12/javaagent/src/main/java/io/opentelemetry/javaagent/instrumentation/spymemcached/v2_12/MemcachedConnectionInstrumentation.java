@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -30,14 +29,12 @@ class MemcachedConnectionInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("addOperation")
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("net.spy.memcached.MemcachedNode")))
-            .and(takesArgument(1, named("net.spy.memcached.ops.Operation"))),
+            .and(
+                takesArguments(
+                    "net.spy.memcached.MemcachedNode", "net.spy.memcached.ops.Operation")),
         getClass().getName() + "$AddOperationAdvice");
     transformer.applyAdviceToMethod(
-        named("redistributeOperation")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("net.spy.memcached.ops.Operation"))),
+        named("redistributeOperation").and(takesArguments("net.spy.memcached.ops.Operation")),
         getClass().getName() + "$RedistributeOperationAdvice");
   }
 
