@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes
 
+- Apache HttpClient 4.3 library instrumentation no longer automatically emits
+  `network.peer.address` or `network.peer.port` inferred from the route target.
+  Use `server.address` and `server.port` for logical destination grouping;
+  actual socket peer information is no longer provided by this integration.
 - Rename `messaging.system` to `messaging.system.name` (`aws_sqs` becomes `aws.sqs`) and adopt
   the system-specific attribute renames from
   [semantic-conventions #4250](https://github.com/open-telemetry/semantic-conventions/pull/4250).
