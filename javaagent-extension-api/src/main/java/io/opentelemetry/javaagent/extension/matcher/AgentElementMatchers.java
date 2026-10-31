@@ -81,15 +81,17 @@ public final class AgentElementMatchers {
   }
 
   /**
-   * Matches a list of types against their exact ordered names.
+   * Matches a method with exactly the provided ordered parameter type names.
    *
-   * <p>When used with {@code takesArguments}, the names are compared against erased parameter
-   * types. Primitive types use their Java names, such as {@code int}. An empty list matches only an
-   * empty list of types.
+   * <p>Parameter type names are compared after erasure. Primitive types use their Java names, such
+   * as {@code int}. Passing no names matches only methods with no parameters.
+   *
+   * @param names the exact ordered parameter type names to match.
+   * @return a matcher for methods with the specified parameter types.
    */
-  public static ElementMatcher.Junction<Iterable<? extends TypeDescription>> names(
+  public static <T extends MethodDescription> ElementMatcher.Junction<T> takesArgumentsNamed(
       String... names) {
-    return new NamesMatcher(names);
+    return new TakesArgumentsNamedMatcher<>(names);
   }
 
   /**

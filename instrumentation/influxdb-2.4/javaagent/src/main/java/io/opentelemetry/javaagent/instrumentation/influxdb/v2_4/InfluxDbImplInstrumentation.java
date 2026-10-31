@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.names;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArgumentsNamed;
 import static io.opentelemetry.javaagent.instrumentation.influxdb.v2_4.InfluxDbSingletons.requestInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isEnum;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -51,54 +51,50 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("query")
             .and(
-                takesArguments(
-                    names(
-                        "org.influxdb.dto.Query",
-                        "java.util.function.Consumer",
-                        "java.util.function.Consumer"))),
+                takesArgumentsNamed(
+                    "org.influxdb.dto.Query",
+                    "java.util.function.Consumer",
+                    "java.util.function.Consumer")),
         getClass().getName() + "$InfluxDbAsyncQueryAdvice");
     transformer.applyAdviceToMethod(
         named("query")
             .and(
-                takesArguments(
-                    names("org.influxdb.dto.Query", "int", "java.util.function.Consumer"))),
+                takesArgumentsNamed(
+                    "org.influxdb.dto.Query", "int", "java.util.function.Consumer")),
         getClass().getName() + "$InfluxDbChunkedConsumerQueryAdvice");
     transformer.applyAdviceToMethod(
         named("query")
             .and(
-                takesArguments(
-                    names("org.influxdb.dto.Query", "int", "java.util.function.BiConsumer"))),
+                takesArgumentsNamed(
+                    "org.influxdb.dto.Query", "int", "java.util.function.BiConsumer")),
         getClass().getName() + "$InfluxDbChunkedBiConsumerQueryAdvice");
     transformer.applyAdviceToMethod(
         named("query")
             .and(
-                takesArguments(
-                    names(
-                        "org.influxdb.dto.Query",
-                        "int",
-                        "java.util.function.Consumer",
-                        "java.lang.Runnable"))),
+                takesArgumentsNamed(
+                    "org.influxdb.dto.Query",
+                    "int",
+                    "java.util.function.Consumer",
+                    "java.lang.Runnable")),
         getClass().getName() + "$InfluxDbChunkedConsumerCompletionQueryAdvice");
     transformer.applyAdviceToMethod(
         named("query")
             .and(
-                takesArguments(
-                    names(
-                        "org.influxdb.dto.Query",
-                        "int",
-                        "java.util.function.BiConsumer",
-                        "java.lang.Runnable"))),
+                takesArgumentsNamed(
+                    "org.influxdb.dto.Query",
+                    "int",
+                    "java.util.function.BiConsumer",
+                    "java.lang.Runnable")),
         getClass().getName() + "$InfluxDbChunkedBiConsumerCompletionQueryAdvice");
     transformer.applyAdviceToMethod(
         named("query")
             .and(
-                takesArguments(
-                    names(
-                        "org.influxdb.dto.Query",
-                        "int",
-                        "java.util.function.BiConsumer",
-                        "java.lang.Runnable",
-                        "java.util.function.Consumer"))),
+                takesArgumentsNamed(
+                    "org.influxdb.dto.Query",
+                    "int",
+                    "java.util.function.BiConsumer",
+                    "java.lang.Runnable",
+                    "java.util.function.Consumer")),
         getClass().getName() + "$InfluxDbChunkedBiConsumerCompletionErrorQueryAdvice");
 
     transformer.applyAdviceToMethod(
