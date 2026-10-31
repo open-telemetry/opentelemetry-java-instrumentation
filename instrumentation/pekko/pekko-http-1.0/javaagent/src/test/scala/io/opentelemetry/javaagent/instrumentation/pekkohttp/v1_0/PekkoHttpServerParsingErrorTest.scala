@@ -52,7 +52,7 @@ class PekkoHttpServerParsingErrorTest {
       // where another process can claim it before pekko binds
       val binding =
         Await.result(
-          Http().bindAndHandleSync(handler, "localhost", 0),
+          PekkoHttpTestBinding.bindSync(handler, "localhost", 0),
           10.seconds
         )
       val port = binding.localAddress.getPort
@@ -91,7 +91,7 @@ class PekkoHttpServerParsingErrorTest {
       val handler: HttpRequest => HttpResponse = _ => HttpResponse()
       val binding =
         Await.result(
-          Http().bindAndHandleSync(handler, "localhost", 0),
+          PekkoHttpTestBinding.bindSync(handler, "localhost", 0),
           10.seconds
         )
       val port = binding.localAddress.getPort
@@ -131,7 +131,7 @@ class PekkoHttpServerParsingErrorTest {
       val handler: HttpRequest => HttpResponse = _ => HttpResponse()
       val binding =
         Await.result(
-          Http().bindAndHandleSync(handler, "localhost", 0),
+          PekkoHttpTestBinding.bindSync(handler, "localhost", 0),
           10.seconds
         )
       val port = binding.localAddress.getPort
@@ -179,7 +179,7 @@ class PekkoHttpServerParsingErrorTest {
       val handler: HttpRequest => HttpResponse = _ => HttpResponse()
       val binding =
         Await.result(
-          Http().bindAndHandleSync(handler, "localhost", 0),
+          PekkoHttpTestBinding.bindSync(handler, "localhost", 0),
           10.seconds
         )
       val port = binding.localAddress.getPort
@@ -220,12 +220,12 @@ class PekkoHttpServerParsingErrorTest {
       )
       val binding =
         Await.result(
-          Http().bindAndHandleSync(
-            handler,
-            "localhost",
-            0,
-            settings = settings
-          ),
+          // newServerAt is in both pekko-http 1.x and 2.x and is the only one of the two binding
+          // apis that takes custom settings in both
+          Http()
+            .newServerAt("localhost", 0)
+            .withSettings(settings)
+            .bindSync(handler),
           10.seconds
         )
       val port = binding.localAddress.getPort
@@ -267,7 +267,7 @@ class PekkoHttpServerParsingErrorTest {
         )
       val binding =
         Await.result(
-          Http().bindAndHandle(handler, "localhost", 0),
+          Http().newServerAt("localhost", 0).bindFlow(handler),
           10.seconds
         )
       val port = binding.localAddress.getPort
