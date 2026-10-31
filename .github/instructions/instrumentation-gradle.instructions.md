@@ -40,10 +40,13 @@ or test failure that CI will report.
   `javaagent/build.gradle.kts`. The convention plugin also supplies `javaagent-bootstrap`;
   an explicit `compileOnly` dependency on it is redundant.
 - Every explicitly registered custom `Test` task must set `testClassesDirs` and `classpath`,
-  and be included in `check`; without these it can pass without running any tests. For a
-  variant of a custom `JvmTestSuite`, preserve source-suite JVM settings and create a variant
-  only for suites exercising that behavior. A filtered test task copied to an irrelevant
-  suite can select no tests.
+  and be included in `check`; without these it can pass without running any tests. For a custom
+  `JvmTestSuite`, use `executions.configureEach` for settings shared by its default execution and
+  variants, `executions.configureDefault` for baseline-only settings, and `executions.register` for
+  named variants. This does not create another default task, compilation, classpath, or source set.
+  Keep `tasks.test` appropriate for standalone single-test-task projects. Preserve source-suite JVM
+  settings and create variants only for suites exercising that behavior. A filtered test task copied
+  to an irrelevant suite can select no tests.
 - Do not add equivalent flat/YAML behavior variants or repeat shared-helper defaults, fallback,
   and precedence in every caller. Retain variants exercising distinct configuration paths or behavior.
   Remove unused fixtures, dependencies, task wiring, and metadata-collection inputs with redundant

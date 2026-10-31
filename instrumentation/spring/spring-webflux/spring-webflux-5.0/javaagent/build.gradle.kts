@@ -70,13 +70,6 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:3.+") // see testing-webflux7 module
 }
 
-tasks {
-  test {
-    // server tests require controller-telemetry, which is off by default
-    exclude("**/server/**")
-  }
-}
-
 testing.suites.named<JvmTestSuite>("test") {
   executions {
     configureEach {
@@ -85,6 +78,10 @@ testing.suites.named<JvmTestSuite>("test") {
       jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+    configureDefault {
+      // server tests require controller-telemetry, which is off by default
+      exclude("**/server/**")
     }
     register("ControllerTelemetry") {
       include("**/server/**")

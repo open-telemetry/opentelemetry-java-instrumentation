@@ -45,19 +45,16 @@ dependencies {
   testImplementation("software.amazon.awssdk:regions:2.26.0")
 }
 
-tasks {
-  test {
-    filter {
-      excludeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
-      excludeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
-    }
-  }
-}
-
 testing.suites.named<JvmTestSuite>("test") {
   executions {
     configureEach {
       usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    }
+    configureDefault {
+      filter {
+        excludeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
+        excludeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
+      }
     }
     register("QuerySanitizationDisabled") {
       filter {

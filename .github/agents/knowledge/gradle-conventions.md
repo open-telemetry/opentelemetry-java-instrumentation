@@ -411,17 +411,18 @@ Check actual test sources (including shared testing modules) for Testcontainers 
 the tests use Testcontainers.
 
 Keep shared test configuration in one declaration rather than selecting tasks or variants
-individually. Use `executions.configureEach` when a JVM test suite and its registered variants cover
-the relevant executions. This can include container-free variants; do not retain a global
-`tasks.withType<Test>().configureEach` block merely to include those variants. Use
-`tasks.withType<Test>().configureEach` when the configuration genuinely spans other suites or
-independent `Test` tasks outside the selected suite. Prefer `tasks.test { ... }` when a setting
-applies only to the default test task.
+individually. In a `JvmTestSuite` execution block, use `executions.configureEach` for settings shared
+by the default execution and variants, `executions.configureDefault` for settings limited to the
+default execution, and `executions.register` for named variants. A shared declaration can include
+container-free variants; do not retain a global `tasks.withType<Test>().configureEach` block merely
+to include them. Use `tasks.withType<Test>().configureEach` when the configuration genuinely spans
+other suites or independent `Test` tasks outside the selected suite. Keep `tasks.test { ... }`
+appropriate for standalone single-test-task projects.
 
 The convention plugin's implicit `latestDepTest` does not by itself require global test
 configuration; it inherits the default test task configuration. Keep baseline-only filters and
-other task-specific settings on the default task, and keep variant-only settings on their
-registered execution.
+other task-specific settings in `executions.configureDefault`, and keep variant-only settings on
+their registered execution.
 
 ```kotlin
 tasks {

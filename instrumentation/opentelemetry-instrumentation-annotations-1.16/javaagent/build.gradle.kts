@@ -36,13 +36,13 @@ tasks {
   compileTestJava {
     options.compilerArgs.add("-parameters")
   }
-  test {
-    jvmArgs("-Dotel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods=io.opentelemetry.test.annotation.TracedWithSpan[ignored]")
-  }
 }
 
 testing.suites.named<JvmTestSuite>("test") {
   executions {
+    configureDefault {
+      jvmArgs("-Dotel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods=io.opentelemetry.test.annotation.TracedWithSpan[ignored]")
+    }
     register("DeclarativeConfig") {
       filter {
         includeTestsMatching("WithSpanInstrumentationTest.excludedMethod")

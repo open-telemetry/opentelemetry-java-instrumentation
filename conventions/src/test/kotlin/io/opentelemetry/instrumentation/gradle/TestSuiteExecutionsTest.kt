@@ -87,6 +87,75 @@ class TestSuiteExecutionsTest {
   }
 
   @JunitTest
+  fun `default configuration follows common configuration and stays off variants`() {
+    for (defaultFirst in listOf(true, false)) {
+      val suiteName = if (defaultFirst) "defaultFirst" else "commonFirst"
+      val testSuite = suites().register(suiteName, JvmTestSuite::class.java).get()
+      testSuite.executions {
+        if (defaultFirst) {
+          configureDefault {
+            systemProperty("setting", "default")
+            systemProperty("default.only", "true")
+            jvmArgs("-XX:+UseSerialGC")
+            filter.excludeTestsMatching("baseline.*")
+          }
+        }
+        configureEach {
+          systemProperty("setting", "common")
+          jvmArgs("-Xss2m")
+        }
+        if (!defaultFirst) {
+          configureDefault {
+            systemProperty("setting", "default")
+            systemProperty("default.only", "true")
+            jvmArgs("-XX:+UseSerialGC")
+            filter.excludeTestsMatching("baseline.*")
+          }
+        }
+        register("Variant") {}
+      }
+
+      val default = test(testSuite.name)
+      val variant = test(testSuite.name + "Variant")
+      assertThat(default.systemProperties)
+        .containsEntry("setting", "default")
+        .containsEntry("default.only", "true")
+      assertThat(default.jvmArgs).containsExactly("-Xss2m", "-XX:+UseSerialGC")
+      assertThat(default.filter.excludePatterns).containsExactly("baseline.*")
+      assertThat(variant.systemProperties)
+        .containsEntry("setting", "common")
+        .doesNotContainKey("default.only")
+      assertThat(variant.jvmArgs).containsExactly("-Xss2m")
+      assertThat(variant.filter.excludePatterns).isEmpty()
+      assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
+        .contains(testSuite.name, testSuite.name + "Variant")
+        .doesNotContain(testSuite.name + "Baseline")
+    }
+  }
+
+  @JunitTest
+  fun `default configuration is isolated to its named suite`() {
+    suite("test").executions {
+      configureDefault {
+        systemProperty("suite.default", "test")
+      }
+      register("Variant") {}
+    }
+    val integrationSuite = suites().register("integrationTest", JvmTestSuite::class.java).get()
+    integrationSuite.executions {
+      configureDefault {
+        systemProperty("suite.default", "integration")
+      }
+      register("Variant") {}
+    }
+
+    assertThat(test("test").systemProperties).containsEntry("suite.default", "test")
+    assertThat(test("testVariant").systemProperties).doesNotContainKey("suite.default")
+    assertThat(test("integrationTest").systemProperties).containsEntry("suite.default", "integration")
+    assertThat(test("integrationTestVariant").systemProperties).doesNotContainKey("suite.default")
+  }
+
+  @JunitTest
   fun `telemetry settings compose and override without labeling ordinary properties`() {
     suite("test").executions {
       register("Variant") {
@@ -175,9 +244,32 @@ class TestSuiteExecutionsTest {
       configureEach {
         systemProperty("common", "true")
       }
+      configureDefault {
+        systemProperty("default", "true")
+      }
     }
     assertThat(default.systemProperties).containsEntry("common", "true")
+    assertThat(default.systemProperties).containsEntry("default", "true")
     assertThat(test("testVariant").systemProperties).containsEntry("common", "true")
+    assertThat(test("testVariant").systemProperties).doesNotContainKey("default")
+  }
+
+  @JunitTest
+  fun `default configuration remains lazy until its task is realized`() {
+    var configurationCount = 0
+    suite("test").executions {
+      configureDefault {
+        configurationCount++
+        systemProperty("default", "true")
+      }
+      register("Variant") {}
+    }
+
+    assertThat(configurationCount).isZero()
+    assertThat(test("testVariant").systemProperties).doesNotContainKey("default")
+    assertThat(configurationCount).isZero()
+    assertThat(test("test").systemProperties).containsEntry("default", "true")
+    assertThat(configurationCount).isEqualTo(1)
   }
 
   @JunitTest

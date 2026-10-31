@@ -38,17 +38,14 @@ dependencies {
   latestDepTestLibrary("io.netty:netty-codec-http:4.0.+") // see netty-4.1 module
 }
 
-tasks {
-  test {
-    filter {
-      excludeTestsMatching("Netty40ConnectionSpanTest")
-      excludeTestsMatching("Netty40ClientSslTest")
-    }
-  }
-}
-
 testing.suites.named<JvmTestSuite>("test") {
   executions {
+    configureDefault {
+      filter {
+        excludeTestsMatching("Netty40ConnectionSpanTest")
+        excludeTestsMatching("Netty40ClientSslTest")
+      }
+    }
     register("ConnectionSpan") {
       filter {
         includeTestsMatching("Netty40ConnectionSpanTest")
