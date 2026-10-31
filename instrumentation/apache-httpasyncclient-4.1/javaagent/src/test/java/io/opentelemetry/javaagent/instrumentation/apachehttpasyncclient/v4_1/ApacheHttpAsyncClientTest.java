@@ -201,7 +201,7 @@ class ApacheHttpAsyncClientTest {
                               equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                               equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                               equalTo(SERVER_ADDRESS, hostname),
-                              equalTo(SERVER_PORT, (long) (explicitPort ? explicitTargetPort : 80)),
+                              equalTo(SERVER_PORT, explicitPort ? explicitTargetPort : 80),
                               equalTo(URL_FULL, expectedUri.toString()),
                               equalTo(maybeStablePeerService(), "test-peer-service")),
                   span -> assertServerSpan(span).hasParent(trace.getSpan(1)),
