@@ -81,6 +81,18 @@ public final class AgentElementMatchers {
   }
 
   /**
+   * Matches a list of types against their exact ordered names.
+   *
+   * <p>When used with {@code takesArguments}, the names are compared against erased parameter
+   * types. Primitive types use their Java names, such as {@code int}. An empty list matches only an
+   * empty list of types.
+   */
+  public static ElementMatcher.Junction<Iterable<? extends TypeDescription>> names(
+      String... names) {
+    return new NamesMatcher(names);
+  }
+
+  /**
    * Matches a class loader that contains all classes that are passed as the {@code classNames}
    * parameter. Does not match the bootstrap classpath. Don't use this matcher with classes expected
    * to be on the bootstrap.
