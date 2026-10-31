@@ -393,7 +393,7 @@ additional_telemetry:                             # Manually document telemetry 
 ### Shared configuration definitions
 
 Many instrumentations expose the same configuration options (for example `http.known-methods` or
-`common.peer-service-mapping`). Instead of hand-copying an identical block into every `metadata.yaml`,
+`common.server-service-mapping`). Instead of hand-copying an identical block into every `metadata.yaml`,
 these are defined once in
 [`src/main/resources/shared-config-definitions.yaml`](src/main/resources/shared-config-definitions.yaml)
 under a stable id, and each module references them:
@@ -401,7 +401,7 @@ under a stable id, and each module references them:
 ```yaml
 configurations:
   - ref: http.known-methods
-  - ref: common.peer-service-mapping
+  - ref: common.server-service-mapping
 ```
 
 At metadata-parse time (`SharedConfigurationRegistry`) each `ref` is expanded into the full

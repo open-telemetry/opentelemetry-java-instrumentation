@@ -110,7 +110,7 @@ class JavaagentTestArgumentsProvider(
       "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.perfmark.PerfMark=INFO",
       "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.Context=INFO",
       "-Dotel.java.experimental.span-attributes.copy-from-baggage.include=test-baggage-key-1,test-baggage-key-2",
-      "-Dotel.instrumentation.common.peer-service-mapping=127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service"
+      "-Dotel.instrumentation.common.server-service-mapping=127.0.0.1=test-server-service,localhost=test-server-service,192.0.2.1=test-server-service"
     )
     if (denyUnsafe) {
       list += listOf(

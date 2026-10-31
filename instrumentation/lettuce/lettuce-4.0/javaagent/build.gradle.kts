@@ -41,32 +41,9 @@ tasks {
     systemProperty("metadataConfig", "otel.instrumentation.lettuce.connection-telemetry.enabled=true")
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-  }
-
-  val testConnectionTelemetryEnabledPreviewSemconv =
-    register<Test>("testConnectionTelemetryEnabledPreviewSemconv") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      jvmArgs(
-        "-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true",
-        "-Dotel.semconv-stability.preview=service.peer"
-      )
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.preview=service.peer"
-      )
-    }
-
   check {
     dependsOn(
       testConnectionTelemetryEnabled,
-      testConnectionTelemetryEnabledPreviewSemconv,
-      testPreviewSemconv,
       testExperimental
     )
   }

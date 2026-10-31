@@ -5,12 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.emitOldServicePeerSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.emitPreviewServicePeerSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
-import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAME;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -25,7 +21,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal.ServicePeerResolver;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.internal.ServiceMappingResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.internal.HostAddressAndPortExtractor;
@@ -38,7 +34,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class HttpClientServicePeerAttributesExtractorTest {
+class HttpClientServerServiceAttributesExtractorTest {
 
   @Mock HttpClientAttributesGetter<String, String> httpAttributesGetter;
 
@@ -60,7 +56,7 @@ class HttpClientServicePeerAttributesExtractorTest {
   }
 
   @Test
-  void shouldNotSetAnyValueIfPeerNameDoesNotMatch() {
+  void shouldNotSetAnyValueIfTargetDoesNotMatch() {
     // given
     AttributesExtractor<String, String> underTest =
         createExtractor(mapping("example.com", "myService", null));
@@ -81,8 +77,7 @@ class HttpClientServicePeerAttributesExtractorTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
-  void shouldSetPeerNameIfItMatches() {
+  void shouldSetServerServiceIdentityIfItMatches() {
     // given
     AttributesExtractor<String, String> underTest =
         createExtractor(
@@ -102,16 +97,10 @@ class HttpClientServicePeerAttributesExtractorTest {
     // then
     assertThat(startAttributes.build()).isEmpty();
     Attributes attrs = endAttributes.build();
-    if (emitOldServicePeerSemconv() && emitPreviewServicePeerSemconv()) {
-      assertThat(attrs)
-          .containsOnly(entry(PEER_SERVICE, "myService"), entry(SERVICE_PEER_NAME, "myService"));
-    } else {
-      assertThat(attrs).containsOnly(entry(maybeStablePeerService(), "myService"));
-    }
+    assertThat(attrs).containsOnly(entry(stringKey("server.service.name"), "myService"));
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void shouldFallbackToHostHeaderWhenServerAddressIsNull() {
     // given
     AttributesExtractor<String, String> underTest =
@@ -134,38 +123,37 @@ class HttpClientServicePeerAttributesExtractorTest {
     // then
     assertThat(startAttributes.build()).isEmpty();
     Attributes attrs = endAttributes.build();
-    if (emitOldServicePeerSemconv() && emitPreviewServicePeerSemconv()) {
-      assertThat(attrs)
-          .containsOnly(entry(PEER_SERVICE, "myService"), entry(SERVICE_PEER_NAME, "myService"));
-    } else {
-      assertThat(attrs).containsOnly(entry(maybeStablePeerService(), "myService"));
-    }
+    assertThat(attrs).containsOnly(entry(stringKey("server.service.name"), "myService"));
   }
 
   private AttributesExtractor<String, String> createExtractor(
       DeclarativeConfigProperties... mappings) {
-    ServicePeerResolver resolver = createResolver(mappings);
-    return new HttpClientServicePeerAttributesExtractor<>(
+    ServiceMappingResolver resolver = createResolver(mappings);
+    return new HttpClientServerServiceAttributesExtractor<>(
         new ServerAddressAndPortExtractor<>(
             httpAttributesGetter, new HostAddressAndPortExtractor<>(httpAttributesGetter)),
         httpAttributesGetter,
         resolver);
   }
 
-  private static ServicePeerResolver createResolver(DeclarativeConfigProperties... entries) {
+  private static ServiceMappingResolver createResolver(DeclarativeConfigProperties... entries) {
+    return new ServiceMappingResolver(createOpenTelemetry(entries));
+  }
+
+  private static ExtendedOpenTelemetry createOpenTelemetry(DeclarativeConfigProperties... entries) {
     ExtendedOpenTelemetry otel = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
     when(otel.getInstrumentationConfig("common")).thenReturn(commonConfig);
-    when(commonConfig.get("semconv_stability")).thenReturn(DeclarativeConfigProperties.empty());
     List<DeclarativeConfigProperties> entryList = asList(entries);
-    when(commonConfig.getStructuredList("service_peer_mapping", emptyList())).thenReturn(entryList);
-    return new ServicePeerResolver(otel);
+    when(commonConfig.getStructuredList("server_service_mapping", emptyList()))
+        .thenReturn(entryList);
+    return otel;
   }
 
   private static DeclarativeConfigProperties mapping(
-      String peer, @Nullable String serviceName, @Nullable String serviceNamespace) {
+      String target, @Nullable String serviceName, @Nullable String serviceNamespace) {
     DeclarativeConfigProperties props = mock(DeclarativeConfigProperties.class);
-    when(props.getString("peer")).thenReturn(peer);
+    when(props.getString("target")).thenReturn(target);
     when(props.getString("service_name")).thenReturn(serviceName);
     when(props.getString("service_namespace")).thenReturn(serviceNamespace);
     return props;

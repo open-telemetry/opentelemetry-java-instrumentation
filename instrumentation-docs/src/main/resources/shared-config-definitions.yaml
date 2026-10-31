@@ -20,27 +20,34 @@ configurations:
     type: list
     default: "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"
 
-  common.peer-service-mapping:
-    name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.service_peer_mapping
-    description: "Used to specify a mapping from server addresses or configured targets to peer services. Configured targets containing commas or equals signs can only be mapped with declarative `service_peer_mapping`."
+  common.server-service-mapping:
+    name: otel.instrumentation.common.server-service-mapping
+    declarative_name: java.common.server_service_mapping
+    description: >-
+      Maps server addresses or configured targets to logical server service identities. Flat mappings
+      use `target=service_name`; the target can be a hostname, IP address, or target including a port
+      or path. Flat mappings cannot express service namespaces or targets containing commas or equals
+      signs; use declarative `server_service_mapping` for those cases.
     type: map
     default: ""
     declarative_type: structured_list
     declarative_schema:
       type: object
       required:
-        - peer
-        - service_name
+        - target
       properties:
-        peer:
+        target:
           type: string
-          description: "Server address or configured target to match against."
-          example: host
+          description: "Server address or complete configured target to match against."
+          example: payments.example.com
         service_name:
           type: string
-          description: "Peer service name to record for matching peers."
-          example: serviceName
+          description: "Logical server service name to record for matching targets."
+          example: payments
+        service_namespace:
+          type: string
+          description: "Logical server service namespace to record for matching targets."
+          example: checkout
 
   http.client.capture-request-headers:
     name: otel.instrumentation.http.client.capture-request-headers
@@ -189,12 +196,6 @@ global_configurations:
     type: list
     declarative_type: string
     default: ""
-
-  semconv-stability.preview:
-    name: otel.semconv-stability.preview
-    declarative_name: java.common.semconv_stability.preview
-    description: "Opt-in to emit preview (not yet stable) semantic conventions for the `service.peer` group. Use `<group>/dup` to emit both the old and the preview conventions simultaneously. The flat `otel.semconv-stability.preview` property is read only from system properties and environment variables, not from the agent configuration file."
-    type: list
 
   semconv-exception.signal.preview:
     name: otel.semconv.exception.signal.preview

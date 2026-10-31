@@ -285,9 +285,9 @@
       "defaultValue": true
     },
     {
-      "name": "otel.instrumentation.common.peer-service-mapping",
+      "name": "otel.instrumentation.common.server-service-mapping",
       "type": "java.util.Map<java.lang.String, java.lang.String>",
-      "description": "Used to specify a mapping from server addresses or configured targets to peer services, as a comma-separated list of <code>server_address_or_configured_target=user_assigned_name</code> pairs. Configured targets containing commas or equals signs cannot be represented in this flat property; map them with declarative <code>service_peer_mapping</code> instead. The peer service is added as an attribute to a span whose server address or configured target matches the mapping. See https://opentelemetry.io/docs/zero-code/java/agent/configuration/#peer-service-name."
+      "description": "Maps server addresses or configured targets to logical server service identities as comma-separated <code>target=service_name</code> pairs. Flat mappings cannot express namespaces or targets containing commas or equals signs; use declarative <code>server_service_mapping</code> for those."
     },
     {
       "name": "otel.instrumentation.common.thread-details.enabled",

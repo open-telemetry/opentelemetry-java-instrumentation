@@ -35,27 +35,6 @@ testing {
       }
     }
 
-    register<JvmTestSuite>("testPreviewSemconvUnitTests") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/unitTests/java"))
-        }
-      }
-
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation-api-incubator"))
-        implementation(project(":javaagent-extension-api"))
-        implementation("io.lettuce:lettuce-core:5.0.0.RELEASE")
-      }
-
-      targets.all {
-        testTask.configure {
-          jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-        }
-      }
-    }
-
     register<JvmTestSuite>("lettuce51Test") {
       sources {
         java {
@@ -127,49 +106,10 @@ tasks {
     jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
     systemProperty("metadataConfig", "otel.instrumentation.lettuce.connection-telemetry.enabled=true")
   }
-
-  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .filter { !it.name.endsWith("unitTests", true) }
-    .map { suite ->
-      register<Test>("${suite.name}PreviewSemconv") {
-        val sourceTask = named<Test>(suite.name).get()
-        setJvmArgs(sourceTask.jvmArgs)
-        setSystemProperties(sourceTask.systemProperties)
-
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        val previewSemconvConfig = "otel.semconv-stability.preview=service.peer"
-        jvmArgs("-D$previewSemconvConfig")
-        systemProperty(
-          "metadataConfig",
-          listOfNotNull(sourceTask.systemProperties["metadataConfig"], previewSemconvConfig)
-            .joinToString(","),
-        )
-        isEnabled = sourceTask.enabled
-      }
-    }
-
-  val testConnectionTelemetryEnabledPreviewSemconv =
-    register<Test>("testConnectionTelemetryEnabledPreviewSemconv") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      jvmArgs(
-        "-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true",
-        "-Dotel.semconv-stability.preview=service.peer"
-      )
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.preview=service.peer"
-      )
-    }
-
   check {
     dependsOn(
       testing.suites,
       testConnectionTelemetryEnabled,
-      testConnectionTelemetryEnabledPreviewSemconv,
-      previewSemconvSuites,
       testExperimental,
     )
   }
