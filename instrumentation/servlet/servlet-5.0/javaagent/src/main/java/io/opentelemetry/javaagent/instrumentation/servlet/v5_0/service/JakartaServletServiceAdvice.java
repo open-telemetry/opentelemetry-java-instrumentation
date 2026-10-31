@@ -18,6 +18,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5HttpServerResponseMutator;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.Servlet5SnippetInjectingResponseWrapper;
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
@@ -111,6 +112,10 @@ public class JakartaServletServiceAdvice {
       return new Object[] {null, request, response};
     }
     HttpServletRequest httpServletRequest = (HttpServletRequest) request;
+
+    if (httpServletRequest.getDispatcherType() == DispatcherType.FORWARD) {
+      Servlet5SnippetInjectingResponseWrapper.resetForForward(httpServletRequest);
+    }
 
     String snippet = snippetInjectionHelper().getSnippet();
     if (!snippet.isEmpty()
