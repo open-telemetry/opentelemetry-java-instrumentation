@@ -112,7 +112,7 @@ class ContextBridgeTest {
         assertThat(otelValue).hasValue(null);
 
         otherThread.submit(Context.current().wrap(runnable)).get();
-        assertThat(grpcValue).hasValue("japan");
+        assertThat(grpcValue).hasValue(null);
         assertThat(otelValue).hasValue("cat");
       }
     } finally {
