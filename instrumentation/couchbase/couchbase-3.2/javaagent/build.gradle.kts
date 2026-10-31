@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -83,35 +85,41 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs(
-      "-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true",
-    )
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.couchbase.emit-experimental-telemetry=true",
-    )
-  }
-
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*CouchbaseExceptionSignalTest")
-    }
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
-  }
-
   check {
-    dependsOn(testing.suites, testExperimental, testExceptionSignalLogs)
+    dependsOn(testing.suites, "testExperimental", "testExceptionSignalLogs")
   }
 
   if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }
+  }
+}
+
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    register("Experimental") {
+      jvmArgs(
+        "-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true",
+      )
+      systemProperty(
+        "metadataConfig",
+        "otel.instrumentation.couchbase.emit-experimental-telemetry=true",
+      )
+    }
+
+    register("ExceptionSignalLogs") {
+      filter {
+        includeTestsMatching("*CouchbaseExceptionSignalTest")
+      }
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+      systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+    }
+  }
+}
+
+if (otelProps.denyUnsafe) {
+  tasks.withType<Test>().configureEach {
+    enabled = false
   }
 }

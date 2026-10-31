@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -78,40 +80,38 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true",
-    )
-  }
-
-  val testSpringDisabled = register<Test>("testSpringDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("SpringKafkaMockConsumerTest")
-    }
-    jvmArgs("-Dotel.instrumentation.spring-kafka.enabled=false")
-
-    systemProperty("springDisabled", true)
-    systemProperty("metadataConfig", "otel.instrumentation.spring-kafka.enabled=false")
-  }
-
-  test {
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-    )
-  }
-
   check {
-    dependsOn(testing.suites, testExperimental, testSpringDisabled)
+    dependsOn(testing.suites, "testExperimental", "testSpringDisabled")
+  }
+}
+
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureDefault {
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+      systemProperty(
+        "metadataConfig",
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+      )
+    }
+
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+      jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+      systemProperty(
+        "metadataConfig",
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true",
+      )
+    }
+
+    register("SpringDisabled") {
+      filter {
+        includeTestsMatching("SpringKafkaMockConsumerTest")
+      }
+      jvmArgs("-Dotel.instrumentation.spring-kafka.enabled=false")
+      systemProperty("springDisabled", true)
+      systemProperty("metadataConfig", "otel.instrumentation.spring-kafka.enabled=false")
+    }
   }
 }
 

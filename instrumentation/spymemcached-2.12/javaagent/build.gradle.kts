@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -37,15 +39,16 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.spymemcached.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.spymemcached.experimental-span-attributes=true")
-  }
-
   check {
-    dependsOn(testing.suites, testExperimental)
+    dependsOn(testing.suites, "testExperimental")
+  }
+}
+
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.spymemcached.experimental-span-attributes=true")
+      systemProperty("metadataConfig", "otel.instrumentation.spymemcached.experimental-span-attributes=true")
+    }
   }
 }
