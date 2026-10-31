@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -63,8 +64,7 @@ testing {
     named<JvmTestSuite>("test") {
       executions {
         register("Experimental") {
-          jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
-          systemProperty("metadataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
+          telemetryConfig("otel.instrumentation.elasticsearch.experimental-span-attributes", "true")
         }
       }
     }

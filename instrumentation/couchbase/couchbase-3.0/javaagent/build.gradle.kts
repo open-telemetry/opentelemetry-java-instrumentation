@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -44,8 +45,7 @@ tasks {
       named<JvmTestSuite>("test") {
         executions {
           register("Experimental") {
-            jvmArgs("-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true")
-            systemProperty("metadataConfig", "otel.instrumentation.couchbase.emit-experimental-telemetry=true")
+            telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
           }
         }
       }

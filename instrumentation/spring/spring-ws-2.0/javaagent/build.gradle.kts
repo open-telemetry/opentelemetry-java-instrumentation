@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -49,8 +50,7 @@ testing {
           jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
         }
         register("Experimental") {
-          jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-          systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
+          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
         }
       }
     }

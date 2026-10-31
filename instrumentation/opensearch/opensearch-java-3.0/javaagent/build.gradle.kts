@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -66,11 +67,7 @@ testing {
             includeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
             includeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
           }
-          jvmArgs("-Dotel.instrumentation.opensearch.query-sanitization.enabled=false")
-          systemProperty(
-            "metadataConfig",
-            "otel.instrumentation.opensearch.query-sanitization.enabled=false",
-          )
+          telemetryConfig("otel.instrumentation.opensearch.query-sanitization.enabled", "false")
         }
       }
     }

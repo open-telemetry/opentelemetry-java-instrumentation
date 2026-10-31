@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -58,19 +59,17 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     jvmArgs("-Dotel.instrumentation.common.view-telemetry.enabled=true")
   }
-
-  test {
-    systemProperty("metadataConfig", "otel.instrumentation.common.view-telemetry.enabled=true")
-  }
 }
 
 testing {
   suites {
     named<JvmTestSuite>("test") {
       executions {
+        configureEach {
+          telemetryConfig("otel.instrumentation.common.view-telemetry.enabled", "true")
+        }
         register("Experimental") {
-          jvmArgs("-Dotel.instrumentation.jsp.experimental-span-attributes=true")
-          systemProperty("metadataConfig", "otel.instrumentation.common.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true")
+          telemetryConfig("otel.instrumentation.jsp.experimental-span-attributes", "true")
         }
       }
     }

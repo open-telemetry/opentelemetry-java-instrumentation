@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -56,9 +57,8 @@ testing {
             includeTestsMatching("Netty40ClientSslTest")
           }
           include("**/Netty40ConnectionSpanTest.*", "**/Netty40ClientSslTest.*")
-          jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
-          jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
-          systemProperty("metadataConfig", "otel.instrumentation.netty.connection-telemetry.enabled=true,otel.instrumentation.netty.ssl-telemetry.enabled=true")
+          telemetryConfig("otel.instrumentation.netty.connection-telemetry.enabled", "true")
+          telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
         }
       }
     }

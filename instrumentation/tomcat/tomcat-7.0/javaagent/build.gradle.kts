@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -45,11 +46,7 @@ testing {
           jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
         }
         register("RequestParameterCapture") {
-          jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-parameter")
-          systemProperty(
-            "metadataConfig",
-            "otel.instrumentation.servlet.experimental.request-parameters.included=test-parameter",
-          )
+          telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.included", "test-parameter")
         }
         register("Experimental") {
           jvmArgs("-Dotel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true")

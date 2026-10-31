@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -50,24 +51,12 @@ testing {
           // required on jdk17
           jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
           jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-          jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-          jvmArgs("-Dotel.instrumentation.common.view-telemetry.enabled=true")
-
-          systemProperty(
-            "metadataConfig",
-            "otel.instrumentation.common.controller-telemetry.enabled=true," +
-              "otel.instrumentation.common.view-telemetry.enabled=true"
-          )
+          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+          telemetryConfig("otel.instrumentation.common.view-telemetry.enabled", "true")
           systemProperty("testLatestDeps", otelProps.testLatestDeps)
         }
         register("Experimental") {
-          systemProperty(
-            "metadataConfig",
-            "otel.instrumentation.common.controller-telemetry.enabled=true," +
-              "otel.instrumentation.common.view-telemetry.enabled=true," +
-              "otel.instrumentation.spring-webmvc.experimental-span-attributes=true"
-          )
-          jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
+          telemetryConfig("otel.instrumentation.spring-webmvc.experimental-span-attributes", "true")
         }
       }
     }

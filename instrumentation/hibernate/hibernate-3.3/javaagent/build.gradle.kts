@@ -6,6 +6,7 @@
  */
 
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -73,8 +74,7 @@ testing {
     named<JvmTestSuite>("test") {
       executions {
         register("Experimental") {
-          jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-          systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
+          telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
         }
         register("Disabled") {
           filter {

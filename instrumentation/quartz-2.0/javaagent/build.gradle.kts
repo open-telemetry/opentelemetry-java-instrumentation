@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -26,8 +27,7 @@ testing {
     named<JvmTestSuite>("test") {
       executions {
         register("Experimental") {
-          jvmArgs("-Dotel.instrumentation.quartz.experimental-span-attributes=true")
-          systemProperty("metadataConfig", "otel.instrumentation.quartz.experimental-span-attributes=true")
+          telemetryConfig("otel.instrumentation.quartz.experimental-span-attributes", "true")
         }
       }
     }

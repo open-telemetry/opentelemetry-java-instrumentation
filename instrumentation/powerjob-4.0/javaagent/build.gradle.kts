@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -29,8 +30,7 @@ testing {
           jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
         }
         register("Experimental") {
-          jvmArgs("-Dotel.instrumentation.powerjob.experimental-span-attributes=true")
-          systemProperty("metadataConfig", "otel.instrumentation.powerjob.experimental-span-attributes=true")
+          telemetryConfig("otel.instrumentation.powerjob.experimental-span-attributes", "true")
         }
       }
     }

@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -90,20 +91,11 @@ testing {
       executions {
         register("ControllerTelemetry") {
           include("**/server/**")
-          jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-          systemProperty(
-            "metadataConfig",
-            "otel.instrumentation.common.controller-telemetry.enabled=true"
-          )
+          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
         }
         register("ExceptionSignalLogs") {
-          jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-          systemProperty(
-            "metadataConfig",
-            "otel.instrumentation.common.controller-telemetry.enabled=true," +
-              "otel.semconv.exception.signal.preview=logs"
-          )
+          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+          telemetryConfig("otel.semconv.exception.signal.preview", "logs")
         }
       }
     }

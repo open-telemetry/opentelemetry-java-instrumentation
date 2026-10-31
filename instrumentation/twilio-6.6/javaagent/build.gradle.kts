@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -37,8 +38,7 @@ testing {
     named<JvmTestSuite>("test") {
       executions {
         register("Experimental") {
-          jvmArgs("-Dotel.instrumentation.twilio.experimental-span-attributes=true")
-          systemProperty("metadataConfig", "otel.instrumentation.twilio.experimental-span-attributes=true")
+          telemetryConfig("otel.instrumentation.twilio.experimental-span-attributes", "true")
         }
         register("Disabled") {
           filter {

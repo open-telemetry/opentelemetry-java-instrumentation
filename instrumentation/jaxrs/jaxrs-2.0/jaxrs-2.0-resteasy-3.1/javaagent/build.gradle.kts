@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -67,17 +68,11 @@ testing {
           systemProperty("testLatestDeps", otelProps.testLatestDeps)
         }
         register("Experimental") {
-          jvmArgs("-Dotel.instrumentation.jaxrs.experimental-span-attributes=true")
-          jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-          systemProperty(
-            "metadataConfig",
-            "otel.instrumentation.common.controller-telemetry.enabled=true," +
-              "otel.instrumentation.jaxrs.experimental-span-attributes=true",
-          )
+          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+          telemetryConfig("otel.instrumentation.jaxrs.experimental-span-attributes", "true")
         }
         register("ControllerTelemetry") {
-          jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-          systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
+          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
         }
       }
     }

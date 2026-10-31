@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -31,8 +32,7 @@ testing {
           systemProperty("testLatestDeps", otelProps.testLatestDeps)
         }
         register("Experimental") {
-          jvmArgs("-Dotel.instrumentation.spring-scheduling.experimental-span-attributes=true")
-          systemProperty("metadataConfig", "otel.instrumentation.spring-scheduling.experimental-span-attributes=true")
+          telemetryConfig("otel.instrumentation.spring-scheduling.experimental-span-attributes", "true")
         }
       }
     }
