@@ -66,6 +66,7 @@ import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
@@ -1499,6 +1500,87 @@ public abstract class AbstractGrpcTest {
     clientCallDone.await(10, SECONDS);
 
     assertThat(error).hasValue(null);
+  }
+
+  @Test
+  void wrappedTaskRunsAfterServerContextCancelled() throws Exception {
+    AtomicReference<String> backendTraceId = new AtomicReference<>();
+    Server backend =
+        configureServer(
+                ServerBuilder.forPort(0)
+                    .addService(
+                        new GreeterGrpc.GreeterImplBase() {
+                          @Override
+                          public void sayHello(
+                              Helloworld.Request request,
+                              StreamObserver<Helloworld.Response> responseObserver) {
+                            backendTraceId.set(Span.current().getSpanContext().getTraceId());
+                            responseObserver.onNext(
+                                Helloworld.Response.newBuilder()
+                                    .setMessage(request.getName())
+                                    .build());
+                            responseObserver.onCompleted();
+                          }
+                        }))
+            .build()
+            .start();
+    ManagedChannel backendChannel = createChannel(backend);
+    closer.add(() -> backendChannel.shutdownNow().awaitTermination(10, SECONDS));
+    closer.add(() -> backend.shutdownNow().awaitTermination());
+    GreeterGrpc.GreeterBlockingStub backendStub = GreeterGrpc.newBlockingStub(backendChannel);
+
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    closer.add(executor::shutdownNow);
+
+    CountDownLatch clientCallDone = new CountDownLatch(1);
+    AtomicReference<Throwable> error = new AtomicReference<>();
+    AtomicReference<SpanContext> serverSpan = new AtomicReference<>();
+    AtomicReference<SpanContext> taskSpan = new AtomicReference<>();
+
+    Server frontend =
+        configureServer(
+                ServerBuilder.forPort(0)
+                    .addService(
+                        new GreeterGrpc.GreeterImplBase() {
+                          @Override
+                          public void sayHello(
+                              Helloworld.Request request,
+                              StreamObserver<Helloworld.Response> responseObserver) {
+                            serverSpan.set(Span.current().getSpanContext());
+                            Runnable wrapped =
+                                io.opentelemetry.context.Context.current()
+                                    .wrap(
+                                        () -> {
+                                          taskSpan.set(Span.current().getSpanContext());
+                                          try {
+                                            backendStub.sayHello(request);
+                                          } catch (Throwable t) {
+                                            error.set(t);
+                                          }
+                                          clientCallDone.countDown();
+                                        });
+                            // The server cancels this context when the call completes.
+                            Context.current().addListener(cancelled -> wrapped.run(), executor);
+                            responseObserver.onNext(
+                                Helloworld.Response.newBuilder()
+                                    .setMessage(request.getName())
+                                    .build());
+                            responseObserver.onCompleted();
+                          }
+                        }))
+            .build()
+            .start();
+    ManagedChannel frontendChannel = createChannel(frontend);
+    closer.add(() -> frontendChannel.shutdownNow().awaitTermination(10, SECONDS));
+    closer.add(() -> frontend.shutdownNow().awaitTermination());
+
+    GreeterGrpc.newBlockingStub(frontendChannel)
+        .sayHello(Helloworld.Request.newBuilder().setName("test").build());
+
+    assertThat(clientCallDone.await(10, SECONDS)).isTrue();
+    assertThat(error).hasValue(null);
+    assertThat(taskSpan.get()).isEqualTo(serverSpan.get());
+    assertThat(backendTraceId).hasValue(serverSpan.get().getTraceId());
   }
 
   // Regression test for

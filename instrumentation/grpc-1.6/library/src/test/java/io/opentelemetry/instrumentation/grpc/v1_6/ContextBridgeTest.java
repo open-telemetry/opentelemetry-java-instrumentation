@@ -119,4 +119,34 @@ class ContextBridgeTest {
       grpcContext.detach(root);
     }
   }
+
+  @Test
+  void otelWrapUsesContextAttachedOnDestination() throws Exception {
+    io.grpc.Context grpcContext = io.grpc.Context.current().withValue(COUNTRY, "japan");
+    io.grpc.Context root = grpcContext.attach();
+    try {
+      try (Scope ignored = Context.current().with(ANIMAL, "cat").makeCurrent()) {
+        AtomicReference<String> grpcValue = new AtomicReference<>();
+        AtomicReference<String> otelValue = new AtomicReference<>();
+        Runnable wrapped =
+            Context.current()
+                .wrap(
+                    () -> {
+                      grpcValue.set(COUNTRY.get());
+                      otelValue.set(Context.current().get(ANIMAL));
+                    });
+
+        otherThread.submit(() -> io.grpc.Context.ROOT.run(wrapped)).get();
+        assertThat(grpcValue).hasValue(null);
+        assertThat(otelValue).hasValue("cat");
+
+        io.grpc.Context destination = io.grpc.Context.ROOT.withValue(COUNTRY, "france");
+        otherThread.submit(() -> destination.run(wrapped)).get();
+        assertThat(grpcValue).hasValue("france");
+        assertThat(otelValue).hasValue("cat");
+      }
+    } finally {
+      grpcContext.detach(root);
+    }
+  }
 }

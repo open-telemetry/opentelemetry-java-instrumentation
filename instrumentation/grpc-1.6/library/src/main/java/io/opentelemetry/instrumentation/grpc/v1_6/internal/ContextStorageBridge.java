@@ -33,6 +33,8 @@ public final class ContextStorageBridge extends Context.Storage {
   // context that should be restored in original context store on detach
   private static final Context.Key<Context> ORIGINAL_TO_RESTORE =
       Context.key("original-to-restore");
+  // context the caller attached, the value in original context store is only a restore token
+  private static final Context.Key<Context> ATTACHED_CONTEXT = Context.key("attached-context");
 
   private final boolean propagateGrpcDeadline;
   private final boolean forkGrpcContext;
@@ -66,7 +68,7 @@ public final class ContextStorageBridge extends Context.Storage {
 
     if (current == toAttach) {
       Context result = current.withValue(OTEL_SCOPE, Scope.noop());
-      result = attachOriginalContextStorage(result);
+      result = attachOriginalContextStorage(result, toAttach);
       return result;
     }
 
@@ -87,13 +89,14 @@ public final class ContextStorageBridge extends Context.Storage {
 
     Scope scope = newOtelContext.makeCurrent();
     Context result = current.withValue(OTEL_SCOPE, scope);
-    result = attachOriginalContextStorage(result);
+    result = attachOriginalContextStorage(result, toAttach);
     return result;
   }
 
-  private Context attachOriginalContextStorage(Context context) {
+  private Context attachOriginalContextStorage(Context context, Context attached) {
     Context result = context;
     if (originalStorage != null) {
+      result = result.withValue(ATTACHED_CONTEXT, attached);
       Context originalToRestore = originalStorage.doAttach(result);
       result = result.withValues(ORIGINAL_CONTEXT, result, ORIGINAL_TO_RESTORE, originalToRestore);
     }
@@ -135,19 +138,28 @@ public final class ContextStorageBridge extends Context.Storage {
       if (!propagateGrpcDeadline && originalStorage != null) {
         Context originalCurrent = originalStorage.current();
         // check whether grpc context would have propagated without otel context
-        if (originalCurrent == null || originalCurrent == Context.ROOT) {
+        if (!forkGrpcContext) {
+          // Only a context attached on this thread applies. A context that arrived here through
+          // OpenTelemetry propagation may already be cancelled.
+          current = attachedContext(originalCurrent);
+        } else if (originalCurrent == null || originalCurrent == Context.ROOT) {
           // Because we are propagating gRPC context via OpenTelemetry here, we may also propagate a
           // deadline where it wasn't present before. Notably, this could happen with no user
           // intention when using the javaagent which will add OpenTelemetry propagation
           // automatically, and cause that code to fail with a deadline cancellation. While ideally
           // we could propagate deadline as well as gRPC intended, we cannot have existing code fail
           // because it added the javaagent and choose to fork here.
-          current = forkGrpcContext ? current.fork() : Context.ROOT;
+          current = current.fork();
         }
       }
 
       return current.withValue(OTEL_CONTEXT, otelContext);
     }
     return current;
+  }
+
+  private static Context attachedContext(Context originalCurrent) {
+    Context attached = originalCurrent == null ? null : ATTACHED_CONTEXT.get(originalCurrent);
+    return attached == null ? Context.ROOT : attached;
   }
 }
