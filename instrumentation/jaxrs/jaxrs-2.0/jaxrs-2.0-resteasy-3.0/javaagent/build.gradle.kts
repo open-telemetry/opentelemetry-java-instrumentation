@@ -71,21 +71,17 @@ dependencies {
   latestDepTestLibrary("io.undertow:undertow-servlet:2.2.24.Final") // see jaxrs-2.0-resteasy-3.1 module
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          systemProperty("testLatestDeps", otelProps.testLatestDeps)
-        }
-        register("Experimental") {
-          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
-          telemetryConfig("otel.instrumentation.jaxrs.experimental-span-attributes", "true")
-        }
-        register("ControllerTelemetry") {
-          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
-        }
-      }
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+      telemetryConfig("otel.instrumentation.jaxrs.experimental-span-attributes", "true")
+    }
+    register("ControllerTelemetry") {
+      telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
     }
   }
 }

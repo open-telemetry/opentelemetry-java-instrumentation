@@ -26,14 +26,10 @@ dependencies {
   testImplementation("jakarta.ws.rs:jakarta.ws.rs-api:3.0.0")
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("ControllerTelemetry") {
-          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
-        }
-      }
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    register("ControllerTelemetry") {
+      telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
     }
   }
 }

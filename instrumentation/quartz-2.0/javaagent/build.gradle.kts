@@ -22,14 +22,10 @@ dependencies {
   testImplementation(project(":instrumentation:quartz-2.0:testing"))
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("Experimental") {
-          telemetryConfig("otel.instrumentation.quartz.experimental-span-attributes", "true")
-        }
-      }
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.quartz.experimental-span-attributes", "true")
     }
   }
 }

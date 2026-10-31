@@ -58,18 +58,14 @@ tasks {
   }
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("QuerySanitizationDisabled") {
-          filter {
-            includeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
-            includeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
-          }
-          telemetryConfig("otel.instrumentation.opensearch.query-sanitization.enabled", "false")
-        }
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    register("QuerySanitizationDisabled") {
+      filter {
+        includeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
+        includeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
       }
+      telemetryConfig("otel.instrumentation.opensearch.query-sanitization.enabled", "false")
     }
   }
 }

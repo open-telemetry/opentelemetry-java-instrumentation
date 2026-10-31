@@ -47,26 +47,15 @@ dependencies {
   latestDepTestLibrary("org.elasticsearch.client:transport:5.2.+") // see elasticsearch-transport-5.3 module
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.nio=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  }
-
-  check {
-    dependsOn(testing.suites)
-  }
-}
-
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("Experimental") {
-          telemetryConfig("otel.instrumentation.elasticsearch.experimental-span-attributes", "true")
-        }
-      }
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.nio=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.elasticsearch.experimental-span-attributes", "true")
     }
   }
 }

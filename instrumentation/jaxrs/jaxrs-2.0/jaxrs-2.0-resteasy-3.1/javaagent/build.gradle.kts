@@ -60,21 +60,17 @@ dependencies {
   }
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          systemProperty("testLatestDeps", otelProps.testLatestDeps)
-        }
-        register("Experimental") {
-          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
-          telemetryConfig("otel.instrumentation.jaxrs.experimental-span-attributes", "true")
-        }
-        register("ControllerTelemetry") {
-          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
-        }
-      }
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+      telemetryConfig("otel.instrumentation.jaxrs.experimental-span-attributes", "true")
+    }
+    register("ControllerTelemetry") {
+      telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
     }
   }
 }

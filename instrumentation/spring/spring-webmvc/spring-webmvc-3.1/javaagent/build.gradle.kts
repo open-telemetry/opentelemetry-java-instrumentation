@@ -42,24 +42,20 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-security:2.+") // see spring-webmvc-6.0 module
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          systemProperty("testLatestDeps", otelProps.testLatestDeps)
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
-          // required on jdk17
-          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
-          telemetryConfig("otel.instrumentation.common.view-telemetry.enabled", "true")
-        }
-        register("Experimental") {
-          telemetryConfig("otel.instrumentation.spring-webmvc.experimental-span-attributes", "true")
-        }
-      }
+      telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+      telemetryConfig("otel.instrumentation.common.view-telemetry.enabled", "true")
+    }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.spring-webmvc.experimental-span-attributes", "true")
     }
   }
 }

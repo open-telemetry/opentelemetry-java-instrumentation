@@ -41,20 +41,16 @@ tasks {
   }
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("DeclarativeConfig") {
-          filter {
-            includeTestsMatching("WithSpanInstrumentationTest.excludedMethod")
-            includeTestsMatching("WithSpanInstrumentationTest.deriveAutomaticName")
-          }
-          jvmArgs(
-            "-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml"
-          )
-        }
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    register("DeclarativeConfig") {
+      filter {
+        includeTestsMatching("WithSpanInstrumentationTest.excludedMethod")
+        includeTestsMatching("WithSpanInstrumentationTest.deriveAutomaticName")
       }
+      jvmArgs(
+        "-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml"
+      )
     }
   }
 }

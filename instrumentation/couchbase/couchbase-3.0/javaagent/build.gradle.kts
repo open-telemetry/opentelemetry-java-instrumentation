@@ -39,16 +39,12 @@ tasks {
       enabled = false
     }
   }
+}
 
-  testing {
-    suites {
-      named<JvmTestSuite>("test") {
-        executions {
-          register("Experimental") {
-            telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
-          }
-        }
-      }
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
     }
   }
 }

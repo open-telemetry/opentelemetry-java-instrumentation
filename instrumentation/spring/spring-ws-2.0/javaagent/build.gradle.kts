@@ -40,19 +40,15 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          // required on jdk17
-          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-        }
-        register("Experimental") {
-          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
-        }
-      }
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
     }
   }
 }

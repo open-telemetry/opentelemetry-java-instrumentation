@@ -71,33 +71,28 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
   test {
     // server tests require controller-telemetry, which is off by default
     exclude("**/server/**")
   }
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("ControllerTelemetry") {
-          include("**/server/**")
-          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
-        }
-        register("ExceptionSignalLogs") {
-          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
-          telemetryConfig("otel.semconv.exception.signal.preview", "logs")
-        }
-      }
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+    register("ControllerTelemetry") {
+      include("**/server/**")
+      telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+    }
+    register("ExceptionSignalLogs") {
+      telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
   }
 }

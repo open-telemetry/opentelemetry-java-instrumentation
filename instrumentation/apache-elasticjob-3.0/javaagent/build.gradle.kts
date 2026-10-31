@@ -20,14 +20,10 @@ dependencies {
   testImplementation("org.apache.curator:curator-test:5.1.0")
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("Experimental") {
-          telemetryConfig("otel.instrumentation.apache-elasticjob.experimental-span-attributes", "true")
-        }
-      }
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.apache-elasticjob.experimental-span-attributes", "true")
     }
   }
 }

@@ -53,37 +53,26 @@ if (otelProps.testLatestDeps) {
   }
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    if (name != "testDisabled") {
-      jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
-    }
-  }
-
-  check {
-    dependsOn(testing.suites)
-  }
-}
-
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("Experimental") {
-          telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
-        }
-        register("Disabled") {
-          filter {
-            includeTestsMatching("*DefaultEnablementTest")
-          }
-
-          jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
-        }
+      if (name != "testDisabled") {
+        jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
       }
+    }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
+    }
+    register("Disabled") {
+      filter {
+        includeTestsMatching("*DefaultEnablementTest")
+      }
+
+      jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
     }
   }
 }

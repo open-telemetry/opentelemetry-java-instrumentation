@@ -36,22 +36,18 @@ dependencies {
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+") // see tomcat-10.0 module
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          // required on jdk17
-          jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-        }
-        register("RequestParameterCapture") {
-          telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.included", "test-parameter")
-        }
-        register("Experimental") {
-          jvmArgs("-Dotel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true")
-        }
-      }
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    }
+    register("RequestParameterCapture") {
+      telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.included", "test-parameter")
+    }
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true")
     }
   }
 }

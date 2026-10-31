@@ -27,20 +27,16 @@ dependencies {
   testInstrumentation(project(":instrumentation:apache-commons-pool-2.0:javaagent"))
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("WithCommonsPoolInstrumentation") {
-          filter {
-            includeTestsMatching(
-              "ApacheDbcpInstrumentationTest.shouldNotReportCommonsPoolMetrics",
-            )
-          }
-
-          jvmArgs("-Dotel.instrumentation.apache-commons-pool.enabled=true")
-        }
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    register("WithCommonsPoolInstrumentation") {
+      filter {
+        includeTestsMatching(
+          "ApacheDbcpInstrumentationTest.shouldNotReportCommonsPoolMetrics",
+        )
       }
+
+      jvmArgs("-Dotel.instrumentation.apache-commons-pool.enabled=true")
     }
   }
 }

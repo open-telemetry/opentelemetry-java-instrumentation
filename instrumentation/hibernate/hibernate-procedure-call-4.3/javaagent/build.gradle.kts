@@ -35,30 +35,22 @@ dependencies {
   latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.+") // see hibernate-6.0 module
 }
 
-tasks {
-  withType<Test>().configureEach {
-
-    if (name != "testDisabled") {
-      jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
-    }
-  }
-}
-
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("Experimental") {
-          telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
-        }
-        register("Disabled") {
-          filter {
-            includeTestsMatching("*DefaultEnablementTest")
-          }
-
-          jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
-        }
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      if (name != "testDisabled") {
+        jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
       }
+    }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
+    }
+    register("Disabled") {
+      filter {
+        includeTestsMatching("*DefaultEnablementTest")
+      }
+
+      jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
     }
   }
 }

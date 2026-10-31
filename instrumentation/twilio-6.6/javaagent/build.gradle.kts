@@ -24,27 +24,19 @@ dependencies {
   latestDepTestLibrary("com.twilio.sdk:twilio:7.+") // documented limitation
 }
 
-tasks {
-  withType<Test>().configureEach {
-
-    if (name != "testDisabled") {
-      jvmArgs("-Dotel.instrumentation.twilio.enabled=true")
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      if (name != "testDisabled") {
+        jvmArgs("-Dotel.instrumentation.twilio.enabled=true")
+      }
     }
-  }
-}
-
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("Experimental") {
-          telemetryConfig("otel.instrumentation.twilio.experimental-span-attributes", "true")
-        }
-        register("Disabled") {
-          filter {
-            includeTestsMatching("*DefaultEnablementTest")
-          }
-        }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.twilio.experimental-span-attributes", "true")
+    }
+    register("Disabled") {
+      filter {
+        includeTestsMatching("*DefaultEnablementTest")
       }
     }
   }

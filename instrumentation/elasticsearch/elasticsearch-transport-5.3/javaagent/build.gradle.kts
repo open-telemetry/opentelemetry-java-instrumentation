@@ -61,29 +61,23 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  }
-
   if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
     }
   }
+}
 
-  testing {
-    suites {
-      named<JvmTestSuite>("test") {
-        executions {
-          register("Experimental") {
-            telemetryConfig("otel.instrumentation.elasticsearch.experimental-span-attributes", "true")
-          }
-        }
-      }
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.elasticsearch.experimental-span-attributes", "true")
     }
   }
 }

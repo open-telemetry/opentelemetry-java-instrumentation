@@ -24,22 +24,20 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("Experimental") {
-          telemetryConfig("otel.instrumentation.lettuce.experimental-span-attributes", "true")
-        }
-        register("ConnectionTelemetryEnabled") {
-          telemetryConfig("otel.instrumentation.lettuce.connection-telemetry.enabled", "true")
-        }
-      }
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.lettuce.experimental-span-attributes", "true")
+    }
+    register("ConnectionTelemetryEnabled") {
+      telemetryConfig("otel.instrumentation.lettuce.connection-telemetry.enabled", "true")
     }
   }
 }

@@ -54,14 +54,10 @@ kotlin {
   }
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("Experimental") {
-          jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
-        }
-      }
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
     }
   }
 }
