@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
-import io.opentelemetry.javaagent.bootstrap.IndyBootstrapDispatcher;
+import io.opentelemetry.javaagent.bootstrap.AdviceBootstrapDispatcher;
 import io.opentelemetry.javaagent.bootstrap.advice.AdviceForwardLookupSupplier;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
@@ -109,7 +109,7 @@ public class ForwardIndyAdviceTransformer implements AgentBuilder.Transformer {
                       String descriptor,
                       Handle bootstrapMethodHandle,
                       Object... bootstrapMethodArguments) {
-                    if (Type.getInternalName(IndyBootstrapDispatcher.class)
+                    if (Type.getInternalName(AdviceBootstrapDispatcher.class)
                         .equals(bootstrapMethodHandle.getOwner())) {
 
                       String adviceClassName = (String) bootstrapMethodArguments[2];
