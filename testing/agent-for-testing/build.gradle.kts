@@ -42,6 +42,26 @@ tasks {
     into(layout.buildDirectory.dir("extracted-agent"))
   }
 
+  val testTemporalityDelta =
+    register<Test>("testTemporalityDelta") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching("io.opentelemetry.javaagent.testing.AgentMetricTemporalityTest")
+      }
+      systemProperty("otel.javaagent.testing.exporter.temporality", "delta")
+    }
+
+  val testTemporalityCumulative =
+    register<Test>("testTemporalityCumulative") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching("io.opentelemetry.javaagent.testing.AgentMetricTemporalityTest")
+      }
+      systemProperty("otel.javaagent.testing.exporter.temporality", "cumulative")
+    }
+
   jar {
     from(extractAgent.map { it.outputs.files })
     from(extensionLibs) {
@@ -63,6 +83,10 @@ tasks {
 
       jvmArgumentProviders.add(JavaagentProvider(jar.flatMap { it.archiveFile }))
     }
+  }
+
+  check {
+    dependsOn(testTemporalityDelta, testTemporalityCumulative)
   }
 }
 
