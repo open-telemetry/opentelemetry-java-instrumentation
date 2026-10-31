@@ -98,6 +98,9 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
   @Override
   public void resetBuffer() {
     super.resetBuffer();
+    if (injectionState.isContentLengthAdjusted()) {
+      setContentLength((int) injectionState.getContentLength() - snippetLength);
+    }
     injectionState.resetBuffer();
   }
 
@@ -112,10 +115,8 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
   public boolean containsHeader(String name) {
     // this function is overridden in order to make sure the response is wrapped
     // but not wrapped twice
-    // we don't use req.setAttribute
-    // because async requests pass down their attributes, but don't pass down our wrapped response
-    // and so we would see the presence of the attribute and think the response was already wrapped
-    // when it really is not
+    // The request attribute tracks body state, not whether this response is wrapped:
+    // async dispatch preserves attributes but may pass down the original response.
     // see also https://docs.oracle.com/javaee/7/api/javax/servlet/AsyncContext.html
     if (name.equals(FAKE_SNIPPET_HEADER)) {
       return true;
@@ -203,6 +204,7 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
   public void updateContentLengthIfPreviouslySet() {
     if (injectionState.hasContentLength()) {
       setContentLength((int) injectionState.getContentLength() + snippetLength);
+      injectionState.markContentLengthAdjusted();
     }
   }
 
