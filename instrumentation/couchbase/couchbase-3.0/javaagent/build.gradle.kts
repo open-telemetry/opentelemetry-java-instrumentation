@@ -29,20 +29,14 @@ dependencies {
   latestDepTestLibrary("com.couchbase.client:java-client:3.0.10") // no longer applicable
 }
 
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
-    }
-  }
-}
-
 testing.suites.named<JvmTestSuite>("test") {
   executions {
+    configureEach {
+      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
+    }
     register("Experimental") {
       telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
     }

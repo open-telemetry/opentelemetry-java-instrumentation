@@ -60,17 +60,12 @@ dependencies {
   latestDepTestLibrary("org.springframework.data:spring-data-elasticsearch:3.0.+") // see elasticsearch-transport-6.0 module
 }
 
-tasks {
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
-    }
-  }
-}
-
 testing.suites.named<JvmTestSuite>("test") {
   executions {
     configureEach {
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
       // required on jdk17
       jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
       jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")

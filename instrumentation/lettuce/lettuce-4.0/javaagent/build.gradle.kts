@@ -22,15 +22,10 @@ dependencies {
   latestDepTestLibrary("biz.paluch.redis:lettuce:4.+") // see lettuce-5.0 module
 }
 
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-}
-
 testing.suites.named<JvmTestSuite>("test") {
   executions {
     configureEach {
+      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
     }
     register("Experimental") {

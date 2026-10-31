@@ -41,18 +41,13 @@ dependencies {
   testLibrary("org.jboss.resteasy:resteasy-servlet-initializer:6.0.0.Final")
 }
 
-tasks {
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
-    }
-  }
-}
-
 testing.suites.named<JvmTestSuite>("test") {
   executions {
     configureEach {
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
     }
     register("Experimental") {
       telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")

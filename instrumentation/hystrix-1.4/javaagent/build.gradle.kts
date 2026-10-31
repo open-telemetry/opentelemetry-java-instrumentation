@@ -24,17 +24,13 @@ dependencies {
   library("io.reactivex:rxjava:1.0.8")
 }
 
-tasks {
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
-    }
-  }
-}
-
 testing.suites.named<JvmTestSuite>("test") {
   executions {
     configureEach {
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
+
       // Disable so failure testing below doesn't inadvertently change the behavior.
       jvmArgs("-Dhystrix.command.default.circuitBreaker.enabled=false")
 
