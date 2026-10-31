@@ -11,7 +11,7 @@ muzzle {
   pass {
     group.set("dev.zio")
     module.set("zio-http_2.12")
-    versions.set("[$zioVersion,)")
+    versions.set("[3.0.0,)")
     // don't care about these versions
     skip("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5")
     assertInverse.set(true)
@@ -19,7 +19,7 @@ muzzle {
   pass {
     group.set("dev.zio")
     module.set("zio-http_2.13")
-    versions.set("[$zioVersion,)")
+    versions.set("[3.0.0,)")
     // don't care about these versions
     skip("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5")
     assertInverse.set(true)
@@ -27,7 +27,7 @@ muzzle {
   pass {
     group.set("dev.zio")
     module.set("zio-http_3")
-    versions.set("[$zioVersion,)")
+    versions.set("[3.0.0,)")
     // don't care about these versions
     skip("0.0.1", "0.0.2", "0.0.3", "0.0.4", "0.0.5")
     assertInverse.set(true)

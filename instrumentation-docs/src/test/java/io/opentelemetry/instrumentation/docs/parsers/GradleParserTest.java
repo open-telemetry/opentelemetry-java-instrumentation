@@ -6,9 +6,11 @@
 package io.opentelemetry.instrumentation.docs.parsers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.instrumentation.docs.internal.DependencyInfo;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class GradleParserTest {
@@ -32,25 +34,26 @@ class GradleParserTest {
   }
 
   @Test
-  void testExtractMuzzleVersions_InterpolatedCoordinates() {
+  void testExtractMuzzleVersions_PlayCoordinates() {
     String gradleBuildFileContent =
         """
-            val playGroup = "com.typesafe.play"
-            val scalaVersion = "2.11"
-            val playVersion = "2.6.0"
-
             muzzle {
               pass {
-                group.set("$playGroup")
-                module.set("play_$scalaVersion")
-                versions.set("[$playVersion,)")
+                group.set("com.typesafe.play")
+                module.set("play_2.11")
+                versions.set("[2.6.0,)")
                 assertInverse.set(true)
               }
               pass {
-                // instrumentation-docs:ignore - verification only
-                group.set("$playGroup")
-                module.set("play_$scalaVersion")
-                versions.set("[$playVersion,2.7.0)")
+                group.set("com.typesafe.play")
+                module.set("play_2.12")
+                versions.set("[2.6.0,)")
+                assertInverse.set(true)
+              }
+              pass {
+                group.set("com.typesafe.play")
+                module.set("play_2.13")
+                versions.set("[2.6.0,)")
                 assertInverse.set(true)
               }
               pass {
@@ -65,7 +68,52 @@ class GradleParserTest {
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
     assertThat(info.versions())
         .containsExactlyInAnyOrder(
-            "com.typesafe.play:play_2.11:[2.6.0,)", "org.playframework:play_3:(,)");
+            "com.typesafe.play:play_2.11:[2.6.0,)",
+            "com.typesafe.play:play_2.12:[2.6.0,)",
+            "com.typesafe.play:play_2.13:[2.6.0,)",
+            "org.playframework:play_3:(,)");
+  }
+
+  @Test
+  void testRejectsNonLiteralMuzzleFields() {
+    for (String assignment :
+        List.of(
+            "group.set(playGroup)",
+            "group.set(\"$playGroup\")",
+            "group.set(\"${playGroup}\")",
+            "module.set(playModule)",
+            "module.set(\"$playModule\")",
+            "module.set(\"${playModule}\")",
+            "versions.set(versionRange)",
+            "versions.set(\"$versionRange\")",
+            "versions.set(\"${versionRange}\")")) {
+      assertThatThrownBy(() -> parseMuzzlePass(assignment))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("must use a literal string");
+    }
+  }
+
+  @Test
+  void testDocsIgnoreSkipsNonLiteralMuzzlePass() {
+    String gradleBuildFileContent =
+        """
+            muzzle {
+              pass {
+                // instrumentation-docs:ignore - verification only
+                group.set(playGroup)
+                module.set("play_$scalaVersion")
+                versions.set("${playVersion},)")
+              }
+              pass {
+                group.set("com.typesafe.play")
+                module.set("play_2.11")
+                versions.set("[2.6.0,)")
+              }
+            }""";
+
+    DependencyInfo info =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+    assertThat(info.versions()).containsExactly("com.typesafe.play:play_2.11:[2.6.0,)");
   }
 
   @Test
@@ -208,26 +256,23 @@ class GradleParserTest {
             id("otel.scala-conventions")
           }
 
-          val zioVersion = "2.0.0"
-          val scalaVersion = "2.12"
-
           muzzle {
             pass {
               group.set("dev.zio")
               module.set("zio_2.12")
-              versions.set("[$zioVersion,)")
+              versions.set("[2.0.0,)")
               assertInverse.set(true)
             }
             pass {
               group.set("dev.zio")
               module.set("zio_2.13")
-              versions.set("[$zioVersion,)")
+              versions.set("[2.0.0,)")
               assertInverse.set(true)
             }
             pass {
               group.set("dev.zio")
               module.set("zio_3")
-              versions.set("[$zioVersion,)")
+              versions.set("[2.0.0,)")
               assertInverse.set(true)
             }
           }
@@ -238,5 +283,10 @@ class GradleParserTest {
     assertThat(info.versions())
         .containsExactlyInAnyOrder(
             "dev.zio:zio_2.12:[2.0.0,)", "dev.zio:zio_2.13:[2.0.0,)", "dev.zio:zio_3:[2.0.0,)");
+  }
+
+  private static DependencyInfo parseMuzzlePass(String assignment) {
+    return GradleParser.parseGradleFile(
+        "muzzle { pass { " + assignment + " } }", InstrumentationType.JAVAAGENT);
   }
 }

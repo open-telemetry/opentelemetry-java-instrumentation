@@ -137,6 +137,10 @@ muzzle {
   name, independently of its public enablement names. It also applies to inverse checks. An unknown
   class name fails the check.
 
+The instrumentation documentation generator reads Muzzle `group`, `module`, and `versions` values
+from non-ignored `pass` blocks as literal strings. Keep those fields literal rather than using
+variables or Kotlin string interpolation; constants remain appropriate in dependency declarations.
+
 When a project contains multiple instrumentation modules with different compatibility ranges or
 target artifacts, exclude unrelated modules in each directive. Use class-based selection when
 public names cannot distinguish the required implementations:
