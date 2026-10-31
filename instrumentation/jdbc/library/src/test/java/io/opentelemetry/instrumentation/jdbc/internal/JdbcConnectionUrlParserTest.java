@@ -744,6 +744,24 @@ class JdbcConnectionUrlParserTest {
             .setConfiguredServerTarget("h2", 2222)
             .setName("db")
             .build(),
+        arg("jdbc:mysql://(user):example@h1:1111/db?serverName=h2&portNumber=2222")
+            .setProperties(stdProps())
+            .setSystem(MYSQL)
+            .setConfiguredServerTarget("h2", 2222)
+            .setName("db")
+            .build(),
+        arg("jdbc:mysql://address=(user):example@h1:1111/db?serverName=h2&portNumber=2222")
+            .setProperties(stdProps())
+            .setSystem(MYSQL)
+            .setConfiguredServerTarget("h2", 2222)
+            .setName("db")
+            .build(),
+        arg("jdbc:mysql://address=example@h1:1111/db?serverName=h2&portNumber=2222")
+            .setProperties(stdProps())
+            .setSystem(MYSQL)
+            .setConfiguredServerTarget("h2", 2222)
+            .setName("db")
+            .build(),
         arg("jdbc:mysql://address=(host=h1)(port=1111)/db?serverName=h2&portNumber=2222")
             .setProperties(stdProps())
             .setSystem(MYSQL)
@@ -1029,6 +1047,24 @@ class JdbcConnectionUrlParserTest {
             .setName("db")
             .build(),
         arg("jdbc:mariadb://h1:1111/db?serverName=h2&portNumber=2222")
+            .setProperties(stdProps())
+            .setSystem(MARIADB)
+            .setConfiguredServerTarget("h2", 2222)
+            .setName("db")
+            .build(),
+        arg("jdbc:mariadb://(user):example@h1:1111/db?serverName=h2&portNumber=2222")
+            .setProperties(stdProps())
+            .setSystem(MARIADB)
+            .setConfiguredServerTarget("h2", 2222)
+            .setName("db")
+            .build(),
+        arg("jdbc:mariadb://address=(user):example@h1:1111/db?serverName=h2&portNumber=2222")
+            .setProperties(stdProps())
+            .setSystem(MARIADB)
+            .setConfiguredServerTarget("h2", 2222)
+            .setName("db")
+            .build(),
+        arg("jdbc:mariadb://address=example@h1:1111/db?serverName=h2&portNumber=2222")
             .setProperties(stdProps())
             .setSystem(MARIADB)
             .setConfiguredServerTarget("h2", 2222)

@@ -100,7 +100,7 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       }
       return;
     }
-    String firstEntry = authority.trim();
+    String firstEntry = MysqlHostParser.stripUserInfo(authority).trim();
     boolean hostProperties = firstEntry.startsWith("address=") || firstEntry.startsWith("(");
     if (!parsedUrlFields && !hostProperties) {
       return;

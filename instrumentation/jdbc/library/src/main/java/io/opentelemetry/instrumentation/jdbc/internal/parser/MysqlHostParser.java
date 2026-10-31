@@ -37,13 +37,7 @@ final class MysqlHostParser {
     if (authority.isEmpty()) {
       return emptyList();
     }
-    int userInfoEnd = authority.lastIndexOf('@');
-    // Parentheses in ordinary user info are not host-property blocks.
-    if (userInfoEnd >= 0
-        && authority.indexOf('(', userInfoEnd + 1) < 0
-        && !isAtInHostProperties(authority, userInfoEnd)) {
-      authority = authority.substring(userInfoEnd + 1);
-    }
+    authority = stripUserInfo(authority);
     List<HostPort> hosts = new ArrayList<>();
     for (String entry : splitHostList(authority)) {
       HostPort host = parseHost(entry.trim(), allowKeyValueHosts);
@@ -54,6 +48,17 @@ final class MysqlHostParser {
       hosts.add(host);
     }
     return Collections.unmodifiableList(hosts);
+  }
+
+  static String stripUserInfo(String authority) {
+    int userInfoEnd = authority.lastIndexOf('@');
+    // Parentheses in ordinary user info are not host-property blocks.
+    if (userInfoEnd >= 0
+        && authority.indexOf('(', userInfoEnd + 1) < 0
+        && !isAtInHostProperties(authority, userInfoEnd)) {
+      return authority.substring(userInfoEnd + 1);
+    }
+    return authority;
   }
 
   private static boolean isAtInHostProperties(String authority, int at) {
