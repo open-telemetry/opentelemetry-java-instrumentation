@@ -100,6 +100,8 @@ abstract class JettySmokeTest extends AppServerTest {
     assertThat(response.status().code()).isEqualTo(500);
     assertThat(response.headers().get("X-Snippet-Scenario")).isEqualTo("error-dispatch");
     assertThat(response.headers().get("X-Snippet-Dispatcher")).isEqualTo("ERROR");
+    assertThat(response.headers().get("X-Snippet-Source-Content-Length")).isEqualTo("1032");
+    assertThat(response.headers().get("X-Snippet-Source-Committed")).isEqualTo("false");
     assertThat(body).isEqualTo(expected);
     assertThat(body).containsOnlyOnce(snippet);
     long contentLength = response.headers().contentLength();
