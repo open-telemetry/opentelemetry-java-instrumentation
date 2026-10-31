@@ -364,6 +364,15 @@
 - Rename `GrpcTelemetryBuilder.setClientRequestMetadata` and
   `GrpcTelemetryBuilder.setServerRequestMetadata` to their `RequestHeaders` forms. Remove
   `setCapturedClientRequestMetadata` and `setCapturedServerRequestMetadata`.
+- Remove `HostIdResource` and `HostIdResourceProvider`. Replace
+  `HostIdResource.get()` with `HostResource.create(true)`. In
+  `otel.java.enabled.resource.providers` and
+  `otel.java.disabled.resource.providers`, replace
+  `io.opentelemetry.instrumentation.resources.HostIdResourceProvider` with
+  `io.opentelemetry.instrumentation.resources.HostResourceProvider`. Disabling
+  the consolidated provider also disables host name and architecture collection.
+  Host ID detection is now enabled by default in the Java agent and Spring Boot starter.
+  Remove `otel.resource.providers.host-id.enabled`, which is no longer supported.
 - Rename public library instrumentation entrypoints from `wrap`/`wrapXxx` to `instrument`
   overloads, retaining distinct `instrumentXxx` names where required.
 - In `opentelemetry-instrumentation-api-incubator`, custom `RpcAttributesGetter` implementations
