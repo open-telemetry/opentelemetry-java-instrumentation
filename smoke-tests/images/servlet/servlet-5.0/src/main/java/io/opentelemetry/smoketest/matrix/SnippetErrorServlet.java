@@ -29,6 +29,12 @@ public class SnippetErrorServlet extends HttpServlet {
     resp.setContentType("text/html;charset=UTF-8");
     resp.setContentLength(ERROR_BODY.getBytes(UTF_8).length);
     resp.setHeader("X-Snippet-Dispatcher", req.getDispatcherType().name());
+    resp.setHeader(
+        "X-Snippet-Source-Content-Length",
+        String.valueOf(req.getAttribute("snippet.error.sourceContentLength")));
+    resp.setHeader(
+        "X-Snippet-Source-Committed",
+        String.valueOf(req.getAttribute("snippet.error.sourceCommitted")));
     resp.getWriter().write(ERROR_BODY);
   }
 }

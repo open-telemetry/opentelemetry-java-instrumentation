@@ -39,6 +39,8 @@ public class JspServlet extends HttpServlet {
       resp.setContentType("text/html;charset=UTF-8");
       resp.setContentLength(1000);
       resp.getOutputStream().write("<head>".getBytes(UTF_8));
+      req.setAttribute("snippet.error.sourceContentLength", resp.getHeader("Content-Length"));
+      req.setAttribute("snippet.error.sourceCommitted", resp.isCommitted());
       throw new SnippetErrorException();
     }
 
