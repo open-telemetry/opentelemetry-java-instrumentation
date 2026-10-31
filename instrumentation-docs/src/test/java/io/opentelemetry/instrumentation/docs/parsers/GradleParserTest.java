@@ -30,32 +30,6 @@ class GradleParserTest {
   }
 
   @Test
-  void testExtractMuzzleVersions_PlayCoordinates() {
-    String gradleBuildFileContent =
-        """
-            muzzle {
-              pass {
-                group.set("com.typesafe.play")
-                module.set("play_2.11")
-                versions.set("[2.6.0,)")
-                assertInverse.set(true)
-              }
-              pass {
-                group.set("org.playframework")
-                module.set("play_3")
-                versions.set("(,)")
-                assertInverse.set(true)
-              }
-            }""";
-
-    DependencyInfo info =
-        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
-    assertThat(info.versions())
-        .containsExactlyInAnyOrder(
-            "com.typesafe.play:play_2.11:[2.6.0,)", "org.playframework:play_3:(,)");
-  }
-
-  @Test
   void testExtractCoreJdk() {
     String gradleBuildFileContent =
         """
@@ -178,5 +152,44 @@ class GradleParserTest {
     DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
     assertThat(info.versions()).containsExactly("com.couchbase.client:java-client:[2,2.6)");
+  }
+
+  @Test
+  void testExtractMuzzleVersions_MultiplePassBlocks() {
+    String gradleBuildFileContent =
+        """
+          plugins {
+            id("otel.javaagent-instrumentation")
+            id("otel.nullaway-conventions")
+            id("otel.scala-conventions")
+          }
+
+          muzzle {
+            pass {
+              group.set("dev.zio")
+              module.set("zio_2.12")
+              versions.set("[2.0.0,)")
+              assertInverse.set(true)
+            }
+            pass {
+              group.set("dev.zio")
+              module.set("zio_2.13")
+              versions.set("[2.0.0,)")
+              assertInverse.set(true)
+            }
+            pass {
+              group.set("dev.zio")
+              module.set("zio_3")
+              versions.set("[2.0.0,)")
+              assertInverse.set(true)
+            }
+          }
+          """;
+
+    DependencyInfo info =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+    assertThat(info.versions())
+        .containsExactlyInAnyOrder(
+            "dev.zio:zio_2.12:[2.0.0,)", "dev.zio:zio_2.13:[2.0.0,)", "dev.zio:zio_3:[2.0.0,)");
   }
 }
