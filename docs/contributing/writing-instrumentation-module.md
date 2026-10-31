@@ -216,6 +216,20 @@ public void transform(TypeTransformer transformer) {
 For matching built-in Java types you can use the `takesArgument(0, String.class)` form. Classes
 originating from the instrumented library need to be matched using the `named()` matcher.
 
+When a method matcher needs an exact argument-count check, place `takesArguments(n)` before
+the positional `takesArgument(index, ...)` checks to keep the type checks grouped. This also
+applies to partial signatures that intentionally leave some argument types unchecked:
+
+```java
+named("someMethod")
+    .and(takesArguments(3))
+    .and(takesArgument(0, String.class))
+    .and(takesArgument(1, int.class))
+```
+
+This ordering convention does not require adding exact-arity checks or checking every argument
+type. Preserve the intended overload selection.
+
 Implementations of `TypeInstrumentation` often embed advice classes as static inner
 classes. These classes are referred to by name when applying advice classes to methods in
 the `transform()` method.
