@@ -41,7 +41,8 @@ public class Bridging {
   private static final Logger logger = Logger.getLogger(Bridging.class.getName());
 
   public static application.io.opentelemetry.api.trace.Span toApplication(Span agentSpan) {
-    // we add ApplicationSpanHolder interface to span implementations used in agent via instrumentation
+    // we add ApplicationSpanHolder interface to span implementations used in agent via
+    // instrumentation
     // this lets us associate the original application span with the agent span so we can convert
     // the agent span back to exactly the same application span that the agent span was created for
     if (agentSpan instanceof ApplicationSpanHolder) {
