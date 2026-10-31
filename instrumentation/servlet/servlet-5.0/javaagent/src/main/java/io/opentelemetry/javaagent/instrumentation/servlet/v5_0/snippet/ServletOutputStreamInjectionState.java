@@ -16,16 +16,17 @@ public class ServletOutputStreamInjectionState {
 
   public static void initializeInjectionStateIfNeeded(
       ServletOutputStream servletOutputStream, Servlet5SnippetInjectingResponseWrapper wrapper) {
-    InjectionState state = VIRTUAL_FIELD.get(servletOutputStream);
-    if (state == null || state.getWrapper() != wrapper) {
-      state = new InjectionState(wrapper);
-      VIRTUAL_FIELD.set(servletOutputStream, state);
-    }
+    VIRTUAL_FIELD.set(servletOutputStream, wrapper.getInjectionState());
   }
 
   @Nullable
   public static InjectionState getInjectionState(ServletOutputStream servletOutputStream) {
-    return VIRTUAL_FIELD.get(servletOutputStream);
+    InjectionState state = VIRTUAL_FIELD.get(servletOutputStream);
+    if (state != null && !state.isCurrentRequest()) {
+      VIRTUAL_FIELD.set(servletOutputStream, null);
+      return null;
+    }
+    return state;
   }
 
   private ServletOutputStreamInjectionState() {}

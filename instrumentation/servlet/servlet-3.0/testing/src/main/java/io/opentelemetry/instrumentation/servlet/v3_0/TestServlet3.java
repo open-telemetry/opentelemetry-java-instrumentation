@@ -25,6 +25,7 @@ import java.io.PrintWriter;
 import java.util.concurrent.CountDownLatch;
 import javax.servlet.AsyncContext;
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -111,6 +112,31 @@ public class TestServlet3 {
             }
             return null;
           });
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetForward extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength(1000);
+      resp.getOutputStream().write("<head>".getBytes(UTF_8));
+      req.getRequestDispatcher(HTML_PRINT_WRITER.getPath()).forward(req, resp);
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength(1000);
+      resp.getWriter().write("<head>");
+      AsyncContext context = req.startAsync();
+      context.getResponse().resetBuffer();
+      context.dispatch(HTML_PRINT_WRITER.getPath());
     }
   }
 

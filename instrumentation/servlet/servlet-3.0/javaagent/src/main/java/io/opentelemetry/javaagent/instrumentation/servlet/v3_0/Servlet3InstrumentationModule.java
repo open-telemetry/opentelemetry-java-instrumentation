@@ -15,8 +15,10 @@ import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncCont
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncContextStartInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncStartInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.service.RequestDispatcherForwardInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletOutputStreamInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletResponseResetInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -51,6 +53,10 @@ public class Servlet3InstrumentationModule extends InstrumentationModule {
             adviceClassName(".Servlet3OutputStreamWriteBytesAndOffsetAdvice"),
             adviceClassName(".Servlet3OutputStreamWriteBytesAdvice"),
             adviceClassName(".Servlet3OutputStreamWriteIntAdvice")),
+        new ServletResponseResetInstrumentation(
+            BASE_PACKAGE, adviceClassName(".Servlet3ResponseResetAdvice")),
+        new RequestDispatcherForwardInstrumentation(
+            BASE_PACKAGE, adviceClassName(".Servlet3RequestDispatcherForwardAdvice")),
         new HttpServletResponseInstrumentation(
             BASE_PACKAGE, adviceClassName(".Servlet3ResponseSendAdvice")));
   }

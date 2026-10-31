@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -109,6 +110,31 @@ public class TestServlet5 {
             }
             return null;
           });
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetForward extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength(1000);
+      resp.getOutputStream().write("<head>".getBytes(UTF_8));
+      req.getRequestDispatcher(HTML_PRINT_WRITER.getPath()).forward(req, resp);
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength(1000);
+      resp.getWriter().write("<head>");
+      AsyncContext context = req.startAsync();
+      context.getResponse().resetBuffer();
+      context.dispatch(HTML_PRINT_WRITER.getPath());
     }
   }
 
