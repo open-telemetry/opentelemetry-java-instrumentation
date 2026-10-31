@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -73,30 +75,18 @@ testing {
   }
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
+testing.suites.withType(JvmTestSuite::class).configureEach {
+  executions {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
+    }
 
-  val testSuites = testing.suites.withType(JvmTestSuite::class)
-
-  val experimentalSuites = testSuites.map { suite ->
-    register<Test>("${suite.name}Experimental") {
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
+    register("Experimental") {
       jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
       systemProperty("metadataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
-    }
-  }
-
-  check {
-    dependsOn(testing.suites, experimentalSuites)
-  }
-
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
     }
   }
 }

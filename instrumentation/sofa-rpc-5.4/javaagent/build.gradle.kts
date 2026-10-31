@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -28,26 +30,22 @@ testing {
   }
 }
 
-tasks.withType<Test>().configureEach {
-  systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-}
+testing.suites.withType(JvmTestSuite::class).configureEach {
+  executions {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
+    }
 
-val exceptionSignalLogsSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-  tasks.register<Test>("${suite.name}ExceptionSignalLogs") {
-    testClassesDirs = suite.sources.output.classesDirs
-    classpath = suite.sources.runtimeClasspath
-
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
-  }
-}
-
-tasks {
-  check {
-    dependsOn(testing.suites, exceptionSignalLogsSuites)
+    register("ExceptionSignalLogs") {
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+      systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+    }
   }
 }
 
@@ -57,11 +55,5 @@ configurations.named("testSofaRpcRuntimeClasspath") {
     force("ch.qos.logback:logback-classic:1.2.13")
     force("ch.qos.logback:logback-core:1.2.13")
     force("org.slf4j:slf4j-api:1.7.21")
-  }
-}
-
-if (otelProps.denyUnsafe) {
-  tasks.withType<Test>().configureEach {
-    enabled = false
   }
 }
