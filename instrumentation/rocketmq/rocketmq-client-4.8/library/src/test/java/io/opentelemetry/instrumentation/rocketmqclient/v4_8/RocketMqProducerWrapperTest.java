@@ -324,7 +324,7 @@ class RocketMqProducerWrapperTest {
   void delegatesLifecycleAndSingleMessageSends() throws Exception {
     DefaultMQProducer producer = mock(DefaultMQProducer.class);
     when(producer.getDefaultMQProducerImpl()).thenReturn(implementation);
-    MQProducer wrapped = RocketMqTelemetry.create(testing.getOpenTelemetry()).wrap(producer);
+    MQProducer wrapped = RocketMqTelemetry.create(testing.getOpenTelemetry()).instrument(producer);
     Message message = messages(1).get(0);
     wrapped.start();
     wrapped.send(message);
@@ -448,7 +448,7 @@ class RocketMqProducerWrapperTest {
               }
               return answer.answer(invocation);
             });
-    return RocketMqTelemetry.create(testing.getOpenTelemetry()).wrap(producer);
+    return RocketMqTelemetry.create(testing.getOpenTelemetry()).instrument(producer);
   }
 
   private static List<Message> messages(int count) {

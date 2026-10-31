@@ -10,6 +10,7 @@ import static java.lang.invoke.MethodType.methodType;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nullable;
 import org.restlet.Message;
 import org.restlet.data.Form;
@@ -28,18 +29,39 @@ public final class MessageAttributesAccessor {
 
   @Nullable
   private static MethodHandle findGetAttributes() {
+    MethodHandles.Lookup lookup = MethodHandles.lookup();
     try {
-      return MethodHandles.lookup().unreflect(Message.class.getMethod("getAttributes"));
+      return lookup.findVirtual(Message.class, "getAttributes", methodType(Map.class));
     } catch (NoSuchMethodException | IllegalAccessException ignored) {
-      return null;
+      // changed the return type to ConcurrentMap in version 2.1
+      try {
+        return lookup.findVirtual(Message.class, "getAttributes", methodType(ConcurrentMap.class));
+      } catch (NoSuchMethodException | IllegalAccessException ignore) {
+        return null;
+      }
     }
   }
 
   @Nullable
   private static MethodHandle findSetValue() {
+    Class<?> setValueReturnType;
+    try {
+      // changed the generic bound to NamedValue in version 2.1; earlier than that it's Parameter
+      setValueReturnType =
+          Class.forName("org.restlet.util.NamedValue", false, Series.class.getClassLoader());
+    } catch (ClassNotFoundException ignored) {
+      try {
+        setValueReturnType =
+            Class.forName("org.restlet.data.Parameter", false, Series.class.getClassLoader());
+      } catch (ClassNotFoundException ignore) {
+        return null;
+      }
+    }
+
     try {
       return MethodHandles.lookup()
-          .unreflect(Series.class.getMethod("set", String.class, String.class));
+          .findVirtual(
+              Series.class, "set", methodType(setValueReturnType, String.class, String.class));
     } catch (NoSuchMethodException | IllegalAccessException ignored) {
       return null;
     }
