@@ -117,11 +117,11 @@ public class AdviceCallForwardingTransformer implements AgentBuilder.Transformer
                           classLoader == null
                               ? bootForwardClassPackage + ".Forward$$" + counter.incrementAndGet()
                               : adviceClassName + "$$Forward$$" + counter.incrementAndGet();
-                      String forwardClassSlasName = forwardClassDotName.replace('.', '/');
+                      String forwardClassInternalName = forwardClassDotName.replace('.', '/');
 
                       Supplier<byte[]> forwardClassBytes =
                           generateForwardClass(
-                              forwardClassSlasName,
+                              forwardClassInternalName,
                               name,
                               descriptor,
                               bootstrapMethodHandle,
@@ -131,7 +131,7 @@ public class AdviceCallForwardingTransformer implements AgentBuilder.Transformer
                       // replace invokedynamic with invokestatic to the generated forwarder class
                       // the forwarder class will contain the original invokedynamic instruction
                       super.visitMethodInsn(
-                          Opcodes.INVOKESTATIC, forwardClassSlasName, name, descriptor, false);
+                          Opcodes.INVOKESTATIC, forwardClassInternalName, name, descriptor, false);
                       return;
                     }
 
@@ -146,7 +146,7 @@ public class AdviceCallForwardingTransformer implements AgentBuilder.Transformer
   }
 
   private static Supplier<byte[]> generateForwardClass(
-      String forwardClassSlasName,
+      String forwardClassInternalName,
       String methodName,
       String methodDescriptor,
       Handle bootstrapMethodHandle,
@@ -156,7 +156,7 @@ public class AdviceCallForwardingTransformer implements AgentBuilder.Transformer
       cw.visit(
           Opcodes.V1_8,
           Opcodes.ACC_PUBLIC,
-          forwardClassSlasName,
+          forwardClassInternalName,
           null,
           Type.getInternalName(Object.class),
           null);

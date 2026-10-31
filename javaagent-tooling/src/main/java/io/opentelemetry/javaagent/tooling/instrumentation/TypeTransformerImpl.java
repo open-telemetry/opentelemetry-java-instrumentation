@@ -38,7 +38,7 @@ public final class TypeTransformerImpl implements TypeTransformer {
                     new Advice.AssignReturned.Factory().withSuppressed(Throwable.class)))
             .bootstrap(
                 IndyBootstrap.getIndyBootstrapMethod(),
-                IndyBootstrap.getAdviceBootstrapArguments(instrumentationModule),
+                IndyBootstrap.createBootstrapArgumentResolverFactory(instrumentationModule),
                 TypeDescription.Generic.Visitor.Generalizing.INSTANCE);
   }
 
@@ -65,7 +65,7 @@ public final class TypeTransformerImpl implements TypeTransformer {
           // verify that advice does not call VirtualField.find
           // NOTE: this check is here to help converting the advice for the indy instrumentation,
           // it can be removed once the conversion is completed
-          VirtualFieldChecker.check(bytes);
+          AdviceVirtualFieldUsageChecker.check(bytes);
           return bytes;
         });
   }
