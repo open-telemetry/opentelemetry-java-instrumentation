@@ -76,7 +76,10 @@ method, even when the helper is nested in an advice class.
 
 ## Returned-value assignment typing
 
-Both `TypeTransformerImpl` and `IndyTypeTransformerImpl` install
+Both [TypeTransformerImpl](../../../javaagent-tooling/src/main/java/io/opentelemetry/javaagent/tooling/instrumentation/indy/TypeTransformerImpl.java)
+(the indy transformer) and
+[InjectingTypeTransformerImpl](../../../javaagent-tooling/src/main/java/io/opentelemetry/javaagent/tooling/instrumentation/InjectingTypeTransformerImpl.java)
+(the injected-helper transformer) install
 `ForceDynamicallyTypedAssignReturnedFactory`. It forces dynamic typing for
 `@Advice.AssignReturned` mappings, including nested `@ToArgument` and `@ToField` annotations.
 Omit explicit `typing = Assigner.Typing.DYNAMIC` on these mappings:

@@ -38,14 +38,14 @@ import org.objectweb.asm.commons.GeneratorAdapter;
  * instructions in a helper class that contains the original {@code INVOKEDYNAMIC} instruction in
  * classes that do not support {@code INVOKEDYNAMIC} (i.e. pre Java 7 class files).
  */
-public class ForwardIndyAdviceTransformer implements AgentBuilder.Transformer {
+public class AdviceForwardingTransformer implements AgentBuilder.Transformer {
   private static final AtomicInteger counter = new AtomicInteger();
   private static final String bootForwardClassPackage =
       AdviceForwardLookupSupplier.class.getPackage().getName();
 
   private final HelperInjector helperInjector;
 
-  public ForwardIndyAdviceTransformer(HelperInjector helperInjector) {
+  public AdviceForwardingTransformer(HelperInjector helperInjector) {
     this.helperInjector = helperInjector;
   }
 
