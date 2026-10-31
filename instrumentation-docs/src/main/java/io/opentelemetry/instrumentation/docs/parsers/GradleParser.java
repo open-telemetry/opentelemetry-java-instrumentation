@@ -95,8 +95,7 @@ public class GradleParser {
       String versionRange = extractLiteralValue(passBlock, "versions");
 
       if (group != null && module != null && versionRange != null) {
-        String summary = group + ":" + module + ":" + versionRange;
-        results.add(summary);
+        results.add(group + ":" + module + ":" + versionRange);
       }
     }
     return new DependencyInfo(results, minJavaVersion);
@@ -141,35 +140,18 @@ public class GradleParser {
 
   @Nullable
   private static String extractLiteralValue(String text, String property) {
-    String argument =
-        extractValue(text, Pattern.quote(property) + "\\.set\\((\"[^\"]*\"|[^)]*)\\)");
-    if (argument == null) {
+    Pattern pattern = Pattern.compile(Pattern.quote(property) + "\\.set\\((\"[^\"]*\"|[^)]*)\\)");
+    Matcher matcher = pattern.matcher(text);
+    if (!matcher.find()) {
       return null;
     }
 
-    Matcher matcher = stringLiteralPattern.matcher(argument.trim());
+    matcher = stringLiteralPattern.matcher(matcher.group(1).trim());
     if (!matcher.matches() || matcher.group(1).contains("$")) {
       throw new IllegalArgumentException(
           "Muzzle " + property + ".set(...) must use a literal string");
     }
     return matcher.group(1);
-  }
-
-  /**
-   * Utility method to extract the first captured group from matching the given regex.
-   *
-   * @param text Text to search
-   * @param regex Regex with a capturing group
-   * @return The first captured group, or null if not found
-   */
-  @Nullable
-  private static String extractValue(String text, String regex) {
-    Pattern pattern = Pattern.compile(regex);
-    Matcher matcher = pattern.matcher(text);
-    if (matcher.find()) {
-      return matcher.group(1);
-    }
-    return null;
   }
 
   public static Set<String> extractVersions(
