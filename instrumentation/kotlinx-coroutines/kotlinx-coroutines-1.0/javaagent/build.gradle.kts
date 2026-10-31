@@ -11,6 +11,7 @@ muzzle {
     module.set("kotlinx-coroutines-core")
     versions.set("[1.0.0,1.3.8)")
     excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.flow.KotlinCoroutinesFlowInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.AnnotationInstrumentationModule")
     extraDependency(project(":instrumentation-annotations"))
     extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
   }
@@ -21,6 +22,20 @@ muzzle {
     versions.set("[1.3.9,)")
     assertInverse.set(true)
     excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.flow.KotlinCoroutinesFlowInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.AnnotationInstrumentationModule")
+    extraDependency(project(":instrumentation-annotations"))
+    extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
+  }
+  pass {
+    // instrumentation-docs:ignore - verification only, @WithSpan on suspend functions needs 1.4.3+
+    name.set("Kotlin Coroutines annotations")
+    group.set("org.jetbrains.kotlinx")
+    module.set("kotlinx-coroutines-core-jvm")
+    versions.set("[1.4.3,)")
+    assertInverse.set(true)
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.KotlinCoroutinesInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.flow.KotlinCoroutinesFlowInstrumentationModule")
+    excludeInstrumentationName("opentelemetry-instrumentation-annotations-1.16")
     extraDependency(project(":instrumentation-annotations"))
     extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
   }
@@ -67,8 +82,8 @@ dependencies {
   testImplementation(project(":instrumentation:reactor:reactor-3.1:library"))
   testImplementation(project(":instrumentation-annotations"))
 
-  testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0")
-  testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.0.0")
+  testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
+  testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.4.3")
   testLibrary("io.vertx:vertx-lang-kotlin-coroutines:3.6.0")
 }
 
@@ -87,10 +102,10 @@ testing {
         implementation("io.opentelemetry:opentelemetry-extension-kotlin")
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
         implementation(
-          "org.jetbrains.kotlinx:kotlinx-coroutines-core:${baseVersion("1.3.0").orLatest()}",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-core:${baseVersion("1.4.3").orLatest()}",
         )
         implementation(
-          "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:${baseVersion("1.3.0").orLatest()}",
+          "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:${baseVersion("1.4.3").orLatest()}",
         )
         implementation(project(":instrumentation:reactor:reactor-3.1:library"))
         implementation(project(":instrumentation-annotations"))
