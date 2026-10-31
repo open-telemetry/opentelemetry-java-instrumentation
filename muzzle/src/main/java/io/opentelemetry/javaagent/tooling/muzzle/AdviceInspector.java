@@ -42,8 +42,8 @@ public class AdviceInspector {
     Boolean result =
         useIsolatedAdvice(instrumentationModule, adviceClassNames(instrumentationModule));
 
-    // we aren't able to tell whether the instrumentation is ready for indy instrumentation or not,
-    // so we assume that it is not
+    // we aren't able to tell whether the instrumentation is ready for isolated advice loading or
+    // not, so we assume that it is not
     return result != null ? result : false;
   }
 
@@ -57,23 +57,25 @@ public class AdviceInspector {
     if (mode == AdviceMode.ALL_INLINE) {
       return false;
     }
-    // Having all advice non-inline is treated as a marker that the instrumentation can use indy.
+    // Having all advice non-inline is treated as a marker that the instrumentation can use isolated
+    // advice loading.
     // Users can override the selection by explicitly choosing how to load helper classes.
     if (mode == AdviceMode.ALL_NON_INLINE) {
       return true;
     }
 
     // no advice annotations were used so the instrumentation is using an AgentBuilder.Transformer
-    // injected class names makes sense only for indy instrumentation
+    // injected class names makes sense only for isolated helper loading
     if (!instrumentationModule.injectedClassNames().isEmpty()) {
       return true;
     }
-    // exposed class names makes sense only for indy instrumentation
+    // exposed class names makes sense only for isolated helper loading
     if (!instrumentationModule.exposedClassNames().isEmpty()) {
       return true;
     }
 
-    // we aren't able to tell whether the instrumentation is ready for indy instrumentation or not
+    // we aren't able to tell whether the instrumentation is ready for isolated advice loading or
+    // not
     return null;
   }
 
@@ -97,12 +99,12 @@ public class AdviceInspector {
                   .getName()
                   .equals(annotation.getAnnotationType().getName())) {
             AnnotationValue<?, ?> value = annotation.getValue("inline");
-            // While it is possible to use non-inline advice with the non-indy instrumentation, by
-            // adding the advice classes as helper classes, we assume that nobody relies on that.
-            // Having a non-inline advice is treated as a marker that the instrumentation can use
-            // indy.
-            // Similarly inline advice could be used with indy instrumentation, but we assume that
-            // if inline advice is used, then it is not indy ready.
+            // While it is possible to use ordinary advice with injected advice classes, we assume
+            // that nobody relies on that.
+            // Having ordinary advice is treated as a marker that the instrumentation can use
+            // isolated advice loading.
+            // Similarly inline advice could be used with isolated helper loading, but we assume
+            // that if inline advice is used, then it is not ready for isolated advice loading.
             if (value.getState().isDefined() && Boolean.FALSE.equals(value.resolve())) {
               nonInlineCount++;
             } else {

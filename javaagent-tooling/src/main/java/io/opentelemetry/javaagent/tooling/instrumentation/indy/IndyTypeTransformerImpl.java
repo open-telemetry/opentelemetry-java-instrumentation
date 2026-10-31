@@ -61,7 +61,7 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
         classFileLocator,
         (slashClassName, bytes) -> {
           // verify that advice does not call VirtualField.find
-          // NOTE: this check is here to help converting the advice for the indy instrumentation,
+          // NOTE: this check is here to help converting the advice to ordinary advice,
           // it can be removed once the conversion is completed
           VirtualFieldChecker.check(bytes);
           return bytes;

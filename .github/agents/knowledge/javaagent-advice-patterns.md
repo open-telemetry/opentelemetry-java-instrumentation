@@ -61,11 +61,11 @@ public void onEnter(/* ... */) { /* ... */ }
 
 Advice classes should also have **no instance fields** — they are never instantiated.
 
-## Keep production advice non-inlined
+## Use ordinary production advice
 
-Use `inline = false` consistently throughout each production module. Mixing inlined and non-inlined advice disables automatic indy isolation.
+Use `inline = false` consistently throughout each production module. Mixing inline and ordinary advice disables automatic helper isolation.
 
-Use OpenTelemetry APIs directly in non-inlined advice and ordinary helpers, for example
+Use OpenTelemetry APIs directly in ordinary advice and ordinary helpers, for example
 `Context.current()` and `Span.fromContext(context)`.
 
 In genuinely inlined advice in the two internal exceptions, static interface calls cannot be

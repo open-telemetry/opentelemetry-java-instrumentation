@@ -182,7 +182,7 @@ keep the PR.
   that can disable telemetry, leak memory, deadlock, or otherwise break
   normal operation (removal of an early `GlobalOpenTelemetry.get()`
   call; closing bridged callbacks on GC; fixing an agent deadlock).
-- Agent transformation correctness: `@Advice` inline vs indy, advice
+- Agent transformation correctness: `@Advice` ordinary vs inline advice, advice
   scope, helper-class exposure to the application class loader.
 - Any public or extension-facing API, builder method, config key, or
   semconv surface, even when the diff also includes plumbing.

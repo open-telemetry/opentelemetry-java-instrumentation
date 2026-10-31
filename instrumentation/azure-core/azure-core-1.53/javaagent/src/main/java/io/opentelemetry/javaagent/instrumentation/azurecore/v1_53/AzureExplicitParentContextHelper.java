@@ -16,8 +16,8 @@ import java.util.Optional;
  * <p>In the agent the application's {@code io.opentelemetry.context.Context} (referenced here as
  * {@code application.io.opentelemetry.context.Context}) is bridged to the agent context by the
  * opentelemetry-api instrumentation. Making the application context current and reading back the
- * agent context performs that conversion using only public API, so this works in both inline and
- * indy mode without reaching into agent-internal helper classes.
+ * agent context performs that conversion using only public API, so this works with both ordinary
+ * and inline advice without reaching into agent-internal helper classes.
  */
 public final class AzureExplicitParentContextHelper {
 
