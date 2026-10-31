@@ -41,8 +41,8 @@ class FileDescriptorTest {
   void registerObservers() {
     // we have to test for positive and negative values in the same test as the metric is only
     // registered for positive values.
-    when(osBean.getOpenFileDescriptorCount()).thenReturn(-1L, 42L);
-    when(osBean.getMaxFileDescriptorCount()).thenReturn(-1L, 100L);
+    when(osBean.getOpenFileDescriptorCount()).thenReturn(-1L, Long.MAX_VALUE, 42L);
+    when(osBean.getMaxFileDescriptorCount()).thenReturn(-1L, Long.MAX_VALUE, 100L);
     FileDescriptor.registerObservers(testing.getOpenTelemetry().getMeter("test"), osBean);
 
     testing.waitAndAssertMetrics(
