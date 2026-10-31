@@ -292,8 +292,13 @@ public class AnnotationInstrumentationHelper {
       ContinuationInterceptor interceptor = callerContext.get(ContinuationInterceptor.Key);
       if (interceptor != null && INTERCEPTED != null) {
         try {
-          INTERCEPTED.set(
-              this, interceptor.interceptContinuation(new CallerResumption(this, callerContext)));
+          Continuation<Object> resumption = new CallerResumption(this, callerContext);
+          Continuation<Object> intercepted = interceptor.interceptContinuation(resumption);
+          // an interceptor that does not wrap the continuation must not be asked to release it,
+          // so keep the default, which intercepts this frame
+          if (intercepted != resumption) {
+            INTERCEPTED.set(this, intercepted);
+          }
         } catch (IllegalAccessException | RuntimeException e) {
           // fall back to intercepting this frame
           logger.log(FINE, "Failed to set the intercepted continuation of the tail call frame", e);

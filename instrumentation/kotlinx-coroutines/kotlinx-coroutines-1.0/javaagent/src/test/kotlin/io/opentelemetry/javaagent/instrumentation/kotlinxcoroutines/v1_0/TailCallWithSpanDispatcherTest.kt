@@ -220,6 +220,20 @@ class TailCallWithSpanDispatcherTest {
     )
   }
 
+  // The runtime releases only continuations that the interceptor wrapped.
+  @Test
+  fun `continuation not wrapped by the interceptor is not released`() {
+    val interceptor = PassThroughInterceptor()
+    assertThat(runWith(interceptor) { annotatedImmediate() }).isEqualTo(1)
+    assertThat(runWith(interceptor) { annotatedSuspending() }).isEqualTo(2)
+    assertThat(interceptor.released.get()).isZero()
+
+    testing.waitAndAssertTraces(
+      { trace -> trace.hasSpansSatisfyingExactly({ it.hasName("immediate").hasNoParent() }) },
+      { trace -> trace.hasSpansSatisfyingExactly({ it.hasName("suspending").hasNoParent() }) },
+    )
+  }
+
   private fun runWith(interceptor: ContinuationInterceptor, block: suspend () -> Int): Int {
     val result = CompletableFuture<Int>()
     block.startCoroutine(Continuation(interceptor) { result.complete(it.getOrThrow()) })
@@ -251,6 +265,19 @@ class TailCallWithSpanDispatcherTest {
       intercepted.incrementAndGet()
       return object : Continuation<T> by continuation {}
     }
+
+    override fun releaseInterceptedContinuation(continuation: Continuation<*>) {
+      released.incrementAndGet()
+    }
+  }
+
+  // Returns each continuation unchanged; counts the releases that the runtime should never make.
+  private class PassThroughInterceptor :
+    AbstractCoroutineContextElement(ContinuationInterceptor),
+    ContinuationInterceptor {
+    val released = AtomicInteger()
+
+    override fun <T> interceptContinuation(continuation: Continuation<T>): Continuation<T> = continuation
 
     override fun releaseInterceptedContinuation(continuation: Continuation<*>) {
       released.incrementAndGet()
