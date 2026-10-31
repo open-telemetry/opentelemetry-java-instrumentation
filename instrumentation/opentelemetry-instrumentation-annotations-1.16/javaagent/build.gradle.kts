@@ -42,7 +42,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("WithSpanInstrumentationTest.excludedMethod")
+      includeTestsMatching("WithSpanInstrumentationTest.excludedMethod*")
       includeTestsMatching("WithSpanInstrumentationTest.deriveAutomaticName")
     }
     jvmArgs(
