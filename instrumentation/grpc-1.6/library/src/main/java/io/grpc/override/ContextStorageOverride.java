@@ -33,7 +33,7 @@ public final class ContextStorageOverride extends Context.Storage {
   }
 
   private static final class ThreadLocalContextStorage extends Context.Storage {
-    private final ThreadLocal<Context> current = new ThreadLocal<>();
+    private static final ThreadLocal<Context> current = new ThreadLocal<>();
 
     @Override
     public Context doAttach(Context toAttach) {
