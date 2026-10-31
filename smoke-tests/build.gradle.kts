@@ -145,4 +145,10 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
   }
+
+  if (System.getProperty("os.name").lowercase().contains("windows")) {
+    named<Test>("testAdditionalVariants") {
+      mustRunAfter(named("testLimitedMatrix"))
+    }
+  }
 }
