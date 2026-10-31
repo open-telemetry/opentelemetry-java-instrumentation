@@ -86,10 +86,24 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
     Servlet5ResponseInjectionState.set(response, injectionState);
   }
 
+  public static void beginForward(HttpServletRequest request) {
+    Object state = request.getAttribute(STATE_ATTRIBUTE);
+    if (state instanceof InjectionState) {
+      ((InjectionState) state).beginForward();
+    }
+  }
+
   public static void resetForForward(HttpServletRequest request) {
     Object state = request.getAttribute(STATE_ATTRIBUTE);
     if (state instanceof InjectionState) {
       ((InjectionState) state).resetForForward();
+    }
+  }
+
+  public static void finishForward(HttpServletRequest request, boolean successful) {
+    Object state = request.getAttribute(STATE_ATTRIBUTE);
+    if (state instanceof InjectionState) {
+      ((InjectionState) state).finishForward(successful);
     }
   }
 
@@ -189,11 +203,11 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
 
   @Override
   public PrintWriter getWriter() throws IOException {
-    injectionState.useWriter();
     if (snippetInjectingPrintWriter == null) {
       snippetInjectingPrintWriter =
           new SnippetInjectingPrintWriter(super.getWriter(), snippet, injectionState);
     }
+    injectionState.useWriter();
     return snippetInjectingPrintWriter;
   }
 

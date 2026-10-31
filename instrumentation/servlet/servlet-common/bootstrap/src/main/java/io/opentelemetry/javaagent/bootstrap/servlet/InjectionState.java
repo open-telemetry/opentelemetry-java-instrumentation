@@ -18,6 +18,7 @@ public final class InjectionState {
   private long contentLength = -1;
   private boolean contentLengthAdjusted;
   private boolean writer;
+  private boolean forwardPending;
 
   public InjectionState(SnippetInjectingResponseWrapper wrapper) {
     this(wrapper, () -> true);
@@ -34,6 +35,10 @@ public final class InjectionState {
 
   public void useWriter() {
     writer = true;
+  }
+
+  public void beginForward() {
+    forwardPending = true;
   }
 
   public boolean shouldProcessStreamWrite() {
@@ -64,6 +69,10 @@ public final class InjectionState {
   public void resetBuffer() {
     wrapper.resetContentLengthIfPreviouslyAdjusted();
     headTagBytesSeen = 0;
+    if (forwardPending) {
+      forwardPending = false;
+      writer = false;
+    }
   }
 
   public void reset() {
@@ -71,11 +80,24 @@ public final class InjectionState {
     contentLength = -1;
     contentLengthAdjusted = false;
     writer = false;
+    forwardPending = false;
   }
 
   public void resetForForward() {
-    resetBuffer();
-    writer = false;
+    if (forwardPending) {
+      resetBuffer();
+    }
+  }
+
+  public void finishForward(boolean successful) {
+    if (!forwardPending) {
+      return;
+    }
+    if (successful) {
+      resetBuffer();
+    } else {
+      forwardPending = false;
+    }
   }
 
   public int getHeadTagBytesSeen() {

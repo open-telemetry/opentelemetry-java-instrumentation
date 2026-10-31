@@ -24,6 +24,7 @@
   <servlet>
     <servlet-name>Jsp</servlet-name>
     <servlet-class>io.opentelemetry.smoketest.matrix.JspServlet</servlet-class>
+    <async-supported>true</async-supported>
   </servlet>
   <servlet-mapping>
     <servlet-name>Headers</servlet-name>

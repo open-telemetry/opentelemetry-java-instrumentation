@@ -18,6 +18,7 @@ import org.apache.hc.core5.http.impl.io.HttpRequestExecutor;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 import org.apache.hc.core5.http.protocol.HttpCoreContext;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 abstract class JettySmokeTest extends AppServerTest {
@@ -64,6 +65,44 @@ abstract class JettySmokeTest extends AppServerTest {
       }
     }
     testing.waitForTraces(2);
+  }
+
+  @Test
+  void jspInjectionSurvivesForwardAndRawAsyncReset() {
+    Assumptions.assumeTrue(serverVersion.startsWith("10.") || serverVersion.startsWith("11."));
+
+    assertJspScenario("stream-forward");
+    assertJspScenario("async-reset");
+
+    testing.waitForTraces(2);
+  }
+
+  private void assertJspScenario(String scenario) {
+    var response = client().get("/app/jsp?snippetScenario=" + scenario).aggregate().join();
+    String jspBody =
+        "\n\n<html>\n"
+            + "  <head>\n"
+            + "    <title>Successful JSP test</title>\n"
+            + "  </head>\n"
+            + "  <body>\n"
+            + "    This JSP demonstrates that Otel instrumentation agent does not break JSP compilation and loading.\n"
+            + "  </body>\n"
+            + "</html>\n";
+    String snippet = "<script>console.log(hi)</script>";
+    String expected = jspBody.replace("<head>", "<head>" + snippet);
+    String body = response.contentUtf8().replace("\r\n", "\n");
+
+    assertThat(response.status().code()).isEqualTo(200);
+    assertThat(body).isEqualTo(expected);
+    assertThat(body).containsOnlyOnce(snippet);
+    if (!isWindows) {
+      assertThat(jspBody.getBytes(UTF_8)).hasSize(196);
+      assertThat(body.getBytes(UTF_8)).hasSize(228);
+    }
+    long contentLength = response.headers().contentLength();
+    if (contentLength >= 0) {
+      assertThat(contentLength).isEqualTo(body.getBytes(UTF_8).length);
+    }
   }
 
   private static void assertContentLength(ClassicHttpResponse response, byte[] body) {
