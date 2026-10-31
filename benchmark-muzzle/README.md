@@ -173,6 +173,12 @@ and fresh configuration cache. Preparation freezes Maven metadata, fetches each
 sample's dependencies, and prepares compilation caches outside the measured commands.
 Fresh-checkout compilation and shading outcomes remain visible in the results.
 
+Both cache backends run Gradle with dependency resolution online. Develocity disables
+its remote cache under `--offline`; keeping both backends online gives them the same
+resolution conditions. Aether version metadata remains frozen and offline.
+Dependencies are prewarmed, but any Gradle dependency requests during measurement
+are included in command timings.
+
 The scenarios are empty assertion caches, an identical sample after one cache
 writer, and new random samples after distinct prior writers. Empty-cache rounds use
 separate namespaces. Later random-sample candidates contribute to the next round's
@@ -182,6 +188,8 @@ uncached control and alternates baseline/candidate order.
 Every executed or cached assertion must produce a report identical to an
 independently executed assertion for the current seed. A missing report or an
 `UP-TO-DATE` assertion invalidates a fresh-checkout measurement.
+Same-sample candidates must restore every assertion; a miss fails verification
+and remains in the retained samples.
 Reports include assertion mode, exclusions, ordered artifact identities, hashes,
 and unresolved dependency outcomes. The opt-in cache additionally fingerprints
 instrumentation/tooling/bootstrap/application classpaths, JVM identity, and
@@ -190,8 +198,12 @@ invalidate a previously selected version's result.
 
 Results include raw command logs, per-seed assertion reports, cache outcomes,
 potential manifest overlap, paired timing differences, and preparation costs.
-These experiments isolate task-result caching, not live network or Gradle-home
-restore costs. Artifacts have a 30-day retention period.
+The workload identity includes online dependency resolution. Start with a new local
+smoke run to capture matching reference reports before sharing its inputs with both
+backends. This matters because online and offline resolution can report different
+failure types and messages for the same missing historical dependency.
+These experiments include Gradle network requests on a prepared workload, but not
+Gradle-home restoration or live Aether metadata lookup. Artifacts have a 30-day retention period.
 
 To verify reuse across jobs, dispatch the remote backend with one round, zero warm
 seeds, the original `workload-run-id`, and `probe-namespace` from the earlier remote

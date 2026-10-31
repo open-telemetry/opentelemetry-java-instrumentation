@@ -277,7 +277,7 @@ class BenchmarkTest(unittest.TestCase):
 
     def test_direct_builds_are_offline_timed_and_reject_invalid_measurements(self):
         for failure in (
-            "none", "configuration-reused", "changed-metadata", "changed-workload",
+            "none", "online-dependencies", "configuration-reused", "changed-metadata", "changed-workload",
             "compile-cache-miss", "configuration-not-stored", "assertion-not-executed",
             "command-failed",
         ):
@@ -294,6 +294,7 @@ class BenchmarkTest(unittest.TestCase):
                 runner.phases = []
                 runner.init_script = runner.root / "benchmark.init.gradle"
                 runner.env = {}
+                runner.dependency_offline = failure != "online-dependencies"
                 runner.workload = {"seed": 1729, "versions_limit": 10}
                 runner.task = ":instrumentation:muzzle1"
                 checkout = runner.checkouts["baseline"]
@@ -313,7 +314,7 @@ class BenchmarkTest(unittest.TestCase):
                     self.assertEqual(command[1], runner.task)
                     self.assertIn("--no-daemon", command)
                     self.assertIn("--configuration-cache", command)
-                    self.assertIn("--offline", command)
+                    self.assertEqual("--offline" in command, runner.dependency_offline)
                     self.assertIn("--no-scan", command)
                     self.assertIn("-PmuzzleBenchmarkRepositoryOffline=true", command)
                     self.assertNotIn("--stop", command)
@@ -343,7 +344,7 @@ class BenchmarkTest(unittest.TestCase):
                     patch.object(benchmark, "run", side_effect=fake_gradle) as child,
                     patch.object(benchmark.time, "perf_counter", side_effect=[10.0, 11.25]),
                 ):
-                    if failure == "none":
+                    if failure in ("none", "online-dependencies"):
                         metrics, tasks = runner.build("baseline", "round-1-baseline", offline=True)
                         self.assertEqual(metrics, {"total execution time": 1250})
                         self.assertEqual(tasks, {task: "EXECUTED"})

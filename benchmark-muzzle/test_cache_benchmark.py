@@ -18,7 +18,8 @@ class CacheBenchmarkTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
 
-            def initialize(runner, args):
+            def initialize(runner, args, *, dependency_offline):
+                self.assertFalse(dependency_offline)
                 runner.workload = {"seed": 42}
                 runner.expected = None
                 runner.revisions = {"baseline": "revision"}
@@ -183,7 +184,34 @@ class CacheBenchmarkTest(unittest.TestCase):
         ):
             runner.measured_round("empty", 1)
 
-    def test_writers_are_checked_against_an_uncached_offline_reference(self):
+    def test_same_sample_requires_cache_restoration_and_retains_misses(self):
+        for outcome in ("EXECUTED", "FROM-CACHE"):
+            runner = object.__new__(cache_benchmark.CacheBenchmark)
+            runner.namespace = "research"
+            runner.seed = 42
+            task = ":example:muzzle-AssertPass-library-1.0"
+            runner.expected_by_seed = {42: {task: "verified"}}
+            runner.prior_manifests = {task: "verified"}
+            runner.writers = 1
+            runner.cache_samples = []
+            with (
+                patch.object(runner, "fresh_build", side_effect=[
+                    ({"total execution time": 1}, {task: "EXECUTED"}),
+                    ({"total execution time": 1}, {task: "EXECUTED"}),
+                    ({"total execution time": 1}, {task: outcome}),
+                ]),
+                patch.object(runner, "write_results") as results,
+            ):
+                if outcome == "EXECUTED":
+                    with self.assertRaisesRegex(ValueError, "same-sample cache did not restore"):
+                        runner.measured_round("same", 1)
+                else:
+                    runner.measured_round("same", 1)
+                self.assertEqual(len(runner.cache_samples), 3)
+                self.assertEqual(runner.cache_samples[-1]["assertions"], {outcome: 1})
+                self.assertEqual(results.call_count, 3)
+
+    def test_writers_are_checked_against_an_uncached_reference(self):
         runner = object.__new__(cache_benchmark.CacheBenchmark)
         runner.preparation_ms = 0
         runner.prior_manifests = {}

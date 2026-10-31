@@ -130,9 +130,10 @@ def summary(samples):
 
 
 class Benchmark:
-    def __init__(self, args):
+    def __init__(self, args, *, dependency_offline=True):
         self.started = time.perf_counter()
         self.args = args
+        self.dependency_offline = dependency_offline
         self.source = args.repository.resolve()
         self.root = args.work_dir.resolve()
         if (
@@ -209,6 +210,8 @@ class Benchmark:
             self.workload, partition=args.partition, runtime=runtime,
             instrumentation_sources_sha256=fixtures["baseline"],
         )
+        if not dependency_offline:
+            self.input_identity["gradle_dependency_resolution"] = "online"
         if args.inputs:
             saved = json.loads((args.inputs / "identity.json").read_text(encoding="utf-8"))
             require_equal(self.input_identity, saved["workload"], "Saved workload identity")
@@ -277,7 +280,7 @@ class Benchmark:
             str(checkout / "gradlew"), self.task, "--no-daemon", "--configuration-cache",
             *self.properties(offline=self.frozen_metadata is not None),
         ]
-        if offline:
+        if offline and self.dependency_offline:
             command.append("--offline")
         started = time.perf_counter()
         success = False

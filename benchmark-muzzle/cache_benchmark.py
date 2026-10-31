@@ -28,7 +28,7 @@ class CacheBenchmark(benchmark.Benchmark):
                 "one round, and zero warm seeds"
             )
         args.baseline = args.candidate = args.revision
-        super().__init__(args)
+        super().__init__(args, dependency_offline=False)
         self.seed = self.workload["seed"]
         self.cache_assertions = False
         self.namespace = probe_namespace or f"muzzle-research-{uuid.uuid4().hex}"
@@ -55,6 +55,7 @@ class CacheBenchmark(benchmark.Benchmark):
         identity.update(
             remote_build_cache=args.backend == "remote",
             cache_conditions="fresh checkout, cold daemon, fresh configuration cache, warm dependencies",
+            dependency_resolution="online Gradle resolution, frozen offline Aether metadata",
             experiment={
                 "backend": args.backend, "namespace": self.namespace,
                 "warm_seeds": args.warm_seeds, "rounds": args.rounds,
@@ -151,6 +152,13 @@ class CacheBenchmark(benchmark.Benchmark):
                 self.prior_manifests.update(expected)
                 self.writers += 1
             self.write_results()
+            if (
+                scenario == "same" and self.cache_assertions
+                and assertions.get("FROM-CACHE", 0) != len(expected)
+            ):
+                raise ValueError(
+                    f"The same-sample cache did not restore every assertion: {dict(assertions)}"
+                )
 
     def measure(self):
         started = time.perf_counter()
@@ -215,8 +223,10 @@ class CacheBenchmark(benchmark.Benchmark):
         lines = [
             f"# Muzzle cache partition {self.args.partition}, {self.args.backend}",
             "",
-            "Every measured command uses a fresh checkout and cold daemon. Maven resolution is "
-            "offline against frozen metadata and prepared dependencies. Baseline and control execute "
+            "Every measured command uses a fresh checkout and cold daemon. Aether version metadata "
+            "is frozen and offline. Gradle dependency resolution remains online so remote build "
+            "caching is available; dependency requests are included in command timings. "
+            "Dependencies are prepared before measurement. Baseline and control execute "
             "all assertions; candidate enables result caching. Cached reports must exactly match "
             "the current seed's independently executed assertions.",
             "",
@@ -275,7 +285,8 @@ class CacheBenchmark(benchmark.Benchmark):
             "",
             "Fresh-checkout compilation and shading outcomes are retained, not assumed away. "
             "Preparation and checkout creation are excluded from command timings. This isolates "
-            "result-cache benefits; live CI download and cache-restore costs remain separate.",
+            "assertion caching on a prepared workload; Gradle network requests are included, but "
+            "Gradle-home restoration and live version-metadata resolution remain separate.",
             "",
             f"Complete: {complete}. No samples are retried or discarded.",
         ]
