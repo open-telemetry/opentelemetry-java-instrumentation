@@ -1,6 +1,11 @@
 name: Muzzle cache benchmark
 
 on:
+  push:
+    branches:
+      - trask-muzzle-caching-research
+    paths:
+      - .github/workflows/muzzle-cache-benchmark.yml
   workflow_dispatch:
     inputs:
       partitions:
@@ -62,6 +67,7 @@ jobs:
           path: gradle-plugins/build/reports/tests
 
   benchmark:
+    if: github.event_name == 'workflow_dispatch'
     needs: validate
     runs-on: ubuntu-24.04
     timeout-minutes: 360
