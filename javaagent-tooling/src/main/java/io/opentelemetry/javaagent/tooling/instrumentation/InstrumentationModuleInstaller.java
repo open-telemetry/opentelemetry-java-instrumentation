@@ -99,7 +99,7 @@ public final class InstrumentationModuleInstaller {
     if (useIsolatedHelperClasses) {
       return installModule(instrumentationModule, parentAgentBuilder);
     } else {
-      return installInjectingModule(instrumentationModule, parentAgentBuilder);
+      return installHelperInjectionModule(instrumentationModule, parentAgentBuilder);
     }
   }
 
@@ -193,7 +193,7 @@ public final class InstrumentationModuleInstaller {
               .transform(new ForwardIndyAdviceTransformer(helperInjector));
 
       extendableAgentBuilder =
-          InstrumentationClassLoaderRegistry.initializeModuleLoaderOnMatch(
+          InstrumentationClassLoaderRegistry.initializeModuleClassLoaderOnTransform(
               instrumentationModule, extendableAgentBuilder);
       extendableAgentBuilder = extendableAgentBuilder.transform(helperInjector);
       extendableAgentBuilder = contextProvider.injectHelperClasses(extendableAgentBuilder);
@@ -208,7 +208,7 @@ public final class InstrumentationModuleInstaller {
     return agentBuilder;
   }
 
-  private AgentBuilder installInjectingModule(
+  private AgentBuilder installHelperInjectionModule(
       InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     List<String> helperClassNames =
         InstrumentationModuleMuzzle.getHelperClassNames(instrumentationModule);
