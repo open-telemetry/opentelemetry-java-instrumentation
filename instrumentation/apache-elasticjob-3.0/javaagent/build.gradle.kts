@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -17,16 +20,10 @@ dependencies {
   testImplementation("org.apache.curator:curator-test:5.1.0")
 }
 
-tasks {
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.apache-elasticjob.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.apache-elasticjob.experimental-span-attributes=true")
-  }
-
-  check {
-    dependsOn(testExperimental)
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.apache-elasticjob.experimental-span-attributes", "true")
+    }
   }
 }
