@@ -16250,10 +16250,10 @@ libraries:
     name: io.opentelemetry.play-mvc-2.6
   has_javaagent: true
   javaagent_target_versions:
-  - com.typesafe.play:play_2.11:[2.6.0,)
+  - com.typesafe.play:play_$scalaVersion:[2.6.0,)
   - com.typesafe.play:play_2.12:[2.6.0,)
   - com.typesafe.play:play_2.13:[2.6.0,)
-  - org.playframework:play_3:[3.0.0,)
+  - org.playframework:play_3:[2.6.0,)
   configuration_refs:
   - common.controller-telemetry.enabled
   telemetry:
