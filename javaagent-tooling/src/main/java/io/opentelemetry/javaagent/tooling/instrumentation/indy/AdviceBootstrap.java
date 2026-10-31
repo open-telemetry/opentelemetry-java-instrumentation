@@ -136,7 +136,7 @@ public class AdviceBootstrap {
       MethodType adviceMethodType,
       Object[] args) {
     try {
-      // See the getAdviceBootstrapArguments method for the argument definitions
+      // See the createBootstrapArgumentResolverFactory method for the argument definitions
       return bootstrapAdvice(
           lookup,
           adviceMethodName,
@@ -179,18 +179,18 @@ public class AdviceBootstrap {
         return mutableCallSite;
       }
 
-      InstrumentationModuleClassLoader instrumentationClassloader =
+      InstrumentationModuleClassLoader instrumentationClassLoader =
           IndyModuleRegistry.getInstrumentationClassLoader(
               moduleClassName, lookup.lookupClass().getClassLoader());
 
       // Advices are not inlined. They are loaded as normal classes by the
-      // InstrumentationModuleClassloader and invoked via a method call from the instrumented method
-      Class<?> adviceClass = instrumentationClassloader.loadClass(adviceClassName);
+      // InstrumentationModuleClassLoader and invoked via a method call from the instrumented method
+      Class<?> adviceClass = instrumentationClassLoader.loadClass(adviceClassName);
       MethodType actualAdviceMethodType =
-          MethodType.fromMethodDescriptorString(adviceMethodDescriptor, instrumentationClassloader);
+          MethodType.fromMethodDescriptorString(adviceMethodDescriptor, instrumentationClassLoader);
 
       MethodHandle methodHandle =
-          instrumentationClassloader
+          instrumentationClassLoader
               .getLookup()
               .findStatic(adviceClass, adviceMethodName, actualAdviceMethodType)
               .asType(callSiteMethodType);
@@ -213,13 +213,13 @@ public class AdviceBootstrap {
     }
   }
 
-  static Advice.BootstrapArgumentResolver.Factory getAdviceBootstrapArguments(
+  static Advice.BootstrapArgumentResolver.Factory createBootstrapArgumentResolverFactory(
       InstrumentationModule instrumentationModule) {
-    String moduleName = instrumentationModule.getClass().getName();
+    String moduleClassName = instrumentationModule.getClass().getName();
     return (adviceMethod, exit) ->
         (instrumentedType, instrumentedMethod) ->
             asList(
-                JavaConstant.Simple.ofLoaded(moduleName),
+                JavaConstant.Simple.ofLoaded(moduleClassName),
                 JavaConstant.Simple.ofLoaded(adviceMethod.getDescriptor()),
                 JavaConstant.Simple.ofLoaded(adviceMethod.getDeclaringType().getName()));
   }
