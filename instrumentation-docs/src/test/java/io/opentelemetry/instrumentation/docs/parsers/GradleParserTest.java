@@ -56,7 +56,7 @@ class GradleParserTest {
               pass {
                 group.set("org.playframework")
                 module.set("play_3")
-                versions.set("[3.0.0,)")
+                versions.set("(,)")
                 assertInverse.set(true)
               }
             }""";
@@ -65,7 +65,7 @@ class GradleParserTest {
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
     assertThat(info.versions())
         .containsExactlyInAnyOrder(
-            "com.typesafe.play:play_2.11:[2.6.0,)", "org.playframework:play_3:[3.0.0,)");
+            "com.typesafe.play:play_2.11:[2.6.0,)", "org.playframework:play_3:(,)");
   }
 
   @Test
