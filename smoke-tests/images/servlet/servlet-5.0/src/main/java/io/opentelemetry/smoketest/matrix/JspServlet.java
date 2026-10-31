@@ -23,15 +23,23 @@ public class JspServlet extends HttpServlet {
       throws IOException, ServletException {
     String snippetScenario = req.getParameter("snippetScenario");
     if ("stream-forward".equals(snippetScenario)) {
+      resp.setHeader("X-Snippet-Scenario", snippetScenario);
       resp.setContentType("text/html");
       resp.getOutputStream().write("<head>".getBytes(UTF_8));
     } else if ("async-reset".equals(snippetScenario)) {
+      resp.setHeader("X-Snippet-Scenario", snippetScenario);
       resp.setContentType("text/html");
       resp.getWriter().write("<head>");
       AsyncContext asyncContext = req.startAsync();
       asyncContext.getResponse().resetBuffer();
       asyncContext.dispatch("/test.jsp");
       return;
+    } else if ("error-dispatch".equals(snippetScenario)) {
+      resp.setHeader("X-Snippet-Scenario", snippetScenario);
+      resp.setContentType("text/html;charset=UTF-8");
+      resp.setContentLength(1000);
+      resp.getOutputStream().write("<head>".getBytes(UTF_8));
+      throw new SnippetErrorException();
     }
 
     RequestDispatcher resultView = req.getRequestDispatcher("test.jsp");
