@@ -101,9 +101,11 @@ class GradleParserTest {
               }
               pass {
                 // instrumentation-docs:ignore - verification only
-                group.set(playGroup)
-                module.set("play_${name}")
-                versions.set("${versionRange}")
+                name.set("Pre-2.6 network instrumentation")
+                group.set("com.couchbase.client")
+                module.set("java-client")
+                versions.set("[2,2.6)")
+                assertInverse.set(true)
               }
               pass {
                 group.set("com.couchbase.client")
