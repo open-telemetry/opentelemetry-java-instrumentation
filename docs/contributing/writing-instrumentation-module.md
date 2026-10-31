@@ -233,23 +233,21 @@ the `transform()` method.
 
 ## Use advice classes to write instrumentation code
 
-## Advice
-
 In production javaagent modules, explicitly set `inline = false` on every
-`@Advice.OnMethodEnter` and `@Advice.OnMethodExit` annotation. The only exceptions are
+`@Advice.OnMethodEnter` and `@Advice.OnMethodExit` method. The only exceptions are
 `instrumentation/internal/internal-class-loader` and
 `instrumentation/internal/internal-lambda`.
 
 Byte Buddy's `inline` attribute defaults to `true`, which copies advice code into the instrumented
-method. Set `inline = false` explicitly to run advice as regular classes instead.
+method. Set `inline = false` explicitly to use non-inlined advice instead.
 
-With `inline = false`, the agent loads advice into a special `InstrumentationModuleClassLoader` by
-default, which can see classes from both the instrumented application classloader and the agent
-classloader. Helper placement is a separate choice: helpers can be loaded in that isolated
-classloader or injected into the instrumented classloader. Instrumented classes call advice in the
-isolated classloader via invokedynamic bytecode instructions.
+By default, the agent loads non-inlined advice into a special `InstrumentationModuleClassLoader`,
+which can see classes from both the instrumented application classloader and the agent classloader.
+Helper placement is a separate choice: helpers can be loaded in that isolated classloader or
+injected into the instrumented classloader. Instrumented classes call advice in the isolated
+classloader via invokedynamic bytecode instructions.
 
-Using `inline = false` with isolated loading has these advantages:
+When non-inlined advice is loaded in isolation, this has several advantages:
 
 - allows instrumentation to have breakpoints set in them and be debugged using standard debugging techniques.
 - provides clean isolation of instrumentation advice from the application and other instrumentations
@@ -303,10 +301,10 @@ caught and handled by the javaagent's exception handler, which logs unexpected e
 
 ### Modifying method arguments
 
-With inlined advices, using the `@Advice.Argument` annotation on method parameter with `readOnly = false`
+With inlined advice, using the `@Advice.Argument` annotation on method parameter with `readOnly = false`
 allows modifying instrumented method arguments.
 
-When using non-inlined advices, reading the argument values is still done with `@Advice.Argument`
+With non-inlined advice, reading the argument values is still done with `@Advice.Argument`
 annotated parameters, however modifying the values is done through the advice method return value
 and `@Advice.AssignReturned.ToArguments` annotation:
 
@@ -323,10 +321,10 @@ It is possible to modify multiple arguments at once by using an array, see usage
 
 ### Modifying method return value
 
-With inlined advices, using the `@Advice.Return` annotation on method parameter with `readOnly = false`
+With inlined advice, using the `@Advice.Return` annotation on method parameter with `readOnly = false`
 allows modifying instrumented method return value on exit advice.
 
-When using non-inlined advices, reading the original return value is still done with the `@Advice.Return`
+With non-inlined advice, reading the original return value is still done with the `@Advice.Return`
 annotated parameter, however modifying the value is done through the advice method return value
 and `@Advice.AssignReturned.ToReturned`.
 
@@ -340,10 +338,10 @@ public static Object onExit(@Advice.Return Object returnValue) {
 
 ### Writing to internal class fields
 
-With inlined advices, using the `@Advice.FieldValue(value = "fieldName", readOnly = false)` annotation
+With inlined advice, using the `@Advice.FieldValue(value = "fieldName", readOnly = false)` annotation
 on advice method parameters allows modifying the `fieldName` field of the instrumented class.
 
-When using non-inlined advices, reading the original field value is still done with the `@Advice.FieldValue`
+With non-inlined advice, reading the original field value is still done with the `@Advice.FieldValue`
 annotated parameter, however modifying the value is done through the advice method return value
 and `@Advice.AssignReturned.ToFields` annotation.
 

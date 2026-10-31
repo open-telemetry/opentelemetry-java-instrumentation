@@ -60,9 +60,7 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
     return new AdviceLocator(
         classFileLocator,
         (slashClassName, bytes) -> {
-          // verify that advice does not call VirtualField.find
-          // The testing checker rejects VirtualField.find calls in non-inlined advice because they
-          // are not rewritten.
+          // Reject VirtualField.find calls in non-inlined advice, where they are not rewritten.
           VirtualFieldChecker.check(bytes);
           return bytes;
         });
