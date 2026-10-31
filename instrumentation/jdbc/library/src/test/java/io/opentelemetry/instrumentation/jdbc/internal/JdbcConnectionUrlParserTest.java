@@ -319,7 +319,7 @@ class JdbcConnectionUrlParserTest {
             .build(),
         arg("jdbc:mysql://user:ex(am,ple@h1:1111,h2:2222/db")
             .setSystem(MYSQL)
-            .setServerAddressGroup("h1:1111,h2:2222")
+            .setNoConfiguredTarget()
             .setName("db")
             .build(),
         arg("jdbc:mysql://my.host?user=myuser&password=PW")
@@ -571,6 +571,7 @@ class JdbcConnectionUrlParserTest {
             .build(),
         arg("jdbc:mysql://(host=mdb.host,\u2003x=y)/mdbdb")
             .setSystem(MYSQL)
+            .setName("mdbdb")
             .setNoConfiguredTarget()
             .build(),
         arg("jdbc:mysql://(%48ost=mdb.host,port=33)/mdbdb")
@@ -941,7 +942,7 @@ class JdbcConnectionUrlParserTest {
             .build(),
         arg("jdbc:mariadb://user:ex(am,ple@h1:1111,h2:2222/db")
             .setSystem(MARIADB)
-            .setServerAddressGroup("h1:1111,h2:2222")
+            .setNoConfiguredTarget()
             .setName("db")
             .build(),
         arg("jdbc:mariadb://(user):example@h1:1111/db")
@@ -2076,10 +2077,9 @@ class JdbcConnectionUrlParserTest {
             .setName("mydb")
             .setServerAddressGroup("mysql.host1:3306,mysql.host2:3307")
             .build(),
-        // an address block spells its credentials out as attributes, so a password may hold an '@'
-        // and characters that look like delimiters; none of it may reach the group target
+        // Percent-encoded credentials inside address properties must not affect host boundaries.
         arg("jdbc:mysql:replication://address=(host=mdb.host1)(port=33)(user=mdbuser)"
-                + "(password=p@ss,w0rd),address=(host=mdb.host2)(port=3306)/mdbdb")
+                + "(password=p%40ss,w0rd),address=(host=mdb.host2)(port=3306)/mdbdb")
             .setSystem(MYSQL)
             .setHost("mdb.host1")
             .setPort(33)

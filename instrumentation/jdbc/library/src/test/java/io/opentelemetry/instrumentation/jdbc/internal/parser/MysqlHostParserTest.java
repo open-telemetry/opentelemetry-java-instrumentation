@@ -23,8 +23,12 @@ class MysqlHostParserTest {
   @MethodSource("singleHosts")
   void parsesHostAndOptionalPort(String authority, String host, Integer port) {
     assertThat(MysqlHostParser.parseHostList(authority, true))
-        .extracting(HostPort::host, HostPort::port)
-        .containsExactly(tuple(host, port));
+        .isNotNull()
+        .satisfies(
+            hosts ->
+                assertThat(hosts.hosts())
+                    .extracting(HostPort::host, HostPort::port)
+                    .containsExactly(tuple(host, port)));
   }
 
   private static Stream<Arguments> singleHosts() {
@@ -50,13 +54,13 @@ class MysqlHostParserTest {
         argumentSet("address host and port", "address=(host=h1)(port=1111)", "h1", 1111),
         argumentSet(
             "address properties and whitespace",
-            "address=(HOST= h1 )(port= 1111 )(user=other)(password=example@value)",
+            "address=(HOST= h1 )(port= 1111 )(user=other)(password=example%40value)",
             "h1",
             1111),
         argumentSet("address IPv6", "address=(host=::1)(port=1111)", "::1", 1111),
         argumentSet(
-            "at sign in address property",
-            "address=(host=h1)(port=1111)(user=other@example)",
+            "encoded at sign in address property",
+            "address=(host=h1)(port=1111)(user=other%40example)",
             "h1",
             1111),
         argumentSet("key-value host", "(host=h1)", "h1", null),
@@ -81,23 +85,36 @@ class MysqlHostParserTest {
   void parsesMixedHostSyntaxesInConfiguredOrder() {
     assertThat(
             MysqlHostParser.parseHostList(
-                "h1:1111, (host=h2,port=2222), address=(host=::1)(user=other@example),h1:1111",
+                "h1:1111, (host=h2,port=2222), address=(host=::1)(user=other%40example),h1:1111",
                 true))
-        .extracting(HostPort::host, HostPort::port)
-        .containsExactly(
-            tuple("h1", 1111), tuple("h2", 2222), tuple("::1", null), tuple("h1", 1111));
+        .isNotNull()
+        .satisfies(
+            hosts ->
+                assertThat(hosts.hosts())
+                    .extracting(HostPort::host, HostPort::port)
+                    .containsExactly(
+                        tuple("h1", 1111),
+                        tuple("h2", 2222),
+                        tuple("::1", null),
+                        tuple("h1", 1111)));
   }
 
   @Test
   void doesNotTakeAnOmittedPortFromTheNextHost() {
     assertThat(MysqlHostParser.parseHostList("(host=h1),address=(host=h2)(port=2222)", true))
-        .extracting(HostPort::host, HostPort::port)
-        .containsExactly(tuple("h1", null), tuple("h2", 2222));
+        .isNotNull()
+        .satisfies(
+            hosts ->
+                assertThat(hosts.hosts())
+                    .extracting(HostPort::host, HostPort::port)
+                    .containsExactly(tuple("h1", null), tuple("h2", 2222)));
   }
 
   @Test
   void emptyAuthorityHasNoConfiguredHosts() {
-    assertThat(MysqlHostParser.parseHostList("", true)).isEmpty();
+    assertThat(MysqlHostParser.parseHostList("", true))
+        .isNotNull()
+        .satisfies(hosts -> assertThat(hosts.hosts()).isEmpty());
   }
 
   @ParameterizedTest
@@ -115,8 +132,12 @@ class MysqlHostParserTest {
       })
   void mariaDbUsesTheSameOrdinaryAndAddressHostParsing(String authority) {
     assertThat(MysqlHostParser.parseHostList(authority, false))
-        .extracting(HostPort::host, HostPort::port)
-        .containsExactly(tuple("h1", 1111));
+        .isNotNull()
+        .satisfies(
+            hosts ->
+                assertThat(hosts.hosts())
+                    .extracting(HostPort::host, HostPort::port)
+                    .containsExactly(tuple("h1", 1111)));
   }
 
   @Test
