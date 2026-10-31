@@ -21,7 +21,6 @@ jobs:
       matrix:
         mode:
           - parallel
-          - serial
     steps:
       - name: Support long paths
         run: git config --system core.longpaths true

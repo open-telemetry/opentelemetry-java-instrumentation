@@ -83,10 +83,26 @@ $monitor = Start-Job -ArgumentList $OutputDirectory -ScriptBlock {
       Capture "docker.exe" @(
         "events", "--since", "2m", "--until", (Get-Date).ToUniversalTime().ToString("o")
       ) "$prefix-docker-events"
+      foreach ($daemon in Get-Process dockerd -ErrorAction SilentlyContinue) {
+        $event = [System.Threading.EventWaitHandle]::OpenExisting("Global\stackdump-$($daemon.Id)")
+        try {
+          if (-not $event.Set()) {
+            throw "Failed to request Docker daemon stack dump for PID $($daemon.Id)"
+          }
+        } finally {
+          $event.Dispose()
+        }
+      }
+      Start-Sleep -Seconds 1
+      $stackFiles = @(Get-ChildItem "$env:ProgramData\docker" -Filter "goroutine-stacks-*.log" -File)
+      if ($stackFiles.Count -eq 0) {
+        throw "Docker daemon produced no stack dumps in $env:ProgramData\docker"
+      }
+      $stackFiles | Copy-Item -Destination $OutputDirectory
       Get-WinEvent -FilterHashtable @{
         LogName = "Application", "System"
         StartTime = (Get-Date).AddMinutes(-2)
-        Level = 1, 2, 3
+        Level = 1, 2, 3, 4
       } -ErrorAction SilentlyContinue |
         Select-Object TimeCreated, ProviderName, Id, LevelDisplayName, Message |
         ConvertTo-Json -Depth 3 |
