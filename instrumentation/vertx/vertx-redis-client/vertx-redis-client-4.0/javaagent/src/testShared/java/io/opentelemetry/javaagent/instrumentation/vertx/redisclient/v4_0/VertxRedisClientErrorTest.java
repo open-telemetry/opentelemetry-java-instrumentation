@@ -235,7 +235,8 @@ class VertxRedisClientErrorTest {
   @Test
   void collidingBinaryMapKeysDoNotHideNestedServerError()
       throws ExecutionException, IOException, InterruptedException, TimeoutException {
-    assumeTrue(testLatestDeps());
+    String vertxVersion = Vertx.class.getPackage().getImplementationVersion();
+    assumeTrue(testLatestDeps() && vertxVersion != null && vertxVersion.startsWith("5."));
     RedisConnection connection = connectRaw(resp3MapWithCollidingBinaryKeys());
 
     Response response =
