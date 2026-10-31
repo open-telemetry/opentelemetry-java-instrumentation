@@ -12,6 +12,7 @@ import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.metrics.InstrumentType;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.metrics.export.AggregationTemporalitySelector;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -28,24 +29,28 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
 
   private static final Logger logger = Logger.getLogger(OtlpInMemoryMetricExporter.class.getName());
 
-  private final Queue<byte[]> collectedRequests = new ConcurrentLinkedQueue<>();
+  private static final AggregationTemporalitySelector defaultTemporalitySelector =
+      AggregationTemporalitySelector.deltaPreferred();
+  private static final AggregationTemporality aggregationTemporalityOverride;
+  private static final boolean hasAggregationTemporalityOverride;
 
-  private static final AggregationTemporality aggregationTemporality = initAggregationTemporality();
-
-  private static AggregationTemporality initAggregationTemporality() {
+  static {
     // this configuration setting is for external users
     // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7902
     String temporalityProperty = System.getProperty("otel.javaagent.testing.exporter.temporality");
-    AggregationTemporality aggregationTemporality;
     if (temporalityProperty == null) {
-      aggregationTemporality = AggregationTemporality.DELTA;
+      logger.log(CONFIG, "Setting aggregation temporality selector to deltaPreferred");
+      aggregationTemporalityOverride = AggregationTemporality.DELTA;
+      hasAggregationTemporalityOverride = false;
     } else {
-      aggregationTemporality =
+      aggregationTemporalityOverride =
           AggregationTemporality.valueOf(temporalityProperty.toUpperCase(Locale.ROOT));
+      logger.log(CONFIG, "Setting aggregation temporality to {0}", aggregationTemporalityOverride);
+      hasAggregationTemporalityOverride = true;
     }
-    logger.log(CONFIG, "Setting aggregation temporality to {0}", aggregationTemporality.toString());
-    return aggregationTemporality;
   }
+
+  private final Queue<byte[]> collectedRequests = new ConcurrentLinkedQueue<>();
 
   List<byte[]> getCollectedExportRequests() {
     return new ArrayList<>(collectedRequests);
@@ -57,7 +62,10 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
 
   @Override
   public AggregationTemporality getAggregationTemporality(InstrumentType instrumentType) {
-    return aggregationTemporality;
+    if (hasAggregationTemporalityOverride) {
+      return aggregationTemporalityOverride;
+    }
+    return defaultTemporalitySelector.getAggregationTemporality(instrumentType);
   }
 
   @Override

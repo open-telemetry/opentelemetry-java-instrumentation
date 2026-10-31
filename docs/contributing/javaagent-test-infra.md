@@ -20,6 +20,9 @@ The `otel.javaagent.experimental.initializer.jar` property is used to load the s
 This contains the span and metric exporters that are used.
 
 These are in-memory exporters, so that the tests can verify the spans and metrics being exported.
+Metric exporters use delta-preferred aggregation temporality by default. Set
+`otel.javaagent.testing.exporter.temporality` to `DELTA` or `CUMULATIVE` to request that temporality
+for every instrument type in agent tests.
 
 These exporters and the in-memory data live in the `AgentClassLoader`, so tests must access them
 using reflection. To simplify this, they store the in-memory data using the OTLP protobuf objects,
@@ -36,3 +39,5 @@ This is a custom distro of the javaagent that embeds the `:testing:agent-exporte
 This module provides methods to help verify the span and metric data produced by the
 instrumentation, hiding the complexity of accessing the in-memory exporters that live in the
 `AgentClassLoader`.
+The library and Spring starter test exporters also use delta-preferred aggregation temporality by
+default.
