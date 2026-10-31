@@ -20,10 +20,10 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class IsolatedAdviceInstrumentationTestModule extends InstrumentationModule {
+public class AdviceInstrumentationTestModule extends InstrumentationModule {
 
-  public IsolatedAdviceInstrumentationTestModule() {
-    super("isolated-advice-test");
+  public AdviceInstrumentationTestModule() {
+    super("advice-test");
   }
 
   @Override
@@ -40,7 +40,7 @@ public class IsolatedAdviceInstrumentationTestModule extends InstrumentationModu
 
     @Override
     public ElementMatcher<TypeDescription> typeMatcher() {
-      return named("isolatedadvice.IsolatedAdviceInstrumentationTest");
+      return named("advice.AdviceInstrumentationTest");
     }
 
     @Override

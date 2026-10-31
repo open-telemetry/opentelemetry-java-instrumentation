@@ -68,7 +68,7 @@ in production modules. Byte Buddy defaults `inline` to `true`. Mixing inlined an
 disables automatic helper isolation. The only exceptions are
 `instrumentation/internal/internal-class-loader` and `instrumentation/internal/internal-lambda`.
 
-Use OpenTelemetry APIs directly in non-inlined advice and ordinary helpers, for example
+Use OpenTelemetry APIs directly in advice and ordinary helpers, for example
 `Context.current()` and `Span.fromContext(context)`.
 
 In inlined advice in the two internal exceptions, static interface calls cannot be

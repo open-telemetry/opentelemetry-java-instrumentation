@@ -239,15 +239,15 @@ In production javaagent modules, explicitly set `inline = false` on every
 `instrumentation/internal/internal-lambda`.
 
 Byte Buddy's `inline` attribute defaults to `true`, which copies advice code into the instrumented
-method. Set `inline = false` explicitly to use non-inlined advice instead.
+method. Production advice explicitly sets `inline = false`; inlined advice is the alternative.
 
-By default, the agent loads non-inlined advice into a special `InstrumentationModuleClassLoader`,
+By default, the agent loads advice into a special `InstrumentationModuleClassLoader`,
 which can see classes from both the instrumented application classloader and the agent classloader.
 Helper placement is a separate choice: helpers can be loaded in that isolated classloader or
 injected into the instrumented classloader. Instrumented classes call advice in the isolated
 classloader via invokedynamic bytecode instructions.
 
-When non-inlined advice is loaded in isolation, this has several advantages:
+When advice is loaded in isolation, this has several advantages:
 
 - allows instrumentation to have breakpoints set in them and be debugged using standard debugging techniques.
 - provides clean isolation of instrumentation advice from the application and other instrumentations
@@ -257,7 +257,7 @@ When non-inlined advice is loaded in isolation, this has several advantages:
 
 Advice classes and their static entry points must remain public for invokedynamic method-handle dispatch.
 Ordinary helper methods may be private when their callers and classloader boundaries permit it;
-non-inlined advice may also use lambdas.
+advice loaded separately may also use lambdas.
 
 ### Shared classes and common classloader
 
