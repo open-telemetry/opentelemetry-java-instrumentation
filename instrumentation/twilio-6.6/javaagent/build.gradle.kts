@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -28,24 +30,22 @@ tasks {
       jvmArgs("-Dotel.instrumentation.twilio.enabled=true")
     }
   }
+}
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.twilio.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.twilio.experimental-span-attributes=true")
-  }
-
-  val testDisabled = register<Test>("testDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*DefaultEnablementTest")
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("Experimental") {
+          jvmArgs("-Dotel.instrumentation.twilio.experimental-span-attributes=true")
+          systemProperty("metadataConfig", "otel.instrumentation.twilio.experimental-span-attributes=true")
+        }
+        register("Disabled") {
+          filter {
+            includeTestsMatching("*DefaultEnablementTest")
+          }
+        }
+      }
     }
-  }
-
-  check {
-    dependsOn(testDisabled, testExperimental)
   }
 }

@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -39,26 +41,24 @@ tasks {
       jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
     }
   }
+}
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("Experimental") {
+          jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+          systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
+        }
+        register("Disabled") {
+          filter {
+            includeTestsMatching("*DefaultEnablementTest")
+          }
 
-    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
-  }
-
-  val testDisabled = register<Test>("testDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*DefaultEnablementTest")
+          jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
+        }
+      }
     }
-
-    jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
-  }
-
-  check {
-    dependsOn(testDisabled, testExperimental)
   }
 }

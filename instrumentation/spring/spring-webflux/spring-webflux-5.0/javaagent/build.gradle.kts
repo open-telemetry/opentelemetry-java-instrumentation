@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -80,34 +82,31 @@ tasks {
     // server tests require controller-telemetry, which is off by default
     exclude("**/server/**")
   }
+}
 
-  val testControllerTelemetry = register<Test>("testControllerTelemetry") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    include("**/server/**")
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.controller-telemetry.enabled=true"
-    )
-  }
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.controller-telemetry.enabled=true," +
-        "otel.semconv.exception.signal.preview=logs"
-    )
-  }
-
-  check {
-    dependsOn(
-      testControllerTelemetry,
-      testExceptionSignalLogs
-    )
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("ControllerTelemetry") {
+          include("**/server/**")
+          jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+          systemProperty(
+            "metadataConfig",
+            "otel.instrumentation.common.controller-telemetry.enabled=true"
+          )
+        }
+        register("ExceptionSignalLogs") {
+          jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+          systemProperty(
+            "metadataConfig",
+            "otel.instrumentation.common.controller-telemetry.enabled=true," +
+              "otel.semconv.exception.signal.preview=logs"
+          )
+        }
+      }
+    }
   }
 }
 

@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -34,23 +36,25 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.couchbase.emit-experimental-telemetry=true",
-    )
-  }
-
-  check {
-    dependsOn(testExperimental)
-  }
-
   if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
+    }
+  }
+
+  testing {
+    suites {
+      named<JvmTestSuite>("test") {
+        executions {
+          register("Experimental") {
+            jvmArgs("-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true")
+            systemProperty(
+              "metadataConfig",
+              "otel.instrumentation.couchbase.emit-experimental-telemetry=true",
+            )
+          }
+        }
+      }
     }
   }
 }

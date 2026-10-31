@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -37,16 +39,17 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
+}
 
-  val testControllerTelemetry = register<Test>("testControllerTelemetry") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
-  }
-
-  check {
-    dependsOn(testControllerTelemetry)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("ControllerTelemetry") {
+          jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+          systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
+        }
+      }
+    }
   }
 }

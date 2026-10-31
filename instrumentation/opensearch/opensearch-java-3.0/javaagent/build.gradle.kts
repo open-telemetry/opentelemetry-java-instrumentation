@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -53,23 +55,24 @@ tasks {
       excludeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
     }
   }
+}
 
-  val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
-      includeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("QuerySanitizationDisabled") {
+          filter {
+            includeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
+            includeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
+          }
+          jvmArgs("-Dotel.instrumentation.opensearch.query-sanitization.enabled=false")
+          systemProperty(
+            "metadataConfig",
+            "otel.instrumentation.opensearch.query-sanitization.enabled=false",
+          )
+        }
+      }
     }
-    jvmArgs("-Dotel.instrumentation.opensearch.query-sanitization.enabled=false")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.opensearch.query-sanitization.enabled=false",
-    )
-  }
-
-  check {
-    dependsOn(testQuerySanitizationDisabled)
   }
 }

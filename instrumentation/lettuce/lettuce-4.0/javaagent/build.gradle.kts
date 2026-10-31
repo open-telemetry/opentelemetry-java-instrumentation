@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -24,27 +26,21 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
+}
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.lettuce.experimental-span-attributes=true")
-  }
-
-  val testConnectionTelemetryEnabled = register<Test>("testConnectionTelemetryEnabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.lettuce.connection-telemetry.enabled=true")
-  }
-
-  check {
-    dependsOn(
-      testConnectionTelemetryEnabled,
-      testExperimental
-    )
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("Experimental") {
+          jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
+          systemProperty("metadataConfig", "otel.instrumentation.lettuce.experimental-span-attributes=true")
+        }
+        register("ConnectionTelemetryEnabled") {
+          jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
+          systemProperty("metadataConfig", "otel.instrumentation.lettuce.connection-telemetry.enabled=true")
+        }
+      }
+    }
   }
 }

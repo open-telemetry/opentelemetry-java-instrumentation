@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -32,22 +34,20 @@ dependencies {
   }
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.xxl-job.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.xxl-job.experimental-span-attributes=true")
-  }
-
-  check {
-    dependsOn(testExperimental)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          // required on jdk17
+          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+        }
+        register("Experimental") {
+          jvmArgs("-Dotel.instrumentation.xxl-job.experimental-span-attributes=true")
+          systemProperty("metadataConfig", "otel.instrumentation.xxl-job.experimental-span-attributes=true")
+        }
+      }
+    }
   }
 }

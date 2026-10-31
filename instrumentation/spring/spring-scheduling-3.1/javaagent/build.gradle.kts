@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -18,23 +20,22 @@ dependencies {
   library("org.springframework:spring-context:3.1.0.RELEASE")
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.spring-scheduling.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.spring-scheduling.experimental-span-attributes=true")
-  }
-
-  check {
-    dependsOn(testExperimental)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          // required on jdk17
+          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+          systemProperty("testLatestDeps", otelProps.testLatestDeps)
+        }
+        register("Experimental") {
+          jvmArgs("-Dotel.instrumentation.spring-scheduling.experimental-span-attributes=true")
+          systemProperty("metadataConfig", "otel.instrumentation.spring-scheduling.experimental-span-attributes=true")
+        }
+      }
+    }
   }
 }
 

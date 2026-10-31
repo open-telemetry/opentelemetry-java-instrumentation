@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -34,29 +36,27 @@ tasks {
     // jvmArgs("-Dhystrix.command.default.execution.timeout.enabled=false")
   }
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.hystrix.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.hystrix.experimental-span-attributes=true")
-  }
-
-  val testDisabled = register<Test>("testDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*DefaultEnablementTest")
-    }
-  }
-
-  check {
-    dependsOn(testDisabled, testExperimental)
-  }
-
   if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
+    }
+  }
+
+  testing {
+    suites {
+      named<JvmTestSuite>("test") {
+        executions {
+          register("Experimental") {
+            jvmArgs("-Dotel.instrumentation.hystrix.experimental-span-attributes=true")
+            systemProperty("metadataConfig", "otel.instrumentation.hystrix.experimental-span-attributes=true")
+          }
+          register("Disabled") {
+            filter {
+              includeTestsMatching("*DefaultEnablementTest")
+            }
+          }
+        }
+      }
     }
   }
 }

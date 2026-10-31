@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -68,33 +70,27 @@ dependencies {
   latestDepTestLibrary("io.undertow:undertow-servlet:2.2.24.Final") // see jaxrs-2.0-resteasy-3.1 module
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.jaxrs.experimental-span-attributes=true")
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.controller-telemetry.enabled=true," +
-        "otel.instrumentation.jaxrs.experimental-span-attributes=true",
-    )
-  }
-
-  val testControllerTelemetry = register<Test>("testControllerTelemetry") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
-  }
-
-  check {
-    dependsOn(testExperimental, testControllerTelemetry)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          systemProperty("testLatestDeps", otelProps.testLatestDeps)
+        }
+        register("Experimental") {
+          jvmArgs("-Dotel.instrumentation.jaxrs.experimental-span-attributes=true")
+          jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+          systemProperty(
+            "metadataConfig",
+            "otel.instrumentation.common.controller-telemetry.enabled=true," +
+              "otel.instrumentation.jaxrs.experimental-span-attributes=true",
+          )
+        }
+        register("ControllerTelemetry") {
+          jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+          systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
+        }
+      }
+    }
   }
 }

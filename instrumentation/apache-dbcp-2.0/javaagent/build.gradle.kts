@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -25,21 +27,20 @@ dependencies {
   testInstrumentation(project(":instrumentation:apache-commons-pool-2.0:javaagent"))
 }
 
-tasks {
-  val testWithCommonsPoolInstrumentation =
-    register<Test>("testWithCommonsPoolInstrumentation") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      filter {
-        includeTestsMatching(
-          "ApacheDbcpInstrumentationTest.shouldNotReportCommonsPoolMetrics",
-        )
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("WithCommonsPoolInstrumentation") {
+          filter {
+            includeTestsMatching(
+              "ApacheDbcpInstrumentationTest.shouldNotReportCommonsPoolMetrics",
+            )
+          }
+
+          jvmArgs("-Dotel.instrumentation.apache-commons-pool.enabled=true")
+        }
       }
-
-      jvmArgs("-Dotel.instrumentation.apache-commons-pool.enabled=true")
     }
-
-  check {
-    dependsOn(testWithCommonsPoolInstrumentation)
   }
 }
