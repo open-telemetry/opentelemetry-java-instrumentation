@@ -13,10 +13,8 @@ import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -26,11 +24,10 @@ import javax.annotation.Nullable;
 /** Handles parsing of Gradle build files to extract muzzle and dependency information. */
 public class GradleParser {
 
-  private static final Pattern variablePattern =
-      Pattern.compile("val\\s+(\\w+)\\s*=\\s*\"([^\"]+)\"");
-
   private static final Pattern muzzlePassBlockPattern =
-      Pattern.compile("pass\\s*\\{(.*?)}", Pattern.DOTALL);
+      Pattern.compile("pass\\s*\\{((?:\\$\\{[^}]*}|[^}])*)}", Pattern.DOTALL);
+
+  private static final Pattern stringLiteralPattern = Pattern.compile("\"([^\"]*)\"");
 
   private static final Pattern coreJdkPattern = Pattern.compile("coreJdk\\.set\\(true\\)");
 
@@ -63,8 +60,7 @@ public class GradleParser {
       return new DependencyInfo(emptySet(), null);
     }
 
-    Map<String, String> variables = extractVariables(gradleFileContents);
-    return parseMuzzle(gradleFileContents, variables);
+    return parseMuzzle(gradleFileContents);
   }
 
   /**
@@ -72,11 +68,9 @@ public class GradleParser {
    * each "pass { ... }" entry, returning a set of version summary strings.
    *
    * @param gradleFileContents Contents of a Gradle build file as a String
-   * @param variables Map of variable names to their values
    * @return A set of strings summarizing the group, module, and version ranges
    */
-  private static DependencyInfo parseMuzzle(
-      String gradleFileContents, Map<String, String> variables) {
+  private static DependencyInfo parseMuzzle(String gradleFileContents) {
     Set<String> results = new HashSet<>();
     Matcher passBlockMatcher = muzzlePassBlockPattern.matcher(gradleFileContents);
 
@@ -96,12 +90,12 @@ public class GradleParser {
         }
       }
 
-      String group = extractValue(passBlock, "group\\.set\\(\"([^\"]+)\"\\)");
-      String module = extractValue(passBlock, "module\\.set\\(\"([^\"]+)\"\\)");
-      String versionRange = extractValue(passBlock, "versions\\.set\\(\"([^\"]+)\"\\)");
+      String group = extractLiteralValue(passBlock, "group");
+      String module = extractLiteralValue(passBlock, "module");
+      String versionRange = extractLiteralValue(passBlock, "versions");
 
       if (group != null && module != null && versionRange != null) {
-        String summary = group + ":" + module + ":" + interpolate(versionRange, variables);
+        String summary = group + ":" + module + ":" + versionRange;
         results.add(summary);
       }
     }
@@ -145,35 +139,20 @@ public class GradleParser {
     return false;
   }
 
-  /**
-   * Extracts variables from the given Gradle file content.
-   *
-   * @param gradleFileContents Contents of a Gradle build file as a String
-   * @return A map of variable names to their values
-   */
-  private static Map<String, String> extractVariables(String gradleFileContents) {
-    Map<String, String> variables = new HashMap<>();
-    Matcher variableMatcher = variablePattern.matcher(gradleFileContents);
-
-    while (variableMatcher.find()) {
-      variables.put(variableMatcher.group(1), variableMatcher.group(2));
+  @Nullable
+  private static String extractLiteralValue(String text, String property) {
+    String argument =
+        extractValue(text, Pattern.quote(property) + "\\.set\\((\"[^\"]*\"|[^)]*)\\)");
+    if (argument == null) {
+      return null;
     }
 
-    return variables;
-  }
-
-  /**
-   * Interpolates variables in the given text using the provided variable map.
-   *
-   * @param text Text to interpolate
-   * @param variables Map of variable names to their values
-   * @return Interpolated text
-   */
-  private static String interpolate(String text, Map<String, String> variables) {
-    for (Map.Entry<String, String> entry : variables.entrySet()) {
-      text = text.replace("$" + entry.getKey(), entry.getValue());
+    Matcher matcher = stringLiteralPattern.matcher(argument.trim());
+    if (!matcher.matches() || matcher.group(1).contains("$")) {
+      throw new IllegalArgumentException(
+          "Muzzle " + property + ".set(...) must use a literal string");
     }
-    return text;
+    return matcher.group(1);
   }
 
   /**
