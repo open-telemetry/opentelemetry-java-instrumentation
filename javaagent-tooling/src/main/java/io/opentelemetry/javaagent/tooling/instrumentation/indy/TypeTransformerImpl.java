@@ -19,13 +19,13 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.ClassFileLocator.Resolution;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public final class IndyTypeTransformerImpl implements TypeTransformer {
+public final class TypeTransformerImpl implements TypeTransformer {
 
   private final Advice.WithCustomMapping adviceMapping;
   private AgentBuilder.Identified.Extendable agentBuilder;
   private final InstrumentationModule instrumentationModule;
 
-  public IndyTypeTransformerImpl(
+  public TypeTransformerImpl(
       AgentBuilder.Identified.Extendable agentBuilder, InstrumentationModule module) {
     this.agentBuilder = agentBuilder;
     this.instrumentationModule = module;
