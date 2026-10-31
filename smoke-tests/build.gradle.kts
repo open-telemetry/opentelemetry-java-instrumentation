@@ -148,6 +148,7 @@ tasks {
 
   if (System.getProperty("os.name").lowercase().contains("windows")) {
     named<Test>("testAdditionalVariants") {
+      // Concurrent container startup and cleanup can hang in Windows Host Network Service.
       mustRunAfter(named("testLimitedMatrix"))
     }
   }
