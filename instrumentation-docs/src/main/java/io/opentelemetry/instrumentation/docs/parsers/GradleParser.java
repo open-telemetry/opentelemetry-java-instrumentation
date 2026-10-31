@@ -90,9 +90,9 @@ public class GradleParser {
         }
       }
 
-      String group = extractLiteralValue(passBlock, "group");
-      String module = extractLiteralValue(passBlock, "module");
-      String versionRange = extractLiteralValue(passBlock, "versions");
+      String group = extractValue(passBlock, "group");
+      String module = extractValue(passBlock, "module");
+      String versionRange = extractValue(passBlock, "versions");
 
       if (group != null && module != null && versionRange != null) {
         results.add(group + ":" + module + ":" + versionRange);
@@ -139,7 +139,7 @@ public class GradleParser {
   }
 
   @Nullable
-  private static String extractLiteralValue(String text, String property) {
+  private static String extractValue(String text, String property) {
     Pattern pattern = Pattern.compile(Pattern.quote(property) + "\\.set\\((\"[^\"]*\"|[^)]*)\\)");
     Matcher matcher = pattern.matcher(text);
     if (!matcher.find()) {
