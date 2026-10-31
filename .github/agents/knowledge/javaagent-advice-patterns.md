@@ -45,9 +45,7 @@ suppressions to a single advice method.
 
 All `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` methods **must be `static`**. ByteBuddy
 defaults to inlining advice code directly into the instrumented method — there is no advice object
-instance. For production javaagent advice, explicitly set `inline = false` on every
-`@Advice.OnMethodEnter` and `@Advice.OnMethodExit` method except in
-`instrumentation/internal/internal-class-loader` and `instrumentation/internal/internal-lambda`.
+instance.
 
 ```java
 // ✅ Correct
@@ -63,10 +61,12 @@ Advice classes should also have **no instance fields** — they are never instan
 
 ## Set `inline = false` on advice
 
-Set `inline = false` explicitly on every `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` method
-in production modules. Byte Buddy defaults `inline` to `true`. Mixing inlined and non-inlined advice
-disables automatic helper isolation. The only exceptions are
-`instrumentation/internal/internal-class-loader` and `instrumentation/internal/internal-lambda`.
+Explicitly set `inline = false` on every `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` method,
+except in `instrumentation/internal/internal-class-loader`, `instrumentation/internal/internal-lambda`,
+and test fixtures intentionally exercising inlined or mixed advice.
+
+Byte Buddy defaults `inline` to `true`. Mixing inlined and non-inlined advice disables automatic
+helper isolation.
 
 Use OpenTelemetry APIs directly in advice and ordinary helpers, for example
 `Context.current()` and `Span.fromContext(context)`.
@@ -159,8 +159,7 @@ Keep `suppress = Throwable.class` in both cases — it is always required.
 - **Internal infrastructure** (`instrumentation/internal/`): Instrumentations for internal
   class loading and lambda support may intentionally let errors propagate because silently
   swallowing them would corrupt JVM internals.
-- **Test code** (`testing-common/`, test sources): Not production instrumentation — suppress
-  is not required.
+- **Test code** (`testing-common/`, test sources): `suppress` is not required.
 
 These exceptions do not need `suppress`. For methods with non-trivial bodies
 (library calls, collection iteration, reflection), retain it.
