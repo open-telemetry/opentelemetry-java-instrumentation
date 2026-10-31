@@ -58,6 +58,7 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
   private final InjectionState injectionState;
 
   @Nullable private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
+  @Nullable private PrintWriter delegatePrintWriter;
 
   public Servlet3SnippetInjectingResponseWrapper(HttpServletResponse response, String snippet) {
     this(null, response, snippet);
@@ -137,6 +138,7 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
     super.reset();
     injectionState.reset();
     snippetInjectingPrintWriter = null;
+    delegatePrintWriter = null;
   }
 
   @Override
@@ -239,9 +241,11 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
 
   @Override
   public PrintWriter getWriter() throws IOException {
-    if (snippetInjectingPrintWriter == null) {
+    PrintWriter writer = super.getWriter();
+    if (snippetInjectingPrintWriter == null || writer != delegatePrintWriter) {
       snippetInjectingPrintWriter =
-          new SnippetInjectingPrintWriter(super.getWriter(), snippet, injectionState);
+          new SnippetInjectingPrintWriter(writer, snippet, injectionState);
+      delegatePrintWriter = writer;
     }
     injectionState.useWriter();
     return snippetInjectingPrintWriter;

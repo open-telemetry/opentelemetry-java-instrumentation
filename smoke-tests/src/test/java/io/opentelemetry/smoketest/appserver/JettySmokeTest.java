@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.smoketest.ResourceMapping;
 import io.opentelemetry.smoketest.SmokeTestOptions;
 import io.opentelemetry.smoketest.TargetWaitStrategy;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.net.Socket;
 import java.time.Duration;
 import org.apache.hc.core5.http.ClassicHttpResponse;
@@ -110,6 +111,42 @@ abstract class JettySmokeTest extends AppServerTest {
     }
 
     testing.waitForTraces(1);
+  }
+
+  @Test
+  void cachedWriterRejectsStreamAfterRawAsyncReset() {
+    Assumptions.assumeTrue(serverVersion.startsWith("10.") || serverVersion.startsWith("11."));
+
+    var response = assertAsyncResetScenario("async-reset-stream");
+    assertThat(response.headers().get("X-Snippet-Writer-Rejected")).isEqualTo("true");
+    testing.waitForTraces(1);
+  }
+
+  @Test
+  void cachedWriterReacquiresChangedEncodingAfterRawAsyncReset() {
+    Assumptions.assumeTrue(serverVersion.startsWith("10.") || serverVersion.startsWith("11."));
+
+    var response = assertAsyncResetScenario("async-reset-writer");
+    assertThat(response.headers().get("X-Snippet-Native-Writer-Changed")).isEqualTo("true");
+    assertThat(response.headers().get("X-Snippet-Writer-Reused")).isEqualTo("true");
+    testing.waitForTraces(1);
+  }
+
+  private AggregatedHttpResponse assertAsyncResetScenario(String scenario) {
+    var response = client().get("/app/jsp?snippetScenario=" + scenario).aggregate().join();
+    byte[] payload = response.content().array();
+    String body = new String(payload, UTF_8);
+    String snippet = "<script>console.log(hi)</script>";
+
+    assertThat(response.status().code()).isEqualTo(200);
+    assertThat(response.headers().get("X-Snippet-Scenario")).isEqualTo(scenario);
+    assertThat(response.headers().get("X-Snippet-Source-Content-Length")).isEqualTo("1032");
+    assertThat(response.headers().get("X-Snippet-Source-Committed")).isEqualTo("false");
+    assertThat(body)
+        .isEqualTo("<html><head>" + snippet + "</head><body>Replacement café</body></html>");
+    assertThat(body).containsOnlyOnce(snippet);
+    assertThat(response.headers().contentLength()).isEqualTo(payload.length);
+    return response;
   }
 
   private void assertJspScenario(String scenario) {

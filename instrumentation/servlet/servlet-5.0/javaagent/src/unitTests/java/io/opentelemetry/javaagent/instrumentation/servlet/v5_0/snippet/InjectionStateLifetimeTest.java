@@ -236,8 +236,7 @@ class InjectionStateLifetimeTest {
           .when(response)
           .setContentLength(anyInt());
       when(response.getOutputStream()).thenReturn(stream);
-      when(response.getWriter())
-          .thenAnswer(invocation -> new PrintWriter(new OutputStreamWriter(stream, UTF_8)));
+      when(response.getWriter()).thenReturn(new PrintWriter(new OutputStreamWriter(stream, UTF_8)));
     }
 
     Servlet5SnippetInjectingResponseWrapper wrap() {
