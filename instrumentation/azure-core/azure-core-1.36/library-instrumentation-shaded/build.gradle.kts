@@ -7,9 +7,9 @@ group = "io.opentelemetry.javaagent.instrumentation"
 
 dependencies {
   // the latest version that works with azure-core 1.36.0 is 1.0.0-beta.49
-  // but the latest version that works with ordinary advice is 1.0.0-beta.45
-  // (ordinary advice support was fixed by https://github.com/Azure/azure-sdk-for-java/pull/42586
-  // in 1.0.0-beta.51)
+  // but beta.49's reflective AgentContextStorage lookup can throw LinkageError across the
+  // application/agent classloader boundary; beta.51 handles this
+  // (https://github.com/Azure/azure-sdk-for-java/pull/42586)
   implementation("com.azure:azure-core-tracing-opentelemetry:1.0.0-beta.45")
 }
 

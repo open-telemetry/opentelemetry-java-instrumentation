@@ -99,12 +99,13 @@ public class AdviceInspector {
                   .getName()
                   .equals(annotation.getAnnotationType().getName())) {
             AnnotationValue<?, ?> value = annotation.getValue("inline");
-            // While it is possible to use ordinary advice with injected advice classes, we assume
-            // that nobody relies on that.
-            // Having ordinary advice is treated as a marker that the instrumentation can use
+            // While it is possible to use advice marked inline = false with injected advice
+            // classes, we assume that nobody relies on that.
+            // Advice marked inline = false is treated as a marker that the instrumentation can use
             // isolated advice loading.
-            // Similarly inline advice could be used with isolated helper loading, but we assume
-            // that if inline advice is used, then it is not ready for isolated advice loading.
+            // Similarly advice marked inline = true could be used with isolated helper loading,
+            // but we assume that if inline = true is used, then it is not ready for isolated advice
+            // loading.
             if (value.getState().isDefined() && Boolean.FALSE.equals(value.resolve())) {
               nonInlineCount++;
             } else {

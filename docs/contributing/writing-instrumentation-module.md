@@ -233,23 +233,23 @@ the `transform()` method.
 
 ## Use advice classes to write instrumentation code
 
-## Ordinary advice
+## Advice
 
-Ordinary advice (`inline = false`) is the repository default. In production javaagent modules,
-explicitly set `inline = false` on every `@Advice.OnMethodEnter` and `@Advice.OnMethodExit`
-annotation. The only exceptions are `instrumentation/internal/internal-class-loader` and
+In production javaagent modules, explicitly set `inline = false` on every
+`@Advice.OnMethodEnter` and `@Advice.OnMethodExit` annotation. The only exceptions are
+`instrumentation/internal/internal-class-loader` and
 `instrumentation/internal/internal-lambda`.
 
-The `inline` attribute defaults to `true`, which copies advice code into the instrumented method.
-Set `inline = false` to run advice as regular classes instead.
+Byte Buddy's `inline` attribute defaults to `true`, which copies advice code into the instrumented
+method. Set `inline = false` explicitly to run advice as regular classes instead.
 
-By default, the agent loads ordinary advice into a special `InstrumentationModuleClassLoader`, which
-can see classes from both the instrumented application classloader and the agent classloader. Helper
-placement is a separate choice: helpers can be loaded in that isolated classloader or injected into
-the instrumented classloader. Isolated advice is called from instrumented classes via invokedynamic
-bytecode instructions.
+With `inline = false`, the agent loads advice into a special `InstrumentationModuleClassLoader` by
+default, which can see classes from both the instrumented application classloader and the agent
+classloader. Helper placement is a separate choice: helpers can be loaded in that isolated
+classloader or injected into the instrumented classloader. Instrumented classes call advice in the
+isolated classloader via invokedynamic bytecode instructions.
 
-Using ordinary advice with isolated loading has these advantages:
+Using `inline = false` with isolated loading has these advantages:
 
 - allows instrumentation to have breakpoints set in them and be debugged using standard debugging techniques.
 - provides clean isolation of instrumentation advice from the application and other instrumentations
@@ -259,7 +259,7 @@ Using ordinary advice with isolated loading has these advantages:
 
 Advice classes and their static entry points must remain public for invokedynamic method-handle dispatch.
 Ordinary helper methods may be private when their callers and classloader boundaries permit it;
-ordinary advice may also use lambdas.
+non-inlined advice may also use lambdas.
 
 ### Shared classes and common classloader
 

@@ -61,14 +61,15 @@ public void onEnter(/* ... */) { /* ... */ }
 
 Advice classes should also have **no instance fields** — they are never instantiated.
 
-## Use ordinary production advice
+## Configure production advice
 
-Use `inline = false` consistently throughout each production module. Mixing inline and ordinary advice disables automatic helper isolation.
+Set `inline = false` explicitly on both advice annotations throughout each production module. Mixing
+advice marked `inline = true` and `inline = false` disables automatic helper isolation.
 
-Use OpenTelemetry APIs directly in ordinary advice and ordinary helpers, for example
+Use OpenTelemetry APIs directly in advice marked `inline = false` and ordinary helpers, for example
 `Context.current()` and `Span.fromContext(context)`.
 
-In genuinely inlined advice in the two internal exceptions, static interface calls cannot be
+In advice marked `inline = true` in the two internal exceptions, static interface calls cannot be
 copied into pre-Java-8 class files. Call them through a Java-8-compiled helper instead.
 
 Helpers called by advice are ordinary compiled methods and are not copied into the instrumented
@@ -284,7 +285,7 @@ cleanup action follows it, close the scope and then perform that action directly
 close in `try`/`finally` solely to guard against a hypothetical failure from `Scope.close()`. Use
 `try`/`finally` when earlier fallible work must complete before the scope can be closed.
 
-### Pattern 1 — Nullable `AdviceScope` for ordinary advice
+### Pattern 1 — Nullable `AdviceScope` for advice
 
 Use this by default when enter advice may decide not to start instrumentation.
 
