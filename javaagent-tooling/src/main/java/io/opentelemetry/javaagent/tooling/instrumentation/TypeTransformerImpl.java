@@ -3,11 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.instrumentation.indy;
+package io.opentelemetry.javaagent.tooling.instrumentation;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForceDynamicallyTypedAssignReturnedFactory;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyBootstrap;
 import java.io.IOException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
