@@ -117,7 +117,8 @@ public class JakartaServletServiceAdvice {
         && !((HttpServletResponse) response)
             .containsHeader(Servlet5SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {
       response =
-          new Servlet5SnippetInjectingResponseWrapper((HttpServletResponse) response, snippet);
+          new Servlet5SnippetInjectingResponseWrapper(
+              (HttpServletRequest) request, (HttpServletResponse) response, snippet);
     }
 
     AdviceScope adviceScope =

@@ -5,15 +5,59 @@
 
 package io.opentelemetry.javaagent.bootstrap.servlet;
 
+import java.util.function.BooleanSupplier;
+
 // this is shared by both ServletOutputStream and PrintWriter injection
 public final class InjectionState {
   private static final int HEAD_TAG_WRITTEN_FAKE_VALUE = -1;
   private static final int HEAD_TAG_PREFIX_LENGTH = "<head".length();
-  private final SnippetInjectingResponseWrapper wrapper;
+  private final BooleanSupplier currentRequest;
+  private SnippetInjectingResponseWrapper wrapper;
   private int headTagBytesSeen = 0;
+  private long contentLength = -1;
+  private boolean writer;
 
   public InjectionState(SnippetInjectingResponseWrapper wrapper) {
+    this(wrapper, () -> true);
+  }
+
+  public InjectionState(SnippetInjectingResponseWrapper wrapper, BooleanSupplier currentRequest) {
     this.wrapper = wrapper;
+    this.currentRequest = currentRequest;
+  }
+
+  public void setWrapper(SnippetInjectingResponseWrapper wrapper) {
+    this.wrapper = wrapper;
+  }
+
+  public void useWriter() {
+    writer = true;
+  }
+
+  public boolean shouldProcessStreamWrite() {
+    return !writer && shouldProcessWrite();
+  }
+
+  public void setContentLength(long contentLength) {
+    this.contentLength = contentLength;
+  }
+
+  public long getContentLength() {
+    return contentLength;
+  }
+
+  public boolean hasContentLength() {
+    return contentLength != -1;
+  }
+
+  public void resetBuffer() {
+    headTagBytesSeen = 0;
+  }
+
+  public void reset() {
+    resetBuffer();
+    contentLength = -1;
+    writer = false;
   }
 
   public int getHeadTagBytesSeen() {
@@ -29,7 +73,7 @@ public final class InjectionState {
   }
 
   public boolean shouldProcessWrite() {
-    if (isHeadTagWritten()) {
+    if (!currentRequest.getAsBoolean() || isHeadTagWritten()) {
       return false;
     }
     if (!wrapper.isContentTypeTextHtml()) {
