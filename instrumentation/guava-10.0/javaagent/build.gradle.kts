@@ -30,19 +30,17 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("version19Test") {
-      dependencies {
-        implementation("com.google.guava:guava:${baseVersion("19.0").orLatest()}")
-      }
+testing.suites {
+  register<JvmTestSuite>("version19Test") {
+    dependencies {
+      implementation("com.google.guava:guava:${baseVersion("19.0").orLatest()}")
     }
+  }
 
-    named<JvmTestSuite>("test") {
-      executions {
-        register("Experimental") {
-          jvmArgs("-Dotel.instrumentation.guava.experimental-span-attributes=true")
-        }
+  named<JvmTestSuite>("test") {
+    executions {
+      register("Experimental") {
+        jvmArgs("-Dotel.instrumentation.guava.experimental-span-attributes=true")
       }
     }
   }

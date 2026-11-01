@@ -45,51 +45,49 @@ dependencies {
   latestDepTestLibrary("com.couchbase.client:java-client:+")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation:couchbase:couchbase-common-3.1:javaagent"))
-        implementation("com.couchbase.client:java-client:3.4.3")
-        implementation("org.objenesis:objenesis")
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:couchbase:couchbase-common-3.1:javaagent"))
+      implementation("com.couchbase.client:java-client:3.4.3")
+      implementation("org.objenesis:objenesis")
     }
+  }
 
-    // SDK 3.4.3 covers the ProtostellarRequest constructor taking Core as its first argument.
-    register<JvmTestSuite>("version343Test") {
-      dependencies {
-        implementation("com.couchbase.client:java-client:3.4.3")
-      }
+  // SDK 3.4.3 covers the ProtostellarRequest constructor taking Core as its first argument.
+  register<JvmTestSuite>("version343Test") {
+    dependencies {
+      implementation("com.couchbase.client:java-client:3.4.3")
     }
+  }
 
-    // SDK 3.4.4 covers the eight-argument ProtostellarRequest constructor taking CoreProtostellar.
-    register<JvmTestSuite>("version344Test") {
-      dependencies {
-        implementation("com.couchbase.client:java-client:3.4.4")
-      }
+  // SDK 3.4.4 covers the eight-argument ProtostellarRequest constructor taking CoreProtostellar.
+  register<JvmTestSuite>("version344Test") {
+    dependencies {
+      implementation("com.couchbase.client:java-client:3.4.4")
     }
+  }
 
-    // RequestSpan.recordException is available in SDK 3.3.4+.
-    register<JvmTestSuite>("version334Test") {
-      dependencies {
-        implementation("com.couchbase.client:java-client:${baseVersion("3.3.4").orLatest()}")
-        implementation("org.testcontainers:testcontainers-couchbase")
-      }
+  // RequestSpan.recordException is available in SDK 3.3.4+.
+  register<JvmTestSuite>("version334Test") {
+    dependencies {
+      implementation("com.couchbase.client:java-client:${baseVersion("3.3.4").orLatest()}")
+      implementation("org.testcontainers:testcontainers-couchbase")
     }
+  }
 
-    named<JvmTestSuite>("test") {
-      executions {
-        register("Experimental") {
-          telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
+  named<JvmTestSuite>("test") {
+    executions {
+      register("Experimental") {
+        telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
+      }
+
+      register("ExceptionSignalLogs") {
+        filter {
+          includeTestsMatching("*CouchbaseExceptionSignalTest")
         }
-
-        register("ExceptionSignalLogs") {
-          filter {
-            includeTestsMatching("*CouchbaseExceptionSignalTest")
-          }
-          telemetryConfig("otel.semconv.exception.signal.preview", "logs")
-        }
+        telemetryConfig("otel.semconv.exception.signal.preview", "logs")
       }
     }
   }

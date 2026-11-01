@@ -37,58 +37,56 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-kafka:latest.release")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("testAsyncAcks") {
-      dependencies {
-        // async acks were added in 2.8
-        val springKafkaVersion = baseVersion("2.8.0").orLatest()
-        implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
+testing.suites {
+  register<JvmTestSuite>("testAsyncAcks") {
+    dependencies {
+      // async acks were added in 2.8
+      val springKafkaVersion = baseVersion("2.8.0").orLatest()
+      implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
+    }
+  }
+
+  register<JvmTestSuite>("testNoReceiveTelemetry") {
+    dependencies {
+      implementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
+
+      // the "library" configuration is not recognized by the test suite plugin
+      val springKafkaVersion = baseVersion("2.7.0").orLatest()
+      val springBootVersion = baseVersion("2.5.3").orLatest()
+      implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
+      implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
+      implementation("org.springframework.boot:spring-boot-starter:$springBootVersion")
+
+      if (otelProps.testLatestDeps) {
+        implementation("org.springframework.boot:spring-boot-starter-kafka:latest.release")
       }
     }
 
-    register<JvmTestSuite>("testNoReceiveTelemetry") {
-      dependencies {
-        implementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
-
-        // the "library" configuration is not recognized by the test suite plugin
-        val springKafkaVersion = baseVersion("2.7.0").orLatest()
-        val springBootVersion = baseVersion("2.5.3").orLatest()
-        implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
-        implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
-        implementation("org.springframework.boot:spring-boot-starter:$springBootVersion")
-
-        if (otelProps.testLatestDeps) {
-          implementation("org.springframework.boot:spring-boot-starter-kafka:latest.release")
-        }
-      }
-
-      targets.all {
-        testTask.configure {
-          jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-          jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
-        }
+    targets.all {
+      testTask.configure {
+        jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
+        jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
       }
     }
+  }
 
-    named<JvmTestSuite>("test") {
-      executions {
-        configureDefault {
-          telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-        }
+  named<JvmTestSuite>("test") {
+    executions {
+      configureDefault {
+        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+      }
 
-        register("Experimental") {
-          telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-          telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
-        }
+      register("Experimental") {
+        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+        telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
+      }
 
-        register("SpringDisabled") {
-          filter {
-            includeTestsMatching("SpringKafkaMockConsumerTest")
-          }
-          systemProperty("springDisabled", true)
-          telemetryConfig("otel.instrumentation.spring-kafka.enabled", "false")
+      register("SpringDisabled") {
+        filter {
+          includeTestsMatching("SpringKafkaMockConsumerTest")
         }
+        systemProperty("springDisabled", true)
+        telemetryConfig("otel.instrumentation.spring-kafka.enabled", "false")
       }
     }
   }

@@ -27,68 +27,66 @@ dependencies {
   latestDepTestLibrary("io.lettuce:lettuce-core:5.0.+") // see test suite below
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation-api-incubator"))
-        implementation(project(":javaagent-extension-api"))
-        implementation("io.lettuce:lettuce-core:5.0.0.RELEASE")
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation-api-incubator"))
+      implementation(project(":javaagent-extension-api"))
+      implementation("io.lettuce:lettuce-core:5.0.0.RELEASE")
+    }
+  }
+
+  register<JvmTestSuite>("lettuce51Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
     }
 
-    register<JvmTestSuite>("lettuce51Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
-      }
+    dependencies {
+      val lettuceVersion = baseVersion("5.1.0.RELEASE").orLatest("5.+")
+      implementation("io.lettuce:lettuce-core:$lettuceVersion")
+      implementation("org.testcontainers:testcontainers")
+    }
+  }
 
-      dependencies {
-        val lettuceVersion = baseVersion("5.1.0.RELEASE").orLatest("5.+")
-        implementation("io.lettuce:lettuce-core:$lettuceVersion")
-        implementation("org.testcontainers:testcontainers")
+  register<JvmTestSuite>("lettuce60Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
     }
 
-    register<JvmTestSuite>("lettuce60Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
-      }
+    dependencies {
+      val lettuceVersion = baseVersion("6.0.0.RELEASE").orLatest("6.4.+")
+      implementation("io.lettuce:lettuce-core:$lettuceVersion")
+      implementation("org.testcontainers:testcontainers")
+    }
+  }
 
-      dependencies {
-        val lettuceVersion = baseVersion("6.0.0.RELEASE").orLatest("6.4.+")
-        implementation("io.lettuce:lettuce-core:$lettuceVersion")
-        implementation("org.testcontainers:testcontainers")
+  register<JvmTestSuite>("lettuce65Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java", "src/testLettuce65/java"))
       }
     }
 
-    register<JvmTestSuite>("lettuce65Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java", "src/testLettuce65/java"))
-        }
-      }
-
-      dependencies {
-        val lettuceVersion = baseVersion("6.5.0.RELEASE").orLatest()
-        implementation("io.lettuce:lettuce-core:$lettuceVersion")
-        implementation("org.testcontainers:testcontainers")
-      }
+    dependencies {
+      val lettuceVersion = baseVersion("6.5.0.RELEASE").orLatest()
+      implementation("io.lettuce:lettuce-core:$lettuceVersion")
+      implementation("org.testcontainers:testcontainers")
     }
+  }
 
-    named<JvmTestSuite>("test") {
-      executions {
-        register("Experimental") {
-          telemetryConfig("otel.instrumentation.lettuce.experimental-span-attributes", "true")
-        }
+  named<JvmTestSuite>("test") {
+    executions {
+      register("Experimental") {
+        telemetryConfig("otel.instrumentation.lettuce.experimental-span-attributes", "true")
+      }
 
-        register("ConnectionTelemetryEnabled") {
-          telemetryConfig("otel.instrumentation.lettuce.connection-telemetry.enabled", "true")
-        }
+      register("ConnectionTelemetryEnabled") {
+        telemetryConfig("otel.instrumentation.lettuce.connection-telemetry.enabled", "true")
       }
     }
   }
