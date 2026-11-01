@@ -24,24 +24,22 @@ dependencies {
   testImplementation("com.google.guava:guava:33.7.2-jre")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation("net.spy:spymemcached:2.12.0")
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation("net.spy:spymemcached:2.12.0")
     }
+  }
 
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          systemProperty("testLatestDeps", otelProps.testLatestDeps)
-        }
+  named<JvmTestSuite>("test") {
+    executions {
+      configureEach {
+        systemProperty("testLatestDeps", otelProps.testLatestDeps)
+      }
 
-        register("Experimental") {
-          telemetryConfig("otel.instrumentation.spymemcached.experimental-span-attributes", "true")
-        }
+      register("Experimental") {
+        telemetryConfig("otel.instrumentation.spymemcached.experimental-span-attributes", "true")
       }
     }
   }
