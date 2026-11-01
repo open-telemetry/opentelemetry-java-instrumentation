@@ -36,6 +36,8 @@ public final class DubboTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   private final List<AttributesExtractor<DubboRequest, Result>> attributesExtractors =
       new ArrayList<>();
+  private final List<AttributesExtractor<DubboRequest, Result>> clientAttributesExtractors =
+      new ArrayList<>();
   private UnaryOperator<SpanNameExtractor<DubboRequest>> clientSpanNameExtractorCustomizer =
       UnaryOperator.identity();
   private UnaryOperator<SpanNameExtractor<DubboRequest>> serverSpanNameExtractorCustomizer =
@@ -53,6 +55,17 @@ public final class DubboTelemetryBuilder {
   public DubboTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<DubboRequest, Result> attributesExtractor) {
     attributesExtractors.add(attributesExtractor);
+    return this;
+  }
+
+  /**
+   * Adds an additional client-only {@link AttributesExtractor} to invoke to set attributes to
+   * instrumented items.
+   */
+  @CanIgnoreReturnValue
+  public DubboTelemetryBuilder addClientAttributeExtractor(
+      AttributesExtractor<DubboRequest, Result> attributesExtractor) {
+    clientAttributesExtractors.add(attributesExtractor);
     return this;
   }
 
@@ -112,6 +125,7 @@ public final class DubboTelemetryBuilder {
             .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractors(attributesExtractors)
+            .addAttributesExtractors(clientAttributesExtractors)
             .addOperationMetrics(RpcClientMetrics.get());
     setRpcClientExceptionEventExtractor(clientInstrumenterBuilder);
 

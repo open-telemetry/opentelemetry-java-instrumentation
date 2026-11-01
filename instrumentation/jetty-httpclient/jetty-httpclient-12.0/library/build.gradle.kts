@@ -1,5 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-
 plugins {
   id("otel.library-instrumentation")
 }
@@ -12,16 +10,4 @@ dependencies {
   library("org.eclipse.jetty:jetty-client:12.0.0")
 
   testImplementation(project(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:testing"))
-}
-
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("PreviewSemconv") {
-          jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-        }
-      }
-    }
-  }
 }

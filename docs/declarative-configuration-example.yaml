@@ -182,17 +182,22 @@ instrumentation/development:
           # with only a span link connecting it to the producer trace.
           enabled: false
 
-      # Used to specify a mapping from server addresses or configured targets to peer services.
-      # Configured targets containing commas or equals signs can only be mapped with declarative
-      # `service_peer_mapping`.
+      # Maps server addresses or configured targets to logical server service identities. Flat
+      # mappings use `target=service_name`; the target can be a hostname, IP address, or target
+      # including a port or path. Flat mappings cannot express service namespaces or targets
+      # containing commas or equals signs; use declarative `server_service_mapping` for those cases.
       # Each list entry is an object with the following properties:
-      #   peer (string, required): Server address or configured target to match against.
-      #   service_name (string, required): Peer service name to record for matching peers.
+      #   target (string, required): Server address or complete configured target to match
+      #     against.
+      #   service_name (string): Logical server service name to record for matching targets.
+      #   service_namespace (string): Logical server service namespace to record for matching
+      #     targets.
       # Example:
-      #   service_peer_mapping:
-      #     - peer: host
-      #       service_name: serviceName
-      service_peer_mapping: []
+      #   server_service_mapping:
+      #     - target: payments.example.com
+      #       service_name: payments
+      #       service_namespace: checkout
+      server_service_mapping: []
 
       # Strategy for suppressing nested instrumentation spans: `semconv` suppresses a span nested in
       # a span of the same semantic convention type, `span-kind` suppresses a span nested in a span

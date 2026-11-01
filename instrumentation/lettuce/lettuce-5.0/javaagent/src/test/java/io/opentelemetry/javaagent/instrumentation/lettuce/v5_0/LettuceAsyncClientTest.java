@@ -6,7 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.ExperimentalHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -174,7 +175,8 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
+                            equalTo(
+                                stringKey("server.service.name"), expectedMappedServiceName()))));
   }
 
   @SuppressWarnings("deprecation") // RedisURI constructor
@@ -210,7 +212,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_PORT, incorrectPort),
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event

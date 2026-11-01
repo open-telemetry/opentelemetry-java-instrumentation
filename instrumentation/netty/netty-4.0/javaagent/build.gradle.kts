@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -35,40 +38,23 @@ dependencies {
   latestDepTestLibrary("io.netty:netty-codec-http:4.0.+") // see netty-4.1 module
 }
 
-tasks {
-  val testConnectionSpan = register<Test>("testConnectionSpan") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("Netty40ConnectionSpanTest")
-      includeTestsMatching("Netty40ClientSslTest")
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureDefault {
+      filter {
+        excludeTestsMatching("Netty40ConnectionSpanTest")
+        excludeTestsMatching("Netty40ClientSslTest")
+      }
     }
-    include("**/Netty40ConnectionSpanTest.*", "**/Netty40ClientSslTest.*")
-    jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.netty.connection-telemetry.enabled=true,otel.instrumentation.netty.ssl-telemetry.enabled=true")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("Netty40ConnectionSpanTest")
-      excludeTestsMatching("Netty40ClientSslTest")
+    register("ConnectionSpan") {
+      filter {
+        includeTestsMatching("Netty40ConnectionSpanTest")
+        includeTestsMatching("Netty40ClientSslTest")
+      }
+      include("**/Netty40ConnectionSpanTest.*", "**/Netty40ClientSslTest.*")
+      telemetryConfig("otel.instrumentation.netty.connection-telemetry.enabled", "true")
+      telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
     }
-  }
-
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-    filter {
-      excludeTestsMatching("Netty40ConnectionSpanTest")
-      excludeTestsMatching("Netty40ClientSslTest")
-    }
-  }
-
-  check {
-    dependsOn(testConnectionSpan, testPreviewSemconv)
   }
 }
 

@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
@@ -117,7 +118,7 @@ class ElasticsearchRest6Test {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
 
@@ -164,7 +165,7 @@ class ElasticsearchRest6Test {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_search"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
@@ -232,7 +233,7 @@ class ElasticsearchRest6Test {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200)),
                 span ->

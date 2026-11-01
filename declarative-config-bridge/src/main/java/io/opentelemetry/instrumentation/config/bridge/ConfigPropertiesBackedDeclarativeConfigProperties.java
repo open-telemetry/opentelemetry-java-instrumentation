@@ -31,7 +31,8 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   private static final String JAVA_DECLARATIVE_PREFIX = "java.";
   private static final String INSTRUMENTATION_PROPERTY_PREFIX = "otel.instrumentation.";
-  private static final String JAVA_COMMON_SERVICE_PEER_MAPPING = "java.common.service_peer_mapping";
+  private static final String JAVA_COMMON_SERVER_SERVICE_MAPPING =
+      "java.common.server_service_mapping";
 
   private static final Map<String, String> SPECIAL_MAPPINGS;
 
@@ -55,7 +56,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
         "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters");
     // general.stability_opt_in_list is the name in the declarative configuration schema; the
     // general.semconv_stability.opt_in spelling is only reachable through this bridge and is kept
-    // for backwards compatibility (see SemconvSelectionResolver, which reads both)
+    // for backwards compatibility.
     SPECIAL_MAPPINGS.put("general.stability_opt_in_list", "otel.semconv-stability.opt-in");
     SPECIAL_MAPPINGS.put("general.semconv_stability.opt_in", "otel.semconv-stability.opt-in");
     SPECIAL_MAPPINGS.put(
@@ -252,8 +253,8 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   @Override
   public List<DeclarativeConfigProperties> getStructuredList(String name) {
     String fullPath = pathWithName(name);
-    if (instrumentationConfig && fullPath.equals(JAVA_COMMON_SERVICE_PEER_MAPPING)) {
-      return ServicePeerMapping.getList(configProperties);
+    if (instrumentationConfig && fullPath.equals(JAVA_COMMON_SERVER_SERVICE_MAPPING)) {
+      return ServiceMapping.getList(configProperties);
     }
     return null;
   }
