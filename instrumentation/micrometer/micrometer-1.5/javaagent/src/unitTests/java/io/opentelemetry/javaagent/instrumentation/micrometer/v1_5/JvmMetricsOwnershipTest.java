@@ -11,23 +11,16 @@ import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.micrometer.core.instrument.Meter;
-import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Tags;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.lang.reflect.Constructor;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class JvmMetricsOwnershipTest {
-  @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @ParameterizedTest
   @CsvSource({
@@ -141,31 +134,9 @@ class JvmMetricsOwnershipTest {
     }
   }
 
-  @SuppressWarnings("unchecked")
   private static Predicate<Meter.Id> policy(
       boolean enabled, Set<String> kept, Set<String> observers) {
-    try {
-      // Indy instrumentation keeps unexposed helpers in its own loader. Resolve the policy
-      // alongside the injected registry, not through the application Micrometer loader.
-      Class<?> helper =
-          Class.forName(
-              "io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.JvmMetricsOwnership",
-              true,
-              Metrics.globalRegistry.getRegistries().stream()
-                  .filter(
-                      registry ->
-                          registry.getClass().getName().contains("OpenTelemetryMeterRegistry"))
-                  .findFirst()
-                  .get()
-                  .getClass()
-                  .getClassLoader());
-      Constructor<?> constructor =
-          helper.getDeclaredConstructor(boolean.class, Set.class, Set.class);
-      constructor.setAccessible(true);
-      return (Predicate<Meter.Id>) constructor.newInstance(enabled, kept, observers);
-    } catch (ReflectiveOperationException e) {
-      throw new LinkageError(e.getMessage(), e);
-    }
+    return new JvmMetricsOwnership(enabled, kept, observers);
   }
 
   private static Meter.Id id(String name, Meter.Type type) {

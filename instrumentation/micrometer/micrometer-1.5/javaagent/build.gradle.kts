@@ -23,6 +23,17 @@ dependencies {
   testInstrumentation(project(":instrumentation:runtime-telemetry:javaagent"))
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation("io.micrometer:micrometer-core:1.5.0")
+      }
+    }
+  }
+}
+
 tasks {
   val testJvmMetricsOwnership = register<Test>("testJvmMetricsOwnership") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -94,6 +105,7 @@ tasks {
 
   check {
     dependsOn(
+      testing.suites,
       testJvmMetricsOwnership,
       testJvmMetricsOwnershipJfr,
       testBaseTimeUnit,
