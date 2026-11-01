@@ -72,7 +72,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("request"))
-            .and(takesArguments("java.lang.String", "io.nats.client.impl.Headers", "[B"))
+            .and(takesArguments("java.lang.String", "io.nats.client.impl.Headers", "byte[]"))
             .and(returns(CompletableFuture.class)),
         getClass().getName() + "$RequestFutureHeadersBodyAdvice");
     transformer.applyAdviceToMethod(

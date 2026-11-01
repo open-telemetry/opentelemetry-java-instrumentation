@@ -41,7 +41,7 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
     transformer.applyAdviceToMethod(
         named("sendCommand")
-            .and(takesArguments("redis.clients.jedis.commands.ProtocolCommand", "[[B")),
+            .and(takesArguments("redis.clients.jedis.commands.ProtocolCommand", "byte[][]")),
         getClass().getName() + "$SendCommandAdvice");
   }
 
