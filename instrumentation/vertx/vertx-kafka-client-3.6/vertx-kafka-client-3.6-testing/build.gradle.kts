@@ -1,6 +1,6 @@
 plugins {
-  id("otel.testcontainers-testing")
   id("otel.javaagent-testing")
+  id("otel.testcontainers-testing")
 }
 
 dependencies {

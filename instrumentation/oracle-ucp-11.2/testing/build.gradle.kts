@@ -1,6 +1,6 @@
 plugins {
-  id("otel.testcontainers-testing")
   id("otel.java-conventions")
+  id("otel.testcontainers-testing")
 }
 
 dependencies {

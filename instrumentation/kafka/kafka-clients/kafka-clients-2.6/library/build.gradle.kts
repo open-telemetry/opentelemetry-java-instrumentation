@@ -2,8 +2,8 @@ import io.opentelemetry.instrumentation.gradle.executions
 import org.gradle.api.plugins.jvm.JvmTestSuite
 
 plugins {
-  id("otel.testcontainers-testing")
   id("otel.library-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 dependencies {

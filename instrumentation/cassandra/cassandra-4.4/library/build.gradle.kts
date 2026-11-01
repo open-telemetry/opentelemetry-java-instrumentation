@@ -1,6 +1,6 @@
 plugins {
-  id("otel.testcontainers-testing")
   id("otel.library-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 dependencies {

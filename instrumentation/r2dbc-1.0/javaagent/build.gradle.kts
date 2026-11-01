@@ -1,8 +1,8 @@
 plugins {
-  id("otel.testcontainers-testing")
   id("otel.javaagent-instrumentation")
   id("otel.java-conventions")
   id("otel.nullaway-conventions")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {

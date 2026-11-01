@@ -1,6 +1,6 @@
 plugins {
-  id("otel.testcontainers-testing")
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 val camelversion = "2.20.1" // first version that the tests pass on

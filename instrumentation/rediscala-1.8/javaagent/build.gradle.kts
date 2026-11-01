@@ -1,7 +1,7 @@
 plugins {
-  id("otel.testcontainers-testing")
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {

@@ -1,8 +1,8 @@
 import java.time.Duration
 
 plugins {
-  id("otel.testcontainers-testing")
   id("otel.library-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 val baseAgent = configurations.create("baseAgent") {
