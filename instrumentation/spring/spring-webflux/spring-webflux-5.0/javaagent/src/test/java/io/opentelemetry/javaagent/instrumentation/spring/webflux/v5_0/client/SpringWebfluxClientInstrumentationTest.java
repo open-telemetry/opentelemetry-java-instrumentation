@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.client;
 
+import static io.opentelemetry.instrumentation.testing.util.MetricAssertions.histogram;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -68,18 +69,14 @@ class SpringWebfluxClientInstrumentationTest
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.spring-webflux-5.0",
-        metric ->
-            metric
-                .hasName("http.client.request.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfyingExactly(
-                                    equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                    equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                    equalTo(SERVER_ADDRESS, uri.getHost()),
-                                    equalTo(SERVER_PORT, uri.getPort())))));
+        histogram(
+            metric -> metric.hasName("http.client.request.duration"),
+            point ->
+                point.hasAttributesSatisfyingExactly(
+                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                    equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                    equalTo(SERVER_ADDRESS, uri.getHost()),
+                    equalTo(SERVER_PORT, uri.getPort()))));
   }
 }
