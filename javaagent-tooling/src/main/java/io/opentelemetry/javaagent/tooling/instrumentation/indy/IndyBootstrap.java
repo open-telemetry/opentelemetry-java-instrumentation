@@ -135,7 +135,7 @@ public class IndyBootstrap {
       MethodType adviceMethodType,
       Object[] args) {
     try {
-      // See the createBootstrapArgumentResolverFactory method for the argument definitions
+      // See the getAdviceBootstrapArguments method for the argument definitions
       return bootstrapAdvice(
           lookup,
           adviceMethodName,
@@ -212,7 +212,7 @@ public class IndyBootstrap {
     }
   }
 
-  public static Advice.BootstrapArgumentResolver.Factory createBootstrapArgumentResolverFactory(
+  public static Advice.BootstrapArgumentResolver.Factory getAdviceBootstrapArguments(
       InstrumentationModule instrumentationModule) {
     String moduleName = instrumentationModule.getClass().getName();
     return (adviceMethod, exit) ->

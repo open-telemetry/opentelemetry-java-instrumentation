@@ -38,7 +38,7 @@ public final class TypeTransformerImpl implements TypeTransformer {
                     new Advice.AssignReturned.Factory().withSuppressed(Throwable.class)))
             .bootstrap(
                 IndyBootstrap.getIndyBootstrapMethod(),
-                IndyBootstrap.createBootstrapArgumentResolverFactory(instrumentationModule),
+                IndyBootstrap.getAdviceBootstrapArguments(instrumentationModule),
                 TypeDescription.Generic.Visitor.Generalizing.INSTANCE);
   }
 

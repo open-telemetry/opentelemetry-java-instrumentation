@@ -98,7 +98,7 @@ public final class InstrumentationModuleInstaller {
     if (useIndy) {
       return installIndyModule(instrumentationModule, parentAgentBuilder);
     } else {
-      return installHelperInjectionModule(instrumentationModule, parentAgentBuilder);
+      return installInjectingModule(instrumentationModule, parentAgentBuilder);
     }
   }
 
@@ -207,7 +207,7 @@ public final class InstrumentationModuleInstaller {
     return agentBuilder;
   }
 
-  private AgentBuilder installHelperInjectionModule(
+  private AgentBuilder installInjectingModule(
       InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     List<String> helperClassNames =
         InstrumentationModuleMuzzle.getHelperClassNames(instrumentationModule);
