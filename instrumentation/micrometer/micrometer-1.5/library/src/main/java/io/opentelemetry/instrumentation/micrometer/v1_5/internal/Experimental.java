@@ -100,7 +100,7 @@ public final class Experimental {
    * <p>The predicate receives the registered Micrometer ID after meter filters, before bridge
    * naming conventions. It is evaluated when creating a meter; changing its result does not replace
    * already registered meters. A suppressed timer or distribution summary also creates none of its
-   * companion instruments (the {@code .max} gauge and the percentile and histogram gauges).
+   * companion instruments (the percentile and histogram gauges).
    *
    * <p>The caller owns the suppression policy. The bridge does not determine whether another
    * instrumentation replaces the meter's observations.

@@ -41,9 +41,9 @@ buffer, system CPU, and file-descriptor replacements additionally require
 
 This selects native units and attributes, rather than preserving identical series. Native thread
 counts partition platform threads by daemon flag and state; summing those partitions replaces live
-and per-state counts. Native GC duration includes both pause and concurrent-phase notifications;
-GC cause capture is separately configurable. Memory/buffer values of `-1` (unavailable) are omitted
-by runtime telemetry. CPU time uses seconds in the native representation.
+and per-state counts. Native GC duration includes both pause and concurrent-phase notifications
+and always includes `jvm.gc.cause`. Memory/buffer values of `-1` (unavailable) are omitted by
+runtime telemetry. CPU time uses seconds in the native representation.
 
 Keep an exact registered Micrometer name, including all its generated companion instruments:
 

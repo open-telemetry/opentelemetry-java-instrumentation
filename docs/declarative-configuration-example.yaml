@@ -15,7 +15,7 @@ instrumentation/development:
         # List of HTTP request headers to capture in HTTP client telemetry.
         request_captured_headers: []
 
-        # List of HTTP response headgers to capture in HTTP client telemetry.
+        # List of HTTP response headers to capture in HTTP client telemetry.
         response_captured_headers: []
       server:
         # List of HTTP request headers to capture in HTTP server telemetry.

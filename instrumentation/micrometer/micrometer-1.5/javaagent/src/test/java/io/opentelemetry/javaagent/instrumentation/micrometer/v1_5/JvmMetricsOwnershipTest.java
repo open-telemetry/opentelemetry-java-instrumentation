@@ -145,7 +145,7 @@ class JvmMetricsOwnershipTest {
   private static Predicate<Meter.Id> policy(
       boolean enabled, Set<String> kept, Set<String> observers) {
     try {
-      // V3's indy instrumentation keeps unexposed helpers in its own loader. Resolve the policy
+      // Indy instrumentation keeps unexposed helpers in its own loader. Resolve the policy
       // alongside the injected registry, not through the application Micrometer loader.
       Class<?> helper =
           Class.forName(

@@ -30,7 +30,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 // runs with jvm-metrics-ownership enabled and jvm.classes.unloaded kept, see build.gradle.kts
 class JvmMetricsOwnershipEnabledTest {
   private static final String MICROMETER_SCOPE = "io.opentelemetry.micrometer-1.5";
-  private static final String RUNTIME_TELEMETRY_SCOPE = "io.opentelemetry.runtime-telemetry-java8";
+  private static final String RUNTIME_TELEMETRY_SCOPE = "io.opentelemetry.runtime-telemetry";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

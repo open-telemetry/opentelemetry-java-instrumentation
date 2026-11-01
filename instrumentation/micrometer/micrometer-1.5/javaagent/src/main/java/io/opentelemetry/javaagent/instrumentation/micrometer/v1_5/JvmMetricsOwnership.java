@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
+import static java.util.Collections.unmodifiableSet;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 
 import io.micrometer.core.instrument.Meter;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
 
 /**
  * Selects supported standard JVM meters whose observations are owned by agent JMX telemetry.
- * Complementary metrics and unknown names remain bridged; this is not a namespace filter.
+ * Complementary metrics and unknown names remain bridged.
  */
 final class JvmMetricsOwnership implements Predicate<Meter.Id> {
   private static final Logger logger = Logger.getLogger(JvmMetricsOwnership.class.getName());
@@ -29,8 +29,8 @@ final class JvmMetricsOwnership implements Predicate<Meter.Id> {
 
   JvmMetricsOwnership(boolean enabled, Set<String> kept, Set<String> registeredObservers) {
     this.enabled = enabled;
-    this.kept = Collections.unmodifiableSet(new HashSet<>(kept));
-    this.registeredObservers = Collections.unmodifiableSet(new HashSet<>(registeredObservers));
+    this.kept = unmodifiableSet(new HashSet<>(kept));
+    this.registeredObservers = unmodifiableSet(new HashSet<>(registeredObservers));
     if (enabled && registeredObservers.isEmpty()) {
       // runtime telemetry is disabled, reports these metrics through JFR, or has not been
       // installed yet (agent listeners are delayed when the application uses a custom LogManager)
@@ -115,7 +115,7 @@ final class JvmMetricsOwnership implements Predicate<Meter.Id> {
       case "process.files.max":
         return id.getType() == Meter.Type.GAUGE ? "jvm.file_descriptor.limit" : null;
       // Both timers partition the same GC notifications collected by the native histogram.
-      // Selecting ownership adopts native GC attributes, including its optional cause capture.
+      // Selecting ownership adopts native GC attributes, including GC cause capture.
       case "jvm.gc.pause":
       case "jvm.gc.concurrent.phase.time":
         return id.getType() == Meter.Type.TIMER ? "jvm.gc.duration" : null;

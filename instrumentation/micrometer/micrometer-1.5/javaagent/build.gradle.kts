@@ -24,23 +24,18 @@ dependencies {
 }
 
 tasks {
-  val ownershipTests = listOf("testJvmMetricsOwnership", "testJvmMetricsOwnershipV3Preview").map { taskName ->
-    register<Test>(taskName) {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      filter {
-        includeTestsMatching("*JvmMetricsOwnershipEnabledTest")
-      }
-      include("**/*JvmMetricsOwnershipEnabledTest.*")
-      jvmArgs(
-        "-Dotel.instrumentation.micrometer.experimental.jvm-metrics-ownership.enabled=true",
-        "-Dotel.instrumentation.micrometer.experimental.jvm-metrics-ownership.kept=jvm.classes.unloaded",
-        "-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true",
-      )
-      if (taskName.endsWith("V3Preview")) {
-        jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-      }
+  val testJvmMetricsOwnership = register<Test>("testJvmMetricsOwnership") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*JvmMetricsOwnershipEnabledTest")
     }
+    include("**/*JvmMetricsOwnershipEnabledTest.*")
+    jvmArgs(
+      "-Dotel.instrumentation.micrometer.experimental.jvm-metrics-ownership.enabled=true",
+      "-Dotel.instrumentation.micrometer.experimental.jvm-metrics-ownership.kept=jvm.classes.unloaded",
+      "-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true",
+    )
   }
 
   val testJvmMetricsOwnershipJfr = register<Test>("testJvmMetricsOwnershipJfr") {
@@ -99,7 +94,7 @@ tasks {
 
   check {
     dependsOn(
-      ownershipTests,
+      testJvmMetricsOwnership,
       testJvmMetricsOwnershipJfr,
       testBaseTimeUnit,
       testPrometheusMode,
