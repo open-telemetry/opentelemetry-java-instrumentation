@@ -5,6 +5,9 @@
  * instrumentation isn't able to reference it.
  */
 
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -50,40 +53,26 @@ if (otelProps.testLatestDeps) {
   }
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    if (name != "testDisabled") {
-      jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
+      if (name != "testDisabled") {
+        jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
+      }
     }
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
-  }
-
-  val testDisabled = register<Test>("testDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*DefaultEnablementTest")
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
     }
+    register("Disabled") {
+      filter {
+        includeTestsMatching("*DefaultEnablementTest")
+      }
 
-    jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
-  }
-
-  check {
-    dependsOn(
-      testing.suites,
-      testDisabled,
-      testExperimental,
-    )
+      jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
+    }
   }
 }
