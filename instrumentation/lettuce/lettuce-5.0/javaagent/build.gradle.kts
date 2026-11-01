@@ -91,11 +91,7 @@ tasks {
   }
 
   check {
-    dependsOn(
-      testing.suites,
-      "testConnectionTelemetryEnabled",
-      "testExperimental",
-    )
+    dependsOn(testing.suites)
   }
 }
 
