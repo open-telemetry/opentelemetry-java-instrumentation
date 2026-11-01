@@ -1,0 +1,20 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+settingsEvaluated { settings ->
+  def remote = settings.buildCache.remote
+  if (remote != null) {
+    remote.push = false
+  }
+  if (settings.gradle.parent == null) {
+    if (remote == null || !remote.enabled) {
+      throw new GradleException("The CI benchmark requires remote cache reads")
+    }
+    println("MUZZLE_BENCHMARK_REMOTE enabled=${remote.enabled} push=${remote.push}")
+    settings.gradle.taskGraph.whenReady {
+      println("MUZZLE_BENCHMARK_TASK_GRAPH ${System.currentTimeMillis()}")
+    }
+  }
+}
