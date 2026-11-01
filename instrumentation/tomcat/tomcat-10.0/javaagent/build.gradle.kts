@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -31,21 +32,16 @@ dependencies {
 testing.suites.named<JvmTestSuite>("test") {
   executions {
     register("RequestParameterCapture") {
-      jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.servlet.experimental.request-parameters.included=test-*",
-      )
+      telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.included", "test-*")
     }
 
     register("UserNameCapture") {
       filter {
         includeTestsMatching("*TomcatHandlerTest.capturesUserNameFromPrincipal")
       }
-      jvmArgs("-Dotel.instrumentation.common.user.name.enabled=true")
       jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
       jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-      systemProperty("metadataConfig", "otel.instrumentation.common.user.name.enabled=true")
+      telemetryConfig("otel.instrumentation.common.user.name.enabled", "true")
     }
 
     register("Experimental") {

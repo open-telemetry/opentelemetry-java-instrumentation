@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -54,8 +55,7 @@ testing {
 testing.suites.withType(JvmTestSuite::class).configureEach {
   executions {
     register("ExceptionSignalLogs") {
-      jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-      systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
   }
 }

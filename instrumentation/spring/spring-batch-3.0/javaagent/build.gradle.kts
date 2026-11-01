@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -50,11 +51,7 @@ testing.suites.named<JvmTestSuite>("test") {
         includeTestsMatching("*ChunkRootSpanTest")
       }
       include("**/*ChunkRootSpanTest.*")
-      jvmArgs("-Dotel.instrumentation.spring-batch.experimental.chunk.new-trace=true")
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.spring-batch.experimental.chunk.new-trace=true",
-      )
+      telemetryConfig("otel.instrumentation.spring-batch.experimental.chunk.new-trace", "true")
     }
 
     register("ItemLevelSpan") {
@@ -63,8 +60,7 @@ testing.suites.named<JvmTestSuite>("test") {
         includeTestsMatching("*CustomSpanEventTest")
       }
       include("**/*ItemLevelSpanTest.*", "**/*CustomSpanEventTest.*")
-      jvmArgs("-Dotel.instrumentation.spring-batch.item.enabled=true")
-      systemProperty("metadataConfig", "otel.instrumentation.spring-batch.item.enabled=true")
+      telemetryConfig("otel.instrumentation.spring-batch.item.enabled", "true")
     }
 
     register("Experimental") {
@@ -73,8 +69,7 @@ testing.suites.named<JvmTestSuite>("test") {
         excludeTestsMatching("*ItemLevelSpanTest")
         excludeTestsMatching("*CustomSpanEventTest")
       }
-      jvmArgs("-Dotel.instrumentation.spring-batch.experimental-span-attributes=true")
-      systemProperty("metadataConfig", "otel.instrumentation.spring-batch.experimental-span-attributes=true")
+      telemetryConfig("otel.instrumentation.spring-batch.experimental-span-attributes", "true")
     }
   }
 }
