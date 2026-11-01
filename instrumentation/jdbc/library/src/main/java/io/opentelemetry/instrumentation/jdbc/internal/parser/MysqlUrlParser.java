@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthorityWithQueryAt;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractSubtype;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.indexOfAny;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
@@ -82,17 +80,13 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     int hostsStart = jdbcUrl.indexOf("://") + 3;
     int hostsEnd = indexOfAny(jdbcUrl, hostsStart, '/', '?', '#');
     hostsEnd = hostsEnd < 0 ? jdbcUrl.length() : hostsEnd;
-    String authority = jdbcUrl.substring(hostsStart, hostsEnd);
-    HostList parsedHosts = MysqlHostParser.parseHostList(authority, mysql);
-    // A validated host block without user info makes the query boundary unambiguous.
-    boolean validHostBlocks =
-        parsedHosts != null && parsedHosts.hasHostProperties() && authority.indexOf('@') < 0;
-    if (!validHostBlocks
-        && extractAuthority(jdbcUrl) == null
-        && extractAuthorityWithQueryAt(jdbcUrl, parsedHosts != null) == null) {
+    if (hasAmbiguousCredentials(jdbcUrl, hostsEnd)) {
+      logger.fine("Unable to determine MySQL/MariaDB host boundaries safely");
       ctx.resolveConfiguredServerTarget(null);
       return;
     }
+    HostList parsedHosts =
+        MysqlHostParser.parseHostList(jdbcUrl.substring(hostsStart, hostsEnd), mysql);
     List<HostPort> hosts = parsedHosts == null ? null : parsedHosts.hosts();
     boolean hostProperties = parsedHosts != null && parsedHosts.firstHostProperties();
     resolveHostGroup(hosts, ctx);
@@ -122,6 +116,44 @@ public final class MysqlUrlParser implements JdbcUrlParser {
               .addEndpoint(ctx.host(), ctx.port() == null ? -1 : ctx.port())
               .build());
     }
+  }
+
+  /**
+   * A raw at sign outside the authority is safe only in an unambiguous query value. Path and
+   * fragment text, and query values that could contain a remaining host list, may be malformed
+   * credentials instead.
+   */
+  private static boolean hasAmbiguousCredentials(String jdbcUrl, int authorityEnd) {
+    int at = jdbcUrl.indexOf('@', authorityEnd);
+    if (at < 0) {
+      return false;
+    }
+    int queryStart = jdbcUrl.indexOf('?', authorityEnd);
+    int fragmentStart = jdbcUrl.indexOf('#', authorityEnd);
+    for (; at >= 0; at = jdbcUrl.indexOf('@', at + 1)) {
+      if (queryStart < 0 || at < queryStart || (fragmentStart >= 0 && at > fragmentStart)) {
+        return true;
+      }
+      int parameterStart = Math.max(queryStart, jdbcUrl.lastIndexOf('&', at)) + 1;
+      int equals = jdbcUrl.indexOf('=', parameterStart);
+      if (equals <= parameterStart || equals > at) {
+        return true;
+      }
+      int parameterEnd = indexOfAny(jdbcUrl, at + 1, '&', '#');
+      parameterEnd = parameterEnd < 0 ? jdbcUrl.length() : parameterEnd;
+      int delimiter = indexOfAny(jdbcUrl, parameterStart, '/', '?');
+      if (delimiter >= 0 && delimiter < parameterEnd) {
+        return true;
+      }
+      String suffix = jdbcUrl.substring(at + 1, parameterEnd).trim();
+      if ((suffix.indexOf(',') >= 0
+              || suffix.startsWith("(")
+              || suffix.regionMatches(true, 0, "address=", 0, "address=".length()))
+          && MysqlHostParser.parseHostList(suffix, true) != null) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static void resolveHostGroup(@Nullable List<HostPort> hosts, ParseContext ctx) {

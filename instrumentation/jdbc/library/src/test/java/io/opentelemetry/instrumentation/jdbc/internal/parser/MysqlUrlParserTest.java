@@ -216,6 +216,114 @@ class MysqlUrlParserTest {
   }
 
   @ParameterizedTest
+  @MethodSource("ambiguousCredentialUrls")
+  void validHostsCannotRecoverAnAmbiguousCredentialBoundary(String url) {
+    DbInfo info = JdbcConnectionUrlParser.parse(url, null);
+
+    assertThat(info.getConfiguredServerTarget()).isNull();
+    assertThat(info.getDbNamespace()).isNull();
+  }
+
+  private static Stream<Arguments> ambiguousCredentialUrls() {
+    List<String> urls = new ArrayList<>();
+    for (String prefix :
+        asList(
+            "jdbc:mysql://",
+            "jdbc:mysql:replication://",
+            "jdbc:mariadb://",
+            "jdbc:mariadb:sequential://")) {
+      List<String> hostForms = new ArrayList<>(asList("h1:3306", "address=(host=h1)"));
+      if (prefix.startsWith("jdbc:mysql:")) {
+        hostForms.add("(host=h1)");
+      }
+      for (String host : hostForms) {
+        for (int hostCount : asList(0, 1, 6)) {
+          for (int credentialIndex = 0; credentialIndex <= hostCount; credentialIndex++) {
+            List<String> entries = new ArrayList<>();
+            for (int i = 0; i < hostCount; i++) {
+              entries.add(host);
+            }
+            entries.add(credentialIndex, "user:123");
+            for (String suffix :
+                asList(
+                    "/a@h2:3306,h3:3306/db",
+                    "/a@h2:3306,h3:3306/db?user=admin@corp.com",
+                    "?x=y@h2:3306,h3:3306/db",
+                    "?x=y@h2:3306,h3:3306",
+                    "?x=y@h2:3306,h3:3306&user=admin@corp.com",
+                    "?x=/a@h2:3306,h3:3306",
+                    "?x=y@address=(host=h2)/db",
+                    "?x=y@(host=h2,port=3306)",
+                    "?missing@h2:3306",
+                    "#ignored?x=y@h2:3306,h3:3306/db",
+                    "/db?user=admin@corp.com#ignored@h2")) {
+              urls.add(prefix + String.join(",", entries) + suffix);
+            }
+          }
+        }
+      }
+    }
+    return urls.stream().distinct().map(url -> argumentSet(url, url));
+  }
+
+  @Test
+  void rejectedCredentialBoundariesCannotUseQueryOrDataSourceFallbacks() {
+    Properties properties = new Properties();
+    properties.setProperty("serverName", "fallback");
+    properties.setProperty("portNumber", "1111");
+    String url =
+        "jdbc:mysql://(host=h1),user:123/a@h2:3306,h3:3306/db"
+            + "?serverName=query-host&portNumber=2222";
+
+    assertThat(JdbcConnectionUrlParser.parse(url, properties).getConfiguredServerTarget()).isNull();
+  }
+
+  @ParameterizedTest
+  @MethodSource("unambiguousQueryUrls")
+  void queryValuesDoNotDependOnUnrelatedHostSyntax(String url, boolean multipleHosts) {
+    DbInfo info = JdbcConnectionUrlParser.parse(url, null);
+
+    assertThat(info.getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create(multipleHosts ? "h1,h2" : "h1", null));
+    assertThat(info.getDbNamespace()).isEqualTo(url.contains("/db") ? "db" : null);
+  }
+
+  private static Stream<Arguments> unambiguousQueryUrls() {
+    List<Arguments> urls = new ArrayList<>();
+    for (String prefix :
+        asList(
+            "jdbc:mysql://",
+            "jdbc:mysql:replication://",
+            "jdbc:mariadb://",
+            "jdbc:mariadb:sequential://")) {
+      List<String> hostForms = new ArrayList<>(asList("h1:3306", "address=(host=h1)"));
+      if (prefix.startsWith("jdbc:mysql:")) {
+        hostForms.add("(host=h1)");
+      }
+      for (String host : hostForms) {
+        for (boolean multipleHosts : asList(false, true)) {
+          String authority =
+              host + (multipleHosts ? ",user%40example:p%2Fa%3Fs%23s%40word@h2:3306" : "");
+          for (String path : asList("", "/db")) {
+            for (String query :
+                asList(
+                    "?user=admin@corp.com",
+                    "?sessionVariables=email='user@example.com',sql_mode=ANSI",
+                    "?first=user@example.com&second=other@example.org",
+                    "?user=user%40example.com&options=(value)",
+                    "?user=admin@corp.com&serverSslCert=/etc/ssl/ca.pem",
+                    "?user=admin@corp.com#ignored")) {
+              String url = prefix + authority + path + query;
+              urls.add(argumentSet(url, url, multipleHosts));
+            }
+          }
+        }
+      }
+    }
+    return urls.stream();
+  }
+
+  @ParameterizedTest
   @ValueSource(
       strings = {
         "jdbc:mysql://(user):ex(ample@h1:1111,h2:2222/db",

@@ -35,11 +35,10 @@ final class MysqlHostParser {
   @Nullable
   static HostList parseHostList(String authority, boolean mysql) {
     if (authority.isEmpty()) {
-      return new HostList(emptyList(), false, false);
+      return new HostList(emptyList(), false);
     }
     List<HostPort> hosts = new ArrayList<>();
     boolean firstHostProperties = false;
-    boolean hostProperties = false;
     for (String segment : splitHostList(authority)) {
       String entry = stripUserInfo(segment.trim(), mysql);
       HostPort host = entry == null ? null : parseHost(entry, mysql);
@@ -51,10 +50,9 @@ final class MysqlHostParser {
       if (hosts.isEmpty()) {
         firstHostProperties = properties;
       }
-      hostProperties |= properties;
       hosts.add(host);
     }
-    return new HostList(Collections.unmodifiableList(hosts), firstHostProperties, hostProperties);
+    return new HostList(Collections.unmodifiableList(hosts), firstHostProperties);
   }
 
   @Nullable
@@ -259,12 +257,10 @@ final class MysqlHostParser {
   static final class HostList {
     private final List<HostPort> hosts;
     private final boolean firstHostProperties;
-    private final boolean hostProperties;
 
-    private HostList(List<HostPort> hosts, boolean firstHostProperties, boolean hostProperties) {
+    private HostList(List<HostPort> hosts, boolean firstHostProperties) {
       this.hosts = hosts;
       this.firstHostProperties = firstHostProperties;
-      this.hostProperties = hostProperties;
     }
 
     List<HostPort> hosts() {
@@ -273,10 +269,6 @@ final class MysqlHostParser {
 
     boolean firstHostProperties() {
       return firstHostProperties;
-    }
-
-    boolean hasHostProperties() {
-      return hostProperties;
     }
   }
 }

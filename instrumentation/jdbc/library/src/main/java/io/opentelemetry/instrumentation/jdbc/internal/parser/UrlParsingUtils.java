@@ -256,11 +256,6 @@ public final class UrlParsingUtils {
   /** Extract an authority when an at sign in a later query parameter obscures its boundary. */
   @Nullable
   static String extractAuthorityWithQueryAt(String url) {
-    return extractAuthorityWithQueryAt(url, false);
-  }
-
-  @Nullable
-  static String extractAuthorityWithQueryAt(String url, boolean validatedAuthority) {
     int authorityStart = url.indexOf("://");
     authorityStart = authorityStart < 0 ? 0 : authorityStart + 3;
     int authorityEnd = indexOfAny(url, authorityStart, '/', '?', '#');
@@ -286,7 +281,7 @@ public final class UrlParsingUtils {
     }
 
     String authority = url.substring(authorityStart, authorityEnd);
-    if (!validatedAuthority && !isEndpointAuthority(authority)) {
+    if (!isEndpointAuthority(authority)) {
       return null;
     }
     String suffix = url.substring(credentialsEnd + 1, parameterEnd);
