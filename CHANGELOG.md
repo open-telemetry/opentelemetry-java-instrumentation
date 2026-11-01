@@ -7,6 +7,7 @@
 - Apache HttpClient 4.3 library instrumentation no longer automatically emits
   `network.peer.address` or `network.peer.port` inferred from the route target.
   Use `server.address` and `server.port` for logical destination grouping.
+- Configured service mappings now emit `server.service.name` and `server.service.namespace`, and no longer emit `peer.service`, `service.peer.name`, or `service.peer.namespace`. Rename `otel.instrumentation.common.peer-service-mapping` to `otel.instrumentation.common.server-service-mapping`; in YAML, use `java.common.server_service_mapping` with `target` instead of `peer`.
 - Rename `otel.instrumentation.grpc.{client,server}.request-metadata.{included,excluded}` to
   `otel.instrumentation.grpc.{client,server}.request-headers.{included,excluded}`.
 - Captured gRPC request attributes now use `rpc.request.header.<key>` instead of
@@ -233,11 +234,6 @@
   `structuredAttributesIncluded` and `structuredAttributesExcluded` in XML, or
   `setStructuredAttributes(IncludeExclude)` programmatically.
   Log4j `MapMessage` keys are emitted as their original log attribute names.
-- Service-peer semantic conventions now require `otel.semconv-stability.preview=service.peer`
-  (or `service.peer/dup` for dual emission). The `service.peer` and `service.peer/dup`
-  values in `otel.semconv-stability.opt-in` no longer select them.
-  For declarative configuration, move these values from `general.stability_opt_in_list` to
-  `java.common.semconv_stability.preview`.
 - Micrometer timers and distribution summaries no longer emit separate `.max` gauge metrics; use the
   maximum from their histogram instead. Custom meter statistic suffixes are appended after the base
   name passes through the naming convention (for example, Prometheus mode changes
@@ -362,6 +358,12 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove the deprecated `ServicePeerAttributesExtractor`,
+  `HttpClientServicePeerAttributesExtractor`, `ServicePeerResolver`, and
+  `expectedPeerService()` APIs; use `ServerServiceAttributesExtractor`,
+  `HttpClientServerServiceAttributesExtractor`, and `ServiceMappingResolver` instead. Replace
+  `expectedPeerService()` with `TestServerServiceMapping.expectedMappedServiceName()` in
+  service-mapping tests.
 - Rename `GrpcTelemetryBuilder.setClientRequestMetadata` and
   `GrpcTelemetryBuilder.setServerRequestMetadata` to their `RequestHeaders` forms. Remove
   `setCapturedClientRequestMetadata` and `setCapturedServerRequestMetadata`.

@@ -145,4 +145,11 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
   }
+
+  if (System.getProperty("os.name").lowercase().contains("windows")) {
+    named<Test>("testAdditionalVariants") {
+      // Concurrent container startup and cleanup can hang in Windows Host Network Service.
+      mustRunAfter(named("testLimitedMatrix"))
+    }
+  }
 }

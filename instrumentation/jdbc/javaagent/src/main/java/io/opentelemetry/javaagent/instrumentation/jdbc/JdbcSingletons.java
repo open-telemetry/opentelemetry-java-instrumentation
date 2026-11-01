@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenterBuilder;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
@@ -38,8 +38,8 @@ public class JdbcSingletons {
   public static final boolean CAPTURE_QUERY_PARAMETERS;
 
   static {
-    AttributesExtractor<DbRequest, Void> servicePeerExtractor =
-        ServicePeerAttributesExtractor.create(
+    AttributesExtractor<DbRequest, Void> serverServiceAttributesExtractor =
+        ServerServiceAttributesExtractor.create(
             new JdbcAttributesGetter(), GlobalOpenTelemetry.get());
 
     CAPTURE_QUERY_PARAMETERS =
@@ -49,7 +49,7 @@ public class JdbcSingletons {
     statementInstrumenter =
         JdbcInstrumenterFactory.createStatementInstrumenter(
             GlobalOpenTelemetry.get(),
-            singletonList(servicePeerExtractor),
+            singletonList(serverServiceAttributesExtractor),
             true,
             DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "jdbc"),
             CAPTURE_QUERY_PARAMETERS);
@@ -57,7 +57,7 @@ public class JdbcSingletons {
     transactionInstrumenter =
         JdbcInstrumenterFactory.createTransactionInstrumenter(
             GlobalOpenTelemetry.get(),
-            singletonList(servicePeerExtractor),
+            singletonList(serverServiceAttributesExtractor),
             DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "jdbc")
                 .get("transaction/development")
                 .getBoolean("enabled", false));

@@ -10,7 +10,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -105,7 +104,6 @@ class CouchbaseClient30Test {
                         .hasStatus(StatusData.unset())
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(PEER_SERVICE, experimental("kv")),
                             satisfies(
                                 stringKey("couchbase.operation_id"), val -> val.startsWith("0x")),
                             equalTo(stringKey("couchbase.document_id"), experimental("id"))),
@@ -121,7 +119,6 @@ class CouchbaseClient30Test {
                         .hasStatus(StatusData.unset())
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(PEER_SERVICE, experimental("kv")),
                             equalTo(stringKey("couchbase.operation_id"), experimental("0x")),
                             equalTo(stringKey("couchbase.document_id"), experimental("id"))));
           }
@@ -143,7 +140,6 @@ class CouchbaseClient30Test {
                         .hasStatus(StatusData.unset())
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(PEER_SERVICE, experimental("kv")),
                             satisfies(
                                 stringKey("couchbase.operation_id"), val -> val.startsWith("0x")),
                             equalTo(stringKey("couchbase.document_id"), experimental("async-id"))),
@@ -159,7 +155,6 @@ class CouchbaseClient30Test {
                         .hasStatus(StatusData.unset())
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(PEER_SERVICE, experimental("kv")),
                             equalTo(stringKey("couchbase.operation_id"), experimental("0x")),
                             equalTo(stringKey("couchbase.document_id"), experimental("async-id"))));
           }

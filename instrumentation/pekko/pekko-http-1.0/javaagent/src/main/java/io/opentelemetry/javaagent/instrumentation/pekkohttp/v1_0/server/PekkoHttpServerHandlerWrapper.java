@@ -21,7 +21,8 @@ import scala.util.Success;
 import scala.util.Try;
 
 /**
- * Wraps the handler function that is passed to {@code Http2Ext.bindAndHandleAsync}.
+ * Wraps the handler function that is passed to {@code HttpExt.bindAndHandleAsync} or {@code
+ * Http2Ext.bindAndHandleAsync}.
  *
  * <p>With http/1.1 requests and responses are matched by their order in the connection flow, see
  * {@link PekkoHttpServerTracer}. Http/2 multiplexes concurrent streams on a single connection, so
@@ -53,6 +54,10 @@ public class PekkoHttpServerHandlerWrapper
     HttpRequest serverRequest = request;
     PekkoTracingRequest tracedRequest =
         serverRequest.getAttribute(PekkoTracingRequest.ATTR_KEY).orElse(null);
+    if (tracedRequest == null && !isHttp2(serverRequest)) {
+      // http/1.1 requests are already handled by PekkoFlowWrapper
+      return handler.apply(serverRequest);
+    }
     if (tracedRequest != null) {
       // remove the attribute before the request is passed to user code
       serverRequest = (HttpRequest) serverRequest.removeAttribute(PekkoTracingRequest.ATTR_KEY);

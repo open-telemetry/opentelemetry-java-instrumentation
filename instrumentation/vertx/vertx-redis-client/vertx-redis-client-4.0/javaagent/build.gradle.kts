@@ -53,28 +53,6 @@ testing {
       }
     }
 
-    register<JvmTestSuite>("previewSemconvUnitTests") {
-      sources {
-        java {
-          srcDir("src/unitTests/java")
-        }
-      }
-
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation-api-incubator"))
-        implementation("io.vertx:vertx-redis-client:4.4.4")
-      }
-
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-          }
-        }
-      }
-    }
-
     register<JvmTestSuite>("test403") {
       sources {
         java {
@@ -110,24 +88,7 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .filter { !it.name.endsWith("unitTests", true) }
-    .associate { suite ->
-      suite.name to register<Test>("${suite.name}PreviewSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-      }
-    }
-
   check {
-    dependsOn(testing.suites.named("unitTests"), testing.suites.named("previewSemconvUnitTests"))
-    if (otelProps.testLatestDeps) {
-      dependsOn(previewSemconvSuites.getValue("test"))
-    } else {
-      dependsOn(testing.suites, previewSemconvSuites.values)
-    }
+    dependsOn(testing.suites)
   }
 }

@@ -52,29 +52,34 @@ definitions:
         context.
       type: string
       default: trace_id
-    common.peer-service-mapping:
-      name: otel.instrumentation.common.peer-service-mapping
-      declarative_name: java.common.service_peer_mapping
-      description: Used to specify a mapping from server addresses or configured targets
-        to peer services. Configured targets containing commas or equals signs can
-        only be mapped with declarative `service_peer_mapping`.
+    common.server-service-mapping:
+      name: otel.instrumentation.common.server-service-mapping
+      declarative_name: java.common.server_service_mapping
+      description: Maps server addresses or configured targets to logical server service
+        identities. Flat mappings use `target=service_name`; the target can be a hostname,
+        IP address, or target including a port or path. Flat mappings cannot express
+        service namespaces or targets containing commas or equals signs; use declarative
+        `server_service_mapping` for those cases.
       type: map
       default: ''
       declarative_type: structured_list
       declarative_schema:
         type: object
         required:
-        - peer
-        - service_name
+        - target
         properties:
-          peer:
+          target:
             type: string
-            description: Server address or configured target to match against.
-            example: host
+            description: Server address or complete configured target to match against.
+            example: payments.example.com
           service_name:
             type: string
-            description: Peer service name to record for matching peers.
-            example: serviceName
+            description: Logical server service name to record for matching targets.
+            example: payments
+          service_namespace:
+            type: string
+            description: Logical server service namespace to record for matching targets.
+            example: checkout
     common.user.name.enabled:
       name: otel.instrumentation.common.user.name.enabled
       declarative_name: java.common.user.name.enabled
@@ -1383,15 +1388,6 @@ definitions:
       default: ''
       deprecated: true
       replaced_by: general.stability_opt_in_list
-    semconv-stability.preview:
-      name: otel.semconv-stability.preview
-      declarative_name: java.common.semconv_stability.preview
-      description: Opt-in to emit preview (not yet stable) semantic conventions for
-        the `service.peer` group. Use `<group>/dup` to emit both the old and the preview
-        conventions simultaneously. The flat `otel.semconv-stability.preview` property
-        is read only from system properties and environment variables, not from the
-        agent configuration file.
-      type: list
     span-suppression-strategy:
       name: otel.instrumentation.common.span-suppression-strategy
       declarative_name: java.common.span_suppression_strategy
@@ -5524,7 +5520,6 @@ definitions:
         type: STRING
 global_configuration_refs:
 - semconv-stability.opt-in
-- semconv-stability.preview
 - semconv-exception.signal.preview
 - span-suppression-strategy
 - semconv-stability.opt-in.deprecated-declarative-name
@@ -5619,7 +5614,7 @@ libraries:
   - com.typesafe.akka:akka-http_2.12:[10,)
   - com.typesafe.akka:akka-http_2.13:[10,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -5645,64 +5640,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-    - span_kind: SERVER
-      attributes:
-      - name: client.address
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: http.route
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: url.path
-        type: STRING
-      - name: url.query
-        type: STRING
-      - name: url.scheme
-        type: STRING
-      - name: user_agent.original
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    - http.server.request.duration-1f6f63ed
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -5822,7 +5764,7 @@ libraries:
   javaagent_target_versions:
   - org.apache.dubbo:dubbo:[2.7,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   telemetry:
   - when: default
     metric_refs:
@@ -5833,8 +5775,6 @@ libraries:
       attributes:
       - name: error.type
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: rpc.method
         type: STRING
       - name: rpc.system.name
@@ -5843,40 +5783,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-    - span_kind: SERVER
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.method_original
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - rpc.client.call.duration-a776e0a5
-    - rpc.server.call.duration-4a9fd153
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
     - span_kind: SERVER
       attributes:
@@ -5949,7 +5856,7 @@ libraries:
   javaagent_target_versions:
   - org.apache.httpcomponents:httpasyncclient:[4.1,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -5977,39 +5884,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -6029,7 +5908,7 @@ libraries:
   javaagent_target_versions:
   - commons-httpclient:commons-httpclient:[2.0,4.0)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -6051,33 +5930,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -6098,7 +5955,7 @@ libraries:
   - io.dropwizard:dropwizard-client:(,3.0.0)
   - org.apache.httpcomponents:httpclient:[4.0,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -6122,35 +5979,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -6208,7 +6041,7 @@ libraries:
   javaagent_target_versions:
   - org.apache.httpcomponents.client5:httpclient5:[5.0,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -6232,35 +6065,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -6338,7 +6147,7 @@ libraries:
   javaagent_target_versions:
   - com.linecorp.armeria:armeria:[1.3.0,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -6368,68 +6177,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-    - span_kind: SERVER
-      attributes:
-      - name: client.address
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: http.route
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: url.path
-        type: STRING
-      - name: url.query
-        type: STRING
-      - name: url.scheme
-        type: STRING
-      - name: user_agent.original
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    - http.server.request.duration-1f6f63ed
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -6519,7 +6271,7 @@ libraries:
   javaagent_target_versions:
   - com.ning:async-http-client:[1.8.0,1.9.0)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -6541,33 +6293,11 @@ libraries:
         type: STRING
       - name: http.response.status_code
         type: LONG
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-98bb5f3b
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -6587,7 +6317,7 @@ libraries:
   javaagent_target_versions:
   - com.ning:async-http-client:[1.9.0,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -6609,33 +6339,11 @@ libraries:
         type: STRING
       - name: http.response.status_code
         type: LONG
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-98bb5f3b
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -6655,7 +6363,7 @@ libraries:
   javaagent_target_versions:
   - org.asynchttpclient:async-http-client:[2.0.0,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -6683,39 +6391,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -9231,8 +8911,6 @@ libraries:
         type: STRING
       - name: couchbase.operation_id
         type: STRING
-      - name: peer.service
-        type: STRING
     - span_kind: INTERNAL
       attributes:
       - name: peer.latency
@@ -9964,7 +9642,7 @@ libraries:
   javaagent_target_versions:
   - com.google.http-client:google-http-client:[1.19.0,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -9984,31 +9662,11 @@ libraries:
         type: STRING
       - name: http.response.status_code
         type: LONG
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-98bb5f3b
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -10772,7 +10430,7 @@ libraries:
   javaagent_target_versions:
   - Java 8+
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -10794,33 +10452,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -10931,7 +10567,7 @@ libraries:
   javaagent_target_versions:
   - Java 11+
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -10955,35 +10591,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -11004,7 +10616,7 @@ libraries:
   javaagent_target_versions:
   - Java 8+
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.known-methods
   - http.server.capture-request-headers
   - http.server.capture-response-headers
@@ -11521,7 +11133,7 @@ libraries:
   configuration_refs:
   - common.db.query-sanitization.enabled
   - common.db.sqlcommenter.enabled
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - otel.instrumentation.jdbc-datasource.enabled
   - otel.instrumentation.jdbc.experimental.capture-query-parameters
   - otel.instrumentation.jdbc.experimental.sqlcommenter.enabled
@@ -11548,9 +11160,9 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
+        type: STRING
+      - name: server.service.name
         type: STRING
     - span_kind: INTERNAL
       attributes:
@@ -11590,38 +11202,6 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - db.client.operation.duration-18bcff8b
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.batch.size
-        type: LONG
-      - name: db.query.summary
-        type: STRING
-      - name: db.query.text
-        type: STRING
-      - name: db.stored_procedure.name
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: service.peer.name
-        type: STRING
-    - span_kind: INTERNAL
-      attributes:
-      - name: code.function.name
-        type: STRING
-      - name: db.namespace
-        type: STRING
-      - name: db.system.name
-        type: STRING
   - when: otel.semconv.exception.signal.preview=logs
     metric_refs:
     - db.client.operation.duration-18bcff8b
@@ -11642,9 +11222,9 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
+        type: STRING
+      - name: server.service.name
         type: STRING
     - span_kind: INTERNAL
       attributes:
@@ -11673,7 +11253,7 @@ libraries:
   - redis.clients:jedis:[2.0.0,3.0.0)
   configuration_refs:
   - common.db.query-sanitization.enabled
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - otel.instrumentation.jedis.query-sanitization.enabled
   telemetry:
   - when: default
@@ -11696,37 +11276,11 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - db.client.operation.duration-8ae2b8ce
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.batch.size
-        type: LONG
-      - name: db.operation.name
-        type: STRING
-      - name: db.query.text
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
 - name: jedis-3.0
   display_name: Jedis
@@ -11745,7 +11299,7 @@ libraries:
   - redis.clients:jedis:[3.0.0,4)
   configuration_refs:
   - common.db.query-sanitization.enabled
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - otel.instrumentation.jedis.query-sanitization.enabled
   telemetry:
   - when: default
@@ -11768,37 +11322,11 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - db.client.operation.duration-8ae2b8ce
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.batch.size
-        type: LONG
-      - name: db.operation.name
-        type: STRING
-      - name: db.query.text
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
 - name: jedis-4.0
   display_name: Jedis
@@ -12032,7 +11560,7 @@ libraries:
   javaagent_target_versions:
   - org.eclipse.jetty:jetty-client:[9.2,10)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -12056,35 +11584,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -12106,7 +11610,7 @@ libraries:
   javaagent_target_versions:
   - org.eclipse.jetty:jetty-client:[12,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -12130,35 +11634,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -12342,7 +11822,7 @@ libraries:
   javaagent_target_versions:
   - org.jodd:jodd-http:[4.1.1,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -12366,35 +11846,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -14117,7 +13573,7 @@ libraries:
   - io.ktor:ktor-client-core:[2.0.0,3.0.0)
   - io.ktor:ktor-server-core:[2.0.0,3.0.0)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -14225,7 +13681,7 @@ libraries:
   - io.ktor:ktor-client-core:[3.0.0,)
   - io.ktor:ktor-server-core:[3.0.0,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -14364,7 +13820,7 @@ libraries:
   javaagent_target_versions:
   - io.kubernetes:client-java-api:[7.0.0,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -14385,12 +13841,12 @@ libraries:
         type: STRING
       - name: http.response.status_code
         type: LONG
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
+      - name: server.service.name
+        type: STRING
       - name: url.full
         type: STRING
   - when: otel.instrumentation.kubernetes-client.experimental-span-attributes=true
@@ -14409,31 +13865,11 @@ libraries:
         type: STRING
       - name: kubernetes-client.namespace
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-98bb5f3b
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -14453,7 +13889,7 @@ libraries:
   javaagent_target_versions:
   - biz.paluch.redis:lettuce:[4.0.Final,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - otel.instrumentation.lettuce.connection-telemetry.enabled
   - otel.instrumentation.lettuce.experimental-span-attributes-48d10623
   telemetry:
@@ -14501,37 +13937,11 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - db.client.operation.duration-d183b382
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.batch.size
-        type: LONG
-      - name: db.operation.name
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
   - when: otel.instrumentation.lettuce.experimental-span-attributes=true
     metric_refs:
@@ -14559,30 +13969,6 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - db.client.operation.duration-d183b382
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.batch.size
-        type: LONG
-      - name: db.operation.name
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
 - name: lettuce-5.0
   display_name: Lettuce
   description: |
@@ -14600,7 +13986,7 @@ libraries:
   - io.lettuce:lettuce-core:[5.0.0.RELEASE,)
   configuration_refs:
   - common.db.query-sanitization.enabled
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - otel.instrumentation.lettuce.connection-telemetry.enabled
   - otel.instrumentation.lettuce.experimental-span-attributes-f6bf8fef
   - otel.instrumentation.lettuce.query-sanitization.enabled
@@ -14653,39 +14039,11 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - db.client.operation.duration-d183b382
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.batch.size
-        type: LONG
-      - name: db.operation.name
-        type: STRING
-      - name: db.query.text
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
   - when: otel.instrumentation.lettuce.experimental-span-attributes=true
     metric_refs:
@@ -14709,32 +14067,6 @@ libraries:
         type: BOOLEAN
       - name: lettuce.command.results.count
         type: LONG
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - db.client.operation.duration-d183b382
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.batch.size
-        type: LONG
-      - name: db.operation.name
-        type: STRING
-      - name: db.query.text
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: error.type
-        type: STRING
       - name: network.peer.address
         type: STRING
       - name: network.peer.port
@@ -15197,7 +14529,7 @@ libraries:
   javaagent_target_versions:
   - io.netty:netty:[3.8.0.Final,4)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -15229,70 +14561,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-    - span_kind: SERVER
-      attributes:
-      - name: client.address
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: url.path
-        type: STRING
-      - name: url.query
-        type: STRING
-      - name: url.scheme
-        type: STRING
-      - name: user_agent.original
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    - http.server.request.duration-639e2d0b
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -15345,7 +14618,7 @@ libraries:
   - io.netty:netty-all:[4.0.0.Final,4.1.0.Final)
   - io.netty:netty-codec-http:[4.0.0.Final,4.1.0.Final)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -15379,70 +14652,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-    - span_kind: SERVER
-      attributes:
-      - name: client.address
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: url.path
-        type: STRING
-      - name: url.query
-        type: STRING
-      - name: url.scheme
-        type: STRING
-      - name: user_agent.original
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    - http.server.request.duration-639e2d0b
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -15496,7 +14710,7 @@ libraries:
   - io.netty:netty-all:[4.1.0.Final,5.0.0)
   - io.netty:netty-codec-http:[4.1.0.Final,5.0.0)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -15530,70 +14744,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-    - span_kind: SERVER
-      attributes:
-      - name: client.address
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: url.path
-        type: STRING
-      - name: url.query
-        type: STRING
-      - name: url.scheme
-        type: STRING
-      - name: user_agent.original
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    - http.server.request.duration-639e2d0b
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -15642,7 +14797,7 @@ libraries:
   javaagent_target_versions:
   - com.squareup.okhttp:okhttp:[2.2,3)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -15666,35 +14821,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -15715,7 +14846,7 @@ libraries:
   javaagent_target_versions:
   - com.squareup.okhttp3:okhttp:[3.0,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -15745,41 +14876,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.request.resend_count
-        type: LONG
-      - name: http.response.status_code
-        type: LONG
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -15805,12 +14906,12 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
+      - name: server.service.name
+        type: STRING
       - name: url.full
         type: STRING
     event_refs:
@@ -16137,7 +15238,7 @@ libraries:
   - org.apache.pekko:pekko-http_2.13:[1.0,)
   - org.apache.pekko:pekko-http_3:[1.0,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -16163,12 +15264,12 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
+      - name: server.service.name
+        type: STRING
       - name: url.full
         type: STRING
     - span_kind: SERVER
@@ -16278,7 +15379,7 @@ libraries:
   - com.typesafe.play:play-ahc-ws-standalone_2.11:[1.0.0,2.0.0)
   - com.typesafe.play:play-ahc-ws-standalone_2.12:[1.0.0,2.0.0)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -16304,12 +15405,12 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
+      - name: server.service.name
+        type: STRING
       - name: url.full
         type: STRING
 - name: play-ws-2.0
@@ -16330,7 +15431,7 @@ libraries:
   - com.typesafe.play:play-ahc-ws-standalone_2.12:[2.0.0,2.1.0)
   - com.typesafe.play:play-ahc-ws-standalone_2.13:[2.0.6,2.1.0)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -16356,12 +15457,12 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
+      - name: server.service.name
+        type: STRING
       - name: url.full
         type: STRING
 - name: play-ws-2.1
@@ -16382,7 +15483,7 @@ libraries:
   - com.typesafe.play:play-ahc-ws-standalone_2.13:[2.1.0,]
   - org.playframework:play-ahc-ws-standalone_3:[3.0.0,]
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -16408,12 +15509,12 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
+      - name: server.service.name
+        type: STRING
       - name: url.full
         type: STRING
 - name: powerjob-4.0
@@ -16659,7 +15760,7 @@ libraries:
   configuration_refs:
   - common.db.query-sanitization.enabled
   - common.db.sqlcommenter.enabled
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - otel.instrumentation.r2dbc.experimental.sqlcommenter.enabled
   - otel.instrumentation.r2dbc.query-sanitization.enabled
   telemetry:
@@ -16681,35 +15782,11 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - db.client.operation.duration-d4212042
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.batch.size
-        type: LONG
-      - name: db.query.summary
-        type: STRING
-      - name: db.query.text
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
 - name: rabbitmq-2.7
   display_name: RabbitMQ
@@ -17035,7 +16112,7 @@ libraries:
   - io.ratpack:ratpack-core:[1.4.0,)
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -17061,39 +16138,11 @@ libraries:
         type: STRING
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-    - span_kind: INTERNAL
-      attributes: []
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: http.route
-        type: STRING
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -17119,7 +16168,7 @@ libraries:
   has_standalone_library: true
   configuration_refs:
   - common.controller-telemetry.enabled
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -17299,7 +16348,7 @@ libraries:
   - io.projectreactor.netty:reactor-netty-http:[1.0.0,)
   - io.projectreactor.netty:reactor-netty:[1.0.0,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -17330,41 +16379,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.request.resend_count
-        type: LONG
-      - name: http.response.status_code
-        type: LONG
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -18416,7 +17435,7 @@ libraries:
   javaagent_target_versions:
   - com.alipay.sofa:sofa-rpc-all:[5.4.0,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   telemetry:
   - when: default
     metric_refs:
@@ -18427,8 +17446,6 @@ libraries:
       attributes:
       - name: error.type
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: rpc.method
         type: STRING
       - name: rpc.status_code
@@ -18439,36 +17456,7 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
-    - span_kind: SERVER
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.status_code
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - rpc.client.call.duration-23f3e1cb
-    - rpc.server.call.duration-8600ccb1
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: rpc.method
-        type: STRING
-      - name: rpc.status_code
-        type: STRING
-      - name: rpc.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
     - span_kind: SERVER
       attributes:
@@ -18489,8 +17477,6 @@ libraries:
       attributes:
       - name: error.type
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: rpc.method
         type: STRING
       - name: rpc.status_code
@@ -18501,6 +17487,8 @@ libraries:
         type: STRING
       - name: server.port
         type: LONG
+      - name: server.service.name
+        type: STRING
     - span_kind: SERVER
       attributes:
       - name: error.type
@@ -19201,24 +18189,6 @@ libraries:
         type: LONG
       - name: url.full
         type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-98bb5f3b
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: url.full
-        type: STRING
 - name: spring-web-6.0
   display_name: Spring Web
   description: |
@@ -19270,21 +18240,15 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
+      - name: server.service.name
+        type: STRING
       - name: url.full
         type: STRING
   - when: otel.instrumentation.common.controller-telemetry.enabled=true
-    spans:
-    - span_kind: INTERNAL
-      attributes:
-      - name: code.function.name
-        type: STRING
-  - when: otel.instrumentation.common.controller-telemetry.enabled=true,otel.semconv-stability.preview=service.peer
     spans:
     - span_kind: INTERNAL
       attributes:
@@ -19304,12 +18268,12 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
+      - name: server.service.name
+        type: STRING
       - name: url.full
         type: STRING
     - span_kind: INTERNAL
@@ -19318,28 +18282,6 @@ libraries:
         type: STRING
     event_refs:
     - http.client.request.exception-ca66bc45
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
-        type: STRING
-      - name: url.full
-        type: STRING
 - name: spring-webflux-5.3
   display_name: Spring WebFlux
   description: |
@@ -19357,53 +18299,6 @@ libraries:
   has_standalone_library: true
   telemetry:
   - when: default
-    metric_refs:
-    - http.client.request.duration-98bb5f3b
-    - http.server.request.duration-4e1d0d72
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: url.full
-        type: STRING
-    - span_kind: SERVER
-      attributes:
-      - name: client.address
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: http.route
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: url.path
-        type: STRING
-      - name: url.query
-        type: STRING
-      - name: url.scheme
-        type: STRING
-      - name: user_agent.original
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
     metric_refs:
     - http.client.request.duration-98bb5f3b
     - http.server.request.duration-4e1d0d72
@@ -20224,7 +19119,7 @@ libraries:
   javaagent_target_versions:
   - io.vertx:vertx-core:[3.0.0,4.0.0)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -20244,31 +19139,11 @@ libraries:
         type: STRING
       - name: http.response.status_code
         type: LONG
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-98bb5f3b
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -20288,7 +19163,7 @@ libraries:
   javaagent_target_versions:
   - io.vertx:vertx-core:[4.0.0,5)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -20316,39 +19191,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -20369,7 +19216,7 @@ libraries:
   javaagent_target_versions:
   - io.vertx:vertx-core:[5.0.0,)
   configuration_refs:
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - http.client.capture-request-headers
   - http.client.capture-response-headers
   - http.client.emit-experimental-telemetry
@@ -20397,39 +19244,11 @@ libraries:
         type: LONG
       - name: network.protocol.version
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-      - name: url.full
-        type: STRING
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - http.client.request.duration-a64b5297
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: error.type
-        type: STRING
-      - name: http.request.method
-        type: STRING
-      - name: http.request.method_original
-        type: STRING
-      - name: http.response.status_code
-        type: LONG
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: network.protocol.version
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
       - name: url.full
         type: STRING
@@ -20530,7 +19349,7 @@ libraries:
   - io.vertx:vertx-redis-client:[4.0.0,)
   configuration_refs:
   - common.db.query-sanitization.enabled
-  - common.peer-service-mapping
+  - common.server-service-mapping
   - otel.instrumentation.vertx-redis-client.query-sanitization.enabled
   telemetry:
   - when: default
@@ -20555,39 +19374,11 @@ libraries:
         type: STRING
       - name: network.peer.port
         type: LONG
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - db.client.operation.duration-d183b382
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.batch.size
-        type: LONG
-      - name: db.operation.name
-        type: STRING
-      - name: db.query.text
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: network.peer.address
-        type: STRING
-      - name: network.peer.port
-        type: LONG
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
 - name: vertx-rx-java-3.5
   display_name: Vert.x RxJava
@@ -20639,35 +19430,11 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - db.client.operation.duration-d4212042
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.batch.size
-        type: LONG
-      - name: db.query.summary
-        type: STRING
-      - name: db.query.text
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
 - name: vertx-sql-client-5.0
   display_name: Vert.x SQL Client
@@ -20707,35 +19474,11 @@ libraries:
         type: STRING
       - name: error.type
         type: STRING
-      - name: peer.service
-        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
         type: LONG
-  - when: otel.semconv-stability.preview=service.peer
-    metric_refs:
-    - db.client.operation.duration-d4212042
-    spans:
-    - span_kind: CLIENT
-      attributes:
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.batch.size
-        type: LONG
-      - name: db.query.summary
-        type: STRING
-      - name: db.query.text
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: service.peer.name
+      - name: server.service.name
         type: STRING
 - name: vertx-web-3.0
   display_name: Vert.x Web

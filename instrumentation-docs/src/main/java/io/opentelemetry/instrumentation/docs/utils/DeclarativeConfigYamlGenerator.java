@@ -190,8 +190,9 @@ public class DeclarativeConfigYamlGenerator {
 
   /**
    * Returns whether the declarative form of a configuration is a list of objects. The flat {@code
-   * type} describes the system property (e.g. {@code map} for the {@code host=service} peer service
-   * mapping), so the declarative shape can differ and is then marked by {@code declarative_type}.
+   * type} describes the system property (e.g. {@code map} for the {@code target=service_name}
+   * server service mapping), so the declarative shape can differ and is then marked by {@code
+   * declarative_type}.
    *
    * @param config the configuration option
    * @return true if the declarative form is a structured list
@@ -367,12 +368,14 @@ public class DeclarativeConfigYamlGenerator {
    *
    * <pre>
    * Each list entry is an object with the following properties:
-   *   peer (string, required): Host name or IP address to match against.
-   *   service_name (string, required): Peer service name to record for matching peers.
+   *   target (string, required): Server address or complete configured target to match against.
+   *   service_name (string): Logical server service name to record for matching targets.
+   *   service_namespace (string): Logical server service namespace to record for matching targets.
    * Example:
-   *   service_peer_mapping:
-   *     - peer: host
-   *       service_name: serviceName
+   *   server_service_mapping:
+   *     - target: payments.example.com
+   *       service_name: payments
+   *       service_namespace: checkout
    * </pre>
    *
    * @param key the configuration key the schema belongs to
