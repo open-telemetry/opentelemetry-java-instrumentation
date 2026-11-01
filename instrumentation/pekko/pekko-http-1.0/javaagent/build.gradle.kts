@@ -71,6 +71,13 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("pekko11Test") {
+      dependencies {
+        implementation("org.apache.pekko:pekko-http_2.13:1.1.0")
+        implementation("org.apache.pekko:pekko-stream_2.13:1.1.0")
+      }
+    }
+
     // the agent matches methods of pekko classes by name, some of them are private and scala
     // mangles their names, run the tests against the scala 3 artifacts to catch a name that only
     // holds for scala 2
@@ -95,6 +102,14 @@ testing {
       }
     }
   }
+}
+
+// the pekko 1.1 suite runs the same tests as the baseline suite against the versions from the
+// reported regression
+sourceSets.named("pekko11Test") {
+  java.srcDir("src/test/java")
+  resources.srcDir("src/test/resources")
+  extensions.getByType(org.gradle.api.tasks.ScalaSourceDirectorySet::class.java).srcDir("src/test/scala")
 }
 
 // the scala 3 suite runs the same tests as the scala 2 suite, against the _3 artifacts
@@ -122,8 +137,19 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
+  val pekko11NoSpanSuppressionTest = register<Test>("pekko11NoSpanSuppressionTest") {
+    testClassesDirs = sourceSets["pekko11Test"].output.classesDirs
+    classpath = sourceSets["pekko11Test"].runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.common.span-suppression-strategy=none")
+
+    filter {
+      includeTestsMatching("*PekkoHttpServerInstrumentationTestAsync.successfulGetRequest")
+    }
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, pekko11NoSpanSuppressionTest)
   }
 
   if (otelProps.denyUnsafe) {

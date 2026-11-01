@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -67,47 +70,27 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:3.+") // see testing-webflux7 module
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  test {
-    // server tests require controller-telemetry, which is off by default
-    exclude("**/server/**")
-  }
-
-  val testControllerTelemetry = register<Test>("testControllerTelemetry") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    include("**/server/**")
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.controller-telemetry.enabled=true"
-    )
-  }
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.controller-telemetry.enabled=true," +
-        "otel.semconv.exception.signal.preview=logs"
-    )
-  }
-
-  check {
-    dependsOn(
-      testControllerTelemetry,
-      testExceptionSignalLogs
-    )
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+    configureDefault {
+      // server tests require controller-telemetry, which is off by default
+      exclude("**/server/**")
+    }
+    register("ControllerTelemetry") {
+      include("**/server/**")
+      telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+    }
+    register("ExceptionSignalLogs") {
+      telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+    }
   }
 }
 
