@@ -244,9 +244,9 @@ The `inline` attribute defaults to `true`, which copies advice code into the ins
 Set `inline = false` to load advice as regular classes and use indy instrumentation.
 
 With indy, advice classes are loaded alongside all helper classes
-into a special `InstrumentationModuleClassLoader`, which sees the classes from both the instrumented
+into a special `InstrumentationModuleClassloader`, which sees the classes from both the instrumented
 application classloader and the agent classloader.
-The instrumented classes call the advice classes residing in the `InstrumentationModuleClassLoader` via
+The instrumented classes call the advice classes residing in the `InstrumentationModuleClassloader` via
 invokedynamic bytecode instructions.
 
 Using indy instrumentation has these advantages:
