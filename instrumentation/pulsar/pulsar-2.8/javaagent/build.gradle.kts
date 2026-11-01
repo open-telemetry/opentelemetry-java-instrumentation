@@ -78,11 +78,7 @@ tasks {
   }
 
   check {
-    dependsOn(
-      testing.suites,
-      "testReceiveSpanDisabled",
-      "testExperimental",
-    )
+    dependsOn(testing.suites)
   }
 
   if (otelProps.denyUnsafe) {

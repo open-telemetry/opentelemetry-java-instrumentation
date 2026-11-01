@@ -23,6 +23,10 @@ dependencies {
 
 testing.suites.named<JvmTestSuite>("test") {
   executions {
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.micrometer.enabled=true")
+    }
+
     configureDefault {
       filter {
         excludeTestsMatching("*TimerMillisecondsTest")
@@ -54,15 +58,5 @@ testing.suites.named<JvmTestSuite>("test") {
       include("**/*HistogramGaugesTest.*")
       jvmArgs("-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true")
     }
-  }
-}
-
-tasks {
-  check {
-    dependsOn("testBaseTimeUnit", "testPrometheusMode", "testHistogramGauges")
-  }
-
-  withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.micrometer.enabled=true")
   }
 }

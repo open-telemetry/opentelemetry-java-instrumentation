@@ -50,7 +50,6 @@ testing.suites.named<JvmTestSuite>("test") {
 
 tasks {
   check {
-    dependsOn("testExperimental")
     dependsOn(testing.suites.named("version19Test"))
   }
 }

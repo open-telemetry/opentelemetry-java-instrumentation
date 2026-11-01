@@ -28,12 +28,6 @@ dependencies {
   testImplementation("javax.servlet:javax.servlet-api:3.0.1")
 }
 
-tasks {
-  check {
-    dependsOn("testExperimental", "testRequestParameterCapture", "testUserNameCapture")
-  }
-}
-
 testing.suites.named<JvmTestSuite>("test") {
   executions {
     register("RequestParameterCapture") {

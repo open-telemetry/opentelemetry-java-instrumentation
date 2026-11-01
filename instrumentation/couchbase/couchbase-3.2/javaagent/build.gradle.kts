@@ -86,7 +86,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, "testExperimental", "testExceptionSignalLogs")
+    dependsOn(testing.suites)
   }
 
   if (otelProps.denyUnsafe) {
@@ -115,11 +115,5 @@ testing.suites.named<JvmTestSuite>("test") {
       jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
       systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
     }
-  }
-}
-
-if (otelProps.denyUnsafe) {
-  tasks.withType<Test>().configureEach {
-    enabled = false
   }
 }

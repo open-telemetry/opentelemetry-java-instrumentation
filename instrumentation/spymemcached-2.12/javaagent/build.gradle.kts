@@ -40,7 +40,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, "testExperimental")
+    dependsOn(testing.suites)
   }
 }
 

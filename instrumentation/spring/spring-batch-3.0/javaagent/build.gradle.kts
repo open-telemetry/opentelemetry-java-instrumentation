@@ -28,6 +28,15 @@ dependencies {
 
 testing.suites.named<JvmTestSuite>("test") {
   executions {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+      jvmArgs("-Dotel.instrumentation.spring-batch.enabled=true")
+    }
+
     configureDefault {
       filter {
         excludeTestsMatching("*ChunkRootSpanTest")
@@ -67,20 +76,5 @@ testing.suites.named<JvmTestSuite>("test") {
       jvmArgs("-Dotel.instrumentation.spring-batch.experimental-span-attributes=true")
       systemProperty("metadataConfig", "otel.instrumentation.spring-batch.experimental-span-attributes=true")
     }
-  }
-}
-
-tasks {
-  check {
-    dependsOn("testChunkRootSpan", "testItemLevelSpan", "testExperimental")
-  }
-
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    jvmArgs("-Dotel.instrumentation.spring-batch.enabled=true")
   }
 }

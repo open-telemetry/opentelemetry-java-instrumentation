@@ -81,7 +81,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, "testExperimental", "testSpringDisabled")
+    dependsOn(testing.suites)
   }
 }
 
