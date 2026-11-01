@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -203,7 +204,8 @@ class ApacheHttpAsyncClientTest {
                               equalTo(SERVER_ADDRESS, hostname),
                               equalTo(SERVER_PORT, explicitPort ? explicitTargetPort : 80),
                               equalTo(URL_FULL, expectedUri.toString()),
-                              equalTo(maybeStablePeerService(), "test-peer-service")),
+                              equalTo(
+                                  stringKey("server.service.name"), expectedMappedServiceName())),
                   span -> assertServerSpan(span).hasParent(trace.getSpan(1)),
                   span ->
                       span.hasName("callback")
