@@ -28,7 +28,7 @@ class TakesArgumentsMatcher<T extends MethodDescription>
 
     TypeList.Generic parameterTypes = parameters.asTypeList();
     for (int index = 0; index < names.length; index++) {
-      if (!names[index].equals(parameterTypes.get(index).asErasure().getName())) {
+      if (!names[index].equals(parameterTypes.get(index).asErasure().getActualName())) {
         return false;
       }
     }

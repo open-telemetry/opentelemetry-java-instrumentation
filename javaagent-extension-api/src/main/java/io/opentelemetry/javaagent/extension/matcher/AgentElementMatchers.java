@@ -84,7 +84,10 @@ public final class AgentElementMatchers {
    * Matches a method with exactly the provided ordered parameter type names.
    *
    * <p>Parameter type names are compared after erasure. Primitive types use their Java names, such
-   * as {@code int}. Passing no names matches only methods with no parameters.
+   * as {@code int}, and array types use readable Java names, such as {@code byte[]}, {@code
+   * java.lang.Object[]}, and {@code byte[][]}. For example, {@code takesArguments("byte[]",
+   * "java.lang.Object[]", "byte[][]")} matches those ordered parameter types. Passing no names
+   * matches only methods with no parameters.
    *
    * @param names the exact ordered parameter type names to match.
    * @return a matcher for methods with the specified parameter types.

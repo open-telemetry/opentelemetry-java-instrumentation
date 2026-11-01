@@ -60,6 +60,17 @@ class TakesArgumentsMatcherTest {
             new String[] {"java.lang.String", "java.lang.Integer"},
             false),
         argumentSet("primitive names", "primitives", new String[] {"int", "boolean"}, true),
+        argumentSet("primitive array names", "primitiveArray", new String[] {"byte[]"}, true),
+        argumentSet(
+            "reference array names", "referenceArray", new String[] {"java.lang.Object[]"}, true),
+        argumentSet(
+            "multidimensional array names",
+            "multidimensionalArray",
+            new String[] {"byte[][]"},
+            true),
+        argumentSet("wrong array component type", "primitiveArray", new String[] {"int[]"}, false),
+        argumentSet(
+            "wrong array dimension", "multidimensionalArray", new String[] {"byte[]"}, false),
         argumentSet("empty names and signature", "noArguments", new String[0], true),
         argumentSet("empty names and nonempty signature", "string", new String[0], false),
         argumentSet("generic erasure", "generic", new String[] {"java.util.List"}, true));
@@ -123,6 +134,12 @@ class TakesArgumentsMatcherTest {
   private static void tooMany(String string, Integer integer, Long number) {}
 
   private static void primitives(int integer, boolean bool) {}
+
+  private static void primitiveArray(byte[] values) {}
+
+  private static void referenceArray(Object[] values) {}
+
+  private static void multidimensionalArray(byte[][] values) {}
 
   private static void noArguments() {}
 
