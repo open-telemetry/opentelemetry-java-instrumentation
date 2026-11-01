@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentConstructionState;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -18,6 +19,7 @@ import io.vertx.core.Handler;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToFields.ToField;
@@ -35,7 +37,7 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("connectingTo").and(takesArguments("java.util.function.Supplier")),
+        named("connectingTo").and(takesArguments(Supplier.class)),
         getClass().getName() + "$ConnectingToSupplierAdvice");
 
     transformer.applyAdviceToMethod(
@@ -43,7 +45,7 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$ConnectingToOptionsAdvice");
 
     transformer.applyAdviceToMethod(
-        named("connectingTo").and(takesArguments("java.util.List")),
+        named("connectingTo").and(takesArguments(List.class)),
         getClass().getName() + "$ConnectingToListAdvice");
 
     transformer.applyAdviceToMethod(

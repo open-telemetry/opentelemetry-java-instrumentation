@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.xxljob.v1_9_2;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.xxljob.v1_9_2.XxlJobSingletons.helper;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.xxl.job.core.handler.IJobHandler;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -31,7 +31,7 @@ class GlueJobHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("execute").and(isPublic()).and(takesArguments("java.lang.String")),
+        named("execute").and(isPublic()).and(takesArguments(String.class)),
         getClass().getName() + "$ScheduleAdvice");
   }
 

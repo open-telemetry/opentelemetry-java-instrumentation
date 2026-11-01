@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -33,41 +33,27 @@ class HttpClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     // advice classes below expose current context in doOn*/doAfter* callbacks
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("doOnRequest"))
-            .and(takesArguments("java.util.function.BiConsumer")),
+        isPublic().and(named("doOnRequest")).and(takesArguments(BiConsumer.class)),
         getClass().getName() + "$OnRequestAdvice");
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("doAfterRequest"))
-            .and(takesArguments("java.util.function.BiConsumer")),
+        isPublic().and(named("doAfterRequest")).and(takesArguments(BiConsumer.class)),
         getClass().getName() + "$AfterRequestAdvice");
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("doOnRequestError"))
-            .and(takesArguments("java.util.function.BiConsumer")),
+        isPublic().and(named("doOnRequestError")).and(takesArguments(BiConsumer.class)),
         getClass().getName() + "$OnRequestErrorAdvice");
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("doOnResponse"))
-            .and(takesArguments("java.util.function.BiConsumer")),
+        isPublic().and(named("doOnResponse")).and(takesArguments(BiConsumer.class)),
         getClass().getName() + "$OnResponseAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(namedOneOf("doAfterResponseSuccess", "doOnRedirect"))
-            .and(takesArguments("java.util.function.BiConsumer")),
+            .and(takesArguments(BiConsumer.class)),
         getClass().getName() + "$AfterResponseAdvice");
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("doOnResponseError"))
-            .and(takesArguments("java.util.function.BiConsumer")),
+        isPublic().and(named("doOnResponseError")).and(takesArguments(BiConsumer.class)),
         getClass().getName() + "$OnResponseErrorAdvice");
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("doOnError"))
-            .and(
-                takesArguments(
-                    "java.util.function.BiConsumer", "java.util.function.BiConsumer")),
+        isPublic().and(named("doOnError")).and(takesArguments(BiConsumer.class, BiConsumer.class)),
         getClass().getName() + "$OnErrorAdvice");
   }
 

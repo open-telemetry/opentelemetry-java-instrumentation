@@ -29,9 +29,7 @@ class JbossLogmanagerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("logRaw"))
-            .and(takesArguments("org.jboss.logmanager.ExtLogRecord")),
+        isPublic().and(named("logRaw")).and(takesArguments("org.jboss.logmanager.ExtLogRecord")),
         getClass().getName() + "$CallLogRawAdvice");
   }
 
