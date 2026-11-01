@@ -203,13 +203,13 @@ class JdbcConnectionUrlParserTest {
         "",
         "&serverSslCert=/etc/ssl/ca.pem",
         "&sessionVariables=sql_mode=ANSI,time_zone=UTC",
-        "&sessionVariables=email='user@example.com',sql_mode=ANSI"
+        "&sessionVariables=email='user%40example.com',sql_mode=ANSI"
       })
-  void atInMariaDbQueryDoesNotDisableConfiguredTargetParsing(String trailingParameters) {
+  void encodedAtInMariaDbQueryPreservesConfiguredTargetParsing(String trailingParameters) {
     String url =
         "jdbc:mariadb:failover://h1:3306,h2:3306/db?user="
             + "admin"
-            + "@"
+            + "%40"
             + "corp.com"
             + trailingParameters;
 
@@ -250,11 +250,11 @@ class JdbcConnectionUrlParserTest {
   }
 
   @Test
-  void atInMariaDbQueryWithoutDatabaseDoesNotDisableConfiguredTargetParsing() {
+  void encodedAtInMariaDbQueryWithoutDatabasePreservesConfiguredTargetParsing() {
     DbInfo dbInfo =
         parse(
             "jdbc:mariadb:failover://h1,h2"
-                + "?sessionVariables=email='user@example.com',sql_mode=ANSI",
+                + "?sessionVariables=email='user%40example.com',sql_mode=ANSI",
             null);
 
     assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1,h2", null));
@@ -263,22 +263,22 @@ class JdbcConnectionUrlParserTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
-        "jdbc:mariadb:failover://h1" + "?sessionVariables=email='user@example.com',sql_mode=ANSI",
+        "jdbc:mariadb:failover://h1" + "?sessionVariables=email='user%40example.com',sql_mode=ANSI",
         "jdbc:mariadb:failover://address=(host=h1)"
-            + "?sessionVariables=email='user@example.com',sql_mode=ANSI"
+            + "?sessionVariables=email='user%40example.com',sql_mode=ANSI"
       })
-  void atInMariaDbSingletonQueryPreservesOrdinaryParsing(String url) {
+  void encodedAtInMariaDbSingletonQueryPreservesOrdinaryParsing(String url) {
     DbInfo dbInfo = parse(url, null);
 
     assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1", null));
   }
 
   @Test
-  void atInMariaDbAddressBlockQueryWithoutDatabaseDoesNotDisableConfiguredTargetParsing() {
+  void encodedAtInMariaDbAddressBlockQueryWithoutDatabasePreservesConfiguredTargetParsing() {
     DbInfo dbInfo =
         parse(
             "jdbc:mariadb:failover://address=(host=h1),address=(host=h2)"
-                + "?sessionVariables=email='user@example.com',sql_mode=ANSI",
+                + "?sessionVariables=email='user%40example.com',sql_mode=ANSI",
             null);
 
     assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1,h2", null));
@@ -507,7 +507,7 @@ class JdbcConnectionUrlParserTest {
         "jdbc:mysql://(host=h1,port=1111)/db+name%2Bextra%2fpart?other=(host=wrong,port=2222)|h1|1111|db+name+extra/part|false",
         "jdbc:mysql://(host=h1,port=1111)/db?serverName=wrong&portNumber=2222|h1|1111|db|true",
         "jdbc:mysql://(host=h1)/db?portNumber=2222|h1|2222|db|true",
-        "jdbc:mysql://(host=h1,port=1111)?sessionVariables=email='user@example.com',sql_mode=ANSI|h1|1111||false",
+        "jdbc:mysql://(host=h1,port=1111)?sessionVariables=email='user%40example.com',sql_mode=ANSI|h1|1111||false",
         "jdbc:mysql://(host=h1,port=1111)//db|h1|1111|/db|false",
         "jdbc:mysql://h1,h2,h3,h4,h5,(host=h6,port=1111)/db|h1:3306,h2:3306,h3:3306,h4:3306,h5:3306||db|false",
         "jdbc:mysql://h1,h2,h3,h4,h5,(host=h6,port=65536)/db|||db|false",

@@ -7,6 +7,22 @@
 | `otel.instrumentation.jdbc.experimental.transaction.enabled`      | Boolean | `false` | Enables experimental instrumentation to create spans for COMMIT and ROLLBACK operations.                                                                                                                                                                                                                                                     |
 | `otel.instrumentation.jdbc.experimental.sqlcommenter.enabled`     | Boolean | `false` | Enables augmenting queries with a comment containing the tracing information. See [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting queries with tracing context will make query texts unique, which may have adverse impact on database performance. Consult with database experts before enabling. |
 
+## MySQL and MariaDB connection URLs
+
+For MySQL and MariaDB URLs using `://`, a raw `@` in the path, query, or fragment
+suppresses the configured server target and URL-derived database namespace.
+Such text cannot be distinguished reliably from credentials containing an unescaped
+`/`, `?`, or `#`, so it is not used to derive these attributes.
+
+Percent-encode `@` as `%40` in those URL components, for example:
+
+```text
+jdbc:mysql://db.host/database?user=admin%40example.com
+jdbc:mariadb://db.host/database%40tenant
+```
+
+The `@` separating credentials from a host remains supported.
+
 ## Connection Pool Unwrapping
 
 The instrumentation unwraps pooled connections (via java.sql.Wrapper) to cache database metadata

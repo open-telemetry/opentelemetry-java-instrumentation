@@ -160,8 +160,8 @@ class MysqlUrlParserTest {
     List<String> suffixes =
         asList(
             "/db",
-            "/db?sessionVariables=email='user@example.com',sql_mode=ANSI",
-            "?sessionVariables=email='user@example.com',sql_mode=ANSI");
+            "/db?sessionVariables=email='user%40example.com',sql_mode=ANSI",
+            "?sessionVariables=email='user%40example.com',sql_mode=ANSI");
 
     List<String> authorities = new ArrayList<>();
     for (String h1 : first) {
@@ -254,13 +254,19 @@ class MysqlUrlParserTest {
                 asList(
                     "/a@h2:3306,h3:3306/db",
                     "/a@h2:3306,h3:3306/db?user=admin@corp.com",
+                    "?x=y@h2",
+                    "?x=y@h2&serverName=query-host&portNumber=2222&databaseName=query-db",
                     "?x=y@h2:3306,h3:3306/db",
                     "?x=y@h2:3306,h3:3306",
+                    "?x=y@h2:3306,h3:invalid",
+                    "?x=y@h2:3306,",
                     "?x=y@h2:3306,h3:3306&user=admin@corp.com",
                     "?x=/a@h2:3306,h3:3306",
                     "?x=y@address=(host=h2)/db",
                     "?x=y@(host=h2,port=3306)",
                     "?missing@h2:3306",
+                    "/db@",
+                    "/db#@",
                     "#ignored?x=y@h2:3306,h3:3306/db",
                     "/db?user=admin@corp.com#ignored@h2")) {
               urls.add(prefix + String.join(",", entries) + suffix);
@@ -272,29 +278,31 @@ class MysqlUrlParserTest {
     return urls.stream().distinct().map(url -> argumentSet(url, url));
   }
 
-  @Test
-  void rejectedCredentialBoundariesCannotUseQueryOrDataSourceFallbacks() {
+  @ParameterizedTest
+  @MethodSource("ambiguousCredentialUrls")
+  void rejectedCredentialBoundariesCannotUseQueryOrDataSourceFallbacks(String url) {
     Properties properties = new Properties();
     properties.setProperty("serverName", "fallback");
     properties.setProperty("portNumber", "1111");
-    String url =
-        "jdbc:mysql://(host=h1),user:123/a@h2:3306,h3:3306/db"
-            + "?serverName=query-host&portNumber=2222";
-
     assertThat(JdbcConnectionUrlParser.parse(url, properties).getConfiguredServerTarget()).isNull();
   }
 
   @ParameterizedTest
-  @MethodSource("unambiguousQueryUrls")
-  void queryValuesDoNotDependOnUnrelatedHostSyntax(String url, boolean multipleHosts) {
+  @MethodSource("queryUrls")
+  void queryAtSignsRequirePercentEncoding(String url, String encodedUrl, boolean multipleHosts) {
     DbInfo info = JdbcConnectionUrlParser.parse(url, null);
 
-    assertThat(info.getConfiguredServerTarget())
+    assertThat(info.getConfiguredServerTarget()).isNull();
+    assertThat(info.getDbNamespace()).isNull();
+
+    DbInfo encodedInfo = JdbcConnectionUrlParser.parse(encodedUrl, null);
+
+    assertThat(encodedInfo.getConfiguredServerTarget())
         .isEqualTo(DbServerTarget.create(multipleHosts ? "h1,h2" : "h1", null));
-    assertThat(info.getDbNamespace()).isEqualTo(url.contains("/db") ? "db" : null);
+    assertThat(encodedInfo.getDbNamespace()).isEqualTo(url.contains("/db") ? "db" : null);
   }
 
-  private static Stream<Arguments> unambiguousQueryUrls() {
+  private static Stream<Arguments> queryUrls() {
     List<Arguments> urls = new ArrayList<>();
     for (String prefix :
         asList(
@@ -316,17 +324,40 @@ class MysqlUrlParserTest {
                     "?user=admin@corp.com",
                     "?sessionVariables=email='user@example.com',sql_mode=ANSI",
                     "?first=user@example.com&second=other@example.org",
-                    "?user=user%40example.com&options=(value)",
+                    "?user=user%40example.com&options=(value)@",
                     "?user=admin@corp.com&serverSslCert=/etc/ssl/ca.pem",
                     "?user=admin@corp.com#ignored")) {
               String url = prefix + authority + path + query;
-              urls.add(argumentSet(url, url, multipleHosts));
+              urls.add(
+                  argumentSet(
+                      url,
+                      url,
+                      prefix + authority + path + query.replace("@", "%40"),
+                      multipleHosts));
             }
           }
         }
       }
     }
     return urls.stream();
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+      value = {
+        "jdbc:mysql://h1/db%40tenant|db@tenant",
+        "jdbc:mariadb://h1/db%40tenant|db@tenant",
+        "jdbc:mysql:replication://h1/db%40tenant|db%40tenant",
+        "jdbc:mariadb:sequential://h1/db%40tenant|db%40tenant",
+        "jdbc:mysql://h1/db#tenant%40example|db",
+        "jdbc:mariadb://h1/db#tenant%40example|db"
+      },
+      delimiter = '|')
+  void encodedAtSignsDoNotChangeHostOrNamespaceParsing(String url, String namespace) {
+    DbInfo info = JdbcConnectionUrlParser.parse(url, null);
+
+    assertThat(info.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1", null));
+    assertThat(info.getDbNamespace()).isEqualTo(namespace);
   }
 
   @ParameterizedTest

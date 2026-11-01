@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes
 
+- MySQL and MariaDB JDBC URLs using `://` with a raw `@` in the path, query, or fragment
+  no longer provide a configured server target or URL-derived database namespace.
+  Percent-encode these characters as `%40`, for example `?user=admin%40example.com`.
 - GenAI error type getters now return the final value. Returning `null` omits `error.type`; overrides
   should return `error == null ? null : error.getClass().getName()` for the exception-class fallback.
 - HTTP client and server getters now determine `error.type`; their returned value, including `null`,
