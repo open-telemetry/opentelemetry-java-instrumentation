@@ -16,7 +16,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 
-import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -136,6 +135,12 @@ public abstract class AbstractApacheHttpClientTest {
   @Nested
   class ApacheClientHostRequestTest extends ApacheHttpClientTest<BasicHttpRequest> {
 
+    @Override
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      super.configure(optionsBuilder);
+      optionsBuilder.setTestProxy(true).setExpectProxyNetworkPeerAttributes(false);
+    }
+
     @Test
     void requestWithInetAddress() throws IOException {
       int serverPort = resolveAddress("/success").getPort();
@@ -159,52 +164,32 @@ public abstract class AbstractApacheHttpClientTest {
                   span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
     }
 
-    @Test
-    void requestWithInetAddressThroughProxy() throws IOException {
-      // The shared HTTP server does not accept absolute-form proxy requests.
-      HttpServer proxy =
-          HttpServer.create(
-              new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 0), 0);
-      cleanup.deferCleanup(() -> proxy.stop(0));
-      proxy.createContext(
-          "/success",
-          exchange -> {
-            try {
-              exchange.sendResponseHeaders(200, -1);
-            } finally {
-              exchange.close();
-            }
-          });
-      proxy.start();
-
-      HttpHost target =
-          new HttpHost(
-              InetAddress.getByAddress("192.0.2.7", new byte[] {(byte) 192, 0, 2, 7}),
-              8080,
-              "http");
-      URI expectedUri = URI.create(target.toURI() + "/success");
+    @Override
+    public int sendRequestWithProxy(
+        BasicHttpRequest request,
+        String method,
+        URI uri,
+        Map<String, String> headers,
+        InetSocketAddress proxyAddress)
+        throws IOException {
+      // Keep an explicit address so the regression exercises target-derived peer attributes.
+      // Preserve the hostname to avoid reverse DNS when HttpCore 4.4 reads it.
+      InetAddress targetAddress =
+          InetAddress.getByAddress(
+              uri.getHost(), InetAddress.getByName(uri.getHost()).getAddress());
+      HttpHost target = new HttpHost(targetAddress, uri.getPort(), uri.getScheme());
 
       HttpClientContext context = HttpClientContext.create();
       context.setRequestConfig(
           RequestConfig.custom()
-              .setConnectTimeout((int) CONNECTION_TIMEOUT.toMillis())
-              .setSocketTimeout((int) READ_TIMEOUT.toMillis())
-              .setProxy(new HttpHost("127.0.0.1", proxy.getAddress().getPort()))
+              .setConnectTimeout((int) connectTimeout().toMillis())
+              .setSocketTimeout((int) readTimeout().toMillis())
+              .setProxy(
+                  new HttpHost(proxyAddress.getAddress().getHostAddress(), proxyAddress.getPort()))
               .build());
 
-      int responseCode =
-          getClient(expectedUri)
-              .execute(
-                  target,
-                  new BasicHttpRequest("GET", "/success"),
-                  AbstractApacheHttpClientTest::getResponseCode,
-                  context);
-      assertThat(responseCode).isEqualTo(200);
-
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> assertClientSpanWithoutPeer(span, expectedUri)));
+      return getClient(uri)
+          .execute(target, request, AbstractApacheHttpClientTest::getResponseCode, context);
     }
 
     private SpanDataAssert assertClientSpanWithoutPeer(SpanDataAssert span, URI uri) {
