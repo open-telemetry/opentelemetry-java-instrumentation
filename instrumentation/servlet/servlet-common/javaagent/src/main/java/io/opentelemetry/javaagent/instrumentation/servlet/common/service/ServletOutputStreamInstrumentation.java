@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.servlet.common.service;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -54,8 +54,9 @@ public class ServletOutputStreamInstrumentation implements TypeInstrumentation {
             .and(isPublic()),
         writeBytesAndOffsetAdviceClassName);
     transformer.applyAdviceToMethod(
-        named("write").and(takesArguments("[B")).and(isPublic()), writeBytesAdviceClassName);
+        named("write").and(takesArguments(byte[].class)).and(isPublic()),
+        writeBytesAdviceClassName);
     transformer.applyAdviceToMethod(
-        named("write").and(takesArguments("int")).and(isPublic()), writeIntAdviceClassName);
+        named("write").and(takesArguments(int.class)).and(isPublic()), writeIntAdviceClassName);
   }
 }

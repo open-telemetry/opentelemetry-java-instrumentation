@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.executors.ContextPropagatingRunnable;
@@ -31,7 +31,7 @@ class LocalSchedulerActivationInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("submit").and(takesArguments("java.lang.Runnable")),
+        named("submit").and(takesArguments(Runnable.class)),
         getClass().getName() + "$WrapRunnableAdvice");
   }
 

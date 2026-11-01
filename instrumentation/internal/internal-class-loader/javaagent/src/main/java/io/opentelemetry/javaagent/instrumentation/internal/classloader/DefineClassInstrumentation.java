@@ -5,14 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper.Handler.DefineClassContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.nio.ByteBuffer;
+import java.security.ProtectionDomain;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -30,13 +31,11 @@ class DefineClassInstrumentation implements TypeInstrumentation {
         named("defineClass")
             .and(
                 takesArguments(
-                    "java.lang.String", "[B", "int", "int", "java.security.ProtectionDomain")),
+                    String.class, byte[].class, int.class, int.class, ProtectionDomain.class)),
         getClass().getName() + "$DefineClassAdvice");
     transformer.applyAdviceToMethod(
         named("defineClass")
-            .and(
-                takesArguments(
-                    "java.lang.String", "java.nio.ByteBuffer", "java.security.ProtectionDomain")),
+            .and(takesArguments(String.class, ByteBuffer.class, ProtectionDomain.class)),
         getClass().getName() + "$DefineClassWithThreeArgsAdvice");
   }
 

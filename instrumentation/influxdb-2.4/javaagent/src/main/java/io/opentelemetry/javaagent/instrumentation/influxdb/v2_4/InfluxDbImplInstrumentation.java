@@ -47,9 +47,7 @@ class InfluxDbImplInstrumentation implements TypeInstrumentation {
         named("query")
             .and(
                 takesArguments("org.influxdb.dto.Query")
-                    .or(
-                        takesArguments(
-                            "org.influxdb.dto.Query", "java.util.concurrent.TimeUnit"))),
+                    .or(takesArguments("org.influxdb.dto.Query", "java.util.concurrent.TimeUnit"))),
         getClass().getName() + "$InfluxDbQueryAdvice");
     transformer.applyAdviceToMethod(
         named("query")

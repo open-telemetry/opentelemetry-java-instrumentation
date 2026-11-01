@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.job;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -30,7 +30,7 @@ public class JobFactoryBeanInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$InitAdvice");
     transformer.applyAdviceToMethod(
-        named("setJobExecutionListeners").and(takesArguments("[Ljava.lang.Object;")),
+        named("setJobExecutionListeners").and(takesArguments(Object[].class)),
         getClass().getName() + "$SetListenersAdvice");
   }
 
