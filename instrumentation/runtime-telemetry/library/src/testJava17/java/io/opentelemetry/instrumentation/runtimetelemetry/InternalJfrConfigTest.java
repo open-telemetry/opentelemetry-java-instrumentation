@@ -55,7 +55,7 @@ class InternalJfrConfigTest {
   void jfrOwnershipIsNotReportedAsJmxRegistration() {
     ensureJfrAvailable();
     TestConfig config = new TestConfig();
-    when(config.jfrMetrics.getScalarList("included", String.class))
+    when(config.jfrMetrics.getScalarList("included", String.class, emptyList()))
         .thenReturn(singletonList("jvm.class.*"));
     RuntimeTelemetry telemetry = config.configure();
     cleanup.deferCleanup(telemetry);
