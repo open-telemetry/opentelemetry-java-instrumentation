@@ -1,4 +1,5 @@
 plugins {
+  id("otel.testcontainers-testing")
   id("otel.javaagent-instrumentation")
 }
 
@@ -80,10 +81,6 @@ testing {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
   if (otelProps.denyUnsafe) {
     // Lettuce 5.1.0 pulls in Reactor 3.2.0, whose RingBuffer accesses sun.misc.Unsafe directly.
     named("lettuce51Test", Test::class) {

@@ -1,4 +1,5 @@
 plugins {
+  id("otel.testcontainers-testing")
   id("otel.javaagent-instrumentation")
 }
 
@@ -86,8 +87,6 @@ val vaadinBuildService =
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
     if (name.startsWith("vaadinLatestTest")) {
       usesService(vaadinBuildService)
     }

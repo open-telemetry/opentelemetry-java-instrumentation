@@ -2,6 +2,7 @@ import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
+  id("otel.testcontainers-testing")
   id("otel.javaagent-instrumentation")
 }
 
@@ -25,7 +26,6 @@ dependencies {
 testing.suites.named<JvmTestSuite>("test") {
   executions {
     configureEach {
-      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
     }
     register("Experimental") {

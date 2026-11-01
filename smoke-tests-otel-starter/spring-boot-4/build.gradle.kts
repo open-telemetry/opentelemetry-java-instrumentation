@@ -1,4 +1,5 @@
 plugins {
+  id("otel.testcontainers-testing")
   id("otel.java-conventions")
   alias(springBoot40.plugins.versions)
   id("otel.spring-native-test-conventions")
@@ -50,9 +51,6 @@ tasks.withType<JavaCompile>().configureEach {
 tasks {
   bootJar {
     enabled = false
-  }
-  test {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }
 

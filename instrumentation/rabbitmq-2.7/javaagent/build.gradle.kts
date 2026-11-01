@@ -2,6 +2,7 @@ import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
+  id("otel.testcontainers-testing")
   id("otel.javaagent-instrumentation")
 }
 
@@ -64,8 +65,6 @@ testing.suites {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     // add byte buddy agent for mockito
     configurations.testRuntimeClasspath.get().find { it.name.contains("byte-buddy-agent") }?.apply {

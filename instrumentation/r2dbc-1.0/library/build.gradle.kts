@@ -1,4 +1,5 @@
 plugins {
+  id("otel.testcontainers-testing")
   id("otel.library-instrumentation")
 }
 
@@ -9,10 +10,4 @@ dependencies {
   testImplementation(project(":instrumentation:r2dbc-1.0:testing"))
   testImplementation(project(":instrumentation:reactor:reactor-3.1:library"))
   testImplementation("org.testcontainers:testcontainers")
-}
-
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
 }

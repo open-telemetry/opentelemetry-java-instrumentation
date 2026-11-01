@@ -1,4 +1,5 @@
 plugins {
+  id("otel.testcontainers-testing")
   id("otel.java-conventions")
 }
 
@@ -7,10 +8,4 @@ dependencies {
   implementation("org.testcontainers:testcontainers-oracle-free")
 
   compileOnly("com.oracle.database.jdbc:ucp:11.2.0.4")
-}
-
-tasks {
-  test {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
 }

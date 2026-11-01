@@ -1,4 +1,5 @@
 plugins {
+  id("otel.testcontainers-testing")
   id("otel.javaagent-instrumentation")
 }
 
@@ -16,10 +17,4 @@ dependencies {
 
   implementation(project(":instrumentation:nats:nats-2.17:library"))
   testImplementation(project(":instrumentation:nats:nats-2.17:testing"))
-}
-
-tasks {
-  test {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
 }

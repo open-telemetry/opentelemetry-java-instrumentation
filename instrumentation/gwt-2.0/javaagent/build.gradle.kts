@@ -1,4 +1,5 @@
 plugins {
+  id("otel.testcontainers-testing")
   id("otel.javaagent-instrumentation")
 }
 
@@ -112,7 +113,6 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
   val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {

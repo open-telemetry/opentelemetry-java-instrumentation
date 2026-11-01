@@ -1,4 +1,5 @@
 plugins {
+  id("otel.testcontainers-testing")
   id("otel.javaagent-instrumentation")
 }
 
@@ -52,7 +53,6 @@ gradle.sharedServices.registerIfAbsent("hbaseBuildService", HbaseBuildService::c
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     usesService(gradle.sharedServices.registrations["hbaseBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }

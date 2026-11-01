@@ -1,4 +1,5 @@
 plugins {
+  id("otel.testcontainers-testing")
   id("otel.javaagent-instrumentation")
 }
 
@@ -49,7 +50,6 @@ tasks {
       "testJedis51OrLater",
       otelProps.testLatestDeps || name.startsWith("jedis51"),
     )
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
   check {
