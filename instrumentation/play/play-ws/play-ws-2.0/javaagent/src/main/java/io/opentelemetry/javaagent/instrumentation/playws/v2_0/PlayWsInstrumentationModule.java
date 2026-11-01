@@ -5,13 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v2_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.playws.v2_0.PlayWs20Singletons.instrumenter;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.playws.common.v1_0.AbstractBootstrapInstrumentation;
@@ -30,11 +28,7 @@ import play.shaded.ahc.org.asynchttpclient.ws.WebSocketUpgradeHandler;
 @AutoService(InstrumentationModule.class)
 public class PlayWsInstrumentationModule extends InstrumentationModule {
   public PlayWsInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "play-ws-2.0" : "play-ws",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"play-ws", "play"}
-            : new String[] {"play-ws-2.0"});
+    super("play-ws-2.0", "play-ws", "play");
   }
 
   @Override
@@ -54,7 +48,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule {
         @Advice.Argument(0) Request request,
         @Advice.Argument(1) AsyncHandler<?> originalAsyncHandler) {
       AsyncHandler<?> asyncHandler = originalAsyncHandler;
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return new Object[] {null, asyncHandler};
       }

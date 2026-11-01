@@ -35,6 +35,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import reactor.netty.http.client.HttpClient;
 
 abstract class AbstractReactorNettyHttpClientTest
@@ -189,13 +191,17 @@ abstract class AbstractReactorNettyHttpClientTest
         });
   }
 
-  @Test
-  void shouldExposeContextToHttpRequestErrorCallback() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void shouldExposeContextToHttpRequestErrorCallback(boolean combinedCallbacks) {
     AtomicReference<Span> onRequestErrorSpan = new AtomicReference<>();
 
     HttpClient httpClient =
-        createHttpClient(false)
-            .doOnRequestError((rq, err) -> onRequestErrorSpan.set(Span.current()));
+        combinedCallbacks
+            ? createHttpClient(false)
+                .doOnError((rq, err) -> onRequestErrorSpan.set(Span.current()), (rs, err) -> {})
+            : createHttpClient(false)
+                .doOnRequestError((rq, err) -> onRequestErrorSpan.set(Span.current()));
 
     Throwable thrown =
         catchThrowable(

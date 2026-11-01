@@ -22,4 +22,4 @@ dependencies {
   otelBom.addExtra(semconvConstraint.group, semconvConstraint.name, semconvVersion)
 }
 
-otelBom.projectFilter.set { it.findProperty("otel.stable") == "true" }
+otelBom.projectFilter.set { it.extra.properties["otel.stable"] == "true" }

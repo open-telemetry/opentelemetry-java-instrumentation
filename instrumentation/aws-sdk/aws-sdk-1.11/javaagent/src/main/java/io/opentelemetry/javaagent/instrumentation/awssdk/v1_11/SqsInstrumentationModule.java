@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.awssdk.v1_11.internal.SqsImpl;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -18,11 +17,7 @@ import net.bytebuddy.asm.Advice;
 public class SqsInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
 
   public SqsInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "aws-sdk-1.11" : "aws-sdk",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"aws-sdk-sqs", "aws-sdk"}
-            : new String[] {"aws-sdk-1.11", "aws-sdk-1.11-sqs"});
+    super("aws-sdk-1.11", "aws-sdk-sqs", "aws-sdk");
   }
 
   @Override

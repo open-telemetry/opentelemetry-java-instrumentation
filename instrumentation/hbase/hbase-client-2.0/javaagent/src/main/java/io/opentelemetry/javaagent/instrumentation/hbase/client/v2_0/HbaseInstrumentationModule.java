@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -22,11 +21,7 @@ public final class HbaseInstrumentationModule extends InstrumentationModule {
   private static final String CALL_UTIL = "org.apache.hadoop.hbase.ipc.OpenTelemetryCallUtil";
 
   public HbaseInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "hbase-client-2.0" : "hbase-client",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"hbase-client"}
-            : new String[] {"hbase-client-2.0"});
+    super("hbase-client-2.0", "hbase-client");
   }
 
   @Override
@@ -48,6 +43,15 @@ public final class HbaseInstrumentationModule extends InstrumentationModule {
   @Override
   public List<String> injectedClassNames() {
     return asList(CALL_UTIL);
+  }
+
+  @Override
+  public List<String> exposedClassNames() {
+    // OpenTelemetryCallUtil must share HBase's class loader to access package-private Call.
+    // Expose these types so it uses the same state classes as the isolated advice.
+    return asList(
+        "io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.RequestAndContext",
+        "io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseRequest");
   }
 
   @Override

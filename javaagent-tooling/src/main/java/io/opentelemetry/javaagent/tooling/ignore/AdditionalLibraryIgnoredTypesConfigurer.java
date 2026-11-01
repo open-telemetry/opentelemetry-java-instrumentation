@@ -100,6 +100,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("org.springframework.boot.")
+        .allowClass("org.springframework.boot.loader.LaunchedURLClassLoader")
         .allowClass("org.springframework.boot.context.web.")
         .allowClass("org.springframework.boot.logging.logback.")
         .allowClass("org.springframework.boot.web.filter.")
@@ -213,7 +214,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass(
             "org.springframework.web.context.support.AbstractRefreshableWebApplicationContext")
         .allowClass("org.springframework.web.context.support.GenericWebApplicationContext")
-        .allowClass("org.springframework.web.context.support.XmlWebApplicationContext");
+        .allowClass("org.springframework.web.context.support.XmlWebApplicationContext")
+        .allowClass("org.springframework.web.client.DefaultRestClient$DefaultResponseSpec$$Lambda");
 
     // xml-apis, xerces, xalan, but not xml web-services
     builder

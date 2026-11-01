@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -48,7 +48,15 @@ class LettuceClusterClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         nameStartsWith("connectStateful")
             .and(
-                takesArgument(1, hasSuperType(named("com.lambdaworks.redis.RedisChannelHandler")))),
+                takesArgument(
+                    1,
+                    // connectStateful overloads declare the concrete connection types;
+                    // helpers declare RedisChannelHandler directly or use a type variable
+                    // that erases to it.
+                    namedOneOf(
+                        "com.lambdaworks.redis.RedisChannelHandler",
+                        "com.lambdaworks.redis.StatefulRedisConnectionImpl",
+                        "com.lambdaworks.redis.cluster.StatefulRedisClusterConnectionImpl"))),
         getClass().getName() + "$AttachStatefulConnectionAdvice");
   }
 

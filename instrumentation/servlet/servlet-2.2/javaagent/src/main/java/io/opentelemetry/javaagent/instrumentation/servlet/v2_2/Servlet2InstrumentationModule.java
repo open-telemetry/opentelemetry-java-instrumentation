@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseInstrumentation;
@@ -23,11 +22,7 @@ public class Servlet2InstrumentationModule extends InstrumentationModule {
   private static final String BASE_PACKAGE = "javax.servlet";
 
   public Servlet2InstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "servlet-2.2" : "servlet",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"servlet"}
-            : new String[] {"servlet-2.2"});
+    super("servlet-2.2", "servlet");
   }
 
   // this is required to make sure servlet 2 instrumentation won't apply to servlet 3

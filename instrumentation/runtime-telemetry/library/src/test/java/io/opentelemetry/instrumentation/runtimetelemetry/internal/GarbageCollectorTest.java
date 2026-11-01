@@ -24,10 +24,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.management.Notification;
 import javax.management.NotificationEmitter;
 import javax.management.NotificationListener;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -50,14 +49,12 @@ class GarbageCollectorTest {
 
   @Captor private ArgumentCaptor<NotificationListener> listenerCaptor;
 
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void registerObservers(boolean captureGcCause) {
+  @Test
+  void registerObservers() {
     GarbageCollector.registerObservers(
         testing.getOpenTelemetry().getMeter("test"),
         singletonList(gcBean),
-        GarbageCollectorTest::getGcNotificationInfo,
-        captureGcCause);
+        GarbageCollectorTest::getGcNotificationInfo);
 
     NotificationEmitter notificationEmitter = (NotificationEmitter) gcBean;
     verify(notificationEmitter).addNotificationListener(listenerCaptor.capture(), any(), any());
@@ -89,9 +86,7 @@ class GarbageCollectorTest {
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(JVM_GC_NAME, "G1 Young Generation"),
                                         equalTo(JVM_GC_ACTION, "end of minor GC"),
-                                        equalTo(
-                                            JVM_GC_CAUSE,
-                                            captureGcCause ? "Allocation Failure" : null))
+                                        equalTo(JVM_GC_CAUSE, "Allocation Failure"))
                                     .hasBucketBoundaries(GC_DURATION_BUCKETS),
                             point ->
                                 point
@@ -100,8 +95,7 @@ class GarbageCollectorTest {
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(JVM_GC_NAME, "G1 Old Generation"),
                                         equalTo(JVM_GC_ACTION, "end of major GC"),
-                                        equalTo(
-                                            JVM_GC_CAUSE, captureGcCause ? "System.gc()" : null))
+                                        equalTo(JVM_GC_CAUSE, "System.gc()"))
                                     .hasBucketBoundaries(GC_DURATION_BUCKETS))));
   }
 

@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
 import static java.util.Collections.emptySet;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.metrics.Meter;
 import java.util.Collections;
 import java.util.HashSet;
@@ -27,11 +26,6 @@ public class JfrConfig {
 
   public static JfrConfig create() {
     return new JfrConfig();
-  }
-
-  @CanIgnoreReturnValue
-  public JfrConfig setUseLegacyJfrCpuCountMetric(boolean useLegacy) {
-    return this;
   }
 
   public JfrTelemetry buildJfrTelemetry(

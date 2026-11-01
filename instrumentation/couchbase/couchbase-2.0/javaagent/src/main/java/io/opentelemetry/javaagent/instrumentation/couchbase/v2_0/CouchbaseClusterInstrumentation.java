@@ -15,6 +15,8 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.couchbase.client.core.ClusterFacade;
 import com.couchbase.client.java.CouchbaseCluster;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.rxjava.v1_0.TracedOnSubscribe;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -46,28 +48,35 @@ class CouchbaseClusterInstrumentation implements TypeInstrumentation {
   public static class CouchbaseClientAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static CallDepth trackCallDepth() {
+    public static Scope trackCallDepth(
+        @Advice.Origin("#t") Class<?> declaringClass,
+        @Advice.Origin("#m") String methodName,
+        @Advice.FieldValue("core") ClusterFacade core) {
       CallDepth callDepth = CallDepth.forClass(CouchbaseCluster.class);
-      callDepth.getAndIncrement();
-      return callDepth;
+      if (callDepth.getAndIncrement() > 0) {
+        return null;
+      }
+      CouchbaseRequestInfo request =
+          CouchbaseRequestInfo.create(
+              null, COUCHBASE_SERVER_TARGET.get(core), declaringClass, methodName);
+      return CouchbaseRequestInfo.init(Context.current(), request).makeCurrent();
     }
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     @SuppressWarnings("deprecation") // Observable.create is required for RxJava 1.0 compatibility
     public static Observable<?> subscribeResult(
-        @Advice.Origin("#t") Class<?> declaringClass,
-        @Advice.Origin("#m") String methodName,
-        @Advice.FieldValue("core") ClusterFacade core,
-        @Advice.Return Observable<?> result,
-        @Advice.Enter CallDepth callDepth) {
-      if (callDepth.decrementAndGet() > 0) {
+        @Advice.Return Observable<?> result, @Advice.Enter Scope scope) {
+      Context context = Context.current();
+      if (scope != null) {
+        scope.close();
+      }
+      CouchbaseRequestInfo request = CouchbaseRequestInfo.get(context);
+      if (CallDepth.forClass(CouchbaseCluster.class).decrementAndGet() > 0
+          || request == null
+          || result == null) {
         return result;
       }
-
-      CouchbaseRequestInfo request =
-          CouchbaseRequestInfo.create(
-              null, COUCHBASE_SERVER_TARGET.get(core), declaringClass, methodName);
       return Observable.create(
           TracedOnSubscribe.perSubscription(result, instrumenter(), request.copySupplier()));
     }

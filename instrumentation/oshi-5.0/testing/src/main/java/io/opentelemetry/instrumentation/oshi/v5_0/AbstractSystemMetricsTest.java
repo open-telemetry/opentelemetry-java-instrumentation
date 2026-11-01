@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.oshi.v5_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeVersion;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -14,7 +12,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.incubating.DiskIncubatingAttributes.DISK_IO_DIRECTION;
 import static io.opentelemetry.semconv.incubating.NetworkIncubatingAttributes.NETWORK_INTERFACE_NAME;
 import static io.opentelemetry.semconv.incubating.NetworkIncubatingAttributes.NETWORK_IO_DIRECTION;
-import static io.opentelemetry.semconv.incubating.OtherIncubatingAttributes.STATE;
 import static io.opentelemetry.semconv.incubating.SystemIncubatingAttributes.SYSTEM_DEVICE;
 import static io.opentelemetry.semconv.incubating.SystemIncubatingAttributes.SYSTEM_MEMORY_STATE;
 
@@ -22,6 +19,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.LongPointData;
+import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Collection;
 import org.junit.jupiter.api.Test;
@@ -31,15 +29,11 @@ public abstract class AbstractSystemMetricsTest {
 
   protected abstract InstrumentationExtension testing();
 
-  /**
-   * @deprecated Exists only so the javaagent test can pin the pre-rename {@code
-   *     io.opentelemetry.oshi} scope; to be removed in 3.0 once v3-preview becomes the default.
-   */
-  @Deprecated
-  protected abstract String scopeName();
+  protected static String scopeName() {
+    return "io.opentelemetry.oshi-5.0";
+  }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv and scopeName() bridge
   void memoryMetrics() {
     registerMetrics();
 
@@ -51,10 +45,7 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasDescription(
-                                v3Preview()
-                                    ? "Reports memory in use by state."
-                                    : "System memory usage")
+                            .hasDescription("Reports memory in use by state.")
                             .hasUnit("By")
                             .hasLongSumSatisfying(
                                 sum ->
@@ -63,20 +54,12 @@ public abstract class AbstractSystemMetricsTest {
                                             point ->
                                                 point
                                                     .hasAttributesSatisfyingExactly(
-                                                        equalTo(
-                                                            v3Preview()
-                                                                ? SYSTEM_MEMORY_STATE
-                                                                : STATE,
-                                                            "used"))
+                                                        equalTo(SYSTEM_MEMORY_STATE, "used"))
                                                     .hasValueSatisfying(v -> v.isNotNegative()),
                                             point ->
                                                 point
                                                     .hasAttributesSatisfyingExactly(
-                                                        equalTo(
-                                                            v3Preview()
-                                                                ? SYSTEM_MEMORY_STATE
-                                                                : STATE,
-                                                            "free"))
+                                                        equalTo(SYSTEM_MEMORY_STATE, "free"))
                                                     .hasValueSatisfying(v -> v.isNotNegative())))));
     testing()
         .waitAndAssertMetrics(
@@ -86,10 +69,7 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasDescription(
-                                v3Preview()
-                                    ? "Percentage of memory bytes in use."
-                                    : "System memory utilization")
+                            .hasDescription("Percentage of memory bytes in use.")
                             .hasUnit("1")
                             .hasDoubleGaugeSatisfying(
                                 gauge ->
@@ -97,21 +77,16 @@ public abstract class AbstractSystemMetricsTest {
                                         point ->
                                             point
                                                 .hasAttributesSatisfyingExactly(
-                                                    equalTo(
-                                                        v3Preview() ? SYSTEM_MEMORY_STATE : STATE,
-                                                        "used"))
+                                                    equalTo(SYSTEM_MEMORY_STATE, "used"))
                                                 .hasValueSatisfying(v -> v.isNotNegative()),
                                         point ->
                                             point
                                                 .hasAttributesSatisfyingExactly(
-                                                    equalTo(
-                                                        v3Preview() ? SYSTEM_MEMORY_STATE : STATE,
-                                                        "free"))
+                                                    equalTo(SYSTEM_MEMORY_STATE, "free"))
                                                 .hasValueSatisfying(v -> v.isNotNegative())))));
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using the legacy scopeName() bridge
   void networkAndDiskMetrics() {
     registerMetrics();
 
@@ -123,33 +98,24 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric -> {
                       assertThat(metric)
-                          .hasDescription(
-                              v3Preview()
-                                  ? "The number of bytes transmitted and received."
-                                  : "System network IO")
+                          .hasDescription("The number of bytes transmitted and received.")
                           .hasUnit("By")
                           .hasLongSumSatisfying(sum -> sum.isMonotonic());
                       assertNetworkPoints(
-                          metric.getLongSumData().getPoints(),
-                          v3Preview() ? NETWORK_INTERFACE_NAME : stringKey("device"));
+                          metric.getLongSumData().getPoints(), NETWORK_INTERFACE_NAME);
                     }));
     testing()
         .waitAndAssertMetrics(
             scopeName(),
-            v3Preview() ? "system.network.packet.count" : "system.network.packets",
+            "system.network.packet.count",
             metrics ->
                 metrics.anySatisfy(
                     metric -> {
                       assertThat(metric)
-                          .hasDescription(
-                              v3Preview()
-                                  ? "The number of packets transferred."
-                                  : "System network packets")
-                          .hasUnit(v3Preview() ? "{packet}" : "{packets}")
+                          .hasDescription("The number of packets transferred.")
+                          .hasUnit("{packet}")
                           .hasLongSumSatisfying(sum -> sum.isMonotonic());
-                      assertNetworkPoints(
-                          metric.getLongSumData().getPoints(),
-                          v3Preview() ? SYSTEM_DEVICE : stringKey("device"));
+                      assertNetworkPoints(metric.getLongSumData().getPoints(), SYSTEM_DEVICE);
                     }));
     testing()
         .waitAndAssertMetrics(
@@ -159,15 +125,11 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric -> {
                       assertThat(metric)
-                          .hasDescription(
-                              v3Preview()
-                                  ? "Count of network errors detected."
-                                  : "System network errors")
-                          .hasUnit(v3Preview() ? "{error}" : "{errors}")
+                          .hasDescription("Count of network errors detected.")
+                          .hasUnit("{error}")
                           .hasLongSumSatisfying(sum -> sum.isMonotonic());
                       assertNetworkPoints(
-                          metric.getLongSumData().getPoints(),
-                          v3Preview() ? NETWORK_INTERFACE_NAME : stringKey("device"));
+                          metric.getLongSumData().getPoints(), NETWORK_INTERFACE_NAME);
                     }));
     testing()
         .waitAndAssertMetrics(
@@ -177,8 +139,7 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric -> {
                       assertThat(metric)
-                          .hasDescription(
-                              v3Preview() ? "Disk bytes transferred." : "System disk IO")
+                          .hasDescription("Disk bytes transferred.")
                           .hasUnit("By")
                           .hasLongSumSatisfying(sum -> sum.isMonotonic());
                       assertDiskPoints(metric.getLongSumData().getPoints());
@@ -191,17 +152,17 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric -> {
                       assertThat(metric)
-                          .hasDescription(
-                              v3Preview() ? "Disk operations count." : "System disk operations")
-                          .hasUnit(v3Preview() ? "{operation}" : "{operations}")
+                          .hasDescription("Disk operations count.")
+                          .hasUnit("{operation}")
                           .hasLongSumSatisfying(sum -> sum.isMonotonic());
                       assertDiskPoints(metric.getLongSumData().getPoints());
                     }));
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using the legacy scopeName() bridge
   void systemMetricsUseSystemSchema() {
+    String version = EmbeddedInstrumentationProperties.findVersion("io.opentelemetry.oshi-5.0");
+    assertThat(version).isNotBlank();
     testing()
         .waitAndAssertMetrics(
             scopeName(),
@@ -210,15 +171,33 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .satisfies(
-                                hasScopeSchemaUrl(
-                                    v3Preview()
-                                        ? SchemaUrls.V1_44_0
-                                        : "https://opentelemetry.io/schemas/1.19.0"))
-                            .satisfies(
-                                hasScopeVersion(
-                                    EmbeddedInstrumentationProperties.findVersion(
-                                        "io.opentelemetry.oshi-5.0")))));
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                            .satisfies(hasScopeVersion(version))));
+  }
+
+  @Test
+  void metricIdentities() {
+    testing()
+        .waitAndAssertMetrics(
+            scopeName(), "system.network.packet.count", metrics -> metrics.isNotEmpty());
+    assertThat(testing().metrics())
+        .filteredOn(metric -> metric.getInstrumentationScopeInfo().getName().equals(scopeName()))
+        .allSatisfy(
+            metric ->
+                assertThat(metric)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                    .satisfies(
+                        hasScopeVersion(
+                            EmbeddedInstrumentationProperties.findVersion(scopeName()))))
+        .extracting(MetricData::getName)
+        .containsOnly(
+            "system.memory.usage",
+            "system.memory.utilization",
+            "system.network.io",
+            "system.network.packet.count",
+            "system.network.errors",
+            "system.disk.io",
+            "system.disk.operations");
   }
 
   private static void assertNetworkPoints(
@@ -226,11 +205,11 @@ public abstract class AbstractSystemMetricsTest {
     assertThat(points)
         .allSatisfy(
             point -> {
-              AttributeKey<String> direction =
-                  v3Preview() ? NETWORK_IO_DIRECTION : stringKey("direction");
-              assertThat(point.getAttributes().asMap()).containsOnlyKeys(device, direction);
+              assertThat(point.getAttributes().asMap())
+                  .containsOnlyKeys(device, NETWORK_IO_DIRECTION);
               assertThat(point.getAttributes().get(device)).isNotBlank();
-              assertThat(point.getAttributes().get(direction)).isIn("receive", "transmit");
+              assertThat(point.getAttributes().get(NETWORK_IO_DIRECTION))
+                  .isIn("receive", "transmit");
             });
   }
 
@@ -238,12 +217,10 @@ public abstract class AbstractSystemMetricsTest {
     assertThat(points)
         .allSatisfy(
             point -> {
-              AttributeKey<String> device = v3Preview() ? SYSTEM_DEVICE : stringKey("device");
-              AttributeKey<String> direction =
-                  v3Preview() ? DISK_IO_DIRECTION : stringKey("direction");
-              assertThat(point.getAttributes().asMap()).containsOnlyKeys(device, direction);
-              assertThat(point.getAttributes().get(device)).isNotBlank();
-              assertThat(point.getAttributes().get(direction)).isIn("read", "write");
+              assertThat(point.getAttributes().asMap())
+                  .containsOnlyKeys(SYSTEM_DEVICE, DISK_IO_DIRECTION);
+              assertThat(point.getAttributes().get(SYSTEM_DEVICE)).isNotBlank();
+              assertThat(point.getAttributes().get(DISK_IO_DIRECTION)).isIn("read", "write");
             });
   }
 }

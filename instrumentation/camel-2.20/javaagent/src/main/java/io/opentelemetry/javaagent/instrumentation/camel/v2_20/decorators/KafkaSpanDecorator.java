@@ -23,10 +23,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
-
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelDirection;
 import java.util.Map;
@@ -56,7 +52,6 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
     return topic != null ? topic : super.getDestination(exchange, endpoint);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void pre(
       AttributesBuilder attributes,
@@ -64,11 +59,6 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
       Endpoint endpoint,
       CamelDirection camelDirection) {
     super.pre(attributes, exchange, endpoint, camelDirection);
-
-    if (emitOldMessagingSemconv()) {
-      attributes.put(MESSAGING_OPERATION, "process");
-      attributes.put(MESSAGING_DESTINATION_PARTITION_ID, getDestinationPartitionId(exchange));
-    }
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       String partitionKey = (String) exchange.getIn().getHeader(PARTITION_KEY);

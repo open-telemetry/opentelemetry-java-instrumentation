@@ -6,6 +6,17 @@ plugins {
 
 description = "smoke-tests"
 
+val appServerSuites = mapOf(
+  "payara" to "**/Payara*.*",
+  "jetty" to "**/Jetty*.*",
+  "liberty" to "**/Liberty*.*",
+  "tomcat" to "**/Tomcat*.*",
+  "tomee" to "**/Tomee*.*",
+  "websphere" to "**/Websphere*.*",
+  "wildfly" to "**/Wildfly*.*",
+)
+val smokeTestSuite = project.findProperty("smokeTestSuite") as String?
+
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
   maxJavaVersionForTests.set(JavaVersion.VERSION_11)
@@ -17,7 +28,7 @@ dependencies {
 
   api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
-  implementation(platform("io.grpc:grpc-bom:1.84.0"))
+  implementation(platform("io.grpc:grpc-bom:1.85.1"))
   implementation("org.slf4j:slf4j-api")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
@@ -39,7 +50,7 @@ tasks {
     from(rootProject.file("docs/declarative-configuration-example.yaml"))
   }
 
-  test {
+  withType<Test>().configureEach {
     testLogging.showStandardStreams = true
 
     // this needs to be long enough so that smoke tests that are just running slow don't time out
@@ -49,38 +60,44 @@ tasks {
     // In addition to that we disable them on normal test task to only run when explicitly requested.
     enabled = enabled && gradle.startParameter.taskNames.any { it.startsWith(":smoke-tests:") }
 
-    val suites = mapOf(
-      "payara" to listOf("**/Payara*.*"),
-      "jetty" to listOf("**/Jetty*.*"),
-      "liberty" to listOf("**/Liberty*.*"),
-      "tomcat" to listOf("**/Tomcat*.*"),
-      "tomee" to listOf("**/Tomee*.*"),
-      "websphere" to listOf("**/Websphere*.*"),
-      "wildfly" to listOf("**/Wildfly*.*"),
-      "spring-aot" to listOf("**/SpringBootAotSmokeTest.*"),
+    inputs.property(
+      "useWindowsContainers",
+      project.providers.systemProperty("os.name")
+        .zip(project.providers.environmentVariable("USE_LINUX_CONTAINERS").orElse("")) { os, linux ->
+          linux != "1" && os.lowercase().contains("windows")
+        },
     )
 
-    val smokeTestSuite = project.findProperty("smokeTestSuite") as String?
-    val skipOpenJ9SmokeTests = (findProperty("skipOpenJ9SmokeTests") as String?) == "true"
-    systemProperty("reducedAppServerTests", findProperty("reducedAppServerTests") == "true")
-    if (smokeTestSuite != null) {
-      val suite = suites[smokeTestSuite]
-      if (suite != null) {
-        include(suite)
-      } else if (smokeTestSuite == "other") {
-        suites.values.forEach {
-          exclude(it)
+    val appServerSuite = smokeTestSuite == null || smokeTestSuite in appServerSuites
+    when {
+      smokeTestSuite == null -> {
+        if (name == "testLimitedMatrix" || name == "testAdditionalVariants") {
+          include(appServerSuites.values)
         }
-      } else if (smokeTestSuite == "none") {
-        // Exclude all tests. Running this suite will compile everything needed by smoke tests
-        // without executing any tests.
-        exclude("**/*")
-      } else {
-        throw GradleException("Unknown smoke test suite: $smokeTestSuite")
+      }
+
+      smokeTestSuite in appServerSuites -> include(appServerSuites.getValue(smokeTestSuite!!))
+
+      smokeTestSuite == "other" -> exclude(appServerSuites.values)
+
+      smokeTestSuite == "none" -> exclude("**/*")
+
+      else -> throw GradleException("Unknown smoke test suite: $smokeTestSuite")
+    }
+    if (name == "testAdditionalVariants" && !appServerSuite) {
+      // Non-app-server suites run only in testLimitedMatrix.
+      exclude("**/*")
+    }
+    if (appServerSuite) {
+      when (name) {
+        "testLimitedMatrix" -> systemProperty("inLimitedMatrix", true)
+        "testAdditionalVariants" -> systemProperty("inLimitedMatrix", false)
       }
     }
-
-    if (skipOpenJ9SmokeTests) {
+    val skipOpenJ9 =
+      findProperty("skipOpenJ9SmokeTests") == "true" &&
+        smokeTestSuite != "websphere"
+    if (appServerSuite && skipOpenJ9) {
       exclude("**/*Openj9*.*")
     }
 
@@ -96,14 +113,36 @@ tasks {
     val extensionTestAppTask = project(":smoke-tests:extensions:testapp").tasks.named<Jar>("jar")
     val extensionTestAppJarPath = extensionTestAppTask.flatMap { it.archiveFile }
 
-    dependsOn(shadowTask, extensionTestAppTask, extensionTask)
+    val legacySpringBootTask = project(":smoke-tests:images:spring-boot-1.3").tasks.named<Jar>("jar")
+    val legacySpringBootJarPath = legacySpringBootTask.flatMap { it.archiveFile }
+    inputs.files(extensionJarPath).withPropertyName("smokeTestExtension")
+    inputs.files(extensionTestAppJarPath)
+      .withPropertyName("smokeTestExtensionApp")
+      .withNormalizer(ClasspathNormalizer::class)
+    inputs.files(legacySpringBootJarPath)
+      .withPropertyName("legacySpringBootLogCorrelationFixture")
+      .withNormalizer(ClasspathNormalizer::class)
+
+    dependsOn(shadowTask, extensionTestAppTask, extensionTask, legacySpringBootTask)
 
     doFirst {
       jvmArgs(
         "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${agentJarPath.get()}",
         "-Dio.opentelemetry.smoketest.extension.path=${extensionJarPath.get()}",
-        "-Dio.opentelemetry.smoketest.extension.testapp.path=${extensionTestAppJarPath.get()}"
+        "-Dio.opentelemetry.smoketest.extension.testapp.path=${extensionTestAppJarPath.get()}",
+        "-Dio.opentelemetry.smoketest.springboot13.path=${legacySpringBootJarPath.get()}"
       )
     }
+  }
+
+  register<Test>("testLimitedMatrix") {
+    description = "Runs the limited app-server matrix shared by PRs and main."
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+  }
+  register<Test>("testAdditionalVariants") {
+    description = "Runs app-server cases outside the limited matrix."
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
   }
 }

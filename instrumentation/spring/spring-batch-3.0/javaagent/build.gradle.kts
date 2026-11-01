@@ -15,7 +15,6 @@ muzzle {
 dependencies {
   library("org.springframework.batch:spring-batch-core:3.0.0.RELEASE")
 
-  testImplementation("com.google.guava:guava")
   testImplementation("javax.inject:javax.inject:1")
 
   // SimpleAsyncTaskExecutor context propagation
@@ -81,7 +80,6 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     jvmArgs("-Dotel.instrumentation.spring-batch.enabled=true")
   }

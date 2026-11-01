@@ -70,20 +70,16 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(@Advice.This Object producer) {
       BatchSendState state = batchSendHelper().createBatchSendState(producer, false);
-      Object[] enterResult = new Object[] {state, null};
-      if (state != null) {
-        enterResult[1] = currentBatchSendState().set(state);
-      }
-      return enterResult;
+      return new Object[] {state, currentBatchSendState().set(state)};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Enter Object[] enterResult, @Advice.Thrown Throwable throwable) {
-      BatchSendState state = (BatchSendState) enterResult[0];
-      if (state == null) {
+      if (enterResult == null) {
         return;
       }
+      BatchSendState state = (BatchSendState) enterResult[0];
       currentBatchSendState().restore((BatchSendState) enterResult[1]);
       batchSendHelper().completeBatchSend(state, throwable);
     }
@@ -97,19 +93,17 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
         @Advice.This Object producer, @Advice.Argument(1) SendCallback callback) {
       BatchSendState state = batchSendHelper().createBatchSendState(producer, callback != null);
       Object[] enterResult = new Object[] {state, null, batchSendHelper().wrap(callback, state)};
-      if (state != null) {
-        enterResult[1] = currentBatchSendState().set(state);
-      }
+      enterResult[1] = currentBatchSendState().set(state);
       return enterResult;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Enter Object[] enterResult, @Advice.Thrown Throwable throwable) {
-      BatchSendState state = (BatchSendState) enterResult[0];
-      if (state == null) {
+      if (enterResult == null) {
         return;
       }
+      BatchSendState state = (BatchSendState) enterResult[0];
       currentBatchSendState().restore((BatchSendState) enterResult[1]);
       batchSendHelper().completeBatchSend(state, throwable);
     }
@@ -123,19 +117,17 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
         @Advice.This Object producer, @Advice.Argument(2) SendCallback callback) {
       BatchSendState state = batchSendHelper().createBatchSendState(producer, callback != null);
       Object[] enterResult = new Object[] {state, null, batchSendHelper().wrap(callback, state)};
-      if (state != null) {
-        enterResult[1] = currentBatchSendState().set(state);
-      }
+      enterResult[1] = currentBatchSendState().set(state);
       return enterResult;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Enter Object[] enterResult, @Advice.Thrown Throwable throwable) {
-      BatchSendState state = (BatchSendState) enterResult[0];
-      if (state == null) {
+      if (enterResult == null) {
         return;
       }
+      BatchSendState state = (BatchSendState) enterResult[0];
       currentBatchSendState().restore((BatchSendState) enterResult[1]);
       batchSendHelper().completeBatchSend(state, throwable);
     }

@@ -10,7 +10,6 @@ import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -21,11 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class GraphqlInstrumentationModule extends InstrumentationModule {
 
   public GraphqlInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "graphql-java-12.0" : "graphql-java",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"graphql-java"}
-            : new String[] {"graphql-java-12.0"});
+    super("graphql-java-12.0", "graphql-java");
   }
 
   @Override

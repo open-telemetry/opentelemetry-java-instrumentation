@@ -28,21 +28,17 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
 }
 
+testing {
+  suites {
+    register<JvmTestSuite>("version19Test") {
+      dependencies {
+        implementation("com.google.guava:guava:${baseVersion("19.0").orLatest()}")
+      }
+    }
+  }
+}
+
 tasks {
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=code")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
-  }
-
   val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -51,6 +47,7 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv, testBothSemconv, testExperimental)
+    dependsOn(testExperimental)
+    dependsOn(testing.suites.named("version19Test"))
   }
 }

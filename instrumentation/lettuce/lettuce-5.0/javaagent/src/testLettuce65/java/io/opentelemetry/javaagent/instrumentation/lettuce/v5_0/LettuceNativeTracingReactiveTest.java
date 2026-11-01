@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -77,9 +76,7 @@ class LettuceNativeTracingReactiveTest extends AbstractLettuceClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
-                        .hasKind(SpanKind.CLIENT)));
+                span -> span.hasName("GET " + host + ":" + port).hasKind(SpanKind.CLIENT)));
   }
 
   @Test
@@ -90,9 +87,7 @@ class LettuceNativeTracingReactiveTest extends AbstractLettuceClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "KEYS " + host + ":" + port : "KEYS")
-                        .hasKind(SpanKind.CLIENT)));
+                span -> span.hasName("KEYS " + host + ":" + port).hasKind(SpanKind.CLIENT)));
   }
 
   @Test
@@ -121,11 +116,11 @@ class LettuceNativeTracingReactiveTest extends AbstractLettuceClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
+                    span.hasName("GET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
+                    span.hasName("GET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))));
   }
@@ -157,9 +152,7 @@ class LettuceNativeTracingReactiveTest extends AbstractLettuceClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "KEYS " + host + ":" + port : "KEYS")
-                        .hasKind(SpanKind.CLIENT)));
+                span -> span.hasName("KEYS " + host + ":" + port).hasKind(SpanKind.CLIENT)));
   }
 
   private static Tracing enabledTracing(

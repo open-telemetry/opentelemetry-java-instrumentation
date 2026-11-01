@@ -303,7 +303,7 @@ targets:
       target: ':instrumentation:sofa-rpc-5.4:library-autoconfigure'
     - type: gradle
       path: ./
-      target: ':instrumentation:spark-2.3:javaagent'
+      target: ':instrumentation:spark-2.4:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-boot-autoconfigure'
@@ -612,9 +612,6 @@ targets:
       target: ':instrumentation:jboss-logmanager:jboss-logmanager-mdc-1.1:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jedis:jedis-1.4:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:jedis:jedis-2.0:javaagent'
     - type: gradle
       path: ./
@@ -624,7 +621,7 @@ targets:
       target: ':instrumentation:jedis:jedis-4.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jedis:jedis-common-1.4:javaagent'
+      target: ':instrumentation:jedis:jedis-common:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jetty:jetty-11.0:javaagent'
@@ -712,9 +709,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:lettuce:lettuce-5.0:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:lettuce:lettuce-5.1:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:lettuce:lettuce-5.1:library'
@@ -1002,6 +996,9 @@ targets:
       target: ':instrumentation:servlet:servlet-common-javax:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:spring:spring-ai-1.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:spring:spring-batch-3.0:javaagent'
     - type: gradle
       path: ./
@@ -1032,7 +1029,7 @@ targets:
       target: ':instrumentation:spring:spring-pulsar-1.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:spring:spring-rabbit-1.0:javaagent'
+      target: ':instrumentation:spring:spring-rabbit-1.1:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-rmi-4.0:javaagent'
@@ -1054,9 +1051,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:spring:starters:spring-boot-starter'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:spring:starters:zipkin-spring-boot-starter'
     - type: gradle
       path: ./
       target: ':instrumentation:struts:struts-2.3:javaagent'

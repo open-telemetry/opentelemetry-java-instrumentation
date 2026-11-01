@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.resetRequestAndContext;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.setRequestAndContext;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientUtil.createRequest;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientState.resetRequestAndContext;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientState.setRequestAndContext;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientUtil.createRequest;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4.HbaseSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,12 +17,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerTarget;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseRequest;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseServerTarget;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.RequestAndContext;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -30,7 +29,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.ipc.AbstractRpcClient;
-import org.apache.hadoop.hbase.security.User;
 
 class AbstractRpcClientInstrumentation implements TypeInstrumentation {
 
@@ -66,7 +64,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This AbstractRpcClient<?> client, @Advice.Argument(0) Configuration configuration) {
       HbaseServerTarget.store(client, configuration);
@@ -75,15 +73,13 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class CallMethodAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static RequestAndContext onEnter(
         @Advice.This AbstractRpcClient<?> client,
         @Advice.Argument(0) Object md,
-        @Advice.Argument(2) Object param,
-        @Advice.Argument(4) User ticket,
-        @Advice.Argument(5) InetSocketAddress addr) {
-      HbaseRequest request = createRequest(md, param, ticket, addr, HbaseServerTarget.get(client));
-      Context parentContext = Java8BytecodeBridge.currentContext();
+        @Advice.Argument(2) Object param) {
+      HbaseRequest request = createRequest(md, param, HbaseServerTarget.get(client));
+      Context parentContext = Context.current();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
@@ -94,7 +90,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
       return requestAndContext;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable RequestAndContext requestAndContext) {

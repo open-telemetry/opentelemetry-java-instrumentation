@@ -17,8 +17,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class DefaultEnablementTest {
 
-  private static final boolean V3_PREVIEW =
-      Boolean.getBoolean("otel.instrumentation.common.v3-preview");
+  private static final boolean INSTRUMENTATION_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.hystrix.enabled");
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -39,15 +39,15 @@ class DefaultEnablementTest {
     String result = testing.runWithSpan("parent", () -> new TestCommand().execute());
     assertThat(result).isEqualTo("Hello!");
 
-    if (V3_PREVIEW) {
-      testing.waitAndAssertTraces(
-          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
-    } else {
+    if (INSTRUMENTATION_ENABLED) {
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent"),
                   span -> span.hasName("ExampleGroup.TestCommand.execute")));
+    } else {
+      testing.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
     }
   }
 

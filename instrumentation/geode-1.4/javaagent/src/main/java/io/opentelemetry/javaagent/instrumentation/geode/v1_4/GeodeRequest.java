@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import javax.annotation.Nullable;
@@ -18,10 +16,7 @@ abstract class GeodeRequest {
   static GeodeRequest create(
       Region<?, ?> region, String operationName, @Nullable String queryText) {
     return new AutoValue_GeodeRequest(
-        region,
-        operationName,
-        queryText,
-        emitStableDatabaseSemconv() ? GeodeServerTargets.get(region) : null);
+        region, operationName, queryText, GeodeServerTargets.get(region));
   }
 
   abstract Region<?, ?> getRegion();

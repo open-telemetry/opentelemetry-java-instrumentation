@@ -8,11 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.log4j.mdc.v1_2;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -33,7 +32,7 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic().and(named("getMDC")).and(takesArguments(1)).and(takesArgument(0, String.class)),
+        isPublic().and(named("getMDC")).and(takesArgument(0, String.class)),
         getClass().getName() + "$GetMdcAdvice");
   }
 
@@ -61,7 +60,7 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
       if (context == null) {
         return null;
       }
-      SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
+      SpanContext spanContext = Span.fromContext(context).getSpanContext();
       if (!spanContext.isValid()) {
         return null;
       }

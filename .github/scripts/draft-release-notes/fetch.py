@@ -10,6 +10,7 @@ Missing discussion references are recorded as unavailable in the bundle.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import re
 import shutil
@@ -25,6 +26,12 @@ from typing import Any, Callable
 REPO = "open-telemetry/opentelemetry-java-instrumentation"
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_BUNDLE_DIR = REPO_ROOT / "build" / "changelog-bundle"
+RELEASE_CONFIG_SPEC = importlib.util.spec_from_file_location(
+    "release_config", REPO_ROOT / ".github" / "scripts" / "release-config.py"
+)
+release_config = importlib.util.module_from_spec(RELEASE_CONFIG_SPEC)
+assert RELEASE_CONFIG_SPEC.loader is not None
+RELEASE_CONFIG_SPEC.loader.exec_module(release_config)
 AUTHOR_FILTER = r"^(?!renovate\[bot\] )"
 SRC_MAIN_JAVA_PATHSPEC = "*/src/main/**/*.java"
 PR_SUFFIX_RE = re.compile(r"\s*\(#(\d+)\)$")
@@ -163,23 +170,13 @@ def compute_default_range(version: str) -> str:
     if match is None:
         raise RuntimeError(f"unexpected version: {version}")
 
-    major = int(match.group(1))
-    minor = int(match.group(2))
     changelog = (REPO_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-
-    if minor == 0:
-        prior_major = major - 1
-        prior_minor_match = re.search(
-            rf"^## Version {prior_major}\.(\d+)\..*$",
-            changelog,
-            re.MULTILINE,
-        )
-        if prior_minor_match is None:
+    prior_version = release_config.prior_release_version(version, changelog)
+    if prior_version is None:
+        if int(match.group(2)) == 0:
             return "HEAD"
-        prior_minor = int(prior_minor_match.group(1))
-        return f"v{prior_major}.{prior_minor}.0..HEAD"
-
-    return f"v{major}.{minor - 1}.0..HEAD"
+        raise RuntimeError(f"no previous release found for {version}")
+    return f"v{prior_version}..HEAD"
 
 
 def get_commit_hashes(range_spec: str) -> list[str]:

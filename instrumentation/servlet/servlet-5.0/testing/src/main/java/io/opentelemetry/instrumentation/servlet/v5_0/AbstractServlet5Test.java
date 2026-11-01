@@ -29,11 +29,19 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
+import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import jakarta.servlet.Servlet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttpServerTest<SERVER> {
+
+  private static final boolean REQUEST_PARAMETER_CAPTURE_ENABLED =
+      System.getProperty("otel.instrumentation.servlet.experimental.request-parameters.included")
+              != null
+          || System.getProperty(
+                  "otel.instrumentation.servlet.experimental.request-parameters.excluded")
+              != null;
 
   @RegisterExtension
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
@@ -73,6 +81,7 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setTestCaptureRequestParameters(true);
+    options.setExpectCapturedRequestParameters(!isAgentTest() || REQUEST_PARAMETER_CAPTURE_ENABLED);
     if (isAgentTest()) {
       options.setHasResponseCustomizer(e -> true);
       options.setHasResponseSpan(this::hasResponseSpan);
@@ -226,6 +235,52 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
     assertThat(response.headers().contentLength()).isEqualTo(result.length());
 
     String expectedRoute = expectedHttpRoute(HTML_PRINT_WRITER, "GET");
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("GET" + (expectedRoute != null ? " " + expectedRoute : ""))
+                            .hasKind(SpanKind.SERVER)
+                            .hasNoParent(),
+                    span ->
+                        span.hasName("controller")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void snippetInjectionWithLateContentTypeServletOutputStream() {
+    assumeTrue(isAgentTest());
+    assumeTrue(servlet() == TestServlet5.Sync.class);
+
+    assertLateContentTypeSnippetInjection(HTML_SERVLET_OUTPUT_STREAM);
+  }
+
+  @Test
+  void snippetInjectionWithLateContentTypePrintWriter() {
+    assumeTrue(isAgentTest());
+    assumeTrue(servlet() == TestServlet5.Sync.class);
+
+    assertLateContentTypeSnippetInjection(HTML_PRINT_WRITER);
+  }
+
+  private void assertLateContentTypeSnippetInjection(ServerEndpoint endpoint) {
+    String snippet = "\n  <script type=\"text/javascript\"> Test Test</script>";
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    cleanup.deferCleanup(() -> ExperimentalSnippetHolder.setSnippet(""));
+
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(
+            HttpMethod.GET, resolveAddress(endpoint, "h1c://") + "?lateContentType=true");
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    String result = "<head>" + snippet + "late content type</head>";
+    assertThat(response.status().code()).isEqualTo(endpoint.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(result);
+    assertThat(response.headers().contentLength()).isEqualTo(result.length());
+
+    String expectedRoute = expectedHttpRoute(endpoint, "GET");
     testing()
         .waitAndAssertTraces(
             trace ->

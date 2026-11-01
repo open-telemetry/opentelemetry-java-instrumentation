@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.TaskQueueInstrumentation;
@@ -21,11 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class VertxClientInstrumentationModule extends InstrumentationModule {
 
   public VertxClientInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "vertx-http-client-4.0" : "vertx-http-client",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"vertx-http-client", "vertx"}
-            : new String[] {"vertx-http-client-4.0", "vertx"});
+    super("vertx-http-client-4.0", "vertx-http-client", "vertx");
   }
 
   @Override
@@ -41,6 +36,7 @@ public class VertxClientInstrumentationModule extends InstrumentationModule {
     return asList(
         new ConnectionManagerInstrumentation(),
         new HttpClientConnectionInstrumentation(),
+        new HttpClientResponseInstrumentation(),
         new HttpRequestInstrumentation(),
         new TaskQueueInstrumentation());
   }

@@ -276,7 +276,24 @@ public class Instrumenter<REQUEST, RESPONSE> {
       @Nullable Throwable error,
       @Nullable Instant endTime) {
     Span span = Span.fromContext(context);
+    try {
+      doEndImpl(span, context, request, response, error, endTime);
+    } finally {
+      if (endTime != null) {
+        span.end(endTime);
+      } else {
+        span.end();
+      }
+    }
+  }
 
+  private void doEndImpl(
+      Span span,
+      Context context,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error,
+      @Nullable Instant endTime) {
     if (error != null) {
       error = errorCauseExtractor.extract(error);
       if (emitExceptionAsSpanEvents()) {
@@ -317,12 +334,6 @@ public class Instrumenter<REQUEST, RESPONSE> {
       for (int i = operationListeners.length - 1; i >= 0; i--) {
         operationListeners[i].onEnd(context, attributes, endNanos);
       }
-    }
-
-    if (endTime != null) {
-      span.end(endTime);
-    } else {
-      span.end();
     }
   }
 

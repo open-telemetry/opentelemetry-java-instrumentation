@@ -5,21 +5,15 @@
 
 package io.opentelemetry.instrumentation.oshi.v5_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
-import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
-import io.opentelemetry.semconv.SchemaUrls;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -48,61 +42,27 @@ class SystemMetricsTest extends AbstractSystemMetricsTest {
     return testing;
   }
 
-  @Override
-  @SuppressWarnings("deprecation") // overriding a deprecated abstract method
-  protected String scopeName() {
-    return "io.opentelemetry.oshi-5.0";
-  }
-
   @Test
   void verifyObservablesAreNotEmpty() {
-    assertThat(observables).isNotEmpty();
+    assertThat(observables).hasSize(7);
   }
 
   @Test
-  @SuppressWarnings("deprecation") // caller-owned meters retain legacy conventions
-  void callerOwnedMeterKeepsLegacyConventions() {
+  void closingObserversStopsCollection() throws Exception {
     InMemoryMetricReader reader = InMemoryMetricReader.create();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(reader).build();
     cleanup.deferCleanup(meterProvider);
     List<AutoCloseable> callerObservers =
-        SystemMetrics.registerObservers(meterProvider.get("oshi-caller-meter"));
-    callerObservers.forEach(cleanup::deferCleanup);
-
-    assertThat(reader.collectAllMetrics())
-        .anySatisfy(
-            metric -> {
-              assertThat(metric.getName()).isEqualTo("system.network.packets");
-              assertThat(metric.getUnit()).isEqualTo("{packets}");
-              assertThat(metric).satisfies(hasScopeSchemaUrl(null));
-            });
-  }
-
-  @Test
-  void suppliedConfigurationControlsPreviewMode() {
-    InMemoryMetricReader reader = InMemoryMetricReader.create();
-    SdkMeterProvider meterProvider =
-        SdkMeterProvider.builder().registerMetricReader(reader).build();
-    cleanup.deferCleanup(meterProvider);
-    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class, RETURNS_DEEP_STUBS);
-    when(openTelemetry.getMeterProvider()).thenReturn(meterProvider);
-    when(openTelemetry.getInstrumentationConfig("common").getBoolean("v3_preview"))
-        .thenReturn(!v3Preview());
-    SystemMetrics.registerObservers(openTelemetry).forEach(cleanup::deferCleanup);
-
-    assertThat(reader.collectAllMetrics())
-        .anySatisfy(
-            metric -> {
-              assertThat(metric.getName())
-                  .isEqualTo(
-                      v3Preview() ? "system.network.packets" : "system.network.packet.count");
-              assertThat(metric)
-                  .satisfies(
-                      hasScopeSchemaUrl(
-                          v3Preview()
-                              ? "https://opentelemetry.io/schemas/1.19.0"
-                              : SchemaUrls.V1_44_0));
-            });
+        SystemMetrics.registerObservers(
+            OpenTelemetrySdk.builder().setMeterProvider(meterProvider).build());
+    try {
+      assertThat(reader.collectAllMetrics()).isNotEmpty();
+    } finally {
+      for (AutoCloseable observer : callerObservers) {
+        observer.close();
+      }
+    }
+    assertThat(reader.collectAllMetrics()).isEmpty();
   }
 }

@@ -10,59 +10,134 @@ Run the analysis to update the instrumentation-list.yaml:
 
 ### Telemetry collection
 
-Until this process is ready for all instrumentations, each module will be modified to include a
-system property feature flag configured for when the tests run. By enabling the following flag you
-will enable metric and span collection:
+Collect default telemetry and supported non-default telemetry modes, such as experimental
+attributes, optional metrics, and semantic convention selection.
 
-```kotlin
-tasks {
-  test {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    ...
-  }
-}
+| Test purpose                             | Collect telemetry? | `metadataConfig`                          |
+| ---------------------------------------- | ------------------ | ----------------------------------------- |
+| Document default telemetry               | Yes                | Unset                                     |
+| Document supported non-default telemetry | Yes                | Relevant non-default `key=value` settings |
+| Unit tests or regression-only variants   | No                 | Unset                                     |
+
+For javaagent, plain-library, and library-autoconfigure tests, baseline fixtures may capture
+synthetic HTTP and messaging headers. The capture may come from shared test exporter configuration,
+a library builder, or production properties that the integration actually reads. Do not require
+empty overrides, capture-only flags or variants, or `metadataConfig` conditions solely for this
+fixture setup. Other non-default telemetry settings remain subject to the normal profile rules. Test
+opt-in telemetry in named variants wired into `check`. Preserve normal suite coverage; filtered
+metadata-collection tests are not a substitute.
+
+| Property | Synthetic selector |
+| -------- | ------------------ |
+| `otel.instrumentation.http.client.capture-request-headers` | `X-Test-Request` |
+| `otel.instrumentation.http.client.capture-response-headers` | `X-Test-Response` |
+| `otel.instrumentation.http.server.capture-request-headers` | `X-Test-Request` |
+| `otel.instrumentation.http.server.capture-response-headers` | `X-Test-Response` |
+| `otel.instrumentation.common.messaging.headers.included` | `Test-Message-Header`, `Test-Message-Int-Header`, `Test_Message_Header`, `Test_Message_Int_Header` |
+
+These synthetic selectors are fixture values, not production defaults. Their attributes may appear
+in raw `.telemetry` files under `when: default`, but the analyzer excludes them from generated
+telemetry inventories.
+
+For example, a plain-library fixture can configure synthetic messaging-header capture in its baseline
+builder:
+
+```java
+AwsSdkTelemetry.builder(testing.getOpenTelemetry())
+    .setHeaders(IncludeExclude.builder().setIncluded("Test-Message-*").build())
+    .build();
 ```
 
-Sometimes instrumentation will behave differently based on configuration options, and we can
-differentiate between these configurations by using the `metadataConfig` system property. When the
-telemetry is written to a file, the value of this property will be included, or it will default to
-a `default` attribution.
+A variant enabling experimental attributes still labels only that meaningful opt-in:
+`AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)`. It does not label the synthetic
+header selector or its test-only flag.
 
-For example, to collect and write metadata for the `otel.semconv-stability.opt-in=database` option
-set for an instrumentation:
+`metadataConfig` labels output; it does not configure instrumentation or enable collection.
+An absent or empty label records telemetry under `when: default`. Default means instrumentation
+defaults, not the task name or settings on `test`; synthetic header capture is excluded from the
+label for every fixture type. The generator merges telemetry with the same label.
+Include only non-default user-facing settings needed to describe this instrumentation's signals,
+span kinds, attributes, metrics, or events, including inherited, fixture, and library-builder settings,
+except for synthetic header capture. For settings applied through JVM properties, use flat
+`key=value` conditions without `-D`. For programmatically configured library profiles, use the actual
+builder calls as labels (for example,
+`AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)`) instead of javaagent properties
+that do not configure the library builder. Separate multiple conditions or builder calls with commas,
+using consistent spelling and ordering for the same mode. Split or filter collected tasks that would
+mix profiles under one label. Apply settings separately through JVM properties or library APIs.
+Label non-default metric selectors, not Java source-set names; document runtime prerequisites separately.
+
+Omit test setup, such as ports, timeouts, JVM access flags, and unrelated instrumentation settings.
+Enabling a whole default-off instrumentation is also setup; `disabled_by_default` records that
+requirement. Include span suppression settings only when they determine this instrumentation's
+telemetry, not merely spans from other instrumentation in the test trace.
+
+Shared test conventions forward `-PcollectMetadata=true` to test JVMs.
+Register representative tasks in
+`.github/scripts/instrumentations.sh` covering each profile's instrumentation scope and telemetry
+shape; equivalent suites need not all collect. Exclude unit tests and regression-only
+disablement, adapter-fallback, or classpath compatibility variants based on their purpose, not their
+names. A full-suite `testReceiveSpansDisabled` may document default telemetry; a suppression-only
+regression task does not. Keep regression tasks in `check`, but omit them from the collection script.
+Keep `metadataConfig` labels on the tasks that document non-default telemetry.
+
+When a feature supports distinct telemetry emission modes, collect its DEFAULT profile and
+each supported non-default profile in separate test JVMs. The following schematic example adds
+a PREVIEW profile without changing the default test JVM. Substitute the feature's actual supported
+property and value for `<feature-mode-property>` and `<preview-mode-value>`, and choose a task name
+appropriate to the module; `examplePreviewTest` is illustrative, not a task available in every module.
+Use additional variants for combined emission only when the feature supports it. Keep variants
+scoped to suites exercising the feature and preserve the source suite's JVM settings.
 
 ```kotlin
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
+  val examplePreviewTest = register<Test>("examplePreviewTest") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
 
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    systemProperty("<feature-mode-property>", "<preview-mode-value>")
+    systemProperty("metadataConfig", "<feature-mode-property>=<preview-mode-value>")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(examplePreviewTest)
   }
 }
 ```
 
-Then, prior to running the analyzer, run the following command to generate `.telemetry` files:
+Generate `.telemetry` files with the selected tasks, then run the analyzer. Running `test` alone
+does not execute a separately registered variant:
 
-`./gradlew test -PcollectMetadata=true`
+```bash
+./gradlew :instrumentation:<module>:javaagent:test :instrumentation:<module>:javaagent:<additional-mode-task> -PcollectMetadata=true
+./gradlew :instrumentation-docs:runAnalysis
+```
 
-Then run the doc generator
+Replace `<module>` with the instrumentation's Gradle project path and `<additional-mode-task>`
+with the actual registered task for the supported additional mode.
 
-`./gradlew :instrumentation-docs:runAnalysis`
-
-or use the helper script that will run only the currently supported tests (recommended):
+Or use the same collector as daily CI to run all tasks registered for metadata collection:
 
 ```bash
 ./instrumentation-docs/collect.sh
 ```
+
+The collector clears stale `.telemetry` directories only in selected modules, once before
+collection, and preserves profiles across all passes. Latest-dependency tasks run separately with
+`-PtestLatestDeps=true`. Set `DEBUG_LOGGING=true` for full Gradle output.
+
+On ARM (`arm64` or `aarch64`), the suites in `COLIMA_INSTRUMENTATIONS` require x86_64 containers.
+Install Colima and start a dedicated profile before collecting:
+
+```bash
+colima start --profile otel-metadata --arch x86_64 --memory 4 --activate=false
+./instrumentation-docs/collect.sh
+```
+
+The other suites use your normal Docker environment. Only the x86-only pass uses the
+`otel-metadata` Docker socket. The collector does not start or stop Colima profiles; when finished,
+you can stop this profile with `colima stop --profile otel-metadata`. On x86_64, Colima is not used.
+Missing prerequisites and failed collection tasks cause the collector to exit unsuccessfully.
 
 ## Instrumentation Hierarchy
 
@@ -90,16 +165,12 @@ currently both use the prefix before the first hyphen in that name, regardless o
 | `spring-webmvc-3.1` | `spring`  | `spring` |
 
 Namespace and group are documentation groupings, not javaagent enablement selectors.
-The names registered by a javaagent `InstrumentationModule` determine its selectors. In v3 preview,
-the primary normally matches the full module-directory name, followed by a versionless secondary:
+The names registered by a javaagent `InstrumentationModule` determine its selectors. Use the full
+module-directory name as the primary, followed by a versionless secondary:
 
 ```java
 public SpringWebMvcInstrumentationModule() {
-  super(
-      AgentCommonConfig.get().isV3Preview() ? "spring-webmvc-3.1" : "spring-webmvc",
-      AgentCommonConfig.get().isV3Preview()
-          ? new String[] {"spring-webmvc"}
-          : new String[] {"spring-webmvc-3.1"});
+  super("spring-webmvc-3.1", new String[] {"spring-webmvc"});
 }
 ```
 
@@ -415,9 +486,12 @@ event at two severities is documented as two shapes. The default `exception` eve
 this: `ERROR` for server and consumer operations, `WARN` for client and producer ones.
 
 Telemetry only reaches the generated list for test tasks listed in
-`.github/scripts/instrumentations.sh`. A task that sets a non-default configuration must also set
-the `metadataConfig` system property to that configuration, otherwise its telemetry is recorded
-under `when: default`. The exception events, for example, are collected by the
+`.github/scripts/instrumentations.sh` during automated collection. The analyzer also reads
+`.telemetry` files generated by local runs. Choose tasks and labels according to the
+[telemetry collection convention](#telemetry-collection); a missing label records telemetry
+under `when: default`, including for the shared synthetic header capture above. Label other
+non-default telemetry options accordingly.
+The exception events, for example, are collected by the
 `testExceptionSignalLogs` tasks, which set
 `metadataConfig` to `otel.semconv.exception.signal.preview=logs`.
 

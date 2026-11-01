@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -97,115 +98,124 @@ class HystrixObservableTest {
         Arguments.of(
             named(
                 "toObservable",
-                new Parameter(null, null, cmd -> cmd.toObservable().toBlocking().first()))),
+                new Parameter(null, null, cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable-I",
                 new Parameter(
-                    Schedulers.immediate(), null, cmd -> cmd.toObservable().toBlocking().first()))),
+                    Schedulers.immediate(),
+                    null,
+                    cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable-T",
                 new Parameter(
                     Schedulers.trampoline(),
                     null,
-                    cmd -> cmd.toObservable().toBlocking().first()))),
+                    cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable-C",
                 new Parameter(
                     Schedulers.computation(),
                     null,
-                    cmd -> cmd.toObservable().toBlocking().first()))),
+                    cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable-IO",
                 new Parameter(
-                    Schedulers.io(), null, cmd -> cmd.toObservable().toBlocking().first()))),
+                    Schedulers.io(), null, cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable-NT",
                 new Parameter(
-                    Schedulers.newThread(), null, cmd -> cmd.toObservable().toBlocking().first()))),
+                    Schedulers.newThread(),
+                    null,
+                    cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable+I",
                 new Parameter(
-                    null, Schedulers.immediate(), cmd -> cmd.toObservable().toBlocking().first()))),
+                    null,
+                    Schedulers.immediate(),
+                    cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable+T",
                 new Parameter(
                     null,
                     Schedulers.trampoline(),
-                    cmd -> cmd.toObservable().toBlocking().first()))),
+                    cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable+C",
                 new Parameter(
                     null,
                     Schedulers.computation(),
-                    cmd -> cmd.toObservable().toBlocking().first()))),
+                    cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable+IO",
                 new Parameter(
-                    null, Schedulers.io(), cmd -> cmd.toObservable().toBlocking().first()))),
+                    null, Schedulers.io(), cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable+NT",
                 new Parameter(
-                    null, Schedulers.newThread(), cmd -> cmd.toObservable().toBlocking().first()))),
+                    null,
+                    Schedulers.newThread(),
+                    cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
-            named("observe", new Parameter(null, null, cmd -> cmd.observe().toBlocking().first()))),
+            named(
+                "observe", new Parameter(null, null, cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe-I",
                 new Parameter(
-                    Schedulers.immediate(), null, cmd -> cmd.observe().toBlocking().first()))),
+                    Schedulers.immediate(), null, cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe-T",
                 new Parameter(
-                    Schedulers.trampoline(), null, cmd -> cmd.observe().toBlocking().first()))),
+                    Schedulers.trampoline(), null, cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe-C",
                 new Parameter(
-                    Schedulers.computation(), null, cmd -> cmd.observe().toBlocking().first()))),
+                    Schedulers.computation(), null, cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe-IO",
-                new Parameter(Schedulers.io(), null, cmd -> cmd.observe().toBlocking().first()))),
+                new Parameter(Schedulers.io(), null, cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe-NT",
                 new Parameter(
-                    Schedulers.newThread(), null, cmd -> cmd.observe().toBlocking().first()))),
+                    Schedulers.newThread(), null, cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe+I",
                 new Parameter(
-                    null, Schedulers.immediate(), cmd -> cmd.observe().toBlocking().first()))),
+                    null, Schedulers.immediate(), cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe+T",
                 new Parameter(
-                    null, Schedulers.trampoline(), cmd -> cmd.observe().toBlocking().first()))),
+                    null, Schedulers.trampoline(), cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe+C",
                 new Parameter(
-                    null, Schedulers.computation(), cmd -> cmd.observe().toBlocking().first()))),
+                    null, Schedulers.computation(), cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe+IO",
-                new Parameter(null, Schedulers.io(), cmd -> cmd.observe().toBlocking().first()))),
+                new Parameter(null, Schedulers.io(), cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe+NT",
                 new Parameter(
-                    null, Schedulers.newThread(), cmd -> cmd.observe().toBlocking().first()))));
+                    null, Schedulers.newThread(), cmd -> cmd.observe().toBlocking().single()))));
   }
 
   private static Stream<Arguments> provideCommandActionArguments() {
@@ -220,24 +230,19 @@ class HystrixObservableTest {
                         Schedulers.newThread(),
                         cmd -> {
                           BlockingQueue<String> queue = new LinkedBlockingQueue<>();
+                          CompletableFuture<Void> completion = new CompletableFuture<>();
                           Subscription subscription =
                               cmd.toObservable()
                                   .subscribe(
-                                      next -> {
-                                        try {
-                                          queue.put(next);
-                                        } catch (InterruptedException e) {
-                                          throw new RuntimeException(e);
-                                        }
-                                      });
-                          String returnValue;
+                                      queue::add,
+                                      completion::completeExceptionally,
+                                      () -> completion.complete(null));
                           try {
-                            returnValue = queue.take();
-                          } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
+                            completion.join();
+                            return queue.remove();
+                          } finally {
+                            subscription.unsubscribe();
                           }
-                          subscription.unsubscribe();
-                          return returnValue;
                         })))));
   }
 
@@ -313,24 +318,19 @@ class HystrixObservableTest {
                         null,
                         cmd -> {
                           BlockingQueue<String> queue = new LinkedBlockingQueue<>();
+                          CompletableFuture<Void> completion = new CompletableFuture<>();
                           Subscription subscription =
                               cmd.toObservable()
                                   .subscribe(
-                                      next -> {
-                                        try {
-                                          queue.put(next);
-                                        } catch (InterruptedException e) {
-                                          throw new RuntimeException(e);
-                                        }
-                                      });
-                          String returnValue;
+                                      queue::add,
+                                      completion::completeExceptionally,
+                                      () -> completion.complete(null));
                           try {
-                            returnValue = queue.take();
-                          } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
+                            completion.join();
+                            return queue.remove();
+                          } finally {
+                            subscription.unsubscribe();
                           }
-                          subscription.unsubscribe();
-                          return returnValue;
                         })))));
   }
 

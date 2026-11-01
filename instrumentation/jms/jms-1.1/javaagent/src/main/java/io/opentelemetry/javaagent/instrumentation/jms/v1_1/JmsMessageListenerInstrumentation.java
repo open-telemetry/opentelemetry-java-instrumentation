@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.jms.v1_1.JmsSingletons.consumerProcessInstrumenter;
@@ -99,13 +98,10 @@ class JmsMessageListenerInstrumentation implements TypeInstrumentation {
                 messageWithListenerSubscriptionName);
           }
 
-          Context currentContext = Context.current();
-          Context parentContext = currentContext;
-          if (emitStableMessagingSemconv()) {
-            JmsReceiveContext receiveContext = messageAdapter.getReceiveContext();
-            if (receiveContext != null) {
-              parentContext = receiveContext.context();
-            }
+          Context parentContext = Context.current();
+          JmsReceiveContext receiveContext = messageAdapter.getReceiveContext();
+          if (receiveContext != null) {
+            parentContext = receiveContext.context();
           }
           Instrumenter<MessageWithDestination, Void> instrumenter =
               consumerProcessInstrumenter(messageAdapter.wereConsumedMessagesRecorded());

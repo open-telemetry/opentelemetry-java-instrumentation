@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -14,7 +15,6 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.mockito.Mockito.mock;
@@ -71,31 +71,30 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
 
     assertThat(latch.await(1, MINUTES)).isTrue();
 
-    if (emitStableMessagingSemconv()) {
-      testing.waitAndAssertMetrics(
-          INSTRUMENTATION_NAME,
-          "messaging.client.consumed.messages",
-          metrics ->
-              metrics.satisfiesExactly(
-                  metric ->
-                      assertThat(metric)
-                          .hasLongSumSatisfying(
-                              sum ->
-                                  sum.hasPointsSatisfying(
-                                      point ->
-                                          point
-                                              .hasValue(1)
-                                              .hasAttributesSatisfyingExactly(
-                                                  equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                  equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                                  equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                                  equalTo(
-                                                      MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                                      "test_sub"),
-                                                  equalTo(
-                                                      ERROR_TYPE,
-                                                      IllegalStateException.class.getName()))))));
-    }
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "pulsar"),
+                                                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                equalTo(
+                                                    MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                    "test_sub"),
+                                                equalTo(
+                                                    ERROR_TYPE,
+                                                    IllegalStateException.class.getName()))))));
   }
 
   @Test
@@ -124,44 +123,43 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
 
     latch.await(1, MINUTES);
 
-    if (emitStableMessagingSemconv()) {
-      testing.waitAndAssertMetrics(
-          INSTRUMENTATION_NAME,
-          "messaging.client.consumed.messages",
-          metrics ->
-              metrics.satisfiesExactly(
-                  metric ->
-                      assertThat(metric)
-                          .hasUnit("{message}")
-                          .hasDescription(
-                              "Number of messages that were delivered to the application.")
-                          .hasLongSumSatisfying(
-                              sum ->
-                                  sum.hasPointsSatisfying(
-                                      point ->
-                                          point
-                                              .hasValue(1)
-                                              .hasAttributesSatisfyingExactly(
-                                                  equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                  equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                                  equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                                  equalTo(
-                                                      MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                                      "test_sub"))))));
-    }
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.satisfiesExactly(
+                metric ->
+                    assertThat(metric)
+                        .hasUnit("{message}")
+                        .hasDescription(
+                            "Number of messages that were delivered to the application.")
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "pulsar"),
+                                                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                                equalTo(
+                                                    MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                                    "test_sub"))))));
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(spanName("send", topic))
+                    span.hasName("send " + destinationName(topic))
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             sendAttributes(topic, msgId.toString(), false)),
                 span ->
-                    span.hasName(spanName("process", topic))
+                    span.hasName("process " + destinationName(topic))
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -246,25 +244,6 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
   }
 
   private static void assertDirectReceiveTraces(String topic, MessageId msgId) {
-    if (!emitStableMessagingSemconv()) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                  span ->
-                      span.hasName(spanName("send", topic))
-                          .hasKind(SpanKind.PRODUCER)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              sendAttributes(topic, msgId.toString(), false)),
-                  span ->
-                      span.hasName(spanName("receive", topic))
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(
-                              receiveAttributes(topic, msgId.toString(), false))));
-      return;
-    }
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
@@ -273,7 +252,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(spanName("send", topic))
+                  span.hasName("send " + destinationName(topic))
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -283,10 +262,10 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("receive", topic))
+                    span.hasName("receive " + destinationName(topic))
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
                             receiveAttributes(topic, msgId.toString(), false))));
   }
@@ -331,13 +310,13 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(spanName("send", topic))
+                    span.hasName("send " + destinationName(topic))
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             sendAttributes(topic, msgId.toString(), true)),
                 span ->
-                    span.hasName(spanName("process", topic))
+                    span.hasName("process " + destinationName(topic))
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -376,13 +355,13 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(spanName("send", topic + "-partition-0"))
+                    span.hasName("send " + destinationName(topic + "-partition-0"))
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             sendAttributes(topic + "-partition-0", msgId.toString(), false)),
                 span ->
-                    span.hasName(spanName("process", topic + "-partition-0"))
+                    span.hasName("process " + destinationName(topic + "-partition-0"))
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -449,12 +428,13 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
     assertThat(listenerFailure.get()).isNull();
 
     testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("inner-parent", spanName("process", "outer-topic"), "receive-parent"),
+        orderByRootSpanName(
+            "inner-parent", "process " + destinationName("outer-topic"), "receive-parent"),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("inner-parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(spanName("send", innerTopic))
+                    span.hasName("send " + destinationName(innerTopic))
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -462,7 +442,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(spanName("process", "outer-topic"))
+                    span.hasName("process " + destinationName("outer-topic"))
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
@@ -471,7 +451,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(spanName("send", receiveTopic))
+                    span.hasName("send " + destinationName(receiveTopic))
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -512,13 +492,13 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent1").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(spanName("send", topic1))
+                    span.hasName("send " + destinationName(topic1))
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             sendAttributes(topic1, msgId1.toString(), false)),
                 span ->
-                    span.hasName(spanName("process", topic1))
+                    span.hasName("process " + destinationName(topic1))
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -527,25 +507,17 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(spanName("send", topic2))
+                    span.hasName("send " + destinationName(topic2))
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             sendAttributes(topic2, msgId2.toString(), false)),
                 span ->
-                    span.hasName(spanName("process", topic2))
+                    span.hasName("process " + destinationName(topic2))
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(topic2, msgId2.toString(), false))));
-  }
-
-  private static String spanName(String operationName, String destination) {
-    // the old semantic conventions used "publish" where the stable ones use "send"
-    String oldOperation = operationName.equals("send") ? "publish" : operationName;
-    return emitStableMessagingSemconv()
-        ? operationName + " " + destinationName(destination)
-        : destination + " " + oldOperation;
   }
 
   @SuppressWarnings("unchecked")
@@ -644,7 +616,13 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
 
   private static void triggerListener(ConsumerBase<String> dispatcher) {
     try {
-      Method method = ConsumerBase.class.getDeclaredMethod("triggerListener");
+      Method method;
+      try {
+        // added in 4.2.5
+        method = ConsumerBase.class.getDeclaredMethod("drainListener");
+      } catch (NoSuchMethodException ignored) {
+        method = ConsumerBase.class.getDeclaredMethod("triggerListener");
+      }
       method.setAccessible(true);
       method.invoke(dispatcher);
     } catch (ReflectiveOperationException e) {

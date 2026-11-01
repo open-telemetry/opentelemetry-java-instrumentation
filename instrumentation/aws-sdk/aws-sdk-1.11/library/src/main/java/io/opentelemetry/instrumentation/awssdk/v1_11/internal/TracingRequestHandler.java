@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
@@ -184,12 +182,11 @@ public final class TracingRequestHandler extends RequestHandler2 {
       return dynamoDbInstrumenter;
     }
     if (className.equals(SEND_MESSAGE_REQUEST_CLASS)
-        || (emitStableMessagingSemconv() && className.equals(SEND_MESSAGE_BATCH_REQUEST_CLASS))) {
+        || className.equals(SEND_MESSAGE_BATCH_REQUEST_CLASS)) {
       return producerInstrumenter;
     }
-    if (emitStableMessagingSemconv()
-        && (className.equals(DELETE_MESSAGE_REQUEST_CLASS)
-            || className.equals(DELETE_MESSAGE_BATCH_REQUEST_CLASS))) {
+    if (className.equals(DELETE_MESSAGE_REQUEST_CLASS)
+        || className.equals(DELETE_MESSAGE_BATCH_REQUEST_CLASS)) {
       return settleInstrumenter;
     }
     return requestInstrumenter;

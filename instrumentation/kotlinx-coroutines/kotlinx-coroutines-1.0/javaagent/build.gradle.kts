@@ -100,17 +100,23 @@ testing {
 }
 
 tasks {
+  withType<Test>().configureEach {
+    if (name != "testDisabled") {
+      jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
+    }
+  }
+
   named("byteBuddyKotlin") {
     enabled = false
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testDisabled = register<Test>("testDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
+    filter { includeTestsMatching("*DefaultEnablementTest") }
   }
 
   check {
-    dependsOn(testing.suites, testV3Preview)
+    dependsOn(testing.suites, testDisabled)
   }
 }

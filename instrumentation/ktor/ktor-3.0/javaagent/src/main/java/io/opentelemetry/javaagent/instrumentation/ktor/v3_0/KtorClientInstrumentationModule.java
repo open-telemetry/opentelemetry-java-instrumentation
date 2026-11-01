@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -19,11 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class KtorClientInstrumentationModule extends InstrumentationModule {
 
   public KtorClientInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "ktor-3.0" : "ktor",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"ktor-client", "ktor"}
-            : new String[] {"ktor-3.0", "ktor-client", "ktor-client-3.0"});
+    super("ktor-3.0", "ktor-client", "ktor");
   }
 
   @Override

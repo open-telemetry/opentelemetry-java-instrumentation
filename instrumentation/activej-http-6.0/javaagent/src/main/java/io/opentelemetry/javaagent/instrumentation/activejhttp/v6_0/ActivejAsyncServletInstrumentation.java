@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
@@ -42,8 +41,7 @@ class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("serve")
-            .and(takesArguments(1).and(takesArgument(0, named("io.activej.http.HttpRequest")))),
+        named("serve").and(takesArgument(0, named("io.activej.http.HttpRequest"))),
         getClass().getName() + "$ServeAdvice");
   }
 

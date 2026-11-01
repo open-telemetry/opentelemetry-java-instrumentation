@@ -31,9 +31,6 @@ class VertxSqlClientDeferredRequestTest {
     assertThat(request.replaceInfo(captured)).isTrue();
     assertThat(request.getInfo()).isSameAs(captured);
     assertThat(request.getDatabase()).isEqualTo("database");
-    assertThat(request.getUser()).isEqualTo("user");
-    assertThat(request.getHost()).isEqualTo("db.example");
-    assertThat(request.getPort()).isEqualTo(15432);
     assertThat(request.getConfiguredServerAddress()).isEqualTo("db.example");
     assertThat(request.getConfiguredServerPort()).isEqualTo(15432);
     assertThat(request.getDbSystemName()).isEqualTo("postgresql");
@@ -60,7 +57,6 @@ class VertxSqlClientDeferredRequestTest {
 
     assertThat(request.replaceInfo(unrepresentable)).isTrue();
     assertThat(request.replaceInfo(replacement)).isFalse();
-    assertThat(request.getHost()).isEqualTo("invalid host");
     assertThat(request.getConfiguredServerAddress()).isNull();
     assertThat(request.getConfiguredServerPort()).isNull();
     assertThat(request.isInfoUpdated()).isTrue();

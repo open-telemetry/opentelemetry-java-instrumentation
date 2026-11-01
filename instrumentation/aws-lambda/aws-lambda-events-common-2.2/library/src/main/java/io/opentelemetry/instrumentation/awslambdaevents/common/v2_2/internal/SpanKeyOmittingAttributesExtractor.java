@@ -8,19 +8,17 @@ package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import javax.annotation.Nullable;
 
 /**
  * An attribute extractor that forwards to a delegate without exposing the delegate's {@code
  * SpanKeyProvider} span key, so the resulting span neither suppresses nor is suppressed by spans
- * carrying that key. Lambda explicitly selects each {@code SQSEvent} batch and legacy per-message
- * operation, so these extractors omit the generic process key to keep independently selected
- * operations from suppressing one another. Stable per-message processing retains the key so an
- * enclosing process span can suppress it.
+ * carrying that key. Lambda explicitly selects each {@code SQSEvent} batch, so its extractor omits
+ * the generic process key to keep independently selected batches from suppressing one another.
+ * Per-message processing retains the key so an enclosing process span can suppress it.
  */
 final class SpanKeyOmittingAttributesExtractor<REQUEST, RESPONSE>
-    implements AttributesExtractor<REQUEST, RESPONSE>, SchemaUrlProvider {
+    implements AttributesExtractor<REQUEST, RESPONSE> {
 
   private final AttributesExtractor<REQUEST, RESPONSE> delegate;
 
@@ -41,13 +39,5 @@ final class SpanKeyOmittingAttributesExtractor<REQUEST, RESPONSE>
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
     delegate.onEnd(attributes, context, request, response, error);
-  }
-
-  @Nullable
-  @Override
-  public String internalGetSchemaUrl() {
-    return delegate instanceof SchemaUrlProvider
-        ? ((SchemaUrlProvider) delegate).internalGetSchemaUrl()
-        : null;
   }
 }

@@ -137,14 +137,6 @@ testing {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
         implementation("org.testcontainers:testcontainers-localstack")
       }
-
-      targets {
-        all {
-          testTask.configure {
-            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-          }
-        }
-      }
     }
 
     register<JvmTestSuite>("testBedrockRuntime") {
@@ -153,15 +145,6 @@ testing {
         // 2.25.63 is the first release with Converse API
         val version = baseVersion("2.25.63").orLatest()
         implementation("software.amazon.awssdk:bedrockruntime:$version")
-      }
-
-      targets {
-        all {
-          testTask.configure {
-            // TODO run tests both with and without genai message capture
-            systemProperty("otel.instrumentation.genai.capture-message-content", "true")
-          }
-        }
       }
     }
 
@@ -180,9 +163,7 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    filter {
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
+    filter.includeTestsMatching("Aws2SqsTracingTest")
     systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", "true")
     systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
   }
@@ -197,95 +178,80 @@ tasks {
     include("**/Aws2SqsSuppressReceiveSpansTest.*")
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  val testRdsDataStableSemconv = register<Test>("testRdsDataStableSemconv") {
-    val testRdsDataSourceSet = sourceSets["testRdsData"]
-    testClassesDirs = testRdsDataSourceSet.output.classesDirs
-    classpath = testRdsDataSourceSet.runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("*Sqs*")
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testMessagingPreviewReceiveSpansDisabled = register<Test>("testMessagingPreviewReceiveSpansDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    include("**/Aws2SqsSuppressReceiveSpansTest.*")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("*Sqs*")
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
-
   test {
     filter {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
+  }
+
+  withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+  }
+
+  val testExperimentalAttributes = register<Test>("testExperimentalAttributes") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter.excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.aws-sdk.experimental-span-attributes=true",
+    )
+  }
+
+  val testIndividualHttpErrors = register<Test>("testIndividualHttpErrors") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter.includeTestsMatching("Aws2ClientRecordHttpErrorTest")
+    systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.aws-sdk.experimental-record-individual-http-error=true",
+    )
+  }
+
+  val testReceiveTelemetry = register<Test>("testReceiveTelemetry") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter.includeTestsMatching("Aws2SqsTracingTest")
+    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.aws-sdk.experimental-span-attributes=true," +
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+    )
+  }
+
+  val testBedrockRuntimeCaptureMessageContent = register<Test>("testBedrockRuntimeCaptureMessageContent") {
+    testClassesDirs = sourceSets["testBedrockRuntime"].output.classesDirs
+    classpath = sourceSets["testBedrockRuntime"].runtimeClasspath
+
+    systemProperty("otel.instrumentation.genai.capture-message-content", "true")
+    systemProperty("metadataConfig", "otel.instrumentation.genai.capture-message-content=true")
+  }
+
+  val testRdsDataExperimentalAttributes = register<Test>("testRdsDataExperimentalAttributes") {
+    testClassesDirs = sourceSets["testRdsData"].output.classesDirs
+    classpath = sourceSets["testRdsData"].runtimeClasspath
+
+    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
   }
 
   check {
     dependsOn(
       testing.suites,
       testExperimentalSqs,
-      testStableSemconv,
-      testRdsDataStableSemconv,
       testReceiveSpansDisabled,
-      testMessagingPreview,
-      testMessagingPreviewReceiveSpansDisabled,
-      testBothSemconv
+      testExperimentalAttributes,
+      testIndividualHttpErrors,
+      testReceiveTelemetry,
+      testBedrockRuntimeCaptureMessageContent,
+      testRdsDataExperimentalAttributes,
     )
-  }
-
-  withType<Test>().configureEach {
-    // TODO run tests both with and without experimental span attributes
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   withType<ShadowJar>().configureEach {

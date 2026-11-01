@@ -28,16 +28,14 @@ final class MessagingMetricsAdvice {
           asList(0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0));
 
   // copied from MessagingIncubatingAttributes
-  private static final AttributeKey<String> MESSAGING_SYSTEM =
-      AttributeKey.stringKey("messaging.system");
+  private static final AttributeKey<String> MESSAGING_SYSTEM_NAME =
+      AttributeKey.stringKey("messaging.system.name");
   private static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
       AttributeKey.stringKey("messaging.destination.name");
   private static final AttributeKey<Boolean> MESSAGING_DESTINATION_ANONYMOUS =
       AttributeKey.booleanKey("messaging.destination.anonymous");
   private static final AttributeKey<Boolean> MESSAGING_DESTINATION_TEMPORARY =
       AttributeKey.booleanKey("messaging.destination.temporary");
-  private static final AttributeKey<String> MESSAGING_OPERATION =
-      AttributeKey.stringKey("messaging.operation");
   private static final AttributeKey<String> MESSAGING_OPERATION_NAME =
       AttributeKey.stringKey("messaging.operation.name");
   private static final AttributeKey<String> MESSAGING_OPERATION_TYPE =
@@ -50,18 +48,6 @@ final class MessagingMetricsAdvice {
       AttributeKey.stringKey("messaging.destination.partition.id");
   private static final AttributeKey<String> MESSAGING_DESTINATION_TEMPLATE =
       AttributeKey.stringKey("messaging.destination.template");
-
-  private static final List<AttributeKey<?>> OLD_ATTRIBUTES =
-      unmodifiableList(
-          asList(
-              MESSAGING_SYSTEM,
-              MESSAGING_DESTINATION_NAME,
-              MESSAGING_OPERATION,
-              MESSAGING_DESTINATION_PARTITION_ID,
-              MESSAGING_DESTINATION_TEMPLATE,
-              ERROR_TYPE,
-              SERVER_PORT,
-              SERVER_ADDRESS));
 
   private static final List<AttributeKey<?>> CLIENT_OPERATION_DURATION_ATTRIBUTES =
       buildAttributes(true, true, true);
@@ -76,7 +62,7 @@ final class MessagingMetricsAdvice {
       boolean includeConsumerAttributes, boolean includeOperationType, boolean includeErrorType) {
     List<AttributeKey<?>> attributes = new ArrayList<>();
     attributes.add(MESSAGING_OPERATION_NAME);
-    attributes.add(MESSAGING_SYSTEM);
+    attributes.add(MESSAGING_SYSTEM_NAME);
     if (includeErrorType) {
       attributes.add(ERROR_TYPE);
     }
@@ -118,13 +104,6 @@ final class MessagingMetricsAdvice {
     return builder.build();
   }
 
-  static void applyOldDurationAdvice(DoubleHistogramBuilder builder) {
-    if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
-      return;
-    }
-    ((ExtendedDoubleHistogramBuilder) builder).setAttributesAdvice(OLD_ATTRIBUTES);
-  }
-
   static void applyClientOperationDurationAdvice(DoubleHistogramBuilder builder) {
     if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
       return;
@@ -138,13 +117,6 @@ final class MessagingMetricsAdvice {
       return;
     }
     ((ExtendedDoubleHistogramBuilder) builder).setAttributesAdvice(PROCESS_DURATION_ATTRIBUTES);
-  }
-
-  static void applyOldMessagesAdvice(LongCounterBuilder builder) {
-    if (!(builder instanceof ExtendedLongCounterBuilder)) {
-      return;
-    }
-    ((ExtendedLongCounterBuilder) builder).setAttributesAdvice(OLD_ATTRIBUTES);
   }
 
   static void applySentMessagesAdvice(LongCounterBuilder builder) {

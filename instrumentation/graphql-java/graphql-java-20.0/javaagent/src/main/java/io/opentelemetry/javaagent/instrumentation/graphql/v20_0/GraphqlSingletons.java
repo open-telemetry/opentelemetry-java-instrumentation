@@ -10,15 +10,11 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.GraphqlConfig;
 import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.InstrumentationUtil;
 import io.opentelemetry.instrumentation.graphql.v20_0.GraphQLTelemetry;
-import java.util.logging.Logger;
 
 public class GraphqlSingletons {
-
-  private static final Logger logger = Logger.getLogger(GraphqlSingletons.class.getName());
 
   private static final GraphQLTelemetry telemetry;
 
@@ -66,34 +62,11 @@ public class GraphqlSingletons {
           DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "graphql");
 
       this.captureQuery = config.getBoolean("capture_query", true);
-      this.querySanitizationEnabled = getQuerySanitizationEnabled(config);
+      this.querySanitizationEnabled = GraphqlConfig.getQuerySanitizationEnabled(config);
       this.dataFetcherEnabled = config.get("data_fetcher").getBoolean("enabled", false);
       this.trivialDataFetcherEnabled =
           config.get("trivial_data_fetcher").getBoolean("enabled", false);
       this.operationNameInSpanNameEnabled = GraphqlConfig.getOperationNameInSpanNameEnabled(config);
-    }
-
-    private static boolean getQuerySanitizationEnabled(DeclarativeConfigProperties config) {
-      Boolean querySanitizationEnabled = config.get("query_sanitization").getBoolean("enabled");
-      if (querySanitizationEnabled != null) {
-        return querySanitizationEnabled;
-      }
-
-      if (!SemconvStability.v3Preview()) {
-        Boolean deprecatedQuerySanitizationEnabled =
-            config.get("query_sanitizer").getBoolean("enabled");
-        if (deprecatedQuerySanitizationEnabled != null) {
-          logger.warning(
-              "The otel.instrumentation.graphql.query-sanitizer.enabled setting or equivalent"
-                  + " declarative configuration is deprecated and will be"
-                  + " removed in 3.0. Use "
-                  + "otel.instrumentation.graphql.query-sanitization.enabled"
-                  + " or equivalent declarative configuration instead.");
-          return deprecatedQuerySanitizationEnabled;
-        }
-      }
-
-      return true;
     }
   }
 

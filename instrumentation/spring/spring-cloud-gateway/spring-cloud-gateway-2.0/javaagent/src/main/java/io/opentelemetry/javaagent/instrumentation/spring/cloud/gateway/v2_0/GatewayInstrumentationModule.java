@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.v2_0;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,11 +16,7 @@ import java.util.List;
 public class GatewayInstrumentationModule extends InstrumentationModule {
 
   public GatewayInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "spring-cloud-gateway-2.0" : "spring-cloud-gateway",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-cloud-gateway"}
-            : new String[] {"spring-cloud-gateway-2.0"});
+    super("spring-cloud-gateway-2.0", "spring-cloud-gateway");
   }
 
   @Override

@@ -5,10 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyEnumeration;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -95,7 +93,6 @@ class SjmsRegisteredListenerTest {
 
   @Test
   void completesTwoCallbacksForReusedRawMessage() throws Exception {
-    assumeTrue(emitStableMessagingSemconv());
     MessageListener listener = registeredListener.get();
     assertThat(listener).isNotNull();
 

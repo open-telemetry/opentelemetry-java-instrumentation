@@ -132,7 +132,7 @@ muzzle {
   this is usually used for jars that are not bundled with the instrumented lib but always present
   in the runtime anyway;
 - `excludeInstrumentationName` excludes every module carrying a public enablement name. Prefer
-  this short form when it selects the intended classes both outside v3 preview and in preview;
+  this short form when it selects the intended classes;
 - `excludeInstrumentationModule` excludes one `InstrumentationModule` by its fully qualified class
   name, independently of its public enablement names. It also applies to inverse checks. An unknown
   class name fails the check.

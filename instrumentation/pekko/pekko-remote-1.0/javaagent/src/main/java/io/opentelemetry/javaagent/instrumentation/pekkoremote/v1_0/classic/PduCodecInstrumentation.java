@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.ProtobufContext;
@@ -44,8 +43,8 @@ class PduCodecInstrumentation implements TypeInstrumentation {
     @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static ByteString onExit(@Advice.Return ByteString pdu) {
-      Context context = Java8BytecodeBridge.currentContext();
-      if (context == Java8BytecodeBridge.rootContext()) {
+      Context context = Context.current();
+      if (context == Context.root()) {
         return pdu;
       }
       byte[] field = ProtobufContext.encode(context);

@@ -27,6 +27,12 @@ public final class UrlParser {
       return null;
     }
 
+    if (url.charAt(startIndex) == '[') {
+      // strip the square brackets enclosing an IPv6 address
+      return endIndexExclusive - startIndex > 2
+          ? url.substring(startIndex + 1, endIndexExclusive - 1)
+          : null;
+    }
     return url.substring(startIndex, endIndexExclusive);
   }
 
@@ -103,6 +109,21 @@ public final class UrlParser {
   }
 
   private static int getHostEndIndexExclusive(String url, int startIndex) {
+    // an IPv6 address is enclosed in square brackets and contains ':' characters, so the host ends
+    // after the closing ']' (https://www.rfc-editor.org/rfc/rfc3986#section-3.2.2)
+    if (startIndex < url.length() && url.charAt(startIndex) == '[') {
+      for (int index = startIndex + 1; index < url.length(); index++) {
+        char c = url.charAt(index);
+        if (c == ']') {
+          return index + 1;
+        }
+        if (c == '/' || c == '?' || c == '#') {
+          break;
+        }
+      }
+      // no ']' before the path, query or fragment: treat the host as missing
+      return startIndex;
+    }
     // look for the end of the host:
     //   ':' ==> start of port, or
     //   '/', '?', '#' ==> start of path

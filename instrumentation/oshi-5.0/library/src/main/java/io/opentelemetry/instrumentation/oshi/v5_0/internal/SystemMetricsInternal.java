@@ -17,18 +17,12 @@ import oshi.hardware.HardwareAbstractionLayer;
 import oshi.hardware.NetworkIF;
 
 /**
- * Registers OSHI system metrics with a supplied meter and convention mode.
+ * Registers OSHI system metrics with a supplied meter.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
 public final class SystemMetricsInternal {
-
-  private static final AttributeKey<String> DEVICE_KEY = AttributeKey.stringKey("device");
-  private static final AttributeKey<String> DIRECTION_KEY = AttributeKey.stringKey("direction");
-
-  // copied from OtherIncubatingAttributes
-  private static final AttributeKey<String> STATE_KEY = AttributeKey.stringKey("state");
 
   // copied from SystemIncubatingAttributes
   private static final AttributeKey<String> SYSTEM_DEVICE = AttributeKey.stringKey("system.device");
@@ -45,23 +39,17 @@ public final class SystemMetricsInternal {
   private static final AttributeKey<String> DISK_IO_DIRECTION =
       AttributeKey.stringKey("disk.io.direction");
 
-  public static List<AutoCloseable> registerObservers(Meter meter, boolean v3Preview) {
+  public static List<AutoCloseable> registerObservers(Meter meter) {
     SystemInfo systemInfo = new SystemInfo();
     HardwareAbstractionLayer hal = systemInfo.getHardware();
     List<AutoCloseable> observables = new ArrayList<>();
-    AttributeKey<String> memoryState = v3Preview ? SYSTEM_MEMORY_STATE : STATE_KEY;
-    AttributeKey<String> networkDevice = v3Preview ? NETWORK_INTERFACE_NAME : DEVICE_KEY;
-    AttributeKey<String> networkDirection = v3Preview ? NETWORK_IO_DIRECTION : DIRECTION_KEY;
-    AttributeKey<String> packetDevice = v3Preview ? SYSTEM_DEVICE : DEVICE_KEY;
-    AttributeKey<String> diskDevice = v3Preview ? SYSTEM_DEVICE : DEVICE_KEY;
-    AttributeKey<String> diskDirection = v3Preview ? DISK_IO_DIRECTION : DIRECTION_KEY;
-    Attributes used = Attributes.of(memoryState, "used");
-    Attributes free = Attributes.of(memoryState, "free");
+    Attributes used = Attributes.of(SYSTEM_MEMORY_STATE, "used");
+    Attributes free = Attributes.of(SYSTEM_MEMORY_STATE, "free");
 
     observables.add(
         meter
             .upDownCounterBuilder("system.memory.usage")
-            .setDescription(v3Preview ? "Reports memory in use by state." : "System memory usage")
+            .setDescription("Reports memory in use by state.")
             .setUnit("By")
             .buildWithCallback(
                 r -> {
@@ -73,8 +61,7 @@ public final class SystemMetricsInternal {
     observables.add(
         meter
             .gaugeBuilder("system.memory.utilization")
-            .setDescription(
-                v3Preview ? "Percentage of memory bytes in use." : "System memory utilization")
+            .setDescription("Percentage of memory bytes in use.")
             .setUnit("1")
             .buildWithCallback(
                 r -> {
@@ -86,8 +73,7 @@ public final class SystemMetricsInternal {
     observables.add(
         meter
             .counterBuilder("system.network.io")
-            .setDescription(
-                v3Preview ? "The number of bytes transmitted and received." : "System network IO")
+            .setDescription("The number of bytes transmitted and received.")
             .setUnit("By")
             .buildWithCallback(
                 r -> {
@@ -97,18 +83,21 @@ public final class SystemMetricsInternal {
                     long sent = networkIf.getBytesSent();
                     String device = networkIf.getName();
                     r.record(
-                        recv, Attributes.of(networkDevice, device, networkDirection, "receive"));
+                        recv,
+                        Attributes.of(
+                            NETWORK_INTERFACE_NAME, device, NETWORK_IO_DIRECTION, "receive"));
                     r.record(
-                        sent, Attributes.of(networkDevice, device, networkDirection, "transmit"));
+                        sent,
+                        Attributes.of(
+                            NETWORK_INTERFACE_NAME, device, NETWORK_IO_DIRECTION, "transmit"));
                   }
                 }));
 
     observables.add(
         meter
-            .counterBuilder(v3Preview ? "system.network.packet.count" : "system.network.packets")
-            .setDescription(
-                v3Preview ? "The number of packets transferred." : "System network packets")
-            .setUnit(v3Preview ? "{packet}" : "{packets}")
+            .counterBuilder("system.network.packet.count")
+            .setDescription("The number of packets transferred.")
+            .setUnit("{packet}")
             .buildWithCallback(
                 r -> {
                   for (NetworkIF networkIf : hal.getNetworkIFs()) {
@@ -117,18 +106,19 @@ public final class SystemMetricsInternal {
                     long sent = networkIf.getPacketsSent();
                     String device = networkIf.getName();
                     r.record(
-                        recv, Attributes.of(packetDevice, device, networkDirection, "receive"));
+                        recv,
+                        Attributes.of(SYSTEM_DEVICE, device, NETWORK_IO_DIRECTION, "receive"));
                     r.record(
-                        sent, Attributes.of(packetDevice, device, networkDirection, "transmit"));
+                        sent,
+                        Attributes.of(SYSTEM_DEVICE, device, NETWORK_IO_DIRECTION, "transmit"));
                   }
                 }));
 
     observables.add(
         meter
             .counterBuilder("system.network.errors")
-            .setDescription(
-                v3Preview ? "Count of network errors detected." : "System network errors")
-            .setUnit(v3Preview ? "{error}" : "{errors}")
+            .setDescription("Count of network errors detected.")
+            .setUnit("{error}")
             .buildWithCallback(
                 r -> {
                   for (NetworkIF networkIf : hal.getNetworkIFs()) {
@@ -137,16 +127,20 @@ public final class SystemMetricsInternal {
                     long sent = networkIf.getOutErrors();
                     String device = networkIf.getName();
                     r.record(
-                        recv, Attributes.of(networkDevice, device, networkDirection, "receive"));
+                        recv,
+                        Attributes.of(
+                            NETWORK_INTERFACE_NAME, device, NETWORK_IO_DIRECTION, "receive"));
                     r.record(
-                        sent, Attributes.of(networkDevice, device, networkDirection, "transmit"));
+                        sent,
+                        Attributes.of(
+                            NETWORK_INTERFACE_NAME, device, NETWORK_IO_DIRECTION, "transmit"));
                   }
                 }));
 
     observables.add(
         meter
             .counterBuilder("system.disk.io")
-            .setDescription(v3Preview ? "Disk bytes transferred." : "System disk IO")
+            .setDescription("Disk bytes transferred.")
             .setUnit("By")
             .buildWithCallback(
                 r -> {
@@ -155,16 +149,17 @@ public final class SystemMetricsInternal {
                     long read = diskStore.getReadBytes();
                     long write = diskStore.getWriteBytes();
                     String device = diskStore.getName();
-                    r.record(read, Attributes.of(diskDevice, device, diskDirection, "read"));
-                    r.record(write, Attributes.of(diskDevice, device, diskDirection, "write"));
+                    r.record(read, Attributes.of(SYSTEM_DEVICE, device, DISK_IO_DIRECTION, "read"));
+                    r.record(
+                        write, Attributes.of(SYSTEM_DEVICE, device, DISK_IO_DIRECTION, "write"));
                   }
                 }));
 
     observables.add(
         meter
             .counterBuilder("system.disk.operations")
-            .setDescription(v3Preview ? "Disk operations count." : "System disk operations")
-            .setUnit(v3Preview ? "{operation}" : "{operations}")
+            .setDescription("Disk operations count.")
+            .setUnit("{operation}")
             .buildWithCallback(
                 r -> {
                   for (HWDiskStore diskStore : hal.getDiskStores()) {
@@ -172,8 +167,9 @@ public final class SystemMetricsInternal {
                     long read = diskStore.getReads();
                     long write = diskStore.getWrites();
                     String device = diskStore.getName();
-                    r.record(read, Attributes.of(diskDevice, device, diskDirection, "read"));
-                    r.record(write, Attributes.of(diskDevice, device, diskDirection, "write"));
+                    r.record(read, Attributes.of(SYSTEM_DEVICE, device, DISK_IO_DIRECTION, "read"));
+                    r.record(
+                        write, Attributes.of(SYSTEM_DEVICE, device, DISK_IO_DIRECTION, "write"));
                   }
                 }));
 

@@ -16,6 +16,54 @@ sys.modules[SPEC.name] = fetch
 SPEC.loader.exec_module(fetch)
 
 
+class DefaultRangeTest(unittest.TestCase):
+    def test_uses_highest_full_previous_release(self):
+        changelog = (
+            "## Version 2.9.9 (2026-01-01)\n## Version 2.32.0 (2026-10-03)\n"
+            "## Version 2.32.10 (2026-10-05)\n## Version 2.32.9 (2026-10-04)\n"
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "CHANGELOG.md").write_text(changelog, encoding="utf-8")
+            with mock.patch.object(fetch, "REPO_ROOT", root):
+                for version in ("2.33.0", "3.0.0"):
+                    with self.subTest(version=version):
+                        self.assertEqual(fetch.compute_default_range(version), "v2.32.10..HEAD")
+
+    def test_unpatched_minor_and_initial_major(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            changelog = root / "CHANGELOG.md"
+            changelog.write_text("## Version 2.32.0 (2026-10-03)\n", encoding="utf-8")
+            with mock.patch.object(fetch, "REPO_ROOT", root):
+                self.assertEqual(fetch.compute_default_range("2.33.0"), "v2.32.0..HEAD")
+                changelog.write_text("## Unreleased\n", encoding="utf-8")
+                self.assertEqual(fetch.compute_default_range("1.0.0"), "HEAD")
+                with self.assertRaises(RuntimeError):
+                    fetch.compute_default_range("2.33.0")
+                for version in ("2.33.1", "2.33.0-SNAPSHOT", "invalid"):
+                    with self.subTest(version=version), self.assertRaises(RuntimeError):
+                        fetch.compute_default_range(version)
+
+    def test_patch_commits_are_excluded_from_next_minor_notes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "CHANGELOG.md").write_text(
+                "## Version 2.32.1 (2026-10-05)\n## Version 2.32.0 (2026-10-03)\n",
+                encoding="utf-8",
+            )
+            with mock.patch.object(fetch, "REPO_ROOT", root):
+                fetch.run_command(["git", "init", "--quiet"])
+                fetch.run_command(["git", "config", "user.name", "Release test"])
+                fetch.run_command(["git", "config", "user.email", "release-test@example.invalid"])
+                for message, tag in (("Minor release", "v2.32.0"), ("Patch release", "v2.32.1"), ("Next minor change", None)):
+                    fetch.run_command(["git", "-c", "commit.gpgsign=false", "commit", "--quiet", "--allow-empty", "-m", message])
+                    if tag is not None:
+                        fetch.run_command(["git", "tag", tag])
+                hashes = fetch.get_commit_hashes(fetch.compute_default_range("2.33.0"))
+                self.assertEqual([fetch.get_commit_subject(commit) for commit in hashes], ["Next minor change"])
+
+
 class UserFacingSourceTest(unittest.TestCase):
     def test_detects_runtime_source(self):
         self.assertTrue(

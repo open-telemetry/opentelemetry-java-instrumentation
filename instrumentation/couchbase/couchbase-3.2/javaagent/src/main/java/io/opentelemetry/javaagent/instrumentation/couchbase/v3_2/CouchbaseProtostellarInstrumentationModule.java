@@ -5,12 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 
-import static io.opentelemetry.javaagent.extension.instrumentation.internal.DeprecatedInstrumentationNames.expandDeprecatedNames;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -20,14 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CouchbaseProtostellarInstrumentationModule extends InstrumentationModule {
 
   public CouchbaseProtostellarInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "couchbase-3.2" : "couchbase",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"couchbase"}
-            : expandDeprecatedNames(
-                "couchbase-3.2|deprecated:couchbase-3.4",
-                "couchbase",
-                "couchbase-3.4.3-protostellar"));
+    super("couchbase-3.2", "couchbase");
   }
 
   @Override

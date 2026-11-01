@@ -42,7 +42,12 @@ final class PublishingMessageImplInstrumentation implements TypeInstrumentation 
             .and(takesArgument(0, named("org.apache.rocketmq.client.apis.message.Message")))
             .and(
                 takesArgument(
-                    1, named("org.apache.rocketmq.client.java.impl.producer.PublishingSettings")))
+                    1,
+                    // The constructor declares ProducerSettings in 5.0.0 and
+                    // PublishingSettings in 5.0.1+.
+                    namedOneOf(
+                        "org.apache.rocketmq.client.java.impl.producer.ProducerSettings",
+                        "org.apache.rocketmq.client.java.impl.producer.PublishingSettings")))
             .and(takesArgument(2, boolean.class)),
         getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(

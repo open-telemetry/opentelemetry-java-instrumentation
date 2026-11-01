@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -26,11 +29,24 @@ dependencies {
   latestDepTestLibrary("com.graphql-java:graphql-java:19.+") // see graphql-java-20.0 module
 }
 
-tasks.test {
-  jvmArgs(
-    "-Dotel.instrumentation.graphql.operation-name-in-span-name.enabled=true",
-    "-Dotel.instrumentation.graphql.add-operation-name-to-span-name.enabled=false",
-  )
-
-  systemProperty("collectMetadata", otelProps.collectMetadata)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          jvmArgs("-Dotel.instrumentation.graphql.operation-name-in-span-name.enabled=true")
+        }
+        register("ExceptionLogs") {
+          telemetryConfig("otel.instrumentation.graphql.operation-name-in-span-name.enabled", "true")
+          telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+          filter {
+            includeTestsMatching("*.GraphqlTest.parseError")
+            includeTestsMatching("*.GraphqlTest.validationError")
+            includeTestsMatching("*.GraphqlTest.dataFetcherException")
+            includeTestsMatching("*.GraphqlTest.dataFetcherError")
+          }
+        }
+      }
+    }
+  }
 }

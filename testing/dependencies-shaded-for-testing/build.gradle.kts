@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-junit5:1.41.1")
+  implementation("com.linecorp.armeria:armeria-junit5:1.42.0")
   implementation("com.google.errorprone:error_prone_annotations")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("com.google.protobuf:protobuf-java-util:4.36.2")
@@ -14,7 +14,7 @@ dependencies {
   // 3+ doesn't work with Java 8, but that is fine since --sun-misc-unsafe-memory-access=deny
   // requires Java 23.
   if (otelProps.denyUnsafe) {
-    implementation("com.github.ben-manes.caffeine:caffeine:3.3.0")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.3.1")
   }
 }
 

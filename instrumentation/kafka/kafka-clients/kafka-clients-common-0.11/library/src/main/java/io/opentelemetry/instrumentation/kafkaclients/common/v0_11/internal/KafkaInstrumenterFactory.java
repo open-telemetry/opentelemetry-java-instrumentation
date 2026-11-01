@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -27,6 +26,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -121,7 +121,7 @@ public final class KafkaInstrumenterFactory {
 
   public Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInstrumenter(
       Iterable<AttributesExtractor<KafkaProducerRequest, RecordMetadata>> extractors) {
-    return createProducerInstrumenter(extractors, MessagingProducerMetrics.getForOperationType());
+    return createProducerInstrumenter(extractors, MessagingProducerMetrics.get());
   }
 
   private Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInstrumenter(
@@ -135,6 +135,7 @@ public final class KafkaInstrumenterFactory {
                 openTelemetry,
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, operationType, SEND_OPERATION_NAME, headers))
@@ -180,6 +181,7 @@ public final class KafkaInstrumenterFactory {
                 openTelemetry,
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, POLL_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, operationType, POLL_OPERATION_NAME, headers))
@@ -190,12 +192,10 @@ public final class KafkaInstrumenterFactory {
     if (addClientOperationDuration) {
       builder.addOperationMetrics(MessagingConsumerMetrics.getClientOperationDuration());
     }
-    if (emitStableMessagingSemconv()) {
-      addReceiveConsumedMessages(builder);
-      builder.addSpanLinksExtractor(
-          new KafkaBatchProcessSpanLinksExtractor(
-              openTelemetry.getPropagators().getTextMapPropagator()));
-    }
+    addReceiveConsumedMessages(builder);
+    builder.addSpanLinksExtractor(
+        new KafkaBatchProcessSpanLinksExtractor(
+            openTelemetry.getPropagators().getTextMapPropagator()));
     setMessagingReceiveExceptionEventExtractor(builder);
     return builder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
@@ -222,6 +222,7 @@ public final class KafkaInstrumenterFactory {
                 openTelemetry,
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, operationType, PROCESS_OPERATION_NAME, headers))
@@ -239,8 +240,7 @@ public final class KafkaInstrumenterFactory {
     return MessagingProcessInstrumenterFactory.create(
         builder,
         openTelemetry.getPropagators().getTextMapPropagator(),
-        new KafkaConsumerRecordGetter(),
-        receiveInstrumentationEnabled());
+        new KafkaConsumerRecordGetter());
   }
 
   private boolean receiveInstrumentationEnabled() {
@@ -259,18 +259,16 @@ public final class KafkaInstrumenterFactory {
    */
   private static <REQUEST> void addConsumedMessagesIfNoReceiveOperation(
       InstrumenterBuilder<REQUEST, Void> builder, ToLongFunction<REQUEST> messageCounter) {
-    if (emitStableMessagingSemconv()) {
-      builder
-          .addContextCustomizer(
-              (context, request, startAttributes) -> {
-                long consumedMessagesCount =
-                    KafkaConsumerContextUtil.hasReceiveOperation(context)
-                        ? 0
-                        : messageCounter.applyAsLong(request);
-                return context.with(CONSUMED_MESSAGES_COUNT_KEY, consumedMessagesCount);
-              })
-          .addOperationMetrics(consumedMessagesMetrics);
-    }
+    builder
+        .addContextCustomizer(
+            (context, request, startAttributes) -> {
+              long consumedMessagesCount =
+                  KafkaConsumerContextUtil.hasReceiveOperation(context)
+                      ? 0
+                      : messageCounter.applyAsLong(request);
+              return context.with(CONSUMED_MESSAGES_COUNT_KEY, consumedMessagesCount);
+            })
+        .addOperationMetrics(consumedMessagesMetrics);
   }
 
   private static void addReceiveConsumedMessages(
@@ -309,6 +307,7 @@ public final class KafkaInstrumenterFactory {
                 openTelemetry,
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, operationType, PROCESS_OPERATION_NAME, headers))

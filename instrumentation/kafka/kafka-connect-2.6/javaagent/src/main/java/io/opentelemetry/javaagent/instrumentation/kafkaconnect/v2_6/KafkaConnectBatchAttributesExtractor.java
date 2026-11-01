@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -18,9 +16,7 @@ final class KafkaConnectBatchAttributesExtractor
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, KafkaConnectTask request) {
-    if (emitStableMessagingSemconv()) {
-      request.getBatchRecordAttributes().putCommonAttributes(attributes);
-    }
+    request.getBatchRecordAttributes().putCommonAttributes(attributes);
   }
 
   @Override

@@ -5,14 +5,13 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 
 import io.nats.client.Connection;
 import io.nats.client.Nats;
@@ -43,10 +42,6 @@ abstract class AbstractNatsTest {
   protected abstract InstrumentationExtension testing();
 
   void assertProducerMetrics(String operationName, String destination, String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics();
-      return;
-    }
 
     testing()
         .waitAndAssertMetrics(
@@ -68,7 +63,8 @@ abstract class AbstractNatsTest {
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(
                                                         MESSAGING_OPERATION_NAME, operationName),
-                                                    equalTo(MESSAGING_SYSTEM, "nats"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"), "nats"),
                                                     equalTo(ERROR_TYPE, errorType),
                                                     equalTo(
                                                         MESSAGING_DESTINATION_NAME, destination),
@@ -94,19 +90,15 @@ abstract class AbstractNatsTest {
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(
                                                         MESSAGING_OPERATION_NAME, operationName),
-                                                    equalTo(MESSAGING_SYSTEM, "nats"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"), "nats"),
                                                     equalTo(ERROR_TYPE, errorType),
                                                     equalTo(
                                                         MESSAGING_DESTINATION_NAME,
                                                         destination))))));
-    assertNoDeprecatedMessagingMetrics();
   }
 
   void assertProcessMetrics(String destination, String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics();
-      return;
-    }
 
     testing()
         .waitAndAssertMetrics(
@@ -126,7 +118,8 @@ abstract class AbstractNatsTest {
                                                 .hasSumGreaterThan(0)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(MESSAGING_SYSTEM, "nats"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"), "nats"),
                                                     equalTo(ERROR_TYPE, errorType),
                                                     equalTo(
                                                         MESSAGING_DESTINATION_NAME, destination))
@@ -150,32 +143,12 @@ abstract class AbstractNatsTest {
                                                 .hasValue(1)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(MESSAGING_SYSTEM, "nats"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"), "nats"),
                                                     equalTo(ERROR_TYPE, errorType),
                                                     equalTo(
                                                         MESSAGING_DESTINATION_NAME,
                                                         destination))))));
-    assertNoDeprecatedMessagingMetrics();
-  }
-
-  private void assertNoMessagingMetrics() {
-    assertThat(testing().metrics())
-        .filteredOn(
-            metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
-                    && metric.getName().startsWith("messaging."))
-        .isEmpty();
-  }
-
-  private void assertNoDeprecatedMessagingMetrics() {
-    assertThat(testing().metrics())
-        .filteredOn(
-            metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-        .extracting(metric -> metric.getName())
-        .doesNotContain(
-            "messaging.publish.duration",
-            "messaging.receive.duration",
-            "messaging.receive.messages");
   }
 
   @BeforeAll

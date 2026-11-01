@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.SpanDecorator;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.util.HashMap;
@@ -21,12 +19,10 @@ public class DecoratorRegistry {
     Map<String, SpanDecorator> result = new HashMap<>();
     result.put("ahc", new HttpSpanDecorator());
     result.put("ampq", MessagingSpanDecorator.create("ampq", "amqp"));
-    if (emitStableMessagingSemconv()) {
-      result.put("amqp", MessagingSpanDecorator.create("amqp"));
-    }
+    result.put("amqp", MessagingSpanDecorator.create("amqp"));
     result.put("aws-s3", new S3SpanDecorator());
     result.put("aws-sns", MessagingSpanDecorator.create("aws-sns", "aws.sns"));
-    result.put("aws-sqs", MessagingSpanDecorator.create("aws-sqs", "aws_sqs", false));
+    result.put("aws-sqs", MessagingSpanDecorator.create("aws-sqs", "aws.sqs", false));
     result.put("cometd", MessagingSpanDecorator.create("cometd"));
     result.put("cometds", MessagingSpanDecorator.create("cometds", "cometd"));
     result.put("cql", new DbSpanDecorator("cql", DbSystemNameIncubatingValues.CASSANDRA));

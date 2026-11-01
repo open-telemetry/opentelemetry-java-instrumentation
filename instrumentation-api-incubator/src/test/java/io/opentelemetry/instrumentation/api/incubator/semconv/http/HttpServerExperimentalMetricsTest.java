@@ -101,7 +101,7 @@ class HttpServerExperimentalMetricsTest {
             metric ->
                 assertThat(metric)
                     .hasName("http.server.active_requests")
-                    .hasUnit("{requests}")
+                    .hasUnit("{request}")
                     .hasDescription("Number of active HTTP server requests.")
                     .hasLongSumSatisfying(
                         sum ->

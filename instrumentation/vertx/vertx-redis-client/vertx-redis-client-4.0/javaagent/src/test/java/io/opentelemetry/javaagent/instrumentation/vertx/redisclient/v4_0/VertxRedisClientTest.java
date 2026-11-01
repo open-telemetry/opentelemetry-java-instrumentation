@@ -5,23 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -49,9 +46,11 @@ import io.vertx.redis.client.RedisConnection;
 import io.vertx.redis.client.RedisOptions;
 import io.vertx.redis.client.Request;
 import io.vertx.redis.client.Response;
+import io.vertx.redis.client.impl.types.ErrorType;
 import java.net.InetAddress;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
@@ -67,6 +66,8 @@ import org.testcontainers.containers.GenericContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class VertxRedisClientTest {
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-redis-client-4.0";
+
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -119,13 +120,13 @@ class VertxRedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                    span.hasName("SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))));
 
     assertDurationMetric(
         testing,
-        "io.opentelemetry.vertx-redis-client-4.0",
+        INSTRUMENTATION_NAME,
         DB_SYSTEM_NAME,
         DB_OPERATION_NAME,
         DB_NAMESPACE,
@@ -147,23 +148,22 @@ class VertxRedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                    span.hasName("SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(DB_REDIS_DATABASE_INDEX, null),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(DB_NAMESPACE, "0"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))));
 
     assertDurationMetric(
         testing,
-        "io.opentelemetry.vertx-redis-client-4.0",
+        INSTRUMENTATION_NAME,
         DB_SYSTEM_NAME,
         DB_OPERATION_NAME,
         DB_NAMESPACE,
@@ -185,15 +185,121 @@ class VertxRedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                    span.hasName("SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
+                    span.hasName("GET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("GET", "GET foo"))));
+  }
+
+  @Test
+  void singleCommandServerError() throws Exception {
+    redis
+        .lpush(asList("wrong-type", "value"))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    Object result =
+        connection
+            .send(Request.cmd(Command.GET).arg("wrong-type"))
+            .toCompletionStage()
+            .toCompletableFuture()
+            .handle((response, error) -> error == null ? response : error)
+            .get(30, SECONDS);
+
+    assertThat(result).isInstanceOf(ErrorType.class);
+    assertErrorTypeTelemetry("WRONGTYPE", "GET", "GET wrong-type", null);
+  }
+
+  @Test
+  void batchCommandServerError() throws Exception {
+    redis
+        .lpush(asList("batch-wrong-type", "value"))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    Object result =
+        connection
+            .batch(
+                asList(
+                    Request.cmd(Command.GET).arg("batch-wrong-type"),
+                    Request.cmd(Command.GET).arg("batch-wrong-type")))
+            .toCompletionStage()
+            .toCompletableFuture()
+            .handle((response, error) -> error == null ? response : error)
+            .get(30, SECONDS);
+
+    assertThat(result).isInstanceOf(ErrorType.class);
+    assertErrorTypeTelemetry(
+        testLatestDeps() ? ErrorType.class.getName() : "WRONGTYPE",
+        "PIPELINE GET",
+        "GET batch-wrong-type; GET batch-wrong-type",
+        2L);
+  }
+
+  @ParameterizedTest
+  @MethodSource("serverErrorReplyPrefixCases")
+  void serverErrorReplyPrefixes(String reply, String expectedErrorType) throws Exception {
+    Object result =
+        connection
+            .send(
+                Request.cmd(Command.EVAL)
+                    .arg("return redis.error_reply(ARGV[1])")
+                    .arg("0")
+                    .arg(reply))
+            .toCompletionStage()
+            .toCompletableFuture()
+            .handle((response, error) -> error == null ? response : error)
+            .get(30, SECONDS);
+
+    assertThat(result).isInstanceOf(ErrorType.class);
+    assertErrorTypeTelemetry(
+        expectedErrorType, "EVAL", "EVAL return redis.error_reply(ARGV[1]) 0 ?", null);
+  }
+
+  private static Stream<Arguments> serverErrorReplyPrefixCases() {
+    return Stream.of(
+        argumentSet("customPrefix", "Custom.Code! detail", "Custom.Code!"),
+        argumentSet("lowercasePrefix", "lowercase detail", "lowercase"),
+        argumentSet("prefixOnly", "PrefixOnly", "PrefixOnly"),
+        argumentSet("blankPrefix", " ", ErrorType.class.getName()));
+  }
+
+  private static void assertErrorTypeTelemetry(
+      String errorType, String operationName, String queryText, Long batchSize) {
+    AttributeAssertion[] operationAttributes =
+        redisSpanAttributes(operationName, queryText, batchSize);
+    AttributeAssertion[] attributes =
+        Arrays.copyOf(operationAttributes, operationAttributes.length + 1);
+    attributes[attributes.length - 1] = equalTo(ERROR_TYPE, errorType);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(operationName + " " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(attributes)));
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        metrics ->
+            metrics
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType)))));
   }
 
   @Test
@@ -227,14 +333,14 @@ class VertxRedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                    span.hasName("SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
+                    span.hasName("GET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("GET", "GET foo")),
@@ -257,16 +363,13 @@ class VertxRedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                    span.hasName("SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "RANDOMKEY " + host + ":" + port
-                                : "RANDOMKEY")
+                    span.hasName("RANDOMKEY " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             redisSpanAttributes("RANDOMKEY", "RANDOMKEY"))));
@@ -292,10 +395,7 @@ class VertxRedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "PIPELINE " + host + ":" + port
-                                : "PIPELINE")
+                    span.hasName("PIPELINE " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("PIPELINE", "", 0L))));
   }
@@ -313,7 +413,6 @@ class VertxRedisClientTest {
 
   @Test
   void concurrentClientsKeepDistinctConfiguredTargets() throws Exception {
-    assumeTrue(emitStableDatabaseSemconv());
     String secondHost = host.toUpperCase(Locale.ROOT);
     assumeTrue(!secondHost.equals(host));
 
@@ -357,7 +456,7 @@ class VertxRedisClientTest {
   }
 
   @Test
-  void dynamicOptionsSupplierOmitsStableTarget() throws ReflectiveOperationException {
+  void dynamicOptionsSupplierOmitsConfiguredTarget() throws ReflectiveOperationException {
     assumeTrue(hasDynamicOptionsSupplier());
 
     Class<?> connectOptionsClass =
@@ -395,10 +494,8 @@ class VertxRedisClientTest {
                       .filter(span -> span.getName().startsWith("SET"))
                       .collect(toList());
               assertThat(spans).hasSize(1);
-              assertThat(spans.get(0).getAttributes().get(SERVER_ADDRESS))
-                  .isEqualTo(emitStableDatabaseSemconv() ? null : host);
-              assertThat(spans.get(0).getAttributes().get(SERVER_PORT))
-                  .isEqualTo(emitStableDatabaseSemconv() ? null : Long.valueOf(port));
+              assertThat(spans.get(0).getAttributes().get(SERVER_ADDRESS)).isEqualTo(null);
+              assertThat(spans.get(0).getAttributes().get(SERVER_PORT)).isEqualTo(null);
               assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo(ip);
               assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_PORT))
                   .isEqualTo(Long.valueOf(port));
@@ -407,7 +504,7 @@ class VertxRedisClientTest {
 
   @Test
   void staticReplicationPreservesConfiguredEndpointOrder() throws ReflectiveOperationException {
-    assumeTrue(emitStableDatabaseSemconv());
+
     assumeTrue(hasStaticReplicationTopology());
 
     RedisOptions options =
@@ -483,10 +580,7 @@ class VertxRedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? scenario.operationName + " " + host + ":" + port
-                                : scenario.operationName)
+                    span.hasName(scenario.operationName + " " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             redisSpanAttributes(
@@ -513,10 +607,7 @@ class VertxRedisClientTest {
                 .addRequest(Request.cmd(Command.SET).arg("batch1").arg("v1"))
                 .addRequest(Request.cmd(Command.SET).arg("batch2").arg("v2"))
                 .operationName("PIPELINE SET")
-                .queryText(
-                    emitStableDatabaseSemconv()
-                        ? "SET batch1 ?; SET batch2 ?"
-                        : "SET batch1 ?;SET batch2 ?")
+                .queryText("SET batch1 ?; SET batch2 ?")
                 .batchSize(2)
                 .build()),
         argumentSet(
@@ -525,10 +616,7 @@ class VertxRedisClientTest {
                 .addRequest(Request.cmd(Command.SET).arg("batch1").arg("v1"))
                 .addRequest(Request.cmd(Command.GET).arg("batch1"))
                 .operationName("PIPELINE")
-                .queryText(
-                    emitStableDatabaseSemconv()
-                        ? "SET batch1 ?; GET batch1"
-                        : "SET batch1 ?;GET batch1")
+                .queryText("SET batch1 ?; GET batch1")
                 .batchSize(2)
                 .build()),
         argumentSet(
@@ -541,8 +629,7 @@ class VertxRedisClientTest {
                 .operationName("PIPELINE GET")
                 .queryText(
                     String.join(
-                        emitStableDatabaseSemconv() ? "; " : ";",
-                        nCopies(truncatedQueryTextCommandCount, "GET " + longBatchKey)))
+                        "; ", nCopies(truncatedQueryTextCommandCount, "GET " + longBatchKey)))
                 .batchSize(batchSize)
                 .build()));
   }
@@ -554,15 +641,14 @@ class VertxRedisClientTest {
   private static AttributeAssertion[] redisSpanAttributes(
       String operationName, String queryText, Long batchSize) {
     return new AttributeAssertion[] {
-      equalTo(maybeStable(DB_SYSTEM), REDIS),
-      equalTo(maybeStable(DB_STATEMENT), queryText),
-      equalTo(maybeStable(DB_OPERATION), operationName),
-      equalTo(DB_REDIS_DATABASE_INDEX, emitStableDatabaseSemconv() ? null : Long.valueOf(1)),
-      equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "1" : null),
-      equalTo(DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? batchSize : null),
+      equalTo(DB_SYSTEM_NAME, REDIS),
+      equalTo(DB_QUERY_TEXT, queryText),
+      equalTo(DB_OPERATION_NAME, operationName),
+      equalTo(DB_NAMESPACE, "1"),
+      equalTo(DB_OPERATION_BATCH_SIZE, batchSize),
       equalTo(SERVER_ADDRESS, host),
       equalTo(SERVER_PORT, port),
-      equalTo(maybeStablePeerService(), "test-peer-service"),
+      equalTo(maybeStablePeerService(), testing.expectedPeerService()),
       equalTo(NETWORK_PEER_PORT, port),
       equalTo(NETWORK_PEER_ADDRESS, ip)
     };

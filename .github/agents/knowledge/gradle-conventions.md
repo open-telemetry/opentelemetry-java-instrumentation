@@ -45,8 +45,8 @@ compatible, keep the independently selected `InstrumentationModule` classes in t
 javaagent project. Public enablement names describe the library and independently selectable
 features, not compatibility implementations. Multiple classes may share all their public names.
 Configure one Muzzle `pass` per range and target artifact, excluding unrelated modules in each pass.
-Prefer `excludeInstrumentationName(...)` when the public name selects the intended classes both
-outside v3 preview and in preview. Use `excludeInstrumentationModule(...)` with a fully qualified
+Prefer `excludeInstrumentationName(...)` when the public name selects the intended classes. Use
+`excludeInstrumentationModule(...)` with a fully qualified
 class name when public names cannot distinguish the required implementations. Both forms apply
 to inverse checks, and unknown class exclusions fail the check. Keep the baseline library dependency
 and add newer or optional referenced types with `compileOnly` when appropriate.
@@ -296,11 +296,21 @@ tasks {
 Put the tests under `src/unitTests`. Declare test-only dependencies inside the suite's
 `dependencies` block.
 
+Prefer unconditional `dependsOn(testing.suites)`, including in `testLatestDeps` builds. If existing
+wiring is conditional, prefer removing the condition over adding a `unitTests` exception. Repeating
+unit or fixed-version tests is acceptable; select suites individually only for a concrete
+compatibility or resource constraint.
+
 ### Variant tasks in modules with custom `JvmTestSuite`s
 
 `testing.suites` includes the built-in `test` suite alongside any suite the module registers
 with `register<JvmTestSuite>(...)`. A variant task bound to `sourceSets.test` covers only the
 default source set.
+
+The semconv examples use `<domain>` as a placeholder for a supported selector.
+Use `otel.semconv-stability.opt-in=<domain>` for selectable stable conventions or
+`otel.semconv-stability.preview=<domain>` for preview conventions. Replace the placeholder
+before using the example in a build script; an unrecognized selector does not change the mode.
 
 Derive one variant task per suite only when every suite exercises behavior affected by the
 variant and the same task configuration applies to all of them:
@@ -312,8 +322,8 @@ val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
       testClassesDirs = suite.sources.output.classesDirs
       classpath = suite.sources.runtimeClasspath
 
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+      jvmArgs("-Dotel.semconv-stability.opt-in=<domain>")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=<domain>")
     }
   }
 
@@ -323,15 +333,21 @@ check {
 ```
 
 The map produces `testStableSemconv` for the built-in suite, so the conventional task name is
-preserved. Declare a separate map per variant when a module has more than one, for example
-`${suite.name}StableSemconv` and `${suite.name}BothSemconv` for RPC modules.
+preserved. For preview selection, use a `previewSemconvSuites` map that registers
+`${suite.name}PreviewSemconv` tasks and sets `otel.semconv-stability.preview=<domain>`.
+Declare a separate map per variant when a module has more than one. Use the `StableSemconv`
+suffix for stable selection, `PreviewSemconv` for preview selection, and `BothSemconv`
+when duplicate-mode coverage is required.
+See [testing-semconv-stability.md](testing-semconv-stability.md) for domain-specific modes.
+
+Preserve mixed variants for selectable domains, along with experimental and library-version suites.
 
 #### Preserving source suite JVM settings
 
 When source suite tasks have different JVM arguments or system properties, copy those values into
 the variant before adding its own configuration. This avoids rebuilding source settings with
-suite-name checks. When metadata collection is already active, append the variant setting to the
-inherited `metadataConfig`:
+suite-name checks. For a collected telemetry mode, preserve the inherited telemetry conditions and
+append the variant's telemetry setting to `metadataConfig`, not every copied JVM setting:
 
 ```kotlin
 val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
@@ -441,44 +457,28 @@ that should apply to all tasks. If so, move them to `withType<Test>().configureE
 ```kotlin
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    // ... other properties common to all test tasks
+    // ... properties common to all test tasks
   }
 
-  val testStableSemconv by registering(Test::class) {
+  val testPreviewSemconv by registering(Test::class) {
     // only task-specific config here
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.semconv-stability.preview=<domain>")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=<domain>")
   }
 }
 ```
 
 ## `collectMetadata` and `metadataConfig`
 
-These system properties support the metadata collection pipeline. They are not required for
-test correctness and are being added as a separate migration. Do not add them
-as unrelated cleanup; check their wiring when already present.
+Follow the [telemetry collection convention](../../../instrumentation-docs/readme.md#telemetry-collection)
+for task selection and labels. Shared test conventions forward `-PcollectMetadata=true` to test JVMs.
+Keep `metadataConfig` labels local.
 
-Do not add `collectMetadata` or `metadataConfig` to `unitTests` suites or legacy
-`javaagent-unit-tests` projects. These are unit tests, and metadata collection should not run there.
-
-| Property          | Type            | Value                                                                                            |
-| ----------------- | --------------- | ------------------------------------------------------------------------------------------------ |
-| `collectMetadata` | System property | Pass-through of `otelProps.collectMetadata`; defaults to `false`                                 |
-| `metadataConfig`  | System property | A single `key=value` string describing the non-default configuration active during this test run |
-
-When already present, verify:
-
-- `metadataConfig` is only used in files that also configure `collectMetadata`. A lone
-  `metadataConfig` does not enable collection and should be removed, not added as a partial
-  metadata migration.
-- `collectMetadata` is in `tasks.test` for single-test-task modules, or in
-  `withType<Test>().configureEach` for modules that explicitly register additional `Test`
-  tasks via `by registering(Test::class)` (`latestDepTest` does not count) — never on
-  individual tasks. Do not use
-  `withType<Test>().configureEach { ... }` in single-test-task modules.
-- `metadataConfig` is on each non-default task that participates in metadata collection. It may
-  also appear on the default `test` task when that task participates in metadata collection and
-  itself runs with non-default `jvmArgs` (e.g., an experimental flag enabled module-wide via
-  `withType<Test>().configureEach { jvmArgs(...) }`); in that case the `metadataConfig` value
-  should describe those non-default jvmArgs.
-- The `metadataConfig` value matches at least one of the jvmArgs configured in the task
+Corresponding agent and library variants can use matching task names without sharing configuration
+mechanisms or metadata labels. For builder-controlled library options, use test-only fixture flags
+and label the actual builder calls, as shown in the
+[library variant example](testing-experimental-flags.md#programmatically-configured-library-tests).
+For synthetic header setup in agent, plain-library, or library-autoconfigure fixtures, follow the
+canonical collection guidance rather than adding capture-only variants or label conditions. Inline
+complete labels for fixed profiles; the source-suite variant example above composes labels because it
+preserves inherited conditions.

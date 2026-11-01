@@ -58,23 +58,6 @@ final class RocketMqConsumerAttributeGetter
 
   @Nullable
   @Override
-  public Long getMessageBodySize(RocketMqConsumerRequest request) {
-    if (request.isBatch()) {
-      // per-message attributes that vary across a batch belong on the span links
-      return null;
-    }
-    byte[] body = request.getMessage().getBody();
-    return body == null ? null : (long) body.length;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(RocketMqConsumerRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public String getMessageId(
       RocketMqConsumerRequest request, @Nullable ConsumeMessageContext unused) {
     return request.getMessageId();
@@ -99,12 +82,16 @@ final class RocketMqConsumerAttributeGetter
       RocketMqConsumerRequest request,
       @Nullable ConsumeMessageContext response,
       @Nullable Throwable error) {
-    return getErrorType(response);
+    String responseErrorType = getResponseErrorType(response);
+    if (responseErrorType != null) {
+      return responseErrorType;
+    }
+    return error == null ? null : error.getClass().getName();
   }
 
-  /** Returns the error type of the consume operation, or {@code null} if it did not fail. */
+  /** Returns a response-derived error type, or {@code null} if none is available. */
   @Nullable
-  static String getErrorType(@Nullable ConsumeMessageContext response) {
+  static String getResponseErrorType(@Nullable ConsumeMessageContext response) {
     if (response == null) {
       return null;
     }

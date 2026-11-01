@@ -20,6 +20,11 @@ class Aws2ClientTest extends AbstractAws2ClientTest {
   }
 
   @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return EXPERIMENTAL_ATTRIBUTES;
+  }
+
+  @Override
   protected ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
     return ClientOverrideConfiguration.builder();
   }

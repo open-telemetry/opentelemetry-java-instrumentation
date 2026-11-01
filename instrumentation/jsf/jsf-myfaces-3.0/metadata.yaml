@@ -7,4 +7,3 @@ features:
 library_link: https://myfaces.apache.org/
 configurations:
   - ref: common.controller-telemetry.enabled
-  - ref: common.deprecated-controller-telemetry.enabled

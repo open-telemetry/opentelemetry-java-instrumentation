@@ -24,11 +24,7 @@ class LettuceAsyncClientTest extends AbstractLettuceAsyncClientTest {
   protected RedisClient createClient(String uri) {
     return RedisClient.create(
         ClientResources.builder()
-            .tracing(
-                LettuceTelemetry.builder(testing().getOpenTelemetry())
-                    .setEncodingSpanEventsEnabled(true)
-                    .build()
-                    .createTracing())
+            .tracing(LettuceTelemetry.create(testing().getOpenTelemetry()).createTracing())
             .build(),
         uri);
   }

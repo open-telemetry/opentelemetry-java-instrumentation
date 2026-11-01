@@ -38,6 +38,43 @@ testing {
         }
       }
     }
+    if (!otelProps.testLatestDeps) {
+      // The shared testing project brings in Dubbo 2.7.5, which wins over testDubbo's direct 2.7.0
+      // request. Exclude it here to exercise the earlier completion APIs without loading tests that
+      // depend on DubboBootstrap.
+      register<JvmTestSuite>("testDubbo270") {
+        sources {
+          java {
+            setSrcDirs(listOf("src/testDubbo/java"))
+            include("**/DubboAgentAsyncTest.java")
+          }
+        }
+        dependencies {
+          implementation(project(":instrumentation:apache-dubbo-2.7:testing")) {
+            exclude(group = "org.apache.dubbo")
+          }
+          val version = baseVersion("2.7.0").orLatest()
+          implementation("org.apache.dubbo:dubbo:$version")
+          implementation("org.apache.dubbo:dubbo-config-api:$version")
+        }
+      }
+      register<JvmTestSuite>("testDubbo272") {
+        sources {
+          java {
+            setSrcDirs(listOf("src/testDubbo/java"))
+            include("**/DubboAgentAsyncTest.java")
+          }
+        }
+        dependencies {
+          implementation(project(":instrumentation:apache-dubbo-2.7:testing")) {
+            exclude(group = "org.apache.dubbo")
+          }
+          val version = baseVersion("2.7.2").orLatest()
+          implementation("org.apache.dubbo:dubbo:$version")
+          implementation("org.apache.dubbo:dubbo-config-api:$version")
+        }
+      }
+    }
   }
 }
 
@@ -48,32 +85,20 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-
-  systemProperty("collectMetadata", otelProps.collectMetadata)
 }
 
-val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-  tasks.register<Test>("${suite.name}StableSemconv") {
+val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
+  tasks.register<Test>("${suite.name}PreviewSemconv") {
     testClassesDirs = suite.sources.output.classesDirs
     classpath = suite.sources.runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc,service.peer")
-  }
-}
-
-val bothSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-  tasks.register<Test>("${suite.name}BothSemconv") {
-    testClassesDirs = suite.sources.output.classesDirs
-    classpath = suite.sources.runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup,service.peer")
+    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
   }
 }
 
 tasks {
   check {
-    dependsOn(testing.suites, stableSemconvSuites, bothSemconvSuites)
+    dependsOn(testing.suites, previewSemconvSuites)
   }
 }

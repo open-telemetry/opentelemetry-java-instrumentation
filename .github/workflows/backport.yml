@@ -13,9 +13,10 @@ jobs:
   backport:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          if [[ ! $GITHUB_REF_NAME =~ ^release/v[0-9]+\.[0-9]+\.x$ ]]; then
-            echo this workflow should only be run against release branches
+      - name: Verify backport branch
+        run: |
+          if [[ ! $GITHUB_REF_NAME =~ ^maintenance/v[0-9]+\.x$ && ! $GITHUB_REF_NAME =~ ^release/v[0-9]+\.[0-9]+\.x$ ]]; then
+            echo this workflow should only be run against maintenance/v\<major\>.x or release branches
             exit 1
           fi
 
@@ -28,7 +29,7 @@ jobs:
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh
 
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         id: otelbot-token
         with:
           client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}

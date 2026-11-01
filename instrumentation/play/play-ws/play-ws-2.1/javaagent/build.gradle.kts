@@ -91,10 +91,6 @@ tasks {
     }
   }
 
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
   check {
     dependsOn(testing.suites)
   }

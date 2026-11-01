@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.finatra.v2_9;
 import static io.opentelemetry.javaagent.instrumentation.finatra.v2_9.FinatraSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.twitter.finagle.http.Response;
 import com.twitter.finatra.http.contexts.RouteInfo;
@@ -35,10 +33,7 @@ class FinatraRouteInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("handleMatch")
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("com.twitter.finagle.http.Request"))),
-        getClass().getName() + "$HandleMatchAdvice");
+        named("handleMatch"), getClass().getName() + "$HandleMatchAdvice");
     transformer.applyAdviceToMethod(
         named("copy").and(returns(named("com.twitter.finatra.http.internal.routing.Route"))),
         getClass().getName() + "$CopyAdvice");

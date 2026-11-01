@@ -7,53 +7,28 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import javax.annotation.Nullable;
-import redis.clients.jedis.DefaultJedisSocketFactoryUtil;
-import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisClientConfig;
 import redis.clients.jedis.JedisSocketFactory;
 
 class JedisConnectionInfo {
-  @Nullable private final String serverAddress;
-  @Nullable private final Integer serverPort;
   @Nullable private final RedisServerTarget serverTarget;
   @Nullable private final Long databaseIndex;
 
   private JedisConnectionInfo(
-      @Nullable String serverAddress,
-      @Nullable Integer serverPort,
-      @Nullable RedisServerTarget serverTarget,
-      @Nullable Long databaseIndex) {
-    this.serverAddress = serverAddress;
-    this.serverPort = serverPort;
+      @Nullable RedisServerTarget serverTarget, @Nullable Long databaseIndex) {
     this.serverTarget = serverTarget;
     this.databaseIndex = databaseIndex;
   }
 
   static JedisConnectionInfo create(
       @Nullable JedisSocketFactory socketFactory, @Nullable Object clientConfig) {
-    // The socket endpoint is the one the connection dials, after any HostAndPortMapper ran.
-    HostAndPort socketHostAndPort =
-        DefaultJedisSocketFactoryUtil.getSocketHostAndPort(socketFactory);
     // Without a client config, Jedis leaves the new Redis connection on the default database 0.
     Long databaseIndex =
         clientConfig instanceof JedisClientConfig
             ? Long.valueOf(((JedisClientConfig) clientConfig).getDatabase())
             : 0L;
     return new JedisConnectionInfo(
-        socketHostAndPort != null ? socketHostAndPort.getHost() : null,
-        socketHostAndPort != null ? socketHostAndPort.getPort() : null,
-        JedisConfiguredTargets.socketFactoryTarget(socketFactory),
-        databaseIndex);
-  }
-
-  @Nullable
-  String getServerAddress() {
-    return serverAddress;
-  }
-
-  @Nullable
-  Integer getServerPort() {
-    return serverPort;
+        JedisConfiguredTargets.socketFactoryTarget(socketFactory), databaseIndex);
   }
 
   @Nullable

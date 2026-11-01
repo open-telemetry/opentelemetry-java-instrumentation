@@ -18,6 +18,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import java.net.URI;
+import java.time.Duration;
 import java.util.Properties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -139,6 +140,12 @@ class TestWebfluxSpringBootApp {
     @GetMapping("/cancel")
     Mono<String> cancel() {
       return controller(SUCCESS, () -> Mono.never());
+    }
+
+    @GetMapping("/cancel-after-commit")
+    @ResponseBody
+    Flux<String> cancelAfterCommit() {
+      return Flux.just("committed").delayElements(Duration.ofMillis(100)).concatWith(Flux.never());
     }
   }
 }

@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -21,44 +23,31 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "Test-Message-Header")
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("SqsSuppressReceiveSpansTest")
-    }
-    include("**/SqsSuppressReceiveSpansTest.*")
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("SqsSuppressReceiveSpansTest")
-    }
-    jvmArgs(
-      "-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-      "-Dotel.semconv-stability.opt-in=database",
-    )
-  }
-
   test {
     filter {
       excludeTestsMatching("SqsSuppressReceiveSpansTest")
     }
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
   }
+}
 
-  check {
-    dependsOn(testReceiveSpansDisabled, testStableSemconv)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+          systemProperty("otel.instrumentation.common.messaging.headers.included", "Test-Message-Header")
+          systemProperty("testLatestDeps", otelProps.testLatestDeps)
+        }
+        register("ReceiveSpansDisabled") {
+          filter {
+            includeTestsMatching("SqsSuppressReceiveSpansTest")
+          }
+          include("**/SqsSuppressReceiveSpansTest.*")
+        }
+      }
+    }
   }
 }
 

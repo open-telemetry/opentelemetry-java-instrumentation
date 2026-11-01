@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.jdbc.v8_5;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -43,8 +42,7 @@ class TomcatJdbcInstrumentationTest {
     DataSource dataSource = newDataSource();
     dataSource.setUrl("jdbc:postgresql://db.example:5432/orders");
 
-    assertConnectionPoolMetrics(
-        dataSource, emitStableDatabaseSemconv() ? "orders" : "db.example:5432/orders");
+    assertConnectionPoolMetrics(dataSource, "orders");
   }
 
   @Test
@@ -52,8 +50,7 @@ class TomcatJdbcInstrumentationTest {
     DataSource dataSource = newDataSource();
     dataSource.setUrl("jdbc:postgresql://[2001:db8::1]:5432/orders");
 
-    assertConnectionPoolMetrics(
-        dataSource, emitStableDatabaseSemconv() ? "orders" : "[2001:db8::1]:5432/orders");
+    assertConnectionPoolMetrics(dataSource, "orders");
   }
 
   @Test
@@ -63,9 +60,7 @@ class TomcatJdbcInstrumentationTest {
     dataSource.setConnectionProperties(
         "serverName=properties.example;portNumber=5433;databaseName=inventory");
 
-    assertConnectionPoolMetrics(
-        dataSource,
-        emitStableDatabaseSemconv() ? "inventory" : "properties.example:5433/inventory");
+    assertConnectionPoolMetrics(dataSource, "inventory");
   }
 
   @Test
@@ -144,7 +139,7 @@ class TomcatJdbcInstrumentationTest {
   private static void assertConnectionPoolMetrics(String poolName) {
     assertThat(poolName).isNotEmpty();
 
-    DbConnectionPoolMetricsAssertions.create(testing, "io.opentelemetry.tomcat-jdbc", poolName)
+    DbConnectionPoolMetricsAssertions.create(testing, "io.opentelemetry.tomcat-jdbc-8.5", poolName)
         // no timeouts happen during this test
         .disableConnectionTimeouts()
         .disableCreateTime()
@@ -155,30 +150,24 @@ class TomcatJdbcInstrumentationTest {
 
   private static void assertNoConnectionPoolMetrics() {
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.tomcat-jdbc",
-        emitStableDatabaseSemconv() ? "db.client.connection.count" : "db.client.connections.usage",
+        "io.opentelemetry.tomcat-jdbc-8.5",
+        "db.client.connection.count",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.tomcat-jdbc",
-        emitStableDatabaseSemconv()
-            ? "db.client.connection.idle.min"
-            : "db.client.connections.idle.min",
+        "io.opentelemetry.tomcat-jdbc-8.5",
+        "db.client.connection.idle.min",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.tomcat-jdbc",
-        emitStableDatabaseSemconv()
-            ? "db.client.connection.idle.max"
-            : "db.client.connections.idle.max",
+        "io.opentelemetry.tomcat-jdbc-8.5",
+        "db.client.connection.idle.max",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.tomcat-jdbc",
-        emitStableDatabaseSemconv() ? "db.client.connection.limit" : "db.client.connections.max",
+        "io.opentelemetry.tomcat-jdbc-8.5",
+        "db.client.connection.limit",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.tomcat-jdbc",
-        emitStableDatabaseSemconv()
-            ? "db.client.connection.pending_requests"
-            : "db.client.connections.pending_requests",
+        "io.opentelemetry.tomcat-jdbc-8.5",
+        "db.client.connection.pending_requests",
         AbstractIterableAssert::isEmpty);
   }
 }

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,11 +16,7 @@ import java.util.List;
 public class SpringAwsSqsInstrumentationModule extends InstrumentationModule {
 
   public SpringAwsSqsInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "spring-cloud-aws-3.0" : "spring-cloud-aws",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-cloud-aws"}
-            : new String[] {"spring-cloud-aws-3.0"});
+    super("spring-cloud-aws-3.0", "spring-cloud-aws");
   }
 
   @Override

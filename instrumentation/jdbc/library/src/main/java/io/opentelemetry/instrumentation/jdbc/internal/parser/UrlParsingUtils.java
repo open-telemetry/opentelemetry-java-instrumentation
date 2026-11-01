@@ -121,36 +121,6 @@ public final class UrlParsingUtils {
     }
   }
 
-  /**
-   * Build the short URL for db.connection_string attribute.
-   *
-   * @param type the JDBC type (e.g., "postgresql", "mysql")
-   * @param subtype optional subtype (e.g., "thin" for Oracle, "aurora" for MySQL)
-   * @param host the host name
-   * @param port the port number
-   * @return the short URL in format "type:[subtype:]//host:port" or "type:" if no host
-   */
-  public static String buildShortUrl(
-      String type, @Nullable String subtype, @Nullable String host, @Nullable Integer port) {
-    StringBuilder url = new StringBuilder();
-    appendTypePrefix(url, type, subtype);
-    if (host != null) {
-      url.append("//");
-      appendHostPort(url, host, port);
-    }
-    return url.toString();
-  }
-
-  private static void appendTypePrefix(
-      StringBuilder builder, String type, @Nullable String subtype) {
-    builder.append(type);
-    builder.append(':');
-    if (subtype != null) {
-      builder.append(subtype);
-      builder.append(':');
-    }
-  }
-
   /** Append a host and optional port, adding brackets around an unbracketed IPv6 address. */
   static void appendHostPort(StringBuilder builder, String host, @Nullable Integer port) {
     // Brackets keep an IPv6 literal unambiguous when a port follows.

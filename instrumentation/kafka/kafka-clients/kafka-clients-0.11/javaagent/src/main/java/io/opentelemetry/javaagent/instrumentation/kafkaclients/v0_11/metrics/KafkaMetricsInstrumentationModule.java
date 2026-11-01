@@ -9,7 +9,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,14 +16,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class KafkaMetricsInstrumentationModule extends InstrumentationModule {
   public KafkaMetricsInstrumentationModule() {
-    super(
-        "kafka-clients-metrics",
-        // In v3 preview, default-off metrics must not share default-on Kafka selectors.
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[0]
-            : new String[] {
-              "kafka-clients", "kafka-clients-metrics-0.11", "kafka-clients-0.11", "kafka"
-            });
+    super("kafka-clients-metrics");
   }
 
   @Override
@@ -41,6 +33,6 @@ public class KafkaMetricsInstrumentationModule extends InstrumentationModule {
 
   @Override
   public boolean defaultEnabled() {
-    return super.defaultEnabled() && !AgentCommonConfig.get().isV3Preview();
+    return false;
   }
 }

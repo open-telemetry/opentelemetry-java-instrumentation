@@ -11,11 +11,16 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.GraphqlErrorRecorder;
 import io.opentelemetry.instrumentation.graphql.common.v12_0.internal.OpenTelemetryInstrumentationHelper;
 
 final class GraphqlInstrumenterFactory {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.graphql-java-20.0";
+
+  static GraphqlErrorRecorder createDataFetcherErrorRecorder(OpenTelemetry openTelemetry) {
+    return new GraphqlErrorRecorder(openTelemetry, INSTRUMENTATION_NAME, null);
+  }
 
   static OpenTelemetryInstrumentationHelper createInstrumentationHelper(
       OpenTelemetry openTelemetry,

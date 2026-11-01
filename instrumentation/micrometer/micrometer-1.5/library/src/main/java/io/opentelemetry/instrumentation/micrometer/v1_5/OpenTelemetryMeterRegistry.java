@@ -34,6 +34,10 @@ import javax.annotation.Nullable;
  * A {@link MeterRegistry} implementation that forwards all the captured metrics to the {@linkplain
  * io.opentelemetry.api.metrics.Meter OpenTelemetry Meter} obtained from the passed {@link
  * OpenTelemetry} instance.
+ *
+ * <p>This bridge is not a general replacement for a read-capable Micrometer registry. Many reads
+ * return {@code NaN}, zero, or empty measurements, though some reads are supported. Use a
+ * read-capable registry alongside this bridge when Micrometer reads are needed.
  */
 public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
@@ -56,7 +60,6 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   private final Bridging bridging;
   private final TimeUnit baseTimeUnit;
   private final DistributionStatisticConfigModifier distributionStatisticConfigModifier;
-  private final boolean emitMaxGauge;
   private final boolean metersHiddenFromSearch;
   private final Predicate<Meter.Id> suppressionPredicate;
   private final io.opentelemetry.api.metrics.Meter otelMeter;
@@ -66,15 +69,13 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       TimeUnit baseTimeUnit,
       NamingConvention namingConvention,
       DistributionStatisticConfigModifier distributionStatisticConfigModifier,
-      boolean v3Preview,
       boolean metersHiddenFromSearch,
       Predicate<Meter.Id> suppressionPredicate,
       io.opentelemetry.api.metrics.Meter otelMeter) {
     super(clock);
-    this.bridging = new Bridging(v3Preview);
+    this.bridging = new Bridging();
     this.baseTimeUnit = baseTimeUnit;
     this.distributionStatisticConfigModifier = distributionStatisticConfigModifier;
-    this.emitMaxGauge = !v3Preview;
     this.metersHiddenFromSearch = metersHiddenFromSearch;
     this.suppressionPredicate = suppressionPredicate;
     this.otelMeter = otelMeter;
@@ -153,7 +154,6 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
             distributionStatisticConfigModifier,
             pauseDetector,
             getBaseTimeUnit(),
-            emitMaxGauge,
             otelMeter,
             bridging);
     if (timer.isUsingMicrometerHistograms()) {
@@ -176,7 +176,6 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
             distributionStatisticConfig,
             distributionStatisticConfigModifier,
             scale,
-            emitMaxGauge,
             otelMeter,
             bridging);
     if (distributionSummary.isUsingMicrometerHistograms()) {

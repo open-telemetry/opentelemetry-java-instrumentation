@@ -12,7 +12,6 @@ import static com.couchbase.client.core.cnc.RequestTracer.SERVICE_IDENTIFIER_KV;
 import static com.couchbase.client.core.cnc.RequestTracer.SERVICE_IDENTIFIER_QUERY;
 import static com.couchbase.client.core.cnc.RequestTracer.SERVICE_IDENTIFIER_SEARCH;
 import static com.couchbase.client.core.cnc.RequestTracer.SERVICE_IDENTIFIER_VIEW;
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 
@@ -22,7 +21,10 @@ import com.couchbase.client.core.cnc.RequestTracer;
 import com.couchbase.client.core.msg.RequestContext;
 import com.couchbase.client.core.msg.kv.BaseKeyValueRequest;
 import com.couchbase.client.core.service.ServiceType;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseSpan;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0.CouchbaseTracer;
 import java.time.Duration;
@@ -33,8 +35,21 @@ public final class CouchbaseRequestTracer implements RequestTracer {
 
   private final CouchbaseTracer tracer;
 
-  public static RequestTracer create(Tracer tracer) {
-    return new CouchbaseRequestTracer(new CouchbaseTracer(tracer, false, INTERNAL, true));
+  public static RequestTracer create(OpenTelemetry openTelemetry) {
+    String instrumentationName = "io.opentelemetry.couchbase-3.0";
+    Tracer tracer =
+        openTelemetry
+            .tracerBuilder(instrumentationName)
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
+            .build();
+    Logger exceptionLogger =
+        openTelemetry
+            .getLogsBridge()
+            .loggerBuilder(instrumentationName)
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
+            .build();
+    return new CouchbaseRequestTracer(
+        new CouchbaseTracer(tracer, exceptionLogger, false, true, true));
   }
 
   private CouchbaseRequestTracer(CouchbaseTracer tracer) {

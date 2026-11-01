@@ -142,14 +142,14 @@ public abstract class AbstractLambdaClientTest extends AbstractBaseAwsClientTest
         response, client, "AWSLambda", operation, method, additionalAttributes);
   }
 
-  private static Stream<Arguments> provideArguments() {
+  private Stream<Arguments> provideArguments() {
     return Stream.of(
         Arguments.of(
             "CreateEventSourceMapping",
             "POST",
             LAMBDA_CREATE_EVENT_SOURCE_MAPPING_RESPONSE_BODY,
             asList(
-                equalTo(stringKey("aws.lambda.function.name"), "myFn01-Temp"),
+                equalTo(stringKey("aws.lambda.function.name"), experimental("myFn01-Temp")),
                 equalTo(AWS_LAMBDA_RESOURCE_MAPPING_ID, "e31def54-5e5d-4c1b-8e0f-bf1b11c137b7")),
             (Function<AWSLambda, Object>)
                 c ->
@@ -176,10 +176,13 @@ public abstract class AbstractLambdaClientTest extends AbstractBaseAwsClientTest
             "GET",
             LAMBDA_GET_FUNCTION_RESPONSE_BODY,
             asList(
-                equalTo(stringKey("aws.lambda.function.name"), "lambda-function-name-foo"),
+                equalTo(
+                    stringKey("aws.lambda.function.name"),
+                    experimental("lambda-function-name-foo")),
                 equalTo(
                     stringKey("aws.lambda.function.arn"),
-                    "arn:aws:lambda:us-west-2:123456789012:function:lambda-function-name-foo")),
+                    experimental(
+                        "arn:aws:lambda:us-west-2:123456789012:function:lambda-function-name-foo"))),
             (Function<AWSLambda, Object>)
                 c ->
                     c.getFunction(

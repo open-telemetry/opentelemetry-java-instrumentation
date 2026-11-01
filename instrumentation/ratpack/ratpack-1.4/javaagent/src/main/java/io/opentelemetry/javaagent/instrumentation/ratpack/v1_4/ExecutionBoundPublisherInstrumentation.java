@@ -9,7 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -41,7 +41,7 @@ class ExecutionBoundPublisherInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static <T> Subscriber<T> wrap(@Advice.Argument(0) Subscriber<T> subscriber) {
-      return new TracingSubscriber<>(subscriber, Java8BytecodeBridge.currentContext());
+      return new TracingSubscriber<>(subscriber, Context.current());
     }
   }
 }

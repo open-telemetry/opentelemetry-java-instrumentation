@@ -10,7 +10,11 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.context.AgentContextStorage;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.Collection;
+import java.util.Iterator;
 import javax.annotation.Nullable;
 
 class ApplicationTextMapPropagator
@@ -52,6 +56,24 @@ class ApplicationTextMapPropagator
 
   private static class AgentGetter<C> implements TextMapGetter<C> {
 
+    @Nullable private static final MethodHandle GET_ALL = findGetAll();
+
+    @Nullable
+    private static MethodHandle findGetAll() {
+      try {
+        // getAll is available on the application API starting with 1.50.
+        return MethodHandles.publicLookup()
+            .findVirtual(
+                application.io.opentelemetry.context.propagation.TextMapGetter.class,
+                "getAll",
+                MethodType.methodType(Iterator.class, Object.class, String.class));
+      } catch (NoSuchMethodException ignored) {
+        return null;
+      } catch (IllegalAccessException e) {
+        throw new IllegalStateException("Failed to access application TextMapGetter.getAll", e);
+      }
+    }
+
     private final application.io.opentelemetry.context.propagation.TextMapGetter<C>
         applicationGetter;
 
@@ -60,6 +82,7 @@ class ApplicationTextMapPropagator
       this.applicationGetter = applicationGetter;
     }
 
+    @SuppressWarnings("deprecation") // retain keys for older application APIs
     @Override
     public Iterable<String> keys(C c) {
       return applicationGetter.keys(c);
@@ -69,6 +92,23 @@ class ApplicationTextMapPropagator
     @Nullable
     public String get(@Nullable C carrier, String key) {
       return applicationGetter.get(carrier, key);
+    }
+
+    @Override
+    public Iterator<String> getAll(@Nullable C carrier, String key) {
+      if (GET_ALL == null) {
+        return TextMapGetter.super.getAll(carrier, key);
+      }
+      try {
+        @SuppressWarnings("unchecked") // TextMapGetter.getAll returns Iterator<String>
+        Iterator<String> values =
+            (Iterator<String>) GET_ALL.invoke(applicationGetter, carrier, key);
+        return values;
+      } catch (RuntimeException | Error e) {
+        throw e;
+      } catch (Throwable t) {
+        throw new IllegalStateException("Failed to invoke application TextMapGetter.getAll", t);
+      }
     }
   }
 

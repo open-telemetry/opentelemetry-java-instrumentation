@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import com.datastax.driver.core.ExecutionInfo;
 import com.datastax.driver.core.Host;
 import com.datastax.driver.core.exceptions.CoordinatorException;
@@ -28,7 +26,7 @@ class CassandraResponse {
     if (coordinator == null) {
       return new CassandraResponse(executionInfo, null);
     }
-    if (emitStableDatabaseSemconv() && CassandraEndPoints.isSniEndPoint(coordinator)) {
+    if (CassandraEndPoints.isSniEndPoint(coordinator)) {
       // SniEndPoint.resolve() returns the proxy, performs DNS, and advances the driver's shared
       // round-robin counter, so the actual proxy is not safe to obtain here.
       return new CassandraResponse(executionInfo, null);
@@ -42,7 +40,7 @@ class CassandraResponse {
       return null;
     }
     CoordinatorException exception = (CoordinatorException) throwable;
-    if (emitStableDatabaseSemconv() && CassandraEndPoints.isSniEndPoint(exception)) {
+    if (CassandraEndPoints.isSniEndPoint(exception)) {
       return new CassandraResponse(null, null);
     }
     return new CassandraResponse(null, exception.getAddress());

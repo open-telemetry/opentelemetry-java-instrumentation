@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,11 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class LettuceInstrumentationModule extends InstrumentationModule {
   public LettuceInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "lettuce-4.0" : "lettuce",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"lettuce"}
-            : new String[] {"lettuce-4.0"});
+    super("lettuce-4.0", "lettuce");
   }
 
   @Override
@@ -31,7 +26,6 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
         new LettuceAsyncCommandsInstrumentation(),
         new LettuceCommandHandlerInstrumentation(),
         new LettuceCommandWrapperInstrumentation(),
-        new LettuceConnectionInstrumentation(),
         new LettuceReactiveCommandDispatcherInstrumentation(),
         new LettuceObservableCommandInstrumentation(),
         new LettuceConnectInstrumentation(),

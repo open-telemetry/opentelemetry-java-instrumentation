@@ -42,30 +42,7 @@ tasks.withType<Test>().configureEach {
 }
 
 tasks {
-  val testSuites = testing.suites.withType(JvmTestSuite::class)
-    .matching { it.name == "test" }
-
-  val stableSemconvSuites = testSuites.map { suite ->
-    register<Test>("${suite.name}StableSemconv") {
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
-    }
-  }
-
-  val bothSemconvSuites = testSuites.map { suite ->
-    register<Test>("${suite.name}BothSemconv") {
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
-    }
-  }
-
   check {
-    dependsOn(testing.suites, stableSemconvSuites, bothSemconvSuites)
+    dependsOn(testing.suites)
   }
 }

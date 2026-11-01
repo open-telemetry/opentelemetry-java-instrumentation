@@ -11,6 +11,7 @@ import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_INSTANCE_ID;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_NAME;
 import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_VERSION;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -71,6 +72,29 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
             .getStructured("http")
             .getStructured("client");
     assertThat(httpClientConfig.getBoolean("emit_experimental_telemetry/development")).isTrue();
+  }
+
+  @Test
+  void ruleBasedSampler() {
+    testing.clearAllExportedData();
+
+    openTelemetry
+        .getTracer("sampler-smoke-test")
+        .spanBuilder("matching span")
+        .setAttribute(URL_PATH, "/actuator/health")
+        .startSpan()
+        .end();
+    assertThat(testing.getExportedSpans()).isEmpty();
+
+    openTelemetry
+        .getTracer("sampler-smoke-test")
+        .spanBuilder("fallback span")
+        .setAttribute(URL_PATH, "/greeting")
+        .startSpan()
+        .end();
+    assertThat(testing.getExportedSpans())
+        .singleElement()
+        .satisfies(span -> assertThat(span.getAttributes().get(URL_PATH)).isEqualTo("/greeting"));
   }
 
   @Test

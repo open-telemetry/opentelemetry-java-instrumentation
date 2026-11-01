@@ -87,7 +87,6 @@ tasks {
   }
   withType<Test>().configureEach {
     jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
   }
 }

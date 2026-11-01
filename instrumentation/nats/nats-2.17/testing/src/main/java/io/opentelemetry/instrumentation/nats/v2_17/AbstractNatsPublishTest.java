@@ -5,11 +5,8 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.assertTraceparentHeader;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import io.nats.client.Subscription;
@@ -132,10 +129,10 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
-                    settlementSpan(trace, firstAckSubject, "+ACK", "ack", clientId),
-                    settlementSpan(trace, secondAckSubject, "-NAK", "nak", clientId),
-                    settlementSpan(trace, thirdAckSubject, "+WPI", "in-progress", clientId),
-                    settlementSpan(trace, fourthAckSubject, "+TERM", "term", clientId)));
+                    settlementSpan(trace, firstAckSubject, "ack", clientId),
+                    settlementSpan(trace, secondAckSubject, "nak", clientId),
+                    settlementSpan(trace, thirdAckSubject, "in-progress", clientId),
+                    settlementSpan(trace, fourthAckSubject, "term", clientId)));
   }
 
   private static byte[] body(String body) {
@@ -143,20 +140,12 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
   }
 
   private static Consumer<SpanDataAssert> settlementSpan(
-      TraceAssert trace, String subject, String body, String operation, int clientId) {
-    boolean stable = emitStableMessagingSemconv();
-    AttributeAssertion[] attributes =
-        stable
-            ? messagingAttributes(operation, subject, clientId, body.length())
-            : messagingAttributes(
-                "publish",
-                subject,
-                clientId,
-                body.length(),
-                equalTo(MESSAGING_DESTINATION_TEMPLATE, "$JS.ACK"));
+      TraceAssert trace, String subject, String operation, int clientId) {
+
+    AttributeAssertion[] attributes = messagingAttributes(operation, subject, clientId);
     return span ->
-        span.hasName(stable ? operation + " $JS.ACK" : "$JS.ACK publish")
-            .hasKind(stable ? SpanKind.CLIENT : SpanKind.PRODUCER)
+        span.hasName(operation + " $JS.ACK")
+            .hasKind(SpanKind.CLIENT)
             .hasParent(trace.getSpan(0))
             .hasAttributesSatisfyingExactly(attributes);
   }
@@ -168,7 +157,7 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
                     span ->
-                        span.hasName(emitStableMessagingSemconv() ? "publish sub" : "sub publish")
+                        span.hasName("publish sub")
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(

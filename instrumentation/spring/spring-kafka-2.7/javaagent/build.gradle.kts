@@ -36,6 +36,14 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("testAsyncAcks") {
+      dependencies {
+        // async acks were added in 2.8
+        val springKafkaVersion = baseVersion("2.8.0").orLatest()
+        implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
+      }
+    }
+
     register<JvmTestSuite>("testNoReceiveTelemetry") {
       dependencies {
         implementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
@@ -68,7 +76,6 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testExperimental = register<Test>("testExperimental") {
@@ -83,49 +90,6 @@ tasks {
     )
   }
 
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("SpringKafkaMockConsumerTest")
-      includeTestsMatching("SpringKafkaTest.shouldCreateSpansForSingleRecordProcess")
-      includeTestsMatching("SpringKafkaTest.shouldTraceRawConsumerInsideListener")
-      includeTestsMatching("SpringKafkaTest.shouldTraceRawConsumerInsideBatchListener")
-      includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaListener")
-      includeTestsMatching("SpringKafkaTest.shouldCreateSpansForBatchReceiveAndProcess")
-      includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaBatchListener")
-    }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("SpringKafkaMockConsumerTest")
-      includeTestsMatching("SpringKafkaTest.shouldCreateSpansForSingleRecordProcess")
-      includeTestsMatching("SpringKafkaTest.shouldTraceRawConsumerInsideListener")
-      includeTestsMatching("SpringKafkaTest.shouldTraceRawConsumerInsideBatchListener")
-      includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaListener")
-      includeTestsMatching("SpringKafkaTest.shouldCreateSpansForBatchReceiveAndProcess")
-      includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaBatchListener")
-    }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
-
-  val testMessagingPreviewNoReceiveTelemetry = register<Test>("testMessagingPreviewNoReceiveTelemetry") {
-    testClassesDirs = sourceSets["testNoReceiveTelemetry"].output.classesDirs
-    classpath = sourceSets["testNoReceiveTelemetry"].runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
   val testSpringDisabled = register<Test>("testSpringDisabled") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -133,8 +97,9 @@ tasks {
       includeTestsMatching("SpringKafkaMockConsumerTest")
     }
     jvmArgs("-Dotel.instrumentation.spring-kafka.enabled=false")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
+
     systemProperty("springDisabled", true)
+    systemProperty("metadataConfig", "otel.instrumentation.spring-kafka.enabled=false")
   }
 
   test {
@@ -146,7 +111,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testExperimental, testMessagingPreview, testBothSemconv, testMessagingPreviewNoReceiveTelemetry, testSpringDisabled)
+    dependsOn(testing.suites, testExperimental, testSpringDisabled)
   }
 }
 
@@ -163,6 +128,7 @@ if (!otelProps.testLatestDeps) {
     listOf(
       testRuntimeClasspath,
       named("testNoReceiveTelemetryRuntimeClasspath"),
+      named("testAsyncAcksRuntimeClasspath"),
     )
       .forEach {
         it.configure {

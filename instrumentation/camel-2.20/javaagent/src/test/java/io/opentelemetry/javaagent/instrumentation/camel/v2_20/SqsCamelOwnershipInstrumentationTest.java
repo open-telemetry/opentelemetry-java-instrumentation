@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -16,7 +15,6 @@ import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.sun.net.httpserver.HttpServer;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -52,8 +50,7 @@ class SqsCamelOwnershipInstrumentationTest {
 
   @Test
   void selectsCamelTraversalWithoutSuppressingOtherResponses() throws Exception {
-    HttpServer server =
-        HttpServer.create(new InetSocketAddress("localhost", PortUtils.findOpenPort()), 0);
+    HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
     cleanup.deferCleanup(() -> server.stop(0));
     server.createContext(
         "/",
@@ -96,7 +93,7 @@ class SqsCamelOwnershipInstrumentationTest {
     assertThat(testing.spans())
         .filteredOn(
             span -> span.getName().equals("process test") || span.getName().equals("test process"))
-        .hasSize(emitStableMessagingSemconv() && !CAMEL_DISABLED && !ADAPTER_DISABLED ? 1 : 2);
+        .hasSize(!CAMEL_DISABLED && !ADAPTER_DISABLED ? 1 : 2);
     assertThat(testing.spans())
         .filteredOn(span -> span.getName().equals("nested"))
         .singleElement()

@@ -15,7 +15,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -36,11 +35,7 @@ import org.springframework.data.repository.core.support.RepositoryProxyPostProce
 public class SpringDataInstrumentationModule extends InstrumentationModule {
 
   public SpringDataInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "spring-data-1.8" : "spring-data",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-data"}
-            : new String[] {"spring-data-1.8"});
+    super("spring-data-1.8", "spring-data");
   }
 
   @Override
@@ -78,13 +73,6 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
       implements RepositoryProxyPostProcessor {
     public static final RepositoryProxyPostProcessor INSTANCE =
         new InterceptingRepositoryProxyPostProcessor();
-
-    // DQH - TODO: Support older versions?
-    // The signature of postProcess changed to add RepositoryInformation in
-    // spring-data-commons 1.9.0
-    // public void postProcess(final ProxyFactory factory) {
-    //   factory.addAdvice(0, RepositoryInterceptor.INSTANCE);
-    // }
 
     @Override
     public void postProcess(ProxyFactory factory, RepositoryInformation repositoryInformation) {

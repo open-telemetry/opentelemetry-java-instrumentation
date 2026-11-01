@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableServicePeerSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.emitPreviewServicePeerSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAMESPACE;
 import static java.util.Arrays.asList;
@@ -38,6 +38,7 @@ class ServicePeerResolverTest {
           mapping("1.2.3.4", "ipSvc", "ipNs"),
           mapping("1.2.3.4/api", "ipApiSvc", null),
           mapping("1.2.3.4:8080/api", "ipPortApi", "ipPortApiNs"),
+          mapping("[::1]:8080", "ipv6PortSvc", null),
           mapping("nsonly.com", null, "nsOnly"));
 
   @ParameterizedTest
@@ -80,7 +81,10 @@ class ServicePeerResolverTest {
         // mismatch, falls back to host-only
         Arguments.of("1.2.3.4", 8080, null, "ipSvc", "ipNs"),
         // path-only matcher rejects when query port differs from matcher port
-        Arguments.of("1.2.3.4", 9000, "/api", "ipSvc", "ipNs"));
+        Arguments.of("1.2.3.4", 9000, "/api", "ipSvc", "ipNs"),
+        // bracketed IPv6 mapping matches the IPv6 address and port
+        Arguments.of("::1", 8080, null, "ipv6PortSvc", null),
+        Arguments.of("::1", 9090, null, null, null));
   }
 
   @Test
@@ -177,7 +181,7 @@ class ServicePeerResolverTest {
   }
 
   private static void assertNamespace(@Nullable String expected, Attributes attrs) {
-    if (emitStableServicePeerSemconv()) {
+    if (emitPreviewServicePeerSemconv()) {
       if (expected != null) {
         assertThat(attrs.get(SERVICE_PEER_NAMESPACE)).isEqualTo(expected);
       } else {
@@ -192,7 +196,9 @@ class ServicePeerResolverTest {
   private static ServicePeerResolver createResolver(DeclarativeConfigProperties... entries) {
     ExtendedOpenTelemetry otel = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
+    when(otel.getGeneralInstrumentationConfig()).thenReturn(DeclarativeConfigProperties.empty());
     when(otel.getInstrumentationConfig("common")).thenReturn(commonConfig);
+    when(commonConfig.get("semconv_stability")).thenReturn(DeclarativeConfigProperties.empty());
 
     List<DeclarativeConfigProperties> entryList = asList(entries);
     when(commonConfig.getStructuredList("service_peer_mapping", emptyList())).thenReturn(entryList);

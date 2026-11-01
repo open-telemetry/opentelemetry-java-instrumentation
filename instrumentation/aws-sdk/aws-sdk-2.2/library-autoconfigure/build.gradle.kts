@@ -46,22 +46,7 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
-  val testRdsDataStableSemconv = register<Test>("testRdsDataStableSemconv") {
-    val testRdsDataSourceSet = sourceSets["testRdsData"]
-    testClassesDirs = testRdsDataSourceSet.output.classesDirs
-    classpath = testRdsDataSourceSet.runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
   check {
-    dependsOn(testing.suites, testStableSemconv, testRdsDataStableSemconv)
+    dependsOn(testing.suites)
   }
 }

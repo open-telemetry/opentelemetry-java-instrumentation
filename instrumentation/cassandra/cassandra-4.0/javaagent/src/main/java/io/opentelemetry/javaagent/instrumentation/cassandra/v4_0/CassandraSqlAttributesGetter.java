@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraEndPoints.isDefaultEndPoint;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
@@ -75,28 +74,15 @@ final class CassandraSqlAttributesGetter
     if (executionInfo == null) {
       return null;
     }
-    if (!emitStableDatabaseSemconv()) {
-      return getLegacyNetworkPeer(executionInfo);
-    }
     InetSocketAddress peer = CassandraResponsePeers.getExecutionInfoPeer(executionInfo);
     if (peer != null) {
       return peer;
     }
-    return getStableNetworkPeerFallback(executionInfo);
+    return getNetworkPeerFallback(executionInfo);
   }
 
   @Nullable
-  private static InetSocketAddress getLegacyNetworkPeer(ExecutionInfo executionInfo) {
-    Node coordinator = executionInfo.getCoordinator();
-    if (coordinator == null) {
-      return null;
-    }
-    SocketAddress address = coordinator.getEndPoint().resolve();
-    return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
-  }
-
-  @Nullable
-  private static InetSocketAddress getStableNetworkPeerFallback(ExecutionInfo executionInfo) {
+  private static InetSocketAddress getNetworkPeerFallback(ExecutionInfo executionInfo) {
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator == null) {
       return null;

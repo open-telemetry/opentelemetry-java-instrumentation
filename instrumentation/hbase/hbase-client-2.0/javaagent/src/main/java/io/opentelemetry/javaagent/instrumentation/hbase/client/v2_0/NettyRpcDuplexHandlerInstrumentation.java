@@ -39,7 +39,7 @@ class NettyRpcDuplexHandlerInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class WriteAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.Argument(0) ChannelHandlerContext context, @Advice.Argument(1) Object message) {
       if (OpenTelemetryCallUtil.isCall(message)) {

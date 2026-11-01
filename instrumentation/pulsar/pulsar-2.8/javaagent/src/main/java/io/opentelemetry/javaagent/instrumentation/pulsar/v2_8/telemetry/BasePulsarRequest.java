@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.UrlData;
 import javax.annotation.Nullable;
 import org.apache.pulsar.common.naming.TopicName;
@@ -27,17 +25,12 @@ public class BasePulsarRequest {
   }
 
   /**
-   * Returns the value to use for {@code messaging.destination.name}. Under the stable messaging
-   * semantic conventions this is the fully qualified topic name without the {@code -partition-N}
-   * suffix, e.g. {@code persistent://public/default/my-topic}. The partition is modeled separately,
-   * in {@code messaging.destination.partition.id}, which is defined as being unique within the
-   * destination name, so the destination name must not embed it. Under the old semantic conventions
-   * the topic name is reported as is.
+   * Returns the value to use for {@code messaging.destination.name}, the fully qualified topic name
+   * without the {@code -partition-N} suffix, e.g. {@code persistent://public/default/my-topic}. The
+   * partition is modeled separately, in {@code messaging.destination.partition.id}, which is
+   * defined as being unique within the destination name, so the destination name must not embed it.
    */
   static String destination(String topicName) {
-    if (!emitStableMessagingSemconv()) {
-      return topicName;
-    }
     // A producer can be created with a short topic name while a consumer always sees the fully
     // qualified form, so expanding here lets producer and consumer spans for the same topic agree
     // on the destination name.

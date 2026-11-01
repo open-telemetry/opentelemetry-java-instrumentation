@@ -9,9 +9,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
+import static java.util.Collections.singletonMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
@@ -20,6 +20,8 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -74,7 +76,7 @@ abstract class KafkaStreamsBaseTest {
 
     // create test topic
     try (AdminClient adminClient =
-        AdminClient.create(ImmutableMap.of("bootstrap.servers", kafka.getBootstrapServers()))) {
+        AdminClient.create(singletonMap("bootstrap.servers", kafka.getBootstrapServers()))) {
       adminClient
           .createTopics(
               asList(
@@ -86,22 +88,14 @@ abstract class KafkaStreamsBaseTest {
 
     producer = new KafkaProducer<>(producerProps(kafka.getBootstrapServers()));
     cleanup.deferAfterAll(producer);
-    Map<String, Object> consumerProps =
-        ImmutableMap.of(
-            "bootstrap.servers",
-            kafka.getBootstrapServers(),
-            "group.id",
-            "test",
-            "enable.auto.commit",
-            "true",
-            "auto.commit.interval.ms",
-            "10",
-            "session.timeout.ms",
-            "30000",
-            "key.deserializer",
-            IntegerDeserializer.class,
-            "value.deserializer",
-            StringDeserializer.class);
+    Map<String, Object> consumerProps = new HashMap<>();
+    consumerProps.put("bootstrap.servers", kafka.getBootstrapServers());
+    consumerProps.put("group.id", "test");
+    consumerProps.put("enable.auto.commit", "true");
+    consumerProps.put("auto.commit.interval.ms", "10");
+    consumerProps.put("session.timeout.ms", "30000");
+    consumerProps.put("key.deserializer", IntegerDeserializer.class);
+    consumerProps.put("value.deserializer", StringDeserializer.class);
     consumer = new KafkaConsumer<>(consumerProps);
     cleanup.deferAfterAll(consumer);
     consumer.subscribe(
@@ -119,21 +113,15 @@ abstract class KafkaStreamsBaseTest {
 
   static Map<String, Object> producerProps(String servers) {
     // values copied from spring's KafkaTestUtils
-    return ImmutableMap.of(
-        "bootstrap.servers",
-        servers,
-        "retries",
-        0,
-        "batch.size",
-        "16384",
-        "linger.ms",
-        1,
-        "buffer.memory",
-        "33554432",
-        "key.serializer",
-        IntegerSerializer.class,
-        "value.serializer",
-        StringSerializer.class);
+    Map<String, Object> props = new HashMap<>();
+    props.put("bootstrap.servers", servers);
+    props.put("retries", 0);
+    props.put("batch.size", "16384");
+    props.put("linger.ms", 1);
+    props.put("buffer.memory", "33554432");
+    props.put("key.serializer", IntegerSerializer.class);
+    props.put("value.serializer", StringSerializer.class);
+    return Collections.unmodifiableMap(props);
   }
 
   // Kafka's eventual consistency behavior forces us to do a couple of empty poll() calls until it

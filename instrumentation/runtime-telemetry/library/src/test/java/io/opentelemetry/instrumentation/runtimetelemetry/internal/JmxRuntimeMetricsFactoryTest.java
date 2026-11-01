@@ -21,7 +21,7 @@ class JmxRuntimeMetricsFactoryTest {
   void registersOnlySelectedObservables() {
     List<AutoCloseable> observables =
         JmxRuntimeMetricsFactory.buildObservables(
-            false, false, "jvm.class.count"::equals, OpenTelemetry.noop().getMeter("test"));
+            false, "jvm.class.count"::equals, OpenTelemetry.noop().getMeter("test"));
     observables.forEach(cleanup::deferCleanup);
 
     assertThat(observables).hasSize(1);

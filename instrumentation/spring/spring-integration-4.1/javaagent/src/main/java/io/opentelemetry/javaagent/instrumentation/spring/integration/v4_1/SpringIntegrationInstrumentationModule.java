@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -18,11 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class SpringIntegrationInstrumentationModule extends InstrumentationModule {
   public SpringIntegrationInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "spring-integration-4.1" : "spring-integration",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-integration"}
-            : new String[] {"spring-integration-4.1", "spring-integration-core-4.1"});
+    super("spring-integration-4.1", "spring-integration");
   }
 
   @Override

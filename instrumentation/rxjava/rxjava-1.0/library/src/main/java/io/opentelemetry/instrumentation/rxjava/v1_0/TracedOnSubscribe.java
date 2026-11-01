@@ -20,7 +20,7 @@ public final class TracedOnSubscribe<T, REQUEST> implements Observable.OnSubscri
   private final Supplier<REQUEST> requestFactory;
   private final Context parentContext;
 
-  public static <T, REQUEST> TracedOnSubscribe<T, REQUEST> perSubscription(
+  public static <T, REQUEST> Observable.OnSubscribe<T> perSubscription(
       Observable<T> originalObservable,
       Instrumenter<REQUEST, ?> instrumenter,
       Supplier<REQUEST> requestFactory) {
@@ -62,7 +62,8 @@ public final class TracedOnSubscribe<T, REQUEST> implements Observable.OnSubscri
     Context context = instrumenter.start(parentContext, request);
     AtomicReference<Context> contextRef = new AtomicReference<>(context);
     try (Scope ignored = context.makeCurrent()) {
-      delegate.call(new TracedSubscriber<>(subscriber, instrumenter, contextRef, request));
+      delegate.call(
+          new TracedSubscriber<>(subscriber, instrumenter, contextRef, request, parentContext));
     } catch (Throwable t) {
       Context spanContext = contextRef.getAndSet(null);
       if (spanContext != null) {

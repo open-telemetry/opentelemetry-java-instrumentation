@@ -18,7 +18,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRequestContext;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisRequestContext;
 import java.net.Socket;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;

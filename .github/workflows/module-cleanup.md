@@ -130,6 +130,7 @@ jobs:
         with:
           client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
           private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          repositories: opentelemetry-java-instrumentation
           permission-contents: write
           permission-pull-requests: write
       - uses: actions/checkout@v6.0.2

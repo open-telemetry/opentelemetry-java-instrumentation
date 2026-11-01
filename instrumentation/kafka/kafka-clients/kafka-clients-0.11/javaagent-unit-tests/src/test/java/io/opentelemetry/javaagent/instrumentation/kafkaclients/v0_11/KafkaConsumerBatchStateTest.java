@@ -73,6 +73,7 @@ class KafkaConsumerBatchStateTest {
         .isFalse();
   }
 
+  @SuppressWarnings("removal")
   private static ConsumerRecords<String, String> records() {
     TopicPartition partition = new TopicPartition("test", 0);
     return new ConsumerRecords<>(singletonMap(partition, singletonList(record())));

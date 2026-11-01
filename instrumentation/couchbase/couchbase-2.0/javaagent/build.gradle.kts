@@ -52,18 +52,26 @@ dependencies {
   library("com.couchbase.client:java-client:2.0.0")
   compileOnly("com.couchbase.client:core-io:1.6.0")
 
-  testImplementation(project(":instrumentation:couchbase:couchbase-common:testing"))
+  testImplementation("com.couchbase.mock:CouchbaseMock:1.5.19")
 
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
 
-  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:2.+") // see test suite below
   latestDepTestLibrary("com.couchbase.client:java-client:2.5.+") // see test suite below
 }
 
 testing {
   suites {
+    register<JvmTestSuite>("version25Test") {
+      dependencies {
+        implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
+        implementation("com.couchbase.client:java-client:${baseVersion("2.5.0").orLatest("2.5.+")}")
+        implementation(
+          "org.springframework.data:spring-data-couchbase:${baseVersion("2.0.0.RELEASE").orLatest("2.+")}"
+        )
+      }
+    }
     register<JvmTestSuite>("version26Test") {
       dependencies {
         implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
@@ -83,19 +91,6 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-    register<Test>("${suite.name}StableSemconv") {
-      isEnabled = named<Test>(suite.name).get().enabled
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-    }
   }
 
   val experimentalSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
@@ -109,18 +104,23 @@ tasks {
     }
   }
 
-  val version26TestLegacyConfig = register<Test>("version26TestLegacyConfig") {
-    val suite = testing.suites.named<JvmTestSuite>("version26Test").get()
-    isEnabled = named<Test>(suite.name).get().enabled
-    testClassesDirs = suite.sources.output.classesDirs
-    classpath = suite.sources.runtimeClasspath
+  val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
+    val sourceTask = named<Test>("version25Test").get()
+    isEnabled = sourceTask.enabled
+    setJvmArgs(sourceTask.jvmArgs)
+    setSystemProperties(sourceTask.systemProperties)
+    testClassesDirs = sourceTask.testClassesDirs
+    classpath = sourceTask.classpath
 
-    jvmArgs("-Dotel.instrumentation.couchbase.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.couchbase.experimental-span-attributes=true")
+    filter {
+      includeTestsMatching("CouchbaseQuerySanitizationTest")
+    }
+    jvmArgs("-Dotel.instrumentation.couchbase.query-sanitization.enabled=false")
+    systemProperty("testQuerySanitizationEnabled", "false")
   }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites, version26TestLegacyConfig)
+    dependsOn(testing.suites, experimentalSuites, testQuerySanitizationDisabled)
   }
 
   if (otelProps.denyUnsafe) {

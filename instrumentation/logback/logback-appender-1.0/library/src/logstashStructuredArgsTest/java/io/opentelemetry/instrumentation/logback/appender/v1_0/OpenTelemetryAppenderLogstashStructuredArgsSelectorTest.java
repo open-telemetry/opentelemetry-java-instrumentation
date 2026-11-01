@@ -18,22 +18,15 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import java.util.ArrayList;
 import java.util.List;
 import net.logstash.logback.argument.StructuredArguments;
+import net.logstash.logback.marker.Markers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
-
-  private static final String DEPRECATED_LOGSTASH_STRUCTURED_ARGUMENTS_WARNING =
-      "The captureLogstashStructuredArguments setting of the OpenTelemetry appender and the"
-          + " otel.instrumentation.logback-appender.experimental"
-          + ".capture-logstash-structured-arguments property are deprecated and may be removed"
-          + " in the next minor release. Use logstashStructuredArgumentAttributesIncluded,"
-          + " logstashStructuredArgumentAttributesExcluded, or"
-          + " otel.instrumentation.logback-appender.experimental"
-          + ".logstash-structured-argument-attributes.included instead.";
 
   @RegisterExtension
   private static final LibraryInstrumentationExtension testing =
@@ -66,8 +59,8 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
 
   @Test
   void configurationFileSelectorMatchesGlobPatterns() {
-    appender.setLogstashStructuredArgumentAttributesIncluded("key*");
-    appender.setLogstashStructuredArgumentAttributesExcluded("*2");
+    appender.setStructuredAttributesIncluded("key*");
+    appender.setStructuredAttributesExcluded("*2");
 
     log();
 
@@ -78,7 +71,7 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
 
   @Test
   void configurationFileSelectorCapturesEverythingNotExcluded() {
-    appender.setLogstashStructuredArgumentAttributesExcluded("key2,other");
+    appender.setStructuredAttributesExcluded("key2,other");
 
     log();
 
@@ -88,18 +81,23 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
   }
 
   @Test
-  void noSelectorCapturesNothing() {
+  void noSelectorCapturesEverything() {
     log();
 
-    testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), "value1"),
+                equalTo(stringKey("key2"), "value2"),
+                equalTo(stringKey("other"), "value3")));
     assertThat(warnings()).isEmpty();
   }
 
   @Test
   void selectorTakesPrecedenceOverConfigurationFileSelector() {
-    appender.setLogstashStructuredArgumentAttributes(
+    appender.setStructuredAttributes(
         IncludeExclude.builder().setIncluded(singletonList("key1")).build());
-    appender.setLogstashStructuredArgumentAttributesIncluded("key2");
+    appender.setStructuredAttributesIncluded("key2");
 
     log();
 
@@ -109,10 +107,9 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing the deprecated setting
-  void configurationFileSelectorTakesPrecedenceOverDeprecatedSetting() {
-    appender.setLogstashStructuredArgumentAttributesIncluded("key1");
-    appender.setCaptureLogstashStructuredArguments(true);
+  void emptySelectorFallsBackToConfigurationFileSelector() {
+    appender.setStructuredAttributesIncluded("key1");
+    appender.setStructuredAttributes(IncludeExclude.builder().build());
 
     log();
 
@@ -123,9 +120,8 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing the deprecated setting
-  void deprecatedSettingCapturesEverythingWhenEnabled() {
-    appender.setCaptureLogstashStructuredArguments(true);
+  void selectorCapturesEverythingWhenIncluded() {
+    appender.setStructuredAttributes(IncludeExclude.builder().setIncluded("*").build());
 
     log();
 
@@ -135,34 +131,36 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
                 equalTo(stringKey("key1"), "value1"),
                 equalTo(stringKey("key2"), "value2"),
                 equalTo(stringKey("other"), "value3")));
-    assertThat(warnings()).containsExactly(DEPRECATED_LOGSTASH_STRUCTURED_ARGUMENTS_WARNING);
+    assertThat(warnings()).isEmpty();
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing the deprecated setting
-  void deprecatedSettingCapturesNothingWhenDisabled() {
-    appender.setCaptureLogstashStructuredArguments(false);
+  void configurationFileSelectorCapturesNothingWhenEverythingExcluded() {
+    appender.setStructuredAttributesExcluded("*");
 
     log();
 
     testing.waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly());
-    assertThat(warnings()).containsExactly(DEPRECATED_LOGSTASH_STRUCTURED_ARGUMENTS_WARNING);
+    assertThat(warnings()).isEmpty();
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing the deprecated setting
-  void deprecatedSettingWarnsOnlyOnce() {
-    appender.setCaptureLogstashStructuredArguments(true);
+  void emptySelectorCapturesEverything() {
+    appender.setStructuredAttributes(IncludeExclude.builder().build());
 
-    appender.start();
-    appender.stop();
-    appender.start();
+    log();
 
-    assertThat(warnings()).containsExactly(DEPRECATED_LOGSTASH_STRUCTURED_ARGUMENTS_WARNING);
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), "value1"),
+                equalTo(stringKey("key2"), "value2"),
+                equalTo(stringKey("other"), "value3")));
   }
 
   @Test
-  void eventNameIsCapturedWithoutSelector() {
+  void eventNameIsCapturedWhenStructuredAttributesExcluded() {
+    appender.setStructuredAttributesExcluded("*");
     appender.setOpenTelemetry(testing.getOpenTelemetry());
     appender.start();
     logger.addAppender(appender);
@@ -174,6 +172,61 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
 
     testing.waitAndAssertLogRecords(
         logRecord -> logRecord.hasEventName("test.event").hasAttributesSatisfyingExactly());
+  }
+
+  @Test
+  void selectorFiltersAllStructuredSourcesWithoutFilteringMdc() {
+    appender.setStructuredAttributes(
+        IncludeExclude.builder().setIncluded("request-*").setExcluded("*-secret").build());
+    appender.setMdcAttributes(IncludeExclude.builder().setIncluded("mdc-secret").build());
+    appender.setOpenTelemetry(testing.getOpenTelemetry());
+    appender.start();
+    logger.addAppender(appender);
+
+    MDC.put("mdc-secret", "separate");
+    try {
+      logger
+          .atInfo()
+          .addKeyValue("request-kvp", "captured")
+          .addKeyValue("request-kvp-secret", "ignored")
+          .addMarker(Markers.append("request-marker", "captured"))
+          .addMarker(Markers.append("request-marker-secret", "ignored"))
+          .addArgument(StructuredArguments.keyValue("request-argument", "captured"))
+          .addArgument(StructuredArguments.keyValue("request-argument-secret", "ignored"))
+          .log("log message {} {}");
+    } finally {
+      MDC.remove("mdc-secret");
+    }
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("request-kvp"), "captured"),
+                equalTo(stringKey("request-marker"), "captured"),
+                equalTo(stringKey("request-argument"), "captured"),
+                equalTo(stringKey("mdc-secret"), "separate")));
+  }
+
+  @Test
+  void xmlSelectorFiltersAllStructuredSources() {
+    OpenTelemetryAppender.install(testing.getOpenTelemetry());
+    loggerContext
+        .getLogger("structured-selector-xml-test")
+        .atInfo()
+        .addKeyValue("request-kvp", "captured")
+        .addKeyValue("request-kvp-secret", "ignored")
+        .addMarker(Markers.append("request-marker", "captured"))
+        .addMarker(Markers.append("request-marker-secret", "ignored"))
+        .addArgument(StructuredArguments.keyValue("request-argument", "captured"))
+        .addArgument(StructuredArguments.keyValue("request-argument-secret", "ignored"))
+        .log("log message {} {}");
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("request-kvp"), "captured"),
+                equalTo(stringKey("request-marker"), "captured"),
+                equalTo(stringKey("request-argument"), "captured")));
   }
 
   private void log() {

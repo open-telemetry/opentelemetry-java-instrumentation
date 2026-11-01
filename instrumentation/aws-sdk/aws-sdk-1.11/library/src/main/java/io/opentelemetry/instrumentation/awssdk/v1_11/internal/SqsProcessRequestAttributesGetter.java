@@ -18,7 +18,7 @@ class SqsProcessRequestAttributesGetter
     implements MessagingAttributesGetter<SqsProcessRequest, Response<?>> {
 
   // copied from MessagingIncubatingAttributes.MessagingSystemIncubatingValues
-  private static final String AWS_SQS = "aws_sqs";
+  private static final String AWS_SQS = "aws.sqs";
 
   @Override
   public String getSystem(SqsProcessRequest request) {
@@ -55,18 +55,6 @@ class SqsProcessRequestAttributesGetter
   @Override
   @Nullable
   public String getConversationId(SqsProcessRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageBodySize(SqsProcessRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(SqsProcessRequest request) {
     return null;
   }
 

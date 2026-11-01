@@ -6,8 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.ExperimentalHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -15,6 +13,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
@@ -23,10 +24,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -37,11 +34,12 @@ import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import com.google.common.collect.ImmutableMap;
 import io.lettuce.core.ConnectionFuture;
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.ScriptOutputType;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -54,6 +52,8 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
@@ -78,11 +78,15 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   private int incorrectPort;
   private String dbUriNonExistent;
 
-  private static final ImmutableMap<String, String> testHashMap =
-      ImmutableMap.of(
-          "firstname", "John",
-          "lastname", "Doe",
-          "age", "53");
+  private static final Map<String, String> TEST_HASH_MAP;
+
+  static {
+    Map<String, String> map = new LinkedHashMap<>();
+    map.put("firstname", "John");
+    map.put("lastname", "Doe");
+    map.put("age", "53");
+    TEST_HASH_MAP = Collections.unmodifiableMap(map);
+  }
 
   private static final int NON_DEFAULT_DB_INDEX = 1;
 
@@ -124,7 +128,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     int expectedTraceCount = lettuce5 ? 2 : 1;
     if (connectionTelemetryEnabled()) {
       expectedTraceCount += 2;
-      if (lettuce5 && emitStableDatabaseSemconv()) {
+      if (lettuce5) {
         // SELECT is a child of the second CONNECT span instead of starting another trace.
         expectedTraceCount--;
       }
@@ -168,10 +172,9 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(DB_REDIS_DATABASE_INDEX, null),
-                            equalTo(maybeStablePeerService(), "test-peer-service"))));
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
   }
 
   @SuppressWarnings("deprecation") // RedisURI constructor
@@ -205,10 +208,9 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, incorrectPort),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(DB_REDIS_DATABASE_INDEX, null),
-                            equalTo(maybeStablePeerService(), "test-peer-service"))
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
@@ -238,19 +240,124 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                    span.hasName("SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))));
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "SET TESTSETKEY ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"))));
+  }
+
+  @Test
+  void testCommandServerErrorUsesRedisErrorType() throws Exception {
+    connection.sync().hmset("TESTHM", TEST_HASH_MAP);
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    Throwable thrown = catchThrowable(() -> asyncCommands.get("TESTHM").get(10, SECONDS));
+
+    assertThat(thrown)
+        .isInstanceOf(ExecutionException.class)
+        .hasCauseInstanceOf(RedisCommandExecutionException.class);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "GET TESTHM"),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(ERROR_TYPE, "WRONGTYPE"))));
+
+    assertErrorTypeMetric("io.opentelemetry.lettuce-5.0", "WRONGTYPE", 1);
+  }
+
+  @Test
+  void testTransactionServerErrorUsesRedisErrorType() throws Exception {
+    asyncCommands.multi().get(10, SECONDS);
+    RedisFuture<Object> failedCommand =
+        asyncCommands.eval(
+            "return redis.error_reply('ERR transaction failure')", ScriptOutputType.VALUE);
+    assertThat(asyncCommands.exec().get(10, SECONDS)).isNotNull();
+
+    Throwable error = catchThrowable(() -> failedCommand.get(10, SECONDS));
+    assertThat(error)
+        .isInstanceOf(ExecutionException.class)
+        .hasCauseInstanceOf(RedisCommandExecutionException.class);
+    assertThat(error.getCause()).hasMessage("ERR transaction failure");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("MULTI " + host + ":" + port).hasStatus(StatusData.unset())),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("EVAL " + host + ":" + port)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, "ERR"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("EXEC " + host + ":" + port).hasStatus(StatusData.unset())));
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.lettuce-5.0",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.satisfies(
+                            data ->
+                                assertThat(data.getPoints())
+                                    .filteredOn(
+                                        point -> point.getAttributes().get(ERROR_TYPE) != null)
+                                    .singleElement()
+                                    .satisfies(
+                                        point -> {
+                                          assertThat(point.getCount()).isEqualTo(1);
+                                          assertThat(point.getAttributes().get(ERROR_TYPE))
+                                              .isEqualTo("ERR");
+                                        }))));
+  }
+
+  @Test
+  void testNonAsciiServerErrorUsesExceptionTypeFallback() throws Exception {
+    Throwable error =
+        catchThrowable(
+            () ->
+                asyncCommands
+                    .eval(
+                        "return redis.error_reply('\\195\\169chec\\228\\184\\173 details')",
+                        ScriptOutputType.VALUE)
+                    .get(10, SECONDS));
+    assertThat(error)
+        .isInstanceOf(ExecutionException.class)
+        .hasCauseInstanceOf(RedisCommandExecutionException.class);
+
+    String exceptionType = RedisCommandExecutionException.class.getName();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("EVAL " + host + ":" + port)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, exceptionType))));
+    assertErrorTypeMetric("io.opentelemetry.lettuce-5.0", exceptionType, 1);
   }
 
   @Test
@@ -264,40 +371,31 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName(
-                              emitStableDatabaseSemconv()
-                                  ? "SELECT " + host + ":" + port
-                                  : "SELECT")
+                      span.hasName("SELECT " + host + ":" + port)
                           .hasKind(SpanKind.CLIENT)
                           .hasAttributesSatisfyingExactly(
                               equalTo(SERVER_ADDRESS, host),
                               equalTo(SERVER_PORT, port),
-                              equalTo(
-                                  NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                              equalTo(
-                                  NETWORK_PEER_PORT,
-                                  emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                              equalTo(maybeStable(DB_SYSTEM), REDIS),
-                              equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                              equalTo(maybeStable(DB_STATEMENT), "SELECT 1"),
-                              equalTo(maybeStable(DB_OPERATION), "SELECT"))),
+                              equalTo(NETWORK_PEER_ADDRESS, ip),
+                              equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                              equalTo(DB_SYSTEM_NAME, REDIS),
+                              equalTo(DB_NAMESPACE, "0"),
+                              equalTo(DB_QUERY_TEXT, "SELECT 1"),
+                              equalTo(DB_OPERATION_NAME, "SELECT"))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
-                      span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                      span.hasName("SET " + host + ":" + port)
                           .hasKind(SpanKind.CLIENT)
                           .hasAttributesSatisfyingExactly(
                               equalTo(SERVER_ADDRESS, host),
                               equalTo(SERVER_PORT, port),
-                              equalTo(
-                                  NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                              equalTo(
-                                  NETWORK_PEER_PORT,
-                                  emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                              equalTo(maybeStable(DB_SYSTEM), REDIS),
-                              equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                              equalTo(maybeStable(DB_STATEMENT), "SET SELECT_TEST_KEY ?"),
-                              equalTo(maybeStable(DB_OPERATION), "SET"))));
+                              equalTo(NETWORK_PEER_ADDRESS, ip),
+                              equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                              equalTo(DB_SYSTEM_NAME, REDIS),
+                              equalTo(DB_NAMESPACE, "0"),
+                              equalTo(DB_QUERY_TEXT, "SET SELECT_TEST_KEY ?"),
+                              equalTo(DB_OPERATION_NAME, "SET"))));
     } finally {
       connection.sync().select(0);
       testing.waitForTraces(3);
@@ -328,20 +426,18 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
+                    span.hasName("GET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY"),
-                            equalTo(maybeStable(DB_OPERATION), "GET")),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "GET TESTKEY"),
+                            equalTo(DB_OPERATION_NAME, "GET")),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -392,20 +488,18 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "GET " + host + ":" + port : "GET")
+                    span.hasName("GET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY"),
-                            equalTo(maybeStable(DB_OPERATION), "GET")),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "GET NON_EXISTENT_KEY"),
+                            equalTo(DB_OPERATION_NAME, "GET")),
                 span ->
                     span.hasName("callback1")
                         .hasKind(SpanKind.INTERNAL)
@@ -442,23 +536,18 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "RANDOMKEY " + host + ":" + port
-                                : "RANDOMKEY")
+                    span.hasName("RANDOMKEY " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
-                            equalTo(maybeStable(DB_OPERATION), "RANDOMKEY")),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "RANDOMKEY"),
+                            equalTo(DB_OPERATION_NAME, "RANDOMKEY")),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -470,7 +559,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
       throws ExecutionException, InterruptedException, TimeoutException {
     CompletableFuture<Map<String, String>> future = new CompletableFuture<>();
 
-    RedisFuture<String> hmsetFuture = asyncCommands.hmset("TESTHM", testHashMap);
+    RedisFuture<String> hmsetFuture = asyncCommands.hmset("TESTHM", TEST_HASH_MAP);
     hmsetFuture.thenApplyAsync(
         setResult -> {
           // Wait for 'hmset' trace to get written
@@ -493,47 +582,37 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
           return null;
         });
 
-    assertThat(future.get(10, SECONDS)).isEqualTo(testHashMap);
+    assertThat(future.get(10, SECONDS)).isEqualTo(TEST_HASH_MAP);
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "HMSET " + host + ":" + port : "HMSET")
+                    span.hasName("HMSET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                "HMSET TESTHM firstname ? lastname ? age ?"),
-                            equalTo(maybeStable(DB_OPERATION), "HMSET"))),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "HMSET TESTHM firstname ? lastname ? age ?"),
+                            equalTo(DB_OPERATION_NAME, "HMSET"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "HGETALL " + host + ":" + port
-                                : "HGETALL")
+                    span.hasName("HGETALL " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM"),
-                            equalTo(maybeStable(DB_OPERATION), "HGETALL"))));
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "HGETALL TESTHM"),
+                            equalTo(DB_OPERATION_NAME, "HGETALL"))));
   }
 
   @Test
@@ -569,24 +648,20 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "DEL " + host + ":" + port : "DEL")
+                    span.hasName("DEL " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
                         .hasException(new IllegalStateException("TestException"))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, null),
-                            equalTo(NETWORK_PEER_PORT, null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(maybeStable(DB_STATEMENT), "DEL key1 key2"),
-                            equalTo(maybeStable(DB_OPERATION), "DEL"),
-                            equalTo(
-                                ERROR_TYPE,
-                                emitStableDatabaseSemconv()
-                                    ? "java.lang.IllegalStateException"
-                                    : null))));
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "DEL key1 key2"),
+                            equalTo(DB_OPERATION_NAME, "DEL"),
+                            equalTo(ERROR_TYPE, "java.lang.IllegalStateException"))));
+
+    assertErrorTypeMetric("io.opentelemetry.lettuce-5.0", "java.lang.IllegalStateException", 1);
   }
 
   @Test
@@ -620,18 +695,16 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasNoParent()
                         .hasTotalAttributeCount(0),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SADD " + host + ":" + port : "SADD")
+                    span.hasName("SADD " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, null),
-                            equalTo(NETWORK_PEER_PORT, null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(maybeStable(DB_STATEMENT), "SADD SKEY ? ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SADD"),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "SADD SKEY ? ?"),
+                            equalTo(DB_OPERATION_NAME, "SADD"),
                             equalTo(booleanKey("lettuce.command.cancelled"), experimental(true))),
                 span ->
                     span.hasName("callback")
@@ -653,7 +726,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     for (RedisFuture<?> future : futures) {
       Throwable thrown = catchThrowable(() -> future.get(10, SECONDS));
       if (thrown != null) {
-        assertThat(thrown.getCause().getClass().getName()).isEqualTo(scenario.errorType);
+        assertThat(thrown.getCause().getClass().getName()).isEqualTo(scenario.exceptionType);
       }
     }
 
@@ -667,28 +740,40 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? scenario.operationName + " " + host + ":" + port
-                                : scenario.operationName)
+                    span.hasName(scenario.operationName + " " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(maybeStable(DB_STATEMENT), scenario.queryText),
-                            equalTo(maybeStable(DB_OPERATION), scenario.operationName),
-                            equalTo(
-                                DB_OPERATION_BATCH_SIZE,
-                                emitStableDatabaseSemconv() ? scenario.batchSize : null),
-                            equalTo(
-                                ERROR_TYPE,
-                                emitStableDatabaseSemconv() ? scenario.errorType : null))));
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, scenario.queryText),
+                            equalTo(DB_OPERATION_NAME, scenario.operationName),
+                            equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                            equalTo(ERROR_TYPE, scenario.errorType))));
+
+    assertErrorTypeMetric("io.opentelemetry.lettuce-5.0", scenario.errorType, 1);
+  }
+
+  private static void assertErrorTypeMetric(
+      String instrumentationName, String errorType, long count) {
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        metrics ->
+            metrics
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasCount(count)
+                                    .hasAttributesSatisfying(
+                                        attributes ->
+                                            assertThat(attributes.get(ERROR_TYPE))
+                                                .isEqualTo(errorType)))));
   }
 
   @Test
@@ -699,23 +784,17 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + host + ":" + port : "SET")
+                    span.hasName("SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(
-                                DB_NAMESPACE,
-                                emitStableDatabaseSemconv()
-                                    ? String.valueOf(NON_DEFAULT_DB_INDEX)
-                                    : null),
-                            equalTo(maybeStable(DB_STATEMENT), "SET NONDEFAULTKEY ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))));
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, String.valueOf(NON_DEFAULT_DB_INDEX)),
+                            equalTo(DB_QUERY_TEXT, "SET NONDEFAULTKEY ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"))));
   }
 
   @Test
@@ -736,33 +815,19 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "PIPELINE SET " + host + ":" + port
-                                : "PIPELINE SET")
+                    span.hasName("PIPELINE SET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, String.valueOf(NON_DEFAULT_DB_INDEX)),
                             equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(
-                                DB_NAMESPACE,
-                                emitStableDatabaseSemconv()
-                                    ? String.valueOf(NON_DEFAULT_DB_INDEX)
-                                    : null),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                emitStableDatabaseSemconv()
-                                    ? "SET NONDEFAULTBATCH1 ?; SET NONDEFAULTBATCH2 ?"
-                                    : "SET NONDEFAULTBATCH1 ?;SET NONDEFAULTBATCH2 ?"),
-                            equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
-                            equalTo(
-                                DB_OPERATION_BATCH_SIZE,
-                                emitStableDatabaseSemconv() ? 2L : null))));
+                                DB_QUERY_TEXT, "SET NONDEFAULTBATCH1 ?; SET NONDEFAULTBATCH2 ?"),
+                            equalTo(DB_OPERATION_NAME, "PIPELINE SET"),
+                            equalTo(DB_OPERATION_BATCH_SIZE, 2L))));
   }
 
   @Test
@@ -789,23 +854,17 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
               }
               assertThat(selectSpans).hasSize(1);
               assertThat(selectSpans.get(0))
-                  .hasName(emitStableDatabaseSemconv() ? "SELECT " + host + ":" + port : "SELECT")
+                  .hasName("SELECT " + host + ":" + port)
                   .hasKind(SpanKind.CLIENT)
                   .hasAttributesSatisfyingExactly(
                       equalTo(SERVER_ADDRESS, host),
                       equalTo(SERVER_PORT, port),
-                      equalTo(NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? ip : null),
-                      equalTo(
-                          NETWORK_PEER_PORT,
-                          emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                      equalTo(maybeStable(DB_SYSTEM), REDIS),
-                      equalTo(
-                          DB_NAMESPACE,
-                          emitStableDatabaseSemconv()
-                              ? String.valueOf(NON_DEFAULT_DB_INDEX)
-                              : null),
-                      equalTo(maybeStable(DB_STATEMENT), "SELECT " + NON_DEFAULT_DB_INDEX),
-                      equalTo(maybeStable(DB_OPERATION), "SELECT"));
+                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                      equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                      equalTo(DB_SYSTEM_NAME, REDIS),
+                      equalTo(DB_NAMESPACE, String.valueOf(NON_DEFAULT_DB_INDEX)),
+                      equalTo(DB_QUERY_TEXT, "SELECT " + NON_DEFAULT_DB_INDEX),
+                      equalTo(DB_OPERATION_NAME, "SELECT"));
             });
   }
 
@@ -832,10 +891,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 .addCommand(commands -> commands.set("batch1", "v1"))
                 .addCommand(commands -> commands.set("batch2", "v2"))
                 .operationName("PIPELINE SET")
-                .queryText(
-                    emitStableDatabaseSemconv()
-                        ? "SET batch1 ?; SET batch2 ?"
-                        : "SET batch1 ?;SET batch2 ?")
+                .queryText("SET batch1 ?; SET batch2 ?")
                 .batchSize(2)
                 .build()),
         argumentSet(
@@ -844,10 +900,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 .addCommand(commands -> commands.set("batch1", "v1"))
                 .addCommand(commands -> commands.get("batch1"))
                 .operationName("PIPELINE")
-                .queryText(
-                    emitStableDatabaseSemconv()
-                        ? "SET batch1 ?; GET batch1"
-                        : "SET batch1 ?;GET batch1")
+                .queryText("SET batch1 ?; GET batch1")
                 .batchSize(2)
                 .build()),
         argumentSet(
@@ -856,12 +909,10 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                 .addCommand(commands -> commands.configSet("not-a-real-config", "1"))
                 .addCommand(commands -> commands.set("batch-after-error", "v1"))
                 .operationName("PIPELINE")
-                .queryText(
-                    emitStableDatabaseSemconv()
-                        ? "CONFIG SET not-a-real-config ?; SET batch-after-error ?"
-                        : "CONFIG SET not-a-real-config ?;SET batch-after-error ?")
+                .queryText("CONFIG SET not-a-real-config ?; SET batch-after-error ?")
                 .batchSize(2)
-                .errorType("io.lettuce.core.RedisCommandExecutionException")
+                .exceptionType("io.lettuce.core.RedisCommandExecutionException")
+                .errorType("ERR")
                 .build()));
   }
 
@@ -870,6 +921,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
     private final String operationName;
     private final String queryText;
     private final Long batchSize;
+    private final String exceptionType;
     private final String errorType;
 
     private BatchScenario(Builder builder) {
@@ -877,6 +929,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
       this.operationName = builder.operationName;
       this.queryText = builder.queryText;
       this.batchSize = builder.batchSize;
+      this.exceptionType = builder.exceptionType;
       this.errorType = builder.errorType;
     }
 
@@ -893,6 +946,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
       private String operationName;
       private String queryText;
       private Long batchSize;
+      private String exceptionType;
       private String errorType;
 
       private Builder addCommand(BatchCommand command) {
@@ -920,6 +974,11 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
         return this;
       }
 
+      private Builder exceptionType(String exceptionType) {
+        this.exceptionType = exceptionType;
+        return this;
+      }
+
       private BatchScenario build() {
         return new BatchScenario(this);
       }
@@ -941,20 +1000,15 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName(
-                                  emitStableDatabaseSemconv()
-                                      ? "DEBUG " + host + ":" + port
-                                      : "DEBUG")
+                          span.hasName("DEBUG " + host + ":" + port)
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   equalTo(SERVER_ADDRESS, host),
                                   equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), REDIS),
-                                  equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                                  equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT"),
-                                  equalTo(maybeStable(DB_OPERATION), "DEBUG"),
-                                  equalTo(NETWORK_PEER_ADDRESS, null),
-                                  equalTo(NETWORK_PEER_PORT, null))));
+                                  equalTo(DB_SYSTEM_NAME, REDIS),
+                                  equalTo(DB_NAMESPACE, "0"),
+                                  equalTo(DB_QUERY_TEXT, "DEBUG SEGFAULT"),
+                                  equalTo(DB_OPERATION_NAME, "DEBUG"))));
         });
   }
 
@@ -969,20 +1023,15 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasName(
-                                  emitStableDatabaseSemconv()
-                                      ? "SHUTDOWN " + host + ":" + port
-                                      : "SHUTDOWN")
+                          span.hasName("SHUTDOWN " + host + ":" + port)
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   equalTo(SERVER_ADDRESS, host),
                                   equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), REDIS),
-                                  equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                                  equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"),
-                                  equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
-                                  equalTo(NETWORK_PEER_ADDRESS, null),
-                                  equalTo(NETWORK_PEER_PORT, null))));
+                                  equalTo(DB_SYSTEM_NAME, REDIS),
+                                  equalTo(DB_NAMESPACE, "0"),
+                                  equalTo(DB_QUERY_TEXT, "SHUTDOWN NOSAVE"),
+                                  equalTo(DB_OPERATION_NAME, "SHUTDOWN"))));
         });
   }
 }

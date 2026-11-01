@@ -14,6 +14,17 @@ import org.junit.jupiter.api.Test;
 
 class SupportabilityMetricsTest {
   @Test
+  void reportsSqlSanitizerCacheMisses() {
+    List<String> reports = new ArrayList<>();
+    SupportabilityMetrics metrics = new SupportabilityMetrics(true, reports::add);
+
+    metrics.incrementCounter(SupportabilityMetrics.CounterNames.SQL_SANITIZER_CACHE_MISS);
+    metrics.report();
+
+    assertThat(reports).containsExactly("Counter 'sql sanitizer cache miss' : 1");
+  }
+
+  @Test
   void disabled() {
     List<String> reports = new ArrayList<>();
     SupportabilityMetrics metrics = new SupportabilityMetrics(false, reports::add);

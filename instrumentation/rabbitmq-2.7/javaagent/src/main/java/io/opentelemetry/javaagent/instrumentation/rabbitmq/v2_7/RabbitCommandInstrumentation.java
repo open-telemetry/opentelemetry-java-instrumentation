@@ -12,8 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.rabbitmq.client.Command;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -53,7 +53,7 @@ class RabbitCommandInstrumentation implements TypeInstrumentation {
 
       Context context = CURRENT_RABBIT_CONTEXT.get();
       if (context != null && command.getMethod() != null) {
-        RabbitInstrumenterHelper.onCommand(Java8BytecodeBridge.spanFromContext(context), command);
+        RabbitInstrumenterHelper.onCommand(Span.fromContext(context), command);
       }
     }
   }

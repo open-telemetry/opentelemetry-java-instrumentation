@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.jaxrs;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionInfixAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
@@ -15,9 +16,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,9 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServerUsingTest<SERVER> {
+
+  private static final boolean CONTROLLER_TELEMETRY_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.common.controller-telemetry.enabled");
 
   protected static class TestResponse {
     private final String text;
@@ -129,26 +133,33 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
     String expectedServerSpanName = serverRoute == null ? method : method + " " + serverRoute;
     testing()
         .waitAndAssertTraces(
-            trace ->
+            trace -> {
+              Consumer<SpanDataAssert> serverSpan =
+                  span -> {
+                    span.hasName(expectedServerSpanName).hasKind(SpanKind.SERVER);
+                    if (runsOnServer() && abortNormal) {
+                      span.hasStatus(StatusData.unset());
+                    }
+                  };
+              if (CONTROLLER_TELEMETRY_ENABLED) {
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName(expectedServerSpanName).hasKind(SpanKind.SERVER);
-                      if (runsOnServer() && abortNormal) {
-                        span.hasStatus(StatusData.unset());
-                      }
-                    },
+                    serverSpan,
                     span -> {
                       span.hasName(controllerName).hasParent(trace.getSpan(0));
-                      List<AttributeAssertion> assertions;
-                      if (abortPrematch) {
-                        assertions =
-                            codeFunctionInfixAssertions(
-                                ".JaxRsFilterTest$PrematchRequestFilter", "filter");
-                      } else {
-                        assertions = codeFunctionInfixAssertions(".Resource$Test", "hello");
-                      }
-                      span.hasAttributesSatisfyingExactly(assertions);
-                    }));
+                      span.hasAttributesSatisfyingExactly(
+                          satisfies(
+                              CODE_FUNCTION_NAME,
+                              val ->
+                                  val.contains(
+                                          abortPrematch
+                                              ? ".JaxRsFilterTest$PrematchRequestFilter"
+                                              : ".Resource$Test")
+                                      .endsWith(abortPrematch ? ".filter" : ".hello")));
+                    });
+              } else {
+                trace.hasSpansSatisfyingExactly(serverSpan);
+              }
+            });
   }
 
   @Test
@@ -163,24 +174,31 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
 
     testing()
         .waitAndAssertTraces(
-            trace ->
+            trace -> {
+              Consumer<SpanDataAssert> serverSpan =
+                  span -> {
+                    span.hasName(method + " /test3/nested").hasKind(SpanKind.SERVER).hasNoParent();
+                    if (!runsOnServer()) {
+                      span.hasAttributesSatisfyingExactly(
+                          equalTo(HTTP_REQUEST_METHOD, method),
+                          equalTo(HTTP_ROUTE, "/test3/nested"),
+                          equalTo(ERROR_TYPE, HttpConstants._OTHER));
+                    }
+                  };
+              if (CONTROLLER_TELEMETRY_ENABLED) {
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName(method + " /test3/nested")
-                          .hasKind(SpanKind.SERVER)
-                          .hasNoParent();
-                      if (!runsOnServer()) {
-                        span.hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, method),
-                            equalTo(HTTP_ROUTE, "/test3/nested"),
-                            equalTo(ERROR_TYPE, HttpConstants._OTHER));
-                      }
-                    },
+                    serverSpan,
                     span ->
                         span.hasName("Test3.nested")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                codeFunctionInfixAssertions(".Resource$Test", "nested"))));
+                                satisfies(
+                                    CODE_FUNCTION_NAME,
+                                    val -> val.contains(".Resource$Test").endsWith(".nested"))));
+              } else {
+                trace.hasSpansSatisfyingExactly(serverSpan);
+              }
+            });
   }
 }

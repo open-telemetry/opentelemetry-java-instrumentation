@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.singletonList;
@@ -64,8 +63,7 @@ class Jedis36ClientTest {
         .singleElement()
         .satisfies(
             span -> {
-              assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                  .isEqualTo(emitStableDatabaseSemconv() ? "localhost" : endpoint.getHost());
+              assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo("localhost");
               assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo((long) port);
             });
   }

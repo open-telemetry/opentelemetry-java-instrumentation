@@ -1,10 +1,5 @@
 file_format: "1.1"
 
-instrumentation/development:
-  java:
-    common:
-      v3_preview: true
-
 distribution:
   javaagent:
     force_synchronous_agent_listeners/development: false

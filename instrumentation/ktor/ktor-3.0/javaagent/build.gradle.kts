@@ -61,13 +61,13 @@ tasks {
     jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
   }
 
   check {
-    dependsOn(testExperimental, testStableSemconv)
+    dependsOn(testExperimental, testPreviewSemconv)
   }
 }

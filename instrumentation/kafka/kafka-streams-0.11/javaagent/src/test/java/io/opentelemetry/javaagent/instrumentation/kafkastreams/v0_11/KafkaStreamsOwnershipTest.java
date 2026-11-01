@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -77,13 +76,7 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
         .atMost(Duration.ofSeconds(30))
         .untilAsserted(() -> onlySpan("io.opentelemetry.kafka-streams-0.11", inputTopic));
     assertThat(testing.spans())
-        .filteredOn(
-            span ->
-                span.getName()
-                    .equals(
-                        emitStableMessagingSemconv()
-                            ? "process nested-topic"
-                            : "nested-topic process"))
+        .filteredOn(span -> span.getName().equals("process nested-topic"))
         .isEmpty();
   }
 
@@ -110,6 +103,7 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
     assertThat(invoked.await(30, SECONDS)).isTrue();
 
     await()
+        .dontCatchUncaughtExceptions()
         .atMost(Duration.ofSeconds(30))
         .untilAsserted(
             () ->
@@ -128,6 +122,7 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
     return config;
   }
 
+  @SuppressWarnings("removal")
   private static ConsumerRecords<Integer, String> records(String topic, String value) {
     TopicPartition partition = new TopicPartition(topic, 0);
     ConsumerRecord<Integer, String> record = new ConsumerRecord<>(topic, 0, 0, 1, value);
@@ -135,7 +130,7 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
   }
 
   private static SpanData onlySpan(String instrumentationName, String topic) {
-    String spanName = emitStableMessagingSemconv() ? "process " + topic : topic + " process";
+    String spanName = "process " + topic;
     List<SpanData> spans =
         testing.spans().stream()
             .filter(

@@ -99,14 +99,6 @@ testing {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
         implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest()}")
       }
-
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-          }
-        }
-      }
     }
 
     register<JvmTestSuite>("testSqsNoReceiveTelemetry") {
@@ -131,54 +123,44 @@ tasks {
 
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
+  val testExperimentalAttributes = register<Test>("testExperimentalAttributes") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    systemProperty("metadataConfig", "otel.instrumentation.aws-sdk.experimental-span-attributes=true")
   }
 
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
+  val testSqsReceiveTelemetry = register<Test>("testSqsReceiveTelemetry") {
     testClassesDirs = sourceSets["testSqs"].output.classesDirs
     classpath = sourceSets["testSqs"].runtimeClasspath
 
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
+    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty(
+      "metadataConfig",
+      "otel.instrumentation.aws-sdk.experimental-span-attributes=true," +
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+    )
   }
 
-  val testMessagingPreviewNoReceiveTelemetry = register<Test>("testMessagingPreviewNoReceiveTelemetry") {
-    testClassesDirs = sourceSets["testSqsNoReceiveTelemetry"].output.classesDirs
-    classpath = sourceSets["testSqsNoReceiveTelemetry"].runtimeClasspath
+  if (!otelProps.testLatestDeps) {
+    val testBefore106ExperimentalAttributes = register<Test>("testBefore106ExperimentalAttributes") {
+      testClassesDirs = sourceSets["test_before_1_11_106"].output.classesDirs
+      classpath = sourceSets["test_before_1_11_106"].runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets["testSqs"].output.classesDirs
-    classpath = sourceSets["testSqs"].runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    // with the v3 preview off, the legacy opt-in flag selects the new messaging semconv too
-    jvmArgs("-Dotel.semconv-stability.opt-in=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging/dup")
+      systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    }
+    check {
+      dependsOn(testBefore106ExperimentalAttributes)
+    }
   }
 
   check {
-    dependsOn(
-      testStableSemconv,
-      testMessagingPreview,
-      testMessagingPreviewNoReceiveTelemetry,
-      testBothSemconv
-    )
+    dependsOn(testExperimentalAttributes, testSqsReceiveTelemetry)
   }
 
   if (otelProps.denyUnsafe) {

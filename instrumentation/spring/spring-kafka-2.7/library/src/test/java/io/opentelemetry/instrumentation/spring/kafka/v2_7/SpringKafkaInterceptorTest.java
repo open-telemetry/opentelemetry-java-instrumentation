@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.kafka.v2_7;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricPointCounts;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -15,13 +15,8 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -344,6 +339,7 @@ class SpringKafkaInterceptorTest {
                 span -> assertBatchSpan(span, 1, "0", failOuter ? null : error).hasNoParent()));
   }
 
+  @SuppressWarnings("removal")
   @Test
   void distinctBatchesWithSharedRecordsPreserveCardinalityAndCreationLinks() {
     ConsumerRecord<String, String> first = record(0, 1, "first", FIRST_CREATION);
@@ -351,8 +347,8 @@ class SpringKafkaInterceptorTest {
     Map<TopicPartition, List<ConsumerRecord<String, String>>> partitions = new LinkedHashMap<>();
     partitions.put(new TopicPartition("orders", 0), singletonList(first));
     partitions.put(new TopicPartition("orders", 1), singletonList(second));
-    ConsumerRecords<String, String> batch = new ConsumerRecords<>(partitions);
-    ConsumerRecords<String, String> anotherBatch = new ConsumerRecords<>(partitions);
+    ConsumerRecords<String, String> batch = records(partitions);
+    ConsumerRecords<String, String> anotherBatch = records(partitions);
     RecordInterceptor<String, String> recordInterceptor = telemetry.createRecordInterceptor();
     BatchInterceptor<String, String> batchInterceptor = telemetry.createBatchInterceptor();
     IllegalStateException error = new IllegalStateException("first batch attempt");
@@ -469,70 +465,68 @@ class SpringKafkaInterceptorTest {
 
   private static SpanDataAssert assertRecordSpan(
       SpanDataAssert span, ConsumerRecord<String, String> record, Throwable error) {
-    return span.hasName(emitStableMessagingSemconv() ? "process orders" : "orders process")
+    return span.hasName("process orders")
         .hasKind(SpanKind.CONSUMER)
         .hasStatus(error == null ? StatusData.unset() : StatusData.error())
         .hasAttributesSatisfyingExactly(
-            equalTo(MESSAGING_SYSTEM, "kafka"),
+            equalTo(stringKey("messaging.system.name"), "kafka"),
             equalTo(MESSAGING_DESTINATION_NAME, "orders"),
             equalTo(MESSAGING_DESTINATION_PARTITION_ID, Integer.toString(record.partition())),
-            equalTo(MESSAGING_KAFKA_MESSAGE_KEY, record.key()),
-            equalTo(
-                MESSAGING_KAFKA_MESSAGE_OFFSET, emitOldMessagingSemconv() ? record.offset() : null),
-            equalTo(MESSAGING_KAFKA_OFFSET, emitStableMessagingSemconv() ? record.offset() : null),
-            equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
-            equalTo(
-                ERROR_TYPE,
-                emitStableMessagingSemconv() && error != null ? error.getClass().getName() : null));
+            equalTo(stringKey("kafka.message.key"), record.key()),
+            equalTo(longKey("kafka.offset"), record.offset()),
+            equalTo(MESSAGING_OPERATION_NAME, "process"),
+            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+            equalTo(ERROR_TYPE, error != null ? error.getClass().getName() : null));
   }
 
   private static SpanDataAssert assertBatchSpan(
       SpanDataAssert span, int count, String partition, Throwable error) {
-    return span.hasName(emitStableMessagingSemconv() ? "process orders" : "orders process")
+    return span.hasName("process orders")
         .hasKind(SpanKind.CONSUMER)
         .hasStatus(error == null ? StatusData.unset() : StatusData.error())
         .hasAttributesSatisfyingExactly(
-            equalTo(MESSAGING_SYSTEM, "kafka"),
+            equalTo(stringKey("messaging.system.name"), "kafka"),
             equalTo(MESSAGING_DESTINATION_NAME, "orders"),
-            equalTo(
-                MESSAGING_DESTINATION_PARTITION_ID,
-                emitStableMessagingSemconv() ? partition : null),
-            equalTo(MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_NAME, emitStableMessagingSemconv() ? "process" : null),
-            equalTo(MESSAGING_OPERATION_TYPE, emitStableMessagingSemconv() ? "process" : null),
+            equalTo(MESSAGING_DESTINATION_PARTITION_ID, partition),
+            equalTo(MESSAGING_OPERATION_NAME, "process"),
+            equalTo(MESSAGING_OPERATION_TYPE, "process"),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, count),
-            equalTo(
-                ERROR_TYPE,
-                emitStableMessagingSemconv() && error != null ? error.getClass().getName() : null));
+            equalTo(ERROR_TYPE, error != null ? error.getClass().getName() : null));
   }
 
   private static LinkData[] batchLinks() {
     return new LinkData[] {
       LinkData.create(
           FIRST_CREATION,
-          emitStableMessagingSemconv()
-              ? Attributes.of(
-                  MESSAGING_DESTINATION_PARTITION_ID, "0",
-                  MESSAGING_KAFKA_OFFSET, 1L,
-                  MESSAGING_KAFKA_MESSAGE_KEY, "first")
-              : Attributes.empty()),
+          Attributes.of(
+              MESSAGING_DESTINATION_PARTITION_ID,
+              "0",
+              longKey("kafka.offset"),
+              1L,
+              stringKey("kafka.message.key"),
+              "first")),
       LinkData.create(
           SECOND_CREATION,
-          emitStableMessagingSemconv()
-              ? Attributes.of(
-                  MESSAGING_DESTINATION_PARTITION_ID, "1",
-                  MESSAGING_KAFKA_OFFSET, 2L,
-                  MESSAGING_KAFKA_MESSAGE_KEY, "second")
-              : Attributes.empty())
+          Attributes.of(
+              MESSAGING_DESTINATION_PARTITION_ID,
+              "1",
+              longKey("kafka.offset"),
+              2L,
+              stringKey("kafka.message.key"),
+              "second"))
     };
   }
 
   private static ConsumerRecords<String, String> records(ConsumerRecord<String, String> record) {
-    return new ConsumerRecords<>(
+    return records(
         singletonMap(
             new TopicPartition(record.topic(), record.partition()), singletonList(record)));
+  }
+
+  @SuppressWarnings("removal")
+  private static <K, V> ConsumerRecords<K, V> records(
+      Map<TopicPartition, List<ConsumerRecord<K, V>>> recordsByPartition) {
+    return new ConsumerRecords<>(recordsByPartition);
   }
 
   private static ConsumerRecord<String, String> record(

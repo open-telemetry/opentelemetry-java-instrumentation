@@ -8,7 +8,7 @@
 #   update-changelog-for-release.sh <version> <date> [--keep-unreleased-section]
 #
 # With --keep-unreleased-section, the `## Unreleased` heading is preserved above
-# the new version section (used when updating CHANGELOG.md on `main` after
+# the new version section (used when updating the development branch after
 # cutting a release branch).
 
 if [[ $# -lt 2 || $# -gt 3 ]]; then

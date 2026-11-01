@@ -18,7 +18,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import io.opentelemetry.instrumentation.netty.common.internal.Timer;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.client.ConnectionListener;
@@ -59,8 +58,8 @@ class NettyChannelInstrumentation implements TypeInstrumentation {
     public static NettyScope onEnter(
         @Advice.This Channel channel, @Advice.Argument(0) SocketAddress remoteAddress) {
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      Span span = Java8BytecodeBridge.spanFromContext(parentContext);
+      Context parentContext = Context.current();
+      Span span = Span.fromContext(parentContext);
       if (!span.getSpanContext().isValid()) {
         return null;
       }

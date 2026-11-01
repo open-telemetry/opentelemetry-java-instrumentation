@@ -45,8 +45,8 @@ class SuppressionTest {
         SdkMeterProvider.builder().registerMetricReader(reader).build()) {
       OpenTelemetryMeterRegistryBuilder builder =
           OpenTelemetryMeterRegistry.builder(
-                  OpenTelemetrySdk.builder().setMeterProvider(provider).build())
-              .setPrometheusMode(prometheusMode);
+              OpenTelemetrySdk.builder().setMeterProvider(provider).build());
+      Experimental.setPrometheusMode(builder, prometheusMode);
       Experimental.setSuppressionPredicate(builder, id -> id.getName().startsWith("suppressed."));
       Experimental.setMicrometerHistogramGaugesEnabled(builder, true);
       MeterRegistry registry = builder.build();

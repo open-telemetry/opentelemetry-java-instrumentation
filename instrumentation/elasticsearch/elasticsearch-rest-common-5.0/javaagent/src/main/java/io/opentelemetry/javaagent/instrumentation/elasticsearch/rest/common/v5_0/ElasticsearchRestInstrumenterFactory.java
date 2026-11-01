@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -22,11 +22,6 @@ import javax.annotation.Nullable;
 import org.elasticsearch.client.Response;
 
 public final class ElasticsearchRestInstrumenterFactory {
-
-  private static final boolean CAPTURE_SEARCH_QUERY =
-      captureSearchQuery(
-          DeclarativeConfigUtil.getInstrumentationConfig(
-              GlobalOpenTelemetry.get(), "elasticsearch"));
 
   private static final boolean SANITIZE_SEARCH_QUERY =
       DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "elasticsearch");
@@ -40,7 +35,7 @@ public final class ElasticsearchRestInstrumenterFactory {
   public static Instrumenter<ElasticsearchRestRequest, Response> create(
       String instrumentationName) {
     ElasticsearchDbAttributesGetter dbClientAttributesGetter =
-        new ElasticsearchDbAttributesGetter(CAPTURE_SEARCH_QUERY, sanitizer);
+        new ElasticsearchDbAttributesGetter(sanitizer);
     ElasticsearchClientAttributeExtractor esClientAttributesExtractor =
         new ElasticsearchClientAttributeExtractor(
             AgentCommonConfig.get().getKnownHttpRequestMethods(),
@@ -49,17 +44,13 @@ public final class ElasticsearchRestInstrumenterFactory {
         Instrumenter.<ElasticsearchRestRequest, Response>builder(
                 GlobalOpenTelemetry.get(),
                 instrumentationName,
-                new ElasticsearchSpanNameExtractor(dbClientAttributesGetter))
+                DbClientSpanNameExtractor.create(dbClientAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
             .addAttributesExtractor(esClientAttributesExtractor)
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
     DbExceptionEventExtractors.setDbClientExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
-  }
-
-  private static boolean captureSearchQuery(DeclarativeConfigProperties config) {
-    return ElasticsearchRestConfig.captureSearchQuery(
-        config, AgentCommonConfig.get().isV3Preview());
   }
 
   private ElasticsearchRestInstrumenterFactory() {}

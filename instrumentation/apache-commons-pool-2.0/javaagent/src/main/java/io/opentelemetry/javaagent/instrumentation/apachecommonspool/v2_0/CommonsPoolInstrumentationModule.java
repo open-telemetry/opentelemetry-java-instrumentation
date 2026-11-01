@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.apachecommonspool.v2_0;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,11 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class CommonsPoolInstrumentationModule extends InstrumentationModule {
   public CommonsPoolInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "apache-commons-pool-2.0" : "apache-commons-pool",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"apache-commons-pool"}
-            : new String[] {"apache-commons-pool-2.0"});
+    super("apache-commons-pool-2.0", "apache-commons-pool");
   }
 
   @Override

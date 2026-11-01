@@ -8,15 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network;
 import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.CouchbaseNetworkVirtualFields.COUCHBASE_REQUEST_INFO;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import com.couchbase.client.core.endpoint.AbstractEndpoint;
 import com.couchbase.client.core.message.CouchbaseRequest;
 import com.couchbase.client.deps.io.netty.channel.ChannelHandlerContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
-import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -33,11 +30,10 @@ class Couchbase26NetworkInstrumentation implements TypeInstrumentation {
     // encode(ChannelHandlerContext ctx, REQUEST msg, List<Object> out)
     transformer.applyAdviceToMethod(
         named("encode")
-            .and(takesArguments(3))
             .and(
                 takesArgument(
                     0, named("com.couchbase.client.deps.io.netty.channel.ChannelHandlerContext")))
-            .and(takesArgument(2, List.class)),
+            .and(takesArgument(1, named("com.couchbase.client.core.message.CouchbaseRequest"))),
         getClass().getName() + "$CouchbaseNetworkAdvice");
   }
 
@@ -46,17 +42,13 @@ class Couchbase26NetworkInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void addNetworkTagsToSpan(
-        @Advice.FieldValue("endpoint") AbstractEndpoint endpoint,
         @Advice.FieldValue("localSocket") String localSocket,
         @Advice.Argument(0) ChannelHandlerContext channelHandlerContext,
         @Advice.Argument(1) CouchbaseRequest request) {
 
       CouchbaseRequestInfo requestInfo = COUCHBASE_REQUEST_INFO.get(request);
       if (requestInfo != null) {
-        // The socket and the address the driver opened this endpoint to describe the same node, and
-        // only stay consistent with each other when they are recorded together
-        requestInfo.setNode(
-            channelHandlerContext.channel().remoteAddress(), endpoint.remoteAddress());
+        requestInfo.setNode(channelHandlerContext.channel().remoteAddress());
         requestInfo.setLocalAddress(localSocket);
       }
     }

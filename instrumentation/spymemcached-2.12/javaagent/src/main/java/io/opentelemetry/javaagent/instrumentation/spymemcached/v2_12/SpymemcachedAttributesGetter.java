@@ -5,13 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
+import net.spy.memcached.internal.OperationFuture;
+import net.spy.memcached.ops.OperationStatus;
+import net.spy.memcached.ops.StatusCode;
 
 class SpymemcachedAttributesGetter
     implements DbClientAttributesGetter<SpymemcachedRequest, Object> {
@@ -28,9 +29,8 @@ class SpymemcachedAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getDbQueryText(SpymemcachedRequest spymemcachedRequest) {
-    return null;
+    return spymemcachedRequest.getQueryText();
   }
 
   @Override
@@ -39,18 +39,40 @@ class SpymemcachedAttributesGetter
   }
 
   @Override
-  @SuppressWarnings("deprecation") // old database semconv still use db.operation
-  public String getDbOperation(SpymemcachedRequest spymemcachedRequest) {
-    return spymemcachedRequest.getOperationName();
+  @Nullable
+  public String getErrorType(
+      SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
+    if (error != null || !(response instanceof OperationFuture)) {
+      return null;
+    }
+    OperationFuture<?> future = (OperationFuture<?>) response;
+    if (future.isCancelled()) {
+      return null;
+    }
+    OperationStatus status = future.getStatus();
+    if (status == null || status.isSuccess()) {
+      return null;
+    }
+    StatusCode code = status.getStatusCode();
+    if (code == null) {
+      return null;
+    }
+    switch (code) {
+      case SUCCESS:
+      case ERR_NOT_FOUND:
+      case ERR_EXISTS:
+      case ERR_NOT_STORED:
+      case CANCELLED:
+        return null;
+      default:
+        return code.name();
+    }
   }
 
   @Override
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       SpymemcachedRequest spymemcachedRequest, @Nullable Object response) {
-    if (!emitStableDatabaseSemconv()) {
-      return null;
-    }
     InetSocketAddress address = spymemcachedRequest.getHandlingNodeAddress();
     return address == null || address.isUnresolved() ? null : address;
   }
@@ -58,22 +80,14 @@ class SpymemcachedAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(SpymemcachedRequest spymemcachedRequest) {
-    if (emitStableDatabaseSemconv()) {
-      DbServerTarget target = spymemcachedRequest.getServerTarget();
-      return target == null ? null : target.getAddress();
-    }
-    InetSocketAddress address = spymemcachedRequest.getHandlingNodeAddress();
-    return address == null ? null : address.getHostString();
+    DbServerTarget target = spymemcachedRequest.getServerTarget();
+    return target == null ? null : target.getAddress();
   }
 
   @Override
   @Nullable
   public Integer getServerPort(SpymemcachedRequest spymemcachedRequest) {
-    if (emitStableDatabaseSemconv()) {
-      DbServerTarget target = spymemcachedRequest.getServerTarget();
-      return target == null ? null : target.getPort();
-    }
-    InetSocketAddress address = spymemcachedRequest.getHandlingNodeAddress();
-    return address == null ? null : address.getPort();
+    DbServerTarget target = spymemcachedRequest.getServerTarget();
+    return target == null ? null : target.getPort();
   }
 }

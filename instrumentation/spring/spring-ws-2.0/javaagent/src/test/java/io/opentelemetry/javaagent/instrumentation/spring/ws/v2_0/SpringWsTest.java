@@ -5,16 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
@@ -25,6 +24,8 @@ import io.opentelemetry.test.hello_web_service.HelloRequestSoapAction;
 import io.opentelemetry.test.hello_web_service.HelloRequestWsAction;
 import io.opentelemetry.test.hello_web_service.HelloResponse;
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -65,16 +66,12 @@ class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplicationCo
   @Override
   protected ConfigurableApplicationContext setupServer() throws Exception {
     SpringApplication app = new SpringApplication(AppConfig.class, WebServiceConfig.class);
-    app.setDefaultProperties(
-        ImmutableMap.of(
-            "server.port",
-            port,
-            "server.context-path",
-            getContextPath(),
-            "server.servlet.contextPath",
-            getContextPath(),
-            "server.error.include-message",
-            "always"));
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("server.port", port);
+    properties.put("server.context-path", getContextPath());
+    properties.put("server.servlet.contextPath", getContextPath());
+    properties.put("server.error.include-message", "always");
+    app.setDefaultProperties(properties);
     marshaller.setPackagesToScan(ClassUtils.getPackageName(HelloRequest.class));
     marshaller.afterPropertiesSet();
     return app.run();
@@ -136,9 +133,10 @@ class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplicationCo
                           .hasName("HelloEndpoint." + methodName)
                           .hasKind(SpanKind.INTERNAL)
                           .hasAttributesSatisfyingExactly(
-                              codeFunctionAssertions(
-                                  "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint",
-                                  methodName))));
+                              equalTo(
+                                  CODE_FUNCTION_NAME,
+                                  "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint."
+                                      + methodName))));
     } else {
       testing.waitAndAssertTraces(
           trace ->
@@ -183,9 +181,10 @@ class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplicationCo
                                               EXCEPTION_STACKTRACE,
                                               val -> val.isInstanceOf(String.class))))
                           .hasAttributesSatisfyingExactly(
-                              codeFunctionAssertions(
-                                  "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint",
-                                  methodName))));
+                              equalTo(
+                                  CODE_FUNCTION_NAME,
+                                  "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint."
+                                      + methodName))));
     } else {
       testing.waitAndAssertTraces(
           trace ->

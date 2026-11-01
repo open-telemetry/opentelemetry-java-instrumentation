@@ -191,6 +191,14 @@ Following the reasoning from
 - `Optional` shouldn't appear in public API signatures
 - Avoid `Optional` on the hot path (instrumentation code), unless the instrumented library uses it
 
+### Conditional expressions
+
+Avoid directly nested ternaries, even when parenthesized. Use named intermediate values, `if`/`else`,
+or early returns, keeping simple ternaries where they improve readability.
+
+A ternary inside a separate method-call argument does not count as direct nesting. In tests, nested
+ternaries may remain inline in attribute-assertion expected values.
+
 ## Semantic convention constants
 
 **Library instrumentation**: Copy semantic convention constants directly into library
@@ -200,8 +208,8 @@ across versions). For example:
 
 ```java
 // copied from MessagingIncubatingAttributes
-private static final AttributeKey<String> MESSAGING_SYSTEM =
-    AttributeKey.stringKey("messaging.system");
+private static final AttributeKey<String> MESSAGING_SYSTEM_NAME =
+    AttributeKey.stringKey("messaging.system.name");
 ```
 
 **Javaagent instrumentation**: Use the semconv constants from the semconv artifact directly. The

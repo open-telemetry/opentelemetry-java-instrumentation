@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -46,8 +47,7 @@ public class OpenTelemetryAppenderAutoConfiguration {
     ApplicationListener<ApplicationReadyEvent> logbackOtelAppenderInitializer(
         OpenTelemetry openTelemetry) {
       return event -> {
-        io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender.install(
-            openTelemetry);
+        OpenTelemetryAppender.install(openTelemetry);
       };
     }
   }

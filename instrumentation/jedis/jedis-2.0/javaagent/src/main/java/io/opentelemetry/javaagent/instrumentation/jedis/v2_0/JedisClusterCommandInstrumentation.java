@@ -61,9 +61,6 @@ class JedisClusterCommandInstrumentation implements TypeInstrumentation {
         return null;
       }
       JedisClusterCommandContext commandContext = JedisClusterCommandContext.create();
-      if (commandContext == null) {
-        return null;
-      }
       AdviceState adviceState = new AdviceState(commandContext);
       adviceState.previousCommandContext = currentCommandContext().set(commandContext);
       return adviceState;

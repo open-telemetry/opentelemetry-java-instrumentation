@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -36,9 +35,7 @@ class RabbitConsumerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Consumer consumer) {
-      if (emitStableMessagingSemconv()) {
-        CamelRabbitProcessingOwnership.markCamelAsProcessingOwner(consumer);
-      }
+      CamelRabbitProcessingOwnership.markCamelAsProcessingOwner(consumer);
     }
   }
 }

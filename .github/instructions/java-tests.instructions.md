@@ -12,11 +12,38 @@ convention not caught by CI.
 
 ## Behavior coverage
 
-- For a javaagent change supporting multiple runtime library versions,
-  look for tests with the installed agent against the required versions.
-  Direct helper tests and `javaagent-unit-tests` do not exercise class
-  transformation or the actual library; do not count them as integration
-  coverage.
+- Prefer integration tests for instrumentation behavior. Exercise the library through its normal
+  API, use a real service when relevant, and assert emitted telemetry. For javaagent changes, use
+  the installed agent against the required library versions to exercise class transformation and
+  library compatibility.
+- Use focused unit tests for nontrivial standalone logic and shared infrastructure when they add
+  coverage beyond integration tests. Choose cases for distinct behavior and important edge cases,
+  not to enumerate every implementation branch or combination of mocked responses.
+- Tests that exercise javaagent helper classes directly, without requiring installed-agent behavior,
+  belong in a `JvmTestSuite` named `unitTests` under `src/unitTests/java`. Prefer direct same-package
+  access over `AgentClassLoaderAccess` or reflection used solely to bypass integration-test
+  classloader isolation. Reflection or classloader access remains appropriate when that behavior
+  is itself under test.
+- Test supported behavior. Do not add or request tests that only prove
+  removed settings are ignored, or preview variants that repeat the same behavior.
+  When configuration wiring changes, test the real initialization path and emitted
+  telemetry, not just helpers.
+- For ordinary settings available in both forms, prefer default-behavior and
+  module-specific flat-property tests. Do not add or request duplicate behavior tests for
+  equivalent flat properties and declarative YAML that use shared configuration logic. Add declarative-mode
+  coverage only for different behavior, new or changed mode-specific wiring or
+  migration paths, structured configuration, or settings unavailable through flat properties.
+  Keep mode-specific wiring tests focused rather than repeating the full behavior matrix.
+  Test shared flat-to-declarative conversion centrally. Single-source declarative unit tests are not duplicates.
+- Test shared-helper defaults, fallback, and precedence centrally, not in every caller.
+  Keep caller-specific logic covered and add missing central coverage before removing a module test.
+- Do not add or request historical-absence assertions merely because telemetry
+  or functionality was removed or made opt-in. An absence assertion must verify
+  a supported contract that would merit testing even if the previous behavior
+  had never existed; do not mechanically replace old presence assertions with
+  absence assertions in unrelated integration or smoke tests. Keep focused
+  coverage for supported settings, changed defaults, explicit opt-in/opt-out,
+  and default enablement, as well as exact assertions of supported telemetry.
 - For a module whose default enablement changes, the same representative
   operation must emit instrumentation telemetry in an enabled JVM and no
   instrumentation telemetry in a disabled JVM. A `DefaultEnablementTest`
@@ -27,7 +54,7 @@ convention not caught by CI.
   are escape hatches for buggy instrumentation, not general telemetry-tuning
   settings. Do not add or request per-instrumentation selector tests for new
   modules, aliases, renames, or consolidations. This includes module name-list
-  assertions, enable/disable matrices, precedence, legacy/v3-preview handling,
+  assertions, enable/disable matrices, precedence, legacy-name handling,
   flat/YAML parity, warning checks, and dedicated JVM variants or test projects.
   Test shared enablement or alias-helper changes centrally. Keep coverage for
   actual default-enablement changes as described above, feature settings, and
@@ -54,10 +81,12 @@ convention not caught by CI.
 - Test methods do not need `throws Exception` clauses unless actually required.
 - Prefer the nearest common parent in `catch` (including `Exception` /
   `Throwable`) over multi-catch.
-- Allocate test ports through `PortUtils` so allocations are coordinated across
-  the test process. Use `findOpenPorts(count)` when a service needs a consecutive
-  range instead of assuming ports adjacent to a separately allocated port are
-  available.
+- Prefer binding test servers to port `0` when they expose the actual bound port.
+  Wait for binding to complete before reading the port and connecting clients;
+  keep the server bound rather than probing and releasing a port.
+  When ports must be chosen before the server starts, use `PortUtils` to coordinate
+  allocations across test processes. Use `findOpenPorts(count)` for a consecutive
+  range instead of assuming adjacent ports are available.
 - Prefer plain `@AfterEach` or `@AfterAll` teardown when direct cleanup is
   safe. Introduce `AutoCleanupExtension` when deferred cleanup improves
   clarity or protects partially completed setup. Register it with the
@@ -80,23 +109,29 @@ convention not caught by CI.
   Use unordered assertions only when supported concurrency or asynchronous
   execution makes the order nondeterministic.
 
-## [Testing] Trace Clearing After Asynchronous Operations
+## [Testing] Discarding setup and cleanup telemetry
 
-- When test setup or cleanup performs an operation that can complete or export
-  spans asynchronously, call `testing.waitForTraces(expectedTraceCount)` before
-  its captured telemetry is cleared, whether by `testing.clearData()` or an
-  `InstrumentationExtension` lifecycle clear. Keep the wait at the end of setup
-  or cleanup even when removing a redundant explicit clear. Use the total trace
-  count expected at that point so spans exported after the clear cannot leak
-  into the next assertion or test.
-- Add the wait only when the exact trace count is deterministic. Do not guess
-  when retries, concurrent/background work, timing, or external-system behavior
-  can vary the count.
+- Inspect setup and cleanup operations before each `testing.clearData()` and
+  before an `InstrumentationExtension` lifecycle clear, not just the final
+  telemetry assertions. When an operation can complete or export spans
+  asynchronously, wait for its traces before clearing. A synchronous client
+  call returning does not by itself establish that all telemetry was captured.
+- For telemetry that is only being discarded, use
+  `testing.waitForTraces(expectedTraceCount)`. Do not introduce span-name or
+  attribute assertions, `waitAndAssertTraces(...)`, or assertion helpers solely
+  to wait for setup telemetry. Keep assertions when that telemetry's contents
+  are themselves part of the behavior under test.
+- Use the total trace count expected at that point and wait for all setup
+  traces, not just the first one. Add a count-based wait only when the count
+  is deterministic. If retries, concurrent/background work, or external-system
+  behavior can vary it, use an appropriate completion signal rather than
+  guessing a count or adding a sleep.
 - `InstrumentationExtension` already clears captured telemetry before each
-  test. Do not add or keep a setup/cleanup `clearData()` solely for per-test
-  isolation when that lifecycle clear is sufficient. Keep explicit clears only
-  for a required mid-test reset, including to discard telemetry from a
-  preceding asynchronous operation after its exports have been drained.
+  test. Keep any necessary wait at the end of setup or cleanup even when
+  removing a redundant explicit clear. Do not add or keep an explicit clear
+  solely for per-test isolation; keep explicit clears for required mid-test resets.
+- Do not wait for spans that intentionally remain open until the operation
+  under test completes, such as an unfinished pipeline or transaction.
 
 ## [Testing] AssertJ Idiomatic Simplifications
 
@@ -138,37 +173,50 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 
 ## [Testing] Mode-Dependent Expected Values
 
-- Use the shared static `TestLatestDeps.testLatestDeps()` and
-  `SemconvStability.emitOld*Semconv()` / `emitStable*Semconv()` accessors,
-  preferably via static imports, rather than repeating inline
-  `Boolean.getBoolean(...)` calls with the mode property names. A
+- When a feature supports distinct telemetry emission modes, exercise each
+  supported mode in a separate test JVM: DEFAULT-only, PREVIEW-only, and
+  combined emission only where supported. Do not require variants for features
+  without distinct modes or presume every feature supports combined emission.
+- DEFAULT telemetry covered by the [repository compatibility policy](../../VERSIONING.md)
+  remains backward compatible until the next major version, subject to the
+  telemetry changes that policy permits. PREVIEW telemetry is provisional.
+  These emission-mode labels do not establish formal semantic-convention
+  stability or extend compatibility guarantees to alpha artifacts.
+- Use the shared static `TestLatestDeps.testLatestDeps()` and reuse existing
+  appropriate shared mode accessors when available, preferably via static imports,
+  rather than repeating inline `Boolean.getBoolean(...)` calls with mode property names. A
   module-specific experimental flag may use a per-class constant such as
   `EXPERIMENTAL_ATTRIBUTES`; keep the conventional `experimental(value)`
   helper for attribute values absent when the flag is off.
-- Database instrumentation tests run either the default or stable database
-  semconv mode. Do not add `database/dup` test tasks or expand assertions to
-  cover both modes at once.
-- Use `SemconvStabilityUtil.maybeStable(...)` when old and stable database keys
-  carry the same expected value:
+- Assert keys and values directly when expectations do not depend on a mode:
 
   ```java
-  equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH);
-  equalTo(maybeStable(DB_OPERATION), "info");
+  equalTo(stringKey("example.invariant"), "value");
   ```
 
-  Do not replace these with separate null-gated assertions for the old and
-  stable keys.
 - Keep short conditional expected values directly in the assertion when the
-  expected values differ by mode or an attribute exists in only one mode:
+  expected values differ by mode or an attribute exists in only one mode.
+  In these examples, `emitDefault` and `emitPreview` are illustrative booleans,
+  not required accessor names or new helpers. `null` means assert absence;
+  both flags can be true in a supported combined mode:
 
   ```java
-  span.hasName(emitStableMessagingSemconv() ? "send orders" : "orders publish");
-  equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null);
+  equalTo(stringKey("example.default"), emitDefault ? "value" : null);
+  equalTo(stringKey("example.preview"), emitPreview ? "value" : null);
   ```
 
+- When a value changes between mutually exclusive DEFAULT and PREVIEW modes,
+  keep both expected values inline:
+
+  ```java
+  equalTo(stringKey("example.name"), emitPreview ? "preview-value" : "default-value");
+  ```
+
+- Nested ternaries are allowed directly in attribute-assertion expected values. Other test code follows
+  the normal conditional-expression rule.
 - Do not extract the ternary into a helper such as `spanName(...)`,
-  `oldOrExperimental(value)`, or `expectedNamespace()` when no established
-  semconv utility applies. Seeing both expected values at the assertion is more
+  `modeValue(...)`, or `expectedNamespace()` when no established
+  mode utility applies. Seeing both expected values at the assertion is more
   useful than deduplicating a short expression.
 - Do not conditionally build a `List<AttributeAssertion>` and then pass that
   list to `hasAttributesSatisfyingExactly(...)`. Pass each assertion directly
@@ -177,22 +225,22 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 
   ```java
   // Bad: the helper conditionally builds a list and hides the expected shape.
-  private static List<AttributeAssertion> databaseAttributes() {
+  private static List<AttributeAssertion> modeAttributes() {
     List<AttributeAssertion> attributes = new ArrayList<>();
-    if (emitOldDatabaseSemconv()) {
-      attributes.add(equalTo(DB_USER, USER_DB));
+    if (emitDefault) {
+      attributes.add(equalTo(stringKey("example.default"), "value"));
     }
-    if (emitStableDatabaseSemconv()) {
-      attributes.add(equalTo(ERROR_TYPE, "42601"));
+    if (emitPreview) {
+      attributes.add(equalTo(stringKey("example.preview"), "value"));
     }
     return attributes;
   }
-  span.hasAttributesSatisfyingExactly(databaseAttributes());
+  span.hasAttributesSatisfyingExactly(modeAttributes());
 
   // Good: pass each assertion directly and keep its mode check visible.
   span.hasAttributesSatisfyingExactly(
-      equalTo(DB_USER, emitOldDatabaseSemconv() ? USER_DB : null),
-      equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null));
+      equalTo(stringKey("example.default"), emitDefault ? "value" : null),
+      equalTo(stringKey("example.preview"), emitPreview ? "value" : null));
   ```
 
 - The conventional `experimental(value)` helper is the one exception: keep it.

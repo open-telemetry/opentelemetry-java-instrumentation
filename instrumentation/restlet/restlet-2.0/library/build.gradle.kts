@@ -27,7 +27,3 @@ if (otelProps.testLatestDeps) {
     }
   }
 }
-
-tasks.test {
-  systemProperty("collectMetadata", otelProps.collectMetadata)
-}

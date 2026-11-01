@@ -23,10 +23,10 @@ final class KafkaBatchRecordAttributes {
       AttributeKey.stringKey("messaging.destination.name");
   private static final AttributeKey<String> MESSAGING_DESTINATION_PARTITION_ID =
       AttributeKey.stringKey("messaging.destination.partition.id");
-  private static final AttributeKey<String> MESSAGING_KAFKA_MESSAGE_KEY =
-      AttributeKey.stringKey("messaging.kafka.message.key");
-  private static final AttributeKey<Long> MESSAGING_KAFKA_OFFSET =
-      AttributeKey.longKey("messaging.kafka.offset");
+  // copied from KafkaIncubatingAttributes
+  private static final AttributeKey<String> KAFKA_MESSAGE_KEY =
+      AttributeKey.stringKey("kafka.message.key");
+  private static final AttributeKey<Long> KAFKA_OFFSET = AttributeKey.longKey("kafka.offset");
 
   private boolean initialized;
   @Nullable private String commonPartition;
@@ -79,8 +79,8 @@ final class KafkaBatchRecordAttributes {
     // single message, and poll() is a batching operation whose span always reports
     // messaging.batch.message_count, so they stay on the links even when the batch happens to
     // carry a single record
-    attributes.put(MESSAGING_KAFKA_OFFSET, record.offset());
-    attributes.put(MESSAGING_KAFKA_MESSAGE_KEY, KafkaUtil.serializeKey(record.key()));
+    attributes.put(KAFKA_OFFSET, record.offset());
+    attributes.put(KAFKA_MESSAGE_KEY, KafkaUtil.serializeKey(record.key()));
     return attributes.build();
   }
 

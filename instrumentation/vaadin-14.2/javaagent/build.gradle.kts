@@ -54,13 +54,6 @@ testing {
       }
     }
 
-    register<JvmTestSuite>("vaadin16Test") {
-      dependencies {
-        implementation(project(":instrumentation:vaadin-14.2:testing"))
-        implementation("com.vaadin:vaadin-spring-boot-starter:16.0.0")
-      }
-    }
-
     register<JvmTestSuite>("vaadin14LatestTest") {
       dependencies {
         implementation(project(":instrumentation:vaadin-14.2:testing"))
@@ -74,6 +67,8 @@ testing {
         implementation(project(":instrumentation:vaadin-14.2:testing"))
         // tests fail with 24.4.1
         implementation("com.vaadin:vaadin-spring-boot-starter:24.3.13")
+        implementation("org.testcontainers:testcontainers-selenium")
+        implementation("org.seleniumhq.selenium:selenium-java:4.8.3")
       }
     }
   }
@@ -92,20 +87,44 @@ val vaadinBuildService =
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    usesService(vaadinBuildService)
 
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    // Enable legacy OpenSSL provider for Node.js 17+ compatibility with webpack 4
-    environment("NODE_OPTIONS", "--openssl-legacy-provider")
+    if (name.startsWith("vaadinLatestTest")) {
+      usesService(vaadinBuildService)
+    }
   }
+
+  val controllerTelemetrySuites =
+    if (otelProps.testLatestDeps) {
+      listOf("vaadin14LatestTest", "vaadinLatestTest")
+    } else {
+      listOf("vaadin142Test")
+    }
+  val controllerTelemetryTasks =
+    controllerTelemetrySuites.map { suiteName ->
+      val suiteProvider = testing.suites.named<JvmTestSuite>(suiteName)
+      val sourceTaskProvider = named<Test>(suiteName)
+      register<Test>("${suiteName}ControllerTelemetry") {
+        val suite = suiteProvider.get()
+        val sourceTask = sourceTaskProvider.get()
+        setJvmArgs(sourceTask.jvmArgs)
+        setSystemProperties(sourceTask.systemProperties)
+
+        testClassesDirs = suite.sources.output.classesDirs
+        classpath = suite.sources.runtimeClasspath
+
+        jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+        systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
+        isEnabled = sourceTask.enabled
+      }
+    }
 
   check {
     if (otelProps.testLatestDeps) {
       dependsOn(testing.suites.named("vaadin14LatestTest"), testing.suites.named("vaadinLatestTest"))
     } else {
-      dependsOn(testing.suites.named("vaadin142Test"), testing.suites.named("vaadin16Test"))
+      dependsOn(testing.suites.named("vaadin142Test"))
     }
+    dependsOn(controllerTelemetryTasks)
   }
 }
 

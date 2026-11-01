@@ -28,10 +28,9 @@ implementation("io.opentelemetry.instrumentation:instrumentation:opentelemetry-m
 
 ## Usage
 
-The instrumentation is initialized by passing a command listener from
-`MongoTelemetry` to the `MongoClientSettings` builder. Pass the configured seed
-list to `createCommandListener`. Stable telemetry then reports those seeds as
-the logical server target.
+Add a command listener from `MongoTelemetry` to the `MongoClientSettings` builder.
+Pass the client's complete seed list to `createCommandListener(seeds)` to derive
+`server.address` and `server.port` from the client configuration.
 
 ```java
 OpenTelemetry openTelemetry = ...;

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecommonspool.v2_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.apachecommonspool.v2_0.CommonsPoolSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -13,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.apachecommonspool.CommonsPoolMetricsSuppression;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -51,11 +51,11 @@ class GenericObjectPoolInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This BaseGenericObjectPool<?> pool,
         @Advice.Argument(1) BaseObjectPoolConfig config) {
-      if (CommonsPoolMetricsSuppression.isSuppressed(currentContext())) {
+      if (CommonsPoolMetricsSuppression.isSuppressed(Context.current())) {
         return;
       }
 
@@ -74,7 +74,7 @@ class GenericObjectPoolInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class CloseAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.This BaseGenericObjectPool<?> pool) {
       if (pool instanceof GenericKeyedObjectPoolMXBean<?>) {
         telemetry().unregisterMetrics((GenericKeyedObjectPoolMXBean<?>) pool);

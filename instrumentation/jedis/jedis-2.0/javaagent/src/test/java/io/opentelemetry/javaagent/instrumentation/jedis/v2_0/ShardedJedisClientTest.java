@@ -5,18 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -57,9 +53,6 @@ class ShardedJedisClientTest {
 
   private static String configuredTarget;
 
-  private static String shardHost;
-  private static int shardPort;
-
   @BeforeAll
   static void setup() {
     firstServer.start();
@@ -85,8 +78,6 @@ class ShardedJedisClientTest {
     cleanup.deferAfterAll(sharded::disconnect);
 
     shard = sharded.getShard("foo");
-    shardHost = shard.getClient().getHost();
-    shardPort = shard.getClient().getPort();
   }
 
   @Test
@@ -102,66 +93,36 @@ class ShardedJedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                    span.hasName("SET " + configuredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(SERVER_ADDRESS, configuredTarget),
                             equalTo(
-                                maybeStablePeerService(),
-                                emitStableDatabaseSemconv() ? null : "test-peer-service"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : shardHost),
-                            equalTo(
-                                SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) shardPort),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? peerAddress.getAddress().getHostAddress()
-                                    : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? (long) peerAddress.getPort()
-                                    : null))),
+                                NETWORK_PEER_ADDRESS, peerAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, (long) peerAddress.getPort()))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "GET " + configuredTarget : "GET")
+                    span.hasName("GET " + configuredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "GET foo"),
-                            equalTo(maybeStable(DB_OPERATION), "GET"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "GET foo"),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(SERVER_ADDRESS, configuredTarget),
                             equalTo(
-                                maybeStablePeerService(),
-                                emitStableDatabaseSemconv() ? null : "test-peer-service"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : shardHost),
-                            equalTo(
-                                SERVER_PORT, emitStableDatabaseSemconv() ? null : (long) shardPort),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? peerAddress.getAddress().getHostAddress()
-                                    : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? (long) peerAddress.getPort()
-                                    : null))));
+                                NETWORK_PEER_ADDRESS, peerAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, (long) peerAddress.getPort()))));
   }
 
   @Test
   void commandFromAllShardsUsesConfiguredTarget() {
     Jedis shard = sharded.getAllShards().iterator().next();
-    String selectedHost = shard.getClient().getHost();
-    int selectedPort = shard.getClient().getPort();
 
     shard.set("all-shards", "bar");
     InetSocketAddress peerAddress =
@@ -171,44 +132,27 @@ class ShardedJedisClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                    span.hasName("SET " + configuredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET all-shards ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET all-shards ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(SERVER_ADDRESS, configuredTarget),
                             equalTo(
-                                maybeStablePeerService(),
-                                emitStableDatabaseSemconv() ? null : "test-peer-service"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : selectedHost),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv() ? null : (long) selectedPort),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? peerAddress.getAddress().getHostAddress()
-                                    : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? (long) peerAddress.getPort()
-                                    : null))));
+                                NETWORK_PEER_ADDRESS, peerAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, (long) peerAddress.getPort()))));
 
-    if (emitStableDatabaseSemconv()) {
-      testing.waitAndAssertMetrics(
-          "io.opentelemetry.jedis-2.0",
-          metric ->
-              metric
-                  .hasName("db.client.operation.duration")
-                  .hasHistogramSatisfying(
-                      histogram ->
-                          histogram.hasPointsSatisfying(
-                              point -> point.hasAttribute(SERVER_ADDRESS, configuredTarget))));
-    }
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-2.0",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point -> point.hasAttribute(SERVER_ADDRESS, configuredTarget))));
   }
 
   @Test
@@ -240,69 +184,33 @@ class ShardedJedisClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                    span.hasName("SET " + configuredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET " + firstKey + " ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(
-                                maybeStablePeerService(),
-                                emitStableDatabaseSemconv() ? null : "test-peer-service"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? configuredTarget
-                                    : firstShard.getClient().getHost()),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? null
-                                    : (long) firstShard.getClient().getPort()),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET " + firstKey + " ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(SERVER_ADDRESS, configuredTarget),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? firstPeerAddress.getAddress().getHostAddress()
-                                    : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? (long) firstPeerAddress.getPort()
-                                    : null)),
+                                firstPeerAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, (long) firstPeerAddress.getPort())),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                    span.hasName("SET " + configuredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET " + secondKey + " ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(
-                                maybeStablePeerService(),
-                                emitStableDatabaseSemconv() ? null : "test-peer-service"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? configuredTarget
-                                    : secondShard.getClient().getHost()),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? null
-                                    : (long) secondShard.getClient().getPort()),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET " + secondKey + " ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(SERVER_ADDRESS, configuredTarget),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? secondPeerAddress.getAddress().getHostAddress()
-                                    : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? (long) secondPeerAddress.getPort()
-                                    : null))));
+                                secondPeerAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, (long) secondPeerAddress.getPort()))));
   }
 
   @Test
@@ -331,72 +239,36 @@ class ShardedJedisClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("first parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                    span.hasName("SET " + configuredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET " + firstKey + " ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(
-                                maybeStablePeerService(),
-                                emitStableDatabaseSemconv() ? null : "test-peer-service"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? configuredTarget
-                                    : firstShard.getClient().getHost()),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? null
-                                    : (long) firstShard.getClient().getPort()),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET " + firstKey + " ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(SERVER_ADDRESS, configuredTarget),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? firstPeerAddress.getAddress().getHostAddress()
-                                    : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? (long) firstPeerAddress.getPort()
-                                    : null))),
+                                firstPeerAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, (long) firstPeerAddress.getPort()))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("second parent").hasNoParent().hasTotalAttributeCount(0),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                    span.hasName("SET " + configuredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(maybeStable(DB_STATEMENT), "SET " + secondKey + " ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(
-                                maybeStablePeerService(),
-                                emitStableDatabaseSemconv() ? null : "test-peer-service"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? configuredTarget
-                                    : secondShard.getClient().getHost()),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? null
-                                    : (long) secondShard.getClient().getPort()),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET " + secondKey + " ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(SERVER_ADDRESS, configuredTarget),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv()
-                                    ? secondPeerAddress.getAddress().getHostAddress()
-                                    : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? (long) secondPeerAddress.getPort()
-                                    : null))));
+                                secondPeerAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, (long) secondPeerAddress.getPort()))));
   }
 
   private static String keyForShard(Jedis selectedShard, String prefix) {

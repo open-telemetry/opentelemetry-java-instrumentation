@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.c3p0.v0_9;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,9 +16,7 @@ import java.util.List;
 public class C3p0InstrumentationModule extends InstrumentationModule {
 
   public C3p0InstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "c3p0-0.9" : "c3p0",
-        AgentCommonConfig.get().isV3Preview() ? new String[] {"c3p0"} : new String[] {"c3p0-0.9"});
+    super("c3p0-0.9", "c3p0");
   }
 
   @Override

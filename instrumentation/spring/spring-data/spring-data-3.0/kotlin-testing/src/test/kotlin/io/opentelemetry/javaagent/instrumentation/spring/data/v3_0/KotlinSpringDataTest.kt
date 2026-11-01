@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.data.v3_0
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
+import io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps
 import io.opentelemetry.javaagent.instrumentation.spring.data.v3_0.repository.CustomerRepository
 import io.opentelemetry.javaagent.instrumentation.spring.data.v3_0.repository.PersistenceConfig
 import kotlinx.coroutines.runBlocking
@@ -52,7 +53,8 @@ class KotlinSpringDataTest {
       trace.hasSpansSatisfyingExactly({
         it.hasName("CustomerRepository.findById").hasNoParent()
       }, {
-        it.hasName("SELECT db.CUSTOMER").hasParent(trace.getSpan(0))
+        it.hasName(if (testLatestDeps()) "SELECT \"CUSTOMER\"" else "SELECT CUSTOMER")
+          .hasParent(trace.getSpan(0))
       })
     })
   }

@@ -6,15 +6,39 @@ behind the shorter Java test instructions.
 
 ## Javaagent integration coverage versus unit coverage
 
-Unit suites and legacy `javaagent-unit-tests` projects exercise helper or instrumentation classes
-directly without installing the javaagent against a live target library. They do not verify agent
-loading, class transformation, or runtime behavior of clients, pools, clusters, sentinels, and
-other integrations.
+Choose the test harness before writing the test. Use installed-agent integration tests to verify
+agent loading, class transformation, and application-integration behavior. Unit suites and legacy
+`javaagent-unit-tests` projects exercise helper or instrumentation classes directly without
+installing the javaagent against a live target library; they do not replace that integration coverage.
+
+For javaagent helper tests that do not require installed-agent behavior, use a `JvmTestSuite` named
+`unitTests` under `src/unitTests/java`, with direct same-package access. See the
+[Gradle unit-suite setup](gradle-conventions.md#javaagent-unit-test-suites).
+Telemetry assertions alone do not require an installed agent.
+
+If a test needs `AgentClassLoaderAccess` or reflection solely to reach a helper across integration-test
+classloader isolation, reconsider the suite instead of adding access workarounds. Reflection and
+classloader access remain appropriate when that behavior is itself under test.
 
 When a change must support multiple runtime versions, retain real agent-backed integration tests
 for each required version. Keep tests that run on the baseline in the default `test` suite and
 place only newer-version-specific tests in a dedicated `JvmTestSuite`; do not count a unit suite
 as coverage for the missing integration runtime.
+
+## Configuration test ownership
+
+For settings available in both forms, prefer default-behavior and module-specific flat-property tests.
+The bridge exposes flat properties through the declarative API; test conversion centrally rather
+than repeating behavior assertions for equivalent YAML.
+
+Shared helpers own defaults, fallback, and precedence tests. Keep caller-specific logic covered,
+and add missing central coverage before removing a module test.
+
+Retain declarative tests for structured/YAML-only settings, distinct binding, parsing, initialization,
+or migration paths, and native configuration integration. Single-source declarative unit tests are not duplicates.
+
+Remove unused fixtures, dependencies, task registrations, and metadata-collection inputs with redundant
+variants. Keep metadata describing supported settings.
 
 ## Instrumentation enablement selectors
 
@@ -26,7 +50,7 @@ Do not add per-instrumentation selector tests, including for new modules,
 renames, aliases, or consolidations:
 
 - No `instrumentationNames()` or name-order assertions.
-- No enable/disable matrices, precedence, fallback, legacy/v3-preview, flat/YAML
+- No enable/disable matrices, precedence, fallback, legacy-name handling, flat/YAML
   parity, or deprecation-warning checks.
 - No test projects, source sets, JVM variants, fixtures, or dependencies solely
   for those checks.
@@ -163,11 +187,15 @@ private static Stream<Arguments> testCases() {
 
 ## Test Port Allocation
 
+Prefer binding the test server to port `0` when it exposes the actual bound port. Wait for
+binding to complete before reading that port and connecting clients. The server keeps the
+socket bound, so there is no gap between choosing the port and binding it.
+
 When a test needs an available TCP port that another server or container will bind later, use
 `PortUtils.findOpenPort()` or `PortUtils.findOpenPorts(count)`. Do not implement a local probe by
 opening `new ServerSocket(0)`, reading its port, and closing it; that bypasses the repository
-allocator's coordination between parallel test processes. Keep port `0` when the same socket
-remains bound and becomes the test server.
+allocator's coordination between parallel test processes. Use `findOpenPorts(count)` when a
+service requires consecutive ports instead of assuming adjacent ports are available.
 
 ## Abstract Test Base Classes — Per-Class State Goes On Instance Fields
 
@@ -258,20 +286,18 @@ intentionally ad hoc or cross-trace filtering that the trace DSL cannot express.
   possible metric name. Do not add an exporter-interval sleep before or after `clearData()` solely
   to wait for metrics; the test runners force-flush metrics when reading them.
 
-## Trace Clearing After Asynchronous Operations
+## Discarding setup and cleanup telemetry
 
-- When test setup or cleanup performs an operation that can complete or export spans
-  asynchronously, call `testing.waitForTraces(expectedTraceCount)` before its captured telemetry
-  is cleared, whether by `testing.clearData()` or an `InstrumentationExtension` lifecycle clear.
-  Keep the wait at the end of setup or cleanup even when removing a redundant explicit clear. The
-  expected count is the total number of traces that should be captured at that point. Waiting
-  prevents spans exported after the clear from leaking into the next assertion or test.
-- Add the wait only when the exact trace count is deterministic. Do not guess a count when it can
-  vary because of retries, concurrent/background work, timing, or external-system behavior.
-- `InstrumentationExtension` already clears captured telemetry before each test. Do not add or keep
-  a setup/cleanup `clearData()` solely for per-test isolation when that lifecycle clear is
-  sufficient; keep explicit clears only when the test needs a mid-test reset, including to discard
-  telemetry from a preceding asynchronous operation after its exports have been drained.
+The [native test instructions](../../instructions/java-tests.instructions.md#testing-discarding-setup-and-cleanup-telemetry)
+define the rules and exceptions for discarding setup and cleanup telemetry.
+For example, a setup command that produces one completed trace can be drained without asserting
+its span names or attributes:
+
+```java
+jedis.lpush("wrong-type", "value");
+testing.waitForTraces(1);
+testing.clearData();
+```
 
 ## Attribute Assertion `satisfies()` Lambda Parameters
 
@@ -331,47 +357,69 @@ expected:
 
 - Experimental attributes (`-Dotel.instrumentation.<module>.experimental-*=true`) — see
   [testing-experimental-flags.md](testing-experimental-flags.md).
-- Semconv stability (`-Dotel.semconv-stability.opt-in=...`) — see
+- Semconv selection (`-Dotel.semconv-stability.opt-in=<domain>` for selectable stable
+  conventions or `-Dotel.semconv-stability.preview=<domain>` for preview conventions), see
   [testing-semconv-stability.md](testing-semconv-stability.md).
 - `testLatestDeps` Gradle property — runs against the newest supported library versions
   instead of the pinned earliest-supported ones.
 
-### Read the flag through a shared static helper, not a per-class field
+### Read mode flags through helpers
 
-Each flag has a shared static accessor; static-import it and call it directly. Never call
-`Boolean.getBoolean("…")` inline and never duplicate the property-name string at the call
-site.
+Use the shared static accessors below for global test modes. Static-import them rather than reading
+properties in assertions or builder calls. Module-specific flags can use a constant when every
+fixture reads the same property, or an instance method when the configuration source varies by
+fixture.
 
 | Flag                                           | Shared accessor                                                                                                    | Where it lives                                                                  |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
 | `-PtestLatestDeps=true`                        | `testLatestDeps()`                                                                                                 | `io.opentelemetry.instrumentation.testing.util.TestLatestDeps` (testing-common) |
-| `otel.semconv-stability.opt-in=…`              | `emitStableDatabaseSemconv()`, `emitOldDatabaseSemconv()`, `emitStableCodeSemconv()`, etc.                         | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
+| `otel.semconv-stability.opt-in=<domain>`       | the domain's `emitOld*Semconv()` / `emitStable*Semconv()` accessors                                                | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
+| `otel.semconv-stability.preview=<domain>`      | the domain's `emitOld*Semconv()` / `emitPreview*Semconv()` accessors                                               | `io.opentelemetry.instrumentation.api.internal.SemconvStability`                |
 | `otel.instrumentation.<module>.experimental-*` | per-module `EXPERIMENTAL_ATTRIBUTES` constant — see [testing-experimental-flags.md](testing-experimental-flags.md) | within the test class                                                           |
+
+Replace `<domain>` with a supported selector. Use `emitStable*Semconv()` for stable selection
+and `emitPreview*Semconv()` for preview selection.
+
+### Shared agent and library fixtures
+
+Shared tests can exercise an option configured through a production property in the agent and
+through a builder in the plain library. Resolve the mode in an instance method on the shared test
+base, using the production property for agent fixtures and a test-only flag for plain-library
+fixtures. For example, the AWS SDK tests use:
+
+```java
+protected boolean captureExperimentalSpanAttributes() {
+  return testing() instanceof AgentInstrumentationExtension
+      ? EXPERIMENTAL_ATTRIBUTES
+      : Boolean.getBoolean("test.captureExperimentalSpanAttributes");
+}
+```
+
+Here `EXPERIMENTAL_ATTRIBUTES` reads the agent's production property. Use the same method in
+library builder setup and expected-value helpers. Keep selection dependent on the concrete
+fixture instance; do not cache the resolved mode in a shared static field.
+
+Library-autoconfigure fixtures can use `LibraryInstrumentationExtension` while genuinely reading
+production properties. Override the shared method in those fixtures to select the production
+setting. Preserve overrides that intentionally force a value for a regression scenario.
+This distinction applies to builder-controlled options, not shared production settings that
+libraries actually read. See the
+[library variant example](testing-experimental-flags.md#programmatically-configured-library-tests)
+for Gradle wiring and metadata labels. For synthetic header capture in baseline fixtures and its
+metadata treatment, follow the
+[canonical collection guidance](../../../instrumentation-docs/readme.md#telemetry-collection).
 
 ### Mode-dependent expected values
 
-Database instrumentation tests run either the default or stable database
-semconv mode. Do not add `database/dup` test tasks or expand assertions to
-cover both modes at once. Duplicate-mode coverage belongs in tests for the
-semconv stability API itself.
-
-Use `SemconvStabilityUtil.maybeStable(...)` when old and stable database keys
-carry the same expected value:
+Assert keys and values directly when expectations do not depend on a mode:
 
 ```java
-equalTo(maybeStable(DB_SYSTEM), ELASTICSEARCH)
-equalTo(maybeStable(DB_OPERATION), "info")
+equalTo(DB_SYSTEM_NAME, ELASTICSEARCH)
+equalTo(DB_OPERATION_NAME, "info")
+equalTo(ERROR_TYPE, "42601")
 ```
 
-Do not replace these with separate null-gated assertions for the old and stable
-keys:
-
-```java
-equalTo(DB_SYSTEM, emitOldDatabaseSemconv() ? ELASTICSEARCH : null)
-equalTo(DB_SYSTEM_NAME, emitStableDatabaseSemconv() ? ELASTICSEARCH : null)
-```
-
-When no established semconv utility applies, put the ternary inside the
+For selectable domains, when no established semconv utility applies, put the ternary inside the
 `equalTo` value or single attribute key. Do not duplicate two whole
 `hasAttributesSatisfyingExactly(...)` blocks under a `flag ? a : b`. This
 includes attributes that exist in only one mode and attributes whose expected
@@ -379,8 +427,8 @@ values differ by mode. The assertion API treats `null` as "expect attribute
 absent":
 
 ```java
-equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB)
-equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null)
+equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null)
+equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null)
 equalTo(SOME_KEY, experimental("value"))
 span.hasName(testLatestDeps() ? "GET" : "HTTP GET")
 .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
@@ -404,20 +452,20 @@ derivation only:
 
 ```java
 // Bad: the helper conditionally builds a list and hides the expected shape.
-private static List<AttributeAssertion> databaseAttributes() {
+private static List<AttributeAssertion> rpcAttributes() {
   List<AttributeAssertion> attributes = new ArrayList<>();
-  if (emitOldDatabaseSemconv()) {
-    attributes.add(equalTo(DB_USER, USER_DB));
+  if (emitOldRpcSemconv()) {
+    attributes.add(equalTo(RPC_GRPC_STATUS_CODE, 0L));
   }
-  if (emitStableDatabaseSemconv()) {
-    attributes.add(equalTo(ERROR_TYPE, "42601"));
+  if (emitPreviewRpcSemconv()) {
+    attributes.add(equalTo(RPC_RESPONSE_STATUS_CODE, "OK"));
   }
   return attributes;
 }
-span.hasAttributesSatisfyingExactly(databaseAttributes());
+span.hasAttributesSatisfyingExactly(rpcAttributes());
 
 // Good: pass each assertion directly and keep its mode check visible.
 span.hasAttributesSatisfyingExactly(
-    equalTo(DB_USER, emitOldDatabaseSemconv() ? USER_DB : null),
-    equalTo(ERROR_TYPE, emitStableDatabaseSemconv() ? "42601" : null));
+    equalTo(RPC_GRPC_STATUS_CODE, emitOldRpcSemconv() ? 0L : null),
+    equalTo(RPC_RESPONSE_STATUS_CODE, emitPreviewRpcSemconv() ? "OK" : null));
 ```

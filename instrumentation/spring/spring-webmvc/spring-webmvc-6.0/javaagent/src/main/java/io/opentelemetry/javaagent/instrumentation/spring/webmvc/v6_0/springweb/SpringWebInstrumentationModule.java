@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -20,11 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringWebInstrumentationModule extends InstrumentationModule {
 
   public SpringWebInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "spring-webmvc-6.0" : "spring-webmvc",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-webmvc"}
-            : new String[] {"spring-webmvc-6.0"});
+    super("spring-webmvc-6.0", "spring-webmvc");
   }
 
   @Override
@@ -40,7 +35,7 @@ public class SpringWebInstrumentationModule extends InstrumentationModule {
     // Spring might want to read the class file metadata; this line will make the filter class file
     // visible to the bean class loader
     helperResourceBuilder.register(
-        "org/springframework/web/servlet/v6_0/OpenTelemetryHandlerMappingFilter.class");
+        "io/opentelemetry/javaagent/instrumentation/spring/webmvc/v6_0/OpenTelemetryHandlerMappingFilter.class");
   }
 
   @Override

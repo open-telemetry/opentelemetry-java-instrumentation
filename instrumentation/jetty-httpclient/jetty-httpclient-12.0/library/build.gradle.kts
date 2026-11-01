@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -12,14 +14,14 @@ dependencies {
   testImplementation(project(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:testing"))
 }
 
-tasks {
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("PreviewSemconv") {
+          jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+        }
+      }
+    }
   }
 }

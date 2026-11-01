@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -19,7 +20,6 @@ import java.util.function.Function;
 
 public class ClickHouseInstrumenterFactory {
 
-  @SuppressWarnings("deprecation") // to support old semconv
   public static Instrumenter<ClickHouseDbRequest, Void> createInstrumenter(
       String instrumenterName, Function<Throwable, String> errorCodeExtractor) {
     ClickHouseAttributesGetter dbAttributesGetter =
@@ -29,14 +29,14 @@ public class ClickHouseInstrumenterFactory {
         Instrumenter.<ClickHouseDbRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 instrumenterName,
-                DbClientSpanNameExtractor.createWithGenericOldSpanName(dbAttributesGetter))
+                DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(dbAttributesGetter)
-                    .setTableAttribute(null)
                     .setQuerySanitizationEnabled(
                         DbConfig.isQuerySanitizationEnabled(
                             GlobalOpenTelemetry.get(), "clickhouse"))
                     .build())
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());

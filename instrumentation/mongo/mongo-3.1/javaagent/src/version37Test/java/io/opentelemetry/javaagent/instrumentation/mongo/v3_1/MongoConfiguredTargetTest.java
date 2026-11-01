@@ -102,7 +102,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void relativeUnixSocketOmitsTheStableTarget() {
+  void relativeUnixSocketOmitsTheConfiguredTarget() {
     try (ConfiguredClient client =
         createClient(singletonList(new UnixServerAddress("mongodb.sock")))) {
       runCommand(client);
@@ -112,7 +112,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
   }
 
   @Test
-  void relativeUnixSocketInSeedListOmitsTheStableTarget() {
+  void relativeUnixSocketInSeedListOmitsTheConfiguredTarget() {
     try (ConfiguredClient client =
         createClient(
             asList(

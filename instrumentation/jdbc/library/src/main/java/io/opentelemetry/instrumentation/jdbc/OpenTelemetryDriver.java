@@ -28,7 +28,6 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
@@ -84,11 +83,7 @@ public final class OpenTelemetryDriver implements Driver {
         SystemProperty.getBoolean(
             "otel.instrumentation.jdbc.query-sanitization.enabled",
             SystemProperty.getBoolean(
-                "otel.instrumentation.common.db.query-sanitization.enabled",
-                SemconvStability.v3Preview(openTelemetry)
-                    ? true
-                    : SystemProperty.getBoolean(
-                        "otel.instrumentation.common.db-statement-sanitizer.enabled", true))));
+                "otel.instrumentation.common.db.query-sanitization.enabled", true)));
   }
 
   private static boolean transactionEnabled(OpenTelemetry openTelemetry) {

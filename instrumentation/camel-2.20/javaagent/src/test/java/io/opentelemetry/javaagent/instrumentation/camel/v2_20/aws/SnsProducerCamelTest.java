@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.aws;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessagingMetricsAssertions.assertSendMetrics;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -19,7 +18,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -47,7 +45,7 @@ class SnsProducerCamelTest {
 
   @BeforeAll
   static void setUp() throws IOException {
-    server = HttpServer.create(new InetSocketAddress("localhost", PortUtils.findOpenPort()), 0);
+    server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
     server.createContext("/", SnsProducerCamelTest::handleRequest);
     server.start();
 
@@ -93,9 +91,7 @@ class SnsProducerCamelTest {
                 span -> {
                   camelSend.set(trace.getSpan(1));
                   CamelSpanAssertions.snsPublish(span, topicName).hasParent(trace.getSpan(0));
-                  if (emitStableMessagingSemconv()) {
-                    span.hasAttribute(MESSAGING_MESSAGE_ID, "message-id");
-                  }
+                  span.hasAttribute(MESSAGING_MESSAGE_ID, "message-id");
                 },
                 span -> {
                   AwsSpanAssertions.sns(span, "SNS.Publish", topicArn, topicArn)

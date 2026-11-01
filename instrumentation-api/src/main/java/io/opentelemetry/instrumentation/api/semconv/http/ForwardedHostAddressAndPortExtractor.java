@@ -84,6 +84,21 @@ final class ForwardedHostAddressAndPortExtractor<REQUEST>
       return extractHost(sink, host, start + 1, quoteEnd);
     }
 
+    // an IPv6 address is enclosed in square brackets and contains ':' characters, so the address
+    // ends at the closing ']' and the port, if any, follows it
+    if (host.charAt(start) == '[') {
+      int ipv6End = host.indexOf(']', start + 1);
+      if (notFound(ipv6End, end)) {
+        // malformed header value
+        return false;
+      }
+      sink.setAddress(host.substring(start + 1, ipv6End));
+      if (ipv6End + 1 < end && host.charAt(ipv6End + 1) == ':') {
+        setPort(sink, host, ipv6End + 2, end);
+      }
+      return true;
+    }
+
     int hostHeaderSeparator = host.indexOf(':', start);
     if (notFound(hostHeaderSeparator, end)) {
       sink.setAddress(host.substring(start, end));

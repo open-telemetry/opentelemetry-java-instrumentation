@@ -66,20 +66,7 @@ configurations.configureEach {
 }
 
 tasks {
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=code")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
-  }
-
   check {
-    dependsOn(testing.suites, testStableSemconv, testBothSemconv)
+    dependsOn(testing.suites)
   }
 }

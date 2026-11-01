@@ -29,11 +29,11 @@ public class JedisConfiguredTargets {
   private static final VirtualField<Pool<?>, ConfiguredTarget> POOL_TARGET =
       VirtualField.find(Pool.class, ConfiguredTarget.class);
 
-  private static final VirtualField<Pool<?>, PoolFactory> POOL_FACTORY =
-      VirtualField.find(Pool.class, PoolFactory.class);
+  private static final VirtualField<Pool<?>, PooledObjectFactory<?>> POOL_FACTORY =
+      VirtualField.find(Pool.class, PooledObjectFactory.class, "poolFactory");
 
-  private static final VirtualField<HostAndPort, OriginalEndpoint> ORIGINAL_ENDPOINT =
-      VirtualField.find(HostAndPort.class, OriginalEndpoint.class);
+  private static final VirtualField<HostAndPort, String> ORIGINAL_ENDPOINT =
+      VirtualField.find(HostAndPort.class, String.class, "originalEndpoint");
 
   private static final VirtualField<JedisClusterConnectionHandler, ConfiguredTarget>
       CLUSTER_TARGET =
@@ -45,9 +45,9 @@ public class JedisConfiguredTargets {
   public static void setPoolTarget(Pool<?> pool, @Nullable RedisServerTarget target) {
     ConfiguredTarget configuredTarget = ConfiguredTarget.create(target);
     POOL_TARGET.set(pool, configuredTarget);
-    PoolFactory poolFactory = POOL_FACTORY.get(pool);
+    PooledObjectFactory<?> poolFactory = POOL_FACTORY.get(pool);
     if (poolFactory != null) {
-      JedisFactoryTarget.set(poolFactory.factory, configuredTarget);
+      JedisFactoryTarget.set(poolFactory, configuredTarget);
     }
   }
 
@@ -60,7 +60,7 @@ public class JedisConfiguredTargets {
     if (factory == null || !JedisFactoryTarget.isInstance(factory)) {
       return;
     }
-    POOL_FACTORY.set(pool, new PoolFactory(factory));
+    POOL_FACTORY.set(pool, factory);
     ConfiguredTarget configuredTarget = Context.current().get(CURRENT_CONFIGURED_TARGET);
     if (configuredTarget == null) {
       configuredTarget = POOL_TARGET.get(pool);
@@ -75,7 +75,7 @@ public class JedisConfiguredTargets {
   public static void captureOriginalEndpoint(
       @Nullable HostAndPort parsedEndpoint, @Nullable String configuredEndpoint) {
     if (parsedEndpoint != null && configuredEndpoint != null) {
-      ORIGINAL_ENDPOINT.set(parsedEndpoint, new OriginalEndpoint(configuredEndpoint));
+      ORIGINAL_ENDPOINT.set(parsedEndpoint, configuredEndpoint);
     }
   }
 
@@ -99,10 +99,10 @@ public class JedisConfiguredTargets {
   }
 
   static String endpoint(HostAndPort endpoint) {
-    OriginalEndpoint originalEndpoint = ORIGINAL_ENDPOINT.get(endpoint);
+    String originalEndpoint = ORIGINAL_ENDPOINT.get(endpoint);
     return originalEndpoint == null
         ? RedisServerTarget.endpoint(endpoint.getHost(), endpoint.getPort())
-        : RedisServerTarget.normalizeHostAndPort(originalEndpoint.value);
+        : RedisServerTarget.normalizeHostAndPort(originalEndpoint);
   }
 
   @Nullable
@@ -174,14 +174,6 @@ public class JedisConfiguredTargets {
 
   private JedisConfiguredTargets() {}
 
-  private static final class PoolFactory {
-    private final PooledObjectFactory<?> factory;
-
-    private PoolFactory(PooledObjectFactory<?> factory) {
-      this.factory = factory;
-    }
-  }
-
   private static final class ConfiguredTarget {
     private static final ConfiguredTarget UNREPRESENTABLE = new ConfiguredTarget(null);
 
@@ -193,14 +185,6 @@ public class JedisConfiguredTargets {
 
     private ConfiguredTarget(@Nullable RedisServerTarget target) {
       this.target = target;
-    }
-  }
-
-  private static final class OriginalEndpoint {
-    private final String value;
-
-    private OriginalEndpoint(String value) {
-      this.value = value;
     }
   }
 }

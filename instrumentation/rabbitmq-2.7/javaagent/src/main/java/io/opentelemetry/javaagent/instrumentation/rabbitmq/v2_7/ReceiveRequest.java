@@ -24,9 +24,4 @@ public abstract class ReceiveRequest {
   public abstract GetResponse getResponse();
 
   public abstract Connection getConnection();
-
-  String spanName() {
-    String queue = getQueue();
-    return (queue.startsWith("amq.gen-") ? "<generated>" : queue) + " receive";
-  }
 }

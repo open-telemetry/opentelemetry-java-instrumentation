@@ -17,7 +17,3 @@ dependencies {
 
   latestDepTestLibrary("org.restlet:org.restlet:1.+") // see restlet-2.0 module
 }
-
-tasks.test {
-  systemProperty("collectMetadata", otelProps.collectMetadata)
-}

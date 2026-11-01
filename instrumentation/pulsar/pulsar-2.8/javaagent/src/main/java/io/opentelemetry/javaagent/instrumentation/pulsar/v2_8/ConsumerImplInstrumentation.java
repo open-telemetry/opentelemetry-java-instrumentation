@@ -21,7 +21,6 @@ import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -30,7 +29,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Messages;
-import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.impl.PulsarClientImpl;
 
 class ConsumerImplInstrumentation implements TypeInstrumentation {
@@ -45,15 +43,14 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor(), getClass().getName() + "$ConsumerConstructorAdvice");
+        isConstructor()
+            .and(takesArgument(0, named("org.apache.pulsar.client.impl.PulsarClientImpl"))),
+        getClass().getName() + "$ConsumerConstructorAdvice");
 
     // internalReceive will apply to Consumer#receive(long,TimeUnit)
     // and called before MessageListener#receive.
     transformer.applyAdviceToMethod(
-        isProtected()
-            .and(named("internalReceive"))
-            .and(takesArguments(2))
-            .and(takesArgument(1, TimeUnit.class)),
+        isProtected().and(named("internalReceive")).and(takesArguments(2)),
         getClass().getName() + "$ConsumerInternalReceiveAdvice");
     // internalReceive will apply to Consumer#receive()
     transformer.applyAdviceToMethod(
@@ -80,10 +77,9 @@ class ConsumerImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void after(
-        @Advice.This Consumer<?> consumer, @Advice.Argument(value = 0) PulsarClient client) {
+        @Advice.This Consumer<?> consumer, @Advice.Argument(value = 0) PulsarClientImpl client) {
 
-      PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
-      String url = pulsarClient.getLookup().getServiceUrl();
+      String url = client.getLookup().getServiceUrl();
       VirtualFieldStore.inject(consumer, url);
     }
   }

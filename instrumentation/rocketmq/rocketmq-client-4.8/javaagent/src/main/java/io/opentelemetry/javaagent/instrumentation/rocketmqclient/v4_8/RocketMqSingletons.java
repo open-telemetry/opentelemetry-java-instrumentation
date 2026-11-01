@@ -43,8 +43,7 @@ public class RocketMqSingletons {
 
   private static final ConsumeMessageHook consumeMessageHook = telemetry.createConsumeMessageHook();
 
-  private static final SendMessageHook sendMessageHook =
-      batchSendHelper.wrap(telemetry.createSendMessageHook());
+  private static final SendMessageHook sendMessageHook = batchSendHelper.createSendMessageHook();
 
   public static RocketMqBatchSendHelper batchSendHelper() {
     return batchSendHelper;

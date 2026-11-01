@@ -12,7 +12,6 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.procedure.cal
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.HibernateOperation;
@@ -53,7 +52,7 @@ class ProcedureCallInstrumentation implements TypeInstrumentation {
         return null;
       }
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Context.current();
       HibernateOperation hibernateOperation =
           new HibernateOperation(
               "ProcedureCall." + name,

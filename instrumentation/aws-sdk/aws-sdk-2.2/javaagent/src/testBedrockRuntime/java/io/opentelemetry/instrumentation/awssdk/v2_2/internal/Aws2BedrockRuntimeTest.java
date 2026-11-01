@@ -31,4 +31,9 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
       BedrockRuntimeAsyncClient client) {
     return client;
   }
+
+  @Override
+  protected boolean isCaptureMessageContentEnabled() {
+    return Boolean.getBoolean("otel.instrumentation.genai.capture-message-content");
+  }
 }

@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.graphql.common.v12_0;
 
 import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -19,6 +21,8 @@ import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GR
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 
+import graphql.ErrorType;
+import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphqlErrorBuilder;
@@ -30,10 +34,13 @@ import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.SchemaUrls;
 import java.io.IOException;
@@ -43,10 +50,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractGraphqlTest {
@@ -56,6 +66,7 @@ public abstract class AbstractGraphqlTest {
 
   private final List<Map<String, String>> books = new ArrayList<>();
   private final List<Map<String, String>> authors = new ArrayList<>();
+  private CompletableFuture<Object> dataFetcherResult;
 
   protected GraphQL graphql;
   protected GraphQLSchema graphqlSchema;
@@ -121,13 +132,17 @@ public abstract class AbstractGraphqlTest {
         .build();
   }
 
-  private DataFetcher<DataFetcherResult<Map<String, String>>> getBookByIdDataFetcher() {
+  private DataFetcher<Object> getBookByIdDataFetcher() {
     return dataFetchingEnvironment ->
         getTesting()
             .runWithSpan(
                 "fetchBookById",
                 () -> {
                   String bookId = dataFetchingEnvironment.getArgument("id");
+                  if (bookId.startsWith("book-async-")) {
+                    dataFetcherResult = new CompletableFuture<>();
+                    return dataFetcherResult;
+                  }
                   DataFetcherResult.Builder<Map<String, String>> builder =
                       DataFetcherResult.newResult();
                   if ("book-exception".equals(bookId)) {
@@ -266,23 +281,16 @@ public abstract class AbstractGraphqlTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("GraphQL Operation")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasTotalAttributeCount(0)
-                            .hasStatus(StatusData.error())
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("exception")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(EXCEPTION_TYPE, "InvalidSyntax"),
-                                            satisfies(
-                                                EXCEPTION_MESSAGE,
-                                                val ->
-                                                    val.startsWithIgnoringCase(
-                                                        "Invalid Syntax"))))));
+                    span -> {
+                      span.hasName("GraphQL Operation")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasNoParent()
+                          .hasTotalAttributeCount(0)
+                          .hasStatus(StatusData.error());
+                      assertStructuredError(
+                          span, "InvalidSyntax", result.getErrors().get(0).getMessage());
+                    }));
+    assertStructuredErrorLogs("InvalidSyntax", result.getErrors().get(0).getMessage());
   }
 
   @Test
@@ -308,21 +316,190 @@ public abstract class AbstractGraphqlTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("GraphQL Operation")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasTotalAttributeCount(0)
-                            .hasStatus(StatusData.error())
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event
-                                        .hasName("exception")
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(EXCEPTION_TYPE, "ValidationError"),
-                                            satisfies(
-                                                EXCEPTION_MESSAGE,
-                                                val -> val.startsWith("Validation error"))))));
+                    span -> {
+                      span.hasName("GraphQL Operation")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasNoParent()
+                          .hasTotalAttributeCount(0)
+                          .hasStatus(StatusData.error());
+                      assertStructuredError(
+                          span, "ValidationError", result.getErrors().get(0).getMessage());
+                    }));
+    assertStructuredErrorLogs("ValidationError", result.getErrors().get(0).getMessage());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void dataFetcherException(boolean asynchronous) {
+    assertDataFetcherFailure(asynchronous, true);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void dataFetcherError(boolean asynchronous) {
+    assertDataFetcherFailure(asynchronous, false);
+  }
+
+  private void assertDataFetcherFailure(boolean asynchronous, boolean exception) {
+    String bookId =
+        (asynchronous ? "book-async-" : "book-") + (exception ? "exception" : "graphql-error");
+    CompletableFuture<ExecutionResult> execution =
+        graphql.executeAsync(
+            ExecutionInput.newExecutionInput()
+                .query(
+                    "query findBookById { bookById(id: \""
+                        + bookId
+                        + "\") { name author { name } } }"));
+    IllegalStateException failure = new IllegalStateException("fetching book failed");
+    if (asynchronous) {
+      // Complete on another thread after the GraphQL invocation has left its scope.
+      CompletableFuture.runAsync(
+              () -> {
+                if (exception) {
+                  dataFetcherResult.completeExceptionally(failure);
+                } else {
+                  dataFetcherResult.complete(
+                      DataFetcherResult.newResult()
+                          .error(
+                              GraphqlErrorBuilder.newError()
+                                  .errorType(ErrorType.DataFetchingException)
+                                  .message("failed to fetch book")
+                                  .build())
+                          .build());
+                }
+              })
+          .join();
+    }
+    ExecutionResult result = execution.join();
+    String message =
+        exception
+            ? "Exception while fetching data (/bookById) : fetching book failed"
+            : "failed to fetch book";
+    assertThat(result.getErrors())
+        .singleElement()
+        .satisfies(error -> assertThat(error.getMessage()).isEqualTo(message));
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace -> {
+              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+              assertions.add(
+                  span -> {
+                    span.hasName("query findBookById")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
+                            equalTo(GRAPHQL_OPERATION_TYPE, "query"),
+                            normalizedQueryEqualsTo(
+                                GRAPHQL_DOCUMENT,
+                                "query findBookById { bookById(id: ?) { name author { name } } }"));
+                    assertStructuredError(span, "DataFetchingException", message);
+                  });
+              if (includeDataFetcher()) {
+                assertions.add(
+                    span -> {
+                      span.hasName("bookById")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasParent(trace.getSpan(0))
+                          .hasStatus(StatusData.error())
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(stringKey("graphql.field.name"), "bookById"),
+                              equalTo(stringKey("graphql.field.path"), "/bookById"));
+                      if (exception) {
+                        span.hasException(emitExceptionAsSpanEvents() ? failure : null);
+                      } else {
+                        assertStructuredError(span, "DataFetchingException", message);
+                      }
+                    });
+              }
+              assertions.add(
+                  span -> {
+                    span.hasName("fetchBookById")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(includeDataFetcher() ? 1 : 0))
+                        .hasTotalAttributeCount(0);
+                    if (exception && !asynchronous) {
+                      span.hasStatus(StatusData.error())
+                          .hasException(emitExceptionAsSpanEvents() ? failure : null);
+                    } else {
+                      span.hasStatus(StatusData.unset()).hasEventsSatisfyingExactly();
+                    }
+                  });
+              trace.hasSpansSatisfyingExactly(assertions);
+            });
+    if (emitExceptionAsLogs()) {
+      List<Consumer<LogRecordDataAssert>> assertions = new ArrayList<>();
+      if (exception && !asynchronous) {
+        assertions.add(throwableLog(spanWithName("fetchBookById"), failure));
+      }
+      if (includeDataFetcher()) {
+        SpanData fetcherSpan = spanWithName("bookById");
+        assertions.add(
+            exception
+                ? throwableLog(fetcherSpan, failure)
+                : structuredErrorLog(fetcherSpan, "DataFetchingException", message));
+      }
+      assertions.add(
+          structuredErrorLog(spanWithName("query findBookById"), "DataFetchingException", message));
+      getTesting().waitAndAssertLogRecords(assertions);
+    } else {
+      assertThat(getTesting().logRecords()).isEmpty();
+    }
+  }
+
+  private static void assertStructuredError(SpanDataAssert span, String type, String message) {
+    if (emitExceptionAsSpanEvents()) {
+      span.hasEventsSatisfyingExactly(
+          event ->
+              event
+                  .hasName("exception")
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, type), equalTo(EXCEPTION_MESSAGE, message)));
+    } else {
+      span.hasEventsSatisfyingExactly();
+    }
+  }
+
+  private void assertStructuredErrorLogs(String type, String message) {
+    if (emitExceptionAsLogs()) {
+      getTesting()
+          .waitAndAssertLogRecords(
+              structuredErrorLog(spanWithName("GraphQL Operation"), type, message));
+    } else {
+      assertThat(getTesting().logRecords()).isEmpty();
+    }
+  }
+
+  private static Consumer<LogRecordDataAssert> structuredErrorLog(
+      SpanData span, String type, String message) {
+    return log ->
+        log.hasEventName("exception")
+            .hasSeverity(Severity.WARN)
+            .hasSpanContext(span.getSpanContext())
+            .satisfies(
+                logData ->
+                    assertThat(logData.getInstrumentationScopeInfo())
+                        .isEqualTo(span.getInstrumentationScopeInfo()))
+            .hasAttributesSatisfyingExactly(
+                equalTo(EXCEPTION_TYPE, type), equalTo(EXCEPTION_MESSAGE, message));
+  }
+
+  private static Consumer<LogRecordDataAssert> throwableLog(SpanData span, Throwable failure) {
+    return log ->
+        log.hasEventName("exception")
+            .hasSeverity(Severity.WARN)
+            .hasSpanContext(span.getSpanContext())
+            .hasException(failure)
+            .hasTotalAttributeCount(3);
+  }
+
+  private SpanData spanWithName(String name) {
+    return getTesting().spans().stream()
+        .filter(span -> span.getName().equals(name))
+        .findFirst()
+        .orElseThrow(() -> new AssertionError("Missing span " + name));
   }
 
   @Test

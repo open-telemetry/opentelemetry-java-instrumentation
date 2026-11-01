@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -19,11 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class Couchbase26NetworkInstrumentationModule extends InstrumentationModule {
 
   public Couchbase26NetworkInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "couchbase-2.0" : "couchbase",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"couchbase"}
-            : new String[] {"couchbase-2.6"});
+    super("couchbase-2.0", "couchbase");
   }
 
   @Override

@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisErrorPrefix;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
+import redis.actors.ReplyErrorException;
 
 final class RediscalaAttributesGetter implements DbClientAttributesGetter<RediscalaRequest, Void> {
 
@@ -28,14 +28,6 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
     return databaseIndex != null ? String.valueOf(databaseIndex) : null;
   }
 
-  @Deprecated // to be removed in 3.0
-  @Override
-  @Nullable
-  public String getDbName(RediscalaRequest request) {
-    // old semconv reports the redis database index as db.redis.database_index, not db.name
-    return null;
-  }
-
   @Override
   @Nullable
   public String getDbQueryText(RediscalaRequest request) {
@@ -44,12 +36,6 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
 
   @Override
   public String getDbOperationName(RediscalaRequest request) {
-    return request.getStableOperationName();
-  }
-
-  @Override
-  @SuppressWarnings("deprecation") // old database semconv still use db.operation
-  public String getDbOperation(RediscalaRequest request) {
     return request.getOperationName();
   }
 
@@ -61,21 +47,28 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<Redisc
 
   @Nullable
   @Override
-  public String getServerAddress(RediscalaRequest request) {
-    if (emitStableDatabaseSemconv()) {
-      RedisServerTarget serverTarget = request.getServerTarget();
-      return serverTarget != null ? serverTarget.getAddress() : null;
+  public String getErrorType(
+      RediscalaRequest request, @Nullable Void unused, @Nullable Throwable error) {
+    // Rediscala wraps decoded Redis error replies in ReplyErrorException. RESP errors start with an
+    // error prefix; a missing prefix preserves the shared exception-class fallback.
+    // https://redis.io/docs/latest/develop/reference/protocol-spec/#resp-errors
+    if (!(error instanceof ReplyErrorException)) {
+      return null;
     }
-    return request.getHost();
+    return RedisErrorPrefix.extract(error.getMessage());
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(RediscalaRequest request) {
+    RedisServerTarget serverTarget = request.getServerTarget();
+    return serverTarget != null ? serverTarget.getAddress() : null;
   }
 
   @Nullable
   @Override
   public Integer getServerPort(RediscalaRequest request) {
-    if (emitStableDatabaseSemconv()) {
-      RedisServerTarget serverTarget = request.getServerTarget();
-      return serverTarget != null ? serverTarget.getPort() : null;
-    }
-    return request.getPort();
+    RedisServerTarget serverTarget = request.getServerTarget();
+    return serverTarget != null ? serverTarget.getPort() : null;
   }
 }

@@ -7,4 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.cxf.v3_0;
 
 import io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.AbstractJaxWs2Test;
 
-class CxfJaxWs2Test extends AbstractJaxWs2Test {}
+class CxfJaxWs2Test extends AbstractJaxWs2Test {
+
+  @Override
+  protected String expectedScopeName() {
+    return "io.opentelemetry.jaxws-2.0-cxf-3.0";
+  }
+}

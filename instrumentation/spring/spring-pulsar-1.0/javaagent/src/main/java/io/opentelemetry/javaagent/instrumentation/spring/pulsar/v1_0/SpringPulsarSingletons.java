@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.pulsar.v1_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
@@ -16,6 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
@@ -29,37 +29,27 @@ public class SpringPulsarSingletons {
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     SpringPulsarMessageAttributesGetter getter = new SpringPulsarMessageAttributesGetter();
-    boolean messagingReceiveInstrumentationEnabled =
-        ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
-
-    consumerProcessInstrumenter =
-        createInstrumenter(openTelemetry, getter, messagingReceiveInstrumentationEnabled);
+    consumerProcessInstrumenter = createInstrumenter(openTelemetry, getter);
   }
 
   private static Instrumenter<Message<?>, Void> createInstrumenter(
-      OpenTelemetry openTelemetry,
-      SpringPulsarMessageAttributesGetter getter,
-      boolean messagingReceiveInstrumentationEnabled) {
+      OpenTelemetry openTelemetry, SpringPulsarMessageAttributesGetter getter) {
     MessagingOperationType operationType = MessagingOperationType.PROCESS;
     InstrumenterBuilder<Message<?>, Void> builder =
         Instrumenter.<Message<?>, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builder(getter, operationType, PROCESS_OPERATION_NAME)
                     .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build())
             .addOperationMetrics(MessagingProcessMetrics.get());
-    if (emitStableMessagingSemconv()) {
-      builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
-    }
+    builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     setMessagingProcessExceptionEventExtractor(builder);
     return MessagingProcessInstrumenterFactory.create(
-        builder,
-        openTelemetry.getPropagators().getTextMapPropagator(),
-        new MessageHeaderGetter(),
-        messagingReceiveInstrumentationEnabled);
+        builder, openTelemetry.getPropagators().getTextMapPropagator(), new MessageHeaderGetter());
   }
 
   public static Instrumenter<Message<?>, Void> consumerProcessInstrumenter() {

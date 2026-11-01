@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 
@@ -16,9 +15,6 @@ public final class CouchbaseConfiguredTarget {
 
   public static void capture(
       CouchbaseSpan span, CouchbaseSpanName spanName, RequestContext requestContext) {
-    if (!emitStableDatabaseSemconv()) {
-      return;
-    }
     CouchbaseServerTarget target = CouchbaseServerTargets.get(requestContext.core());
     spanName.captureServerTarget(target);
     if (target == null) {

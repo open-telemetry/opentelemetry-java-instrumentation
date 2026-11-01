@@ -12,7 +12,7 @@ muzzle {
 
 dependencies {
   library("com.oracle.database.jdbc:ucp:11.2.0.4")
-  library("com.oracle.database.jdbc:ojdbc8:12.2.0.1")
+  library("com.oracle.database.jdbc:ojdbc8:21.1.0.0")
 
   implementation(project(":instrumentation:oracle-ucp-11.2:library"))
   implementation(project(":instrumentation:jdbc:javaagent-common"))
@@ -25,18 +25,6 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
   }
 }

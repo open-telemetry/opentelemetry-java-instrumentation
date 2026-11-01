@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -16,12 +17,14 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toMap;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.logs.Severity;
+import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanId;
@@ -35,7 +38,6 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
@@ -56,6 +58,9 @@ import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -125,30 +130,6 @@ class InstrumenterTest {
         @Nullable Throwable error) {
       attributes.put("resp3", response.get("resp3"));
       attributes.put("resp2", response.get("resp2_2"));
-    }
-  }
-
-  static class AttributesExtractorWithSchemaUrl
-      implements AttributesExtractor<Map<String, String>, Map<String, String>>, SchemaUrlProvider {
-
-    @Override
-    public void onStart(
-        AttributesBuilder attributes, Context parentContext, Map<String, String> request) {
-      attributes.put("key", "value");
-    }
-
-    @Override
-    public void onEnd(
-        AttributesBuilder attributes,
-        Context context,
-        Map<String, String> request,
-        @Nullable Map<String, String> response,
-        @Nullable Throwable error) {}
-
-    @Nullable
-    @Override
-    public String internalGetSchemaUrl() {
-      return "schemaUrl from extractor";
     }
   }
 
@@ -889,53 +870,49 @@ class InstrumenterTest {
                     span -> span.hasName("span").hasInstrumentationScopeInfo(expectedLibraryInfo)));
   }
 
-  @Test
-  void schemaUrl_computedFromExtractors() {
-    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(
+      strings = {"https://opentelemetry.io/schemas/1.0.0", "https://example.com/custom-schema"})
+  void schemaUrl_allSignals(String schemaUrl) {
+    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", name -> "span")
-            .addAttributesExtractor(new AttributesExtractorWithSchemaUrl())
-            .buildInstrumenter();
+            .addAttributesExtractor(new AttributesExtractor1())
+            .addOperationMetrics(
+                meter -> {
+                  LongCounter counter = meter.counterBuilder("test.operations").build();
+                  return new OperationListener() {
+                    @Override
+                    public Context onStart(
+                        Context context, Attributes startAttributes, long startNanos) {
+                      return context;
+                    }
 
-    Context context = instrumenter.start(Context.root(), emptyMap());
-    assertThat(Span.fromContext(context)).isNotNull();
-
-    instrumenter.end(context, emptyMap(), emptyMap(), null);
-
-    InstrumentationScopeInfo expectedLibraryInfo =
-        InstrumentationScopeInfo.builder("test").setSchemaUrl("schemaUrl from extractor").build();
-    otelTesting
-        .assertTraces()
-        .hasTracesSatisfyingExactly(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("span").hasInstrumentationScopeInfo(expectedLibraryInfo)));
-  }
-
-  @Test
-  void schemaUrl_schemaSetExplicitlyOverridesSchemaComputedFromExtractors() {
+                    @Override
+                    public void onEnd(Context context, Attributes endAttributes, long endNanos) {
+                      counter.add(1);
+                    }
+                  };
+                });
+    if (schemaUrl != null) {
+      builder.setSchemaUrl(schemaUrl);
+    }
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
-        Instrumenter.<Map<String, String>, Map<String, String>>builder(
-                otelTesting.getOpenTelemetry(), "test", name -> "span")
-            .setSchemaUrl("https://opentelemetry.io/schemas/1.0.0")
-            .addAttributesExtractor(new AttributesExtractorWithSchemaUrl())
-            .buildInstrumenter();
+        builder.buildInstrumenter();
 
-    Context context = instrumenter.start(Context.root(), emptyMap());
-    assertThat(Span.fromContext(context)).isNotNull();
+    Context context = instrumenter.start(Context.root(), REQUEST);
+    instrumenter.end(context, REQUEST, RESPONSE, new IllegalStateException("test"));
 
-    instrumenter.end(context, emptyMap(), emptyMap(), null);
-
-    InstrumentationScopeInfo expectedLibraryInfo =
-        InstrumentationScopeInfo.builder("test")
-            .setSchemaUrl("https://opentelemetry.io/schemas/1.0.0")
-            .build();
-    otelTesting
-        .assertTraces()
-        .hasTracesSatisfyingExactly(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("span").hasInstrumentationScopeInfo(expectedLibraryInfo)));
+    assertThat(otelTesting.getSpans()).singleElement().satisfies(hasScopeSchemaUrl(schemaUrl));
+    assertThat(otelTesting.getMetrics()).singleElement().satisfies(hasScopeSchemaUrl(schemaUrl));
+    if (emitExceptionAsLogs()) {
+      assertThat(otelTesting.getLogRecords())
+          .singleElement()
+          .satisfies(hasScopeSchemaUrl(schemaUrl));
+    } else {
+      assertThat(otelTesting.getLogRecords()).isEmpty();
+    }
   }
 
   @Test
@@ -958,6 +935,49 @@ class InstrumenterTest {
 
     assertThatSpanKeyWasStored(SpanKey.DB_CLIENT, context);
     assertThatSpanKeyWasStored(SpanKey.HTTP_CLIENT, context);
+  }
+
+  @Test
+  void shouldEndSpanOnError() {
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .addAttributesExtractor(
+                new AttributesExtractor<Map<String, String>, Map<String, String>>() {
+                  @Override
+                  public void onStart(
+                      AttributesBuilder attributes,
+                      Context parentContext,
+                      Map<String, String> request) {}
+
+                  @Override
+                  public void onEnd(
+                      AttributesBuilder attributes,
+                      Context context,
+                      Map<String, String> request,
+                      @Nullable Map<String, String> response,
+                      @Nullable Throwable error) {
+                    throw new IllegalStateException("error");
+                  }
+                })
+            .buildInstrumenter();
+
+    Map<String, String> request = emptyMap();
+    Context context = instrumenter.start(Context.root(), request);
+
+    SpanContext spanContext = Span.fromContext(context).getSpanContext();
+    assertThat(spanContext.isValid()).isTrue();
+
+    assertThatThrownBy(() -> instrumenter.end(context, emptyMap(), emptyMap(), null))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("error");
+
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("span").hasKind(SpanKind.INTERNAL)));
   }
 
   private static void assertThatSpanKeyWasStored(SpanKey spanKey, Context context) {

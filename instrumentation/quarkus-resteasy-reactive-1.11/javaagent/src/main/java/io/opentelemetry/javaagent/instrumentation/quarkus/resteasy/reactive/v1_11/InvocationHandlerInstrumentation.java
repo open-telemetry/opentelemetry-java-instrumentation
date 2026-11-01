@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.quarkus.resteasy.reactive.v1_11;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -22,7 +23,14 @@ class InvocationHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("handle"), getClass().getName() + "$HandleAdvice");
+    transformer.applyAdviceToMethod(
+        named("handle")
+            .and(
+                takesArgument(
+                    0,
+                    named(
+                        "org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext"))),
+        getClass().getName() + "$HandleAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0.RocketMqSingletons.simpleConsumerReceiveInstrumenter;
 
 import io.opentelemetry.context.Context;
@@ -33,14 +32,10 @@ public class SimpleConsumerReceiveOperation {
    * of by the per-message-queue instrumentation underneath it.
    */
   public static boolean handlesReceive(Object consumer) {
-    return emitStableMessagingSemconv() && consumer instanceof SimpleConsumer;
+    return consumer instanceof SimpleConsumer;
   }
 
-  @Nullable
   public static SimpleConsumerReceiveOperation start(SimpleConsumer consumer) {
-    if (!emitStableMessagingSemconv()) {
-      return null;
-    }
     return new SimpleConsumerReceiveOperation(
         consumer.getConsumerGroup(), Context.current(), Timer.start());
   }

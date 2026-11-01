@@ -4,10 +4,10 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.5.4"
     id("com.gradle.plugin-publish") version "2.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.4.10"
+    id("org.jetbrains.kotlin.jvm") version "2.4.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.1"
-    id("org.graalvm.buildtools.native") version "1.1.14"
+    id("org.graalvm.buildtools.native") version "1.1.17"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.10.0"
   }
@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:pushLinuxImages -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:pushWindowsImages -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.6.0"
+  id("com.gradle.develocity") version "4.6.1"
 }
 
 dependencyResolutionManagement {
@@ -178,6 +178,7 @@ include(":smoke-tests:images:servlet")
 include(":smoke-tests:images:servlet:servlet-3.0")
 include(":smoke-tests:images:servlet:servlet-5.0")
 include(":smoke-tests:images:spring-boot")
+include(":smoke-tests:images:spring-boot-1.3")
 include(":smoke-tests:extensions:testapp")
 include(":smoke-tests:extensions:extension")
 
@@ -416,13 +417,12 @@ include(":instrumentation:jdbc:javaagent")
 include(":instrumentation:jdbc:javaagent-common")
 include(":instrumentation:jdbc:library")
 include(":instrumentation:jdbc:testing")
-include(":instrumentation:jedis:jedis-1.4:javaagent")
 include(":instrumentation:jedis:jedis-2.0:javaagent")
 include(":instrumentation:jedis:jedis-3.0:javaagent")
 include(":instrumentation:jedis:jedis-3.0:javaagent-unit-tests")
 include(":instrumentation:jedis:jedis-4.0:javaagent")
 include(":instrumentation:jedis:jedis-4.0:javaagent-unit-tests")
-include(":instrumentation:jedis:jedis-common-1.4:javaagent")
+include(":instrumentation:jedis:jedis-common:javaagent")
 include(":instrumentation:jetty:jetty-8.0:javaagent")
 include(":instrumentation:jetty:jetty-11.0:javaagent")
 include(":instrumentation:jetty:jetty-12.0:javaagent")
@@ -476,7 +476,6 @@ include(":instrumentation:kubernetes-client-7.0:javaagent-unit-tests")
 include(":instrumentation:lettuce:lettuce-4.0:javaagent")
 include(":instrumentation:lettuce:lettuce-4.0:javaagent-unit-tests")
 include(":instrumentation:lettuce:lettuce-5.0:javaagent")
-include(":instrumentation:lettuce:lettuce-5.1:javaagent")
 include(":instrumentation:lettuce:lettuce-5.1:library")
 include(":instrumentation:lettuce:lettuce-5.1:testing")
 include(":instrumentation:lettuce:lettuce-common:library")
@@ -676,7 +675,8 @@ include(":instrumentation:sofa-rpc-5.4:javaagent")
 include(":instrumentation:sofa-rpc-5.4:library")
 include(":instrumentation:sofa-rpc-5.4:library-autoconfigure")
 include(":instrumentation:sofa-rpc-5.4:testing")
-include(":instrumentation:spark-2.3:javaagent")
+include(":instrumentation:spark-2.4:javaagent")
+include(":instrumentation:spring:spring-ai-1.0:javaagent")
 include(":instrumentation:spring:spring-batch-3.0:javaagent")
 include(":instrumentation:spring:spring-boot-actuator-autoconfigure-2.0:javaagent")
 include(":instrumentation:spring:spring-boot-autoconfigure")
@@ -706,7 +706,7 @@ include(":instrumentation:spring:spring-kafka-2.7:library")
 include(":instrumentation:spring:spring-kafka-2.7:testing")
 include(":instrumentation:spring:spring-pulsar-1.0:javaagent")
 include(":instrumentation:spring:spring-pulsar-1.0:testing")
-include(":instrumentation:spring:spring-rabbit-1.0:javaagent")
+include(":instrumentation:spring:spring-rabbit-1.1:javaagent")
 include(":instrumentation:spring:spring-rmi-4.0:javaagent")
 include(":instrumentation:spring:spring-scheduling-3.1:bootstrap")
 include(":instrumentation:spring:spring-scheduling-3.1:javaagent")
@@ -731,7 +731,6 @@ include(":instrumentation:spring:spring-webmvc:spring-webmvc-common-3.1:testing"
 include(":instrumentation:spring:spring-ws-2.0:javaagent")
 include(":instrumentation:spring:spring-ws-2.0:testing")
 include(":instrumentation:spring:starters:spring-boot-starter")
-include(":instrumentation:spring:starters:zipkin-spring-boot-starter")
 include(":instrumentation:spymemcached-2.12:javaagent")
 include(":instrumentation:spymemcached-2.12:javaagent-unit-tests")
 include(":instrumentation:struts:struts-2.3:javaagent")

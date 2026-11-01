@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -47,20 +49,6 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
-    jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
-    jvmArgs("-Dio.opentelemetry.context.enableStrictContext=true")
-
-    // force the netty event loop into constrained territory
-    systemProperty("io.netty.eventLoopThreads", "2")
-    // ensure concurrent tests are competing for netty workers
-    systemProperty("com.twitter.finagle.netty4.numWorkers", "2")
-    // ensure concurrent tests are competing for offload pool workers
-    systemProperty("com.twitter.finagle.offload.numWorkers", "2")
-  }
-
   test {
     systemProperty(
       "metadataConfig",
@@ -68,27 +56,39 @@ tasks {
         "otel.instrumentation.http.server.emit-experimental-telemetry=true"
     )
   }
+}
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
+          jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
+          jvmArgs("-Dio.opentelemetry.context.enableStrictContext=true")
 
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
-        "otel.instrumentation.http.server.emit-experimental-telemetry=true," +
-        "otel.semconv-stability.opt-in=service.peer"
-    )
-  }
+          // force the netty event loop into constrained territory
+          systemProperty("io.netty.eventLoopThreads", "2")
+          // ensure concurrent tests are competing for netty workers
+          systemProperty("com.twitter.finagle.netty4.numWorkers", "2")
+          // ensure concurrent tests are competing for offload pool workers
+          systemProperty("com.twitter.finagle.offload.numWorkers", "2")
 
-  check {
-    dependsOn(testStableSemconv)
-  }
+          if (otelProps.denyUnsafe) {
+            enabled = false
+          }
+        }
+        register("PreviewSemconv") {
+          jvmArgs("-Dotel.semconv-stability.preview=service.peer")
 
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
+          systemProperty(
+            "metadataConfig",
+            "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
+              "otel.instrumentation.http.server.emit-experimental-telemetry=true," +
+              "otel.semconv-stability.preview=service.peer"
+          )
+        }
+      }
     }
   }
 }

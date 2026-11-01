@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.azurecore.v1_53.AzureSd
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -27,11 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AzureContextInstrumentationModule extends InstrumentationModule {
 
   public AzureContextInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "azure-core-1.53" : "azure-core",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"azure-core"}
-            : new String[] {"azure-core-1.53", "azure-core-1.53-context"});
+    super("azure-core-1.53", "azure-core");
   }
 
   @Override

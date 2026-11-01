@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -33,7 +32,14 @@ class OptimizedOperationInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("addOperation")
             .and(takesArguments(1))
-            .and(takesArgument(0, hasSuperType(named("net.spy.memcached.ops.Operation")))),
+            .and(
+                takesArgument(
+                    0,
+                    // Both OptimizedGetImpl classes declare addOperation(GetOperation), while
+                    // OptimizedSetImpl declares addOperation(CASOperation).
+                    namedOneOf(
+                        "net.spy.memcached.ops.GetOperation",
+                        "net.spy.memcached.ops.CASOperation"))),
         getClass().getName() + "$AddOperationAdvice");
   }
 

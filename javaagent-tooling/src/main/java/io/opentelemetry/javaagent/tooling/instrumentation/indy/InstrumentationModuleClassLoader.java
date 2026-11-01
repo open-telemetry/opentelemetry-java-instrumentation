@@ -254,7 +254,14 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
           } else {
             result =
                 java.security.AccessController.doPrivileged(
-                    (PrivilegedAction<Class<?>>) () -> defineClassWithPackage(name, bytecode));
+                    // Creating a lambda here would reenter helper loading through lambda and
+                    // reflection instrumentation.
+                    new PrivilegedAction<Class<?>>() {
+                      @Override
+                      public Class<?> run() {
+                        return defineClassWithPackage(name, bytecode);
+                      }
+                    });
           }
         }
       }

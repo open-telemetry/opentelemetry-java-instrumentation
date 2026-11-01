@@ -50,17 +50,6 @@ final class SpringPulsarMessageAttributesGetter
   }
 
   @Override
-  public Long getMessageBodySize(Message<?> message) {
-    return (long) message.size();
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(Message<?> message) {
-    return null;
-  }
-
-  @Override
   @Nullable
   public String getMessageId(Message<?> message, @Nullable Void unused) {
     if (message.getMessageId() != null) {

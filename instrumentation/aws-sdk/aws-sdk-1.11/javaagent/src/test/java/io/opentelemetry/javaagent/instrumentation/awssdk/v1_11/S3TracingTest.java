@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.experimental;
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSpanAssertions.s3;
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSpanAssertions.sns;
 import static io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSpanAssertions.sqs;
@@ -21,9 +22,8 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_RE
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
@@ -37,7 +37,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // MESSAGING_OPERATION is deprecated
+@SuppressWarnings("deprecation") // using deprecated RPC semconv
 class S3TracingTest {
 
   @RegisterExtension
@@ -94,11 +94,11 @@ class S3TracingTest {
             trace.hasSpansSatisfyingExactly(
                 span -> s3(span, bucketName, "PutObject", "PUT", 200),
                 span ->
-                    span.hasName("s3ToSqsTestQueue process")
+                    span.hasName("process s3ToSqsTestQueue")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                             equalTo(AWS_SQS_QUEUE_URL, queueUrl),
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                             equalTo(RPC_METHOD, "ReceiveMessage"),
@@ -115,9 +115,10 @@ class S3TracingTest {
                                     val.satisfiesAnyOf(
                                         v -> assertThat(v).isNull(),
                                         v -> assertThat(v).isInstanceOf(Number.class))),
-                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
                             equalTo(MESSAGING_DESTINATION_NAME, "s3ToSqsTestQueue"),
-                            equalTo(MESSAGING_OPERATION, "process"),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("process child")
@@ -186,11 +187,11 @@ class S3TracingTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("s3ToSnsToSqsTestQueue process")
+                    span.hasName("process s3ToSnsToSqsTestQueue")
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                             equalTo(AWS_SQS_QUEUE_URL, queueUrl),
                             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                             equalTo(RPC_METHOD, "ReceiveMessage"),
@@ -207,9 +208,10 @@ class S3TracingTest {
                                     val.satisfiesAnyOf(
                                         v -> assertThat(v).isNull(),
                                         v -> assertThat(v).isInstanceOf(Number.class))),
-                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
                             equalTo(MESSAGING_DESTINATION_NAME, "s3ToSnsToSqsTestQueue"),
-                            equalTo(MESSAGING_OPERATION, "process"),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("process child")

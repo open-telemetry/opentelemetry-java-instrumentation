@@ -12,11 +12,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.databaseSchemaUrl;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.messagingSchemaUrl;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
@@ -32,12 +27,15 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.genai.internal.GenAiSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
@@ -47,7 +45,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessContextCustomizer;
-import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -57,6 +55,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -130,8 +129,6 @@ public final class AwsSdkInstrumenterFactory {
     };
   }
 
-  private static final AttributesExtractor<ExecutionAttributes, Response> rpcAttributesExtractor =
-      RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter());
   private static final AwsSdkExperimentalAttributesExtractor experimentalAttributesExtractor =
       new AwsSdkExperimentalAttributesExtractor();
 
@@ -164,23 +161,28 @@ public final class AwsSdkInstrumenterFactory {
       httpClientSuppressionAttributesExtractor =
           new AwsSdkHttpClientSuppressionAttributesExtractor();
 
-  private static final List<AttributesExtractor<ExecutionAttributes, Response>>
-      defaultAttributesExtractors =
-          asList(rpcAttributesExtractor, httpClientSuppressionAttributesExtractor);
+  private static final AttributesExtractor<ExecutionAttributes, Response>
+      awsSdkAttributesExtractor = new AwsSdkAttributesExtractor();
 
-  private static final List<AttributesExtractor<ExecutionAttributes, Response>>
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
+      defaultAttributesExtractors =
+          asList(awsSdkAttributesExtractor, httpClientSuppressionAttributesExtractor);
+
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
       extendedAttributesExtractors =
           asList(
-              rpcAttributesExtractor,
+              awsSdkAttributesExtractor,
               experimentalAttributesExtractor,
               httpClientSuppressionAttributesExtractor);
 
-  private static final List<AttributesExtractor<ExecutionAttributes, Response>>
-      defaultConsumerAttributesExtractors = asList(rpcAttributesExtractor, httpAttributesExtractor);
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
+      defaultConsumerAttributesExtractors =
+          asList(awsSdkAttributesExtractor, httpAttributesExtractor);
 
-  private static final List<AttributesExtractor<ExecutionAttributes, Response>>
+  private final List<AttributesExtractor<ExecutionAttributes, Response>>
       extendedConsumerAttributesExtractors =
-          asList(rpcAttributesExtractor, httpAttributesExtractor, experimentalAttributesExtractor);
+          asList(
+              awsSdkAttributesExtractor, httpAttributesExtractor, experimentalAttributesExtractor);
 
   private final OpenTelemetry openTelemetry;
   @Nullable private final TextMapPropagator messagingPropagator;
@@ -210,7 +212,7 @@ public final class AwsSdkInstrumenterFactory {
         AwsSdkInstrumenterFactory::spanName,
         SpanKindExtractor.alwaysClient(),
         attributesExtractors(),
-        builder -> setRpcClientExceptionEventExtractor(builder),
+        builder -> {},
         true);
   }
 
@@ -256,21 +258,17 @@ public final class AwsSdkInstrumenterFactory {
         toSqsRequestExtractors(consumerAttributesExtractors()),
         singletonList(messagingAttributeExtractor),
         builder -> {
-          builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
-          builder.setSchemaUrl(messagingSchemaUrl());
+          builder.addOperationMetrics(MessagingConsumerMetrics.get());
+          builder.setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
           setMessagingReceiveExceptionEventExtractor(builder);
-          if (emitStableMessagingSemconv()) {
-            builder.addSpanLinksExtractor(
-                (spanLinks, parentContext, request) -> {
-                  for (SqsMessage message : request.getMessages()) {
-                    SpanContext spanContext =
-                        Span.fromContext(message.getCreationContext()).getSpanContext();
-                    if (spanContext.isValid()) {
-                      spanLinks.addLink(spanContext, messageLinkAttributes(message));
-                    }
-                  }
-                });
-          }
+          builder.addSpanLinksExtractor(
+              (spanLinks, parentContext, request) -> {
+                for (SqsMessage message : request.getMessages()) {
+                  SpanContext spanContext =
+                      Span.fromContext(message.getCreationContext()).getSpanContext();
+                  spanLinks.addLink(spanContext, messageLinkAttributes(message));
+                }
+              });
         },
         messagingReceiveInstrumentationEnabled);
   }
@@ -288,8 +286,8 @@ public final class AwsSdkInstrumenterFactory {
             .addAttributesExtractor(
                 messagingAttributesExtractor(getter, operationType, PROCESS_OPERATION_NAME))
             .addOperationMetrics(processMetrics)
-            .setSchemaUrl(messagingSchemaUrl());
-    if (!messagingReceiveInstrumentationEnabled && emitStableMessagingSemconv()) {
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
+    if (!messagingReceiveInstrumentationEnabled) {
       builder.addContextCustomizer(
           (context, request, startAttributes) ->
               context.with(DELIVERY_CLAIMED, request.getMessage().claimDelivery()));
@@ -297,34 +295,25 @@ public final class AwsSdkInstrumenterFactory {
     }
     setMessagingProcessExceptionEventExtractor(builder);
 
-    if (emitStableMessagingSemconv() || messagingReceiveInstrumentationEnabled) {
-      builder.addSpanLinksExtractor(
-          (spanLinks, parentContext, request) -> {
-            // getCreationContext() extracts against a root context, so it is either a valid
-            // creation context or an invalid one; in particular it can never pick up the ambient
-            // span. the creation context is linked even when it ends up being this span's parent,
-            // which happens when there is no ambient span, because semconv asks for a link to the
-            // creation context for every message the span accounts for
-            //
-            // the link carries no messaging.message.id: a process span accounts for a single
-            // message, so that attribute belongs on the span itself, where it already is
-            SpanContext creationSpanContext =
-                Span.fromContext(request.getMessage().getCreationContext()).getSpanContext();
-            if (creationSpanContext.isValid()) {
-              spanLinks.addLink(creationSpanContext);
-            }
-          });
-    }
-    if (emitStableMessagingSemconv()) {
-      builder.addContextCustomizer(
-          MessagingProcessContextCustomizer.create(
-              (parentContext, request) ->
-                  SqsParentContext.ofMessage(
-                      parentContext,
-                      request.getMessage(),
-                      messagingPropagator,
-                      useXrayPropagator)));
-    }
+    builder.addSpanLinksExtractor(
+        (spanLinks, parentContext, request) -> {
+          // getCreationContext() extracts against a root context, so it is either a valid
+          // creation context or an invalid one; in particular it can never pick up the ambient
+          // span. the creation context is linked even when it ends up being this span's parent,
+          // which happens when there is no ambient span, because semconv asks for a link to the
+          // creation context for every message the span accounts for
+          //
+          // the link carries no messaging.message.id: a process span accounts for a single
+          // message, so that attribute belongs on the span itself, where it already is
+          SpanContext creationSpanContext =
+              Span.fromContext(request.getMessage().getCreationContext()).getSpanContext();
+          spanLinks.addLink(creationSpanContext);
+        });
+    builder.addContextCustomizer(
+        MessagingProcessContextCustomizer.create(
+            (parentContext, request) ->
+                SqsParentContext.ofMessage(
+                    parentContext, request.getMessage(), messagingPropagator, useXrayPropagator)));
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
@@ -372,8 +361,7 @@ public final class AwsSdkInstrumenterFactory {
         request -> {
           SdkRequest sdkRequest =
               request.getAttribute(TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE);
-          return emitStableMessagingSemconv()
-                  && SqsAccess.isBatchRequest(sdkRequest)
+          return SqsAccess.isBatchRequest(sdkRequest)
                   && !TracingExecutionInterceptor.getBatchMessageContexts(request).isEmpty()
               ? SpanKind.CLIENT
               : SpanKind.PRODUCER;
@@ -381,21 +369,17 @@ public final class AwsSdkInstrumenterFactory {
         attributesExtractorsWithLateServerAttributes(),
         singletonList(messagingAttributeExtractor),
         builder -> {
-          builder.addOperationMetrics(MessagingProducerMetrics.getForOperationType());
-          builder.setSchemaUrl(messagingSchemaUrl());
+          builder.addOperationMetrics(MessagingProducerMetrics.get());
+          builder.setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
           setMessagingSendExceptionEventExtractor(builder);
-          if (emitStableMessagingSemconv()) {
-            builder.addSpanLinksExtractor(
-                (spanLinks, parentContext, request) -> {
-                  for (Context creationContext :
-                      TracingExecutionInterceptor.getBatchMessageContexts(request)) {
-                    SpanContext spanContext = Span.fromContext(creationContext).getSpanContext();
-                    if (spanContext.isValid()) {
-                      spanLinks.addLink(spanContext);
-                    }
-                  }
-                });
-          }
+          builder.addSpanLinksExtractor(
+              (spanLinks, parentContext, request) -> {
+                for (Context creationContext :
+                    TracingExecutionInterceptor.getBatchMessageContexts(request)) {
+                  SpanContext spanContext = Span.fromContext(creationContext).getSpanContext();
+                  spanLinks.addLink(spanContext);
+                }
+              });
         },
         true);
   }
@@ -409,7 +393,7 @@ public final class AwsSdkInstrumenterFactory {
             MessagingSpanNameExtractor.create(getter, operationType, CREATE_OPERATION_NAME))
         .addAttributesExtractor(
             messagingAttributesExtractor(getter, operationType, CREATE_OPERATION_NAME))
-        .setSchemaUrl(messagingSchemaUrl())
+        .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
         .buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
@@ -426,14 +410,15 @@ public final class AwsSdkInstrumenterFactory {
         attributesExtractorsWithLateServerAttributes(),
         singletonList(messagingAttributeExtractor),
         builder -> {
-          builder.addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
-          builder.setSchemaUrl(messagingSchemaUrl());
+          builder.addOperationMetrics(MessagingConsumerMetrics.get());
+          builder.setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
           setMessagingSettleExceptionEventExtractor(builder);
         },
         true);
   }
 
   public Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter() {
+    DynamoDbAttributesGetter getter = new DynamoDbAttributesGetter();
     return createInstrumenter(
         openTelemetry,
         AwsSdkInstrumenterFactory::spanName,
@@ -441,9 +426,9 @@ public final class AwsSdkInstrumenterFactory {
         attributesExtractors(),
         builder -> {
           builder
-              .addAttributesExtractor(new DynamoDbAttributesExtractor())
+              .addAttributesExtractor(DbClientAttributesExtractor.create(getter))
               .addOperationMetrics(DbClientMetrics.get())
-              .setSchemaUrl(databaseSchemaUrl());
+              .setSchemaUrl(DbSchemaUrls.SCHEMA_URL);
           setDbClientExceptionEventExtractor(builder);
         },
         true);
@@ -452,9 +437,7 @@ public final class AwsSdkInstrumenterFactory {
   public Instrumenter<ExecutionAttributes, Response> rdsDataInstrumenter() {
     RdsDataSqlAttributesGetter getter = new RdsDataSqlAttributesGetter();
     SpanNameExtractor<ExecutionAttributes> spanNameExtractor =
-        emitStableDatabaseSemconv()
-            ? DbClientSpanNameExtractor.create(getter)
-            : AwsSdkInstrumenterFactory::spanName;
+        DbClientSpanNameExtractor.create(getter);
     return createInstrumenter(
         openTelemetry,
         spanNameExtractor,
@@ -464,7 +447,7 @@ public final class AwsSdkInstrumenterFactory {
           builder
               .addAttributesExtractor(SqlClientAttributesExtractor.create(getter))
               .addOperationMetrics(DbClientMetrics.get())
-              .setSchemaUrl(databaseSchemaUrl());
+              .setSchemaUrl(DbSchemaUrls.SCHEMA_URL);
           setDbClientExceptionEventExtractor(builder);
         },
         true);
@@ -481,14 +464,19 @@ public final class AwsSdkInstrumenterFactory {
           builder
               .addAttributesExtractor(GenAiAttributesExtractor.create(getter))
               .addAttributesExtractor(new BedrockRuntimeAttributesExtractor())
-              .addOperationMetrics(GenAiClientMetrics.get());
+              .addOperationMetrics(GenAiClientMetrics.get())
+              .setSchemaUrl(GenAiSchemaUrls.SCHEMA_URL);
           setGenAiClientExceptionEventExtractor(builder);
         },
         true);
   }
 
   public Logger eventLogger() {
-    return openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
+    return openTelemetry
+        .getLogsBridge()
+        .loggerBuilder(INSTRUMENTATION_NAME)
+        .setSchemaUrl(GenAiSchemaUrls.SCHEMA_URL)
+        .build();
   }
 
   private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createInstrumenter(
@@ -523,6 +511,7 @@ public final class AwsSdkInstrumenterFactory {
     InstrumenterBuilder<REQUEST, RESPONSE> builder =
         Instrumenter.<REQUEST, RESPONSE>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
+            .setSchemaUrl(SchemaUrls.V1_44_0)
             .addAttributesExtractors(attributeExtractors)
             .setEnabled(enabled);
     customizer.accept(builder);

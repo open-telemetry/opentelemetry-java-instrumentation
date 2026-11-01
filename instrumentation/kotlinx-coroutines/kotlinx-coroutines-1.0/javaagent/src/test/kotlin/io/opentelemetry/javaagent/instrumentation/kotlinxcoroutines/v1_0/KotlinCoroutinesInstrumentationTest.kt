@@ -15,11 +15,11 @@ import io.opentelemetry.extension.kotlin.getOpenTelemetryContext
 import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
 import io.opentelemetry.sdk.trace.data.StatusData
+import io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME
 import io.vertx.core.Vertx
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.CompletableDeferred
@@ -45,6 +45,7 @@ import kotlinx.coroutines.yield
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -52,6 +53,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
@@ -82,8 +84,6 @@ class KotlinCoroutinesInstrumentationTest {
   }
 
   val tracer = testing.openTelemetry.getTracer("test")
-
-  private fun v3Preview(): Boolean = java.lang.Boolean.getBoolean("otel.instrumentation.common.v3-preview")
 
   @ParameterizedTest
   @MethodSource("dispatchersSourceArguments")
@@ -382,23 +382,6 @@ class KotlinCoroutinesInstrumentationTest {
       annotated1()
     }
 
-    if (v3Preview()) {
-      assertThat(testing.spans()).isEmpty()
-      return
-    }
-
-    val assertions = codeFunctionAssertions(this.javaClass, "annotated2")
-    assertions.add(equalTo(AttributeKey.longKey("byteValue"), 1))
-    assertions.add(equalTo(AttributeKey.longKey("intValue"), 4))
-    assertions.add(equalTo(AttributeKey.longKey("longValue"), 5))
-    assertions.add(equalTo(AttributeKey.longKey("shortValue"), 6))
-    assertions.add(equalTo(AttributeKey.doubleKey("doubleValue"), 2.0))
-    assertions.add(equalTo(AttributeKey.doubleKey("floatValue"), 3.0))
-    assertions.add(equalTo(AttributeKey.booleanKey("booleanValue"), true))
-    assertions.add(equalTo(AttributeKey.stringKey("charValue"), "a"))
-    assertions.add(equalTo(AttributeKey.stringKey("nullableCharValue"), "z"))
-    assertions.add(equalTo(AttributeKey.stringKey("stringValue"), "test"))
-
     testing.waitAndAssertTraces(
       { trace ->
         trace.hasSpansSatisfyingExactly(
@@ -406,13 +389,25 @@ class KotlinCoroutinesInstrumentationTest {
             it.hasName("a1")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
-                codeFunctionAssertions(this.javaClass, "annotated1")
+                equalTo(CODE_FUNCTION_NAME, this.javaClass.name + ".annotated1")
               )
           },
           {
             it.hasName("KotlinCoroutinesInstrumentationTest.annotated2")
               .hasParent(trace.getSpan(0))
-              .hasAttributesSatisfyingExactly(assertions)
+              .hasAttributesSatisfyingExactly(
+                equalTo(CODE_FUNCTION_NAME, this.javaClass.name + ".annotated2"),
+                equalTo(AttributeKey.longKey("byteValue"), 1),
+                equalTo(AttributeKey.longKey("intValue"), 4),
+                equalTo(AttributeKey.longKey("longValue"), 5),
+                equalTo(AttributeKey.longKey("shortValue"), 6),
+                equalTo(AttributeKey.doubleKey("doubleValue"), 2.0),
+                equalTo(AttributeKey.doubleKey("floatValue"), 3.0),
+                equalTo(AttributeKey.booleanKey("booleanValue"), true),
+                equalTo(AttributeKey.stringKey("charValue"), "a"),
+                equalTo(AttributeKey.stringKey("nullableCharValue"), "z"),
+                equalTo(AttributeKey.stringKey("stringValue"), "test")
+              )
           }
         )
       }
@@ -444,8 +439,6 @@ class KotlinCoroutinesInstrumentationTest {
   // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/12837
   @Test
   fun `WithSpan restores effective context after unannotated suspension`() {
-    Assumptions.assumeFalse(v3Preview())
-
     val rootSpan = tracer.spanBuilder("root").startSpan()
     runBlocking(Context.root().asContextElement()) {
       withContext(TestContextElement(rootSpan.storeInContext(Context.root()))) {
@@ -500,8 +493,6 @@ class KotlinCoroutinesInstrumentationTest {
 
   @Test
   fun `WithSpan preserves coroutine stack frames`() {
-    Assumptions.assumeFalse(v3Preview())
-
     runBlocking {
       stackFrameCaller()
     }
@@ -529,8 +520,6 @@ class KotlinCoroutinesInstrumentationTest {
 
   @Test
   fun `WithSpan ends span on failed completion`() {
-    Assumptions.assumeFalse(v3Preview())
-
     val exception = IllegalStateException("expected")
     val result = runCatching {
       runBlocking {
@@ -563,17 +552,78 @@ class KotlinCoroutinesInstrumentationTest {
     throw exception
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = [false, true])
+  @Disabled("Tail-call @WithSpan continuations can resume application code on the wrong thread, breaking dispatcher confinement and thread-bound state such as Spring transactions: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20744")
+  fun `tail delay preserves dispatcher`(annotated: Boolean) {
+    val threads = runBlocking {
+      withContext(singleThread.asCoroutineDispatcher()) {
+        val callerThread = Thread.currentThread()
+        if (annotated) {
+          annotatedDelay()
+        } else {
+          delay(100)
+        }
+        callerThread to Thread.currentThread()
+      }
+    }
+
+    if (annotated) {
+      testing.waitAndAssertTraces(
+        { trace ->
+          trace.hasSpansSatisfyingExactly(
+            { it.hasName("tail-delay") },
+          )
+        },
+      )
+    }
+    assertThat(threads.second).isSameAs(threads.first)
+  }
+
+  @WithSpan("tail-delay")
+  private suspend fun annotatedDelay() = delay(100)
+
+  @ParameterizedTest
+  @ValueSource(booleans = [false, true])
+  @Disabled("Tail-call @WithSpan continuations can resume application code on the wrong thread, breaking dispatcher confinement and thread-bound state such as Spring transactions: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20744")
+  fun `tail withContext preserves dispatcher`(annotated: Boolean) {
+    val threads = runBlocking {
+      withContext(singleThread.asCoroutineDispatcher()) {
+        val callerThread = Thread.currentThread()
+        if (annotated) {
+          annotatedWithContext(threadPool.asCoroutineDispatcher())
+        } else {
+          withContext(threadPool.asCoroutineDispatcher()) {
+            delay(100)
+          }
+        }
+        callerThread to Thread.currentThread()
+      }
+    }
+
+    if (annotated) {
+      testing.waitAndAssertTraces(
+        { trace ->
+          trace.hasSpansSatisfyingExactly(
+            { it.hasName("tail-with-context") },
+          )
+        },
+      )
+    }
+    assertThat(threads.second).isSameAs(threads.first)
+  }
+
+  @WithSpan("tail-with-context")
+  private suspend fun annotatedWithContext(dispatcher: CoroutineDispatcher) = withContext(dispatcher) {
+    delay(100)
+  }
+
   // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/9312
   @Test
   fun `test class with default constructor argument`() {
     runBlocking {
       val classDefaultConstructorArguments = ClazzWithDefaultConstructorArguments()
       classDefaultConstructorArguments.sayHello()
-    }
-
-    if (v3Preview()) {
-      assertThat(testing.spans()).isEmpty()
-      return
     }
 
     testing.waitAndAssertTraces(
@@ -583,7 +633,7 @@ class KotlinCoroutinesInstrumentationTest {
             it.hasName("ClazzWithDefaultConstructorArguments.sayHello")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
-                codeFunctionAssertions(ClazzWithDefaultConstructorArguments::class.qualifiedName, "sayHello")
+                equalTo(CODE_FUNCTION_NAME, ClazzWithDefaultConstructorArguments::class.qualifiedName + ".sayHello")
               )
           }
         )

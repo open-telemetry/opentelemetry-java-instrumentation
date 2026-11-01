@@ -43,8 +43,7 @@ public abstract class InstrumentationModule implements Ordered {
    * corresponds to the main instrumentation name is considered first, after that additional
    * instrumentation names are considered in the order they are listed here.
    *
-   * <p>Names registered under {@code otel.instrumentation.common.v3-preview=true} follow this
-   * ordered hierarchy:
+   * <p>Instrumentation names follow this ordered hierarchy:
    *
    * <ul>
    *   <li>The full module directory name, including versions, e.g. {@code
@@ -74,8 +73,7 @@ public abstract class InstrumentationModule implements Ordered {
    * <p>Names use kebab-case. Umbrella membership follows product ownership, not directory nesting
    * or a shared prefix. Module classes may share all their public names; separate compatibility
    * ranges do not require separate public controls. Muzzle can select individual modules by fully
-   * qualified class name. Outside preview, compatibility aliases retain their configuration
-   * precedence.
+   * qualified class name.
    *
    * <p>These names apply to flat {@code otel.instrumentation.<name>.enabled} properties and
    * declarative enabled/disabled lists. They are troubleshooting escape hatches, not telemetry

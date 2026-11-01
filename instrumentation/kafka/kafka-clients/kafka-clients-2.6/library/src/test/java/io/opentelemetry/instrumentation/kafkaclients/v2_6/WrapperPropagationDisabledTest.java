@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.List;
@@ -20,44 +18,13 @@ class WrapperPropagationDisabledTest extends AbstractWrapperTest {
 
   @Override
   void assertTraces(boolean testHeaders, boolean testExperimental) {
-    if (emitStableMessagingSemconv()) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                  span ->
-                      span.hasName("send " + SHARED_TOPIC)
-                          .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              sendAttributes(testHeaders, testExperimental)),
-                  span ->
-                      span.hasName("producer callback")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(0))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("process " + SHARED_TOPIC)
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasNoParent()
-                          .hasLinks()
-                          .hasAttributesSatisfyingExactly(
-                              processAttributes(greeting, testHeaders, testExperimental)),
-                  span ->
-                      span.hasName("process child")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(0))));
-      return;
-    }
-
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(SHARED_TOPIC + " publish")
-                        .hasKind(SpanKind.PRODUCER)
+                    span.hasName("send " + SHARED_TOPIC)
+                        .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             sendAttributes(testHeaders, testExperimental)),
@@ -68,7 +35,7 @@ class WrapperPropagationDisabledTest extends AbstractWrapperTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(SHARED_TOPIC + " process")
+                    span.hasName("process " + SHARED_TOPIC)
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasLinks()

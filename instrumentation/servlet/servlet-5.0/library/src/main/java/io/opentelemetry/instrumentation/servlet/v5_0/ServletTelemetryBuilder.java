@@ -51,8 +51,8 @@ public final class ServletTelemetryBuilder {
     Experimental.internalSetRequestParameters(
         (builder, requestParameters) ->
             builder.servletBuilder.setRequestParameters(requestParameters));
-    Experimental.internalSetCaptureEnduserId(
-        (builder, value) -> builder.servletBuilder.setCaptureEnduserId(value));
+    Experimental.internalSetCaptureUserName(
+        (builder, value) -> builder.servletBuilder.setCaptureUserName(value));
   }
 
   ServletTelemetryBuilder(OpenTelemetry openTelemetry) {

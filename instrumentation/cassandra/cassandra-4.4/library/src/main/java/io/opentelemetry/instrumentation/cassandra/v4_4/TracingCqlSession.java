@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Arrays.asList;
 
 import com.datastax.dse.driver.api.core.cql.reactive.ReactiveResultSet;
@@ -46,16 +45,12 @@ final class TracingCqlSession {
   CqlSession wrapSession(CqlSession session, Set<EndPoint> programmaticContactPoints) {
     // The driver configuration can be reloaded, so read the configured target once here and keep
     // that snapshot for the life of the session.
-    DbServerTarget serverTarget =
-        emitStableDatabaseSemconv()
-            ? CassandraServerTarget.of(session, programmaticContactPoints)
-            : null;
+    DbServerTarget serverTarget = CassandraServerTarget.of(session, programmaticContactPoints);
     return wrapSession(session, serverTarget);
   }
 
   CqlSession wrapSession(CqlSession session, Collection<InetSocketAddress> contactPoints) {
-    DbServerTarget serverTarget =
-        emitStableDatabaseSemconv() ? CassandraServerTarget.ofAddresses(contactPoints) : null;
+    DbServerTarget serverTarget = CassandraServerTarget.ofAddresses(contactPoints);
     return wrapSession(session, serverTarget);
   }
 

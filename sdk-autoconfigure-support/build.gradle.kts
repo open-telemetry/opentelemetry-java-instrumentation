@@ -13,5 +13,4 @@ dependencies {
   compileOnly("com.google.code.findbugs:annotations")
   testCompileOnly("com.google.code.findbugs:annotations")
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
-  testImplementation("io.opentelemetry.contrib:opentelemetry-samplers")
 }

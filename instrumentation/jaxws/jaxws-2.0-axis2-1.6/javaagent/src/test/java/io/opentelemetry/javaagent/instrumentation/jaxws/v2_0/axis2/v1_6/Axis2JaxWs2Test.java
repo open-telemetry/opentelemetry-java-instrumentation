@@ -57,4 +57,9 @@ class Axis2JaxWs2Test extends AbstractJaxWs2Test {
       return IOUtils.toString(inputStream, UTF_8);
     }
   }
+
+  @Override
+  protected String expectedScopeName() {
+    return "io.opentelemetry.jaxws-2.0-axis2-1.6";
+  }
 }

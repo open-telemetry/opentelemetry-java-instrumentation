@@ -20,7 +20,6 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@SuppressWarnings("deprecation") // supporting old semconv until 3.0
 public final class OceanbaseUrlParser implements JdbcUrlParser {
 
   private static final String SYSTEM = "oceanbase";
@@ -46,9 +45,7 @@ public final class OceanbaseUrlParser implements JdbcUrlParser {
       if (subtype.equals(ORACLE)) {
         // Override system for Oracle mode
         ctx.system(ORACLE_DB);
-        ctx.oldSemconvSystem(ORACLE);
       }
-      ctx.subtype(subtype);
       ctx.parseUrl(jdbcUrl);
     } else {
       GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx);

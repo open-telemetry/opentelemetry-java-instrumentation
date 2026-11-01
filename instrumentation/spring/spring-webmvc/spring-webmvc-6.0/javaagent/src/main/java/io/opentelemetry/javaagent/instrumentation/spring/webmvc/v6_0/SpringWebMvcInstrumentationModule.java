@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -20,11 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringWebMvcInstrumentationModule extends InstrumentationModule {
 
   public SpringWebMvcInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "spring-webmvc-6.0" : "spring-webmvc",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-webmvc"}
-            : new String[] {"spring-webmvc-6.0"});
+    super("spring-webmvc-6.0", "spring-webmvc");
   }
 
   @Override
@@ -37,12 +32,13 @@ public class SpringWebMvcInstrumentationModule extends InstrumentationModule {
   public boolean isHelperClass(String className) {
     // filter on prefix due to inner classes
     return className.startsWith(
-        "org.springframework.web.servlet.v6_0.OpenTelemetryHandlerMappingFilter");
+        "io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.OpenTelemetryHandlerMappingFilter");
   }
 
   @Override
   public List<String> exposedClassNames() {
-    return singletonList("org.springframework.web.servlet.v6_0.OpenTelemetryHandlerMappingFilter");
+    return singletonList(
+        "io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.OpenTelemetryHandlerMappingFilter");
   }
 
   @Override

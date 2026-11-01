@@ -5,24 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.common.v1_1;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsMessageProcessingState;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContext;
 import javax.annotation.Nullable;
 
 public class JmsReceiveSpanUtil {
-  private static final ContextPropagators propagators = GlobalOpenTelemetry.getPropagators();
-  private static final boolean receiveInstrumentationEnabled =
-      ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
-
   public static void createReceiveSpan(
       Instrumenter<MessageWithDestination, Void> receiveInstrumenter,
       MessageWithDestination request,
@@ -30,15 +21,6 @@ public class JmsReceiveSpanUtil {
       @Nullable Throwable throwable) {
     JmsMessageProcessingState processingState = request.message().prepareForReceive();
     Context parentContext = Context.current();
-    // if receive instrumentation is not enabled we'll use the producer as parent, unless the stable
-    // messaging semantic conventions are enabled, where the producer is linked instead
-    if (!receiveInstrumentationEnabled && !emitStableMessagingSemconv()) {
-      parentContext =
-          propagators
-              .getTextMapPropagator()
-              .extract(parentContext, request, MessagePropertyGetter.INSTANCE);
-    }
-
     if (receiveInstrumenter.shouldStart(parentContext, request)) {
       Context receiveContext =
           InstrumenterUtil.startAndEnd(
@@ -50,7 +32,7 @@ public class JmsReceiveSpanUtil {
               timer.startTime(),
               timer.now());
       request.message().setReceiveContext(new JmsReceiveContext(receiveContext, processingState));
-      if (emitStableMessagingSemconv() && throwable == null) {
+      if (throwable == null) {
         request.message().markConsumedMessagesRecorded();
       }
     }

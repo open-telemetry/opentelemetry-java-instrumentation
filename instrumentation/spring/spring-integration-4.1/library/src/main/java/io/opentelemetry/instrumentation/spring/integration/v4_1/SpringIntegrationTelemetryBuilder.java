@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -61,9 +62,8 @@ public final class SpringIntegrationTelemetryBuilder {
    * Configures which message headers are captured as span attributes.
    *
    * <p>Header values are captured under the {@code messaging.header.<name>} attribute key. The
-   * {@code <name>} part in the attribute key is the header name with dashes replaced by underscores
-   * unless {@code otel.instrumentation.common.v3-preview} is enabled, in which case dashes are
-   * preserved.
+   * {@code <name>} part in the attribute key is the header name with its original spelling,
+   * including dashes.
    *
    * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
    * of characters, including none. Excluded patterns take precedence over included patterns. A
@@ -111,14 +111,14 @@ public final class SpringIntegrationTelemetryBuilder {
    * SpringIntegrationTelemetryBuilder}.
    */
   public SpringIntegrationTelemetry build() {
-    SpringMessagingAttributesGetter consumerGetter = new SpringMessagingAttributesGetter(false);
-    SpringMessagingAttributesGetter consumerNameGetter = new SpringMessagingAttributesGetter(true);
+    SpringMessagingAttributesGetter consumerGetter = new SpringMessagingAttributesGetter();
     InstrumenterBuilder<MessageWithChannel, Void> consumerBuilder =
         Instrumenter.<MessageWithChannel, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
-                    consumerNameGetter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
+                    consumerGetter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
@@ -132,22 +132,21 @@ public final class SpringIntegrationTelemetryBuilder {
         MessagingProcessInstrumenterFactory.create(
             consumerBuilder,
             openTelemetry.getPropagators().getTextMapPropagator(),
-            MessageHeadersGetter.INSTANCE,
-            false);
+            MessageHeadersGetter.INSTANCE);
 
-    SpringMessagingAttributesGetter producerGetter = new SpringMessagingAttributesGetter(false);
-    SpringMessagingAttributesGetter producerNameGetter = new SpringMessagingAttributesGetter(true);
+    SpringMessagingAttributesGetter producerGetter = new SpringMessagingAttributesGetter();
     InstrumenterBuilder<MessageWithChannel, Void> producerBuilder =
         Instrumenter.<MessageWithChannel, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
-                    producerNameGetter, MessagingOperationType.SEND, SEND_OPERATION_NAME))
+                    producerGetter, MessagingOperationType.SEND, SEND_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractors(additionalAttributeExtractors)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     producerGetter, MessagingOperationType.SEND, SEND_OPERATION_NAME, headers))
-            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+            .addOperationMetrics(MessagingProducerMetrics.get());
     setMessagingSendExceptionEventExtractor(producerBuilder);
     Instrumenter<MessageWithChannel, Void> producerInstrumenter =
         producerBuilder.buildInstrumenter(SpanKindExtractor.alwaysProducer());

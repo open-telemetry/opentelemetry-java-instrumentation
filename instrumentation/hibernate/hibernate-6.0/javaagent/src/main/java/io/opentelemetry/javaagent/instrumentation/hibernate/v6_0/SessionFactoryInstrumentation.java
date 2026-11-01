@@ -40,6 +40,8 @@ class SessionFactoryInstrumentation implements TypeInstrumentation {
             .and(takesArguments(0))
             .and(
                 returns(
+                    // Match public session interfaces and covariant return types declared by
+                    // session factories and builders.
                     namedOneOf(
                         "org.hibernate.Session",
                         "org.hibernate.StatelessSession",

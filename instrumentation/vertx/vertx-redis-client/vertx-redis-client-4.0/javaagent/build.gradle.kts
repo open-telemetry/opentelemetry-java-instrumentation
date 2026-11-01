@@ -9,7 +9,7 @@ muzzle {
     versions.set("[4.0.0,)")
     assertInverse.set(true)
 
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_4_5.VertxRedisClientInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClient445InstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -19,7 +19,7 @@ muzzle {
     versions.set("[4.4.5,)")
     assertInverse.set(true)
 
-    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClient40InstrumentationModule")
   }
 }
 
@@ -53,7 +53,7 @@ testing {
       }
     }
 
-    register<JvmTestSuite>("stableSemconvUnitTests") {
+    register<JvmTestSuite>("previewSemconvUnitTests") {
       sources {
         java {
           srcDir("src/unitTests/java")
@@ -69,7 +69,7 @@ testing {
       targets {
         all {
           testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
+            jvmArgs("-Dotel.semconv-stability.preview=service.peer")
           }
         }
       }
@@ -107,27 +107,27 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
+  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
     .filter { !it.name.endsWith("unitTests", true) }
     .associate { suite ->
-      suite.name to register<Test>("${suite.name}StableSemconv") {
+      suite.name to register<Test>("${suite.name}PreviewSemconv") {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
 
-        jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+        systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
       }
     }
 
   check {
-    dependsOn(testing.suites.named("unitTests"), testing.suites.named("stableSemconvUnitTests"))
+    dependsOn(testing.suites.named("unitTests"), testing.suites.named("previewSemconvUnitTests"))
     if (otelProps.testLatestDeps) {
-      dependsOn(stableSemconvSuites.getValue("test"))
+      dependsOn(previewSemconvSuites.getValue("test"))
     } else {
-      dependsOn(testing.suites, stableSemconvSuites.values)
+      dependsOn(testing.suites, previewSemconvSuites.values)
     }
   }
 }

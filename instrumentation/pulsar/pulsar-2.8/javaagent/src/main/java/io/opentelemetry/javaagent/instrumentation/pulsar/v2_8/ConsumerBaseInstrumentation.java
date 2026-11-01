@@ -34,7 +34,9 @@ class ConsumerBaseInstrumentation implements TypeInstrumentation {
         named("triggerListener")
             .or(nameStartsWith("lambda$triggerListener$"))
             .and(takesArguments(0))
-            .or(named("receiveMessageFromConsumer")),
+            .or(named("receiveMessageFromConsumer"))
+            // added in 4.2.5
+            .or(named("drainListener")),
         getClass().getName() + "$TriggerListenerAdvice");
   }
 

@@ -5,9 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -16,9 +14,6 @@ import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DYNAMODB;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.AWS_DYNAMODB;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
@@ -67,14 +62,10 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
     List<AttributeAssertion> additionalAttributes =
         new ArrayList<>(
             asList(
-                equalTo(
-                    maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
-                equalTo(maybeStable(DB_OPERATION), "CreateTable"),
+                equalTo(DB_SYSTEM_NAME, AWS_DYNAMODB),
+                equalTo(DB_OPERATION_NAME, "CreateTable"),
                 equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable"))));
-    if (emitStableDatabaseSemconv()) {
-      additionalAttributes.add(equalTo(DB_COLLECTION_NAME, "sometable"));
-    }
-
+    additionalAttributes.add(equalTo(DB_COLLECTION_NAME, "sometable"));
     Object response = client.createTable(new CreateTableRequest("sometable", null));
     assertRequestWithMockedResponse(
         response, client, "DynamoDBv2", "CreateTable", "POST", additionalAttributes);
@@ -89,11 +80,8 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
         SERVER_PORT);
   }
 
-  // describes the batch cases for the two DynamoDB batch operations (BatchGetItem and
-  // BatchWriteItem): the request to send and the expected client span. batch attributes
-  // (db.operation.batch.size, BATCH operation name, db.collection.name) are only emitted under
-  // stable database semconv for BatchWriteItem, whose request entries represent explicit write
-  // operations. BatchGetItem request entries are keys, so they do not produce batch telemetry.
+  // BatchWriteItem entries represent explicit write operations and produce batch telemetry.
+  // BatchGetItem entries are keys, so they do not produce batch telemetry.
   @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("batchScenarios")
@@ -105,17 +93,10 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
     List<AttributeAssertion> additionalAttributes =
         new ArrayList<>(
             asList(
-                equalTo(
-                    maybeStable(DB_SYSTEM), emitStableDatabaseSemconv() ? AWS_DYNAMODB : DYNAMODB),
-                equalTo(
-                    maybeStable(DB_OPERATION),
-                    emitStableDatabaseSemconv() ? scenario.stableOperation : scenario.awsOperation),
-                equalTo(
-                    DB_OPERATION_BATCH_SIZE,
-                    emitStableDatabaseSemconv() ? scenario.batchSize : null),
-                equalTo(
-                    DB_COLLECTION_NAME,
-                    emitStableDatabaseSemconv() && scenario.hasCollection ? "sometable" : null)));
+                equalTo(DB_SYSTEM_NAME, AWS_DYNAMODB),
+                equalTo(DB_OPERATION_NAME, scenario.operationName),
+                equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                equalTo(DB_COLLECTION_NAME, scenario.hasCollection ? "sometable" : null)));
 
     Object response = scenario.execute.apply(client);
     assertRequestWithMockedResponse(
@@ -124,50 +105,50 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
 
   private static Stream<BatchScenario> batchScenarios() {
     return Stream.of(
-        // BatchGetItem entries are keys, not explicit operations, so the stable operation name
+        // BatchGetItem entries are keys, not explicit operations, so the operation name
         // remains the raw batch operation and db.operation.batch.size is not emitted.
         BatchScenario.builder("getItemEmpty")
             .awsOperation("BatchGetItem")
             .execute(client -> client.batchGetItem(getItemRequest(0)))
-            .stableOperation("BatchGetItem")
+            .operationName("BatchGetItem")
             .build(),
         BatchScenario.builder("getItemSingle")
             .awsOperation("BatchGetItem")
             .execute(client -> client.batchGetItem(getItemRequest(1)))
-            .stableOperation("BatchGetItem")
+            .operationName("BatchGetItem")
             .hasCollection()
             .build(),
         BatchScenario.builder("getItemTwo")
             .awsOperation("BatchGetItem")
             .execute(client -> client.batchGetItem(getItemRequest(2)))
-            .stableOperation("BatchGetItem")
+            .operationName("BatchGetItem")
             .hasCollection()
             .build(),
         BatchScenario.builder("writeItemEmpty")
             .awsOperation("BatchWriteItem")
             .execute(client -> client.batchWriteItem(emptyWriteItemRequest()))
-            .stableOperation("BatchWriteItem")
+            .operationName("BatchWriteItem")
             .batchSize(0)
             .build(),
         // a single put request is reported as PutItem
         BatchScenario.builder("writeItemSinglePut")
             .awsOperation("BatchWriteItem")
             .execute(client -> client.batchWriteItem(putItemsRequest(1)))
-            .stableOperation("PutItem")
+            .operationName("PutItem")
             .hasCollection()
             .build(),
         // a single delete request is reported as DeleteItem
         BatchScenario.builder("writeItemSingleDelete")
             .awsOperation("BatchWriteItem")
             .execute(client -> client.batchWriteItem(deleteItemsRequest(1)))
-            .stableOperation("DeleteItem")
+            .operationName("DeleteItem")
             .hasCollection()
             .build(),
         // two put requests are reported as BATCH PutItem
         BatchScenario.builder("writeItemTwoPuts")
             .awsOperation("BatchWriteItem")
             .execute(client -> client.batchWriteItem(putItemsRequest(2)))
-            .stableOperation("BATCH PutItem")
+            .operationName("BATCH PutItem")
             .batchSize(2)
             .hasCollection()
             .build(),
@@ -175,7 +156,7 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
         BatchScenario.builder("writeItemTwoDeletes")
             .awsOperation("BatchWriteItem")
             .execute(client -> client.batchWriteItem(deleteItemsRequest(2)))
-            .stableOperation("BATCH DeleteItem")
+            .operationName("BATCH DeleteItem")
             .batchSize(2)
             .hasCollection()
             .build(),
@@ -184,7 +165,7 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
         BatchScenario.builder("writeItemMixed")
             .awsOperation("BatchWriteItem")
             .execute(client -> client.batchWriteItem(mixedWriteItemRequest()))
-            .stableOperation("BATCH")
+            .operationName("BATCH")
             .batchSize(2)
             .hasCollection()
             .build());
@@ -252,7 +233,7 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
     final String name;
     final String awsOperation;
     final Function<AmazonDynamoDB, Object> execute;
-    final String stableOperation;
+    final String operationName;
     final Long batchSize;
     final boolean hasCollection;
 
@@ -260,7 +241,7 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
       this.name = builder.name;
       this.awsOperation = builder.awsOperation;
       this.execute = builder.execute;
-      this.stableOperation = builder.stableOperation;
+      this.operationName = builder.operationName;
       this.batchSize = builder.batchSize;
       this.hasCollection = builder.hasCollection;
     }
@@ -279,7 +260,7 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
       private final String name;
       private String awsOperation;
       private Function<AmazonDynamoDB, Object> execute;
-      private String stableOperation;
+      private String operationName;
       private Long batchSize;
       private boolean hasCollection;
 
@@ -297,8 +278,8 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
         return this;
       }
 
-      Builder stableOperation(String stableOperation) {
-        this.stableOperation = stableOperation;
+      Builder operationName(String operationName) {
+        this.operationName = operationName;
         return this;
       }
 

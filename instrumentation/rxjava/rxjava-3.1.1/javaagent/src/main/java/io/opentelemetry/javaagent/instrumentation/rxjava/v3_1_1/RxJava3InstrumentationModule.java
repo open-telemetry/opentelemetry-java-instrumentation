@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -19,11 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RxJava3InstrumentationModule extends InstrumentationModule {
 
   public RxJava3InstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "rxjava-3.1.1" : "rxjava",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"rxjava"}
-            : new String[] {"rxjava-3.1.1"});
+    super("rxjava-3.1.1", "rxjava");
   }
 
   @Override

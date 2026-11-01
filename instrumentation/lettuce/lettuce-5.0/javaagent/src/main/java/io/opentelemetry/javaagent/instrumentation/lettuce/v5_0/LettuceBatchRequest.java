@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Collections.emptyList;
 
 import io.lettuce.core.protocol.RedisCommand;
@@ -14,7 +13,6 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,11 +69,6 @@ final class LettuceBatchRequest {
   }
 
   @Nullable
-  InetSocketAddress getServerAddress() {
-    return connectionState == null ? null : connectionState.serverAddress;
-  }
-
-  @Nullable
   SocketAddress getPeerAddress() {
     // Read when the span ends so an outbound write after the flush can still supply the peer.
     return LettuceCommandPeer.batchAddress(commands);
@@ -113,7 +106,7 @@ final class LettuceBatchRequest {
     StringBuilder builder = new StringBuilder();
     for (RedisCommand<?, ?, ?> command : commands) {
       String commandQueryText = queryText(command);
-      String separator = builder.length() == 0 ? "" : batchQuerySeparator();
+      String separator = builder.length() == 0 ? "" : "; ";
       if (builder.length() + separator.length() + commandQueryText.length() > LIMIT) {
         break;
       }
@@ -129,9 +122,5 @@ final class LettuceBatchRequest {
             ? emptyList()
             : LettuceArgSplitter.splitArgs(command.getArgs().toCommandString());
     return sanitizer.sanitize(commandName, args);
-  }
-
-  private static String batchQuerySeparator() {
-    return emitStableDatabaseSemconv() ? "; " : ";";
   }
 }

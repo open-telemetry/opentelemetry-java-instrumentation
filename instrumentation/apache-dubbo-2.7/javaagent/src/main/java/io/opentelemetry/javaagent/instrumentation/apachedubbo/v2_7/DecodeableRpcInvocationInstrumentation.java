@@ -47,16 +47,12 @@ public class DecodeableRpcInvocationInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class DecodeAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Timer onEnter() {
-      if (!DubboUnknownServiceHelper.isEnabled()) {
-        return null;
-      }
       return Timer.start();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This RpcInvocation invocation,
         @Advice.Argument(0) Object channelObj,

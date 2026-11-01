@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableRpcSemconv;
-
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 
 /** A {@link SpanNameExtractor} for RPC requests. */
@@ -14,7 +12,7 @@ public final class RpcSpanNameExtractor<REQUEST> implements SpanNameExtractor<RE
 
   /**
    * Returns a {@link SpanNameExtractor} that constructs the span name according to RPC semantic
-   * conventions: {@code <rpc.service>/<rpc.method>}.
+   * conventions.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       RpcAttributesGetter<REQUEST, ?> attributesExtractor) {
@@ -27,23 +25,12 @@ public final class RpcSpanNameExtractor<REQUEST> implements SpanNameExtractor<RE
     this.getter = getter;
   }
 
-  @SuppressWarnings("deprecation") // for getMethod()
   @Override
   public String extract(REQUEST request) {
-    if (emitStableRpcSemconv()) {
-      String method = getter.getRpcMethod(request);
-      if (method != null) {
-        return method;
-      }
-      // fall back to rpc.system.name
-      return getter.getRpcSystemName(request);
+    String method = getter.getRpcMethod(request);
+    if (method != null && !method.equals("_OTHER")) {
+      return method;
     }
-
-    String service = getter.getService(request);
-    String method = getter.getMethod(request);
-    if (service == null || method == null) {
-      return "RPC request";
-    }
-    return service + '/' + method;
+    return getter.getRpcSystemName(request);
   }
 }

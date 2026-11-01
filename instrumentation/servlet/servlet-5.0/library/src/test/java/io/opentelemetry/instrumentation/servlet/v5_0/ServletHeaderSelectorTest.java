@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.servlet.v5_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Arrays.asList;
 import static java.util.Collections.enumeration;
 import static java.util.Collections.singletonList;
@@ -24,6 +25,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExt
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletHttpAttributesGetter;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
+import io.opentelemetry.instrumentation.servlet.v5_0.internal.Experimental;
 import io.opentelemetry.instrumentation.servlet.v5_0.internal.Servlet5Accessor;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -31,6 +33,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -133,5 +136,42 @@ class ServletHeaderSelectorTest {
         .extracting(AttributeKey::getKey)
         .noneMatch(key -> key.startsWith("http.request.header."))
         .noneMatch(key -> key.startsWith("http.response.header."));
+  }
+
+  @Test
+  void capturesUserNameWhenEnabled() throws Exception {
+    ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
+    Experimental.setCaptureUserName(builder, true);
+    Filter filter = builder.build().createFilter();
+
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getMethod()).thenReturn("GET");
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test-user");
+    when(request.getUserPrincipal()).thenReturn(principal);
+    HttpServletResponse response = mock(HttpServletResponse.class);
+
+    filter.doFilter(request, response, (req, res) -> {});
+
+    List<List<SpanData>> traces = testing.waitForTraces(1);
+    assertThat(traces.get(0).get(0).getAttributes().get(stringKey("user.name")))
+        .isEqualTo("test-user");
+  }
+
+  @Test
+  void doesNotCaptureUserNameByDefault() throws Exception {
+    Filter filter = ServletTelemetry.builder(testing.getOpenTelemetry()).build().createFilter();
+
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getMethod()).thenReturn("GET");
+    Principal principal = mock(Principal.class);
+    when(principal.getName()).thenReturn("test-user");
+    when(request.getUserPrincipal()).thenReturn(principal);
+    HttpServletResponse response = mock(HttpServletResponse.class);
+
+    filter.doFilter(request, response, (req, res) -> {});
+
+    List<List<SpanData>> traces = testing.waitForTraces(1);
+    assertThat(traces.get(0).get(0).getAttributes().get(stringKey("user.name"))).isNull();
   }
 }

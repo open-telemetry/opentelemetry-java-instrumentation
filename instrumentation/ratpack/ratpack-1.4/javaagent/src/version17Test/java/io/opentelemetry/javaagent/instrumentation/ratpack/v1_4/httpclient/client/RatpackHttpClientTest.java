@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.httpclient.client;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -59,17 +58,14 @@ class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
                         .satisfies(
                             spanData -> {
                               assertThat(spanData.getInstrumentationScopeInfo().getName())
-                                  .isEqualTo(
-                                      v3Preview()
-                                          ? "io.opentelemetry.ratpack-1.4"
-                                          : "io.opentelemetry.ratpack-1.7");
+                                  .isEqualTo("io.opentelemetry.ratpack-1.4");
                               assertThat(spanData.getInstrumentationScopeInfo().getVersion())
                                   .isNotEmpty();
                             }),
                 span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
 
     testing.waitAndAssertMetrics(
-        v3Preview() ? "io.opentelemetry.ratpack-1.4" : "io.opentelemetry.ratpack-1.7",
+        "io.opentelemetry.ratpack-1.4",
         metric ->
             metric
                 .hasName("http.client.request.duration")

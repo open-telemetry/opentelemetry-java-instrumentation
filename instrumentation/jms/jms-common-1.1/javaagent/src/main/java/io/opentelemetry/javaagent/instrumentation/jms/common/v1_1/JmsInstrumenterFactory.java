@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jms.common.v1_1;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -16,11 +15,11 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProcessMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -36,7 +35,6 @@ public class JmsInstrumenterFactory {
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
   private IncludeExclude headers = IncludeExclude.builder().build();
-  private boolean messagingReceiveInstrumentationEnabled = false;
 
   public JmsInstrumenterFactory(OpenTelemetry openTelemetry, String instrumentationName) {
     this.openTelemetry = openTelemetry;
@@ -49,13 +47,6 @@ public class JmsInstrumenterFactory {
     return this;
   }
 
-  @CanIgnoreReturnValue
-  public JmsInstrumenterFactory setMessagingReceiveTelemetryEnabled(
-      boolean messagingReceiveInstrumentationEnabled) {
-    this.messagingReceiveInstrumentationEnabled = messagingReceiveInstrumentationEnabled;
-    return this;
-  }
-
   public Instrumenter<MessageWithDestination, Void> createProducerInstrumenter() {
     JmsMessageAttributesGetter getter = new JmsMessageAttributesGetter();
     MessagingOperationType operationType = MessagingOperationType.SEND;
@@ -65,9 +56,10 @@ public class JmsInstrumenterFactory {
                 openTelemetry,
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(operationType, SEND_OPERATION_NAME))
-            .addOperationMetrics(MessagingProducerMetrics.getForOperationType());
+            .addOperationMetrics(MessagingProducerMetrics.get());
     setMessagingSendExceptionEventExtractor(builder);
     return builder.buildProducerInstrumenter(new MessagePropertySetter());
   }
@@ -81,23 +73,19 @@ public class JmsInstrumenterFactory {
                 openTelemetry,
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, RECEIVE_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(operationType, RECEIVE_OPERATION_NAME))
-            .addOperationMetrics(MessagingConsumerMetrics.getForOperationType());
+            .addOperationMetrics(MessagingConsumerMetrics.get());
     setMessagingReceiveExceptionEventExtractor(builder);
-    // with the stable messaging semantic conventions the producer is always linked, since it is
-    // never used as the parent of the receive span
-    if (messagingReceiveInstrumentationEnabled || emitStableMessagingSemconv()) {
-      builder.addSpanLinksExtractor(
-          new PropagatorBasedSpanLinksExtractor<>(
-              openTelemetry.getPropagators().getTextMapPropagator(),
-              MessagePropertyGetter.INSTANCE));
-    }
+    builder.addSpanLinksExtractor(
+        new PropagatorBasedSpanLinksExtractor<>(
+            openTelemetry.getPropagators().getTextMapPropagator(), MessagePropertyGetter.INSTANCE));
     return builder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
   public Instrumenter<MessageWithDestination, Void> createConsumerProcessInstrumenter(
-      boolean canHaveReceiveInstrumentation, boolean recordConsumedMessages) {
+      boolean recordConsumedMessages) {
     JmsMessageAttributesGetter getter = new JmsMessageAttributesGetter();
     MessagingOperationType operationType = MessagingOperationType.PROCESS;
 
@@ -106,24 +94,18 @@ public class JmsInstrumenterFactory {
                 openTelemetry,
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(operationType, PROCESS_OPERATION_NAME));
-    boolean receiveOperationExists =
-        canHaveReceiveInstrumentation && messagingReceiveInstrumentationEnabled;
-    if (recordConsumedMessages && emitStableMessagingSemconv()) {
+    if (recordConsumedMessages) {
       builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     }
-    if (emitStableMessagingSemconv()) {
-      builder.addOperationMetrics(JmsProcessMetrics.create());
-    } else {
-      builder.addOperationMetrics(MessagingProcessMetrics.get());
-    }
+    builder.addOperationMetrics(JmsProcessMetrics.create());
     setMessagingProcessExceptionEventExtractor(builder);
     return MessagingProcessInstrumenterFactory.create(
         builder,
         openTelemetry.getPropagators().getTextMapPropagator(),
-        MessagePropertyGetter.INSTANCE,
-        receiveOperationExists);
+        MessagePropertyGetter.INSTANCE);
   }
 
   private AttributesExtractor<MessageWithDestination, Void> createMessagingAttributesExtractor(

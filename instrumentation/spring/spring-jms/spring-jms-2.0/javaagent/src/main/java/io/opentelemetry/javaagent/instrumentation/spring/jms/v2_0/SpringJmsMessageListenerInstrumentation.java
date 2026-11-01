@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0.SpringJmsSingletons.listenerInstrumenter;
@@ -17,7 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.MessageAdapter;
@@ -93,14 +91,7 @@ class SpringJmsMessageListenerInstrumentation implements TypeInstrumentation {
                 null);
           }
 
-          Context currentContext = Context.current();
-          Context parentContext = currentContext;
-          if (!emitStableMessagingSemconv()) {
-            JmsReceiveContext receiveContext = messageAdapter.getReceiveContext();
-            if (receiveContext != null) {
-              parentContext = receiveContext.context();
-            }
-          }
+          Context parentContext = Context.current();
 
           Instrumenter<MessageWithDestination, Void> instrumenter =
               listenerInstrumenter(messageAdapter.wereConsumedMessagesRecorded());

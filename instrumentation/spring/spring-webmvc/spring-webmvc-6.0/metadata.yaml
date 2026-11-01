@@ -17,18 +17,8 @@ configurations:
       Enables the capture of experimental span attributes `spring-webmvc.view.name` and
       `spring-webmvc.view.type`.
   - ref: common.controller-telemetry.enabled
-  - ref: common.deprecated-controller-telemetry.enabled
   - name: otel.instrumentation.common.view-telemetry.enabled
     declarative_name: java.common.view_telemetry.enabled
     description: Enables the creation of experimental view spans.
     type: boolean
     default: false
-  - name: otel.instrumentation.common.experimental.view-telemetry.enabled
-    declarative_name: java.common.view_telemetry/development.enabled
-    description: >
-      Deprecated: use `otel.instrumentation.common.view-telemetry.enabled` instead. This setting
-      is ignored under v3-preview and will be removed in 3.0.
-    type: boolean
-    default: false
-    deprecated: true
-    replaced_by: otel.instrumentation.common.view-telemetry.enabled

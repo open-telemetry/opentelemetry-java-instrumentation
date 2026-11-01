@@ -15,7 +15,6 @@ import io.micrometer.core.instrument.config.NamingConvention;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Internal;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +27,10 @@ public final class OpenTelemetryMeterRegistryBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";
 
   static {
+    Experimental.internalSetBaseTimeUnit(
+        (builder, baseTimeUnit) -> builder.baseTimeUnit = baseTimeUnit);
+    Experimental.internalSetPrometheusMode(
+        (builder, prometheusMode) -> builder.prometheusMode = prometheusMode);
     Experimental.internalSetMicrometerHistogramGaugesEnabled(
         (builder, enabled) -> builder.histogramGaugesEnabled = enabled);
     Experimental.internalSetSuppressionPredicate(
@@ -55,26 +58,6 @@ public final class OpenTelemetryMeterRegistryBuilder {
     return this;
   }
 
-  /** Sets the base time unit. */
-  @CanIgnoreReturnValue
-  public OpenTelemetryMeterRegistryBuilder setBaseTimeUnit(TimeUnit baseTimeUnit) {
-    this.baseTimeUnit = baseTimeUnit;
-    return this;
-  }
-
-  /**
-   * Enables the "Prometheus mode" - this will simulate the behavior of Micrometer's {@code
-   * PrometheusMeterRegistry}. The instruments will be renamed to match Micrometer instrument
-   * naming, and the base time unit will be set to seconds.
-   *
-   * <p>Set this to {@code true} if you are using the Prometheus metrics exporter.
-   */
-  @CanIgnoreReturnValue
-  public OpenTelemetryMeterRegistryBuilder setPrometheusMode(boolean prometheusMode) {
-    this.prometheusMode = prometheusMode;
-    return this;
-  }
-
   /**
    * Returns a new {@link OpenTelemetryMeterRegistry} with the settings of this {@link
    * OpenTelemetryMeterRegistryBuilder}.
@@ -99,7 +82,6 @@ public final class OpenTelemetryMeterRegistryBuilder {
         baseTimeUnit,
         namingConvention,
         modifier,
-        SemconvStability.v3Preview(openTelemetry),
         metersHiddenFromSearch,
         suppressionPredicate,
         meterBuilder.build());

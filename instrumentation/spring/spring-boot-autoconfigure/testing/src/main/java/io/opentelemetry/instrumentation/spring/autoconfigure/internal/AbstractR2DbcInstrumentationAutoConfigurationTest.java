@@ -5,8 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -45,13 +44,13 @@ public abstract class AbstractR2DbcInstrumentationAutoConfigurationTest {
                       trace.hasSpansSatisfyingExactly(
                           span ->
                               span.hasAttribute(
-                                  maybeStable(DB_STATEMENT),
+                                  DB_QUERY_TEXT,
                                   "CREATE TABLE IF NOT EXISTS player(id INT NOT NULL AUTO_INCREMENT, name VARCHAR(?), age INT, PRIMARY KEY (id))")),
                   trace ->
                       trace.hasSpansSatisfyingExactly(
                           span ->
                               span.hasAttribute(
-                                  maybeStable(DB_STATEMENT), "SELECT * FROM player WHERE id = ?")));
+                                  DB_QUERY_TEXT, "SELECT * FROM player WHERE id = ?")));
         });
   }
 }

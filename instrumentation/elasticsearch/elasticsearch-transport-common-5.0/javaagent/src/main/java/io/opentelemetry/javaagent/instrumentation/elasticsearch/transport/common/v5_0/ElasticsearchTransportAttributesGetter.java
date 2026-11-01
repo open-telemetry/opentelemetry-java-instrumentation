@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
@@ -41,12 +39,6 @@ public class ElasticsearchTransportAttributesGetter
   }
 
   @Override
-  @SuppressWarnings("deprecation") // old database semconv still use db.operation
-  public String getDbOperation(ElasticTransportRequest request) {
-    return request.getAction().getClass().getSimpleName();
-  }
-
-  @Override
   @Nullable
   public String getErrorType(
       ElasticTransportRequest request,
@@ -67,13 +59,13 @@ public class ElasticsearchTransportAttributesGetter
   @Nullable
   public String getServerAddress(ElasticTransportRequest request) {
     DbServerTarget target = request.getServerTarget();
-    return emitStableDatabaseSemconv() && target != null ? target.getAddress() : null;
+    return target != null ? target.getAddress() : null;
   }
 
   @Override
   @Nullable
   public Integer getServerPort(ElasticTransportRequest request) {
     DbServerTarget target = request.getServerTarget();
-    return emitStableDatabaseSemconv() && target != null ? target.getPort() : null;
+    return target != null ? target.getPort() : null;
   }
 }

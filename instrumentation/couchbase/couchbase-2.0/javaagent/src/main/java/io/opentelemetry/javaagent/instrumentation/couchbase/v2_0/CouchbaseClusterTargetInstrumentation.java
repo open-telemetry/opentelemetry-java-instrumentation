@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.VirtualFieldHelper.COUCHBASE_SERVER_TARGET;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.couchbase.client.core.ClusterFacade;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
@@ -31,7 +31,13 @@ class CouchbaseClusterTargetInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArguments(3)).and(takesArgument(2, boolean.class)),
+        isConstructor()
+            .and(
+                takesArgument(
+                    1,
+                    namedOneOf(
+                        "com.couchbase.client.java.ConnectionString",
+                        "com.couchbase.client.core.utils.ConnectionString"))),
         getClass().getName() + "$ConstructorAdvice");
   }
 

@@ -46,9 +46,41 @@ dependencies {
 }
 
 tasks {
+  val containerTestPackage =
+    "io.opentelemetry.instrumentation.jmx.rules.containers"
+
+  val containerTestClasses = fileTree("src/test/java") {
+    include("${containerTestPackage.replace('.', '/')}/*Test.java")
+  }.files
+    .map { "$containerTestPackage.${it.nameWithoutExtension}" }
+    .sorted()
+
+  require(containerTestClasses.isNotEmpty()) {
+    "No JMX container test classes found"
+  }
+
   test {
+    filter {
+      containerTestClasses.forEach { excludeTestsMatching(it) }
+    }
+  }
+
+  val containerTests = containerTestClasses.map { testClass ->
+    register<Test>("test${testClass.substringAfterLast('.').removeSuffix("Test")}") {
+      testClassesDirs = sourceSets.test.get().output.classesDirs
+      classpath = sourceSets.test.get().runtimeClasspath
+      filter {
+        includeTestsMatching(testClass)
+      }
+    }
+  }
+
+  check {
+    dependsOn(containerTests)
+  }
+
+  withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    timeout.set(Duration.ofMinutes(30))
 
     // the base agent only contains the agent machinery and the internal instrumentations that it
     // requires, the JMX instrumentation is added on top of it. Using the full agent would capture

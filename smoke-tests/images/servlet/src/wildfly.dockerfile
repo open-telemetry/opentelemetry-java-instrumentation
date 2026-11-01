@@ -17,24 +17,24 @@ WORKDIR /opt/jboss
 
 # latest eclipse-temurin docker images have removed curl in favor of wget (https://github.com/adoptium/containers/issues/630)
 # but ibm-semeru-runtimes docker images lack wget
-RUN apt-get update && apt-get -y install wget
+RUN apt-get update && apt-get -y install wget unzip
 
 # Specify the user which should be used to execute all commands below
 USER jboss
 
 # Set the WILDFLY_VERSION env variable
 ENV WILDFLY_VERSION=${version}
-ENV DOWNLOAD_URL=${baseDownloadUrl}.tar.gz
+ENV DOWNLOAD_URL=${baseDownloadUrl}.zip
 ENV JBOSS_HOME /opt/jboss/wildfly
 
 USER root
 RUN echo curl -O -L $DOWNLOAD_URL
-# Add the WildFly distribution to /opt, and make wildfly the owner of the extracted tar content
+# Add the WildFly distribution to /opt, and make wildfly the owner of the extracted content
 # Make sure the distribution is available from a well-known place
 RUN cd $HOME \
     && archive=$(basename "$DOWNLOAD_URL") \
     && wget -nv $DOWNLOAD_URL \
-    && tar xf "$archive" \
+    && unzip -q "$archive" \
     && mv $HOME/wildfly-$WILDFLY_VERSION $JBOSS_HOME \
     && rm "$archive" \
     && chown -R jboss:0 ${JBOSS_HOME} \

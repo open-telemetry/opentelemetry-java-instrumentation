@@ -7,13 +7,12 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -22,11 +21,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
@@ -38,7 +32,6 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.HttpData;
@@ -70,7 +63,7 @@ import software.amazon.awssdk.services.rdsdata.model.Field;
 import software.amazon.awssdk.services.rdsdata.model.SqlParameter;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class AbstractAws2RdsDataTest {
+public abstract class AbstractAws2RdsDataTest extends AbstractAwsSdkTest {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
   private static final String AWS_SERVICE = "RdsData";
   private static final String DATABASE = "customers_db";
@@ -91,8 +84,6 @@ public abstract class AbstractAws2RdsDataTest {
 
   private RdsDataClient client;
   private RdsDataAsyncClient asyncClient;
-
-  protected abstract InstrumentationExtension getTesting();
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
@@ -129,8 +120,6 @@ public abstract class AbstractAws2RdsDataTest {
         "ExecuteStatement",
         "/Execute",
         "SELECT * FROM customers WHERE email = ?",
-        "SELECT",
-        "customers",
         "SELECT customers",
         null);
     assertSqlDurationMetric();
@@ -151,8 +140,7 @@ public abstract class AbstractAws2RdsDataTest {
         .join();
 
     assertRequestPath("/Execute");
-    assertSqlSpan(
-        "ExecuteStatement", "/Execute", sql, "SELECT", "customers", "SELECT customers", null);
+    assertSqlSpan("ExecuteStatement", "/Execute", sql, "SELECT customers", null);
     assertSqlDurationMetric();
   }
 
@@ -187,8 +175,6 @@ public abstract class AbstractAws2RdsDataTest {
         "BatchExecuteStatement",
         "/BatchExecute",
         sql,
-        "INSERT",
-        "customers",
         isBatch ? "BATCH INSERT customers" : "INSERT customers",
         isBatch ? (long) parameterSetCount : null);
     assertSqlDurationMetric();
@@ -212,20 +198,9 @@ public abstract class AbstractAws2RdsDataTest {
                     span -> {
                       List<AttributeAssertion> attributes =
                           commonAttributes("ExecuteStatement", "/Execute", null, null);
-                      addDatabaseAttributes(
-                          attributes,
-                          sql,
-                          "SELECT",
-                          "missing_customers",
-                          "SELECT missing_customers",
-                          null);
-                      if (emitStableDatabaseSemconv()) {
-                        attributes.add(equalTo(ERROR_TYPE, BadRequestException.class.getName()));
-                      }
-                      span.hasName(
-                              emitStableDatabaseSemconv()
-                                  ? "SELECT missing_customers"
-                                  : AWS_SERVICE + ".ExecuteStatement")
+                      addDatabaseAttributes(attributes, sql, "SELECT missing_customers", null);
+                      attributes.add(equalTo(ERROR_TYPE, BadRequestException.class.getName()));
+                      span.hasName("SELECT missing_customers")
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasStatus(StatusData.error())
@@ -269,13 +244,7 @@ public abstract class AbstractAws2RdsDataTest {
   }
 
   private void assertSqlSpan(
-      String operation,
-      String path,
-      String queryText,
-      String legacyOperation,
-      String legacyTable,
-      String stableQuerySummary,
-      Long batchSize) {
+      String operation, String path, String queryText, String querySummary, Long batchSize) {
     getTesting()
         .waitAndAssertTraces(
             trace ->
@@ -283,17 +252,8 @@ public abstract class AbstractAws2RdsDataTest {
                     span -> {
                       List<AttributeAssertion> attributes =
                           commonAttributes(operation, path, 200, REQUEST_ID);
-                      addDatabaseAttributes(
-                          attributes,
-                          queryText,
-                          legacyOperation,
-                          legacyTable,
-                          stableQuerySummary,
-                          batchSize);
-                      span.hasName(
-                              emitStableDatabaseSemconv()
-                                  ? stableQuerySummary
-                                  : AWS_SERVICE + "." + operation)
+                      addDatabaseAttributes(attributes, queryText, querySummary, batchSize);
+                      span.hasName(querySummary)
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(attributes);
@@ -302,26 +262,18 @@ public abstract class AbstractAws2RdsDataTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static void addDatabaseAttributes(
-      List<AttributeAssertion> attributes,
-      String queryText,
-      String legacyOperation,
-      String legacyTable,
-      String stableQuerySummary,
-      Long batchSize) {
+      List<AttributeAssertion> attributes, String queryText, String querySummary, Long batchSize) {
     attributes.addAll(
         asList(
-            equalTo(maybeStable(DB_SYSTEM), "other_sql"),
-            equalTo(maybeStable(DB_NAME), DATABASE),
-            equalTo(maybeStable(DB_STATEMENT), queryText),
-            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? stableQuerySummary : null),
-            equalTo(
-                maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : legacyOperation),
-            equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : legacyTable),
-            equalTo(DB_OPERATION_BATCH_SIZE, emitStableDatabaseSemconv() ? batchSize : null)));
+            equalTo(DB_SYSTEM_NAME, "other_sql"),
+            equalTo(DB_NAMESPACE, DATABASE),
+            equalTo(DB_QUERY_TEXT, queryText),
+            equalTo(DB_QUERY_SUMMARY, querySummary),
+            equalTo(DB_OPERATION_BATCH_SIZE, batchSize)));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  private static List<AttributeAssertion> commonAttributes(
+  private List<AttributeAssertion> commonAttributes(
       String operation, String path, Integer statusCode, String requestId) {
     return new ArrayList<>(
         asList(
@@ -332,7 +284,7 @@ public abstract class AbstractAws2RdsDataTest {
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, AWS_SERVICE),
             equalTo(RPC_METHOD, operation),
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
             equalTo(HTTP_RESPONSE_STATUS_CODE, statusCode != null ? statusCode.longValue() : null),
             equalTo(AWS_REQUEST_ID, requestId)));
   }

@@ -30,13 +30,13 @@ import java.util.regex.Pattern;
  *   <li>mysql:host:3306/db (non-standard format)
  *   <li>mariadb:replication://host1,host2/db
  *   <li>mariadb:sequential:address=(host=host1)(port=3306)(user=root)/db
+ *   <li>mysql://address=(host=host1)(port=3306)/db
  *   <li>mysql://[::1]:3306/db (IPv6)
  * </ul>
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@SuppressWarnings("deprecation") // supporting old semconv until 3.0
 public final class MysqlUrlParser implements JdbcUrlParser {
 
   // copied from DbAttributes.DbSystemNameValues
@@ -81,11 +81,14 @@ public final class MysqlUrlParser implements JdbcUrlParser {
 
     if (subtype != null) {
       // Has subprotocol (e.g., mysql:aurora://...)
-      ctx.subtype(subtype);
       parseMariaSubProtocol(jdbcUrl.substring(protoLoc + 3), ctx);
     } else if (protoLoc > 0) {
       // Standard URL format - delegate to GenericUrlParser
       GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx, DEFAULT_PORT);
+      if (jdbcUrl.startsWith("address=", protoLoc + 3)) {
+        // java.net.URI finds no host in the address=(host=...)(port=...) form
+        parseMariaAddress(jdbcUrl.substring(protoLoc + 3), ctx);
+      }
     } else {
       // Non-standard format: type/host:port/db?params
       parseNonStandardUrl(jdbcUrl, ctx);
@@ -241,12 +244,13 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       Pattern.compile("\\(\\s*host\\s*=\\s*([^ )]+)\\s*\\)");
   private static final Pattern PORT_PATTERN =
       Pattern.compile("\\(\\s*port\\s*=\\s*([\\d]+)\\s*\\)");
-  private static final Pattern USER_PATTERN =
-      Pattern.compile("\\(\\s*user\\s*=\\s*([^ )]+)\\s*\\)");
 
   private static void parseMariaAddress(String jdbcUrl, ParseContext ctx) {
-    int addressEnd = jdbcUrl.indexOf(",address=");
-    String addressUrl = addressEnd > 0 ? jdbcUrl.substring(0, addressEnd) : jdbcUrl;
+    // only look at the address blocks, not at the database name or the query string
+    int authorityEnd = indexOf(jdbcUrl, 0, '/', '?');
+    String authority = authorityEnd != -1 ? jdbcUrl.substring(0, authorityEnd) : jdbcUrl;
+    int addressEnd = authority.indexOf(",address=");
+    String addressUrl = addressEnd > 0 ? authority.substring(0, addressEnd) : authority;
 
     Matcher hostMatcher = HOST_PATTERN.matcher(addressUrl);
     if (hostMatcher.find()) {
@@ -256,11 +260,6 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     Matcher portMatcher = PORT_PATTERN.matcher(addressUrl);
     if (portMatcher.find()) {
       ctx.port(Integer.parseInt(portMatcher.group(1)));
-    }
-
-    Matcher userMatcher = USER_PATTERN.matcher(addressUrl);
-    if (userMatcher.find()) {
-      ctx.user(userMatcher.group(1));
     }
   }
 }

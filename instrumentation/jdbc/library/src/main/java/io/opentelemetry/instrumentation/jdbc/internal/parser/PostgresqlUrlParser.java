@@ -28,7 +28,6 @@ import java.util.Properties;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@SuppressWarnings("deprecation") // supporting old semconv until 3.0
 public final class PostgresqlUrlParser implements JdbcUrlParser {
 
   // copied from DbAttributes.DbSystemNameValues

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.instrumentationapi.v1_14;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,13 +16,7 @@ import java.util.List;
 public class InstrumentationApiInstrumentationModule extends InstrumentationModule {
 
   public InstrumentationApiInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview()
-            ? "opentelemetry-instrumentation-api-1.14"
-            : "opentelemetry-instrumentation-api",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"opentelemetry-instrumentation-api"}
-            : new String[] {"opentelemetry-instrumentation-api-1.14"});
+    super("opentelemetry-instrumentation-api-1.14", "opentelemetry-instrumentation-api");
   }
 
   @Override

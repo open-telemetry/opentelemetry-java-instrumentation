@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -34,6 +36,72 @@ dependencies {
 
 testing {
   suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("ExperimentalAttributes") {
+          systemProperty("test.captureExperimentalSpanAttributes", "true")
+          systemProperty(
+            "metadataConfig",
+            "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
+          )
+          filter {
+            excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+            excludeTestsMatching("Aws2SqsW3cPropagatorTest")
+            excludeTestsMatching("Aws2SqsW3cPropagatorAndXrayPropagatorTest")
+            excludeTestsMatching("Aws2SqsSuppressReceiveSpansDefaultPropagatorTest")
+            excludeTestsMatching("Aws2SqsSuppressReceiveSpansW3cPropagatorTest")
+            excludeTestsMatching("Aws2SqsSuppressReceiveSpansW3cPropagatorAndXrayPropagatorTest")
+            // Keep inherited SQS coverage by excluding only subclass-specific regression tests.
+            excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDuplicateTracingInterceptor")
+            excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDisableSqsMessageCreateSpans")
+            excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testNoopTelemetryDoesNotInjectInvalidCreationContext")
+            excludeTestsMatching("Aws2ClientNotRecordHttpErrorTest")
+            excludeTestsMatching("Aws2ClientRecordHttpErrorTest")
+            excludeTestsMatching("SqsProcessMetricsIsolationTest")
+          }
+        }
+        register("ReceiveTelemetry") {
+          systemProperty("test.captureExperimentalSpanAttributes", "true")
+          systemProperty(
+            "test.messagingReceiveTelemetryEnabled",
+            "true",
+          )
+          systemProperty(
+            "metadataConfig",
+            "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)," +
+              "AwsSdkTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)",
+          )
+          filter {
+            includeTestsMatching("Aws2SqsDefaultPropagatorTest")
+            excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDuplicateTracingInterceptor")
+            excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testDisableSqsMessageCreateSpans")
+            excludeTestsMatching("Aws2SqsDefaultPropagatorTest.testNoopTelemetryDoesNotInjectInvalidCreationContext")
+          }
+        }
+        register("IndividualHttpErrors") {
+          systemProperty("test.recordIndividualHttpError", "true")
+          systemProperty(
+            "metadataConfig",
+            "AwsSdkTelemetryBuilder.setRecordIndividualHttpError(true)",
+          )
+          filter.includeTestsMatching("Aws2ClientRecordHttpErrorTest")
+        }
+        register("ExceptionSignalLogs") {
+          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+          systemProperty("test.captureExperimentalSpanAttributes", "true")
+          systemProperty(
+            "metadataConfig",
+            "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)," +
+              "otel.semconv.exception.signal.preview=logs",
+          )
+          filter {
+            includeTestsMatching("Aws2ClientTest")
+            includeTestsMatching("Aws2SqsDefaultPropagatorTest.testDeleteMessageError")
+          }
+        }
+      }
+    }
+
     register<JvmTestSuite>("testCoreOnly") {
       dependencies {
         implementation(project())
@@ -44,6 +112,11 @@ testing {
         implementation("software.amazon.awssdk:aws-json-protocol:$version")
         implementation("software.amazon.awssdk:dynamodb:$version")
         implementation("software.amazon.awssdk:lambda:$version")
+      }
+      executions {
+        register("ExperimentalAttributes") {
+          systemProperty("test.captureExperimentalSpanAttributes", "true")
+        }
       }
     }
 
@@ -73,75 +146,25 @@ testing {
         val version = baseVersion("2.5.54").orLatest()
         implementation("software.amazon.awssdk:rdsdata:$version")
       }
+      executions {
+        register("ExperimentalAttributes") {
+          systemProperty("test.captureExperimentalSpanAttributes", "true")
+          systemProperty(
+            "metadataConfig",
+            "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
+          )
+        }
+      }
     }
   }
 }
 
 tasks {
   withType<Test>().configureEach {
-    // NB: If you'd like to change these, there is some cleanup work to be done, as most tests ignore this and
-    // set the value directly (the "library" does not normally query it, only library-autoconfigure)
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*Sqs*")
-    }
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*Sqs*")
-    }
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-  }
-
-  val testCoreOnlyStableSemconv = register<Test>("testCoreOnlyStableSemconv") {
-    val testCoreOnlySourceSet = sourceSets["testCoreOnly"]
-    testClassesDirs = testCoreOnlySourceSet.output.classesDirs
-    classpath = testCoreOnlySourceSet.runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-  }
-
-  val testRdsDataStableSemconv = register<Test>("testRdsDataStableSemconv") {
-    val testRdsDataSourceSet = sourceSets["testRdsData"]
-    testClassesDirs = testRdsDataSourceSet.output.classesDirs
-    classpath = testRdsDataSourceSet.runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
   check {
-    dependsOn(
-      testing.suites,
-      testStableSemconv,
-      testRdsDataStableSemconv,
-      testMessagingPreview,
-      testBothSemconv,
-      testCoreOnlyStableSemconv,
-      testExceptionSignalLogs,
-    )
+    dependsOn(testing.suites)
   }
 }

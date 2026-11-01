@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import javax.annotation.Nullable;
 
 /**
  * Utilities for validating textual database server endpoints.
@@ -115,6 +116,26 @@ public final class DbServerEndpointUtil {
 
   private static boolean isAsciiDigit(char c) {
     return c >= '0' && c <= '9';
+  }
+
+  /**
+   * Parses 1 to 5 ASCII decimal digits as a port in the range 1 to 65535, or returns {@code null}
+   * if invalid. Leading zeros are allowed.
+   */
+  @Nullable
+  public static Integer parsePort(String value) {
+    if (value.isEmpty() || value.length() > 5) {
+      return null;
+    }
+    int port = 0;
+    for (int i = 0; i < value.length(); i++) {
+      char c = value.charAt(i);
+      if (c < '0' || c > '9') {
+        return null;
+      }
+      port = port * 10 + c - '0';
+    }
+    return port >= 1 && port <= 65535 ? port : null;
   }
 
   private DbServerEndpointUtil() {}

@@ -76,21 +76,9 @@ testing {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
   val testSuites = testing.suites.withType(JvmTestSuite::class)
-
-  val stableSemconvSuites = testSuites.map { suite ->
-    register<Test>("${suite.name}StableSemconv") {
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
-      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-    }
-  }
 
   val experimentalSuites = testSuites.map { suite ->
     register<Test>("${suite.name}Experimental") {
@@ -103,7 +91,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites)
+    dependsOn(testing.suites, experimentalSuites)
   }
 
   if (otelProps.denyUnsafe) {

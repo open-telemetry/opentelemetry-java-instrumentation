@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.ktor.v3_0;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -17,11 +16,7 @@ import java.util.List;
 public class KtorServerInstrumentationModule extends InstrumentationModule {
 
   public KtorServerInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "ktor-3.0" : "ktor",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"ktor-server", "ktor"}
-            : new String[] {"ktor-3.0", "ktor-server", "ktor-server-3.0"});
+    super("ktor-3.0", "ktor-server", "ktor");
   }
 
   @Override

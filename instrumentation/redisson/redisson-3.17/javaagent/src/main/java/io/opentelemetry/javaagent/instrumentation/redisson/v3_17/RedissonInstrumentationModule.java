@@ -10,9 +10,9 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedisCommandDecoderInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -20,11 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RedissonInstrumentationModule extends InstrumentationModule {
 
   public RedissonInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "redisson-3.17" : "redisson",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"redisson"}
-            : new String[] {"redisson-3.17"});
+    super("redisson-3.17", "redisson");
   }
 
   @Override
@@ -39,6 +35,7 @@ public class RedissonInstrumentationModule extends InstrumentationModule {
         new MasterSlaveConnectionManagerInstrumentation(),
         new RedisExecutorConnectionFutureInstrumentation(),
         new RedisConnectionInstrumentation(),
+        new RedisCommandDecoderInstrumentation(),
         new RedisCommandDataInstrumentation());
   }
 

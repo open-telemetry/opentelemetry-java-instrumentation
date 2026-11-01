@@ -17,22 +17,17 @@ import java.util.function.Predicate;
  */
 public class JmxRuntimeMetricsFactory {
   public static List<AutoCloseable> buildObservables(
-      boolean emitExperimentalTelemetry,
-      boolean captureGcCause,
-      Predicate<String> metricNamePredicate,
-      Meter meter) {
-    return buildObservables(
-        emitExperimentalTelemetry, captureGcCause, metricNamePredicate, meter, unused -> {});
+      boolean emitExperimentalMetrics, Predicate<String> metricNamePredicate, Meter meter) {
+    return buildObservables(emitExperimentalMetrics, metricNamePredicate, meter, unused -> {});
   }
 
   /**
-   * Like {@link #buildObservables(boolean, boolean, Predicate, Meter)}, and passes the name of each
+   * Like {@link #buildObservables(boolean, Predicate, Meter)}, and passes the name of each
    * supported metric whose observer or GC listener registered successfully to {@code
    * registeredObserver}.
    */
   public static List<AutoCloseable> buildObservables(
-      boolean emitExperimentalTelemetry,
-      boolean captureGcCause,
+      boolean emitExperimentalMetrics,
       Predicate<String> metricNamePredicate,
       Meter meter,
       Consumer<String> registeredObserver) {
@@ -44,8 +39,7 @@ public class JmxRuntimeMetricsFactory {
       registeredObserver.accept("jvm.cpu.count");
     }
     if (metricNamePredicate.test("jvm.gc.duration")) {
-      observables.addAll(
-          GarbageCollector.registerObservers(meter, captureGcCause, registeredObserver));
+      observables.addAll(GarbageCollector.registerObservers(meter, registeredObserver));
     }
     observables.addAll(
         MemoryPools.registerObservers(meter, metricNamePredicate, registeredObserver));
@@ -53,7 +47,7 @@ public class JmxRuntimeMetricsFactory {
       observables.addAll(Threads.registerObservers(meter));
       registeredObserver.accept("jvm.thread.count");
     }
-    if (emitExperimentalTelemetry) {
+    if (emitExperimentalMetrics) {
       observables.addAll(
           BufferPools.registerObservers(meter, metricNamePredicate, registeredObserver));
       observables.addAll(

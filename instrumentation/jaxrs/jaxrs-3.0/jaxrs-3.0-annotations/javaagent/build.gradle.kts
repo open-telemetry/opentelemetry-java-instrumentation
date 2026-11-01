@@ -23,8 +23,16 @@ dependencies {
   testImplementation("jakarta.ws.rs:jakarta.ws.rs-api:3.0.0")
 }
 
-tasks.test {
-  jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+tasks {
+  val testControllerTelemetry = register<Test>("testControllerTelemetry") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
 
-  systemProperty("collectMetadata", otelProps.collectMetadata)
+    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
+  }
+
+  check {
+    dependsOn(testControllerTelemetry)
+  }
 }

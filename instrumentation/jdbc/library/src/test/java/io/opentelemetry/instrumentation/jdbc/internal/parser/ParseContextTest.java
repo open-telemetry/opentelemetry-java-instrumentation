@@ -21,8 +21,6 @@ class ParseContextTest {
 
     DbInfo info = context.toDbInfo();
 
-    assertThat(info.getLegacyServerAddress()).isEqualTo("localhost");
-    assertThat(info.getLegacyServerPort()).isEqualTo(5432);
     assertThat(info.getConfiguredServerTarget()).isNull();
   }
 
@@ -78,13 +76,11 @@ class ParseContextTest {
 
     DbInfo info = context.toDbInfo();
 
-    assertThat(info.getLegacyServerAddress()).isEqualTo("localhost");
-    assertThat(info.getLegacyServerPort()).isEqualTo(5432);
     assertThat(info.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("pg.host", 5433));
   }
 
   @Test
-  void resolvedGroupIsNotOverwrittenByLegacyEndpoint() {
+  void resolvedGroupIsNotOverwrittenBySingleEndpoint() {
     ParseContext context = ParseContext.of("postgresql", null);
     DbServerTarget target = DbServerTarget.create("h1:5432,h2:5433", null);
     context.disableSingleServerFallback();
@@ -106,7 +102,7 @@ class ParseContextTest {
   }
 
   @Test
-  void rejectedTargetDoesNotFallBackToLegacyEndpoint() {
+  void rejectedTargetDoesNotFallBackToSingleEndpoint() {
     ParseContext context = ParseContext.of("postgresql", null);
     context.resolveConfiguredServerTarget(null);
     context.host("h1");

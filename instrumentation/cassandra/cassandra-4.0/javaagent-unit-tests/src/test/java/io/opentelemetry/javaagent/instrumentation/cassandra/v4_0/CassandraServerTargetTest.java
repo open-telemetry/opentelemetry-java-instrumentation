@@ -178,7 +178,7 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void sessionWithSniContactPointHasNoStableTarget() {
+  void sessionWithSniContactPointHasNoServerTarget() {
     configureContactPoints(emptyList());
     when(session.getContext()).thenReturn(context);
     Set<EndPoint> programmaticContactPoints =
@@ -190,7 +190,7 @@ class CassandraServerTargetTest {
   }
 
   @Test
-  void sessionWithCustomDiscoveryEndPointHasNoStableTarget() {
+  void sessionWithCustomDiscoveryEndPointHasNoServerTarget() {
     configureContactPoints(emptyList());
     when(session.getContext()).thenReturn(context);
 

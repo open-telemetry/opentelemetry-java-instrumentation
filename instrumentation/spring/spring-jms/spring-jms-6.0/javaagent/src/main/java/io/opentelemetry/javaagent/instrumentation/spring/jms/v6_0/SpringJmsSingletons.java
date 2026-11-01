@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
@@ -26,14 +24,10 @@ public class SpringJmsSingletons {
   static {
     JmsInstrumenterFactory factory =
         new JmsInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
-            .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
-            .setMessagingReceiveTelemetryEnabled(RECEIVE_TELEMETRY_ENABLED);
+            .setHeaders(ExperimentalConfig.get().getMessagingHeaders());
 
-    listenerInstrumenter = factory.createConsumerProcessInstrumenter(true, false);
-    listenerInstrumenterWithConsumedMessages =
-        emitStableMessagingSemconv()
-            ? factory.createConsumerProcessInstrumenter(true, true)
-            : listenerInstrumenter;
+    listenerInstrumenter = factory.createConsumerProcessInstrumenter(false);
+    listenerInstrumenterWithConsumedMessages = factory.createConsumerProcessInstrumenter(true);
     receiveInstrumenter = factory.createConsumerReceiveInstrumenter();
   }
 

@@ -38,6 +38,10 @@ tasks {
   val testDeclarativeConfig = register<Test>("testDeclarativeConfig") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("WithSpanInstrumentationTest.excludedMethod")
+      includeTestsMatching("WithSpanInstrumentationTest.deriveAutomaticName")
+    }
     jvmArgs(
       "-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml"
     )

@@ -8,6 +8,7 @@ target
 #########
 !**/gradle/wrapper/*
 .gradle
+.kotlin/
 **/build/
 **/generated/
 examples/**/build/

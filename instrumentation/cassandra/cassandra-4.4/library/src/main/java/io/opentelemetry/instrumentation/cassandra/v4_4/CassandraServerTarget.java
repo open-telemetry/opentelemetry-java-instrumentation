@@ -50,7 +50,7 @@ final class CassandraServerTarget {
       }
       return target.build();
     } catch (RuntimeException ignored) {
-      // A session that cannot describe its configuration has no stable server target.
+      // A session that cannot describe its configuration has no configured server target.
       return null;
     }
   }
@@ -76,7 +76,7 @@ final class CassandraServerTarget {
       }
       return target.build();
     } catch (RuntimeException ignored) {
-      // Unsafe or malformed contact points have no stable server target.
+      // Unsafe or malformed contact points have no configured server target.
       return null;
     }
   }

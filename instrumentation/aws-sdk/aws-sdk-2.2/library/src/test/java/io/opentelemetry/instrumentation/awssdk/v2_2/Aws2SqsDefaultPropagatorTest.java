@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -52,10 +51,9 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
 
   @Test
   void testDisableSqsMessageCreateSpans() {
-    assumeTrue(emitStableMessagingSemconv());
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true);
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes());
     telemetryBuilder.setBatchSendMessageCreationSpansEnabled(false);
     AwsSdkTelemetry disabledTelemetry = telemetryBuilder.build();
     SqsClientBuilder builder = SqsClient.builder();
@@ -65,7 +63,7 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
             .addExecutionInterceptor(disabledTelemetry.createExecutionInterceptor())
             .build());
 
-    try (SqsClient client = disabledTelemetry.wrap(builder.build())) {
+    try (SqsClient client = disabledTelemetry.instrument(builder.build())) {
       client.createQueue(createQueueRequest);
       client.sendMessageBatch(sendMessageBatchRequest);
 
@@ -86,7 +84,6 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
 
   @Test
   void testNoopTelemetryDoesNotInjectInvalidCreationContext() {
-    assumeTrue(emitStableMessagingSemconv());
     assumeTrue(supportsMessageSystemAttributes());
     AwsSdkTelemetry noopTelemetry = AwsSdkTelemetry.builder(OpenTelemetry.noop()).build();
     SqsClientBuilder builder = SqsClient.builder();
@@ -96,7 +93,7 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
             .addExecutionInterceptor(noopTelemetry.createExecutionInterceptor())
             .build());
 
-    try (SqsClient client = noopTelemetry.wrap(builder.build())) {
+    try (SqsClient client = noopTelemetry.instrument(builder.build())) {
       client.createQueue(createQueueRequest);
 
       assertThat(client.sendMessageBatch(sendMessageBatchRequest).successful()).hasSize(3);

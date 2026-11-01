@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -20,11 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringJmsInstrumentationModule extends InstrumentationModule {
 
   public SpringJmsInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview() ? "spring-jms-6.0" : "spring-jms",
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {"spring-jms"}
-            : new String[] {"spring-jms-6.0"});
+    super("spring-jms-6.0", "spring-jms");
   }
 
   @Override

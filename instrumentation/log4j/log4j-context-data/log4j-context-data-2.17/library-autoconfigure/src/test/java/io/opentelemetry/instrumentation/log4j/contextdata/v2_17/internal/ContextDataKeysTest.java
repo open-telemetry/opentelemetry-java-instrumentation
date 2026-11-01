@@ -18,16 +18,27 @@ import org.junit.jupiter.api.Test;
 class ContextDataKeysTest {
 
   @Test
-  void deprecatedLoggingKeyIgnoredInV3Preview() {
+  void loggingKeys() {
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
     when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
-    when(commonConfig.getBoolean("v3_preview")).thenReturn(true);
-    when(commonConfig.get("logging").getString("trace_id")).thenReturn("custom_trace_id");
 
     ContextDataKeys contextDataKeys = ContextDataKeys.create(openTelemetry);
 
     assertThat(contextDataKeys.getTraceIdKey()).isEqualTo(LoggingContextConstants.TRACE_ID);
+    assertThat(contextDataKeys.getSpanIdKey()).isEqualTo(LoggingContextConstants.SPAN_ID);
+    assertThat(contextDataKeys.getTraceFlagsKey()).isEqualTo(LoggingContextConstants.TRACE_FLAGS);
+    DeclarativeConfigProperties logging = commonConfig.get("logging");
+
+    when(logging.getString("trace_id_key")).thenReturn("supported_trace_id");
+    when(logging.getString("span_id_key")).thenReturn("supported_span_id");
+    when(logging.getString("trace_flags_key")).thenReturn("supported_trace_flags");
+
+    contextDataKeys = ContextDataKeys.create(openTelemetry);
+
+    assertThat(contextDataKeys.getTraceIdKey()).isEqualTo("supported_trace_id");
+    assertThat(contextDataKeys.getSpanIdKey()).isEqualTo("supported_span_id");
+    assertThat(contextDataKeys.getTraceFlagsKey()).isEqualTo("supported_trace_flags");
   }
 }

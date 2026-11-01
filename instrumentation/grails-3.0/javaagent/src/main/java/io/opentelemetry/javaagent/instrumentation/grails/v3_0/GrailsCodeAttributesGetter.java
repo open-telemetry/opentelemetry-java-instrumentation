@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.grails.v3_0;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 
 class GrailsCodeAttributesGetter implements CodeAttributesGetter<HandlerData> {
 
@@ -15,7 +15,7 @@ class GrailsCodeAttributesGetter implements CodeAttributesGetter<HandlerData> {
   }
 
   @Override
-  public String getMethodName(HandlerData handlerData) {
+  public String getCodeMethodName(HandlerData handlerData) {
     return handlerData.getAction();
   }
 }

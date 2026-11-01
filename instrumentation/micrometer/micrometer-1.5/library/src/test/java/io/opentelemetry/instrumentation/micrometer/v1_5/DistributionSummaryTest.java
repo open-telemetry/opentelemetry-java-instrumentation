@@ -28,9 +28,8 @@ class DistributionSummaryTest extends AbstractDistributionSummaryTest {
     return testing;
   }
 
-  // the decaying max is not exported under the v3 preview, but it must still be readable through
-  // the
-  // micrometer api for consumers such as spring boot actuator
+  // The decaying max isn't exported, but is still readable through Micrometer for consumers such as
+  // Spring Boot Actuator.
   @Test
   void testMaxIsStillReadable() {
     DistributionSummary summary =

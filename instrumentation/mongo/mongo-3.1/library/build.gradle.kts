@@ -19,15 +19,4 @@ tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
 }

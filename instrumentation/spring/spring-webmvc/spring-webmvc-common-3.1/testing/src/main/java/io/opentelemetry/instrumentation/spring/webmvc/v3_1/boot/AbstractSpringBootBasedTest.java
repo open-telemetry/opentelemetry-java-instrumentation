@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.spring.webmvc.v3_1.boot;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionSuffixAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -19,6 +17,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
@@ -193,7 +192,8 @@ public abstract class AbstractSpringBootBasedTest
             span.hasName("BasicErrorController.error")
                 .hasKind(SpanKind.INTERNAL)
                 .hasAttributesSatisfyingExactly(
-                    codeFunctionSuffixAssertions(".BasicErrorController", "error")));
+                    satisfies(
+                        CODE_FUNCTION_NAME, val -> val.endsWith(".BasicErrorController.error"))));
     return spanAssertions;
   }
 
@@ -209,7 +209,8 @@ public abstract class AbstractSpringBootBasedTest
 
     span.hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
-            codeFunctionAssertions(OnCommittedResponseWrapper.class, methodName));
+            equalTo(
+                CODE_FUNCTION_NAME, OnCommittedResponseWrapper.class.getName() + "." + methodName));
     return span;
   }
 
@@ -236,7 +237,8 @@ public abstract class AbstractSpringBootBasedTest
     String codeFunction = handlerSpanName.substring(handlerSpanName.indexOf('.') + 1);
     span.hasName(handlerSpanName)
         .hasKind(SpanKind.INTERNAL)
-        .hasAttributesSatisfyingExactly(codeFunctionAssertions(codeNamespace, codeFunction));
+        .hasAttributesSatisfyingExactly(
+            equalTo(CODE_FUNCTION_NAME, codeNamespace + "." + codeFunction));
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
       span.hasEventsSatisfyingExactly(

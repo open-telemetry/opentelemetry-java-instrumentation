@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -32,38 +35,31 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testConnectionSpan = register<Test>("testConnectionSpan") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("ReactorNettyConnectionSpanTest")
-    }
-    include("**/ReactorNettyConnectionSpanTest.*")
-    jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.netty.connection-telemetry.enabled=true")
-  }
-
   test {
     filter {
       excludeTestsMatching("ReactorNettyConnectionSpanTest")
     }
   }
+}
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
-    filter {
-      excludeTestsMatching("ReactorNettyConnectionSpanTest")
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("ConnectionSpan") {
+          filter {
+            includeTestsMatching("ReactorNettyConnectionSpanTest")
+          }
+          include("**/ReactorNettyConnectionSpanTest.*")
+          telemetryConfig("otel.instrumentation.netty.connection-telemetry.enabled", "true")
+        }
+        register("PreviewSemconv") {
+          telemetryConfig("otel.semconv-stability.preview", "service.peer")
+          filter {
+            excludeTestsMatching("ReactorNettyConnectionSpanTest")
+          }
+        }
+      }
     }
-  }
-
-  check {
-    dependsOn(testConnectionSpan, testStableSemconv)
   }
 }

@@ -53,39 +53,25 @@ testing {
       }
     }
 
+    // SDK 3.4.3 covers the ProtostellarRequest constructor taking Core as its first argument.
     register<JvmTestSuite>("version343Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/version343Test/java"))
-        }
-      }
       dependencies {
         implementation("com.couchbase.client:java-client:3.4.3")
       }
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          }
-        }
-      }
     }
 
+    // SDK 3.4.4 covers the eight-argument ProtostellarRequest constructor taking CoreProtostellar.
     register<JvmTestSuite>("version344Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/version344Test/java"))
-        }
-      }
       dependencies {
         implementation("com.couchbase.client:java-client:3.4.4")
       }
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          }
-        }
+    }
+
+    // RequestSpan.recordException is available in SDK 3.3.4+.
+    register<JvmTestSuite>("version334Test") {
+      dependencies {
+        implementation("com.couchbase.client:java-client:${baseVersion("3.3.4").orLatest()}")
+        implementation("org.testcontainers:testcontainers-couchbase")
       }
     }
   }
@@ -95,71 +81,32 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  val testStableSemconvExperimental = register<Test>("testStableSemconvExperimental") {
+  val testExperimental = register<Test>("testExperimental") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs(
-      "-Dotel.semconv-stability.opt-in=database",
       "-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true",
     )
     systemProperty(
       "metadataConfig",
-      "otel.semconv-stability.opt-in=database,otel.instrumentation.couchbase.emit-experimental-telemetry=true",
+      "otel.instrumentation.couchbase.emit-experimental-telemetry=true",
     )
   }
 
-  val testV3Preview = register<Test>("testV3Preview") {
+  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
-  }
-
-  val testV3PreviewExperimental = register<Test>("testV3PreviewExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs(
-      "-Dotel.instrumentation.common.v3-preview=true",
-      "-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true",
-    )
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.v3-preview=true,otel.instrumentation.couchbase.emit-experimental-telemetry=true",
-    )
-  }
-
-  val testV3PreviewLegacyConfig = register<Test>("testV3PreviewLegacyConfig") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs(
-      "-Dotel.instrumentation.common.v3-preview=true",
-      "-Dotel.instrumentation.couchbase.experimental-span-attributes=true",
-    )
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.v3-preview=true,otel.instrumentation.couchbase.experimental-span-attributes=true",
-    )
+    filter {
+      includeTestsMatching("*CouchbaseExceptionSignalTest")
+    }
+    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
   }
 
   check {
-    dependsOn(
-      testing.suites,
-      testStableSemconv,
-      testStableSemconvExperimental,
-      testV3Preview,
-      testV3PreviewExperimental,
-      testV3PreviewLegacyConfig,
-    )
+    dependsOn(testing.suites, testExperimental, testExceptionSignalLogs)
   }
 
   if (otelProps.denyUnsafe) {

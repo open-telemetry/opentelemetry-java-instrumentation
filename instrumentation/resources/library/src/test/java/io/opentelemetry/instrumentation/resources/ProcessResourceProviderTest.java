@@ -24,10 +24,10 @@ class ProcessResourceProviderTest {
   private static final boolean IS_WINDOWS = OS.WINDOWS.isCurrentOs();
 
   @Test
-  void emitsCommandAttributesByDefault() {
+  void suppressesCommandAttributesByDefault() {
     Resource resource = createProcessResource(new HashMap<>());
 
-    assertCommandAttributes(resource.getAttributes());
+    assertNoCommandAttributes(resource.getAttributes());
   }
 
   @Test
@@ -42,32 +42,26 @@ class ProcessResourceProviderTest {
   }
 
   @Test
-  void suppressesCommandAttributesWithV3Preview() {
+  void suppressesCommandAttributesWithOptOut() {
     Map<String, String> config = new HashMap<>();
-    config.put("otel.instrumentation.common.v3-preview", "true");
+    config.put(
+        "otel.instrumentation.resources.experimental.process-command-attributes.enabled", "false");
 
     Resource resource = createProcessResource(config);
-    Attributes attributes = resource.getAttributes();
 
+    assertNoCommandAttributes(resource.getAttributes());
+  }
+
+  private static void assertNoCommandAttributes(Attributes attributes) {
     assertThat(attributes.get(PROCESS_PID)).isGreaterThan(1);
     assertThat(attributes.get(PROCESS_EXECUTABLE_PATH)).isNotNull();
     assertThat(attributes.get(PROCESS_COMMAND_LINE)).isNull();
     assertThat(attributes.get(PROCESS_COMMAND_ARGS)).isNull();
   }
 
-  @Test
-  void emitsCommandAttributesWithV3PreviewAndOptIn() {
-    Map<String, String> config = new HashMap<>();
-    config.put("otel.instrumentation.common.v3-preview", "true");
-    config.put(
-        "otel.instrumentation.resources.experimental.process-command-attributes.enabled", "true");
-
-    Resource resource = createProcessResource(config);
-
-    assertCommandAttributes(resource.getAttributes());
-  }
-
   private static void assertCommandAttributes(Attributes attributes) {
+    assertThat(attributes.get(PROCESS_PID)).isGreaterThan(1);
+    assertThat(attributes.get(PROCESS_EXECUTABLE_PATH)).isNotNull();
     if (isJava8() || IS_WINDOWS) {
       assertThat(attributes.get(PROCESS_COMMAND_LINE))
           .contains(attributes.get(PROCESS_EXECUTABLE_PATH))

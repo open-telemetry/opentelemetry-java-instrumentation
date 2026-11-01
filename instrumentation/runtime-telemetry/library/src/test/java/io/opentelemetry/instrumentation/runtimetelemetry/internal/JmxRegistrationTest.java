@@ -42,7 +42,7 @@ class JmxRegistrationTest {
       })
   void reportsOnlyTheSelectedReplacement(String name) {
     Set<String> registered = new HashSet<>();
-    JmxRuntimeMetricsFactory.buildObservables(true, false, name::equals, meter, registered::add)
+    JmxRuntimeMetricsFactory.buildObservables(true, name::equals, meter, registered::add)
         .forEach(cleanup::deferCleanup);
     assertThat(registered).containsExactly(name);
   }
@@ -51,7 +51,6 @@ class JmxRegistrationTest {
   void experimentalMetricsAreNotReportedWhenDisabled() {
     Set<String> registered = new HashSet<>();
     JmxRuntimeMetricsFactory.buildObservables(
-            false,
             false,
             name ->
                 name.startsWith("jvm.buffer.")
@@ -121,7 +120,6 @@ class JmxRegistrationTest {
             notification -> {
               throw new AssertionError("no notification expected");
             },
-            false,
             registered::add)
         .forEach(cleanup::deferCleanup);
     assertThat(registered).isEmpty();
@@ -135,7 +133,6 @@ class JmxRegistrationTest {
             notification -> {
               throw new AssertionError("no notification expected");
             },
-            false,
             registered::add)
         .forEach(cleanup::deferCleanup);
     assertThat(registered).containsExactly("jvm.gc.duration");
@@ -159,7 +156,6 @@ class JmxRegistrationTest {
                     notification -> {
                       throw new AssertionError("no notification expected");
                     },
-                    false,
                     registered::add))
         .isInstanceOf(IllegalStateException.class);
     assertThat(registered).isEmpty();

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -15,7 +14,6 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -90,10 +88,8 @@ class VertxRedisClientTargetTest {
               assertThat(spans).isNotEmpty();
               for (SpanData span : spans) {
                 assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                    .isEqualTo(
-                        emitStableDatabaseSemconv() ? host + ":" + port + "/themaster" : host);
-                assertThat(span.getAttributes().get(SERVER_PORT))
-                    .isEqualTo(emitStableDatabaseSemconv() ? null : Long.valueOf(port));
+                    .isEqualTo(host + ":" + port + "/themaster");
+                assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo(null);
                 assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo(ip);
                 assertThat(span.getAttributes().get(NETWORK_PEER_PORT))
                     .isEqualTo(Long.valueOf(port));
@@ -133,8 +129,7 @@ class VertxRedisClientTargetTest {
   }
 
   @Test
-  void trailingInvalidClusterEndpointOmitsStableTarget() {
-    assumeTrue(emitStableDatabaseSemconv());
+  void trailingInvalidClusterEndpointOmitsConfiguredTarget() {
 
     TestRedisCluster redisCluster = new TestRedisCluster();
     cleanup.deferCleanup(redisCluster);
@@ -178,7 +173,6 @@ class VertxRedisClientTargetTest {
 
   @Test
   void clusterClientUsesAllConfiguredSeeds() {
-    assumeTrue(emitStableDatabaseSemconv());
 
     TestRedisCluster redisCluster = new TestRedisCluster();
     cleanup.deferCleanup(redisCluster);

@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.jms.common.v1_1;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.PROCESS_DURATION;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SpanKey.CONSUMER_PROCESS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -32,8 +31,6 @@ class JmsInstrumenterFactoryTest {
 
   @Test
   void recordsIndependentProcessDurationWithoutProcessSpanKey() {
-    assertThat(emitStableMessagingSemconv()).isTrue();
-
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     InMemorySpanExporter spanExporter = InMemorySpanExporter.create();
     SdkMeterProvider meterProvider =
@@ -49,7 +46,7 @@ class JmsInstrumenterFactoryTest {
             .build()) {
       Instrumenter<MessageWithDestination, Void> instrumenter =
           new JmsInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME)
-              .createConsumerProcessInstrumenter(false, true);
+              .createConsumerProcessInstrumenter(true);
       MessageWithDestination request = MessageWithDestination.create(messageAdapter(), null);
       Span parent = openTelemetry.getTracer("test").spanBuilder("parent").startSpan();
       Context parentContext =
@@ -81,8 +78,6 @@ class JmsInstrumenterFactoryTest {
 
   @Test
   void recordsConsumedMessagesOnlyWhenProcessOwnsTheCount() {
-    assertThat(emitStableMessagingSemconv()).isTrue();
-
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
@@ -91,9 +86,9 @@ class JmsInstrumenterFactoryTest {
       JmsInstrumenterFactory factory =
           new JmsInstrumenterFactory(openTelemetry, INSTRUMENTATION_NAME);
       Instrumenter<MessageWithDestination, Void> withoutCount =
-          factory.createConsumerProcessInstrumenter(false, false);
+          factory.createConsumerProcessInstrumenter(false);
       Instrumenter<MessageWithDestination, Void> withCount =
-          factory.createConsumerProcessInstrumenter(false, true);
+          factory.createConsumerProcessInstrumenter(true);
       MessageWithDestination request = MessageWithDestination.create(messageAdapter(), null);
 
       Context context = withoutCount.start(Context.root(), request);
