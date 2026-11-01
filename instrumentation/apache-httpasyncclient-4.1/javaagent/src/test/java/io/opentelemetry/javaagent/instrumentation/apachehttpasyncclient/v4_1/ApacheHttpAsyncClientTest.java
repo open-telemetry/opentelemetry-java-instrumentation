@@ -5,10 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1;
 
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -25,10 +33,13 @@ import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+import java.util.stream.Stream;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.conn.routing.HttpRoute;
+import org.apache.http.conn.routing.HttpRoutePlanner;
 import org.apache.http.impl.conn.DefaultRoutePlanner;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
@@ -38,7 +49,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class ApacheHttpAsyncClientTest {
 
@@ -107,22 +119,41 @@ class ApacheHttpAsyncClientTest {
     }
   }
 
+  private static Stream<Arguments> requestsWithInetAddress() {
+    return Stream.of(
+        argumentSet("default port", false, false),
+        argumentSet("explicit port", true, false),
+        argumentSet("rewritten route", true, true));
+  }
+
   @Nested
   class ApacheClientHostRequestTest extends AbstractTest {
 
     @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void requestWithInetAddress(boolean explicitPort) throws Exception {
+    @MethodSource(
+        "io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1."
+            + "ApacheHttpAsyncClientTest#requestsWithInetAddress")
+    void requestWithInetAddress(boolean explicitPort, boolean rewrittenRoute) throws Exception {
       int serverPort = resolveAddress("/success").getPort();
-      InetAddress address = InetAddress.getByAddress("127.0.0.1", new byte[] {127, 0, 0, 1});
-      HttpHost target = new HttpHost(address, explicitPort ? serverPort : -1, "http");
+      String hostname = rewrittenRoute ? "192.0.2.1" : "127.0.0.1";
+      byte[] addressBytes =
+          rewrittenRoute ? new byte[] {(byte) 192, 0, 2, 1} : new byte[] {127, 0, 0, 1};
+
+      InetAddress address = InetAddress.getByAddress(hostname, addressBytes);
+      int explicitTargetPort = rewrittenRoute ? 8080 : serverPort;
+      HttpHost target = new HttpHost(address, explicitPort ? explicitTargetPort : -1, "http");
       URI expectedUri = URI.create(target.toURI() + "/success");
+
+      HttpRoutePlanner routePlanner =
+          rewrittenRoute
+              ? (host, request, context) ->
+                  new HttpRoute(new HttpHost("127.0.0.1", serverPort, "http"))
+              : new DefaultRoutePlanner(host -> serverPort);
 
       CloseableHttpAsyncClient resolvedClient =
           HttpAsyncClients.custom()
               .setDefaultRequestConfig(requestConfig)
-              // Resolve -1 to the test server port for routing; the original target keeps -1.
-              .setRoutePlanner(new DefaultRoutePlanner(host -> serverPort))
+              .setRoutePlanner(routePlanner)
               .build();
       cleanup.deferCleanup(resolvedClient);
       resolvedClient.start();
@@ -166,17 +197,15 @@ class ApacheHttpAsyncClientTest {
                   span ->
                       assertClientSpan(span, expectedUri, "GET", 200, null)
                           .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfying(
-                              attributes -> {
-                                assertThat(attributes.get(NETWORK_PEER_ADDRESS))
-                                    .isEqualTo("127.0.0.1");
-                                if (explicitPort) {
-                                  assertThat(attributes.get(NETWORK_PEER_PORT))
-                                      .isEqualTo((long) serverPort);
-                                } else {
-                                  assertThat(attributes.get(NETWORK_PEER_PORT)).isNull();
-                                }
-                              }),
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(HTTP_REQUEST_METHOD, "GET"),
+                              equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                              equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                              equalTo(SERVER_ADDRESS, hostname),
+                              equalTo(SERVER_PORT, explicitPort ? explicitTargetPort : 80),
+                              equalTo(URL_FULL, expectedUri.toString()),
+                              equalTo(
+                                  stringKey("server.service.name"), expectedMappedServiceName())),
                   span -> assertServerSpan(span).hasParent(trace.getSpan(1)),
                   span ->
                       span.hasName("callback")
