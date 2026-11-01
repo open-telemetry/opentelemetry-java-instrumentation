@@ -80,6 +80,18 @@ testing {
         implementation("org.testcontainers:testcontainers")
       }
     }
+
+    named<JvmTestSuite>("test") {
+      executions {
+        register("Experimental") {
+          telemetryConfig("otel.instrumentation.lettuce.experimental-span-attributes", "true")
+        }
+
+        register("ConnectionTelemetryEnabled") {
+          telemetryConfig("otel.instrumentation.lettuce.connection-telemetry.enabled", "true")
+        }
+      }
+    }
   }
 }
 
@@ -93,17 +105,5 @@ tasks {
 
   check {
     dependsOn(testing.suites)
-  }
-}
-
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
-    register("Experimental") {
-      telemetryConfig("otel.instrumentation.lettuce.experimental-span-attributes", "true")
-    }
-
-    register("ConnectionTelemetryEnabled") {
-      telemetryConfig("otel.instrumentation.lettuce.connection-telemetry.enabled", "true")
-    }
   }
 }

@@ -49,13 +49,13 @@ testing {
         implementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
       }
     }
-  }
-}
 
-testing.suites.withType(JvmTestSuite::class).configureEach {
-  executions {
-    register("ExceptionSignalLogs") {
-      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+    withType(JvmTestSuite::class).configureEach {
+      executions {
+        register("ExceptionSignalLogs") {
+          telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+        }
+      }
     }
   }
 }

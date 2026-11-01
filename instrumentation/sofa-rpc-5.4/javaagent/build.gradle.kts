@@ -28,23 +28,23 @@ testing {
         implementation("com.alipay.sofa:sofa-rpc-all:${baseVersion("5.4.0").orLatest()}")
       }
     }
-  }
-}
 
-testing.suites.withType(JvmTestSuite::class).configureEach {
-  executions {
-    configureEach {
-      systemProperty("testLatestDeps", otelProps.testLatestDeps)
-      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-      // required on jdk17
-      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-      if (otelProps.denyUnsafe) {
-        enabled = false
+    withType(JvmTestSuite::class).configureEach {
+      executions {
+        configureEach {
+          systemProperty("testLatestDeps", otelProps.testLatestDeps)
+          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+          // required on jdk17
+          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+          if (otelProps.denyUnsafe) {
+            enabled = false
+          }
+        }
+
+        register("ExceptionSignalLogs") {
+          telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+        }
       }
-    }
-
-    register("ExceptionSignalLogs") {
-      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
   }
 }
