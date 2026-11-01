@@ -26,9 +26,7 @@ class GradleParserTest {
             }""";
     DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
-    assertThat(info.versions().size()).isEqualTo(1);
-    assertThat(info.versions().stream().findFirst().get())
-        .isEqualTo("org.elasticsearch.client:rest:[5.0,6.4)");
+    assertThat(info.versions()).containsExactly("org.elasticsearch.client:rest:[5.0,6.4)");
   }
 
   @Test
@@ -44,8 +42,7 @@ class GradleParserTest {
 
     DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
-    assertThat(info.versions().size()).isEqualTo(1);
-    assertThat(info.versions().stream().findFirst().get()).isEqualTo("Java 8+");
+    assertThat(info.versions()).containsExactly("Java 8+");
   }
 
   @Test
@@ -65,9 +62,8 @@ class GradleParserTest {
 
     DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
-    assertThat(info.versions().size()).isEqualTo(1);
     assertThat(info.minJavaVersionSupported()).isEqualTo(11);
-    assertThat(info.versions().stream().findFirst().get()).isEqualTo("Java 11+");
+    assertThat(info.versions()).containsExactly("Java 11+");
   }
 
   @Test
@@ -89,8 +85,7 @@ class GradleParserTest {
 
     DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
-    assertThat(info.versions().size()).isEqualTo(1);
-    assertThat(info.versions().stream().findFirst().get()).isEqualTo("Java 8+");
+    assertThat(info.versions()).containsExactly("Java 8+");
   }
 
   @Test
@@ -171,26 +166,23 @@ class GradleParserTest {
             id("otel.scala-conventions")
           }
 
-          val zioVersion = "2.0.0"
-          val scalaVersion = "2.12"
-
           muzzle {
             pass {
               group.set("dev.zio")
               module.set("zio_2.12")
-              versions.set("[$zioVersion,)")
+              versions.set("[2.0.0,)")
               assertInverse.set(true)
             }
             pass {
               group.set("dev.zio")
               module.set("zio_2.13")
-              versions.set("[$zioVersion,)")
+              versions.set("[2.0.0,)")
               assertInverse.set(true)
             }
             pass {
               group.set("dev.zio")
               module.set("zio_3")
-              versions.set("[$zioVersion,)")
+              versions.set("[2.0.0,)")
               assertInverse.set(true)
             }
           }

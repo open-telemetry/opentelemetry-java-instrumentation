@@ -1,5 +1,6 @@
 plugins {
   id("otel.library-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 dependencies {
@@ -9,10 +10,4 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation(project(":instrumentation:nats:nats-2.17:testing"))
-}
-
-tasks {
-  test {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
 }

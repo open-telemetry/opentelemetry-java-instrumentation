@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -43,6 +44,5 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }

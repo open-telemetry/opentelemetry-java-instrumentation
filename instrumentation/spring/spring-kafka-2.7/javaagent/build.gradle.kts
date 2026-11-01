@@ -4,6 +4,7 @@ import io.opentelemetry.instrumentation.gradle.telemetryConfig
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -94,7 +95,6 @@ testing.suites {
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 

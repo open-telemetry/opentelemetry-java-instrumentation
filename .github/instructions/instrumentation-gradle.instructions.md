@@ -55,14 +55,16 @@ or test failure that CI will report.
   of the same coordinate does not test both versions: Gradle resolves one dependency graph,
   normally selecting the higher version. Exercise the newer runtime in a wired version-specific
   test suite.
-- Inspect test sources before requiring `testcontainersBuildService`; a transitive dependency
-  alone is not enough. Register the service for every execution that runs Testcontainers tests.
-  Keep common test configuration in one declaration rather than selecting tasks or variants
-  individually. Use `executions.configureEach` when a JVM test suite and its variants cover the
-  relevant executions; this may include container-free variants. Prefer `tasks.test` when a setting
-  applies only to the default test task. Use `tasks.withType<Test>().configureEach` only for
-  genuinely project-wide settings spanning other suites or independent `Test` tasks. Implicit
-  `latestDepTest` does not count. Keep unrelated JVM settings and properties scoped.
+- Inspect test sources and shared fixtures before applying `otel.testcontainers-testing` in the
+  test-running project; a transitive dependency alone is not enough. The explicit opt-in schedules
+  all of that project's `Test` tasks through the shared container limiter, including container-free
+  unit tests and variants. Reserve narrower container scheduling for a demonstrated problem.
+  Keep unrelated common test configuration in one declaration rather than selecting tasks or
+  variants individually. Use `executions.configureEach` when a JVM test suite and its variants
+  cover the relevant executions. Prefer `tasks.test` when a setting applies only to the default
+  test task. Use `tasks.withType<Test>().configureEach` for unrelated settings only when they are
+  genuinely project-wide, spanning other suites or independent `Test` tasks. Implicit
+  `latestDepTest` does not count. Keep JVM properties, filters, and enablement appropriately scoped.
 - Check metadata collection when its wiring or collected telemetry changes, not as unrelated
   cleanup. Collect default telemetry and supported non-default telemetry modes. Register
   representative tasks in `.github/scripts/instrumentations.sh` covering each profile's

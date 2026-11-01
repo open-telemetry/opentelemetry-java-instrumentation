@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -15,10 +16,4 @@ dependencies {
   implementation(project(":instrumentation:clickhouse:clickhouse-client-common-0.5:javaagent"))
   library("com.clickhouse:client-v2:0.8.0")
   testInstrumentation(project(":instrumentation:clickhouse:clickhouse-client-v1-0.5:javaagent"))
-}
-
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
 }
