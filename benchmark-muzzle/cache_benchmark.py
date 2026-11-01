@@ -110,7 +110,6 @@ class CacheBenchmark(benchmark.Benchmark):
         started = time.perf_counter()
         self.seed = seed
         self.cache_assertions = False
-        self.build("baseline", f"{name}-dependencies", offline=False, preparation=True)
         self.build("baseline", f"{name}-reference", offline=True, preparation=True)
         if cache:
             self.cache_assertions = True

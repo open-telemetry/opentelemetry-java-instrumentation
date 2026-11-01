@@ -21,6 +21,14 @@ on:
       workload-run-id:
         description: Optional earlier benchmark run whose frozen workload to reuse
         type: string
+      online-dependencies:
+        description: Online Gradle resolution with combined dependency preparation and reference generation
+        type: boolean
+        default: false
+      live-metadata-pair:
+        description: Add one diagnostic baseline/candidate pair with cold live Maven version discovery
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -53,7 +61,7 @@ jobs:
         run: python3 -m unittest -v
 
       - name: Validate benchmark controls
-        run: ./gradlew -p gradle-plugins test --tests '*MuzzleBenchmarkSupportTest' --no-scan
+        run: ./gradlew -p gradle-plugins test --tests '*Muzzle*Test' --no-scan --max-workers=2
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
@@ -104,8 +112,16 @@ jobs:
           PARTITION: ${{ matrix.partition }}
           ROUNDS: ${{ inputs.rounds }}
           WORKLOAD_RUN_ID: ${{ inputs.workload-run-id }}
+          ONLINE_DEPENDENCIES: ${{ inputs.online-dependencies }}
+          LIVE_METADATA_PAIR: ${{ inputs.live-metadata-pair }}
         run: |
           arguments=()
+          if [ "$ONLINE_DEPENDENCIES" = "true" ]; then
+            arguments+=(--online-dependencies)
+          fi
+          if [ "$LIVE_METADATA_PAIR" = "true" ]; then
+            arguments+=(--live-metadata-pair)
+          fi
           if [ -n "$WORKLOAD_RUN_ID" ]; then
             if [ -f "$RUNNER_TEMP/muzzle-workload/inputs/identity.json" ]; then
               arguments+=(--inputs "$RUNNER_TEMP/muzzle-workload/inputs")

@@ -228,7 +228,6 @@ class CacheBenchmarkTest(unittest.TestCase):
         with patch.object(runner, "build", side_effect=build):
             runner.prepare_seed(42, "writer", cache=True)
         self.assertEqual(calls, [
-            ("baseline", False, False),
             ("baseline", True, False),
             ("candidate", True, True),
         ])

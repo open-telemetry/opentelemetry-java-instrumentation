@@ -8,7 +8,7 @@ scenario, not a prediction of fresh-checkout CI time or live Maven downloads.
 The comparison runner is `benchmark.py`. The Gradle plugin's
 `MuzzleBenchmarkSupport` class controls and records its workload; it is not a
 separate benchmark. This tooling is for performance research and leaves normal
-Muzzle CI unchanged.
+version sampling and assertion caching defaults unchanged.
 
 ## Running a comparison
 
@@ -25,7 +25,7 @@ gh workflow run muzzle-performance-comparison.yml \
 
 The default is partition 1. Each partition runs on its own `ubuntu-24.04` runner;
 baseline and candidate always share that runner. Five rounds execute fifteen
-measured builds per partition, plus untimed preparation. Each round includes an
+measured builds per partition, plus preparation outside the comparison samples. Each round includes an
 identical-revision baseline control. Baseline/candidate order alternates.
 Jobs have a two-hour limit, including preparation.
 Pass a subset such as `partitions='[3,4]'` to run only those partitions.
@@ -33,6 +33,26 @@ Pass a subset such as `partitions='[3,4]'` to run only those partitions.
 Start with identical baseline/candidate revisions, one partition, and one round.
 Then verify a baseline/candidate comparison before expanding to all four partitions.
 One round is a functional check, not a performance conclusion. Normal Muzzle CI remains unchanged.
+
+For slice-discovery changes, enable online Gradle dependency resolution and add a
+single cold live-metadata probe:
+
+```sh
+gh workflow run muzzle-performance-comparison.yml \
+  --ref my-benchmark-branch \
+  -f baseline-ref=BASELINE_SHA \
+  -f partitions='[1,2,3,4]' -f rounds=5 \
+  -f online-dependencies=true -f live-metadata-pair=true
+```
+
+This mode combines dependency preparation and reference generation into one build
+per revision. Five rounds plus the live probe use nineteen builds per partition,
+instead of a full assertion-cache scenario and backend matrix. Partitions run
+concurrently on separate runners; comparisons within a partition remain sequential.
+The repeated rounds still freeze Aether metadata and include an identical-revision
+control. The separate live pair starts with empty Aether repositories, includes
+Maven request time, and must produce the same assertion/dependency reports.
+Its single pair is diagnostic, not a statistical performance result.
 
 Both revisions must contain the same benchmark support code. Start the research
 branch from the benchmark commit, then add optimizations on top. Compare that
@@ -46,11 +66,11 @@ of project visitation and uses frozen repository metadata. The benchmark still
 resolves version ranges, filters versions, registers tasks, and executes assertions.
 It does not replay a precomputed task graph or replace Muzzle with a synthetic fixture.
 
-Preparation captures Aether's Maven metadata once. Both revisions then use that
-same metadata offline. Online, untimed builds fetch the selected library dependencies,
-build each revision's shared build logic, and prepare workspace outputs.
-After both online builds finish, an offline warmup verifies each prepared revision
-against the same dependency cache.
+Preparation captures Aether's Maven metadata once. Repeated rounds use that same
+metadata offline. By default, two online builds fetch the selected library
+dependencies and prepare workspace outputs, followed by two offline warmup builds
+that verify the workloads. With `online-dependencies`, one build per revision
+both prepares the outputs and records or verifies the workload.
 
 Every successful assertion records its path, pass/fail mode, instrumentation
 exclusions, ordered classpath identities and SHA-256 hashes, and unresolved dependency outcomes.
@@ -90,10 +110,12 @@ The warmed checkouts and caches stay in place between samples. Measured builds
 must reuse compilation outputs, execute every expected assertion, and store a fresh
 configuration-cache entry. Cache outcomes remain in the reports.
 
-Gradle's dependency resolution and Muzzle's direct Aether resolution both run
-offline during measurement. `--offline` alone does not control Aether.
+Gradle dependency resolution is offline by default and online with
+`online-dependencies`. Repeated rounds always use offline Aether metadata;
+`--offline` alone does not control Aether. The optional live pair uses live metadata.
 The benchmark disables the remote build cache and retains the local build cache.
-There are no timed downloads, cache-clearing builds, or forced task reruns.
+Online requests count toward command time. The runner does not clear task caches
+or force task reruns.
 
 ## Reading the results
 
@@ -178,6 +200,9 @@ its remote cache under `--offline`; keeping both backends online gives them the 
 resolution conditions. Aether version metadata remains frozen and offline.
 Dependencies are prewarmed, but any Gradle dependency requests during measurement
 are included in command timings.
+Each seed's uncached build both fetches its dependencies and records its independent
+reference. Cache population uses a separate build checked against that reference;
+there is no duplicate dependency-only Muzzle execution.
 
 The scenarios are empty assertion caches, an identical sample after one cache
 writer, and new random samples after distinct prior writers. Empty-cache rounds use

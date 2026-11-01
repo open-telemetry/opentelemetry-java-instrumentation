@@ -16,9 +16,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import org.gradle.testkit.runner.BuildResult;
+import org.gradle.testkit.runner.BuildTask;
 import org.gradle.testkit.runner.GradleRunner;
 import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.jupiter.api.AfterEach;
@@ -27,6 +29,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 class MuzzleCacheFunctionalTest {
   private static final String ASSERTION = ":muzzle-AssertPass-fixture-library-1.0";
+
+  private final ConcurrentLinkedQueue<String> requests = new ConcurrentLinkedQueue<>();
 
   @TempDir Path temp;
 
@@ -138,6 +142,113 @@ class MuzzleCacheFunctionalTest {
         .noneSatisfy(line -> assertThat(line).startsWith("unresolved\t"));
   }
 
+  @Test
+  void slicesDoNotDiscoverVersionsForUnselectedProjects() throws IOException {
+    startRepository();
+    Path project = slicedFixture();
+    String assertion = ":instrumentation:a:muzzle-AssertPass-fixture-library-1.0";
+    // The first discovery creates metadata files tracked by the configuration cache.
+    for (int i = 0; i < 3; i++) {
+      BuildResult result = slicedRunner(project, "instrumentation:muzzle1").build();
+      assertThat(result.task(assertion).getOutcome()).isEqualTo(TaskOutcome.SUCCESS);
+      assertThat(result.getTasks())
+          .filteredOn(task -> task.getPath().contains(":muzzle-Assert"))
+          .extracting(BuildTask::getPath)
+          .containsExactly(assertion);
+      if (i == 2) {
+        assertThat(result.getOutput()).contains("Reusing configuration cache");
+      }
+    }
+    assertThat(requests)
+        .anySatisfy(path -> assertThat(path).contains("/library/maven-metadata.xml"))
+        .noneSatisfy(path -> assertThat(path).contains("/module-"));
+  }
+
+  @Test
+  void multipleSlicesAndDirectTasksPreserveSelectedChecks() throws IOException {
+    startRepository();
+    publishLibrary("module-b");
+    publishLibrary("module-c");
+    Path project = slicedFixture();
+    BuildResult result =
+        slicedRunner(project, ":instrumentation:muzzle1", ":instrumentation:muzzle2").build();
+    assertThat(result.getTasks())
+        .filteredOn(task -> task.getPath().contains(":muzzle-Assert"))
+        .extracting(BuildTask::getPath)
+        .containsExactlyInAnyOrder(
+            ":instrumentation:a:muzzle-AssertPass-fixture-library-1.0",
+            ":instrumentation:b:muzzle-AssertPass-fixture-module-b-1.0");
+    assertThat(requests)
+        .allSatisfy(path -> assertThat(path).doesNotContain("/module-c/", "/module-d/"));
+
+    requests.clear();
+    result = slicedRunner(project, ":instrumentation:muzzle1", ":instrumentation:c:muzzle").build();
+    assertThat(result.getTasks())
+        .filteredOn(task -> task.getPath().contains(":muzzle-Assert"))
+        .extracting(BuildTask::getPath)
+        .containsExactlyInAnyOrder(
+            ":instrumentation:a:muzzle-AssertPass-fixture-library-1.0",
+            ":instrumentation:c:muzzle-AssertPass-fixture-module-c-1.0");
+    assertThat(requests)
+        .anySatisfy(path -> assertThat(path).contains("/module-c/maven-metadata.xml"))
+        .noneSatisfy(path -> assertThat(path).contains("/module-d/"));
+
+    publishLibrary("module-d");
+    result =
+        slicedRunner(
+                project,
+                ":instrumentation:muzzle1",
+                ":instrumentation:muzzle2",
+                ":instrumentation:muzzle3",
+                ":instrumentation:muzzle4")
+            .build();
+    assertThat(result.getTasks())
+        .filteredOn(task -> task.getPath().contains(":muzzle-Assert"))
+        .extracting(BuildTask::getPath)
+        .containsExactlyInAnyOrder(
+            ":instrumentation:a:muzzle-AssertPass-fixture-library-1.0",
+            ":instrumentation:b:muzzle-AssertPass-fixture-module-b-1.0",
+            ":instrumentation:c:muzzle-AssertPass-fixture-module-c-1.0",
+            ":instrumentation:d:muzzle-AssertPass-fixture-module-d-1.0");
+  }
+
+  private GradleRunner slicedRunner(Path project, String... tasks) {
+    GradleRunner runner = runner(project, false);
+    List<String> arguments = new ArrayList<>(asList(tasks));
+    arguments.addAll(runner.getArguments().subList(1, runner.getArguments().size()));
+    return runner.withArguments(arguments);
+  }
+
+  private Path slicedFixture() throws IOException {
+    Path project = temp.resolve("sliced");
+    fixture("sliced/instrumentation/a", true, "library");
+    for (String name : asList("b", "c", "d")) {
+      fixture("sliced/instrumentation/" + name, true, "module-" + name);
+    }
+    Files.writeString(
+        project.resolve("settings.gradle"),
+        """
+        rootProject.name = 'slice-fixture'
+        include 'instrumentation', 'instrumentation:a', 'instrumentation:b',
+          'instrumentation:c', 'instrumentation:d'
+        """);
+    Files.writeString(
+        project.resolve("build.gradle"),
+        """
+        plugins { id 'io.opentelemetry.instrumentation.muzzle-check' apply false }
+        project(':instrumentation') {
+          def slices = (1..4).collect { tasks.register("muzzle${it}") }
+          def counter = 0
+          subprojects { child ->
+            child.plugins.withId('io.opentelemetry.instrumentation.muzzle-check') {
+              slices[counter++ % 4].configure { dependsOn(child.tasks.named('muzzle')) }
+            }
+          }
+        }
+        """);
+    return project;
+  }
+
   private BuildResult build(Path project, boolean cache, String... arguments) {
     return runner(project, cache, arguments).build();
   }
@@ -166,6 +277,10 @@ class MuzzleCacheFunctionalTest {
   }
 
   private Path fixture(String name, boolean assertPass) throws IOException {
+    return fixture(name, assertPass, "library");
+  }
+
+  private Path fixture(String name, boolean assertPass, String module) throws IOException {
     Path project = temp.resolve(name);
     Files.createDirectories(
         project.resolve("src/main/java/io/opentelemetry/javaagent/tooling/muzzle"));
@@ -189,7 +304,7 @@ class MuzzleCacheFunctionalTest {
         muzzle {
           %s {
             group.set('fixture')
-            module.set('library')
+            module.set('%s')
             versions.set('[1.0]')
             excludeInstrumentationName(providers.gradleProperty('excludedName').getOrElse('none'))
           }
@@ -197,7 +312,7 @@ class MuzzleCacheFunctionalTest {
         tasks.named('shadowMuzzleTooling') { from('tooling.txt') }
         tasks.named('shadowMuzzleBootstrap') { from('bootstrap.txt') }
         """
-            .formatted(server.getAddress().getPort(), assertPass ? "pass" : "fail"));
+            .formatted(server.getAddress().getPort(), assertPass ? "pass" : "fail", module));
     Files.writeString(
         project.resolve(
             "src/main/java/io/opentelemetry/javaagent/tooling/muzzle/ClassLoaderMatcher.java"),
@@ -227,27 +342,14 @@ class MuzzleCacheFunctionalTest {
   }
 
   private void startRepository() throws IOException {
+    publishLibrary("library");
     Path repository = temp.resolve("repository");
-    Path library = repository.resolve("fixture/library/1.0/library-1.0.jar");
-    Files.createDirectories(library.getParent());
-    writeLibrary(library, "library");
-    Files.writeString(
-        library.resolveSibling("library-1.0.pom"),
-        """
-        <project><modelVersion>4.0.0</modelVersion><groupId>fixture</groupId>
-        <artifactId>library</artifactId><version>1.0</version></project>
-        """);
-    Files.writeString(
-        repository.resolve("fixture/library/maven-metadata.xml"),
-        """
-        <metadata><groupId>fixture</groupId><artifactId>library</artifactId>
-        <versioning><versions><version>1.0</version></versions></versioning></metadata>
-        """);
     server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
     server.createContext(
         "/",
         exchange -> {
           try {
+            requests.add(exchange.getRequestURI().getPath());
             Path file =
                 repository.resolve(exchange.getRequestURI().getPath().substring(1)).normalize();
             if (!file.startsWith(repository) || !Files.isRegularFile(file)) {
@@ -265,6 +367,26 @@ class MuzzleCacheFunctionalTest {
           }
         });
     server.start();
+  }
+
+  private void publishLibrary(String module) throws IOException {
+    Path library = temp.resolve("repository/fixture/" + module + "/1.0/" + module + "-1.0.jar");
+    Files.createDirectories(library.getParent());
+    writeLibrary(library, "library");
+    Files.writeString(
+        library.resolveSibling(module + "-1.0.pom"),
+        """
+        <project><modelVersion>4.0.0</modelVersion><groupId>fixture</groupId>
+        <artifactId>%s</artifactId><version>1.0</version></project>
+        """
+            .formatted(module));
+    Files.writeString(
+        library.getParent().getParent().resolve("maven-metadata.xml"),
+        """
+        <metadata><groupId>fixture</groupId><artifactId>%s</artifactId>
+        <versioning><versions><version>1.0</version></versions></versioning></metadata>
+        """
+            .formatted(module));
   }
 
   private static void writeLibrary(Path file, String content) throws IOException {

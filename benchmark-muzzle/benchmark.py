@@ -232,6 +232,8 @@ class Benchmark:
                 "workflow_run": os.environ.get("GITHUB_RUN_ID"),
                 "max_workers": 4,
                 "remote_build_cache": False,
+                "gradle_dependency_resolution": "offline" if dependency_offline else "online",
+                "live_metadata_pair": getattr(args, "live_metadata_pair", False),
                 "java": java_version,
                 "cache_conditions": "cold daemon, fresh configuration cache, warm workspace and dependencies",
             }, indent=2) + "\n", encoding="utf-8",
@@ -346,13 +348,20 @@ class Benchmark:
                 control_hash = digest(checkout / CONTROLS)
             require_equal(control_hash, digest(checkout / CONTROLS), "Benchmark controls")
         for label in ("baseline", "candidate"):
-            self.build(label, f"bootstrap-{label}", offline=False, preparation=True)
+            online = getattr(self.args, "online_dependencies", False)
+            self.build(
+                label, f"bootstrap-{label}",
+                offline=online and self.frozen_metadata is not None, preparation=True,
+            )
             if self.frozen_metadata is None:
                 self.frozen_metadata = inventory(self.repository)
                 if not self.frozen_metadata:
                     raise ValueError("No Aether version metadata captured")
-        for label in ("baseline", "candidate"):
-            self.build(label, f"warmup-{label}", offline=True, preparation=True)
+                if online:
+                    self.expected = manifests(self.audit)
+        if not getattr(self.args, "online_dependencies", False):
+            for label in ("baseline", "candidate"):
+                self.build(label, f"warmup-{label}", offline=True, preparation=True)
         inputs = self.reports / "inputs"
         inputs.mkdir()
         shutil.copytree(self.repository, inputs / "metadata")
@@ -382,7 +391,30 @@ class Benchmark:
                     "task_outcomes": outcomes,
                 })
                 self.write_results()
+        if getattr(self.args, "live_metadata_pair", False):
+            self.measure_live_metadata()
         self.write_results(complete=True)
+
+    def measure_live_metadata(self):
+        repository, frozen = self.repository, self.frozen_metadata
+        self.live_metadata_samples = []
+        try:
+            for label in ("baseline", "candidate"):
+                self.repository = self.root / f"live-metadata-{label}"
+                self.frozen_metadata = None
+                metrics, outcomes = self.build(
+                    label, f"live-metadata-{label}", offline=False,
+                )
+                self.live_metadata_samples.append({
+                    "label": label, "metrics": metrics, "task_outcomes": outcomes,
+                    "metadata": inventory(self.repository),
+                })
+                (self.reports / "live-metadata-samples.json").write_text(
+                    json.dumps(self.live_metadata_samples, indent=2) + "\n", encoding="utf-8",
+                )
+                require_equal(self.expected, manifests(self.audit), "Live assertion/dependency workload")
+        finally:
+            self.repository, self.frozen_metadata = repository, frozen
 
     def write_results(self, *, complete=False):
         (self.reports / "samples.json").write_text(
@@ -392,7 +424,7 @@ class Benchmark:
         total_ms = (time.perf_counter() - self.started) * 1000
         measured_ms = sum(
             phase["elapsed_ms"] for phase in self.phases
-            if phase["name"].startswith("round-")
+            if phase["name"].startswith(("round-", "live-metadata-"))
         )
         timing = {
             "setup_ms": self.setup_ms,
@@ -442,8 +474,11 @@ class Benchmark:
             f"# Muzzle partition {self.args.partition}",
             "",
             "Cold daemon, fresh configuration cache, warm workspace and dependencies. "
-            "External dependency resolution is offline. Timings include workload auditing.",
-            "These results do not measure live Maven downloads or establish fresh-checkout CI savings.",
+            "Aether version metadata is frozen and offline. "
+            f"Gradle dependency resolution is {'offline' if self.dependency_offline else 'online'}. "
+            "Timings include workload auditing.",
+            "The repeated rounds do not measure live version-metadata downloads or establish "
+            "fresh-checkout CI savings.",
             "",
             "| Revision | Samples | Median | Min | Max |",
             "| --- | ---: | ---: | ---: | ---: |",
@@ -480,6 +515,24 @@ class Benchmark:
             "No samples were retried or removed. Median differences alone do not establish a speedup. "
             "Compare the paired samples and the A/A control, and repeat noisy comparisons.",
         ]
+        if getattr(self, "live_metadata_samples", None):
+            lines += [
+                "",
+                "## Cold live-metadata probe",
+                "",
+                "One baseline/candidate pair uses separate empty Aether repositories and live Maven "
+                "version discovery. Commands include configuration, network requests, and assertions. "
+                "All assertion/dependency reports must match the independently prepared frozen workload. "
+                "A single pair is diagnostic, not a repeatable performance conclusion.",
+                "",
+                "| Revision | Command time | Metadata files |",
+                "| --- | ---: | ---: |",
+                *[
+                    f"| {sample['label']} | {sample['metrics']['total execution time'] / 1000:.2f}s "
+                    f"| {len(sample['metadata'])} |"
+                    for sample in self.live_metadata_samples
+                ],
+            ]
         if self.args.rounds < 5:
             lines += ["", "**Functional run only. Fewer than five rounds cannot support a performance claim.**"]
         (self.reports / "summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -495,10 +548,20 @@ def main():
     parser.add_argument("--rounds", type=int, choices=range(1, 11), default=5)
     parser.add_argument("--inputs", type=Path)
     parser.add_argument("--seed-gradle-home", type=Path)
+    parser.add_argument(
+        "--online-dependencies", action="store_true",
+        help="Keep Gradle resolution online and combine dependency preparation with reference generation",
+    )
+    parser.add_argument(
+        "--live-metadata-pair", action="store_true",
+        help="Add one cold live-Maven baseline/candidate probe after the frozen repeated rounds",
+    )
     args = parser.parse_args()
+    if args.live_metadata_pair and not args.online_dependencies:
+        parser.error("--live-metadata-pair requires --online-dependencies")
     if sys.platform != "linux":
         parser.error("Build measurements run on Linux; runner unit tests also support Windows")
-    benchmark = Benchmark(args)
+    benchmark = Benchmark(args, dependency_offline=not args.online_dependencies)
     try:
         benchmark.measure()
     except (OSError, ValueError, subprocess.CalledProcessError) as error:

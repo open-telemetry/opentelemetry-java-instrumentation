@@ -93,6 +93,11 @@ The gradle plugin defines two tasks:
   ./gradlew :instrumentation:google-http-client-1.19:javaagent:printMuzzleReferences
   ```
 
+Repository CI runs four slices, `:instrumentation:muzzle1` through
+`:instrumentation:muzzle4`. Each slice discovers library versions and executes
+checks only for its assigned instrumentation projects. Multiple slices or individual
+module `muzzle` tasks can be requested together in one command.
+
 The muzzle plugin needs to be configured in the module's `.gradle` file.
 Example:
 

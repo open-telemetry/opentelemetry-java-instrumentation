@@ -247,13 +247,29 @@ val hasRelevantTask = gradle.startParameter.taskNames.any {
 }
 
 if (hasRelevantTask) {
-  val system = newRepositorySystem()
-  val session = newRepositorySystemSession(system)
+  gradle.projectsEvaluated {
+    val selected = gradle.startParameter.taskNames.any {
+      val taskName = it.removePrefix(":")
+      if (taskName.startsWith("instrumentation:muzzle")) {
+        val slice = rootProject.findProject(":instrumentation")
+          ?.tasks?.findByName(taskName.substringAfter(":"))
+        slice != null && muzzle.get() in slice.taskDependencies.getDependencies(slice)
+      } else {
+        val projectPath = project.path.removePrefix(":")
+        val muzzleTaskName = if (projectPath.isEmpty()) "muzzle" else "$projectPath:muzzle"
+        taskName == muzzleTaskName ||
+          taskName.startsWith("muzzle-Assert") ||
+          taskName.contains(":muzzle-Assert")
+      }
+    }
+    if (!selected) {
+      return@projectsEvaluated
+    }
 
-  afterEvaluate {
+    val system = newRepositorySystem()
+    val session = newRepositorySystemSession(system)
     var runAfter = muzzle
 
-    // the project repositories need to be retrieved after evaluation, before that the list is just empty
     val projectRepositories = getProjectRepositories(project)
 
     for (muzzleDirective in muzzleConfig.directives.get()) {

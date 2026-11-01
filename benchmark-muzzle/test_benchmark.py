@@ -135,6 +135,7 @@ class BenchmarkTest(unittest.TestCase):
             runner.started = benchmark.time.perf_counter() - 3
             runner.setup_ms = 100
             runner.preparation_ms = 200
+            runner.dependency_offline = True
             runner.phases = [
                 {"name": f"round-1-{label}", "elapsed_ms": 100}
                 for label in benchmark.order(0)
@@ -162,10 +163,30 @@ class BenchmarkTest(unittest.TestCase):
                 sum(timing[key] for key in ("setup_ms", "preparation_ms", "measured_gradle_ms", "overhead_ms")),
                 timing["total_ms"],
             )
+            runner.dependency_offline = False
+            runner.live_metadata_samples = [
+                {"label": label, "metrics": {"total execution time": 100},
+                 "metadata": {"metadata.xml": label}}
+                for label in ("baseline", "candidate")
+            ]
+            runner.phases.extend(
+                {"name": f"live-metadata-{label}", "elapsed_ms": 100}
+                for label in ("baseline", "candidate")
+            )
+            runner.write_results(complete=True)
+            text = (runner.reports / "summary.md").read_text(encoding="utf-8")
+            self.assertIn("Gradle dependency resolution is online", text)
+            self.assertIn("| baseline | 0.10s | 1 |", text)
+            timing = json.loads((runner.reports / "timing.json").read_text(encoding="utf-8"))
+            self.assertEqual(timing["measured_gradle_ms"], 500)
+            self.assertEqual(len(json.loads(
+                (runner.reports / "samples.json").read_text(encoding="utf-8"),
+            )["samples"]), 3)
 
     def test_preparation_warms_fixed_checkouts_before_offline_audits(self):
         with tempfile.TemporaryDirectory() as directory:
             runner = object.__new__(benchmark.Benchmark)
+            runner.args = SimpleNamespace(online_dependencies=False)
             runner.root = Path(directory)
             for name in ("source", "home", "repository", "audit", "reports"):
                 setattr(runner, name, runner.root / name)
@@ -245,6 +266,96 @@ class BenchmarkTest(unittest.TestCase):
                 ):
                     runner.prepare()
                 build.assert_not_called()
+
+    def test_online_preparation_needs_only_one_reference_build_per_revision(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runner = object.__new__(benchmark.Benchmark)
+            runner.root = Path(directory)
+            runner.source = runner.root / "source"
+            runner.reports = runner.root / "reports"
+            runner.repository = runner.root / "metadata"
+            runner.audit = runner.root / "audit"
+            runner.reports.mkdir()
+            runner.args = SimpleNamespace(online_dependencies=True)
+            runner.checkouts = {
+                label: runner.root / label for label in ("baseline", "candidate")
+            }
+            runner.revisions = {"baseline": "before", "candidate": "after"}
+            runner.frozen_metadata = None
+            runner.expected = None
+            runner.input_identity = {"seed": 1729}
+            record = ":example:muzzle-AssertPass-library-1.0\nassertPass\ttrue\n"
+            phases = []
+
+            def fake_git(command, **kwargs):
+                if "clone" in command:
+                    checkout = Path(command[-1])
+                    control = checkout / benchmark.CONTROLS
+                    control.parent.mkdir(parents=True)
+                    control.write_bytes(b"support")
+                return b""
+
+            def build(label, name, *, offline, preparation):
+                phases.append((label, offline))
+                self.assertTrue(preparation)
+                if label == "candidate":
+                    self.assertEqual(runner.expected, {
+                        ":example:muzzle-AssertPass-library-1.0": record,
+                    })
+                runner.repository.mkdir(exist_ok=True)
+                (runner.repository / "metadata.xml").write_text("frozen", encoding="utf-8")
+                runner.audit.mkdir(exist_ok=True)
+                (runner.audit / "assertion.txt").write_text(record, encoding="utf-8")
+
+            with (
+                patch.object(benchmark, "run", side_effect=fake_git),
+                patch.object(runner, "build", side_effect=build),
+            ):
+                runner.prepare()
+            self.assertEqual(phases, [("baseline", False), ("candidate", True)])
+            self.assertEqual(benchmark.manifests(runner.reports / "inputs" / "assertions"), runner.expected)
+
+    def test_live_metadata_probe_checks_reports_and_restores_state_on_failure(self):
+        for mismatch in (False, True):
+            with self.subTest(mismatch=mismatch), tempfile.TemporaryDirectory() as directory:
+                runner = object.__new__(benchmark.Benchmark)
+                runner.root = Path(directory)
+                runner.repository = runner.root / "frozen"
+                runner.frozen_metadata = {"metadata.xml": "frozen"}
+                runner.audit = runner.root / "audit"
+                runner.reports = runner.root / "reports"
+                runner.reports.mkdir()
+                record = ":example:muzzle-AssertPass-library-1.0\nassertPass\ttrue\n"
+                runner.expected = {":example:muzzle-AssertPass-library-1.0": record}
+                repository, frozen = runner.repository, runner.frozen_metadata
+
+                def build(label, name, *, offline):
+                    self.assertFalse(offline)
+                    self.assertIsNone(runner.frozen_metadata)
+                    self.assertFalse(runner.repository.exists())
+                    runner.repository.mkdir()
+                    (runner.repository / "metadata.xml").write_text(label, encoding="utf-8")
+                    runner.audit.mkdir(exist_ok=True)
+                    (runner.audit / "assertion.txt").write_text(
+                        record + ("changed" if mismatch and label == "candidate" else ""),
+                        encoding="utf-8",
+                    )
+                    return {"total execution time": 100}, {}
+
+                with patch.object(runner, "build", side_effect=build):
+                    if mismatch:
+                        with self.assertRaisesRegex(ValueError, "Live assertion/dependency workload"):
+                            runner.measure_live_metadata()
+                    else:
+                        runner.measure_live_metadata()
+                self.assertEqual(runner.repository, repository)
+                self.assertIs(runner.frozen_metadata, frozen)
+                samples = json.loads(
+                    (runner.reports / "live-metadata-samples.json").read_text(encoding="utf-8"),
+                )
+                self.assertEqual(len(samples), 2)
+                self.assertEqual(set(samples[0]["metadata"]), {"metadata.xml"})
+                self.assertNotEqual(samples[0]["metadata"], samples[1]["metadata"])
 
     def test_measurement_loop_does_not_copy_caches_or_checkouts(self):
         runner = object.__new__(benchmark.Benchmark)
