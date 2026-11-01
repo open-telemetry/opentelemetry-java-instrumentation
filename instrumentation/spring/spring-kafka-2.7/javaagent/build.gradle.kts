@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -88,29 +89,20 @@ tasks {
 testing.suites.named<JvmTestSuite>("test") {
   executions {
     configureDefault {
-      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-      )
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
     }
 
     register("Experimental") {
-      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-      jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true",
-      )
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+      telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
     }
 
     register("SpringDisabled") {
       filter {
         includeTestsMatching("SpringKafkaMockConsumerTest")
       }
-      jvmArgs("-Dotel.instrumentation.spring-kafka.enabled=false")
       systemProperty("springDisabled", true)
-      systemProperty("metadataConfig", "otel.instrumentation.spring-kafka.enabled=false")
+      telemetryConfig("otel.instrumentation.spring-kafka.enabled", "false")
     }
   }
 }

@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -99,21 +100,14 @@ tasks {
 testing.suites.named<JvmTestSuite>("test") {
   executions {
     register("Experimental") {
-      jvmArgs(
-        "-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true",
-      )
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.couchbase.emit-experimental-telemetry=true",
-      )
+      telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
     }
 
     register("ExceptionSignalLogs") {
       filter {
         includeTestsMatching("*CouchbaseExceptionSignalTest")
       }
-      jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-      systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
   }
 }

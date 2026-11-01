@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -47,8 +48,7 @@ tasks {
 testing.suites.named<JvmTestSuite>("test") {
   executions {
     register("Experimental") {
-      jvmArgs("-Dotel.instrumentation.spymemcached.experimental-span-attributes=true")
-      systemProperty("metadataConfig", "otel.instrumentation.spymemcached.experimental-span-attributes=true")
+      telemetryConfig("otel.instrumentation.spymemcached.experimental-span-attributes", "true")
     }
   }
 }

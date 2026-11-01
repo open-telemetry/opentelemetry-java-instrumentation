@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -50,11 +51,7 @@ testing {
           filter {
             includeTestsMatching("PulsarClientV5Test")
           }
-          jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-          systemProperty(
-            "metadataConfig",
-            "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-          )
+          telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
         }
       }
     }
@@ -94,11 +91,7 @@ testing.suites.named<JvmTestSuite>("test") {
       filter {
         excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
       }
-      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-      )
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
     }
 
     register("ReceiveSpanDisabled") {
@@ -113,8 +106,7 @@ testing.suites.named<JvmTestSuite>("test") {
         excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
       }
       jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-      jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
-      systemProperty("metadataConfig", "otel.instrumentation.pulsar.experimental-span-attributes=true")
+      telemetryConfig("otel.instrumentation.pulsar.experimental-span-attributes", "true")
     }
   }
 }

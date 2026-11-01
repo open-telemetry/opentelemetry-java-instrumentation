@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -101,13 +102,11 @@ tasks {
 testing.suites.named<JvmTestSuite>("test") {
   executions {
     register("Experimental") {
-      jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
-      systemProperty("metadataConfig", "otel.instrumentation.lettuce.experimental-span-attributes=true")
+      telemetryConfig("otel.instrumentation.lettuce.experimental-span-attributes", "true")
     }
 
     register("ConnectionTelemetryEnabled") {
-      jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
-      systemProperty("metadataConfig", "otel.instrumentation.lettuce.connection-telemetry.enabled=true")
+      telemetryConfig("otel.instrumentation.lettuce.connection-telemetry.enabled", "true")
     }
   }
 }
