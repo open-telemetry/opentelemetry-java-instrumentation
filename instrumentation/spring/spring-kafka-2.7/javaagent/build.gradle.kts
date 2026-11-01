@@ -63,12 +63,31 @@ testing {
         }
       }
 
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
+      targets.all {
+        testTask.configure {
+          jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
+          jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
+        }
+      }
+    }
+
+    named<JvmTestSuite>("test") {
+      executions {
+        configureDefault {
+          telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+        }
+
+        register("Experimental") {
+          telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+          telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
+        }
+
+        register("SpringDisabled") {
+          filter {
+            includeTestsMatching("SpringKafkaMockConsumerTest")
           }
+          systemProperty("springDisabled", true)
+          telemetryConfig("otel.instrumentation.spring-kafka.enabled", "false")
         }
       }
     }
@@ -83,27 +102,6 @@ tasks {
 
   check {
     dependsOn(testing.suites)
-  }
-}
-
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
-    configureDefault {
-      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-    }
-
-    register("Experimental") {
-      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-      telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
-    }
-
-    register("SpringDisabled") {
-      filter {
-        includeTestsMatching("SpringKafkaMockConsumerTest")
-      }
-      systemProperty("springDisabled", true)
-      telemetryConfig("otel.instrumentation.spring-kafka.enabled", "false")
-    }
   }
 }
 

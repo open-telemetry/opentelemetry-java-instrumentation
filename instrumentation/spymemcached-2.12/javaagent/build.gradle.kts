@@ -31,24 +31,22 @@ testing {
         implementation("net.spy:spymemcached:2.12.0")
       }
     }
-  }
-}
 
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+          systemProperty("testLatestDeps", otelProps.testLatestDeps)
+        }
 
-  check {
-    dependsOn(testing.suites)
-  }
-}
-
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
-    register("Experimental") {
-      telemetryConfig("otel.instrumentation.spymemcached.experimental-span-attributes", "true")
+        register("Experimental") {
+          telemetryConfig("otel.instrumentation.spymemcached.experimental-span-attributes", "true")
+        }
+      }
     }
   }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }

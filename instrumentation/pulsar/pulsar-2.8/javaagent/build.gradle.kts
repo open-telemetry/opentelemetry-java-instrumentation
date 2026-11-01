@@ -55,6 +55,32 @@ testing {
         }
       }
     }
+
+    named<JvmTestSuite>("test") {
+      executions {
+        configureDefault {
+          filter {
+            excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
+          }
+          telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+        }
+
+        register("ReceiveSpanDisabled") {
+          filter {
+            includeTestsMatching("PulsarClientSuppressReceiveSpansTest")
+          }
+          include("**/PulsarClientSuppressReceiveSpansTest.*")
+        }
+
+        register("Experimental") {
+          filter {
+            excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
+          }
+          jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+          telemetryConfig("otel.instrumentation.pulsar.experimental-span-attributes", "true")
+        }
+      }
+    }
   }
 }
 
@@ -72,41 +98,12 @@ tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("io.opentelemetry.pulsar-2.8.debug", "true")
+    if (otelProps.denyUnsafe) {
+      enabled = false
+    }
   }
 
   check {
     dependsOn(testing.suites)
-  }
-
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
-    }
-  }
-}
-
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
-    configureDefault {
-      filter {
-        excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
-      }
-      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-    }
-
-    register("ReceiveSpanDisabled") {
-      filter {
-        includeTestsMatching("PulsarClientSuppressReceiveSpansTest")
-      }
-      include("**/PulsarClientSuppressReceiveSpansTest.*")
-    }
-
-    register("Experimental") {
-      filter {
-        excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
-      }
-      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-      telemetryConfig("otel.instrumentation.pulsar.experimental-span-attributes", "true")
-    }
   }
 }

@@ -37,19 +37,17 @@ testing {
         implementation("com.google.guava:guava:${baseVersion("19.0").orLatest()}")
       }
     }
-  }
-}
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
-    register("Experimental") {
-      jvmArgs("-Dotel.instrumentation.guava.experimental-span-attributes=true")
+    named<JvmTestSuite>("test") {
+      executions {
+        register("Experimental") {
+          jvmArgs("-Dotel.instrumentation.guava.experimental-span-attributes=true")
+        }
+      }
     }
   }
 }
 
-tasks {
-  check {
-    dependsOn(testing.suites.named("version19Test"))
-  }
+tasks.check {
+  dependsOn(testing.suites.named("version19Test"))
 }

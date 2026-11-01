@@ -77,6 +77,21 @@ testing {
         implementation("org.testcontainers:testcontainers-couchbase")
       }
     }
+
+    named<JvmTestSuite>("test") {
+      executions {
+        register("Experimental") {
+          telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
+        }
+
+        register("ExceptionSignalLogs") {
+          filter {
+            includeTestsMatching("*CouchbaseExceptionSignalTest")
+          }
+          telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+        }
+      }
+    }
   }
 }
 
@@ -84,30 +99,12 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    if (otelProps.denyUnsafe) {
+      enabled = false
+    }
   }
 
   check {
     dependsOn(testing.suites)
-  }
-
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
-    }
-  }
-}
-
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
-    register("Experimental") {
-      telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
-    }
-
-    register("ExceptionSignalLogs") {
-      filter {
-        includeTestsMatching("*CouchbaseExceptionSignalTest")
-      }
-      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
-    }
   }
 }
