@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArgumentsExactly;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -27,13 +27,12 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @SuppressWarnings({"UnusedMethod", "UnusedVariable"})
-class TakesArgumentsExactlyMatcherTest {
+class TakesArgumentsMatcherTest {
 
   @ParameterizedTest
   @MethodSource("signatureCases")
   void matchesSignature(String methodName, String[] parameterNames, boolean expected) {
-    assertThat(takesArgumentsExactly(parameterNames).matches(method(methodName)))
-        .isEqualTo(expected);
+    assertThat(takesArguments(parameterNames).matches(method(methodName))).isEqualTo(expected);
   }
 
   private static Stream<Arguments> signatureCases() {
@@ -69,7 +68,7 @@ class TakesArgumentsExactlyMatcherTest {
   @Test
   void expectedNamesAreCopiedOnConstruction() {
     String[] names = {"java.lang.String"};
-    ElementMatcher.Junction<MethodDescription> matcher = takesArgumentsExactly(names);
+    ElementMatcher.Junction<MethodDescription> matcher = takesArguments(names);
     names[0] = "java.lang.Integer";
 
     assertThat(matcher.matches(method("string"))).isTrue();
@@ -82,8 +81,7 @@ class TakesArgumentsExactlyMatcherTest {
     when(method.getParameters()).thenAnswer(invocation -> parameters);
     when(parameters.size()).thenReturn(1);
 
-    assertThat(takesArgumentsExactly("java.lang.String", "java.lang.Integer").matches(method))
-        .isFalse();
+    assertThat(takesArguments("java.lang.String", "java.lang.Integer").matches(method)).isFalse();
 
     verify(method).getParameters();
     verify(parameters).size();
@@ -101,15 +99,14 @@ class TakesArgumentsExactlyMatcherTest {
     when(parameterTypes.get(0))
         .thenReturn(new TypeDescription.ForLoadedType(Long.class).asGenericType());
 
-    assertThat(takesArgumentsExactly("java.lang.String", "java.lang.Integer").matches(method))
-        .isFalse();
+    assertThat(takesArguments("java.lang.String", "java.lang.Integer").matches(method)).isFalse();
 
     verify(parameterTypes).get(0);
     verifyNoMoreInteractions(parameterTypes);
   }
 
   private static MethodDescription method(String methodName) {
-    return new TypeDescription.ForLoadedType(TakesArgumentsExactlyMatcherTest.class)
+    return new TypeDescription.ForLoadedType(TakesArgumentsMatcherTest.class)
         .getDeclaredMethods()
         .filter(named(methodName))
         .getOnly();

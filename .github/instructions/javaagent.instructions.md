@@ -72,14 +72,19 @@ describe selectable behavior, not Muzzle implementation identities.
   including nested argument and field mappings, when using the standard transformation pipeline;
   its postprocessor supplies dynamic typing. This does not apply to advice parameter bindings.
   Verify custom pipelines separately.
-- For a complete, nonempty signature of exact parameter types, use
-  `AgentElementMatchers.takesArgumentsExactly(...)` instead of `takesArguments(Type...)` or an
-  argument count combined with positional type checks. Use exact erased type names, including
-  primitive names such as `"int"`. For a zero-parameter signature, use `takesArguments(0)`.
+- For a complete, nonempty signature of exact parameter types, prefer Byte Buddy's
+  `takesArguments(Class<?>...)` when every parameter is a primitive or a public `java.base` type
+  that is safely accessible and available at the module's minimum supported Java version. If any
+  parameter is a library type or otherwise unsafe or unavailable, use
+  `AgentElementMatchers.takesArguments(String...)` with the exact ordered erased type names,
+  including primitive names such as `"int"`. Do not infer safety from a `java.*` package prefix or
+  the current build JDK. When both overload families are needed, explicitly import both
+  `takesArguments` methods; avoid a bare `takesArguments()` call. For a zero-parameter signature,
+  use `takesArguments(0)`.
 - Keep positional `takesArgument(...)` matchers for intentionally partial signatures or predicates
   that cannot be expressed as exact type names, such as subtype checks or parameter-type
   alternatives across supported versions. Do not add otherwise unnecessary parameter checks
-  merely to use `takesArgumentsExactly(...)`.
+  merely to use an exact-signature matcher.
 - When advice binds a library argument as `Object` to support different known parameter types
   across versions, use `takesArgument(index, namedOneOf(...))` with those type names instead of
   `any()` or a custom argument-count check. The positional matcher already guarantees that the

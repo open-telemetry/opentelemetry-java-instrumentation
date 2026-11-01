@@ -10,12 +10,12 @@ import net.bytebuddy.description.method.ParameterList;
 import net.bytebuddy.description.type.TypeList;
 import net.bytebuddy.matcher.ElementMatcher;
 
-class TakesArgumentsExactlyMatcher<T extends MethodDescription>
+class TakesArgumentsMatcher<T extends MethodDescription>
     extends ElementMatcher.Junction.AbstractBase<T> {
 
   private final String[] names;
 
-  TakesArgumentsExactlyMatcher(String... names) {
+  TakesArgumentsMatcher(String... names) {
     this.names = names.clone();
   }
 
