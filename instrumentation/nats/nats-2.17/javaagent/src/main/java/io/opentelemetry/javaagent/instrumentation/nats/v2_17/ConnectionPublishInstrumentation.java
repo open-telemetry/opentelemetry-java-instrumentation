@@ -45,7 +45,7 @@ class ConnectionPublishInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("publish"))
-            .and(takesArguments("java.lang.String", "io.nats.client.impl.Headers", "[B")),
+            .and(takesArguments("java.lang.String", "io.nats.client.impl.Headers", "byte[]")),
         getClass().getName() + "$PublishHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
@@ -57,7 +57,10 @@ class ConnectionPublishInstrumentation implements TypeInstrumentation {
             .and(named("publish"))
             .and(
                 takesArguments(
-                    "java.lang.String", "java.lang.String", "io.nats.client.impl.Headers", "[B")),
+                    "java.lang.String",
+                    "java.lang.String",
+                    "io.nats.client.impl.Headers",
+                    "byte[]")),
         getClass().getName() + "$PublishReplyToHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic().and(named("publish")).and(takesArguments("io.nats.client.Message")),
