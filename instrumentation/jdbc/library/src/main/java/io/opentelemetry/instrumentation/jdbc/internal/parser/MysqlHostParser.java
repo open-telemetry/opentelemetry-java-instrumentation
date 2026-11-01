@@ -112,7 +112,9 @@ final class MysqlHostParser {
         entry.startsWith("(") || isAddressHost(entry)
             ? parseHostProperties(entry, mysql)
             : parseHostPort(entry, mysql);
-    return host != null && DbServerTargetBuilder.isValidHost(host.host()) ? host : null;
+    return host != null && DbServerTargetBuilder.isValidHost(host.host())
+        ? new HostPort(host.host().toLowerCase(Locale.ROOT), host.port(), null)
+        : null;
   }
 
   @Nullable
@@ -131,7 +133,6 @@ final class MysqlHostParser {
       portStart = colon >= 0 && colon == entry.lastIndexOf(':') ? colon + 1 : -1;
     }
     String host = portStart < 0 ? entry : entry.substring(0, portStart - 1);
-    host = host.toLowerCase(Locale.ROOT);
     if (mysql) {
       host = decodeProperty(host);
       if (host == null || !host.equals(host.trim())) {
@@ -201,7 +202,6 @@ final class MysqlHostParser {
         key = "port";
       }
       String value = equals < 0 ? "" : property.substring(equals + 1).trim();
-      value = key.equals("host") ? value.toLowerCase(Locale.ROOT) : value;
       value = mysql ? decodeProperty(value) : value;
       if (value == null || (key.isEmpty() && !value.isEmpty())) {
         return null;

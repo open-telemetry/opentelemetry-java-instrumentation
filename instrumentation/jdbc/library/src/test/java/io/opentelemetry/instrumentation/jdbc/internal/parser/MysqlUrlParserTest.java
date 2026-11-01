@@ -38,6 +38,8 @@ class MysqlUrlParserTest {
       value = {
         "h1|h1|",
         "h1:1111|h1|1111",
+        "%48%31:1111|h1|1111",
+        "H%31:1111|h1|1111",
         "h1:3306|h1|3306",
         "[::1]:1111|::1|1111",
         "::1|::1|",
@@ -51,11 +53,15 @@ class MysqlUrlParserTest {
         "user:ex(ample@h1:1111|h1|1111",
         "address=(host=h1)|h1|",
         "address=(host=h1)(port=1111)|h1|1111",
+        "address=(host=%48%31)(port=1111)|h1|1111",
+        "address=(host=H%31)(port=1111)|h1|1111",
         "address=(HOST= h1 )(port= 1111 )(user=other)(password=example%40value)|h1|1111",
         "address=(host=::1)(port=1111)|::1|1111",
         "address=(host=h1)(port=1111)(user=other%40example)|h1|1111",
         "(host=h1)|h1|",
         "(host=h1,port=1111)|h1|1111",
+        "(host=%48%31,port=1111)|h1|1111",
+        "(host=H%31,port=1111)|h1|1111",
         "(port=1111,host=h1)|h1|1111",
         "\" ( host = h1 , port = 1111 ) \"|h1|1111",
         "\"(\t host \r =h1,port=1111)\"|h1|1111",
@@ -125,10 +131,7 @@ class MysqlUrlParserTest {
             hosts ->
                 assertThat(hosts.hosts())
                     .extracting(
-                        host ->
-                            tuple(
-                                normalizeHost(host.host()),
-                                host.port() == null ? 3306 : host.port()))
+                        host -> tuple(host.host(), host.port() == null ? 3306 : host.port()))
                     .containsExactlyElementsOf(
                         expected.stream()
                             .map(host -> tuple(normalizeHost(host.getHost()), host.getPort()))
@@ -182,6 +185,9 @@ class MysqlUrlParserTest {
             generated.stream(),
             Stream.of(
                 "jdbc:mysql://h%31:%31%31%31%31/db",
+                "jdbc:mysql://%48%31:1111/db",
+                "jdbc:mysql://address=(host=%48%31)(port=1111)/db",
+                "jdbc:mysql://(host=%48%31,port=1111)/db",
                 "jdbc:mysql://address=(%68ost=h%31)(%70ort=%31%31%31%31)/db",
                 "jdbc:mysql://(user:example@h1:1111/db",
                 "jdbc:mysql://address=(user:example@h1:1111/db",
@@ -438,7 +444,13 @@ class MysqlUrlParserTest {
   @ValueSource(
       strings = {
         "JDBC:MYSQL://H1:1111/DB%41",
-        "JDBC:MYSQL://us\u0130r:example@H1:1111/DB%41",
+        "JDBC:MYSQL://us\u0130r:example@H1:1111/DB%41", // U+0130 is Turkish capital I with dot.
+        "JDBC:MYSQL://%48%31:1111/DB%41",
+        "JDBC:MYSQL://H%31:1111/DB%41",
+        "JDBC:MYSQL://(HOST=%48%31,PORT=1111)/DB%41",
+        "JDBC:MYSQL://(HOST=H%31,PORT=1111)/DB%41",
+        "JDBC:MYSQL://address=(HOST=%48%31)(PORT=1111)/DB%41",
+        "JDBC:MYSQL://address=(HOST=H%31)(PORT=1111)/DB%41",
         "JDBC:TRACING:MYSQL://(HOST=H1,PORT=1111)/DB%41",
         "JDBC:AWS-WRAPPER:MYSQL://address=(HOST=H1)(PORT=1111)/DB%41"
       })
