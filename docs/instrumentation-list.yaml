@@ -5321,7 +5321,7 @@ definitions:
         type: STRING
       - name: rpc.system.name
         type: STRING
-    system.disk.io-8f464505:
+    system.disk.io-7a80ac09:
       name: system.disk.io
       description: Disk bytes transferred.
       instrument: counter
@@ -5330,9 +5330,9 @@ definitions:
       attributes:
       - name: disk.io.direction
         type: STRING
-      - name: system.device.name
+      - name: system.device
         type: STRING
-    system.disk.operations-159427f1:
+    system.disk.operations-d9d641b6:
       name: system.disk.operations
       description: Disk operations count.
       instrument: counter
@@ -5341,20 +5341,20 @@ definitions:
       attributes:
       - name: disk.io.direction
         type: STRING
-      - name: system.device.name
+      - name: system.device
         type: STRING
-    system.memory.usage-6b20b0bd:
+    system.memory.usage-0b523de7:
       name: system.memory.usage
-      description: Reports memory by state.
+      description: Reports memory in use by state.
       instrument: updowncounter
       data_type: LONG_SUM
       unit: By
       attributes:
       - name: system.memory.state
         type: STRING
-    system.memory.utilization-e44e3edc:
+    system.memory.utilization-36cec121:
       name: system.memory.utilization
-      description: Fraction of memory bytes by state.
+      description: Percentage of memory bytes in use.
       instrument: gauge
       data_type: DOUBLE_GAUGE
       unit: '1'
@@ -5383,7 +5383,7 @@ definitions:
         type: STRING
       - name: network.io.direction
         type: STRING
-    system.network.packet.count-f749256c:
+    system.network.packet.count-53bc6d12:
       name: system.network.packet.count
       description: The number of packets transferred.
       instrument: counter
@@ -5392,7 +5392,7 @@ definitions:
       attributes:
       - name: network.io.direction
         type: STRING
-      - name: system.device.name
+      - name: system.device
         type: STRING
   events:
     db.client.operation.exception-83d4cffb:
@@ -15175,7 +15175,7 @@ libraries:
   source_path: instrumentation/oshi-5.0
   scope:
     name: io.opentelemetry.oshi-5.0
-    schema_url: https://opentelemetry.io/schemas/1.45.0
+    schema_url: https://opentelemetry.io/schemas/1.44.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -15183,13 +15183,13 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - system.disk.io-8f464505
-    - system.disk.operations-159427f1
-    - system.memory.usage-6b20b0bd
-    - system.memory.utilization-e44e3edc
+    - system.disk.io-7a80ac09
+    - system.disk.operations-d9d641b6
+    - system.memory.usage-0b523de7
+    - system.memory.utilization-36cec121
     - system.network.errors-41e3be8a
     - system.network.io-75693f94
-    - system.network.packet.count-f749256c
+    - system.network.packet.count-53bc6d12
 - name: payara-5.2020
   display_name: Payara
   description: |
