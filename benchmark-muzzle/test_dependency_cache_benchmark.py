@@ -226,6 +226,30 @@ class DependencyCacheTest(unittest.TestCase):
             self.assertIn("cache-cleanup: never", (args.output / "summary.md").read_text())
             self.assertIn("condition-specific immutable snapshots", (args.output / "summary.md").read_text())
             self.assertEqual(result["cache_warming"]["1"]["warm_seeds"], [1730, 1731])
+            (plan / "warming.json").rename(args.plans / "warming.json")
+            for path in folder.iterdir():
+                path.rename(inputs / path.name)
+            folder.rmdir()
+            args.output = root / "flat-summary"
+            dependency.report(args)
+            self.assertEqual(json.loads((args.output / "results.json").read_text()), result)
+
+    def test_artifact_layout_does_not_hide_missing_or_ambiguous_reports(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            ci.write_json(root / "identity.json", {})
+            self.assertEqual(
+                ci.artifact_path(root, "muzzle-ci-1-2", "identity.json"),
+                root / "muzzle-ci-1-2/identity.json",
+            )
+            self.assertEqual(
+                ci.artifact_path(root, "muzzle-ci-1-2", "identity.json", single=True),
+                root / "identity.json",
+            )
+            (root / "muzzle-ci-1-2").mkdir()
+            ci.write_json(root / "muzzle-ci-1-2/identity.json", {})
+            with self.assertRaisesRegex(ValueError, "Ambiguous"):
+                ci.artifact_path(root, "muzzle-ci-1-2", "identity.json", single=True)
 
 
 if __name__ == "__main__":

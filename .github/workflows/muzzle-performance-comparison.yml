@@ -29,6 +29,9 @@ on:
         description: Prior samples for a dependency-cache experiment
         type: string
         default: '2'
+      report-run:
+        description: Rebuild only the dependency-cache report from an existing run
+        type: string
 
 permissions:
   contents: read
@@ -48,6 +51,7 @@ jobs:
       partitions: ${{ inputs.partitions }}
       rounds: ${{ inputs.rounds }}
       warm-seeds: ${{ inputs.warm-seeds }}
+      report-run: ${{ inputs.report-run }}
 
   prepare:
     if: ${{ !inputs.dependency-cache }}

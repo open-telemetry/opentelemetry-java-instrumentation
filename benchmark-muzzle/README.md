@@ -179,6 +179,11 @@ ratio. A short run does not establish long-term storage growth or retention.
 Single-slice results do not establish the maximum across all four slices;
 use `partitions='[1,2,3,4]'` for that comparison.
 
+To regenerate a dependency-cache report without repeating builds, add
+`-f report-run=DEPENDENCY_CACHE_RUN` to the dispatch command. Keep the same
+`rounds` and `partitions`; the report verifies the original measurement and
+warming identities. Neither cache snapshot is downloaded in this mode.
+
 ## Frozen-workspace comparison
 
 `benchmark.py` retains the separate tuning experiment for a cold daemon and

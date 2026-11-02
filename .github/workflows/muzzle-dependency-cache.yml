@@ -18,6 +18,9 @@ on:
       warm-seeds:
         type: string
         default: '2'
+      report-run:
+        type: string
+        default: ''
   workflow_dispatch:
     inputs:
       revision:
@@ -40,6 +43,9 @@ on:
         description: Prior differently seeded samples retained without action cache cleanup
         type: string
         default: '2'
+      report-run:
+        description: Rebuild only the report from an existing dependency-cache run
+        type: string
 
 permissions:
   contents: read
@@ -83,6 +89,7 @@ jobs:
           PY
 
   warm:
+    if: inputs.report-run == ''
     needs: validate
     runs-on: ubuntu-24.04
     timeout-minutes: 180
@@ -194,7 +201,7 @@ jobs:
           retention-days: 30
 
   report:
-    if: always() && needs.warm.result == 'success'
+    if: always() && needs.validate.result == 'success' && (needs.warm.result == 'success' || inputs.report-run != '')
     needs: [validate, warm, benchmark]
     runs-on: ubuntu-24.04
     steps:
@@ -205,10 +212,14 @@ jobs:
         with:
           pattern: muzzle-ci-[0-9]*-*
           path: ${{ runner.temp }}/results
+          run-id: ${{ inputs.report-run || github.run_id }}
+          github-token: ${{ github.token }}
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: dependency-cache-plan-*
           path: ${{ runner.temp }}/plans
+          run-id: ${{ inputs.report-run || github.run_id }}
+          github-token: ${{ github.token }}
       - name: Verify workload and cache provenance
         env:
           ROUNDS: ${{ inputs.rounds }}

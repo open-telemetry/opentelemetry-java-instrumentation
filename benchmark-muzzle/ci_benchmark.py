@@ -374,6 +374,16 @@ class Comparison:
         self.persist(complete=True)
 
 
+def artifact_path(root, artifact, filename, *, single=False):
+    nested = root / artifact / filename
+    flat = root / filename
+    if single and flat.is_file():
+        if nested.is_file():
+            raise ValueError("Ambiguous artifact layout")
+        return flat
+    return nested
+
+
 def load_reports(root, rounds, partitions):
     reports = {}
     shared = None
@@ -382,8 +392,12 @@ def load_reports(root, rounds, partitions):
     candidate_snapshots = {}
     for partition in partitions:
         for round_number in range(1, rounds + 1):
-            directory = root / f"muzzle-ci-{round_number}-{partition}"
-            identity = json.loads((directory / "identity.json").read_text(encoding="utf-8"))
+            identity_path = artifact_path(
+                root, f"muzzle-ci-{round_number}-{partition}", "identity.json",
+                single=rounds == 1 and len(partitions) == 1,
+            )
+            directory = identity_path.parent
+            identity = json.loads(identity_path.read_text(encoding="utf-8"))
             result = json.loads((directory / "samples.json").read_text(encoding="utf-8"))
             if not result["complete"] or identity["partition"] != partition or identity["round"] != round_number:
                 raise ValueError(f"Incomplete or misidentified comparison: {directory}")

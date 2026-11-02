@@ -171,8 +171,16 @@ def report(args):
         "| --- | ---: | ---: | ---: | ---: |",
     ]
     for partition in args.partitions:
-        plan = json.loads((args.plans / f"dependency-cache-plan-{partition}" / "warming.json").read_text(encoding="utf-8"))
-        identity = json.loads((args.inputs / f"muzzle-ci-1-{partition}" / "identity.json").read_text(encoding="utf-8"))
+        plan_path = ci.artifact_path(
+            args.plans, f"dependency-cache-plan-{partition}", "warming.json",
+            single=len(args.partitions) == 1,
+        )
+        identity_path = ci.artifact_path(
+            args.inputs, f"muzzle-ci-1-{partition}", "identity.json",
+            single=args.rounds == 1 and len(args.partitions) == 1,
+        )
+        plan = json.loads(plan_path.read_text(encoding="utf-8"))
+        identity = json.loads(identity_path.read_text(encoding="utf-8"))
         if (
             not plan["complete"] or plan["partition"] != partition
             or identity["revisions"]["baseline"] != identity["revisions"]["candidate"]
@@ -182,7 +190,7 @@ def report(args):
             or plan["candidate_snapshot"]["sha256"] != identity["candidate_cache_snapshot_sha256"]
         ):
             raise ValueError("The warming plan does not match the measured cache experiment")
-        measured = benchmark.manifests(args.inputs / f"muzzle-ci-1-{partition}" / "baseline" / "assertions")
+        measured = benchmark.manifests(identity_path.parent / "baseline" / "assertions")
         overlap = len(measured.keys() & set(plan["warm_assertion_tasks"])) / len(measured) * 100
         plans[partition] = plan
         lines.append(
