@@ -1,0 +1,88 @@
+name: Muzzle preparation benchmark
+
+on:
+  workflow_call:
+    inputs:
+      rounds:
+        type: string
+        default: '5'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      rounds: ${{ steps.plan.outputs.rounds }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Validate preparation benchmark
+        id: plan
+        env:
+          ROUNDS: ${{ inputs.rounds }}
+        run: |
+          python3 -m unittest discover -s benchmark-muzzle -q
+          python3 - <<'PY'
+          import json, os
+          rounds = int(os.environ["ROUNDS"])
+          if not 1 <= rounds <= 10:
+              raise ValueError("Invalid preparation round count")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write("rounds=" + json.dumps(list(range(1, rounds + 1))) + "\n")
+          PY
+
+  benchmark:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        round: ${{ fromJSON(needs.validate.outputs.rounds) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Compare cleanup with guarded preparation
+        env:
+          ROUND: ${{ matrix.round }}
+          RUNNER_ENVIRONMENT: ${{ runner.environment }}
+        run: |
+          python3 benchmark-muzzle/preparation_benchmark.py run \
+            --round "$ROUND" --output "$RUNNER_TEMP/preparation"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: muzzle-preparation-${{ matrix.round }}
+          path: ${{ runner.temp }}/preparation
+          if-no-files-found: error
+          retention-days: 30
+
+  report:
+    if: always() && needs.validate.result == 'success'
+    needs: [validate, benchmark]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: muzzle-preparation-[0-9]*
+          path: ${{ runner.temp }}/pairs
+      - name: Verify and summarize paired preparation times
+        env:
+          ROUNDS: ${{ inputs.rounds }}
+        run: |
+          python3 benchmark-muzzle/preparation_benchmark.py report \
+            --inputs "$RUNNER_TEMP/pairs" --rounds "$ROUNDS" --output "$RUNNER_TEMP/summary"
+          cat "$RUNNER_TEMP/summary/summary.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: muzzle-preparation-summary
+          path: ${{ runner.temp }}/summary
+          retention-days: 30

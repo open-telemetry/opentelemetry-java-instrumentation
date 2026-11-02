@@ -38,7 +38,7 @@ jobs:
           python3 -m unittest discover -s benchmark-muzzle -q
           python3 - <<'PY'
           import json, os
-          if os.environ["CANDIDATE_MODE"] not in ("standard", "configuration-cache-off", "http-connection-ttl"):
+          if os.environ["CANDIDATE_MODE"] not in ("standard", "configuration-cache-off", "http-connection-ttl", "disk-preparation"):
               raise ValueError("Invalid candidate mode")
           partitions = json.loads(os.environ["PARTITIONS"])
           if (not isinstance(partitions, list) or not partitions
@@ -51,7 +51,7 @@ jobs:
 
   profile:
     needs: validate
-    runs-on: ubuntu-24.04
+    runs-on: ${{ inputs.candidate-mode == 'disk-preparation' && 'ubuntu-latest' || 'ubuntu-24.04' }}
     timeout-minutes: 120
     strategy:
       fail-fast: false
@@ -62,7 +62,17 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - run: .github/scripts/gha-free-disk-space.sh
+      - name: Prepare runner disk
+        env:
+          CANDIDATE_MODE: ${{ inputs.candidate-mode }}
+        run: |
+          if [[ "$CANDIDATE_MODE" == "disk-preparation" ]]; then
+            bash .github/scripts/gha-muzzle-free-disk-space.sh
+            echo "MUZZLE_PREPARATION_POLICY=guarded" >> "$GITHUB_ENV"
+          else
+            .github/scripts/gha-free-disk-space.sh
+            echo "MUZZLE_PREPARATION_POLICY=unconditional" >> "$GITHUB_ENV"
+          fi
       - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin

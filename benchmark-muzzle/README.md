@@ -22,8 +22,8 @@ functional check, not performance evidence.
 
 The workflow captures one Gradle-cache snapshot before executing any builds.
 Set `source-run=EARLIER_CI_BENCHMARK_RUN` to reuse that run's immutable
-`muzzle-ci-cache-snapshot` instead, without restoring or uploading another
-shared cache snapshot.
+`muzzle-ci-cache-snapshot` instead, without creating and re-uploading a new
+snapshot.
 Every round/slice pair runs in its own job, so five rounds create twenty
 independent jobs. Each job executes baseline, an identical-baseline control,
 and candidate on the same runner. Even rounds reverse baseline/candidate order.
@@ -186,6 +186,32 @@ leaves connection and read timeouts and retry counts unchanged. It probes
 whether replacing older pooled connections reduces the long successful
 resource reads seen in profiles; stale connections are a hypothesis, not
 an established diagnosis.
+
+## Disk preparation
+
+`candidate-mode=disk-preparation` measures unconditional SDK/image cleanup
+against the Muzzle free-space guard. It runs five paired preparation rounds
+on fresh `ubuntu-latest` runners, matching production Muzzle's runner image:
+
+```sh
+gh workflow run muzzle-performance-comparison.yml \
+  --ref my-benchmark-branch -f baseline-ref=REVISION_SHA \
+  -f candidate-mode=disk-preparation -f rounds=5
+```
+
+Both scripts run on the same runner, alternating order across rounds.
+Preparation pairs use scripts from the selected workflow revision.
+Only preparation is timed; no Gradle command runs in these pairs.
+The guard leaves installed tools alone when at least 50 GiB is free and
+otherwise calls the existing cleanup script. This is ephemeral runner
+storage, not an allocation from the 10 GB Actions cache budget.
+
+Use the same mode with `profile-only=true`, `source-run` and all four
+`partitions` to validate actual Muzzle work without unconditional cleanup.
+Those commands retain the exact assertion/dependency records and sample
+free disk space once per second during Gradle execution.
+Their runner image is `ubuntu-latest`; do not treat comparisons with the
+ordinary Ubuntu 24.04 profiles as paired Gradle timing evidence.
 
 ## Dependency-cache accumulation
 

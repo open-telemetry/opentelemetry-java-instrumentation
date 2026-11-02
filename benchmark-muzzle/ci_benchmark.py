@@ -3,6 +3,7 @@
 
 import argparse
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 from html.parser import HTMLParser
 import json
@@ -14,6 +15,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import threading
 import time
 
 import benchmark
@@ -27,6 +29,18 @@ INIT_SCRIPT = Path(__file__).with_name("ci.init.gradle")
 
 def write_json(path, value):
     path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+
+
+def sample_disk_usage(path, stop):
+    initial = shutil.disk_usage(path).free
+    minimum = initial
+    while not stop.wait(1):
+        minimum = min(minimum, shutil.disk_usage(path).free)
+    final = shutil.disk_usage(path).free
+    return {
+        "initial_free_bytes": initial, "minimum_free_bytes": min(minimum, final),
+        "final_free_bytes": final,
+    }
 
 
 def check_snapshot_size(path, max_bytes):
@@ -303,6 +317,7 @@ class Comparison:
             "cpu_count": os.cpu_count(),
             "runner_image": os.environ.get("ImageVersion"),
             "workflow_run": os.environ.get("GITHUB_RUN_ID"),
+            "preparation_policy": os.environ.get("MUZZLE_PREPARATION_POLICY", "unrecorded"),
         }
         if self.candidate_snapshot:
             self.identity["experiment"] = "dependency-cache"
@@ -350,6 +365,7 @@ class Comparison:
         sample["http_connection_ttl_ms"] = (
             getattr(self.args, "candidate_http_connection_ttl_ms", None) if label == "candidate" else None
         )
+        sample["disk_free_before_checkout"] = shutil.disk_usage(sample_root).free
         self.samples.append(sample)
         self.persist()
         started = time.perf_counter()
@@ -388,8 +404,15 @@ class Comparison:
         started = time.perf_counter()
         started_wall = int(time.time() * 1000)
         try:
-            benchmark.run(command, cwd=checkout, env=env, log=destination / "console.log")
-            sample["process_success"] = True
+            stop = threading.Event()
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                monitor = pool.submit(sample_disk_usage, checkout, stop)
+                try:
+                    benchmark.run(command, cwd=checkout, env=env, log=destination / "console.log")
+                    sample["process_success"] = True
+                finally:
+                    stop.set()
+                    sample["disk"] = monitor.result()
         finally:
             sample["command_ms"] = (time.perf_counter() - started) * 1000
             self.persist()

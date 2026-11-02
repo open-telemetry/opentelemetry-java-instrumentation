@@ -111,6 +111,19 @@ class CiBenchmarkTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "new file outside"):
                 ci.snapshot(root / "seed", root / "seed" / "inside.tar.gz")
 
+    def test_disk_monitor_records_the_minimum_and_surfaces_read_errors(self):
+        waits = iter((False, False, True))
+        stop = SimpleNamespace(wait=lambda interval: next(waits))
+        with patch.object(ci.shutil, "disk_usage", side_effect=[
+            SimpleNamespace(free=value) for value in (100, 80, 90, 95)
+        ]):
+            self.assertEqual(ci.sample_disk_usage(Path("."), stop), {
+                "initial_free_bytes": 100, "minimum_free_bytes": 80, "final_free_bytes": 95,
+            })
+        with patch.object(ci.shutil, "disk_usage", side_effect=OSError("disk stat failed")):
+            with self.assertRaisesRegex(OSError, "disk stat failed"):
+                ci.sample_disk_usage(Path("."), stop)
+
     def test_snapshot_extraction_rejects_paths_outside_the_gradle_home(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -43,6 +43,7 @@ on:
           - standard
           - configuration-cache-off
           - http-connection-ttl
+          - disk-preparation
         default: standard
 
 permissions:
@@ -54,6 +55,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  disk-preparation:
+    if: inputs.candidate-mode == 'disk-preparation' && !inputs.profile-only && !inputs.dependency-cache
+    uses: ./.github/workflows/muzzle-preparation.yml
+    with:
+      rounds: ${{ inputs.rounds }}
+
   profile:
     if: inputs.profile-only && !inputs.dependency-cache
     uses: ./.github/workflows/muzzle-profile.yml
@@ -75,7 +82,7 @@ jobs:
       report-run: ${{ inputs.report-run }}
 
   prepare:
-    if: ${{ !inputs.dependency-cache && !inputs.profile-only }}
+    if: ${{ !inputs.dependency-cache && !inputs.profile-only && inputs.candidate-mode != 'disk-preparation' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
