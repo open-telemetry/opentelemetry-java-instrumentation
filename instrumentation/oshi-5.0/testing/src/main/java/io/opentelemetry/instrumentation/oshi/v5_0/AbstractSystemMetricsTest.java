@@ -24,6 +24,7 @@ import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Collection;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // system.device belongs to the retained 1.44.0 schema.
 public abstract class AbstractSystemMetricsTest {
   protected abstract void registerMetrics();
 
