@@ -87,6 +87,14 @@ testing.suites.named<JvmTestSuite>("test") {
       include("**/server/**")
       telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
     }
+    register("PreviewSemconv") {
+      exclude("**/server/**")
+      telemetryConfig("otel.semconv-stability.preview", "service.peer")
+    }
+    register("Experimental") {
+      include("**/client/**")
+      telemetryConfig("otel.instrumentation.http.client.emit-experimental-telemetry", "true")
+    }
     register("ExceptionSignalLogs") {
       telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
       telemetryConfig("otel.semconv.exception.signal.preview", "logs")

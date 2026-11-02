@@ -10,15 +10,21 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE;
+import static io.opentelemetry.semconv.incubating.UrlIncubatingAttributes.URL_TEMPLATE;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -34,10 +40,13 @@ import java.time.Duration;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 import reactor.core.publisher.Mono;
 
 public abstract class AbstractSpringWebfluxClientInstrumentationTest
@@ -92,6 +101,284 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   }
 
   protected abstract WebClient.Builder instrument(WebClient.Builder builder);
+
+  protected abstract boolean supportsUriTemplates();
+
+  protected abstract boolean includesBasePathInUriTemplate();
+
+  protected static boolean emitExperimentalTelemetry() {
+    return Boolean.getBoolean("otel.instrumentation.http.client.emit-experimental-telemetry");
+  }
+
+  @Test
+  void shouldCaptureUriTemplateFromVarargs() {
+    WebClient client = createWebClient();
+
+    URI uri = resolveAddress("/hello/some-account");
+    String template = expectedTemplate("/hello/{id}");
+    String instrumentationName =
+        assertTemplateRequest(client.get().uri("/hello/{id}", "some-account"), uri, template);
+
+    testing.waitAndAssertMetrics(
+        instrumentationName,
+        metric ->
+            metric
+                .hasName("http.client.request.duration")
+                .hasDescription("Duration of HTTP client requests.")
+                .hasUnit("s")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasSumGreaterThan(0.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                        equalTo(SERVER_ADDRESS, "localhost"),
+                                        equalTo(SERVER_PORT, uri.getPort()),
+                                        satisfies(
+                                            NETWORK_PROTOCOL_VERSION, val -> val.isIn(null, "1.1")),
+                                        equalTo(URL_TEMPLATE, template)))));
+  }
+
+  @Test
+  void shouldCaptureUriTemplateFromMap() {
+    WebClient client = createWebClient();
+
+    assertTemplateRequest(
+        client.get().uri("/hello/{id}", singletonMap("id", "some-account")),
+        resolveAddress("/hello/some-account"),
+        expectedTemplate("/hello/{id}"));
+  }
+
+  @Test
+  void shouldCaptureUriTemplateFromAbsoluteUri() {
+    WebClient client = createWebClient();
+
+    assertTemplateRequest(
+        client.get().uri(resolveAddress("/hello/") + "{id}", "some-account"),
+        resolveAddress("/hello/some-account"),
+        expectedTemplate("/hello/{id}"));
+  }
+
+  @Test
+  void shouldCapturePathTemplateWithTemplatedSchemeAndUserInfo() {
+    assertTemplateWithUserInfo(
+        "{scheme}://user:secret@example.com/accounts/{id}",
+        "https",
+        expectedTemplate("/accounts/{id}"));
+  }
+
+  @Test
+  void shouldNotCaptureOpaqueTemplateWithSchemeDelimiterInVariable() {
+    // Older Spring defaults cannot expand opaque URI templates.
+    assumeTrue(supportsUriTemplates());
+    assertTemplateWithUserInfo(
+        "{scheme}user:secret@example.com/accounts/{id}", "https://", expectedTemplate(null));
+  }
+
+  @Test
+  void shouldNotCaptureAmbiguousUsernameOnlyUserInfoTemplate() {
+    assumeTrue(supportsUriTemplates());
+    DefaultUriBuilderFactory uriBuilderFactory = new DefaultUriBuilderFactory();
+    uriBuilderFactory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
+    ClientHttpConnector connector = ClientHttpConnectorFactory.create();
+    WebClient client =
+        instrument(
+                WebClient.builder()
+                    .uriBuilderFactory(uriBuilderFactory)
+                    .clientConnector(
+                        (method, uri, callback) ->
+                            connector.connect(
+                                method, resolveAddress("/hello/some-account"), callback)))
+            .build();
+
+    client
+        .get()
+        .uri("{scheme}api-token@example.com/accounts/{id}", "https://", "some-account")
+        .retrieve()
+        .bodyToMono(String.class)
+        .block();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET")
+                        .hasKind(CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(
+                                HTTP_RESPONSE_BODY_SIZE, emitExperimentalTelemetry() ? 20L : null),
+                            equalTo(
+                                URL_FULL,
+                                "https://REDACTED:REDACTED@example.com/accounts/some-account"),
+                            equalTo(URL_TEMPLATE, null),
+                            equalTo(SERVER_ADDRESS, "example.com"),
+                            equalTo(SERVER_PORT, 443),
+                            satisfies(NETWORK_PROTOCOL_VERSION, val -> val.isIn(null, "1.1"))),
+                span ->
+                    span.hasName("test-http-server")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(0))));
+  }
+
+  private void assertTemplateWithUserInfo(
+      String template, String scheme, String expectedPathTemplate) {
+    ClientHttpConnector connector = ClientHttpConnectorFactory.create();
+    WebClient client =
+        createWebClient()
+            .mutate()
+            // Older connectors cannot handle URI userinfo; route to the existing test server.
+            .clientConnector(
+                (method, uri, callback) ->
+                    connector.connect(method, resolveAddress("/hello/some-account"), callback))
+            .build();
+    client.get().uri(template, scheme, "some-account").retrieve().bodyToMono(String.class).block();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            expectedPathTemplate == null ? "GET" : "GET " + expectedPathTemplate)
+                        .hasKind(CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(
+                                HTTP_RESPONSE_BODY_SIZE, emitExperimentalTelemetry() ? 20L : null),
+                            equalTo(
+                                URL_FULL,
+                                "https://REDACTED:REDACTED@example.com/accounts/some-account"),
+                            equalTo(URL_TEMPLATE, expectedPathTemplate),
+                            equalTo(SERVER_ADDRESS, "example.com"),
+                            equalTo(SERVER_PORT, 443),
+                            satisfies(NETWORK_PROTOCOL_VERSION, val -> val.isIn(null, "1.1"))),
+                span ->
+                    span.hasName("test-http-server")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void shouldCaptureUriTemplateAndRedactSignedQuery() {
+    WebClient client = createWebClient();
+
+    assertTemplateRequest(
+        client.get().uri("/hello/{id}?sig=secret", "some-account"),
+        resolveAddress("/hello/some-account?sig=REDACTED"),
+        expectedTemplate("/hello/{id}?sig=secret"));
+  }
+
+  @Test
+  void shouldNotCaptureUriTemplateFromStringWithoutVariables() {
+    WebClient client = createWebClient();
+
+    assertTemplateRequest(
+        client.get().uri("/hello/some-account?sig=secret"),
+        resolveAddress("/hello/some-account?sig=REDACTED"),
+        expectedTemplate(null));
+  }
+
+  @Test
+  void shouldCaptureUriTemplateWithQueryAndFragment() {
+    WebClient client = createWebClient();
+
+    assertTemplateRequest(
+        client
+            .get()
+            .uri(
+                "/hello/{id}?first=one&second={id}#section/{id}",
+                singletonMap("id", "some-account")),
+        resolveAddress("/hello/some-account?first=one&second=some-account#section/some-account"),
+        expectedTemplate("/hello/{id}?first=one&second={id}#section/{id}"));
+  }
+
+  @Test
+  void shouldNotCaptureUriTemplateFromUriObject() {
+    WebClient client = createWebClient();
+
+    URI uri = resolveAddress("/hello/some-account");
+    assertTemplateRequest(client.get().uri(uri), uri, expectedTemplate(null));
+  }
+
+  @Test
+  void shouldNotCaptureUriTemplateFromUriBuilder() {
+    WebClient client = createWebClient();
+
+    assertTemplateRequest(
+        client.get().uri(builder -> builder.path("/hello/{id}").build("some-account")),
+        resolveAddress("/hello/some-account"),
+        expectedTemplate(null));
+  }
+
+  private WebClient createWebClient() {
+    return instrument(
+            WebClient.builder()
+                .baseUrl(resolveAddress("").toString())
+                .clientConnector(ClientHttpConnectorFactory.create()))
+        .build();
+  }
+
+  @Test
+  void shouldCaptureUriTemplateWithBasePath() {
+    String baseUrl = resolveAddress("/hello").toString();
+    WebClient client =
+        instrument(
+                WebClient.builder()
+                    .baseUrl(baseUrl)
+                    .clientConnector(ClientHttpConnectorFactory.create()))
+            .build();
+    assertTemplateRequest(
+        client.get().uri("/{id}", "some-account"),
+        resolveAddress("/hello/some-account"),
+        expectedTemplate(includesBasePathInUriTemplate() ? "/hello/{id}" : "/{id}"));
+  }
+
+  protected String expectedTemplate(String template) {
+    if (template == null || !emitExperimentalTelemetry() || !supportsUriTemplates()) {
+      return null;
+    }
+    return template;
+  }
+
+  protected String assertTemplateRequest(
+      WebClient.RequestHeadersSpec<?> request, URI uri, String template) {
+    request.retrieve().bodyToMono(String.class).block();
+
+    AtomicReference<String> instrumentationName = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName(template == null ? "GET" : "GET " + template)
+                      .hasKind(CLIENT)
+                      .hasNoParent()
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(HTTP_REQUEST_METHOD, "GET"),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                          equalTo(
+                              HTTP_RESPONSE_BODY_SIZE, emitExperimentalTelemetry() ? 20L : null),
+                          equalTo(URL_FULL, uri.toString()),
+                          equalTo(URL_TEMPLATE, template),
+                          equalTo(SERVER_ADDRESS, "localhost"),
+                          equalTo(SERVER_PORT, uri.getPort()),
+                          satisfies(NETWORK_PROTOCOL_VERSION, val -> val.isIn(null, "1.1")),
+                          equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
+              span ->
+                  span.hasName("test-http-server")
+                      .hasKind(SpanKind.SERVER)
+                      .hasParent(trace.getSpan(0)));
+        });
+    return instrumentationName.get();
+  }
 
   @Override
   public int sendRequest(

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.client;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -33,6 +34,16 @@ class SpringWebfluxClientInstrumentationTest
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
+
+  @Override
+  protected boolean supportsUriTemplates() {
+    return testLatestDeps();
+  }
+
+  @Override
+  protected boolean includesBasePathInUriTemplate() {
+    return testLatestDeps();
+  }
 
   @Override
   protected WebClient.Builder instrument(WebClient.Builder builder) {
