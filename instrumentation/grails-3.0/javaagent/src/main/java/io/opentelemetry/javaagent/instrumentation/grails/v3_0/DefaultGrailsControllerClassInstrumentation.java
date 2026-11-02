@@ -31,9 +31,9 @@ class DefaultGrailsControllerClassInstrumentation implements TypeInstrumentation
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("invoke"))
+            .and(takesArguments(2))
             .and(takesArgument(0, named(Object.class.getName())))
-            .and(takesArgument(1, named(String.class.getName())))
-            .and(takesArguments(2)),
+            .and(takesArgument(1, named(String.class.getName()))),
         getClass().getName() + "$ControllerAdvice");
   }
 

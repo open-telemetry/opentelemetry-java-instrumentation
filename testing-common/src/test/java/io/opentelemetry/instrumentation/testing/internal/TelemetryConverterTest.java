@@ -20,20 +20,34 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.exporter.internal.otlp.traces.TraceRequestMarshaler;
+import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
+import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.metrics.data.MetricDataType;
 import io.opentelemetry.sdk.testing.trace.TestSpanData;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.testing.internal.proto.common.v1.AnyValue;
+import io.opentelemetry.testing.internal.proto.common.v1.InstrumentationScope;
 import io.opentelemetry.testing.internal.proto.common.v1.KeyValue;
+import io.opentelemetry.testing.internal.proto.metrics.v1.ExponentialHistogram;
+import io.opentelemetry.testing.internal.proto.metrics.v1.ExponentialHistogramDataPoint;
+import io.opentelemetry.testing.internal.proto.metrics.v1.Metric;
+import io.opentelemetry.testing.internal.proto.metrics.v1.NumberDataPoint;
+import io.opentelemetry.testing.internal.proto.metrics.v1.ResourceMetrics;
+import io.opentelemetry.testing.internal.proto.metrics.v1.ScopeMetrics;
+import io.opentelemetry.testing.internal.proto.metrics.v1.Sum;
+import io.opentelemetry.testing.internal.proto.resource.v1.Resource;
 import io.opentelemetry.testing.internal.proto.trace.v1.ResourceSpans;
 import io.opentelemetry.testing.internal.proto.trace.v1.ScopeSpans;
 import io.opentelemetry.testing.internal.proto.trace.v1.Span;
 import io.opentelemetry.testing.internal.protobuf.ByteString;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -117,6 +131,140 @@ class TelemetryConverterTest {
         argumentSet("reserved bits", 0x80000381, true));
   }
 
+  @Test
+  void metricsDataPreservesResourceAndScopeIdentity() {
+    InstrumentationScope scope =
+        InstrumentationScope.newBuilder()
+            .setName("scope")
+            .setVersion("1.0")
+            .addAttributes(stringAttribute("scope.attribute", "scope-value"))
+            .build();
+    ResourceMetrics resourceMetrics =
+        ResourceMetrics.newBuilder()
+            .setResource(
+                Resource.newBuilder().addAttributes(stringAttribute("resource.attribute", "value")))
+            .setSchemaUrl("resource-schema")
+            .addScopeMetrics(
+                ScopeMetrics.newBuilder()
+                    .setScope(scope)
+                    .setSchemaUrl("scope-schema")
+                    .addMetrics(
+                        Metric.newBuilder()
+                            .setName("metric")
+                            .setDescription("metric description")
+                            .setUnit("items")
+                            .setSum(
+                                Sum.newBuilder()
+                                    .setIsMonotonic(true)
+                                    .setAggregationTemporality(
+                                        io.opentelemetry.testing.internal.proto.metrics.v1
+                                            .AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA)
+                                    .addDataPoints(
+                                        NumberDataPoint.newBuilder()
+                                            .setStartTimeUnixNano(3)
+                                            .setTimeUnixNano(4)
+                                            .addAttributes(
+                                                stringAttribute("point.attribute", "point-value"))
+                                            .setAsInt(42)))))
+            .build();
+    ResourceMetrics differentResourceSchema =
+        resourceMetrics.toBuilder().setSchemaUrl("different-resource-schema").build();
+    ResourceMetrics differentScopeAttributes =
+        resourceMetrics.toBuilder()
+            .setScopeMetrics(
+                0,
+                resourceMetrics.getScopeMetrics(0).toBuilder()
+                    .setScope(
+                        scope.toBuilder()
+                            .clearAttributes()
+                            .addAttributes(stringAttribute("scope.attribute", "different-value"))
+                            .build())
+                    .build())
+            .build();
+
+    MetricData converted = getSingleMetric(resourceMetrics);
+    MetricData convertedWithDifferentResourceSchema = getSingleMetric(differentResourceSchema);
+    MetricData convertedWithDifferentScopeAttributes = getSingleMetric(differentScopeAttributes);
+
+    assertThat(converted.getResource().getAttributes())
+        .isEqualTo(Attributes.of(stringKey("resource.attribute"), "value"));
+    assertThat(converted.getResource().getSchemaUrl()).isEqualTo("resource-schema");
+    assertThat(converted.getResource())
+        .isNotEqualTo(convertedWithDifferentResourceSchema.getResource());
+
+    assertThat(converted.getInstrumentationScopeInfo().getName()).isEqualTo("scope");
+    assertThat(converted.getInstrumentationScopeInfo().getVersion()).isEqualTo("1.0");
+    assertThat(converted.getInstrumentationScopeInfo().getSchemaUrl()).isEqualTo("scope-schema");
+    assertThat(converted.getInstrumentationScopeInfo().getAttributes())
+        .isEqualTo(Attributes.of(stringKey("scope.attribute"), "scope-value"));
+    assertThat(converted.getInstrumentationScopeInfo())
+        .isNotEqualTo(convertedWithDifferentScopeAttributes.getInstrumentationScopeInfo());
+
+    assertThat(
+            asList(
+                converted,
+                convertedWithDifferentResourceSchema,
+                convertedWithDifferentScopeAttributes))
+        .allSatisfy(
+            metricData -> {
+              assertThat(metricData.getName()).isEqualTo("metric");
+              assertThat(metricData.getDescription()).isEqualTo("metric description");
+              assertThat(metricData.getUnit()).isEqualTo("items");
+              assertThat(metricData.getLongSumData().isMonotonic()).isTrue();
+              assertThat(metricData.getLongSumData().getAggregationTemporality())
+                  .isEqualTo(AggregationTemporality.DELTA);
+              assertThat(metricData.getLongSumData().getPoints())
+                  .singleElement()
+                  .satisfies(
+                      point -> {
+                        assertThat(point.getStartEpochNanos()).isEqualTo(3);
+                        assertThat(point.getEpochNanos()).isEqualTo(4);
+                        assertThat(point.getAttributes())
+                            .isEqualTo(Attributes.of(stringKey("point.attribute"), "point-value"));
+                        assertThat(point.getValue()).isEqualTo(42);
+                      });
+            });
+  }
+
+  @Test
+  void metricsDataWithoutMetadataKeepsEmptyAndNullValues() {
+    ResourceMetrics resourceMetrics =
+        ResourceMetrics.newBuilder()
+            .addScopeMetrics(
+                ScopeMetrics.newBuilder()
+                    .setScope(InstrumentationScope.newBuilder().setName("scope"))
+                    .addMetrics(
+                        Metric.newBuilder()
+                            .setName("metric")
+                            .setSum(
+                                Sum.newBuilder()
+                                    .setAggregationTemporality(
+                                        io.opentelemetry.testing.internal.proto.metrics.v1
+                                            .AggregationTemporality
+                                            .AGGREGATION_TEMPORALITY_DELTA))))
+            .build();
+
+    MetricData converted = getSingleMetric(resourceMetrics);
+
+    assertThat(converted.getResource().getAttributes()).isEqualTo(Attributes.empty());
+    assertThat(converted.getResource().getSchemaUrl()).isNull();
+    assertThat(converted.getInstrumentationScopeInfo().getVersion()).isNull();
+    assertThat(converted.getInstrumentationScopeInfo().getSchemaUrl()).isNull();
+    assertThat(converted.getInstrumentationScopeInfo().getAttributes())
+        .isEqualTo(Attributes.empty());
+  }
+
+  private static MetricData getSingleMetric(ResourceMetrics resourceMetrics) {
+    return TelemetryConverter.getMetricsData(singletonList(resourceMetrics)).get(0);
+  }
+
+  private static KeyValue stringAttribute(String key, String value) {
+    return KeyValue.newBuilder()
+        .setKey(key)
+        .setValue(AnyValue.newBuilder().setStringValue(value))
+        .build();
+  }
+
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void sdkOtlpRoundTrip(boolean sampled) throws IOException {
@@ -159,5 +307,111 @@ class TelemetryConverterTest {
               assertThat(spanData.getLinks()).containsExactlyElementsOf(original.getLinks());
               assertThat(spanData.getTotalRecordedLinks()).isEqualTo(4);
             });
+  }
+
+  @Test
+  void exponentialHistogram() {
+    MetricData metric =
+        convertExponentialHistogram(
+            io.opentelemetry.testing.internal.proto.metrics.v1.AggregationTemporality
+                .AGGREGATION_TEMPORALITY_DELTA,
+            ExponentialHistogramDataPoint.newBuilder()
+                .setStartTimeUnixNano(10)
+                .setTimeUnixNano(20)
+                .addAttributes(
+                    KeyValue.newBuilder()
+                        .setKey("key")
+                        .setValue(AnyValue.newBuilder().setStringValue("value")))
+                .setCount(11)
+                .setSum(12.5)
+                .setScale(2)
+                .setZeroCount(3)
+                .setPositive(
+                    ExponentialHistogramDataPoint.Buckets.newBuilder()
+                        .setOffset(-2)
+                        .addAllBucketCounts(asList(0L, 2L, 0L)))
+                .setNegative(
+                    ExponentialHistogramDataPoint.Buckets.newBuilder()
+                        .setOffset(5)
+                        .addAllBucketCounts(asList(1L, 0L, 5L)))
+                .setMin(-1.5)
+                .setMax(4.5)
+                .build());
+
+    assertThat(metric.getName()).isEqualTo("name");
+    assertThat(metric.getDescription()).isEqualTo("description");
+    assertThat(metric.getUnit()).isEqualTo("unit");
+    assertThat(metric.getExponentialHistogramData().getAggregationTemporality())
+        .isEqualTo(AggregationTemporality.DELTA);
+    assertThat(metric.getExponentialHistogramData().getPoints())
+        .singleElement()
+        .satisfies(
+            point -> {
+              assertThat(point.getStartEpochNanos()).isEqualTo(10);
+              assertThat(point.getEpochNanos()).isEqualTo(20);
+              assertThat(point.getAttributes()).isEqualTo(Attributes.of(stringKey("key"), "value"));
+              assertThat(point.getCount()).isEqualTo(11);
+              assertThat(point.getSum()).isEqualTo(12.5);
+              assertThat(point.getScale()).isEqualTo(2);
+              assertThat(point.getZeroCount()).isEqualTo(3);
+              assertThat(point.hasMin()).isTrue();
+              assertThat(point.getMin()).isEqualTo(-1.5);
+              assertThat(point.hasMax()).isTrue();
+              assertThat(point.getMax()).isEqualTo(4.5);
+              assertThat(point.getPositiveBuckets().getScale()).isEqualTo(2);
+              assertThat(point.getPositiveBuckets().getOffset()).isEqualTo(-2);
+              assertThat(point.getPositiveBuckets().getBucketCounts()).containsExactly(0L, 2L, 0L);
+              assertThat(point.getNegativeBuckets().getScale()).isEqualTo(2);
+              assertThat(point.getNegativeBuckets().getOffset()).isEqualTo(5);
+              assertThat(point.getNegativeBuckets().getBucketCounts()).containsExactly(1L, 0L, 5L);
+            });
+  }
+
+  @Test
+  void exponentialHistogramWithoutOptionalStatisticsAndBuckets() {
+    MetricData metric =
+        convertExponentialHistogram(
+            io.opentelemetry.testing.internal.proto.metrics.v1.AggregationTemporality
+                .AGGREGATION_TEMPORALITY_CUMULATIVE,
+            ExponentialHistogramDataPoint.newBuilder().setCount(2).setZeroCount(2).build());
+
+    assertThat(metric.getExponentialHistogramData().getAggregationTemporality())
+        .isEqualTo(AggregationTemporality.CUMULATIVE);
+    assertThat(metric.getExponentialHistogramData().getPoints())
+        .singleElement()
+        .satisfies(
+            point -> {
+              assertThat(point.getCount()).isEqualTo(2);
+              assertThat(point.getZeroCount()).isEqualTo(2);
+              assertThat(point.hasMin()).isFalse();
+              assertThat(point.hasMax()).isFalse();
+              assertThat(point.getPositiveBuckets().getBucketCounts()).isEmpty();
+              assertThat(point.getNegativeBuckets().getBucketCounts()).isEmpty();
+            });
+  }
+
+  private static MetricData convertExponentialHistogram(
+      io.opentelemetry.testing.internal.proto.metrics.v1.AggregationTemporality temporality,
+      ExponentialHistogramDataPoint point) {
+    ResourceMetrics resourceMetrics =
+        ResourceMetrics.newBuilder()
+            .addScopeMetrics(
+                ScopeMetrics.newBuilder()
+                    .addMetrics(
+                        Metric.newBuilder()
+                            .setName("name")
+                            .setDescription("description")
+                            .setUnit("unit")
+                            .setExponentialHistogram(
+                                ExponentialHistogram.newBuilder()
+                                    .setAggregationTemporality(temporality)
+                                    .addDataPoints(point))))
+            .build();
+    Collection<MetricData> metrics =
+        TelemetryConverter.getMetricsData(singletonList(resourceMetrics));
+    assertThat(metrics).hasSize(1);
+    MetricData metric = metrics.iterator().next();
+    assertThat(metric.getType()).isEqualTo(MetricDataType.EXPONENTIAL_HISTOGRAM);
+    return metric;
   }
 }
