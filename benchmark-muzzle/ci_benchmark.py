@@ -147,11 +147,19 @@ def discovery(checkout, destination):
     }
 
 
-def validate_build(log, actual):
+def validate_build(log, actual, *, configuration_cache=True):
     if "BUILD SUCCESSFUL" not in log:
         raise ValueError("Missing successful Gradle build result")
-    if "Reusing configuration cache" in log or "Configuration cache entry stored" not in log:
+    if "Reusing configuration cache" in log:
         raise ValueError("The fresh checkout did not store a fresh configuration cache")
+    if configuration_cache:
+        if "Configuration cache entry stored" not in log:
+            raise ValueError("The fresh checkout did not store a fresh configuration cache")
+    elif (
+        "Configuration cache entry stored" in log
+        or "MUZZLE_BENCHMARK_CONFIGURATION_CACHE requested=false" not in log
+    ):
+        raise ValueError("The candidate did not disable configuration caching")
     if "MUZZLE_BENCHMARK_REMOTE enabled=true push=false" not in log:
         raise ValueError("Remote-cache read-only access was not confirmed")
     tasks = benchmark.task_outcomes(log)
@@ -303,6 +311,10 @@ class Comparison:
             )
         if getattr(args, "single_profile", False):
             self.identity["experiment"] = "operation-profile"
+        if getattr(args, "candidate_no_configuration_cache", False):
+            if self.candidate_snapshot or len(set(self.revisions.values())) != 1:
+                raise ValueError("Configuration-cache comparisons require identical sources and snapshots")
+            self.identity["experiment"] = "configuration-cache"
         write_json(self.reports / "identity.json", self.identity)
         self.persist()
 
@@ -321,6 +333,9 @@ class Comparison:
         destination.mkdir()
         revision = self.revisions["baseline" if label == "control" else label]
         sample = {"label": label, "revision": revision, "process_success": False}
+        sample["configuration_cache"] = not (
+            label == "candidate" and getattr(self.args, "candidate_no_configuration_cache", False)
+        )
         self.samples.append(sample)
         self.persist()
         started = time.perf_counter()
@@ -351,6 +366,8 @@ class Comparison:
                 "--init-script", str(Path(__file__).with_name("operations.init.gradle")),
                 f"-Dmuzzle.profile.output={destination / 'operations.jsonl'}",
             ]
+        if not sample["configuration_cache"]:
+            command.append("--no-configuration-cache")
         write_json(destination / "command.json", command)
         started = time.perf_counter()
         started_wall = int(time.time() * 1000)
@@ -363,7 +380,7 @@ class Comparison:
             print(f"{label}: {sample['command_ms'] / 1000:.2f}s; success={sample['process_success']}", flush=True)
         actual = benchmark.manifests(destination / "assertions")
         log = (destination / "console.log").read_text(encoding="utf-8", errors="replace")
-        tasks = validate_build(log, actual)
+        tasks = validate_build(log, actual, configuration_cache=sample["configuration_cache"])
         sample["task_outcomes"] = tasks
         sample["task_outcome_counts"] = dict(Counter(tasks.values()))
         sample["assertions"] = len(actual)
@@ -444,6 +461,12 @@ def load_reports(root, rounds, partitions):
                 if partition in candidate_snapshots:
                     benchmark.require_equal(candidate_snapshots[partition], value, "Warmed cache across rounds")
                 candidate_snapshots[partition] = value
+            if identity.get("experiment") == "configuration-cache":
+                if (
+                    len(set(identity["revisions"].values())) != 1
+                    or "candidate_cache_snapshot_sha256" in identity
+                ):
+                    raise ValueError("Configuration-cache reports require identical sources and snapshots")
             if shared is None:
                 shared = common
                 expected_revisions = identity["revisions"]
@@ -464,8 +487,13 @@ def load_reports(root, rounds, partitions):
                 benchmark.require_equal(references[partition], actual, "Cross-round workload")
                 log = (directory / label / "console.log").read_text(encoding="utf-8", errors="replace")
                 benchmark.require_equal(
-                    sample["task_outcomes"], validate_build(log, actual), "Recorded task outcomes",
+                    sample["task_outcomes"],
+                    validate_build(log, actual, configuration_cache=sample.get("configuration_cache", True)),
+                    "Recorded task outcomes",
                 )
+                expected_cache = not (shared.get("experiment") == "configuration-cache" and label == "candidate")
+                if sample.get("configuration_cache", True) != expected_cache:
+                    raise ValueError("Configuration-cache mode does not match the experiment")
                 validate_diagnostics(directory / label, sample)
             reports[(round_number, partition)] = result["samples"]
     if candidate_snapshots:
@@ -560,6 +588,13 @@ def aggregate(root, destination, rounds, partitions):
             "snapshot entries are preserved from the original snapshot.",
             "",
         ]
+    if shared.get("experiment") == "configuration-cache":
+        lines[4:4] = [
+            "Both sides use identical source code and cache snapshots. Baseline and control store "
+            "a fresh configuration cache; candidate disables configuration caching. "
+            "Local and remote task-cache reads remain enabled in every command.",
+            "",
+        ]
     for partition, entry in slices.items():
         times = entry["medians_ms"]
         lines.append(
@@ -636,6 +671,7 @@ def main():
     measure.add_argument("--candidate-snapshot-sha256")
     measure.add_argument("--operations-profile", action="store_true")
     measure.add_argument("--single-profile", action="store_true")
+    measure.add_argument("--candidate-no-configuration-cache", action="store_true")
     report = commands.add_parser("report")
     report.add_argument("--inputs", type=Path, required=True)
     report.add_argument("--output", type=Path, required=True)
@@ -656,7 +692,7 @@ def main():
             if args.single_profile:
                 if not args.operations_profile:
                     parser.error("--single-profile requires --operations-profile")
-                runner.execute("baseline")
+                runner.execute("candidate" if args.candidate_no_configuration_cache else "baseline")
                 runner.persist(complete=True)
             else:
                 runner.measure()

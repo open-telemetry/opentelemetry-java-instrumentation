@@ -164,8 +164,16 @@ queuing and response waits. Aether's independent metadata requests are not
 Gradle resource-read operations.
 
 `--operations-profile` also enables these diagnostics for a direct
-`ci_benchmark.py run` comparison. `--single-profile` records only its baseline
-command and cannot produce a paired performance comparison.
+`ci_benchmark.py run` comparison. `--single-profile` records one command and
+cannot produce a paired performance comparison.
+
+`candidate-no-configuration-cache=true` tests whether storing an unused
+configuration cache costs time on fresh CI checkouts. It requires identical
+baseline and candidate source revisions and cache snapshots. Only candidate
+adds `--no-configuration-cache`; task-cache reads remain enabled. Use it with
+`profile-only=true` for a single candidate diagnostic, or without
+`profile-only` for repeated paired comparisons. Both forms verify the actual
+configuration-cache mode and complete assertion/dependency records.
 
 ## Dependency-cache accumulation
 

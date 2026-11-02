@@ -180,6 +180,42 @@ class CiBenchmarkTest(unittest.TestCase):
                 runner.measure()
             self.assertEqual([sample["label"] for sample in runner.samples], ["candidate", "control", "baseline"])
 
+    def test_only_candidate_disables_configuration_cache_and_preserves_task_cache(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runner = self.runner(Path(directory))
+            runner.args.candidate_no_configuration_cache = True
+            runner.revisions = dict.fromkeys(("baseline", "candidate"), "before")
+            observed = []
+
+            def execute(command, **kwargs):
+                result = self.fake_build(command, **kwargs)
+                log = kwargs.get("log")
+                if log is not None:
+                    disabled = "--no-configuration-cache" in command
+                    observed.append((log.parent.name, disabled))
+                    if disabled:
+                        log.write_text(
+                            log.read_text().replace(
+                                "Configuration cache entry stored.",
+                                "MUZZLE_BENCHMARK_CONFIGURATION_CACHE requested=false",
+                            ),
+                            encoding="utf-8",
+                        )
+                return result
+
+            with patch.object(benchmark, "run", side_effect=execute):
+                runner.measure()
+            self.assertEqual(observed, [("baseline", False), ("control", False), ("candidate", True)])
+            self.assertEqual([s["configuration_cache"] for s in runner.samples], [True, True, False])
+            log = build_log().replace(
+                "Configuration cache entry stored.",
+                "MUZZLE_BENCHMARK_CONFIGURATION_CACHE requested=false",
+            )
+            self.assertEqual(ci.validate_build(log, {ASSERTION: RECORD}, configuration_cache=False)[ASSERTION], "EXECUTED")
+            for changed in (build_log(), log.replace("requested=false", "requested=true")):
+                with self.assertRaisesRegex(ValueError, "disable configuration caching"):
+                    ci.validate_build(changed, {ASSERTION: RECORD}, configuration_cache=False)
+
     def test_changed_dependency_reports_invalidate_the_pair_and_remain_available(self):
         with tempfile.TemporaryDirectory() as directory:
             runner = self.runner(Path(directory))

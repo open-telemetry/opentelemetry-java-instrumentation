@@ -12,6 +12,9 @@ on:
       partitions:
         type: string
         default: '[1,2,3,4]'
+      candidate-no-configuration-cache:
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -71,12 +74,17 @@ jobs:
         env:
           REVISION: ${{ inputs.revision }}
           PARTITION: ${{ matrix.partition }}
+          NO_CONFIGURATION_CACHE: ${{ inputs.candidate-no-configuration-cache }}
         run: |
+          extra=()
+          if [[ "$NO_CONFIGURATION_CACHE" == "true" ]]; then
+            extra+=(--candidate-no-configuration-cache)
+          fi
           python3 benchmark-muzzle/ci_benchmark.py run \
             --baseline "$REVISION" --candidate "$REVISION" --round 1 --partition "$PARTITION" \
             --cache-snapshot "$RUNNER_TEMP/initial/gradle-snapshot.tar.gz" \
             --snapshot-sha256 "$(sha256sum "$RUNNER_TEMP/initial/gradle-snapshot.tar.gz" | cut -d' ' -f1)" \
-            --work-dir "$RUNNER_TEMP/muzzle-profile" --operations-profile --single-profile
+            --work-dir "$RUNNER_TEMP/muzzle-profile" --operations-profile --single-profile "${extra[@]}"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:

@@ -36,6 +36,10 @@ on:
         description: Profile one command per slice using the source-run snapshot
         type: boolean
         default: false
+      candidate-no-configuration-cache:
+        description: Compare identical code with candidate configuration caching disabled
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -53,6 +57,7 @@ jobs:
       revision: ${{ inputs.baseline-ref }}
       source-run: ${{ inputs.source-run }}
       partitions: ${{ inputs.partitions }}
+      candidate-no-configuration-cache: ${{ inputs.candidate-no-configuration-cache }}
 
   dependency-cache:
     if: inputs.dependency-cache
@@ -157,13 +162,18 @@ jobs:
           PARTITION: ${{ matrix.partition }}
           ROUND: ${{ matrix.round }}
           SNAPSHOT_SHA256: ${{ needs.prepare.outputs.snapshot-sha256 }}
+          NO_CONFIGURATION_CACHE: ${{ inputs.candidate-no-configuration-cache }}
         run: |
+          extra=()
+          if [[ "$NO_CONFIGURATION_CACHE" == "true" ]]; then
+            extra+=(--candidate-no-configuration-cache)
+          fi
           python3 benchmark-muzzle/ci_benchmark.py run \
             --baseline "$BASELINE" --candidate "$CANDIDATE" \
             --partition "$PARTITION" --round "$ROUND" \
             --work-dir "$RUNNER_TEMP/muzzle-ci" \
             --cache-snapshot "$RUNNER_TEMP/muzzle-ci-snapshot/gradle-snapshot.tar.gz" \
-            --snapshot-sha256 "$SNAPSHOT_SHA256"
+            --snapshot-sha256 "$SNAPSHOT_SHA256" "${extra[@]}"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
