@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.apachehttpclient.v4_3.ApacheHttpC
 
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
-import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -80,12 +79,5 @@ class ApacheHttpClientHttpAttributesGetter
   @Nullable
   public Integer getServerPort(ApacheHttpClientRequest request) {
     return HttpConstants.portOrDefaultFromScheme(request.getServerPort(), request.getScheme());
-  }
-
-  @Override
-  @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
-      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return request.getNetworkPeerAddress();
   }
 }

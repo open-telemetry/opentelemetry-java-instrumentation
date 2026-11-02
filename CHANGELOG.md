@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes
 
+- Apache HttpClient 4.3 library instrumentation no longer automatically emits
+  `network.peer.address` or `network.peer.port` inferred from the route target.
+  Use `server.address` and `server.port` for logical destination grouping.
 - Configured service mappings now emit `server.service.name` and `server.service.namespace`, and no longer emit `peer.service`, `service.peer.name`, or `service.peer.namespace`. Rename `otel.instrumentation.common.peer-service-mapping` to `otel.instrumentation.common.server-service-mapping`; in YAML, use `java.common.server_service_mapping` with `target` instead of `peer`.
 - Rename `otel.instrumentation.grpc.{client,server}.request-metadata.{included,excluded}` to
   `otel.instrumentation.grpc.{client,server}.request-headers.{included,excluded}`.
