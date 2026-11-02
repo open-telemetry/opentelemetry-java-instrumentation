@@ -12,7 +12,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.incubating.DiskIncubatingAttributes.DISK_IO_DIRECTION;
 import static io.opentelemetry.semconv.incubating.NetworkIncubatingAttributes.NETWORK_INTERFACE_NAME;
 import static io.opentelemetry.semconv.incubating.NetworkIncubatingAttributes.NETWORK_IO_DIRECTION;
-import static io.opentelemetry.semconv.incubating.SystemIncubatingAttributes.SYSTEM_DEVICE;
+import static io.opentelemetry.semconv.incubating.SystemIncubatingAttributes.SYSTEM_DEVICE_NAME;
 import static io.opentelemetry.semconv.incubating.SystemIncubatingAttributes.SYSTEM_MEMORY_STATE;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -24,7 +24,6 @@ import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Collection;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("deprecation") // system.device belongs to the retained 1.44.0 schema.
 public abstract class AbstractSystemMetricsTest {
   protected abstract void registerMetrics();
 
@@ -46,7 +45,7 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasDescription("Reports memory in use by state.")
+                            .hasDescription("Reports memory by state.")
                             .hasUnit("By")
                             .hasLongSumSatisfying(
                                 sum ->
@@ -60,7 +59,7 @@ public abstract class AbstractSystemMetricsTest {
                                             point ->
                                                 point
                                                     .hasAttributesSatisfyingExactly(
-                                                        equalTo(SYSTEM_MEMORY_STATE, "free"))
+                                                        equalTo(SYSTEM_MEMORY_STATE, "available"))
                                                     .hasValueSatisfying(v -> v.isNotNegative())))));
     testing()
         .waitAndAssertMetrics(
@@ -70,7 +69,7 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .hasDescription("Percentage of memory bytes in use.")
+                            .hasDescription("Fraction of memory bytes by state.")
                             .hasUnit("1")
                             .hasDoubleGaugeSatisfying(
                                 gauge ->
@@ -83,7 +82,7 @@ public abstract class AbstractSystemMetricsTest {
                                         point ->
                                             point
                                                 .hasAttributesSatisfyingExactly(
-                                                    equalTo(SYSTEM_MEMORY_STATE, "free"))
+                                                    equalTo(SYSTEM_MEMORY_STATE, "available"))
                                                 .hasValueSatisfying(v -> v.isNotNegative())))));
   }
 
@@ -116,7 +115,7 @@ public abstract class AbstractSystemMetricsTest {
                           .hasDescription("The number of packets transferred.")
                           .hasUnit("{packet}")
                           .hasLongSumSatisfying(sum -> sum.isMonotonic());
-                      assertNetworkPoints(metric.getLongSumData().getPoints(), SYSTEM_DEVICE);
+                      assertNetworkPoints(metric.getLongSumData().getPoints(), SYSTEM_DEVICE_NAME);
                     }));
     testing()
         .waitAndAssertMetrics(
@@ -172,7 +171,7 @@ public abstract class AbstractSystemMetricsTest {
                 metrics.anySatisfy(
                     metric ->
                         assertThat(metric)
-                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                             .satisfies(hasScopeVersion(version))));
   }
 
@@ -186,7 +185,7 @@ public abstract class AbstractSystemMetricsTest {
         .allSatisfy(
             metric ->
                 assertThat(metric)
-                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .satisfies(
                         hasScopeVersion(
                             EmbeddedInstrumentationProperties.findVersion(scopeName()))))
@@ -219,8 +218,8 @@ public abstract class AbstractSystemMetricsTest {
         .allSatisfy(
             point -> {
               assertThat(point.getAttributes().asMap())
-                  .containsOnlyKeys(SYSTEM_DEVICE, DISK_IO_DIRECTION);
-              assertThat(point.getAttributes().get(SYSTEM_DEVICE)).isNotBlank();
+                  .containsOnlyKeys(SYSTEM_DEVICE_NAME, DISK_IO_DIRECTION);
+              assertThat(point.getAttributes().get(SYSTEM_DEVICE_NAME)).isNotBlank();
               assertThat(point.getAttributes().get(DISK_IO_DIRECTION)).isIn("read", "write");
             });
   }

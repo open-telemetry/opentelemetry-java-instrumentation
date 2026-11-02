@@ -4,6 +4,8 @@
 
 ### ⚠️ Breaking changes
 
+- OSHI disk and network packet metrics now use `system.device.name` instead of `system.device`;
+  memory metrics use `system.memory.state="available"` instead of `"free"`.
 - Apache HttpClient 4.3 library instrumentation no longer automatically emits
   `network.peer.address` or `network.peer.port` inferred from the route target.
   Use `server.address` and `server.port` for logical destination grouping.
