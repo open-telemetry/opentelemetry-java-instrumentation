@@ -25,9 +25,8 @@ import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForwardIndyAdviceTransformer;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceCallForwardingTransformer;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyTypeTransformerImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.AdviceInspector;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
@@ -190,15 +189,15 @@ public final class InstrumentationModuleInstaller {
           setTypeMatcher(agentBuilder, instrumentationModule, typeInstrumentation)
               .and(muzzleMatcher)
               .transform(ConstantAdjuster.instance())
-              .transform(new ForwardIndyAdviceTransformer(helperInjector));
+              .transform(new AdviceCallForwardingTransformer(helperInjector));
 
       extendableAgentBuilder =
           IndyModuleRegistry.initializeModuleLoaderOnMatch(
               instrumentationModule, extendableAgentBuilder);
       extendableAgentBuilder = extendableAgentBuilder.transform(helperInjector);
       extendableAgentBuilder = contextProvider.injectHelperClasses(extendableAgentBuilder);
-      IndyTypeTransformerImpl typeTransformer =
-          new IndyTypeTransformerImpl(extendableAgentBuilder, instrumentationModule);
+      TypeTransformerImpl typeTransformer =
+          new TypeTransformerImpl(extendableAgentBuilder, instrumentationModule);
       typeInstrumentation.transform(typeTransformer);
       extendableAgentBuilder = typeTransformer.getAgentBuilder();
       extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);
@@ -267,7 +266,8 @@ public final class InstrumentationModuleInstaller {
               .transform(helperInjector);
       extendableAgentBuilder = contextProvider.injectHelperClasses(extendableAgentBuilder);
       extendableAgentBuilder = contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder);
-      TypeTransformerImpl typeTransformer = new TypeTransformerImpl(extendableAgentBuilder);
+      HelperInjectionTypeTransformerImpl typeTransformer =
+          new HelperInjectionTypeTransformerImpl(extendableAgentBuilder);
       typeInstrumentation.transform(typeTransformer);
       extendableAgentBuilder = typeTransformer.getAgentBuilder();
       extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);

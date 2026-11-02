@@ -38,14 +38,14 @@ import org.objectweb.asm.commons.GeneratorAdapter;
  * instructions in a helper class that contains the original {@code INVOKEDYNAMIC} instruction in
  * classes that do not support {@code INVOKEDYNAMIC} (i.e. pre Java 7 class files).
  */
-public class ForwardIndyAdviceTransformer implements AgentBuilder.Transformer {
+public class AdviceCallForwardingTransformer implements AgentBuilder.Transformer {
   private static final AtomicInteger counter = new AtomicInteger();
   private static final String bootForwardClassPackage =
       AdviceForwardLookupSupplier.class.getPackage().getName();
 
   private final HelperInjector helperInjector;
 
-  public ForwardIndyAdviceTransformer(HelperInjector helperInjector) {
+  public AdviceCallForwardingTransformer(HelperInjector helperInjector) {
     this.helperInjector = helperInjector;
   }
 
@@ -117,11 +117,11 @@ public class ForwardIndyAdviceTransformer implements AgentBuilder.Transformer {
                           classLoader == null
                               ? bootForwardClassPackage + ".Forward$$" + counter.incrementAndGet()
                               : adviceClassName + "$$Forward$$" + counter.incrementAndGet();
-                      String forwardClassSlasName = forwardClassDotName.replace('.', '/');
+                      String forwardClassInternalName = forwardClassDotName.replace('.', '/');
 
                       Supplier<byte[]> forwardClassBytes =
                           generateForwardClass(
-                              forwardClassSlasName,
+                              forwardClassInternalName,
                               name,
                               descriptor,
                               bootstrapMethodHandle,
@@ -131,7 +131,7 @@ public class ForwardIndyAdviceTransformer implements AgentBuilder.Transformer {
                       // replace invokedynamic with invokestatic to the generated forwarder class
                       // the forwarder class will contain the original invokedynamic instruction
                       super.visitMethodInsn(
-                          Opcodes.INVOKESTATIC, forwardClassSlasName, name, descriptor, false);
+                          Opcodes.INVOKESTATIC, forwardClassInternalName, name, descriptor, false);
                       return;
                     }
 
@@ -146,7 +146,7 @@ public class ForwardIndyAdviceTransformer implements AgentBuilder.Transformer {
   }
 
   private static Supplier<byte[]> generateForwardClass(
-      String forwardClassSlasName,
+      String forwardClassInternalName,
       String methodName,
       String methodDescriptor,
       Handle bootstrapMethodHandle,
@@ -156,7 +156,7 @@ public class ForwardIndyAdviceTransformer implements AgentBuilder.Transformer {
       cw.visit(
           Opcodes.V1_8,
           Opcodes.ACC_PUBLIC,
-          forwardClassSlasName,
+          forwardClassInternalName,
           null,
           Type.getInternalName(Object.class),
           null);

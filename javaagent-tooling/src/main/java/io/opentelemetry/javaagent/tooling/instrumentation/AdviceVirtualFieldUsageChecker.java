@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling.instrumentation.indy;
+package io.opentelemetry.javaagent.tooling.instrumentation;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
@@ -24,7 +24,7 @@ import org.objectweb.asm.tree.MethodNode;
  * rewriting, we expect users to keep the result of {@link VirtualField#find(Class, Class)} in a
  * static field.
  */
-class VirtualFieldChecker {
+class AdviceVirtualFieldUsageChecker {
   private static final boolean ENABLE_VIRTUAL_FIELD_USAGE_CHECKER =
       Boolean.getBoolean("otel.javaagent.testing.check-virtual-field-usage.enabled");
 
@@ -87,5 +87,5 @@ class VirtualFieldChecker {
     return getAnnotationNode(source, type) != null;
   }
 
-  private VirtualFieldChecker() {}
+  private AdviceVirtualFieldUsageChecker() {}
 }

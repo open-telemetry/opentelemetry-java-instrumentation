@@ -212,7 +212,7 @@ public class IndyBootstrap {
     }
   }
 
-  static Advice.BootstrapArgumentResolver.Factory getAdviceBootstrapArguments(
+  public static Advice.BootstrapArgumentResolver.Factory getAdviceBootstrapArguments(
       InstrumentationModule instrumentationModule) {
     String moduleName = instrumentationModule.getClass().getName();
     return (adviceMethod, exit) ->
