@@ -83,17 +83,69 @@ and deadlocks.
 
 ## Making the release
 
+- Confirm that the inherited
+  [Immutable tags with maintainer bypass](https://github.com/open-telemetry/opentelemetry-java-instrumentation/rules/5576619)
+  ruleset is active. It blocks tag updates and deletions. Maintainers can bypass the ruleset, but
+  must not bypass it for release tags.
+- Create and push the release tag from the head of the release branch:
+
+  ```bash
+  git fetch upstream release/vX.Y.x
+  git tag vX.Y.Z upstream/release/vX.Y.x
+  git push upstream vX.Y.Z
+  ```
+
 - Run the [Release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release.yml).
-  - Press the "Run workflow" button, then select the release branch from the dropdown list,
-    e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
+  - Dispatch the workflow from the command line because the GitHub Actions web interface only
+    offers branches in its "Use workflow from" selector:
+
+    ```bash
+    gh workflow run release.yml \
+      --repo open-telemetry/opentelemetry-java-instrumentation \
+      --ref vX.Y.Z
+    ```
+
   - This workflow will:
     - Publish the artifacts to Maven Central
+    - Sign the Java agent jar and SBOM bundle with Sigstore Cosign
     - Generate [GitHub Artifact Attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations) for the Java agent jar and SBOM bundle
-    - Publish a GitHub release with release notes, Java agent jar, and SBOM bundle
+    - Publish a GitHub release with release notes, the Java agent jar and SBOM bundle, and their
+      Sigstore bundles
   - Review and merge the post-release pull request into `maintenance/vN.x` if it exists,
     otherwise into `main` with a matching snapshot major. Publication stops if the target is missing or mismatched.
     The PR always updates the changelog. Releases newer than the branch's API baseline also update
     the baseline and API diffs after reaching Maven Central, plus the README download link on maintenance branches.
+
+## Verifying release artifacts
+
+Install [Cosign](https://docs.sigstore.dev/cosign/system_config/installation/) and the
+[GitHub CLI](https://cli.github.com/), then replace the version below with the release to verify:
+
+```bash
+VERSION=2.XX.0
+REPOSITORY=open-telemetry/opentelemetry-java-instrumentation
+
+gh release download "v${VERSION}" --repo "${REPOSITORY}" \
+  --pattern opentelemetry-javaagent.jar \
+  --pattern opentelemetry-javaagent.jar.sigstore.json \
+  --pattern opentelemetry-java-instrumentation-SBOM.zip \
+  --pattern opentelemetry-java-instrumentation-SBOM.zip.sigstore.json
+
+CERTIFICATE_IDENTITY="https://github.com/${REPOSITORY}/.github/workflows/release.yml@refs/tags/v${VERSION}"
+CERTIFICATE_OIDC_ISSUER=https://token.actions.githubusercontent.com
+
+cosign verify-blob opentelemetry-javaagent.jar \
+  --bundle opentelemetry-javaagent.jar.sigstore.json \
+  --certificate-identity "${CERTIFICATE_IDENTITY}" \
+  --certificate-oidc-issuer "${CERTIFICATE_OIDC_ISSUER}"
+
+cosign verify-blob opentelemetry-java-instrumentation-SBOM.zip \
+  --bundle opentelemetry-java-instrumentation-SBOM.zip.sigstore.json \
+  --certificate-identity "${CERTIFICATE_IDENTITY}" \
+  --certificate-oidc-issuer "${CERTIFICATE_OIDC_ISSUER}"
+```
+
+If verification fails, do not run, deploy, or otherwise use the artifact.
 
 ## Credentials
 
