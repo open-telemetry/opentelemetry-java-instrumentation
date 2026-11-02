@@ -67,8 +67,18 @@ class TestSuiteExecutions internal constructor(
   /** The suffix is appended to the suite name, e.g. test + Experimental. */
   fun register(suffix: String, action: Action<Test>) {
     require(suffix.isNotBlank()) { "An execution variant needs a non-empty suffix" }
-    require(!variants.containsKey(suffix)) { "Execution variant '$suffix' is already registered" }
-    variants[suffix] = action
+    registerVariant(suite.name + suffix, suffix, action)
+  }
+
+  /** Register an execution variant with an explicit task name. */
+  fun registerTask(taskName: String, action: Action<Test>) {
+    require(taskName.isNotBlank()) { "An execution variant needs a non-empty task name" }
+    registerVariant(taskName, taskName, action)
+  }
+
+  private fun registerVariant(taskName: String, variantName: String, action: Action<Test>) {
+    require(!variants.containsKey(taskName)) { "Execution variant '$variantName' is already registered" }
+    variants[taskName] = action
   }
 
   internal fun configure(action: Action<TestSuiteExecutions>) {
@@ -86,8 +96,8 @@ class TestSuiteExecutions internal constructor(
         dependsOn(testTask)
       }
     }
-    variants.forEach { (suffix, variant) ->
-      val task = project.tasks.register(suite.name + suffix, Test::class.java) {
+    variants.forEach { (taskName, variant) ->
+      val task = project.tasks.register(taskName, Test::class.java) {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
         common.forEach { it.execute(this) }
