@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.internal.ServiceLoaderUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMapCleaner;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
+import io.opentelemetry.javaagent.bootstrap.ApplicationSpanHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.io.File;
@@ -128,6 +129,9 @@ public class AgentStarterImpl implements AgentStarter {
     // io.opentelemetry.sdk.metrics.internal.state.CallbackRegistration to use doPrivileged so that
     // security manager wouldn't deny these calls
     instrumentation.addTransformer(new CallbackRegistrationClassFileTransformer(), true);
+    // transforms SdkSpan in agent class loader and PropagatedSpan in boot loader by adding them an
+    // extra field that can be used to store the application span
+    instrumentation.addTransformer(new SdkSpanClassFileTransformer(), true);
   }
 
   @SuppressWarnings("SystemOut")
@@ -351,6 +355,101 @@ public class AgentStarterImpl implements AgentStarter {
                   }
                 }
               };
+            }
+          };
+
+      cr.accept(cv, 0);
+
+      return cw.toByteArray();
+    }
+  }
+
+  private static class SdkSpanClassFileTransformer implements ClassFileTransformer {
+
+    @Nullable
+    @Override
+    public byte[] transform(
+        ClassLoader loader,
+        String className,
+        Class<?> classBeingRedefined,
+        ProtectionDomain protectionDomain,
+        byte[] classfileBuffer) {
+      // applies to SdkSpan in agent class loader and PropagatedSpan in boot loader
+      if (!((loader == getClass().getClassLoader()
+              && "io/opentelemetry/sdk/trace/SdkSpan".equals(className))
+          || (loader == null && "io/opentelemetry/api/trace/PropagatedSpan".equals(className)))) {
+        return null;
+      }
+      ClassReader cr = new ClassReader(classfileBuffer);
+      ClassWriter cw = new ClassWriter(cr, 0);
+      ClassVisitor cv =
+          new ClassVisitor(AsmApi.VERSION, cw) {
+
+            @Override
+            public void visit(
+                int version,
+                int access,
+                String name,
+                String signature,
+                String superName,
+                String[] interfaces) {
+              // add ApplicationSpanHolder interface
+              if (interfaces == null) {
+                interfaces = new String[1];
+              } else {
+                String[] newInterfaces = new String[interfaces.length + 1];
+                System.arraycopy(interfaces, 0, newInterfaces, 0, interfaces.length);
+                interfaces = newInterfaces;
+              }
+              interfaces[interfaces.length - 1] = Type.getInternalName(ApplicationSpanHolder.class);
+              super.visit(version, access, name, signature, superName, interfaces);
+            }
+
+            @Override
+            public void visitEnd() {
+              visitField(
+                  Opcodes.ACC_PRIVATE | Opcodes.ACC_VOLATILE | Opcodes.ACC_SYNTHETIC,
+                  "__applicationSpan",
+                  "Ljava/lang/Object;",
+                  null,
+                  null);
+
+              // generate getter
+              {
+                MethodVisitor mv =
+                    super.visitMethod(
+                        Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC,
+                        "getApplicationSpan",
+                        "()Ljava/lang/Object;",
+                        null,
+                        null);
+                mv.visitCode();
+                mv.visitVarInsn(Opcodes.ALOAD, 0);
+                mv.visitFieldInsn(
+                    Opcodes.GETFIELD, className, "__applicationSpan", "Ljava/lang/Object;");
+                mv.visitInsn(Opcodes.ARETURN);
+                mv.visitMaxs(1, 1);
+                mv.visitEnd();
+              }
+              // generate setter
+              {
+                MethodVisitor mv =
+                    super.visitMethod(
+                        Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC,
+                        "setApplicationSpan",
+                        "(Ljava/lang/Object;)V",
+                        null,
+                        null);
+                mv.visitCode();
+                mv.visitVarInsn(Opcodes.ALOAD, 0);
+                mv.visitVarInsn(Opcodes.ALOAD, 1);
+                mv.visitFieldInsn(
+                    Opcodes.PUTFIELD, className, "__applicationSpan", "Ljava/lang/Object;");
+                mv.visitInsn(Opcodes.RETURN);
+                mv.visitMaxs(2, 2);
+                mv.visitEnd();
+              }
+              super.visitEnd();
             }
           };
 
