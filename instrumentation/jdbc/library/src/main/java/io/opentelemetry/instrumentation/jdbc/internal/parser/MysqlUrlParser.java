@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthorityWithQueryAt;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractSubtype;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.hasMultipleTargets;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
@@ -81,6 +80,7 @@ public final class MysqlUrlParser implements JdbcUrlParser {
 
     if (subtype != null) {
       // Has subprotocol (e.g., mysql:aurora://...)
+      applyHostGroup(jdbcUrl, ctx);
       parseMariaSubProtocol(jdbcUrl.substring(protoLoc + 3), ctx);
     } else if (protoLoc > 0) {
       // Standard URL format - delegate to GenericUrlParser
@@ -153,12 +153,6 @@ public final class MysqlUrlParser implements JdbcUrlParser {
   }
 
   private static void parseMariaSubProtocol(String jdbcUrl, ParseContext ctx) {
-    if (!applyHostGroup(jdbcUrl, ctx)) {
-      ctx.host(null);
-      ctx.port(null);
-      return;
-    }
-
     int hostEndLoc;
     int ipv6End = jdbcUrl.startsWith("[") ? jdbcUrl.indexOf("]") : -1;
     int sectionEnd = indexOf(jdbcUrl, Math.max(0, ipv6End), ':', '/', '?', ',');
@@ -225,19 +219,15 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     ctx.applyCommonParams(jdbcUrl, "?", "&");
   }
 
-  private static boolean applyHostGroup(String jdbcUrl, ParseContext ctx) {
-    String authority = extractAuthority("mariadb://" + jdbcUrl);
+  private static void applyHostGroup(String jdbcUrl, ParseContext ctx) {
+    String authority = extractAuthority(jdbcUrl);
     if (authority == null) {
-      authority = extractAuthorityWithQueryAt(jdbcUrl);
-      if (authority == null) {
-        return false;
-      }
+      return;
     }
     DbServerTarget target = parseServerTargetGroup(authority, DEFAULT_PORT);
     if (target != null || hasMultipleTargets(jdbcUrl)) {
       ctx.resolveConfiguredServerTarget(target);
     }
-    return true;
   }
 
   private static final Pattern HOST_PATTERN =

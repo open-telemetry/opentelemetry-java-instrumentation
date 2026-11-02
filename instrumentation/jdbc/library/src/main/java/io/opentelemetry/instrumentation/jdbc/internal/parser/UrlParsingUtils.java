@@ -226,7 +226,7 @@ public final class UrlParsingUtils {
     return -1;
   }
 
-  /** Extract the authority from a JDBC URL without reporting ambiguous credential text. */
+  /** Extract the authority from a URL-shaped JDBC connection string. */
   @Nullable
   public static String extractAuthority(String url) {
     int protoLoc = url.indexOf("://");
@@ -235,104 +235,7 @@ public final class UrlParsingUtils {
     }
     int start = protoLoc + 3;
     int end = indexOfAny(url, start, '/', '?', '#');
-    int lastAt = url.lastIndexOf('@');
-    if (lastAt >= start && end >= 0 && lastAt > end) {
-      int possibleAuthorityEnd = indexOfAny(url, lastAt + 1, '/', '?', '#');
-      possibleAuthorityEnd = possibleAuthorityEnd < 0 ? url.length() : possibleAuthorityEnd;
-      int commaAfterAt = url.indexOf(',', lastAt + 1);
-      int commaBeforeEnd = url.indexOf(',', start);
-      boolean atInQueryParameter = isAtInQueryParameter(url, end, lastAt);
-      if (!atInQueryParameter
-          && ((commaAfterAt >= 0 && commaAfterAt < possibleAuthorityEnd)
-              || (commaBeforeEnd >= 0 && commaBeforeEnd < end))) {
-        // Comma-separated text around an early delimiter may be part of a malformed password.
-        // Dropping the group is safer than reporting credential text as a host.
-        return null;
-      }
-    }
     return end < 0 ? url.substring(start) : url.substring(start, end);
-  }
-
-  /** Extract an authority when an at sign in a later query parameter obscures its boundary. */
-  @Nullable
-  static String extractAuthorityWithQueryAt(String url) {
-    int authorityStart = url.indexOf("://");
-    authorityStart = authorityStart < 0 ? 0 : authorityStart + 3;
-    int authorityEnd = indexOfAny(url, authorityStart, '/', '?', '#');
-    if (authorityEnd < 0) {
-      return null;
-    }
-    int queryStart = url.indexOf('?', authorityEnd);
-    int fragmentStart = url.indexOf('#', authorityEnd);
-    int credentialsEnd = url.lastIndexOf('@');
-    int parameterStart =
-        queryStart < 0 ? -1 : Math.max(queryStart, url.lastIndexOf('&', credentialsEnd)) + 1;
-    int parameterEnd = url.indexOf('&', credentialsEnd);
-    if (parameterEnd < 0) {
-      parameterEnd = url.length();
-    }
-    int equals = parameterStart < 0 ? -1 : url.indexOf('=', parameterStart);
-    if (queryStart < 0
-        || (fragmentStart >= 0 && fragmentStart < queryStart)
-        || credentialsEnd < queryStart
-        || equals < parameterStart
-        || equals > credentialsEnd) {
-      return null;
-    }
-
-    String authority = url.substring(authorityStart, authorityEnd);
-    if (!isEndpointAuthority(authority)) {
-      return null;
-    }
-    String suffix = url.substring(credentialsEnd + 1, parameterEnd);
-    int suffixAuthorityEnd = indexOfAny(suffix, '/', '?', '#');
-    String suffixAuthority =
-        suffixAuthorityEnd < 0 ? suffix : suffix.substring(0, suffixAuthorityEnd);
-    if (isEndpointAuthority(suffixAuthority)) {
-      return null;
-    }
-    if (authority.indexOf(',') >= 0) {
-      return authority;
-    }
-
-    return suffix.indexOf('/') < 0 && suffix.indexOf(',') < 0 ? authority : null;
-  }
-
-  private static boolean isEndpointAuthority(String authority) {
-    return hasValidHostPorts(authority)
-        || isSingleEndpointAuthority(authority)
-        || sanitizeHostList(authority) != null;
-  }
-
-  private static boolean isSingleEndpointAuthority(String authority) {
-    List<String> endpoints = splitHostList(stripUserInfo(authority));
-    return endpoints.size() == 1 && sanitizeHostEntry(endpoints.get(0)) != null;
-  }
-
-  private static boolean isAtInQueryParameter(String url, int authorityEnd, int at) {
-    int queryStart = url.indexOf('?', authorityEnd);
-    if (queryStart < 0 || queryStart > at) {
-      return false;
-    }
-    int fragmentStart = url.indexOf('#', authorityEnd);
-    if (fragmentStart >= 0 && fragmentStart < at) {
-      return false;
-    }
-    int parameterStart = Math.max(queryStart, url.lastIndexOf('&', at)) + 1;
-    int equals = url.indexOf('=', parameterStart);
-    if (equals < parameterStart || equals > at) {
-      return false;
-    }
-    int protocol = url.indexOf("://");
-    int authorityStart = protocol < 0 ? 0 : protocol + 3;
-    if (queryStart > authorityEnd
-        || isSingleEndpointAuthority(url.substring(authorityStart, authorityEnd))) {
-      return true;
-    }
-    int parameterEnd = indexOfAny(url, at + 1, '&', '#');
-    parameterEnd = parameterEnd < 0 ? url.length() : parameterEnd;
-    String suffix = url.substring(at + 1, parameterEnd);
-    return suffix.indexOf('/') < 0 && suffix.indexOf(',') < 0;
   }
 
   private static String stripUserInfo(String authority) {
@@ -359,30 +262,7 @@ public final class UrlParsingUtils {
     int authorityEnd = indexOfAny(jdbcUrl, authorityStart, '/', '?', '#', ';');
     authorityEnd = authorityEnd < 0 ? jdbcUrl.length() : authorityEnd;
     String authority = jdbcUrl.substring(authorityStart, authorityEnd);
-    if (splitHostList(stripUserInfo(authority)).size() > 1) {
-      return true;
-    }
-
-    int lastAt = jdbcUrl.lastIndexOf('@');
-    if (lastAt < authorityEnd) {
-      return false;
-    }
-    if (isAtInQueryParameter(jdbcUrl, authorityEnd, lastAt)
-        || isAtInSemicolonParameter(jdbcUrl, authorityEnd, lastAt)) {
-      return false;
-    }
-    int targetEnd = indexOfAny(jdbcUrl, lastAt + 1, '/', '?', '#', '&', ';');
-    targetEnd = targetEnd < 0 ? jdbcUrl.length() : targetEnd;
-    return splitHostList(jdbcUrl.substring(lastAt + 1, targetEnd)).size() > 1;
-  }
-
-  private static boolean isAtInSemicolonParameter(String url, int authorityEnd, int at) {
-    int parameterStart = Math.max(url.lastIndexOf(';', at), url.lastIndexOf('&', at));
-    if (parameterStart < authorityEnd) {
-      return false;
-    }
-    int equals = url.indexOf('=', parameterStart + 1);
-    return equals > parameterStart && equals < at;
+    return splitHostList(stripUserInfo(authority)).size() > 1;
   }
 
   // IPv6 brackets and address=(...) blocks may contain commas.
@@ -432,15 +312,6 @@ public final class UrlParsingUtils {
       sanitized.append("(port=").append(addressPort).append(')');
     }
     return sanitized.toString();
-  }
-
-  private static boolean hasValidHostPorts(String authority) {
-    for (String endpoint : authority.split(",")) {
-      if (!isValidHostPort(endpoint.trim())) {
-        return false;
-      }
-    }
-    return true;
   }
 
   private static boolean isValidHostPort(String value) {
