@@ -89,16 +89,18 @@ testing.suites {
       telemetryConfig("otel.instrumentation.lettuce.connection-telemetry.enabled", "true")
     }
   }
+
+  executions("lettuce51Test") {
+    configureDefault {
+      if (otelProps.denyUnsafe) {
+        // Lettuce 5.1.0 pulls in Reactor 3.2.0, whose RingBuffer accesses sun.misc.Unsafe directly.
+        enabled = false
+      }
+    }
+  }
 }
 
 tasks {
-  if (otelProps.denyUnsafe) {
-    // Lettuce 5.1.0 pulls in Reactor 3.2.0, whose RingBuffer accesses sun.misc.Unsafe directly.
-    named("lettuce51Test", Test::class) {
-      enabled = false
-    }
-  }
-
   check {
     dependsOn(testing.suites)
   }
