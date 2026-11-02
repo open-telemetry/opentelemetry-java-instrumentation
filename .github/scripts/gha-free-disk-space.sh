@@ -1,9 +1,18 @@
 #!/bin/bash -e
 
-# GitHub Actions runners have only provide 14 GB of disk space which we have been exceeding regularly
-# https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+set -o pipefail
 
 df -h
+available_kb=$(df -Pk . | awk 'NR == 2 { print $4 }')
+if [[ ! "$available_kb" =~ ^[0-9]+$ ]]; then
+  echo "Unable to determine available disk space." >&2
+  exit 1
+fi
+if ((available_kb >= 20 * 1024 * 1024)); then
+  echo "At least 20 GiB of disk space is available; skipping cleanup."
+  exit 0
+fi
+
 sudo rm -rf /usr/local/lib/android
 sudo rm -rf /usr/share/dotnet
 sudo rm -rf /usr/local/julia*

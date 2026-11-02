@@ -5,6 +5,7 @@ on:
     branches:
       - trask-conditional-disk-cleanup
     paths:
+      - .github/scripts/gha-free-disk-space.sh
       - .github/workflows/measure-disk-cleanup.yml
 
 permissions:
@@ -35,7 +36,9 @@ jobs:
           reclaimed=$((available_after - available_before))
 
           docker_reclaimed=$(sed -n 's/^Total reclaimed space: //p' "$RUNNER_TEMP/disk-cleanup.log")
-          if [[ -z "$docker_reclaimed" ]]; then
+          if grep -Fxq 'At least 20 GiB of disk space is available; skipping cleanup.' "$RUNNER_TEMP/disk-cleanup.log"; then
+            docker_reclaimed='not run because cleanup was skipped'
+          elif [[ -z "$docker_reclaimed" ]]; then
             echo "::error::The cleanup log did not contain Docker's reclaimed-space measurement."
             exit 1
           fi
