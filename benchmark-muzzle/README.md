@@ -209,8 +209,10 @@ online dependencies and cold live metadata remain unchanged.
 
 The slice-count comparison uses the same source revision and compiled build
 logic for both layouts. The source must support `-PmuzzleSlices=4` and
-`-PmuzzleSlices=8`. The repository default remains four until the layout
-change is selected for production.
+`-PmuzzleSlices=8`. Local builds default to four; repository CI explicitly
+selects eight. Both layouts use the slice-aware discovery implementation.
+This isolates the slice-count change on the research revision, not a literal
+before/after comparison with an older eager-discovery revision.
 
 ```sh
 gh workflow run muzzle-performance-comparison.yml \

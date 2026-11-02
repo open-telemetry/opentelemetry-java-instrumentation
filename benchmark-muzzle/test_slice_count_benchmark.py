@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import re
 import tempfile
 from types import SimpleNamespace
 import unittest
@@ -12,6 +13,14 @@ import test_ci_benchmark as fixtures
 
 
 class SliceCountBenchmarkTest(unittest.TestCase):
+    def test_ci_routes_all_eight_slices_with_the_corresponding_layout(self):
+        workflow = (Path(__file__).resolve().parents[1] / ".github/workflows/reusable-muzzle.yml").read_text(encoding="utf-8")
+        self.assertEqual(
+            re.findall(r'^\s+- ":instrumentation:muzzle(\d+)"$', workflow, re.MULTILINE),
+            [str(number) for number in range(1, 9)],
+        )
+        self.assertIn("run: ./gradlew ${{ matrix.task }} -PmuzzleSlices=8", workflow)
+
     def fixture(self, root, number, partition, durations):
         directory = root / f"muzzle-slices-{number}-{partition}"
         directory.mkdir()

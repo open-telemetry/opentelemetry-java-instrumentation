@@ -22,6 +22,10 @@ jobs:
           - ":instrumentation:muzzle2"
           - ":instrumentation:muzzle3"
           - ":instrumentation:muzzle4"
+          - ":instrumentation:muzzle5"
+          - ":instrumentation:muzzle6"
+          - ":instrumentation:muzzle7"
+          - ":instrumentation:muzzle8"
       fail-fast: false
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -43,4 +47,4 @@ jobs:
           cache-read-only: ${{ inputs.cache-read-only }}
 
       - name: Run muzzle
-        run: ./gradlew ${{ matrix.task }}
+        run: ./gradlew ${{ matrix.task }} -PmuzzleSlices=8
