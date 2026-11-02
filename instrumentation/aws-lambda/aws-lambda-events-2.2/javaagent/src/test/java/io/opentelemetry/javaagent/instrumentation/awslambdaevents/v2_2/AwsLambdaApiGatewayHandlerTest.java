@@ -99,7 +99,7 @@ class AwsLambdaApiGatewayHandlerTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("PUT /hello/{param}")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasKind(SpanKind.SERVER)
                         .hasTraceId("ee13e7026227ebf4c74278ae29691d7a")
                         .hasParentSpanId("0000000000000456")

@@ -11,8 +11,8 @@ import static io.opentelemetry.instrumentation.testing.util.InstrumentationScope
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.logs.Severity;
@@ -162,7 +162,7 @@ class GwtTest {
                         .hasNoParent(),
                 span ->
                     span.hasName("test.gwt.shared.MessageService/sendMessage")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -185,7 +185,7 @@ class GwtTest {
                         .hasNoParent(),
                 span ->
                     span.hasName("test.gwt.shared.MessageService/sendMessage")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
@@ -218,7 +218,7 @@ class GwtTest {
         metric ->
             metric
                 .hasName("rpc.server.call.duration")
-                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                 .hasUnit("s")
                 .hasHistogramSatisfying(
                     histogram ->

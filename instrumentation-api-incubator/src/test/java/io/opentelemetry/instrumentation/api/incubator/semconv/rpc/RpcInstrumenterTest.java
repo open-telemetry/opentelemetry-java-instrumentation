@@ -9,8 +9,8 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_SYSTEM_NAME;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.mock;
@@ -21,6 +21,7 @@ import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -64,7 +65,7 @@ class RpcInstrumenterTest {
                   .hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM_NAME, "test"), equalTo(RPC_METHOD, "Service/Method"));
               assertThat(span.getInstrumentationScopeInfo().getSchemaUrl())
-                  .isEqualTo(SchemaUrls.V1_44_0);
+                  .isEqualTo(SchemaUrls.V1_45_0);
             });
     assertThat(instance.metricReader.collectAllMetrics())
         .singleElement()
@@ -84,7 +85,7 @@ class RpcInstrumenterTest {
                                           equalTo(RPC_SYSTEM_NAME, "test"),
                                           equalTo(RPC_METHOD, "Service/Method"))));
               assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
-                  .isEqualTo(SchemaUrls.V1_44_0);
+                  .isEqualTo(SchemaUrls.V1_45_0);
             });
   }
 
@@ -110,7 +111,7 @@ class RpcInstrumenterTest {
                         equalTo(stringKey("rpc.status_code"), "CANCELLED"),
                         equalTo(ERROR_TYPE, "java.lang.IllegalStateException")));
     assertThat(instance.spanExporter.getFinishedSpanItems().get(0).getInstrumentationScopeInfo())
-        .satisfies(scope -> assertThat(scope.getSchemaUrl()).isEqualTo(SchemaUrls.V1_44_0));
+        .satisfies(scope -> assertThat(scope.getSchemaUrl()).isEqualTo(SchemaUrls.V1_45_0));
 
     Collection<MetricData> metrics = instance.metricReader.collectAllMetrics();
     assertThat(metrics)
@@ -138,7 +139,7 @@ class RpcInstrumenterTest {
         .allSatisfy(
             metric ->
                 assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
-                    .isEqualTo(SchemaUrls.V1_44_0));
+                    .isEqualTo(SchemaUrls.V1_45_0));
   }
 
   @ParameterizedTest
@@ -193,7 +194,7 @@ class RpcInstrumenterTest {
       TestGetter getter = new TestGetter();
       instrumenter =
           Instrumenter.<String, Void>builder(telemetry, "test", RpcSpanNameExtractor.create(getter))
-              .setSchemaUrl(SchemaUrls.V1_44_0)
+              .setSchemaUrl(RpcSchemaUrls.SCHEMA_URL)
               .addAttributesExtractor(
                   client
                       ? RpcClientAttributesExtractor.create(getter)

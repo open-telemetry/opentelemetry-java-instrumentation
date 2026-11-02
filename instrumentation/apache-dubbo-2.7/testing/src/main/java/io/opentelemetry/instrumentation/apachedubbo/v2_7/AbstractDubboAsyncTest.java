@@ -13,8 +13,8 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_SYSTEM_NAME;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -110,7 +110,7 @@ public abstract class AbstractDubboAsyncTest {
             metric ->
                 metric
                     .hasName("rpc.server.call.duration")
-                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->
@@ -149,12 +149,12 @@ public abstract class AbstractDubboAsyncTest {
         span ->
             span.hasName(DelayedService.class.getName() + "/" + method)
                 .hasKind(SpanKind.CLIENT)
-                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                 .hasNoParent(),
         span ->
             span.hasName(DelayedService.class.getName() + "/" + method)
                 .hasKind(SpanKind.SERVER)
-                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                 .hasParent(trace.getSpan(0))
                 .hasStatus(fail ? StatusData.error() : StatusData.unset())
                 .hasAttributesSatisfyingExactly(
