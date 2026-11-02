@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -31,10 +32,6 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
   // Run these tests with the shaded driver because the response-channel instrumentation
   // must also match and work with the driver's relocated Netty classes.
   fun registerShadedTest(

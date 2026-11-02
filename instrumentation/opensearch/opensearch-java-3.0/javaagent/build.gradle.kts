@@ -3,6 +3,7 @@ import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -47,9 +48,6 @@ dependencies {
 
 testing.suites.named<JvmTestSuite>("test") {
   executions {
-    configureEach {
-      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    }
     configureDefault {
       filter {
         excludeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
