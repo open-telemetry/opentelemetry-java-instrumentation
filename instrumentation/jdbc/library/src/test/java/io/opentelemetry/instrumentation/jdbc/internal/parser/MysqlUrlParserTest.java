@@ -132,9 +132,8 @@ class MysqlUrlParserTest {
 
   @ParameterizedTest
   @MethodSource("connectorUrls")
-  void configuredEndpointsMatchConnectorJ(String url) {
-    List<HostInfo> expected =
-        ConnectionUrl.getConnectionUrlInstance(url, new Properties()).getHostsList();
+  void parsedConnectionAttributesMatchConnectorJ(String url) {
+    ConnectionUrl expected = ConnectionUrl.getConnectionUrlInstance(url, new Properties());
     int start = url.indexOf("://") + 3;
     int end = UrlParsingUtils.indexOfAny(url, start, '/', '?', '#');
     String authority = end < 0 ? url.substring(start) : url.substring(start, end);
@@ -147,16 +146,19 @@ class MysqlUrlParserTest {
                     .extracting(
                         host -> tuple(host.host(), host.port() == null ? 3306 : host.port()))
                     .containsExactlyElementsOf(
-                        expected.stream()
+                        expected.getHostsList().stream()
                             .map(host -> tuple(normalizeHost(host.getHost()), host.getPort()))
                             .collect(toList())));
 
     DbServerTargetBuilder target = DbServerTarget.builder(3306);
-    for (HostInfo host : expected) {
+    for (HostInfo host : expected.getHostsList()) {
       target.addEndpoint(normalizeHost(host.getHost()), host.getPort());
     }
-    assertThat(JdbcConnectionUrlParser.parse(url, null).getConfiguredServerTarget())
-        .isEqualTo(target.build());
+    DbInfo info = JdbcConnectionUrlParser.parse(url, null);
+
+    assertThat(info.getConfiguredServerTarget()).isEqualTo(target.build());
+    assertThat(info.getDbNamespace())
+        .isEqualTo(expected.getDatabase().isEmpty() ? null : expected.getDatabase());
   }
 
   private static Stream<Arguments> connectorUrls() {
@@ -183,6 +185,13 @@ class MysqlUrlParserTest {
     return Stream.concat(
             generated.stream(),
             Stream.of(
+                "jdbc:mysql://user:123/a@h2:3306,h3:3306/db",
+                "jdbc:mysql://user:123?x=y@h2",
+                "jdbc:mysql://h1,(host=h2)/db?user=admin@example.com",
+                "jdbc:mysql://h1/db@tenant",
+                "jdbc:mysql://h1/db#ignored@h2",
+                "jdbc:mysql://h1/db?user=admin@example.com&password=p/a?ss@word",
+                "jdbc:mysql://h1/db?password=p%26host%3Dother%26port%3D2222",
                 "jdbc:mysql://h%31:%31%31%31%31/db",
                 "jdbc:mysql://%48%31:1111/db",
                 "jdbc:mysql://address=(host=%48%31)(port=1111)/db",
@@ -213,31 +222,6 @@ class MysqlUrlParserTest {
 
   private static String normalizeHost(String host) {
     return stripIpv6Brackets(host).toLowerCase(Locale.ROOT);
-  }
-
-  @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "jdbc:mysql://user:123/a@h2:3306,h3:3306/db",
-        "jdbc:mysql://user:123?x=y@h2",
-        "jdbc:mysql://h1,(host=h2)/db?user=admin@example.com",
-        "jdbc:mysql://h1/db@tenant",
-        "jdbc:mysql://h1/db#ignored@h2",
-        "jdbc:mysql://h1/db?user=admin@example.com&password=p/a?ss@word",
-        "jdbc:mysql://h1/db?password=p%26host%3Dother%26port%3D2222"
-      })
-  void urlComponentsFollowConnectorJGrammar(String url) {
-    ConnectionUrl expected = ConnectionUrl.getConnectionUrlInstance(url, new Properties());
-    DbServerTargetBuilder target = DbServerTarget.builder(3306);
-    for (HostInfo host : expected.getHostsList()) {
-      target.addEndpoint(normalizeHost(host.getHost()), host.getPort());
-    }
-
-    DbInfo info = JdbcConnectionUrlParser.parse(url, null);
-
-    assertThat(info.getConfiguredServerTarget()).isEqualTo(target.build());
-    assertThat(info.getDbNamespace())
-        .isEqualTo(expected.getDatabase().isEmpty() ? null : expected.getDatabase());
   }
 
   @ParameterizedTest
