@@ -45,7 +45,11 @@ dependencies {
 // With the Shadow plugin applied, shade this module's instrumentation classes, runtime dependencies,
 // and testInstrumentation dependencies. Match the testing agent's package relocations.
 tasks.shadowJar {
-  configurations = listOf(configurations.runtimeClasspath.get(), testInstrumentation)
+  configurations = listOf(project.configurations.runtimeClasspath.get(), testInstrumentation)
+  mergeServiceFiles()
+  filesMatching("META-INF/services/**") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+  }
   archiveFileName.set("agent-testing.jar")
 }
 
