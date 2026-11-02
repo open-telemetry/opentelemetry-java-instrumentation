@@ -32,6 +32,10 @@ on:
       report-run:
         description: Rebuild only the dependency-cache report from an existing run
         type: string
+      profile-only:
+        description: Profile one command per slice using the source-run snapshot
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -42,6 +46,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  profile:
+    if: inputs.profile-only && !inputs.dependency-cache
+    uses: ./.github/workflows/muzzle-profile.yml
+    with:
+      revision: ${{ inputs.baseline-ref }}
+      source-run: ${{ inputs.source-run }}
+      partitions: ${{ inputs.partitions }}
+
   dependency-cache:
     if: inputs.dependency-cache
     uses: ./.github/workflows/muzzle-dependency-cache.yml
@@ -54,7 +66,7 @@ jobs:
       report-run: ${{ inputs.report-run }}
 
   prepare:
-    if: ${{ !inputs.dependency-cache }}
+    if: ${{ !inputs.dependency-cache && !inputs.profile-only }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:

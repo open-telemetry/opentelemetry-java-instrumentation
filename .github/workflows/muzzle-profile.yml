@@ -1,0 +1,86 @@
+name: Muzzle operation profile
+
+on:
+  workflow_call:
+    inputs:
+      revision:
+        type: string
+        required: true
+      source-run:
+        type: string
+        required: true
+      partitions:
+        type: string
+        default: '[1,2,3,4]'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    outputs:
+      partitions: ${{ steps.plan.outputs.partitions }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Validate profile inputs
+        id: plan
+        env:
+          PARTITIONS: ${{ inputs.partitions }}
+        run: |
+          python3 -m unittest discover -s benchmark-muzzle -q
+          python3 - <<'PY'
+          import json, os
+          partitions = json.loads(os.environ["PARTITIONS"])
+          if (not isinstance(partitions, list) or not partitions
+              or any(type(p) is not int or p not in range(1, 5) for p in partitions)
+              or partitions != sorted(set(partitions))):
+              raise ValueError("Invalid slices")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write("partitions=" + json.dumps(partitions) + "\n")
+          PY
+
+  profile:
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: ${{ fromJSON(needs.validate.outputs.partitions) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - run: .github/scripts/gha-free-disk-space.sh
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 25.0.5+8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: muzzle-ci-cache-snapshot
+          path: ${{ runner.temp }}/initial
+          run-id: ${{ inputs.source-run }}
+          github-token: ${{ github.token }}
+      - name: Profile one cold live-metadata command
+        env:
+          REVISION: ${{ inputs.revision }}
+          PARTITION: ${{ matrix.partition }}
+        run: |
+          python3 benchmark-muzzle/ci_benchmark.py run \
+            --baseline "$REVISION" --candidate "$REVISION" --round 1 --partition "$PARTITION" \
+            --cache-snapshot "$RUNNER_TEMP/initial/gradle-snapshot.tar.gz" \
+            --snapshot-sha256 "$(sha256sum "$RUNNER_TEMP/initial/gradle-snapshot.tar.gz" | cut -d' ' -f1)" \
+            --work-dir "$RUNNER_TEMP/muzzle-profile" --operations-profile --single-profile
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: muzzle-profile-${{ matrix.partition }}
+          path: ${{ runner.temp }}/muzzle-profile/reports
+          if-no-files-found: error
+          retention-days: 30

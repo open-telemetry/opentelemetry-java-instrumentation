@@ -139,6 +139,34 @@ python3 -m unittest discover -s benchmark-muzzle -v
 on each for their inputs. Measurements run on Linux, while unit tests also
 support Windows.
 
+## Profiling individual commands
+
+Collect a cold-checkout operation profile without running paired comparisons:
+
+```sh
+gh workflow run muzzle-performance-comparison.yml \
+  --ref my-benchmark-branch \
+  -f profile-only=true -f source-run=EARLIER_CI_BENCHMARK_RUN \
+  -f baseline-ref=REVISION_SHA -f partitions='[1,2,3,4]'
+```
+
+This runs one command per slice using the source run's original snapshot.
+It writes no shared caches and does not create warmed snapshots.
+Each `muzzle-profile-SLICE` artifact includes `operations.jsonl`, the ordinary
+Gradle profile, exact assertion records, metadata and command diagnostics.
+
+The operation listener records overlapping Gradle resource reads, dependency
+resolution, configuration and task intervals. The summary assigns each
+millisecond to the highest-priority active category, rather than adding
+concurrent operation durations. This is a wall-time classification, not a
+CPU or critical-path profile. Resource reads include HTTP-client setup,
+queuing and response waits. Aether's independent metadata requests are not
+Gradle resource-read operations.
+
+`--operations-profile` also enables these diagnostics for a direct
+`ci_benchmark.py run` comparison. `--single-profile` records only its baseline
+command and cannot produce a paired performance comparison.
+
 ## Dependency-cache accumulation
 
 `muzzle-dependency-cache.yml` compares identical source code with the original

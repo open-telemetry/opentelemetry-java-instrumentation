@@ -17,6 +17,7 @@ import tarfile
 import time
 
 import benchmark
+import operation_profile
 
 
 SNAPSHOT_PATHS = ("caches", "wrapper", "jdks", "gradle.properties")
@@ -162,6 +163,12 @@ def validate_build(log, actual):
 
 
 def validate_diagnostics(directory, sample):
+    if "operations" in sample:
+        benchmark.require_equal(
+            sample["operations"],
+            operation_profile.summarize(directory / "operations.jsonl", sample["command_ms"]),
+            "Captured build operations",
+        )
     observed = sample["discovery"]
     metadata = benchmark.inventory(directory / "metadata")
     benchmark.require_equal(observed["metadata_sha256"], metadata, "Captured version metadata")
@@ -290,6 +297,12 @@ class Comparison:
         if self.candidate_snapshot:
             self.identity["experiment"] = "dependency-cache"
             self.identity["candidate_cache_snapshot_sha256"] = candidate_digest
+        if getattr(args, "operations_profile", False):
+            self.identity["operation_profiler_sha256"] = benchmark.digest(
+                Path(__file__).with_name("operations.init.gradle"),
+            )
+        if getattr(args, "single_profile", False):
+            self.identity["experiment"] = "operation-profile"
         write_json(self.reports / "identity.json", self.identity)
         self.persist()
 
@@ -333,6 +346,11 @@ class Comparison:
             f"-Dotel.javaagent.muzzle.versions.limit={workload['versions_limit']}",
             f"-PmuzzleBenchmarkReportDirectory={destination / 'assertions'}",
         ]
+        if getattr(self.args, "operations_profile", False):
+            command += [
+                "--init-script", str(Path(__file__).with_name("operations.init.gradle")),
+                f"-Dmuzzle.profile.output={destination / 'operations.jsonl'}",
+            ]
         write_json(destination / "command.json", command)
         started = time.perf_counter()
         started_wall = int(time.time() * 1000)
@@ -364,6 +382,10 @@ class Comparison:
         shutil.copytree(profiles[0].parent, destination / "profile")
         sample["discovery"] = discovery(checkout, destination)
         sample["setup_ms"] = sample["checkout_ms"] + sample["cache_restore_ms"]
+        if getattr(self.args, "operations_profile", False):
+            sample["operations"] = operation_profile.summarize(
+                destination / "operations.jsonl", sample["command_ms"],
+            )
         self.persist()
         # Only these newly created per-sample directories are disposable.
         shutil.rmtree(checkout)
@@ -612,6 +634,8 @@ def main():
     measure.add_argument("--snapshot-sha256", required=True)
     measure.add_argument("--candidate-cache-snapshot", type=Path)
     measure.add_argument("--candidate-snapshot-sha256")
+    measure.add_argument("--operations-profile", action="store_true")
+    measure.add_argument("--single-profile", action="store_true")
     report = commands.add_parser("report")
     report.add_argument("--inputs", type=Path, required=True)
     report.add_argument("--output", type=Path, required=True)
@@ -629,7 +653,13 @@ def main():
             parser.error("Build measurements run on Linux; unit tests also support Windows")
         runner = Comparison(args)
         try:
-            runner.measure()
+            if args.single_profile:
+                if not args.operations_profile:
+                    parser.error("--single-profile requires --operations-profile")
+                runner.execute("baseline")
+                runner.persist(complete=True)
+            else:
+                runner.measure()
         except (OSError, ValueError, tarfile.TarError, subprocess.CalledProcessError) as error:
             (runner.reports / "failure.txt").write_text(str(error) + "\n", encoding="utf-8")
             runner.persist()
