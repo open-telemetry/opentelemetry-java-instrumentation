@@ -55,16 +55,10 @@ or test failure that CI will report.
   of the same coordinate does not test both versions: Gradle resolves one dependency graph,
   normally selecting the higher version. Exercise the newer runtime in a wired version-specific
   test suite.
-- Inspect test sources and shared fixtures before applying `otel.testcontainers-testing` in the
-  test-running project; a transitive dependency alone is not enough. The explicit opt-in schedules
-  all of that project's `Test` tasks through the shared container limiter, including container-free
-  unit tests and variants. Reserve narrower container scheduling for a demonstrated problem.
-  Keep unrelated common test configuration in one declaration rather than selecting tasks or
-  variants individually. Use `executions.configureEach` when a JVM test suite and its variants
-  cover the relevant executions. Prefer `tasks.test` when a setting applies only to the default
-  test task. Use `tasks.withType<Test>().configureEach` for unrelated settings only when they are
-  genuinely project-wide, spanning other suites or independent `Test` tasks. Implicit
-  `latestDepTest` does not count. Keep JVM properties, filters, and enablement appropriately scoped.
+- Apply `otel.testcontainers-testing` in projects whose tests use Testcontainers, including through
+  shared fixtures; a transitive dependency alone is not enough. The plugin limits all `Test` tasks
+  in the project, including container-free suites and variants. Use narrower scheduling only for a
+  demonstrated problem, and keep unrelated test settings scoped to the tasks that need them.
 - Check metadata collection when its wiring or collected telemetry changes, not as unrelated
   cleanup. Collect default telemetry and supported non-default telemetry modes. Register
   representative tasks in `.github/scripts/instrumentations.sh` covering each profile's
