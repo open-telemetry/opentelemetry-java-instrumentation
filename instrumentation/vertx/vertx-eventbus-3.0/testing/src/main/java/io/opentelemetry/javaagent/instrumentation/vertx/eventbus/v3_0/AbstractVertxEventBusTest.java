@@ -19,6 +19,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -34,6 +35,7 @@ import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.eventbus.MessageProducer;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -210,9 +212,10 @@ public abstract class AbstractVertxEventBusTest {
           received.countDown();
         });
 
-    // DeliveryOptions headers are handed to the message as-is, so a reused instance still holds
-    // the previous send's trace headers. Each consumer must still join its own producer's trace.
-    DeliveryOptions options = new DeliveryOptions();
+    // A populated DeliveryOptions header map is handed to the message as-is, so a reused instance
+    // still holds the previous send's trace headers. Each consumer must still join its own
+    // producer's trace.
+    DeliveryOptions options = new DeliveryOptions().addHeader("application-header", "value");
     testing.runWithSpan("parent1", () -> eventBus.send(address, "first", options));
     testing.runWithSpan("parent2", () -> eventBus.send(address, "second", options));
 
@@ -222,6 +225,34 @@ public abstract class AbstractVertxEventBusTest {
         orderByRootSpanName("parent1", "parent2"),
         trace -> assertProducerConsumerTrace(trace, "parent1", "send", address),
         trace -> assertProducerConsumerTrace(trace, "parent2", "send", address));
+  }
+
+  @Test
+  void multipleBaggageHeaders() throws InterruptedException {
+    String address = "address.baggage." + System.nanoTime();
+    EventBus eventBus = vertx.eventBus();
+
+    CountDownLatch received = new CountDownLatch(1);
+    AtomicReference<Baggage> baggage = new AtomicReference<>();
+    eventBus.consumer(
+        address,
+        message -> {
+          baggage.set(Baggage.current());
+          testing.runWithSpan("handler-inner", () -> {});
+          received.countDown();
+        });
+
+    DeliveryOptions options =
+        new DeliveryOptions().addHeader("baggage", "first=1").addHeader("baggage", "second=2");
+    testing.runWithSpan("parent", () -> eventBus.send(address, "hello", options));
+
+    assertThat(received.await(10, SECONDS)).isTrue();
+
+    assertThat(baggage.get().getEntryValue("first")).isEqualTo("1");
+    assertThat(baggage.get().getEntryValue("second")).isEqualTo("2");
+
+    testing.waitAndAssertTraces(
+        trace -> assertProducerConsumerTrace(trace, "parent", "send", address));
   }
 
   @Test
