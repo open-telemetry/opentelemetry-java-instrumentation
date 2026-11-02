@@ -316,6 +316,7 @@ readonly INSTRUMENTATIONS=(
   "undertow-1.4:javaagent:testExceptionSignalLogs"
   "vaadin-14.2:javaagent:vaadin142Test"
   "vaadin-14.2:javaagent:vaadin142TestControllerTelemetry"
+  "vertx:vertx-eventbus-3.0:javaagent:version3Test"
   "vertx:vertx-http-client:vertx-http-client-3.0:javaagent:test"
   "vertx:vertx-http-client:vertx-http-client-4.0:javaagent:test"
   "vertx:vertx-http-client:vertx-http-client-5.0:javaagent:test"
