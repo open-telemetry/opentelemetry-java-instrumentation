@@ -57,13 +57,14 @@ testing.suites {
       implementation("org.springframework.integration:spring-integration-core:4.1.0.RELEASE")
       implementation("org.springframework.integration:spring-integration-amqp:4.1.0.RELEASE")
     }
-    targets.all {
-      testTask.configure {
-        // Exercise channel propagation independently of executor instrumentation.
-        jvmArgs("-Dotel.instrumentation.executors.enabled=false")
-        jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
-        jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
-      }
+  }
+
+  executions("version41Test") {
+    configureDefault {
+      // Exercise channel propagation independently of executor instrumentation.
+      jvmArgs("-Dotel.instrumentation.executors.enabled=false")
+      jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+      jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
     }
   }
 
