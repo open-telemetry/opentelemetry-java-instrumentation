@@ -61,10 +61,10 @@ testing.suites {
       implementation("org.hsqldb:hsqldb:2.0.0")
       implementation(project(":instrumentation:hibernate:testing"))
 
-      val hibernateVersion = baseVersion("5.+").orLatest("5.0.0.Final")
+      val hibernateVersion = baseVersion("5.0.0.Final").orLatest("5.+")
       implementation("org.hibernate:hibernate-core:$hibernateVersion")
       implementation("org.hibernate:hibernate-entitymanager:$hibernateVersion")
-      implementation("org.springframework.data:spring-data-jpa:${baseVersion("(2.4.0,3)").orLatest("2.3.0.RELEASE")}")
+      implementation("org.springframework.data:spring-data-jpa:${baseVersion("2.3.0.RELEASE").orLatest("(2.4.0,3)")}")
     }
   }
 
