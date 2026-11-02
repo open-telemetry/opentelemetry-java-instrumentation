@@ -62,12 +62,12 @@ testing.suites {
         implementation("org.springframework.boot:spring-boot-starter-kafka:latest.release")
       }
     }
+  }
 
-    targets.all {
-      testTask.configure {
-        jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-        jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
-      }
+  executions("testNoReceiveTelemetry") {
+    configureDefault {
+      jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
     }
   }
 

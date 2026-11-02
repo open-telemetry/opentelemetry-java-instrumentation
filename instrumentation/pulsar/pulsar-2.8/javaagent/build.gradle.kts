@@ -46,13 +46,14 @@ testing.suites {
       implementation("org.testcontainers:testcontainers-pulsar")
       compileOnly("io.swagger.core.v3:swagger-annotations:2.2.55")
     }
-    targets.all {
-      testTask.configure {
-        filter {
-          includeTestsMatching("PulsarClientV5Test")
-        }
-        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+  }
+
+  executions("version5Test") {
+    configureDefault {
+      filter {
+        includeTestsMatching("PulsarClientV5Test")
       }
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
     }
   }
 
