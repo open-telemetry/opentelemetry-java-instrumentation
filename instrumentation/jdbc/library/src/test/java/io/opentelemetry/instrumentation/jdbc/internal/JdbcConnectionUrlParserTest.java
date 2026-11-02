@@ -1971,17 +1971,16 @@ class JdbcConnectionUrlParserTest {
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "postgresql://user:123,a/ss@pg.host:5432",
-        "postgresql://user:p,a/ss@pg.host:5432/db",
-        "postgresql://user:p,a/ss@pg.host:5432",
-        "postgresql://user:pa,ss/word@pg.host1:5432,pg.host2:5433/pgdb",
-        "postgresql://user:p@ss,w/ord@pg.host1:5432,pg.host2:5433/pgdb"
+  @CsvSource(
+      delimiter = '|',
+      value = {
+        "postgresql://user:123,a/ss@pg.host:5432|user:123,a",
+        "postgresql://user:p,a/ss@pg.host:5432/db|user:p,a",
+        "postgresql://user:p,a/ss@pg.host:5432|user:p,a",
+        "postgresql://user:pa,ss/word@pg.host1:5432,pg.host2:5433/pgdb|user:pa,ss",
+        "postgresql://user:p@ss,w/ord@pg.host1:5432,pg.host2:5433/pgdb|user:p@ss,w"
       })
-  void authorityEndsAtPathDelimiterEvenInMalformedCredentialUrls(String url) {
-    String authority =
-        url.substring(url.indexOf("://") + 3, url.indexOf('/', url.indexOf("://") + 3));
+  void authorityEndsAtPathDelimiterEvenInMalformedCredentialUrls(String url, String authority) {
     assertThat(extractAuthority(url)).isEqualTo(authority);
   }
 

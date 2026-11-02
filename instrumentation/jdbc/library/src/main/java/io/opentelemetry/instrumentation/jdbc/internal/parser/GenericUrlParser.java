@@ -96,8 +96,7 @@ public final class GenericUrlParser implements JdbcUrlParser {
     ctx.applyCommonParams(jdbcUrl, "?", "&");
   }
 
-  private static void applyHostGroup(
-      String jdbcUrl, ParseContext ctx, @Nullable Integer defaultPort) {
+  static void applyHostGroup(String jdbcUrl, ParseContext ctx, @Nullable Integer defaultPort) {
     String authority = extractAuthority(jdbcUrl);
     if (authority == null) {
       return;

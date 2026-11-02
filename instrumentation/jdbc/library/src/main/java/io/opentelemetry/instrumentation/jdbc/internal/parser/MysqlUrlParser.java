@@ -5,13 +5,9 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractSubtype;
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.hasMultipleTargets;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerTargetGroup;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -80,7 +76,7 @@ public final class MysqlUrlParser implements JdbcUrlParser {
 
     if (subtype != null) {
       // Has subprotocol (e.g., mysql:aurora://...)
-      applyHostGroup(jdbcUrl, ctx);
+      GenericUrlParser.applyHostGroup(jdbcUrl, ctx, DEFAULT_PORT);
       parseMariaSubProtocol(jdbcUrl.substring(protoLoc + 3), ctx);
     } else if (protoLoc > 0) {
       // Standard URL format - delegate to GenericUrlParser
@@ -217,17 +213,6 @@ public final class MysqlUrlParser implements JdbcUrlParser {
 
     // Apply query params (highest precedence)
     ctx.applyCommonParams(jdbcUrl, "?", "&");
-  }
-
-  private static void applyHostGroup(String jdbcUrl, ParseContext ctx) {
-    String authority = extractAuthority(jdbcUrl);
-    if (authority == null) {
-      return;
-    }
-    DbServerTarget target = parseServerTargetGroup(authority, DEFAULT_PORT);
-    if (target != null || hasMultipleTargets(jdbcUrl)) {
-      ctx.resolveConfiguredServerTarget(target);
-    }
   }
 
   private static final Pattern HOST_PATTERN =
