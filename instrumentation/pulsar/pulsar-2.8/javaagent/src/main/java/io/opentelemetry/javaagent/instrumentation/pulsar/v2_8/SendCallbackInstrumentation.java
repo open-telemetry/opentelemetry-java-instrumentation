@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -16,7 +15,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarRequest;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -37,8 +35,7 @@ class SendCallbackInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // sendComplete declares Exception in Pulsar 2.8 and Throwable in Pulsar 4.0;
-    // advice accepts both as Throwable.
+    // Match both the public callback and the newer private single-argument completion fast path.
     transformer.applyAdviceToMethod(
         named("sendComplete")
             .and(takesArgument(0, namedOneOf("java.lang.Exception", "java.lang.Throwable"))),
@@ -49,31 +46,31 @@ class SendCallbackInstrumentation implements TypeInstrumentation {
   public static class SendCallbackSendCompleteAdvice {
 
     public static class AdviceScope {
-      private final PulsarRequest request;
-      private final Context currentContext;
+      private final SendCallbackData data;
       private final Scope currentScope;
 
-      private AdviceScope(PulsarRequest request, Context currentContext, Scope currentScope) {
-        this.request = request;
-        this.currentContext = currentContext;
+      private AdviceScope(SendCallbackData data, Scope currentScope) {
+        this.data = data;
         this.currentScope = currentScope;
       }
 
       @Nullable
       public static AdviceScope start(SendCallback callback) {
-        // Extract the Context and PulsarRequest from the SendCallback instance.
+        // Extract the operation from the SendCallback instance.
         SendCallbackData callbackData = VirtualFieldStore.takeSendCallbackData(callback);
         if (callbackData == null) {
           return null;
         }
 
-        Context currentContext = callbackData.context;
-        return new AdviceScope(callbackData.request, currentContext, currentContext.makeCurrent());
+        Context currentContext = callbackData.callbackCompletionContext();
+        return new AdviceScope(callbackData, currentContext.makeCurrent());
       }
 
-      public void end(@Nullable Throwable t) {
+      public void end(@Nullable Throwable error) {
         currentScope.close();
-        producerInstrumenter().end(currentContext, request, null, t);
+        if (error != null) {
+          data.end(error);
+        }
       }
     }
 
@@ -85,10 +82,9 @@ class SendCallbackInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Argument(0) @Nullable Throwable t,
-        @Advice.Enter @Nullable AdviceScope adviceScope) {
+        @Advice.Enter @Nullable AdviceScope adviceScope, @Advice.Thrown @Nullable Throwable error) {
       if (adviceScope != null) {
-        adviceScope.end(t);
+        adviceScope.end(error);
       }
     }
   }
