@@ -221,6 +221,17 @@ class CiBenchmarkTest(unittest.TestCase):
                 runner.measure()
             self.assertEqual([sample["label"] for sample in runner.samples], ["candidate", "control", "baseline"])
 
+    def test_eight_slice_command_selects_the_requested_half(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runner = self.runner(Path(directory))
+            runner.args.partition = 5
+            runner.args.muzzle_slices = 8
+            with patch.object(benchmark, "run", side_effect=self.fake_build) as execute:
+                runner.execute("candidate")
+            command = next(call.args[0] for call in execute.call_args_list if call.kwargs.get("log") is not None)
+            self.assertIn(":instrumentation:muzzle5", command)
+            self.assertIn("-PmuzzleSlices=8", command)
+
     def test_only_candidate_disables_configuration_cache_and_preserves_task_cache(self):
         with tempfile.TemporaryDirectory() as directory:
             runner = self.runner(Path(directory))

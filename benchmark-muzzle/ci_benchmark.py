@@ -352,6 +352,8 @@ class Comparison:
             ):
                 raise ValueError("Slice-discovery comparisons require identical sources/snapshots and other settings")
             self.identity["experiment"] = "slice-discovery"
+        if getattr(args, "muzzle_slices", None) is not None:
+            self.identity["muzzle_slices"] = args.muzzle_slices
         write_json(self.reports / "identity.json", self.identity)
         self.persist()
 
@@ -421,6 +423,8 @@ class Comparison:
             command.append(f"-Dorg.gradle.internal.http.idleConnectionTimeout={sample['http_connection_ttl_ms']}")
         if sample["discover_all"] is not None:
             command.append(f"-PmuzzleBenchmarkDiscoverAll={str(sample['discover_all']).lower()}")
+        if getattr(self.args, "muzzle_slices", None) is not None:
+            command.append(f"-PmuzzleSlices={self.args.muzzle_slices}")
         write_json(destination / "command.json", command)
         started = time.perf_counter()
         started_wall = int(time.time() * 1000)

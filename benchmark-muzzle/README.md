@@ -68,6 +68,9 @@ It does not freeze metadata or replay a precomputed task graph.
 Every assertion must execute successfully without assertion-result caching.
 Each records its task identity, pass/fail mode, exclusions, ordered dependency
 identities and hashes, and unresolved dependency outcomes.
+Seeded samples choose their bounds and shuffle from the pinned eligible
+version set. Releases above the pinned bound or rejected prereleases do not
+change that sample. Production's unseeded sampling is unchanged.
 The baseline is the workload reference. Candidate and control must produce
 identical records, including when candidate runs first.
 
@@ -201,6 +204,41 @@ build logic. Baseline and control set the benchmark-only
 This avoids comparing a baseline with cached build logic against a candidate
 that must compile changed build logic. Compatibility assertions, task caches,
 online dependencies and cold live metadata remain unchanged.
+
+## Four versus eight slices
+
+The slice-count comparison uses the same source revision and compiled build
+logic for both layouts. The source must support `-PmuzzleSlices=4` and
+`-PmuzzleSlices=8`. The repository default remains four until the layout
+change is selected for production.
+
+```sh
+gh workflow run muzzle-performance-comparison.yml \
+  --ref my-benchmark-branch -f candidate-mode=eight-slices \
+  -f baseline-ref=REVISION_SHA -f source-run=EARLIER_CI_BENCHMARK_RUN \
+  -f rounds=5 -f partitions='[1,2,3,4]'
+```
+
+Each round/group measures a four-slice baseline, an identical control, and
+the corresponding two eight-slice commands. For example, four-slice
+`muzzle2` must equal the union of eight-slice `muzzle2` and `muzzle6`.
+The four commands use independent checkouts and Gradle homes, and reverse
+order in even rounds. Five rounds use twenty jobs and eighty workload
+commands, not eighty jobs.
+
+Reports reject changed dependency records, overlapping or missing checks,
+changed metadata coverage, and different task-cache outcomes. Aggregate
+slice tasks themselves are excluded from task-outcome equality because
+the layouts intentionally contain different aggregate task names.
+Each round compares the maximum of four baseline commands with the maximum
+of eight candidate commands. This is not an observed Actions fan-out
+completion time or total PR time.
+
+Eight slices duplicate more startup, project configuration and shared
+prerequisites. They consume more runner time but do not require a larger
+persistent dependency cache. `rounds=1` and `partitions='[2]'` provide a
+functional calibration of one baseline group and its two halves, not a
+global performance claim.
 
 ## Disk preparation
 

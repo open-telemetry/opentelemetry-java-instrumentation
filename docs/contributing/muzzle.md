@@ -97,6 +97,9 @@ Repository CI runs four slices, `:instrumentation:muzzle1` through
 `:instrumentation:muzzle4`. Each slice discovers library versions and executes
 checks only for its assigned instrumentation projects. Multiple slices or individual
 module `muzzle` tasks can be requested together in one command.
+For slice-count experiments, `-PmuzzleSlices=8` registers eight slices instead.
+Both halves, such as `muzzle2` and `muzzle6`, cover the projects assigned to
+the corresponding four-slice `muzzle2` task.
 
 The muzzle plugin needs to be configured in the module's `.gradle` file.
 Example:

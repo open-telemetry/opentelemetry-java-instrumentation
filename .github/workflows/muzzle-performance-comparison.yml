@@ -47,6 +47,7 @@ on:
           - disk-preparation-control
           - network-profile
           - slice-discovery
+          - eight-slices
         default: standard
 
 permissions:
@@ -58,6 +59,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  eight-slices:
+    if: inputs.candidate-mode == 'eight-slices' && !inputs.profile-only && !inputs.dependency-cache
+    uses: ./.github/workflows/muzzle-slice-count.yml
+    with:
+      revision: ${{ inputs.baseline-ref }}
+      source-run: ${{ inputs.source-run }}
+      partitions: ${{ inputs.partitions }}
+      rounds: ${{ inputs.rounds }}
+
   disk-preparation:
     if: inputs.candidate-mode == 'disk-preparation' && !inputs.profile-only && !inputs.dependency-cache
     uses: ./.github/workflows/muzzle-preparation.yml
@@ -85,7 +95,7 @@ jobs:
       report-run: ${{ inputs.report-run }}
 
   prepare:
-    if: ${{ !inputs.dependency-cache && !inputs.profile-only && inputs.candidate-mode != 'disk-preparation' }}
+    if: ${{ !inputs.dependency-cache && !inputs.profile-only && inputs.candidate-mode != 'disk-preparation' && inputs.candidate-mode != 'eight-slices' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     outputs:

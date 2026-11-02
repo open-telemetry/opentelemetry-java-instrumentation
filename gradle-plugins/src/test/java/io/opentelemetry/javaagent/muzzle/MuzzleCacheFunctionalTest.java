@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.muzzle;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sun.net.httpserver.HttpServer;
@@ -190,6 +191,86 @@ class MuzzleCacheFunctionalTest {
   }
 
   @Test
+  void benchmarkSamplingIgnoresVersionsOutsideItsPinnedEligibleSet() throws IOException {
+    startRepository();
+    Path pinned = temp.resolve(".github/config/latest-dep-versions.json");
+    Files.createDirectories(pinned.getParent());
+    Files.writeString(pinned, "{\"fixture:library#+\":\"4.0\"}");
+    Path metadata = temp.resolve("repository/fixture/library/maven-metadata.xml");
+    Files.writeString(
+        metadata,
+        "<metadata><versioning><versions><version>1.0</version><version>2.0</version>"
+            + "<version>3.0</version><version>4.0</version></versions></versioning></metadata>");
+    Path first = fixture("sampling-first");
+    Path firstBuild = first.resolve("build.gradle");
+    Files.writeString(
+        firstBuild,
+        Files.readString(firstBuild).replace("versions.set('[1.0]')", "versions.set('[1.0,)')"));
+    BuildResult before =
+        build(first, false, "--dry-run", "-Dotel.javaagent.muzzle.versions.limit=3");
+    List<String> expected =
+        before
+            .getOutput()
+            .lines()
+            .filter(line -> line.startsWith(":muzzle-Assert"))
+            .sorted()
+            .toList();
+    assertThat(expected)
+        .hasSize(3)
+        .contains(
+            ":muzzle-AssertPass-fixture-library-1.0 SKIPPED",
+            ":muzzle-AssertPass-fixture-library-4.0 SKIPPED");
+    Files.writeString(
+        metadata,
+        "<metadata><versioning><versions><version>1.0</version><version>2.0</version>"
+            + "<version>2.5-rc1</version><version>3.0</version><version>4.0</version>"
+            + "<version>5.0</version><version>6.0</version></versions></versioning></metadata>");
+    Path second = fixture("sampling-second");
+    Path secondBuild = second.resolve("build.gradle");
+    Files.writeString(
+        secondBuild,
+        Files.readString(secondBuild).replace("versions.set('[1.0]')", "versions.set('[1.0,)')"));
+    BuildResult after =
+        build(second, false, "--dry-run", "-Dotel.javaagent.muzzle.versions.limit=3");
+    assertThat(
+            after
+                .getOutput()
+                .lines()
+                .filter(line -> line.startsWith(":muzzle-Assert"))
+                .sorted()
+                .toList())
+        .containsExactlyElementsOf(expected);
+  }
+
+  @Test
+  void eightSlicesSplitFourSliceCoverageWithoutDroppingChecks() throws IOException {
+    startRepository();
+    for (String name : asList("b", "c", "d", "e", "f", "g", "h")) {
+      publishLibrary("module-" + name);
+    }
+    Path project = slicedFixture(8);
+    BuildResult four = slicedRunner(project, ":instrumentation:muzzle1").build();
+    assertThat(four.getTasks())
+        .filteredOn(task -> task.getPath().contains(":muzzle-Assert"))
+        .extracting(BuildTask::getPath)
+        .containsExactlyInAnyOrder(
+            ":instrumentation:a:muzzle-AssertPass-fixture-library-1.0",
+            ":instrumentation:e:muzzle-AssertPass-fixture-module-e-1.0");
+    BuildResult first =
+        slicedRunner(project, ":instrumentation:muzzle1", "-PmuzzleSlices=8").build();
+    BuildResult fifth =
+        slicedRunner(project, ":instrumentation:muzzle5", "-PmuzzleSlices=8").build();
+    assertThat(first.getTasks())
+        .filteredOn(task -> task.getPath().contains(":muzzle-Assert"))
+        .extracting(BuildTask::getPath)
+        .containsExactly(":instrumentation:a:muzzle-AssertPass-fixture-library-1.0");
+    assertThat(fifth.getTasks())
+        .filteredOn(task -> task.getPath().contains(":muzzle-Assert"))
+        .extracting(BuildTask::getPath)
+        .containsExactly(":instrumentation:e:muzzle-AssertPass-fixture-module-e-1.0");
+  }
+
+  @Test
   void multipleSlicesAndDirectTasksPreserveSelectedChecks() throws IOException {
     startRepository();
     publishLibrary("module-b");
@@ -245,28 +326,32 @@ class MuzzleCacheFunctionalTest {
   }
 
   private Path slicedFixture() throws IOException {
+    return slicedFixture(4);
+  }
+
+  private Path slicedFixture(int projects) throws IOException {
     Path project = temp.resolve("sliced");
     fixture("sliced/instrumentation/a", true, "library");
-    for (String name : asList("b", "c", "d")) {
+    List<String> names =
+        projects == 4 ? asList("a", "b", "c", "d") : asList("a", "b", "c", "d", "e", "f", "g", "h");
+    for (String name : names.subList(1, names.size())) {
       fixture("sliced/instrumentation/" + name, true, "module-" + name);
     }
     Files.writeString(
         project.resolve("settings.gradle"),
-        """
-        rootProject.name = 'slice-fixture'
-        include 'instrumentation', 'instrumentation:a', 'instrumentation:b',
-          'instrumentation:c', 'instrumentation:d'
-        """);
+        "rootProject.name = 'slice-fixture'\ninclude 'instrumentation', "
+            + names.stream().map(name -> "'instrumentation:" + name + "'").collect(joining(", ")));
     Files.writeString(
         project.resolve("build.gradle"),
         """
         plugins { id 'io.opentelemetry.instrumentation.muzzle-check' apply false }
         project(':instrumentation') {
-          def slices = (1..4).collect { tasks.register("muzzle${it}") }
+          def count = providers.gradleProperty('muzzleSlices').map { it.toInteger() }.getOrElse(4)
+          def slices = (1..count).collect { tasks.register("muzzle${it}") }
           def counter = 0
           subprojects { child ->
             child.plugins.withId('io.opentelemetry.instrumentation.muzzle-check') {
-              slices[counter++ % 4].configure { dependsOn(child.tasks.named('muzzle')) }
+              slices[counter++ % count].configure { dependsOn(child.tasks.named('muzzle')) }
             }
           }
         }

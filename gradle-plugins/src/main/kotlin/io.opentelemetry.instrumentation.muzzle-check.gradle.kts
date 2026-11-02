@@ -572,16 +572,19 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
 fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>, upperBound: Version?) = sequence {
   val predicate = AcceptableVersions(skipVersions)
   fun accept(version: Version?): Boolean = version != null && predicate.test(version) && (upperBound == null || version <= upperBound)
-  if (accept(range.lowestVersion)) {
-    yield(range.lowestVersion.toString())
+  val seed = muzzleBenchmarkSeed
+  val versions = if (seed == null) range.versions else range.versions.filter(::accept).sorted()
+  val lowest = if (seed == null) range.lowestVersion else versions.firstOrNull()
+  val highest = if (seed == null) range.highestVersion else versions.lastOrNull()
+  if (accept(lowest)) {
+    yield(lowest.toString())
   }
-  if (accept(range.highestVersion)) {
-    yield(range.highestVersion.toString())
+  if (accept(highest)) {
+    yield(highest.toString())
   }
 
-  val seed = muzzleBenchmarkSeed
   val random = if (seed == null) Random.Default else MuzzleBenchmarkSupport.randomFor("$path:${range.request.artifact}", seed)
-  val copy: List<Version> = range.versions.shuffled(random)
+  val copy: List<Version> = versions.shuffled(random)
   for (version in copy) {
     if (accept(version)) {
       yield(version.toString())
