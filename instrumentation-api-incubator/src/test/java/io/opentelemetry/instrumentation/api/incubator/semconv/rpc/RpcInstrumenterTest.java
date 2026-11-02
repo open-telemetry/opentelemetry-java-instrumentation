@@ -44,7 +44,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 class RpcInstrumenterTest {
 
   private static final double[] DURATION_BUCKETS = {
-    0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5, 10, 50, 100
+    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10,
+    30, 60
   };
 
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
