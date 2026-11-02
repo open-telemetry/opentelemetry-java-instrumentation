@@ -10,13 +10,19 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.eventbus.v3_0.Ver
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.vertx.core.MultiMap;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -28,6 +34,8 @@ import net.bytebuddy.matcher.ElementMatcher;
  */
 class CreateMessageInstrumentation implements TypeInstrumentation {
 
+  private static final String MULTI_MAP_CLASS_NAME = "io.vertx.core.MultiMap";
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return extendsClass(named("io.vertx.core.eventbus.impl.EventBusImpl"));
@@ -35,23 +43,86 @@ class CreateMessageInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
+    ElementMatcher.Junction<MethodDescription> createMessage =
         isMethod()
             .and(named("createMessage"))
-            .and(returns(named("io.vertx.core.eventbus.impl.MessageImpl"))),
+            .and(returns(named("io.vertx.core.eventbus.impl.MessageImpl")));
+    // Vert.x 4.5 added an argument before the headers
+    transformer.applyAdviceToMethod(
+        createMessage.and(takesArgument(2, named(MULTI_MAP_CLASS_NAME))),
         getClass().getName() + "$CreateMessageAdvice");
+    transformer.applyAdviceToMethod(
+        createMessage.and(takesArgument(3, named(MULTI_MAP_CLASS_NAME))),
+        getClass().getName() + "$CreateMessage45Advice");
+  }
+
+  public static class MessageHeaders {
+
+    /**
+     * The headers of a {@code DeliveryOptions} are handed to the message as-is and the options can
+     * be reused. Injecting into them would leave optional propagation fields that a later send
+     * doesn't write, like baggage, in place for that send. So the message is created without them,
+     * which makes it allocate its own headers, and they are copied over in {@link #inject}.
+     *
+     * @return the headers to create the message with, and the headers to copy over to it
+     */
+    public static Object[] isolate(EventBus eventBus, @Nullable MultiMap headers) {
+      if (headers == null || NativeTracing.isEnabled(eventBus)) {
+        return new Object[] {headers, null};
+      }
+      return new Object[] {null, headers};
+    }
+
+    public static void inject(
+        EventBus eventBus, Object returnValue, @Nullable MultiMap headersToCopy) {
+      if (!(returnValue instanceof Message) || NativeTracing.isEnabled(eventBus)) {
+        return;
+      }
+      Message<?> message = (Message<?>) returnValue;
+      if (headersToCopy != null) {
+        message.headers().addAll(headersToCopy);
+      }
+      propagator().inject(Context.current(), message, MessageHeaderInjector.INSTANCE);
+    }
+
+    private MessageHeaders() {}
   }
 
   @SuppressWarnings("unused")
   public static class CreateMessageAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(value = 2, index = 0))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Object[] onEnter(
+        @Advice.This EventBus eventBus, @Advice.Argument(2) @Nullable MultiMap headers) {
+      return MessageHeaders.isolate(eventBus, headers);
+    }
+
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.This EventBus eventBus, @Advice.Return Object returnValue) {
-      if (!(returnValue instanceof Message) || NativeTracing.isEnabled(eventBus)) {
-        return;
-      }
-      propagator()
-          .inject(Context.current(), (Message<?>) returnValue, MessageHeaderInjector.INSTANCE);
+    public static void onExit(
+        @Advice.This EventBus eventBus,
+        @Advice.Return Object returnValue,
+        @Advice.Enter Object[] enter) {
+      MessageHeaders.inject(eventBus, returnValue, (MultiMap) enter[1]);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class CreateMessage45Advice {
+
+    @AssignReturned.ToArguments(@ToArgument(value = 3, index = 0))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Object[] onEnter(
+        @Advice.This EventBus eventBus, @Advice.Argument(3) @Nullable MultiMap headers) {
+      return MessageHeaders.isolate(eventBus, headers);
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This EventBus eventBus,
+        @Advice.Return Object returnValue,
+        @Advice.Enter Object[] enter) {
+      MessageHeaders.inject(eventBus, returnValue, (MultiMap) enter[1]);
     }
   }
 }

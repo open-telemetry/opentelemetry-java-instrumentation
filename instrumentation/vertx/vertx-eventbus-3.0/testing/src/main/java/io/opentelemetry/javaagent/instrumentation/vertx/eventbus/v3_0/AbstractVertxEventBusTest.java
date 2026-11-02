@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -34,6 +35,8 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.eventbus.MessageProducer;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -212,9 +215,7 @@ public abstract class AbstractVertxEventBusTest {
           received.countDown();
         });
 
-    // A populated DeliveryOptions header map is handed to the message as-is, so a reused instance
-    // still holds the previous send's trace headers. Each consumer must still join its own
-    // producer's trace.
+    // Each consumer must join its own producer's trace when a populated DeliveryOptions is reused.
     DeliveryOptions options = new DeliveryOptions().addHeader("application-header", "value");
     testing.runWithSpan("parent1", () -> eventBus.send(address, "first", options));
     testing.runWithSpan("parent2", () -> eventBus.send(address, "second", options));
@@ -253,6 +254,44 @@ public abstract class AbstractVertxEventBusTest {
 
     testing.waitAndAssertTraces(
         trace -> assertProducerConsumerTrace(trace, "parent", "send", address));
+  }
+
+  @Test
+  void reusedDeliveryOptionsDoNotLeakBaggage() throws InterruptedException {
+    String address = "address.reuse.baggage." + System.nanoTime();
+    EventBus eventBus = vertx.eventBus();
+
+    CountDownLatch received = new CountDownLatch(2);
+    Map<Object, Baggage> baggage = new ConcurrentHashMap<>();
+    Map<Object, String> applicationHeaders = new ConcurrentHashMap<>();
+    eventBus.consumer(
+        address,
+        message -> {
+          baggage.put(message.body(), Baggage.current());
+          applicationHeaders.put(message.body(), message.headers().get("application-header"));
+          testing.runWithSpan("handler-inner", () -> {});
+          received.countDown();
+        });
+
+    // the propagator writes nothing for the second send, because its baggage is empty
+    DeliveryOptions options = new DeliveryOptions().addHeader("application-header", "value");
+    try (Scope ignored = Baggage.builder().put("tenant", "A").build().makeCurrent()) {
+      testing.runWithSpan("parent1", () -> eventBus.send(address, "first", options));
+    }
+    testing.runWithSpan("parent2", () -> eventBus.send(address, "second", options));
+
+    assertThat(received.await(10, SECONDS)).isTrue();
+
+    assertThat(baggage.get("first").getEntryValue("tenant")).isEqualTo("A");
+    assertThat(baggage.get("second").getEntryValue("tenant")).isNull();
+    assertThat(applicationHeaders).containsEntry("first", "value").containsEntry("second", "value");
+    // the application's options must not be changed by the instrumentation
+    assertThat(options.getHeaders().names()).containsExactly("application-header");
+
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("parent1", "parent2"),
+        trace -> assertProducerConsumerTrace(trace, "parent1", "send", address),
+        trace -> assertProducerConsumerTrace(trace, "parent2", "send", address));
   }
 
   @Test

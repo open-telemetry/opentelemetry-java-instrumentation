@@ -18,9 +18,8 @@ enum MessageHeaderInjector implements TextMapSetter<Message<?>> {
       return;
     }
     // Message.headers() lazily creates a non-null MultiMap on MessageImpl across
-    // all Vert.x versions (3.0+), so it is always safe to write here. The MultiMap may be the one
-    // from a user's DeliveryOptions, which can be reused across sends, so overwrite any stale
-    // value instead of appending to it.
+    // all Vert.x versions (3.0+), so it is always safe to write here. The application may have
+    // supplied the same header, so overwrite its value instead of appending to it.
     carrier.headers().set(key, value);
   }
 }
