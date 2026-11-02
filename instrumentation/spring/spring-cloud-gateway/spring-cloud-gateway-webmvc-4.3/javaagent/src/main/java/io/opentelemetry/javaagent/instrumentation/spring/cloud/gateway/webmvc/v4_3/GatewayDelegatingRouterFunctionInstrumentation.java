@@ -31,8 +31,8 @@ class GatewayDelegatingRouterFunctionInstrumentation implements TypeInstrumentat
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("route"))
-            .and(takesArgument(0, named("org.springframework.web.servlet.function.ServerRequest")))
-            .and(takesArguments(1)),
+            .and(takesArguments(1))
+            .and(takesArgument(0, named("org.springframework.web.servlet.function.ServerRequest"))),
         getClass().getName() + "$RouteAdvice");
   }
 

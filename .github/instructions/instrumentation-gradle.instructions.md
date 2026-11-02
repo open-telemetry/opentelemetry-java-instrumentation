@@ -40,10 +40,13 @@ or test failure that CI will report.
   `javaagent/build.gradle.kts`. The convention plugin also supplies `javaagent-bootstrap`;
   an explicit `compileOnly` dependency on it is redundant.
 - Every explicitly registered custom `Test` task must set `testClassesDirs` and `classpath`,
-  and be included in `check`; without these it can pass without running any tests. For a
-  variant of a custom `JvmTestSuite`, preserve source-suite JVM settings and create a variant
-  only for suites exercising that behavior. A filtered test task copied to an irrelevant
-  suite can select no tests.
+  and be included in `check`; without these it can pass without running any tests. For a custom
+  `JvmTestSuite`, use `executions.configureEach` for settings shared by its default execution and
+  variants, `executions.configureDefault` for baseline-only settings, and `executions.register` for
+  named variants. This does not create another default task, compilation, classpath, or source set.
+  Keep `tasks.test` appropriate for standalone single-test-task projects. Preserve source-suite JVM
+  settings and create variants only for suites exercising that behavior. A filtered test task copied
+  to an irrelevant suite can select no tests.
 - Do not add equivalent flat/YAML behavior variants or repeat shared-helper defaults, fallback,
   and precedence in every caller. Retain variants exercising distinct configuration paths or behavior.
   Remove unused fixtures, dependencies, task wiring, and metadata-collection inputs with redundant
@@ -52,13 +55,10 @@ or test failure that CI will report.
   of the same coordinate does not test both versions: Gradle resolves one dependency graph,
   normally selecting the higher version. Exercise the newer runtime in a wired version-specific
   test suite.
-- Inspect test sources before requiring `testcontainersBuildService`; a transitive dependency
-  alone is not enough. In projects that use Testcontainers, register it once for all test tasks,
-  including container-free variants. Narrower registration requires a demonstrated scheduling
-  problem.
-- Prefer `tasks.test` for single-test-task projects. Use `withType<Test>().configureEach` for
-  configuration shared by multiple explicitly declared test tasks or JVM test suites.
-  Implicit `latestDepTest` does not count. Keep unrelated JVM settings and properties scoped.
+- Apply `otel.testcontainers-testing` in projects whose tests use Testcontainers, including through
+  shared fixtures; a transitive dependency alone is not enough. The plugin limits all `Test` tasks
+  in the project, including container-free suites and variants. Use narrower scheduling only for a
+  demonstrated problem, and keep unrelated test settings scoped to the tasks that need them.
 - Check metadata collection when its wiring or collected telemetry changes, not as unrelated
   cleanup. Collect default telemetry and supported non-default telemetry modes. Register
   representative tasks in `.github/scripts/instrumentations.sh` covering each profile's

@@ -45,7 +45,7 @@ import org.objectweb.asm.Type;
  *       ↑ └─────── AdviceBootstrapDispatcher ─ ↑ ──→ └────────────── {@link AdviceBootstrap#bootstrap}
  *     Ext/Platform CL               ↑          │                        ╷
  *       ↑                           ╷          │                        ↓
- *     System CL                     ╷          │        {@link IndyModuleRegistry#getInstrumentationClassLoader(String, ClassLoader)}
+ *     System CL                     ╷          │          {@link InstrumentationClassLoaderRegistry#getInstrumentationClassLoader(String, ClassLoader)}
  *       ↑                           ╷          │                        ╷
  *     Common               linking of CallSite │                        ╷
  *     ↑    ↑             (on first invocation) │                        ╷
@@ -180,7 +180,7 @@ public class AdviceBootstrap {
       }
 
       InstrumentationModuleClassLoader instrumentationClassLoader =
-          IndyModuleRegistry.getInstrumentationClassLoader(
+          InstrumentationClassLoaderRegistry.getInstrumentationClassLoader(
               moduleClassName, lookup.lookupClass().getClassLoader());
 
       // Advices are not inlined. They are loaded as normal classes by the
@@ -213,7 +213,7 @@ public class AdviceBootstrap {
     }
   }
 
-  static Advice.BootstrapArgumentResolver.Factory createBootstrapArgumentResolverFactory(
+  public static Advice.BootstrapArgumentResolver.Factory createBootstrapArgumentResolverFactory(
       InstrumentationModule instrumentationModule) {
     String moduleClassName = instrumentationModule.getClass().getName();
     return (adviceMethod, exit) ->

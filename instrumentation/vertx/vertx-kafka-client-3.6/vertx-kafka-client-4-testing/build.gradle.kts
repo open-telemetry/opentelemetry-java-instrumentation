@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-testing")
+  id("otel.testcontainers-testing")
 }
 
 dependencies {
@@ -41,7 +42,6 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 

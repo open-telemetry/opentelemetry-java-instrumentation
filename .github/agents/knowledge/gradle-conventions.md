@@ -406,53 +406,23 @@ Any test task whose tests use Testcontainers **must** declare:
 usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 ```
 
-Place the declaration in `withType<Test>().configureEach` when **all** test tasks in the
-module use Testcontainers **and** the module has multiple test tasks. When the module has
-only a single test task, put the declaration directly inside `tasks.test { ... }` — do not
-introduce a `withType<Test>().configureEach` block just for `usesService`. Otherwise place
-it on **only** the specific task(s) that use Testcontainers.
+Check actual test sources (including shared testing modules) for Testcontainers types such as
+`GenericContainer` and `LocalStackContainer`; a dependency declaration alone is not evidence that
+the tests use Testcontainers.
 
-**Do not over-apply.** Adding `usesService` to a task that does not use Testcontainers
-unnecessarily throttles it against the 2-slot concurrency limit. A module may have some
-suites that use Testcontainers (e.g., `LocalStackContainer`) and others that use in-process
-test servers (e.g., ElasticMQ `SQSRestServerBuilder`, MockWebServer, WireMock). Only the
-Testcontainers-using suites need the declaration.
+Keep shared test configuration in one declaration rather than selecting tasks or variants
+individually. In a `JvmTestSuite` execution block, use `executions.configureEach` for settings shared
+by the default execution and variants, `executions.configureDefault` for settings limited to the
+default execution, and `executions.register` for named variants. A shared declaration can include
+container-free variants; do not retain a global `tasks.withType<Test>().configureEach` block merely
+to include them. Use `tasks.withType<Test>().configureEach` when the configuration genuinely spans
+other suites or independent `Test` tasks outside the selected suite. Keep `tasks.test { ... }`
+appropriate for standalone single-test-task projects.
 
-**How to detect a missing declaration:** if a test task's source set (or the shared testing
-module it extends) imports or instantiates Testcontainers types (`GenericContainer`,
-`LocalStackContainer`, etc.), it needs `usesService`. Check the actual test sources — do not
-rely solely on the presence of an `org.testcontainers:*` dependency in `build.gradle.kts`,
-because the dependency may only be used by some suites in the module.
-
-## Prefer `withType<Test>().configureEach` (ONLY when multiple test tasks exist)
-
-When a module has custom test tasks (e.g., `testStableSemconv`), shared configuration
-(system properties, JVM args, `usesService` declarations, etc.) that applies to **all**
-test tasks should be set once in a `withType<Test>().configureEach` block, not repeated
-on each individual task.
-
-If a property or JVM arg is moved into `withType<Test>().configureEach`, remove any now-redundant
-copies from individual tasks unless a task intentionally overrides the shared value.
-
-**When the module has only a single test task, prefer the simple `tasks.test { ... }` form.**
-Do **not** convert `tasks.test { ... }` to `withType<Test>().configureEach` in single-test-task
-modules; keep the simple form. The `withType<Test>().configureEach`
-form is only justified when the same `build.gradle.kts` actually registers additional `Test` tasks.
-
-**`latestDepTest` does not count as a second test task for this rule.** It is registered
-implicitly by the convention plugin when `testLatestDeps` is set, and it inherits the
-configuration of `tasks.test`. A module with only a `tasks.test { ... }` block and no
-`by registering(Test::class)` declarations is a single-test-task module — leave it alone
-(use the simple form) even if `testLatestDeps = true`.
-
-Only consider converting to `withType<Test>().configureEach` when the **same
-`build.gradle.kts`** explicitly registers one or more additional `Test` tasks via
-`val foo by registering(Test::class)`.
-
-**How to spot violations:** If `build.gradle.kts` has both a `test { ... }` block and an
-explicit `by registering(Test::class)` custom test task (e.g., `testStableSemconv`), check
-whether any `systemProperty(...)` or `jvmArgs(...)` calls appear inside the `test { }` block
-that should apply to all tasks. If so, move them to `withType<Test>().configureEach`.
+The convention plugin's implicit `latestDepTest` does not by itself require global test
+configuration; it inherits the default test task configuration. Keep baseline-only filters and
+other task-specific settings in `executions.configureDefault`, and keep variant-only settings on
+their registered execution.
 
 ```kotlin
 tasks {

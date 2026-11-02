@@ -56,7 +56,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
         named("removeLast").and(returns(named("io.netty.channel.ChannelHandler"))),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveLastAdvice");
     transformer.applyAdviceToMethod(
-        named("addAfter").and(takesArgument(1, String.class)).and(takesArguments(4)),
+        named("addAfter").and(takesArguments(4)).and(takesArgument(1, String.class)),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$AddAfterAdvice");
     transformer.applyAdviceToMethod(
         named("toMap").and(takesArguments(0)).and(returns(Map.class)),
