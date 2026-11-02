@@ -13,7 +13,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import java.lang.reflect.Constructor;
@@ -25,7 +24,6 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
-import org.reactivestreams.Subscription;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.metadata.ChatGenerationMetadata;
 import org.springframework.ai.chat.metadata.ChatResponseMetadata;
@@ -34,9 +32,7 @@ import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.content.Media;
-import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.FluxOperator;
 import reactor.util.context.ContextView;
 
 class SpringAiStreamTracing {
@@ -80,7 +76,7 @@ class SpringAiStreamTracing {
             .doOnError(error -> end(chatInstrumenter, context, request, state, error, ended))
             .doOnComplete(() -> end(chatInstrumenter, context, request, state, null, ended))
             .doOnCancel(() -> end(chatInstrumenter, context, request, state, null, ended));
-    return new StreamTracingFlux(traced, context, parentContext);
+    return ContextPropagationOperator.runWithContext(traced, context, parentContext);
   }
 
   private static void end(
@@ -114,90 +110,6 @@ class SpringAiStreamTracing {
       instrumenter.end(context, request, response, error);
     } catch (Throwable t) {
       logger.log(FINE, "Failed to end Spring AI stream instrumentation", t);
-    }
-  }
-
-  private static final class StreamTracingFlux extends FluxOperator<ChatResponse, ChatResponse> {
-    private final Context context;
-    private final Context parentContext;
-
-    private StreamTracingFlux(Flux<ChatResponse> source, Context context, Context parentContext) {
-      super(source);
-      this.context = context;
-      this.parentContext = parentContext;
-    }
-
-    @Override
-    public void subscribe(CoreSubscriber<? super ChatResponse> actual) {
-      // Reactor's context alone does not scope subscription-time provider calls.
-      try (Scope ignored = context.makeCurrent()) {
-        source.subscribe(new ParentContextSubscriber(actual, context, parentContext));
-      }
-    }
-  }
-
-  private static final class ParentContextSubscriber implements CoreSubscriber<ChatResponse> {
-    private final CoreSubscriber<? super ChatResponse> actual;
-    private final Context context;
-    private final Context parentContext;
-    private final reactor.util.context.Context reactorContext;
-
-    private ParentContextSubscriber(
-        CoreSubscriber<? super ChatResponse> actual, Context context, Context parentContext) {
-      this.actual = actual;
-      this.context = context;
-      this.parentContext = parentContext;
-      this.reactorContext =
-          ContextPropagationOperator.storeOpenTelemetryContext(actual.currentContext(), context);
-    }
-
-    @Override
-    public void onSubscribe(Subscription subscription) {
-      Subscription scopedSubscription =
-          new Subscription() {
-            @Override
-            public void request(long n) {
-              try (Scope ignored = context.makeCurrent()) {
-                subscription.request(n);
-              }
-            }
-
-            @Override
-            public void cancel() {
-              try (Scope ignored = context.makeCurrent()) {
-                subscription.cancel();
-              }
-            }
-          };
-      try (Scope ignored = parentContext.makeCurrent()) {
-        actual.onSubscribe(scopedSubscription);
-      }
-    }
-
-    @Override
-    public void onNext(ChatResponse response) {
-      try (Scope ignored = parentContext.makeCurrent()) {
-        actual.onNext(response);
-      }
-    }
-
-    @Override
-    public void onError(Throwable t) {
-      try (Scope ignored = parentContext.makeCurrent()) {
-        actual.onError(t);
-      }
-    }
-
-    @Override
-    public void onComplete() {
-      try (Scope ignored = parentContext.makeCurrent()) {
-        actual.onComplete();
-      }
-    }
-
-    @Override
-    public reactor.util.context.Context currentContext() {
-      return reactorContext;
     }
   }
 
