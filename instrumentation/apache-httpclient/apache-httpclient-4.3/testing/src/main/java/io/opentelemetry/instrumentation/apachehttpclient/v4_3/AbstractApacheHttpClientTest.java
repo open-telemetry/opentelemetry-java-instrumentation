@@ -5,24 +5,11 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
-import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -43,7 +30,6 @@ import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.protocol.BasicHttpContext;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -141,29 +127,6 @@ public abstract class AbstractApacheHttpClientTest {
       optionsBuilder.setTestProxy(true).setExpectProxyNetworkPeerAttributes(false);
     }
 
-    @Test
-    void requestWithInetAddress() throws IOException {
-      int serverPort = resolveAddress("/success").getPort();
-      HttpHost target =
-          new HttpHost(
-              InetAddress.getByAddress("127.0.0.1", new byte[] {127, 0, 0, 1}), serverPort, "http");
-      URI expectedUri = URI.create(target.toURI() + "/success");
-
-      int responseCode =
-          getClient(expectedUri)
-              .execute(
-                  target,
-                  new BasicHttpRequest("GET", "/success"),
-                  AbstractApacheHttpClientTest::getResponseCode);
-      assertThat(responseCode).isEqualTo(200);
-
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> assertClientSpanWithoutPeer(span, expectedUri),
-                  span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
-    }
-
     @Override
     public int sendRequestWithProxy(
         BasicHttpRequest request,
@@ -172,11 +135,13 @@ public abstract class AbstractApacheHttpClientTest {
         Map<String, String> headers,
         InetSocketAddress proxyAddress)
         throws IOException {
-      // Keep an explicit address so the regression exercises target-derived peer attributes.
-      // Preserve the hostname to avoid reverse DNS when HttpCore 4.4 reads it.
-      InetAddress targetAddress =
-          InetAddress.getByAddress(
-              uri.getHost(), InetAddress.getByName(uri.getHost()).getAddress());
+      String host = uri.getHost();
+      byte[] addressBytes = InetAddress.getByName(host).getAddress();
+
+      // Store the host to avoid reverse DNS when HttpCore 4.4 calls InetAddress.getHostName().
+      InetAddress targetAddress = InetAddress.getByAddress(host, addressBytes);
+
+      // Use an explicit destination IP to catch it being incorrectly reported as the network peer.
       HttpHost target = new HttpHost(targetAddress, uri.getPort(), uri.getScheme());
 
       HttpClientContext context = HttpClientContext.create();
@@ -190,21 +155,6 @@ public abstract class AbstractApacheHttpClientTest {
 
       return getClient(uri)
           .execute(target, request, AbstractApacheHttpClientTest::getResponseCode, context);
-    }
-
-    private SpanDataAssert assertClientSpanWithoutPeer(SpanDataAssert span, URI uri) {
-      return assertClientSpan(span, uri, "GET", 200, null)
-          .hasNoParent()
-          .hasStatus(StatusData.unset())
-          .hasAttributesSatisfyingExactly(
-              equalTo(HTTP_REQUEST_METHOD, "GET"),
-              equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-              equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-              equalTo(SERVER_ADDRESS, uri.getHost()),
-              equalTo(SERVER_PORT, uri.getPort()),
-              equalTo(URL_FULL, uri.toString()),
-              equalTo(NETWORK_PEER_ADDRESS, null),
-              equalTo(NETWORK_PEER_PORT, null));
     }
 
     @Override
