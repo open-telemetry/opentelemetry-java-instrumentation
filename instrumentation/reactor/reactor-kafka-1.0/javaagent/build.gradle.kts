@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.testcontainers-testing")
@@ -89,14 +92,6 @@ testing {
           implementation("io.projectreactor:reactor-core:3.4.+")
         }
       }
-
-      targets {
-        all {
-          testTask.configure {
-            systemProperty("hasConsumerGroup", true)
-          }
-        }
-      }
     }
 
     register<JvmTestSuite>("testV1_3_21") {
@@ -108,89 +103,49 @@ testing {
           implementation("io.projectreactor:reactor-core:3.4.+")
         }
       }
-
-      targets {
-        all {
-          testTask.configure {
-            systemProperty("hasConsumerGroup", true)
-          }
-        }
-      }
     }
   }
 }
 
+testing.suites.executions("test") {
+  configureEach {
+    systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
+  }
+
+  configureDefault {
+    telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+  }
+
+  register("Experimental") {
+    telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
+    enabled = tasks.named<Test>("test").get().enabled
+  }
+
+  register("ReceiveSpansDisabled") {
+    telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "false")
+    enabled = tasks.named<Test>("test").get().enabled
+  }
+}
+
+testing.suites.executions("testV1_3_3", "testV1_3_21") {
+  configureEach {
+    systemProperty("hasConsumerGroup", true)
+  }
+
+  register("Experimental") {
+    telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
+    enabled = tasks.named<Test>(name.removeSuffix("Experimental")).get().enabled
+  }
+
+  register("ReceiveTelemetry") {
+    telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    enabled = tasks.named<Test>(name.removeSuffix("ReceiveTelemetry")).get().enabled
+  }
+}
+
 tasks {
-  val agentTestSuites = testing.suites.withType(JvmTestSuite::class)
-    .matching { !it.name.endsWith("unitTests", ignoreCase = true) }
-
-  val experimentalSuites = agentTestSuites
-    .map { suite ->
-      register<Test>("${suite.name}Experimental") {
-        val sourceTask = named<Test>(suite.name).get()
-        setJvmArgs(sourceTask.jvmArgs)
-        setSystemProperties(sourceTask.systemProperties)
-
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        val experimentalConfig = "otel.instrumentation.kafka.experimental-span-attributes=true"
-        jvmArgs("-D$experimentalConfig")
-        systemProperty(
-          "metadataConfig",
-          listOfNotNull(sourceTask.systemProperties["metadataConfig"], experimentalConfig).joinToString(","),
-        )
-        isEnabled = sourceTask.enabled
-      }
-    }
-
-  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false",
-    )
-  }
-
-  val receiveTelemetrySuites = agentTestSuites.matching { it.name != "test" }
-    .map { suite ->
-      register<Test>("${suite.name}ReceiveTelemetry") {
-        val sourceTask = named<Test>(suite.name).get()
-        setJvmArgs(sourceTask.jvmArgs)
-        setSystemProperties(sourceTask.systemProperties)
-
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        val receiveConfig = "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true"
-        jvmArgs("-D$receiveConfig")
-        systemProperty(
-          "metadataConfig",
-          listOfNotNull(sourceTask.systemProperties["metadataConfig"], receiveConfig).joinToString(","),
-        )
-        isEnabled = sourceTask.enabled
-      }
-    }
-
-  test {
-    systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-    )
-  }
-
   check {
-    dependsOn(
-      testing.suites,
-      experimentalSuites,
-      testReceiveSpansDisabled,
-      receiveTelemetrySuites,
-    )
+    dependsOn(testing.suites)
   }
 }

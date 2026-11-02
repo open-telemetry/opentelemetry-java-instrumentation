@@ -1,4 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -159,99 +161,62 @@ testing {
   }
 }
 
-tasks {
-  val testExperimentalSqs = register<Test>("testExperimentalSqs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
+testing.suites.executions("test") {
+  register("ExperimentalSqs") {
     filter.includeTestsMatching("Aws2SqsTracingTest")
     systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", "true")
     systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
   }
 
-  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
+  register("ReceiveSpansDisabled") {
     filter {
       includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
     include("**/Aws2SqsSuppressReceiveSpansTest.*")
   }
 
-  test {
+  configureDefault {
     filter {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
   }
 
+  register("ExperimentalAttributes") {
+    filter.excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+    telemetryConfig("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+  }
+
+  register("IndividualHttpErrors") {
+    filter.includeTestsMatching("Aws2ClientRecordHttpErrorTest")
+    telemetryConfig("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
+  }
+
+  register("ReceiveTelemetry") {
+    filter.includeTestsMatching("Aws2SqsTracingTest")
+    telemetryConfig("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+  }
+}
+
+testing.suites.executions("testBedrockRuntime") {
+  register("CaptureMessageContent") {
+    telemetryConfig("otel.instrumentation.genai.capture-message-content", "true")
+  }
+}
+
+testing.suites.executions("testRdsData") {
+  register("ExperimentalAttributes") {
+    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+  }
+}
+
+tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testExperimentalAttributes = register<Test>("testExperimentalAttributes") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter.excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.aws-sdk.experimental-span-attributes=true",
-    )
-  }
-
-  val testIndividualHttpErrors = register<Test>("testIndividualHttpErrors") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter.includeTestsMatching("Aws2ClientRecordHttpErrorTest")
-    systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.aws-sdk.experimental-record-individual-http-error=true",
-    )
-  }
-
-  val testReceiveTelemetry = register<Test>("testReceiveTelemetry") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter.includeTestsMatching("Aws2SqsTracingTest")
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.aws-sdk.experimental-span-attributes=true," +
-        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-    )
-  }
-
-  val testBedrockRuntimeCaptureMessageContent = register<Test>("testBedrockRuntimeCaptureMessageContent") {
-    testClassesDirs = sourceSets["testBedrockRuntime"].output.classesDirs
-    classpath = sourceSets["testBedrockRuntime"].runtimeClasspath
-
-    systemProperty("otel.instrumentation.genai.capture-message-content", "true")
-    systemProperty("metadataConfig", "otel.instrumentation.genai.capture-message-content=true")
-  }
-
-  val testRdsDataExperimentalAttributes = register<Test>("testRdsDataExperimentalAttributes") {
-    testClassesDirs = sourceSets["testRdsData"].output.classesDirs
-    classpath = sourceSets["testRdsData"].runtimeClasspath
-
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-  }
-
   check {
-    dependsOn(
-      testing.suites,
-      testExperimentalSqs,
-      testReceiveSpansDisabled,
-      testExperimentalAttributes,
-      testIndividualHttpErrors,
-      testReceiveTelemetry,
-      testBedrockRuntimeCaptureMessageContent,
-      testRdsDataExperimentalAttributes,
-    )
+    dependsOn(testing.suites)
   }
 
   withType<ShadowJar>().configureEach {

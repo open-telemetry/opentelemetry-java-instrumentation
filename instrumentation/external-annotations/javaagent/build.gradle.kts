@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -44,11 +46,8 @@ testing {
   }
 }
 
-tasks {
-  val testIncludeProperty = register<Test>("testIncludeProperty") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
+testing.suites.executions("test") {
+  register("IncludeProperty") {
     filter {
       includeTestsMatching("ConfiguredTraceAnnotationsTest")
     }
@@ -56,10 +55,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.external-annotations.include=io.opentelemetry.javaagent.instrumentation.external.annotations.OuterClass\$InterestingMethod")
   }
 
-  val testDeclarativeConfigInclude = register<Test>("testDeclarativeConfigInclude") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
+  register("DeclarativeConfigInclude") {
     filter {
       includeTestsMatching("ConfiguredTraceAnnotationsTest")
     }
@@ -69,10 +65,7 @@ tasks {
     )
   }
 
-  val testExcludeMethodsProperty = register<Test>("testExcludeMethodsProperty") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
+  register("ExcludeMethodsProperty") {
     filter {
       includeTestsMatching("TracedMethodsExclusionTest")
     }
@@ -82,10 +75,7 @@ tasks {
     )
   }
 
-  val testDeclarativeConfigExcludeMethods = register<Test>("testDeclarativeConfigExcludeMethods") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
+  register("DeclarativeConfigExcludeMethods") {
     filter {
       includeTestsMatching("TracedMethodsExclusionTest")
     }
@@ -95,20 +85,16 @@ tasks {
     )
   }
 
-  test {
+  configureDefault {
     filter {
       excludeTestsMatching("ConfiguredTraceAnnotationsTest")
       excludeTestsMatching("TracedMethodsExclusionTest")
     }
   }
+}
 
+tasks {
   check {
-    dependsOn(
-      testing.suites,
-      testIncludeProperty,
-      testExcludeMethodsProperty,
-      testDeclarativeConfigInclude,
-      testDeclarativeConfigExcludeMethods,
-    )
+    dependsOn(testing.suites)
   }
 }
