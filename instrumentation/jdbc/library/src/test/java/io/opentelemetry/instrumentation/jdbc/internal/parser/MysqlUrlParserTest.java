@@ -42,7 +42,7 @@ class MysqlUrlParserTest {
         "H%31:1111|h1|1111",
         "h1:3306|h1|3306",
         "[::1]:1111|::1|1111",
-        "::1|::1|",
+        "[::1]|::1|",
         "user:example@h1:1111|h1|1111",
         "address=example@h1:1111|h1|1111",
         "us(er):ex(ample)@h1:1111|h1|1111",
@@ -117,6 +117,20 @@ class MysqlUrlParserTest {
   }
 
   @ParameterizedTest
+  @CsvSource(
+      value = {
+        "jdbc:mariadb://::1/db|::1|",
+        "jdbc:mariadb://2001:db8::1:3307/db|2001:db8::1:3307|",
+        "jdbc:mariadb://[2001:db8::1]:3307/db|2001:db8::1|3307",
+        "jdbc:mariadb:sequential://2001:db8::1:3307/db|2001:db8::1:3307|"
+      },
+      delimiter = '|')
+  void mariaDbPreservesIpv6HostParsing(String url, String host, Integer port) {
+    assertThat(JdbcConnectionUrlParser.parse(url, null).getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create(host, port));
+  }
+
+  @ParameterizedTest
   @MethodSource("connectorUrls")
   void configuredEndpointsMatchConnectorJ(String url) {
     List<HostInfo> expected =
@@ -178,6 +192,16 @@ class MysqlUrlParserTest {
                 "jdbc:mysql://address=(user:example@h1:1111/db",
                 "jdbc:mysql://user:example@h1:1111,(other):example@h2:2222/db",
                 "jdbc:mysql://(host=h1,other=(value),port=1111)/db",
+                "jdbc:mysql://(host=h1,other=[value),(host=h2,port=2222)/db",
+                "jdbc:mysql://(host=h1,other=]value,port=1111),(host=h2,port=2222)/db",
+                "jdbc:mysql://address=(host=h1)(other=[value),address=(host=h2)(port=2222)/db",
+                "jdbc:mysql://address=(host=h1)(other=]value)(port=1111),address=(host=h2)(port=2222)/db",
+                "jdbc:mysql://(host=h1,other=([value)),(host=h2,port=2222)/db",
+                "jdbc:mysql://reader:[(value]@h1:1111,h2:2222/db",
+                "jdbc:mysql://reader:(]value)@h1:1111,h2:2222/db",
+                "jdbc:mysql://2001:db8::1:3307/db",
+                "jdbc:mysql://2001:db8::1:3307,h2:2222/db",
+                "jdbc:mysql://[2001:db8::1]/db",
                 "jdbc:mysql://h1,h2,h3,h4,h5,(host=h6,port=1111)/db",
                 "jdbc:mysql://h1:1111,h1:1111,(host=h1,port=1111)/db",
                 "jdbc:mysql://h1:1111,(host=h2,port=2222),address=(host=::1)(user=other%40example),h1:1111/db",
@@ -436,6 +460,7 @@ class MysqlUrlParserTest {
         "h1:0",
         "h1:65536",
         "[::1]:invalid",
+        "::1",
         "[::1]extra",
         "[h1]",
         "not a host",

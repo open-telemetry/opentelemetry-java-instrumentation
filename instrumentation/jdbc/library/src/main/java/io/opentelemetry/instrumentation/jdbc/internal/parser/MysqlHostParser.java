@@ -37,7 +37,8 @@ final class MysqlHostParser {
     }
     List<HostPort> hosts = new ArrayList<>();
     boolean firstHostProperties = false;
-    for (String segment : splitHostList(authority)) {
+    List<String> entries = mysql ? splitMysqlHostList(authority) : splitHostList(authority);
+    for (String segment : entries) {
       String entry = segment.trim();
       // MariaDB parses address properties directly, including any @ in their values.
       HostPort host = !mysql && isAddressHost(entry) ? parseHost(entry, false) : null;
@@ -56,6 +57,32 @@ final class MysqlHostParser {
       hosts.add(host);
     }
     return new HostList(Collections.unmodifiableList(hosts), firstHostProperties);
+  }
+
+  private static List<String> splitMysqlHostList(String authority) {
+    List<String> entries = new ArrayList<>();
+    int start = 0;
+    for (int i = 0; i < authority.length(); i++) {
+      char c = authority.charAt(i);
+      if (c == '[' || c == '(') {
+        // Connector/J only nests matching markers; '[' inside '(...)' is property text.
+        char closing = c == '[' ? ']' : ')';
+        int depth = 1;
+        while (depth > 0 && ++i < authority.length()) {
+          char nested = authority.charAt(i);
+          if (nested == c) {
+            depth++;
+          } else if (nested == closing) {
+            depth--;
+          }
+        }
+      } else if (c == ',') {
+        entries.add(authority.substring(start, i));
+        start = i + 1;
+      }
+    }
+    entries.add(authority.substring(start));
+    return entries;
   }
 
   private static String stripUserInfo(String entry) {
@@ -91,8 +118,8 @@ final class MysqlHostParser {
       }
       portStart = bracketEnd + 1 < entry.length() ? bracketEnd + 2 : -1;
     } else {
-      int colon = entry.indexOf(':');
-      portStart = colon >= 0 && colon == entry.lastIndexOf(':') ? colon + 1 : -1;
+      int colon = entry.lastIndexOf(':');
+      portStart = colon >= 0 && (mysql || colon == entry.indexOf(':')) ? colon + 1 : -1;
     }
     String host = portStart < 0 ? entry : entry.substring(0, portStart - 1);
     if (mysql) {
