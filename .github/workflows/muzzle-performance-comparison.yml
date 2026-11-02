@@ -46,6 +46,7 @@ on:
           - disk-preparation
           - disk-preparation-control
           - network-profile
+          - slice-discovery
         default: standard
 
 permissions:
@@ -86,7 +87,7 @@ jobs:
   prepare:
     if: ${{ !inputs.dependency-cache && !inputs.profile-only && inputs.candidate-mode != 'disk-preparation' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 60
     outputs:
       rounds: ${{ steps.plan.outputs.rounds }}
       partitions: ${{ steps.plan.outputs.partitions }}
@@ -105,7 +106,7 @@ jobs:
         run: |
           python3 - <<'PY'
           import json, os
-          if os.environ["CANDIDATE_MODE"] not in ("standard", "configuration-cache-off", "http-connection-ttl"):
+          if os.environ["CANDIDATE_MODE"] not in ("standard", "configuration-cache-off", "http-connection-ttl", "slice-discovery"):
               raise ValueError("Invalid candidate mode")
           rounds = int(os.environ["ROUNDS"])
           partitions = json.loads(os.environ["PARTITIONS"])
@@ -203,6 +204,8 @@ jobs:
             extra+=(--candidate-no-configuration-cache)
           elif [[ "$CANDIDATE_MODE" == "http-connection-ttl" ]]; then
             extra+=(--candidate-http-connection-ttl-ms 10000)
+          elif [[ "$CANDIDATE_MODE" == "slice-discovery" ]]; then
+            extra+=(--compare-slice-discovery)
           fi
           python3 benchmark-muzzle/ci_benchmark.py run \
             --baseline "$BASELINE" --candidate "$CANDIDATE" \

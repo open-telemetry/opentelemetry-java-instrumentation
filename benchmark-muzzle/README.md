@@ -194,6 +194,14 @@ the Gradle daemon. A build-operation listener flushes `network.jfr` before the c
 finishes. This mode is diagnostic, not timing-comparison evidence; it does
 not change network deadlines, retries or dependency selection.
 
+`candidate-mode=slice-discovery` compares eager discovery against the
+slice-aware implementation using identical source revisions and compiled
+build logic. Baseline and control set the benchmark-only
+`muzzleBenchmarkDiscoverAll=true`; candidate sets it to `false`.
+This avoids comparing a baseline with cached build logic against a candidate
+that must compile changed build logic. Compatibility assertions, task caches,
+online dependencies and cold live metadata remain unchanged.
+
 ## Disk preparation
 
 `candidate-mode=disk-preparation` measures unconditional SDK/image cleanup

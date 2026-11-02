@@ -345,6 +345,13 @@ class Comparison:
                 raise ValueError("Connection-lifetime comparisons require identical sources/snapshots and configuration-cache modes")
             self.identity["experiment"] = "http-connection-ttl"
             self.identity["candidate_http_connection_ttl_ms"] = ttl
+        if getattr(args, "compare_slice_discovery", False):
+            if (
+                self.candidate_snapshot or len(set(self.revisions.values())) != 1
+                or getattr(args, "candidate_no_configuration_cache", False) or ttl is not None
+            ):
+                raise ValueError("Slice-discovery comparisons require identical sources/snapshots and other settings")
+            self.identity["experiment"] = "slice-discovery"
         write_json(self.reports / "identity.json", self.identity)
         self.persist()
 
@@ -370,6 +377,9 @@ class Comparison:
             getattr(self.args, "candidate_http_connection_ttl_ms", None) if label == "candidate" else None
         )
         sample["disk_free_before_checkout"] = shutil.disk_usage(sample_root).free
+        sample["discover_all"] = (
+            label != "candidate" if getattr(self.args, "compare_slice_discovery", False) else None
+        )
         self.samples.append(sample)
         self.persist()
         started = time.perf_counter()
@@ -409,6 +419,8 @@ class Comparison:
             command.append("--no-configuration-cache")
         if sample["http_connection_ttl_ms"] is not None:
             command.append(f"-Dorg.gradle.internal.http.idleConnectionTimeout={sample['http_connection_ttl_ms']}")
+        if sample["discover_all"] is not None:
+            command.append(f"-PmuzzleBenchmarkDiscoverAll={str(sample['discover_all']).lower()}")
         write_json(destination / "command.json", command)
         started = time.perf_counter()
         started_wall = int(time.time() * 1000)
@@ -432,6 +444,10 @@ class Comparison:
             log, actual, configuration_cache=sample["configuration_cache"],
             connection_ttl_ms=sample["http_connection_ttl_ms"],
         )
+        if sample["discover_all"] is not None:
+            expected = f"MUZZLE_BENCHMARK_DISCOVER_ALL {str(sample['discover_all']).lower()}\n"
+            if expected not in log:
+                raise ValueError("Version discovery mode was not confirmed")
         if getattr(self.args, "jfr_network", False):
             recording = destination / "network.jfr"
             if (
@@ -520,7 +536,7 @@ def load_reports(root, rounds, partitions):
                 if partition in candidate_snapshots:
                     benchmark.require_equal(candidate_snapshots[partition], value, "Warmed cache across rounds")
                 candidate_snapshots[partition] = value
-            if identity.get("experiment") in {"configuration-cache", "http-connection-ttl"}:
+            if identity.get("experiment") in {"configuration-cache", "http-connection-ttl", "slice-discovery"}:
                 if (
                     len(set(identity["revisions"].values())) != 1
                     or "candidate_cache_snapshot_sha256" in identity
@@ -533,6 +549,26 @@ def load_reports(root, rounds, partitions):
             expected_order = list(benchmark.order(round_number - 1))
             if [sample["label"] for sample in result["samples"]] != expected_order:
                 raise ValueError("Comparison order or sample count changed")
+            if shared.get("experiment") == "slice-discovery":
+                by_label = {sample["label"]: sample for sample in result["samples"]}
+                baseline = by_label["baseline"]
+                for label in ("control", "candidate"):
+                    benchmark.require_equal(
+                        baseline["task_outcomes"], by_label[label]["task_outcomes"],
+                        "Discovery experiment task-cache outcomes",
+                    )
+                benchmark.require_equal(
+                    baseline["discovery"]["projects"], by_label["control"]["discovery"]["projects"],
+                    "Eager discovery control",
+                )
+                candidate_projects = by_label["candidate"]["discovery"]["projects"]
+                if not candidate_projects.keys() < baseline["discovery"]["projects"].keys():
+                    raise ValueError("Slice-aware discovery did not reduce the discovery project set")
+                for project, documents in candidate_projects.items():
+                    benchmark.require_equal(
+                        baseline["discovery"]["projects"][project], documents,
+                        "Selected-project metadata paths",
+                    )
             for sample in result["samples"]:
                 label = sample["label"]
                 revision = expected_revisions["baseline" if label == "control" else label]
@@ -559,6 +595,13 @@ def load_reports(root, rounds, partitions):
                 expected_ttl = shared.get("candidate_http_connection_ttl_ms") if label == "candidate" else None
                 if sample.get("http_connection_ttl_ms") != expected_ttl:
                     raise ValueError("Connection-lifetime mode does not match the experiment")
+                if shared.get("experiment") == "slice-discovery":
+                    expected_discovery = label != "candidate"
+                    if (
+                        sample.get("discover_all") != expected_discovery
+                        or f"MUZZLE_BENCHMARK_DISCOVER_ALL {str(expected_discovery).lower()}\n" not in log
+                    ):
+                        raise ValueError("Version discovery mode does not match the experiment")
                 validate_diagnostics(directory / label, sample)
             reports[(round_number, partition)] = result["samples"]
     if candidate_snapshots:
@@ -667,6 +710,14 @@ def aggregate(root, destination, rounds, partitions):
             "Connection/read timeouts, retries, dependency selection and task-cache settings are unchanged.",
             "",
         ]
+    if shared.get("experiment") == "slice-discovery":
+        lines[4:4] = [
+            "Both sides use identical source code, compiled build logic and cache snapshots. "
+            "Baseline and control discover versions in every Muzzle project. Candidate discovers "
+            "only projects belonging to the requested slice. The executed compatibility workload "
+            "must remain identical.",
+            "",
+        ]
     for partition, entry in slices.items():
         times = entry["medians_ms"]
         lines.append(
@@ -744,6 +795,7 @@ def main():
     measure.add_argument("--operations-profile", action="store_true")
     measure.add_argument("--single-profile", action="store_true")
     measure.add_argument("--jfr-network", action="store_true")
+    measure.add_argument("--compare-slice-discovery", action="store_true")
     measure.add_argument("--candidate-no-configuration-cache", action="store_true")
     measure.add_argument("--candidate-http-connection-ttl-ms", type=int, choices=(10000,))
     report = commands.add_parser("report")

@@ -330,6 +330,65 @@ class CiBenchmarkTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "identical sources"):
                 ci.load_reports(root, 1, [1])
 
+    def test_discovery_comparison_uses_identical_build_logic_for_all_conditions(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runner = self.runner(Path(directory))
+            runner.args.compare_slice_discovery = True
+            runner.revisions = dict.fromkeys(("baseline", "candidate"), "before")
+            observed = []
+
+            def execute(command, **kwargs):
+                result = self.fake_build(command, **kwargs)
+                log = kwargs.get("log")
+                if log is not None:
+                    flag = next(value for value in command if value.startswith("-PmuzzleBenchmarkDiscoverAll="))
+                    value = flag.split("=")[1]
+                    observed.append((log.parent.name, value))
+                    log.write_text(log.read_text() + f"MUZZLE_BENCHMARK_DISCOVER_ALL {value}\n")
+                return result
+
+            with patch.object(benchmark, "run", side_effect=execute):
+                runner.measure()
+            self.assertEqual(observed, [("baseline", "true"), ("control", "true"), ("candidate", "false")])
+            self.assertEqual(len({sample["revision"] for sample in runner.samples}), 1)
+
+    def test_discovery_report_requires_reduced_metadata_and_equal_task_cache_outcomes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            folder = self.report_fixture(root, 1, 1, {"baseline": 100, "control": 110, "candidate": 50})
+            identity = json.loads((folder / "identity.json").read_text())
+            identity.update(
+                revisions=dict.fromkeys(("baseline", "candidate"), "before"),
+                experiment="slice-discovery",
+            )
+            ci.write_json(folder / "identity.json", identity)
+            result = json.loads((folder / "samples.json").read_text())
+            for sample in result["samples"]:
+                label = sample["label"]
+                sample["revision"] = "before"
+                sample["discover_all"] = label != "candidate"
+                log = folder / label / "console.log"
+                log.write_text(log.read_text() + f"MUZZLE_BENCHMARK_DISCOVER_ALL {str(sample['discover_all']).lower()}\n")
+                if label != "candidate":
+                    extra = folder / label / "metadata/other/build/muzzleRepo/maven-metadata-fixture.xml"
+                    extra.parent.mkdir(parents=True)
+                    extra.write_text("<metadata/>")
+                    discovery = sample["discovery"]
+                    discovery["projects"][":other"] = ["maven-metadata-fixture.xml"]
+                    discovery.update(
+                        project_count=2, metadata_documents=2,
+                        metadata_sha256=benchmark.inventory(folder / label / "metadata"),
+                    )
+            ci.write_json(folder / "samples.json", result)
+            report = ci.aggregate(root, root / "summary", 1, [1])
+            self.assertEqual(report["maximum_slice_paired"]["candidate"]["delta_ms"]["median"], -50)
+            self.assertIn("compiled build logic", (root / "summary/summary.md").read_text())
+            candidate = next(sample for sample in result["samples"] if sample["label"] == "candidate")
+            candidate["task_outcomes"]["different-cache-hit"] = "FROM-CACHE"
+            ci.write_json(folder / "samples.json", result)
+            with self.assertRaisesRegex(ValueError, "task-cache outcomes"):
+                ci.load_reports(root, 1, [1])
+
     def test_failed_build_is_recorded_without_retry_or_successful_report(self):
         with tempfile.TemporaryDirectory() as directory:
             runner = self.runner(Path(directory))

@@ -40,6 +40,7 @@ plugins {
 val RANGE_COUNT_LIMIT = Integer.getInteger("otel.javaagent.muzzle.versions.limit", 10)
 
 val muzzleBenchmarkSeed = providers.gradleProperty("muzzleBenchmarkSeed").orNull?.toLong()
+val muzzleBenchmarkDiscoverAll = providers.gradleProperty("muzzleBenchmarkDiscoverAll").map(String::toBooleanStrict).getOrElse(false)
 val muzzleBenchmarkRepository = providers.gradleProperty("muzzleBenchmarkRepository").orNull
 val muzzleBenchmarkReportDirectory = providers.gradleProperty("muzzleBenchmarkReportDirectory").orNull?.let(::File)
 val muzzleBenchmarkCache = providers.gradleProperty("muzzleBenchmarkCache").map(String::toBooleanStrict).getOrElse(false)
@@ -49,6 +50,9 @@ check(muzzleBenchmarkSeed != null || (muzzleBenchmarkRepository == null && muzzl
 }
 check(!muzzleBenchmarkCache || (muzzleBenchmarkSeed != null && muzzleBenchmarkReportDirectory != null)) {
   "Muzzle assertion caching requires benchmark sampling and reporting"
+}
+check(!muzzleBenchmarkDiscoverAll || muzzleBenchmarkSeed != null) {
+  "Unselected-project discovery is only available for benchmark sampling"
 }
 
 // Read pinned latest-dep versions to cap muzzle's open-ended version ranges,
@@ -248,7 +252,7 @@ val hasRelevantTask = gradle.startParameter.taskNames.any {
 
 if (hasRelevantTask) {
   gradle.projectsEvaluated {
-    val selected = gradle.startParameter.taskNames.any {
+    val selected = muzzleBenchmarkDiscoverAll || gradle.startParameter.taskNames.any {
       val taskName = it.removePrefix(":")
       if (taskName.startsWith("instrumentation:muzzle")) {
         val slice = rootProject.findProject(":instrumentation")

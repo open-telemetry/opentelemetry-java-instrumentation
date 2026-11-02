@@ -165,6 +165,31 @@ class MuzzleCacheFunctionalTest {
   }
 
   @Test
+  void eagerDiscoveryControlPreservesTheSliceWorkload() throws IOException {
+    startRepository();
+    publishLibrary("module-b");
+    publishLibrary("module-c");
+    publishLibrary("module-d");
+    Path project = slicedFixture();
+    BuildResult eager =
+        slicedRunner(project, "instrumentation:muzzle1", "-PmuzzleBenchmarkDiscoverAll=true")
+            .build();
+    assertThat(requests)
+        .anySatisfy(path -> assertThat(path).contains("/module-b/maven-metadata.xml"))
+        .anySatisfy(path -> assertThat(path).contains("/module-c/maven-metadata.xml"))
+        .anySatisfy(path -> assertThat(path).contains("/module-d/maven-metadata.xml"));
+    BuildResult sliced = slicedRunner(project, "instrumentation:muzzle1").build();
+    assertThat(eager.getTasks())
+        .filteredOn(task -> task.getPath().contains(":muzzle-Assert"))
+        .extracting(BuildTask::getPath)
+        .containsExactlyElementsOf(
+            sliced.getTasks().stream()
+                .filter(task -> task.getPath().contains(":muzzle-Assert"))
+                .map(BuildTask::getPath)
+                .toList());
+  }
+
+  @Test
   void multipleSlicesAndDirectTasksPreserveSelectedChecks() throws IOException {
     startRepository();
     publishLibrary("module-b");
