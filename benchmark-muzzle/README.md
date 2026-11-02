@@ -112,6 +112,11 @@ a performance claim. A small effect comparable to control variation is
 inconclusive. Improvements to Muzzle affect PR completion only when Muzzle is
 on the critical path.
 
+Build-logic changes can invalidate compilation and other task-cache entries.
+Check the recorded task outcomes before attributing an overall timing change
+to version discovery. Fresh-checkout results do not by themselves predict cache
+reuse after the candidate has merged.
+
 ## Results and maintenance
 
 `muzzle-ci-summary` contains the verified cross-slice summary and raw estimators.
