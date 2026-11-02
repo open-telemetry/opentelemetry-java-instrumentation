@@ -25,9 +25,8 @@ import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForwardIndyAdviceTransformer;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyTypeTransformerImpl;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceCallForwardingTransformer;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationClassLoaderRegistry;
 import io.opentelemetry.javaagent.tooling.muzzle.AdviceInspector;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
@@ -87,23 +86,23 @@ public final class InstrumentationModuleInstaller {
       return parentAgentBuilder;
     }
 
-    boolean useIndy = useIndy(instrumentationModule);
+    boolean useIsolatedHelperClasses = useIsolatedHelperClasses(instrumentationModule);
     logger.log(
         FINE,
         "Instrumentation {0} [class {1}] {2} helper classes",
         new Object[] {
           instrumentationModule.instrumentationName(),
           instrumentationModule.getClass().getName(),
-          useIndy ? "isolates" : "injects"
+          useIsolatedHelperClasses ? "isolates" : "injects"
         });
-    if (useIndy) {
-      return installIndyModule(instrumentationModule, parentAgentBuilder);
+    if (useIsolatedHelperClasses) {
+      return installModule(instrumentationModule, parentAgentBuilder);
     } else {
-      return installInjectingModule(instrumentationModule, parentAgentBuilder);
+      return installHelperInjectionModule(instrumentationModule, parentAgentBuilder);
     }
   }
 
-  private boolean useIndy(InstrumentationModule instrumentationModule) {
+  private boolean useIsolatedHelperClasses(InstrumentationModule instrumentationModule) {
     // first check whether user has specified how the helper classes should be handled
     if (instrumentationModule instanceof ExperimentalInstrumentationModule) {
       HelperClassStrategy helperClassStrategy =
@@ -130,7 +129,7 @@ public final class InstrumentationModuleInstaller {
     return adviceInspector.inferHelperClassIsolation(instrumentationModule);
   }
 
-  private AgentBuilder installIndyModule(
+  private AgentBuilder installModule(
       InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     List<String> helperClassNames =
         InstrumentationModuleMuzzle.getHelperClassNames(instrumentationModule);
@@ -157,7 +156,7 @@ public final class InstrumentationModuleInstaller {
             cl ->
                 // With isolated helpers, muzzle searches application and agent class loaders.
                 // Agent classes are non-helper classes, so muzzle checks their references.
-                IndyModuleRegistry.createInstrumentationClassLoaderForMuzzle(
+                InstrumentationClassLoaderRegistry.createInstrumentationClassLoaderForMuzzle(
                     instrumentationModule, cl));
 
     Function<ClassLoader, List<HelperClassDefinition>> helperGenerator =
@@ -190,15 +189,15 @@ public final class InstrumentationModuleInstaller {
           setTypeMatcher(agentBuilder, instrumentationModule, typeInstrumentation)
               .and(muzzleMatcher)
               .transform(ConstantAdjuster.instance())
-              .transform(new ForwardIndyAdviceTransformer(helperInjector));
+              .transform(new AdviceCallForwardingTransformer(helperInjector));
 
       extendableAgentBuilder =
-          IndyModuleRegistry.initializeModuleLoaderOnMatch(
+          InstrumentationClassLoaderRegistry.initializeModuleClassLoaderOnTransform(
               instrumentationModule, extendableAgentBuilder);
       extendableAgentBuilder = extendableAgentBuilder.transform(helperInjector);
       extendableAgentBuilder = contextProvider.injectHelperClasses(extendableAgentBuilder);
-      IndyTypeTransformerImpl typeTransformer =
-          new IndyTypeTransformerImpl(extendableAgentBuilder, instrumentationModule);
+      TypeTransformerImpl typeTransformer =
+          new TypeTransformerImpl(extendableAgentBuilder, instrumentationModule);
       typeInstrumentation.transform(typeTransformer);
       extendableAgentBuilder = typeTransformer.getAgentBuilder();
       extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);
@@ -208,7 +207,7 @@ public final class InstrumentationModuleInstaller {
     return agentBuilder;
   }
 
-  private AgentBuilder installInjectingModule(
+  private AgentBuilder installHelperInjectionModule(
       InstrumentationModule instrumentationModule, AgentBuilder parentAgentBuilder) {
     List<String> helperClassNames =
         InstrumentationModuleMuzzle.getHelperClassNames(instrumentationModule);
@@ -267,7 +266,8 @@ public final class InstrumentationModuleInstaller {
               .transform(helperInjector);
       extendableAgentBuilder = contextProvider.injectHelperClasses(extendableAgentBuilder);
       extendableAgentBuilder = contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder);
-      TypeTransformerImpl typeTransformer = new TypeTransformerImpl(extendableAgentBuilder);
+      HelperInjectionTypeTransformerImpl typeTransformer =
+          new HelperInjectionTypeTransformerImpl(extendableAgentBuilder);
       typeInstrumentation.transform(typeTransformer);
       extendableAgentBuilder = typeTransformer.getAgentBuilder();
       extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);
