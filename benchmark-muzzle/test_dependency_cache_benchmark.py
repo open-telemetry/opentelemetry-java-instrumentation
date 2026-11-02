@@ -48,6 +48,8 @@ class DependencyCacheTest(unittest.TestCase):
             self.assertEqual(result["sha256"], benchmark.digest(root / "combined.tar.gz"))
             with self.assertRaisesRegex(ValueError, "new file"):
                 dependency.compose_snapshot(original, warmed, original)
+            with self.assertRaisesRegex(ValueError, "cache budget"):
+                dependency.compose_snapshot(original, warmed, root / "oversized.tar.gz", max_bytes=1)
         for name in ("/outside", "caches/modules-2/../build-cache-1/value"):
             with self.subTest(name=name), self.assertRaisesRegex(ValueError, "Unsafe"):
                 dependency.dependency_entry(name)
@@ -154,6 +156,39 @@ class DependencyCacheTest(unittest.TestCase):
             self.assertTrue((args.work_dir / "reports/failure.txt").exists())
             self.assertFalse(json.loads((args.work_dir / "reports/warming.json").read_text())["complete"])
 
+    def test_snapshot_budget_rejects_oversized_input_before_any_build(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            snapshot = root / "snapshot.tar.gz"
+            snapshot.write_bytes(b"1234")
+            args = SimpleNamespace(cache_snapshot=snapshot, snapshot_budget_bytes=3)
+            with patch.object(ci, "Comparison") as comparison:
+                with self.assertRaisesRegex(ValueError, "4 bytes.*3-byte cache budget"):
+                    dependency.warm(args)
+            comparison.assert_not_called()
+            ci.check_snapshot_size(snapshot, 4)
+            for size in (dependency.MAX_CACHE_BYTES, dependency.MAX_CACHE_BYTES + 1):
+                sized = SimpleNamespace(stat=lambda: SimpleNamespace(st_size=size))
+                if size == dependency.MAX_CACHE_BYTES:
+                    ci.check_snapshot_size(sized, dependency.MAX_CACHE_BYTES)
+                else:
+                    with self.assertRaisesRegex(ValueError, "cache budget"):
+                        ci.check_snapshot_size(sized, dependency.MAX_CACHE_BYTES)
+            for value in (0, -1, dependency.MAX_CACHE_BYTES + 1):
+                with self.subTest(value=value), self.assertRaisesRegex(ValueError, "snapshot budget"):
+                    dependency.snapshot_budget(SimpleNamespace(snapshot_budget_bytes=value))
+
+    def test_intermediate_snapshot_is_checked_before_hashing_or_further_warming(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            home = root / "home"
+            (home / "caches").mkdir(parents=True)
+            (home / "caches/value").write_text("dependency")
+            with patch.object(benchmark, "digest") as digest:
+                with self.assertRaisesRegex(ValueError, "cache budget"):
+                    ci.snapshot(home, root / "too-large.tar.gz", max_bytes=1)
+            digest.assert_not_called()
+
     def test_report_rejects_bad_warming_before_writing_a_success_summary(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -226,6 +261,8 @@ class DependencyCacheTest(unittest.TestCase):
             self.assertIn("cache-cleanup: never", (args.output / "summary.md").read_text())
             self.assertIn("condition-specific immutable snapshots", (args.output / "summary.md").read_text())
             self.assertEqual(result["cache_warming"]["1"]["warm_seeds"], [1730, 1731])
+            self.assertEqual(result["storage_assessment"]["decision"], "unverified")
+            self.assertFalse(result["storage_assessment"]["repository_fit_verified"])
             (plan / "warming.json").rename(args.plans / "warming.json")
             for path in folder.iterdir():
                 path.rename(inputs / path.name)
@@ -233,6 +270,14 @@ class DependencyCacheTest(unittest.TestCase):
             args.output = root / "flat-summary"
             dependency.report(args)
             self.assertEqual(json.loads((args.output / "results.json").read_text()), result)
+            args.snapshot_budget_bytes = 1499
+            args.output = root / "rejected-summary"
+            dependency.report(args)
+            rejected = json.loads((args.output / "results.json").read_text())
+            self.assertEqual(rejected["storage_assessment"]["decision"], "rejected")
+            self.assertEqual(rejected["storage_assessment"]["oversized_snapshots"], {"1": 1500})
+            self.assertTrue((args.output / "summary.md").read_text().startswith("**Rejected for rollout."))
+            self.assertEqual(rejected["maximum_slice_paired"], result["maximum_slice_paired"])
 
     def test_artifact_layout_does_not_hide_missing_or_ambiguous_reports(self):
         with tempfile.TemporaryDirectory() as directory:

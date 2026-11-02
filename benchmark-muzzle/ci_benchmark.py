@@ -28,7 +28,15 @@ def write_json(path, value):
     path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
-def snapshot(home, destination):
+def check_snapshot_size(path, max_bytes):
+    if max_bytes <= 0:
+        raise ValueError("The snapshot budget must be positive")
+    size = path.stat().st_size
+    if size > max_bytes:
+        raise ValueError(f"Snapshot requires {size} bytes, exceeding the {max_bytes}-byte cache budget")
+
+
+def snapshot(home, destination, *, max_bytes=None):
     if destination.exists() or destination.resolve().is_relative_to(home.resolve()):
         raise ValueError("The snapshot must be a new file outside the Gradle home")
     if not (home / "caches").is_dir():
@@ -42,6 +50,8 @@ def snapshot(home, destination):
         for name in SNAPSHOT_PATHS:
             if (home / name).exists():
                 archive.add(home / name, arcname=name, filter=exclude_locks)
+    if max_bytes is not None:
+        check_snapshot_size(destination, max_bytes)
     return benchmark.digest(destination)
 
 

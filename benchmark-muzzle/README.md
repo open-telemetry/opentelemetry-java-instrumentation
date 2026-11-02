@@ -173,6 +173,18 @@ shared Actions cache. The pinned setup-gradle action's
 confirms that default cleanup removes versions unused by the next build.
 Enabling writes alone therefore does not guarantee accumulation.
 
+Warming rejects an initial, intermediate or final snapshot larger than
+10,000,000,000 bytes. It stops before another warmup or snapshot upload.
+`--snapshot-budget-bytes` can lower that safety cap, but cannot raise it.
+Reports preserve measurements from earlier oversized experiments and mark
+them **rejected for rollout**.
+
+The cap is not a cache allocation. GitHub's 10 GB repository-wide budget is
+shared with every other job and retained cache generation. Snapshots below
+the cap remain **storage feasibility unverified** until their actual
+production cache entries fit a measured allocation. Gzip benchmark archives
+do not establish the size of setup-gradle's cache entries.
+
 The report includes the prior seeds, snapshot sizes and measured assertion
 task overlap with prior samples. That overlap is not a dependency-cache hit
 ratio. A short run does not establish long-term storage growth or retention.

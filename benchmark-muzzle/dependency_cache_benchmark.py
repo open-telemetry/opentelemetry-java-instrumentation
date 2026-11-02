@@ -17,6 +17,16 @@ import benchmark
 import ci_benchmark as ci
 
 
+MAX_CACHE_BYTES = 10_000_000_000
+
+
+def snapshot_budget(args):
+    budget = getattr(args, "snapshot_budget_bytes", MAX_CACHE_BYTES)
+    if not 0 < budget <= MAX_CACHE_BYTES:
+        raise ValueError(f"The snapshot budget must be between 1 and {MAX_CACHE_BYTES} bytes")
+    return budget
+
+
 def dependency_entry(name):
     path = PurePosixPath(name)
     if path.is_absolute() or ".." in path.parts:
@@ -35,7 +45,7 @@ class HashingReader:
         return value
 
 
-def compose_snapshot(original, warmed, destination):
+def compose_snapshot(original, warmed, destination, *, max_bytes=MAX_CACHE_BYTES):
     """Keep original task/script caches and replace only caches/modules-2."""
     if destination.exists() or destination.resolve() in (original.resolve(), warmed.resolve()):
         raise ValueError("The composed snapshot must be a new file")
@@ -70,6 +80,7 @@ def compose_snapshot(original, warmed, destination):
                             inventory[info.name] = {"type": info.type.decode(), "link": info.linkname}
     if not dependency_files:
         raise ValueError("The warmed snapshot contains no Gradle dependency files")
+    ci.check_snapshot_size(destination, max_bytes)
     return {
         "sha256": benchmark.digest(destination),
         "compressed_bytes": destination.stat().st_size,
@@ -82,6 +93,8 @@ def compose_snapshot(original, warmed, destination):
 
 
 def warm(args):
+    budget = snapshot_budget(args)
+    ci.check_snapshot_size(args.cache_snapshot, budget)
     source = args.repository.resolve()
     root = args.work_dir.resolve()
     if root.is_relative_to(source) or source.is_relative_to(root):
@@ -110,6 +123,7 @@ def warm(args):
         "measured_seed": workload["seed"], "warm_seeds": [], "stages": stages,
         "initial_snapshot_sha256": current_digest,
         "initial_compressed_bytes": initial.stat().st_size,
+        "snapshot_budget_bytes": budget,
         "cache_cleanup": "never; models retaining sampled dependencies between main runs",
         "remote_cache": "read-only", "preserved_cache_entries": "everything outside caches/modules-2",
     }
@@ -132,7 +146,7 @@ def warm(args):
             runner.persist(complete=True)
             next_snapshot = args.work_dir / f"seed-{seed}.tar.gz"
             started = time.perf_counter()
-            next_digest = ci.snapshot(home, next_snapshot)
+            next_digest = ci.snapshot(home, next_snapshot, max_bytes=budget)
             stages.append({
                 "seed": seed, "snapshot_sha256": next_digest,
                 "snapshot_bytes": next_snapshot.stat().st_size,
@@ -147,7 +161,7 @@ def warm(args):
             current, current_digest = next_snapshot, next_digest
             ci.write_json(reports / "warming.json", summary)
         started = time.perf_counter()
-        summary["candidate_snapshot"] = compose_snapshot(initial, current, args.output)
+        summary["candidate_snapshot"] = compose_snapshot(initial, current, args.output, max_bytes=budget)
         summary["composition_ms"] = (time.perf_counter() - started) * 1000
         summary["warm_assertion_tasks"] = sorted(warm_tasks)
         current.unlink()
@@ -160,6 +174,7 @@ def warm(args):
 
 
 def report(args):
+    budget = snapshot_budget(args)
     plans = {}
     lines = [
         "", "## Dependency-cache accumulation", "",
@@ -203,11 +218,44 @@ def report(args):
         "Archive download and setup times are excluded from the Gradle command metric. "
         "This short experiment does not establish long-term cache size or retention.", "",
     ]
+    oversized = {
+        str(partition): plan["candidate_snapshot"]["compressed_bytes"]
+        for partition, plan in plans.items()
+        if plan["candidate_snapshot"]["compressed_bytes"] > budget
+    }
+    storage = {
+        "snapshot_budget_bytes": budget,
+        "oversized_snapshots": oversized,
+        "decision": "rejected" if oversized else "unverified",
+        "repository_fit_verified": False,
+        "reason": (
+            "The candidate exceeds the snapshot safety cap and cannot justify a production rollout."
+            if oversized else
+            "Passing the snapshot safety cap does not establish repository-wide cache feasibility."
+        ),
+    }
+    banner = (
+        "**Rejected for rollout. A candidate snapshot exceeds the cache-size safety cap.**"
+        if oversized else
+        "**Storage feasibility unverified. Snapshot size alone does not establish repository-wide fit.**"
+    )
+    lines += [
+        "## Cache budget", "",
+        f"The snapshot safety cap is {budget:,} bytes. The repository's 10 GB cache budget "
+        "is shared by all jobs and cache generations, not allocated to each Muzzle slice. "
+        "These gzip snapshots are not exact production setup-gradle cache entries. "
+        "Any future candidate must fit within a measured allocation after accounting for "
+        "other cache entries and actual production cache transport.", "",
+    ]
     result = ci.aggregate(args.inputs, args.output, args.rounds, args.partitions)
     result["cache_warming"] = plans
+    result["storage_assessment"] = storage
     ci.write_json(args.output / "results.json", result)
     summary = args.output / "summary.md"
-    summary.write_text(summary.read_text(encoding="utf-8") + "\n".join(lines), encoding="utf-8")
+    summary.write_text(
+        banner + "\n\n" + summary.read_text(encoding="utf-8") + "\n".join(lines),
+        encoding="utf-8",
+    )
 
 
 def main():
@@ -222,12 +270,14 @@ def main():
     prepare.add_argument("--snapshot-sha256", required=True)
     prepare.add_argument("--work-dir", type=Path, required=True)
     prepare.add_argument("--output", type=Path, required=True)
+    prepare.add_argument("--snapshot-budget-bytes", type=int, default=MAX_CACHE_BYTES)
     summarize = commands.add_parser("report")
     summarize.add_argument("--inputs", type=Path, required=True)
     summarize.add_argument("--plans", type=Path, required=True)
     summarize.add_argument("--output", type=Path, required=True)
     summarize.add_argument("--rounds", type=int, choices=range(1, 11), required=True)
     summarize.add_argument("--partitions", type=int, choices=range(1, 5), nargs="+", required=True)
+    summarize.add_argument("--snapshot-budget-bytes", type=int, default=MAX_CACHE_BYTES)
     args = parser.parse_args()
     if args.command == "report":
         if args.partitions != sorted(set(args.partitions)):
