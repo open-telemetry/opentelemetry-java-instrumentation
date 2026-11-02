@@ -43,12 +43,6 @@ dependencies {
 
 testing.suites {
   register<JvmTestSuite>("version5Test") {
-    targets.all {
-      testTask.configure {
-        jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-        systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
-      }
-    }
     dependencies {
       sources {
         java {
@@ -71,6 +65,12 @@ testing.suites {
       implementation("org.hibernate:hibernate-core:$hibernateVersion")
       implementation("org.hibernate:hibernate-entitymanager:$hibernateVersion")
       implementation("org.springframework.data:spring-data-jpa:${baseVersion("(2.4.0,3)").orLatest("2.3.0.RELEASE")}")
+    }
+  }
+
+  executions("version5Test") {
+    configureDefault {
+      telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
     }
   }
 
