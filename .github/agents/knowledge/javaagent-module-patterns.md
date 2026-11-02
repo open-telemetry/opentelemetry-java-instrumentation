@@ -567,14 +567,25 @@ supported signatures or concrete-type assumption when the choice is not obvious.
   `extendsClass(...)` and `implementsInterface(...)` are appropriate when the instrumentation
   targets subclasses or implementors of a type.
 - `transform()` wires method matchers to advice classes via `applyAdviceToMethod()`.
-- Direct argument and return-type matchers inside `transform()` use `Type.class` only when the type
+- For complete, nonempty exact signatures, prefer Byte Buddy's `takesArguments(Class<?>...)` when
+  every parameter is a primitive or a public `java.base` type that is safely accessible and
+  available at the module's minimum supported Java version. If any parameter is a library type or
+  otherwise unsafe or unavailable, use the string-only
+  `AgentElementMatchers.takesArguments(String...)`, for example
+  `takesArguments("org.influxdb.dto.Query", "int", "java.util.function.Consumer")`. Do not infer
+  safety from a `java.*` package prefix or the current build JDK. When both overload families are
+  needed, explicitly import both `takesArguments` methods; avoid a bare `takesArguments()` call.
+  Use `takesArguments(0)` for zero-parameter signatures. Keep positional matchers for partial
+  signatures and non-exact type predicates.
+- Positional argument and return-type matchers inside `transform()` use `Type.class` only when the type
   is loadable from the agent class loader. For JDK types, use class literals only for primitives and
   primitive arrays, or types from these exact package names: `java.io`, `java.lang`,
   `java.lang.reflect`, `java.net`, `java.nio`, `java.time`, `java.util`, `java.util.concurrent`, and
   `java.util.function`. These exact packages belong to the mandatory `java.base` module, so an
-  accessible type from one of them is present in every supported runtime image and safe to use as a
-  class literal when it is available at the module's minimum supported Java version. Package
-  matching is not recursive: `java.util` does not include `java.util.logging`.
+  public, accessible type from one of them is present in every supported runtime image and safe to
+  use as a class literal when it is available at the module's minimum supported Java version.
+  Package matching is not recursive: `java.util` does not include `java.util.logging`. Do not infer
+  safety from a `java.*` prefix or the current build JDK.
   Use `takesArgument(0, String.class)` and `returns(CompletableFuture.class)`, not
   `takesArgument(0, named("java.lang.String"))` or
   `returns(named("java.util.concurrent.CompletableFuture"))`.
@@ -584,7 +595,7 @@ supported signatures or concrete-type assumption when the choice is not obvious.
   Keep `named(...)` for `typeMatcher()`, class-loader optimization, hierarchy matchers
   (`extendsClass`, `implementsInterface`), all instrumented-library types, JDK types outside the
   allowlist or unavailable at the module's minimum Java version, inaccessible JDK-internal classes,
-  and advice-class name strings. This method-signature convention does not change the type-level and
+  and advice-class name strings. This positional/return-type convention does not change the type-level and
   advice-class classloading guidance above and below.
 - `isMethod()` in method matchers inside `transform()` is redundant when the matcher
   already names a specific, non-empty method — e.g. `named("foo")` or `namedOneOf("foo", "bar")`.

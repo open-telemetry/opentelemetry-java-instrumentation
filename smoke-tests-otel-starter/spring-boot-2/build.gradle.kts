@@ -1,5 +1,6 @@
 plugins {
   id("otel.java-conventions")
+  id("otel.testcontainers-testing")
 }
 
 description = "smoke-tests-otel-starter-spring-boot-2"
