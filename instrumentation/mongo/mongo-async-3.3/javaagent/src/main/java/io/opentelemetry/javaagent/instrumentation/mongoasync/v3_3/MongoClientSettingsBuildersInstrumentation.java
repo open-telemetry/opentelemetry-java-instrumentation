@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.mongoasync.v3_3;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.mongoasync.v3_3.MongoInstrumentationSingletons.tracingListener;
 import static net.bytebuddy.matcher.ElementMatchers.declaresField;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.mongodb.async.client.MongoClientSettings;
@@ -30,9 +30,7 @@ final class MongoClientSettingsBuildersInstrumentation implements TypeInstrument
             declaresMethod(
                 named("addCommandListener")
                     .and(isPublic())
-                    .and(
-                        takesArguments(1)
-                            .and(takesArgument(0, named("com.mongodb.event.CommandListener"))))))
+                    .and(takesArguments("com.mongodb.event.CommandListener"))))
         .and(declaresField(named("commandListeners")));
   }
 

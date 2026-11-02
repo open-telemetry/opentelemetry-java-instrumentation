@@ -7,11 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.powerjob.v4_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.powerjob.v4_0.PowerJobSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -41,11 +40,7 @@ class BasicProcessorInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("process")
             .and(isPublic())
-            .and(
-                takesArguments(1)
-                    .and(
-                        takesArgument(
-                            0, named("tech.powerjob.worker.core.processor.TaskContext")))),
+            .and(takesArguments("tech.powerjob.worker.core.processor.TaskContext")),
         getClass().getName() + "$ProcessAdvice");
   }
 

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -34,47 +33,27 @@ class HttpClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     // advice classes below expose current context in doOn*/doAfter* callbacks
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("doOnRequest"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, BiConsumer.class)),
+        isPublic().and(named("doOnRequest")).and(takesArguments(BiConsumer.class)),
         getClass().getName() + "$OnRequestAdvice");
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("doAfterRequest"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, BiConsumer.class)),
+        isPublic().and(named("doAfterRequest")).and(takesArguments(BiConsumer.class)),
         getClass().getName() + "$AfterRequestAdvice");
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("doOnRequestError"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, BiConsumer.class)),
+        isPublic().and(named("doOnRequestError")).and(takesArguments(BiConsumer.class)),
         getClass().getName() + "$OnRequestErrorAdvice");
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("doOnResponse"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, BiConsumer.class)),
+        isPublic().and(named("doOnResponse")).and(takesArguments(BiConsumer.class)),
         getClass().getName() + "$OnResponseAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(namedOneOf("doAfterResponseSuccess", "doOnRedirect"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, BiConsumer.class)),
+            .and(takesArguments(BiConsumer.class)),
         getClass().getName() + "$AfterResponseAdvice");
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("doOnResponseError"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, BiConsumer.class)),
+        isPublic().and(named("doOnResponseError")).and(takesArguments(BiConsumer.class)),
         getClass().getName() + "$OnResponseErrorAdvice");
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("doOnError"))
-            .and(takesArguments(2))
-            .and(takesArgument(0, BiConsumer.class))
-            .and(takesArgument(1, BiConsumer.class)),
+        isPublic().and(named("doOnError")).and(takesArguments(BiConsumer.class, BiConsumer.class)),
         getClass().getName() + "$OnErrorAdvice");
   }
 

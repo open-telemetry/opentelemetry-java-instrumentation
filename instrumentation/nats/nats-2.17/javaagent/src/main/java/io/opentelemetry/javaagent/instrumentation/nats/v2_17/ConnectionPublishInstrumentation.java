@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.publishInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingletons.settleInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.nats.client.Connection;
@@ -40,42 +40,30 @@ class ConnectionPublishInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("publish"))
-            .and(takesArguments(2))
-            .and(takesArgument(0, String.class))
-            .and(takesArgument(1, byte[].class)),
+        isPublic().and(named("publish")).and(takesArguments(String.class, byte[].class)),
         getClass().getName() + "$PublishBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("publish"))
-            .and(takesArguments(3))
-            .and(takesArgument(0, String.class))
-            .and(takesArgument(1, named("io.nats.client.impl.Headers")))
-            .and(takesArgument(2, byte[].class)),
+            .and(takesArguments("java.lang.String", "io.nats.client.impl.Headers", "byte[]")),
         getClass().getName() + "$PublishHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("publish"))
-            .and(takesArguments(3))
-            .and(takesArgument(0, String.class))
-            .and(takesArgument(1, String.class))
-            .and(takesArgument(2, byte[].class)),
+            .and(takesArguments(String.class, String.class, byte[].class)),
         getClass().getName() + "$PublishReplyToBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("publish"))
-            .and(takesArguments(4))
-            .and(takesArgument(0, String.class))
-            .and(takesArgument(1, String.class))
-            .and(takesArgument(2, named("io.nats.client.impl.Headers")))
-            .and(takesArgument(3, byte[].class)),
+            .and(
+                takesArguments(
+                    "java.lang.String",
+                    "java.lang.String",
+                    "io.nats.client.impl.Headers",
+                    "byte[]")),
         getClass().getName() + "$PublishReplyToHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("publish"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("io.nats.client.Message"))),
+        isPublic().and(named("publish")).and(takesArguments("io.nats.client.Message")),
         getClass().getName() + "$PublishMessageAdvice");
   }
 

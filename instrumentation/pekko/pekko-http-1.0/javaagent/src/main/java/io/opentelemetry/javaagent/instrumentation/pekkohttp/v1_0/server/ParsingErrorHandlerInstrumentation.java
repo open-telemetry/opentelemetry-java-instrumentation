@@ -7,12 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isBridge;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -55,11 +54,12 @@ class ParsingErrorHandlerInstrumentation implements TypeInstrumentation {
         named("handle")
             .and(not(isAbstract()))
             .and(not(isBridge()))
-            .and(takesArguments(4))
-            .and(takesArgument(0, named("org.apache.pekko.http.scaladsl.model.StatusCode")))
-            .and(takesArgument(1, named("org.apache.pekko.http.scaladsl.model.ErrorInfo")))
-            .and(takesArgument(2, named("org.apache.pekko.event.LoggingAdapter")))
-            .and(takesArgument(3, named("org.apache.pekko.http.scaladsl.settings.ServerSettings"))),
+            .and(
+                takesArguments(
+                    "org.apache.pekko.http.scaladsl.model.StatusCode",
+                    "org.apache.pekko.http.scaladsl.model.ErrorInfo",
+                    "org.apache.pekko.event.LoggingAdapter",
+                    "org.apache.pekko.http.scaladsl.settings.ServerSettings")),
         getClass().getName() + "$HandleAdvice");
   }
 

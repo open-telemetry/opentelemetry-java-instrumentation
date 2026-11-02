@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
@@ -38,13 +37,7 @@ class LoadInjectedClassInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     ElementMatcher.Junction<MethodDescription> methodMatcher =
         named("loadClass")
-            .and(
-                takesArguments(1)
-                    .and(takesArgument(0, String.class))
-                    .or(
-                        takesArguments(2)
-                            .and(takesArgument(0, String.class))
-                            .and(takesArgument(1, boolean.class))))
+            .and(takesArguments(String.class).or(takesArguments(String.class, boolean.class)))
             .and(isPublic().or(isProtected()))
             .and(not(isStatic()));
     // Inline instrumentation to prevent problems with invokedynamic-recursion

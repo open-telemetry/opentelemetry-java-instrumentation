@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentConstructionState;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
@@ -19,6 +19,7 @@ import io.vertx.core.Handler;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToFields.ToField;
@@ -36,19 +37,15 @@ class ClientBuilderInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("connectingTo")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("java.util.function.Supplier"))),
+        named("connectingTo").and(takesArguments(Supplier.class)),
         getClass().getName() + "$ConnectingToSupplierAdvice");
 
     transformer.applyAdviceToMethod(
-        named("connectingTo")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("io.vertx.sqlclient.SqlConnectOptions"))),
+        named("connectingTo").and(takesArguments("io.vertx.sqlclient.SqlConnectOptions")),
         getClass().getName() + "$ConnectingToOptionsAdvice");
 
     transformer.applyAdviceToMethod(
-        named("connectingTo").and(takesArguments(1)).and(takesArgument(0, named("java.util.List"))),
+        named("connectingTo").and(takesArguments(List.class)),
         getClass().getName() + "$ConnectingToListAdvice");
 
     transformer.applyAdviceToMethod(
