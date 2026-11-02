@@ -111,7 +111,7 @@ class JettyServlet5ForwardTest extends JettyDispatchTest {
       assertThat(response.contentUtf8()).isEqualTo(expected);
       assertThat(response.contentUtf8()).containsOnlyOnce(snippet);
       if (response.headers().contentLength() >= 0) {
-        assertThat(response.headers().contentLength()).isEqualTo(expected.length());
+        assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
       }
     } finally {
       ExperimentalSnippetHolder.setSnippet("");
@@ -131,7 +131,7 @@ class JettyServlet5ForwardTest extends JettyDispatchTest {
       String expected = HTML_PRINT_WRITER.getBody().replace("<head>", "<head>" + snippet);
       assertThat(response.contentUtf8()).isEqualTo(expected);
       assertThat(response.contentUtf8()).containsOnlyOnce(snippet);
-      assertThat(response.headers().contentLength()).isEqualTo(expected.length());
+      assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
     } finally {
       ExperimentalSnippetHolder.setSnippet("");
     }

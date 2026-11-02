@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet;
 
+import static java.nio.charset.StandardCharsets.UTF_16LE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -225,6 +226,7 @@ class InjectionStateLifetimeTest {
 
   @ParameterizedTest
   @EnumSource(Output.class)
+  @SuppressWarnings("DirectInvocationOnMock")
   void errorDispatchDoesNotInheritAbandonedContentLength(Output output) throws IOException {
     Fixture fixture = new Fixture();
     Servlet3SnippetInjectingResponseWrapper first = fixture.wrap();
@@ -311,6 +313,7 @@ class InjectionStateLifetimeTest {
   }
 
   @Test
+  @SuppressWarnings("DirectInvocationOnMock")
   void cachedWriterConsultsNativeOwnershipAfterRawReset() throws IOException {
     Fixture fixture = new Fixture();
     Servlet3SnippetInjectingResponseWrapper wrapper = fixture.wrap();
@@ -321,6 +324,7 @@ class InjectionStateLifetimeTest {
   }
 
   @Test
+  @SuppressWarnings("DirectInvocationOnMock")
   void cachedWriterReplacedAfterRawResetAndEncodingChange() throws IOException {
     Fixture fixture = new Fixture();
     Servlet3SnippetInjectingResponseWrapper wrapper = fixture.wrap();
@@ -332,8 +336,7 @@ class InjectionStateLifetimeTest {
     assertThat(replacement).isNotSameAs(old);
     replacement.write(HTML);
     replacement.flush();
-    assertThat(new String(fixture.bytes.toByteArray(), java.nio.charset.UTF_16LE))
-        .isEqualTo(INJECTED);
+    assertThat(new String(fixture.bytes.toByteArray(), UTF_16LE)).isEqualTo(INJECTED);
   }
 
   enum Output {
