@@ -17,9 +17,9 @@ import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.utility.JavaModule;
 
-public class IndyModuleRegistry {
+public class InstrumentationClassLoaderRegistry {
 
-  private IndyModuleRegistry() {}
+  private InstrumentationClassLoaderRegistry() {}
 
   private static final ConcurrentHashMap<String, InstrumentationModule> modulesByClassName =
       new ConcurrentHashMap<>();
@@ -32,7 +32,7 @@ public class IndyModuleRegistry {
    * instrumented class loader realized via {@link ClassLoaderValue}.
    */
   private static final ClassLoaderValue<Map<ClassLoader, InstrumentationModuleClassLoader>>
-      internalOrExtensionsClassLoaders = new ClassLoaderValue<>();
+      instrumentationClassLoaders = new ClassLoaderValue<>();
 
   public static InstrumentationModuleClassLoader getInstrumentationClassLoader(
       String moduleClassName, ClassLoader instrumentedClassLoader) {
@@ -47,11 +47,12 @@ public class IndyModuleRegistry {
   public static InstrumentationModuleClassLoader getInstrumentationClassLoader(
       InstrumentationModule module, ClassLoader instrumentedClassLoader) {
 
-    ClassLoader moduleCl = module.getClass().getClassLoader();
-    InstrumentationModuleClassLoader loader =
-        lookupInstrumentationClassLoader(instrumentedClassLoader, moduleCl);
+    ClassLoader agentOrExtensionClassLoader = module.getClass().getClassLoader();
+    InstrumentationModuleClassLoader instrumentationClassLoader =
+        lookupInstrumentationClassLoader(instrumentedClassLoader, agentOrExtensionClassLoader);
 
-    if (loader == null || !loader.hasModuleInstalled(module)) {
+    if (instrumentationClassLoader == null
+        || !instrumentationClassLoader.hasModuleInstalled(module)) {
       throw new IllegalArgumentException(
           module
               + " has not been initialized for class loader "
@@ -74,41 +75,45 @@ public class IndyModuleRegistry {
             .jpmsModulesToOpen()
             .forEach(
                 (javaModule, packages) ->
-                    ModuleOpener.open(instrumentation, javaModule, loader, packages));
+                    ModuleOpener.open(
+                        instrumentation, javaModule, instrumentationClassLoader, packages));
       }
     }
-    return loader;
+    return instrumentationClassLoader;
   }
 
   @Nullable
   private static InstrumentationModuleClassLoader lookupInstrumentationClassLoader(
-      ClassLoader instrumentedClassLoader, ClassLoader moduleCl) {
+      ClassLoader instrumentedClassLoader, ClassLoader agentOrExtensionClassLoader) {
     Map<ClassLoader, InstrumentationModuleClassLoader> map =
-        internalOrExtensionsClassLoaders.get(instrumentedClassLoader);
+        instrumentationClassLoaders.get(instrumentedClassLoader);
     if (map == null) {
       return null;
     }
-    return map.get(moduleCl);
+    return map.get(agentOrExtensionClassLoader);
   }
 
   /** Returns a newly created class loader containing only the provided module for muzzle. */
   public static InstrumentationModuleClassLoader createInstrumentationClassLoaderForMuzzle(
       InstrumentationModule module, ClassLoader instrumentedClassLoader) {
     // TODO: remove this method and replace usages with a custom TypePool implementation instead
-    ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
-    InstrumentationModuleClassLoader cl =
-        new InstrumentationModuleClassLoader(instrumentedClassLoader, agentOrExtensionCl);
-    cl.installModule(module, true);
-    return cl;
+    ClassLoader agentOrExtensionClassLoader = module.getClass().getClassLoader();
+    InstrumentationModuleClassLoader instrumentationClassLoader =
+        new InstrumentationModuleClassLoader(instrumentedClassLoader, agentOrExtensionClassLoader);
+    instrumentationClassLoader.installModule(module, true);
+    return instrumentationClassLoader;
   }
 
-  public static AgentBuilder.Identified.Extendable initializeModuleLoaderOnMatch(
+  public static AgentBuilder.Identified.Extendable initializeModuleClassLoaderOnTransform(
       InstrumentationModule module, AgentBuilder.Identified.Extendable agentBuilder) {
-    String moduleName = module.getClass().getName();
-    InstrumentationModule existingRegistration = modulesByClassName.putIfAbsent(moduleName, module);
+    String moduleClassName = module.getClass().getName();
+    InstrumentationModule existingRegistration =
+        modulesByClassName.putIfAbsent(moduleClassName, module);
     if (existingRegistration != null && existingRegistration != module) {
       throw new IllegalArgumentException(
-          "A different module with the class name " + moduleName + " has already been registered!");
+          "A different module with the class name "
+              + moduleClassName
+              + " has already been registered!");
     }
     return agentBuilder.transform(
         (builder, typeDescription, classLoader, javaModule, protectionDomain) -> {
@@ -120,21 +125,22 @@ public class IndyModuleRegistry {
   private static void initializeModuleLoaderForClassLoader(
       InstrumentationModule module, ClassLoader classLoader) {
 
-    ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
-    InstrumentationModuleClassLoader moduleCl;
+    ClassLoader agentOrExtensionClassLoader = module.getClass().getClassLoader();
+    InstrumentationModuleClassLoader instrumentationClassLoader;
 
     // Because extensions have their own classloader, extension modules are loaded in a common
     // InstrumentationModuleCLassLoader per extension and instrumented CL (with extension CL as key)
     // Non-extension modules are loaded in a common InstrumentationModuleClassLoader per
     // instrumented CL (with agent CL as key)
 
-    moduleCl =
-        internalOrExtensionsClassLoaders
+    instrumentationClassLoader =
+        instrumentationClassLoaders
             .computeIfAbsent(classLoader, ConcurrentHashMap::new)
             .computeIfAbsent(
-                agentOrExtensionCl,
-                k -> new InstrumentationModuleClassLoader(classLoader, agentOrExtensionCl));
+                agentOrExtensionClassLoader,
+                k ->
+                    new InstrumentationModuleClassLoader(classLoader, agentOrExtensionClassLoader));
 
-    moduleCl.installModule(module);
+    instrumentationClassLoader.installModule(module);
   }
 }
