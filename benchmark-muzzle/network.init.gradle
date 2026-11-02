@@ -22,6 +22,8 @@ if (gradle.parent == null) {
   def file = new File(output)
   file.parentFile.mkdirs()
   def recording = new Recording(Configuration.getConfiguration("profile"))
+  recording.disable("jdk.InitialEnvironmentVariable")
+  recording.disable("jdk.InitialSystemProperty")
   recording.enable("jdk.SocketRead").withThreshold(Duration.ofMillis(10)).withStackTrace()
   recording.enable("jdk.SocketWrite").withThreshold(Duration.ofMillis(10)).withStackTrace()
   recording.enable("jdk.ThreadPark").withThreshold(Duration.ofMillis(100)).withStackTrace()
