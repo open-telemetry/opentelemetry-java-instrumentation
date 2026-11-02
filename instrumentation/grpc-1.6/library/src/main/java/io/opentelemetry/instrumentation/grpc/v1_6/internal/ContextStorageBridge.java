@@ -33,18 +33,27 @@ public final class ContextStorageBridge extends Context.Storage {
   // context that should be restored in original context store on detach
   private static final Context.Key<Context> ORIGINAL_TO_RESTORE =
       Context.key("original-to-restore");
+  // context the caller attached, the value in original context store is only a restore token
+  private static final Context.Key<Context> ATTACHED_CONTEXT = Context.key("attached-context");
 
   private final boolean propagateGrpcDeadline;
+  private final boolean forkGrpcContext;
   // original context storage that would have been used when running without agent
   private final Context.Storage originalStorage;
 
   public ContextStorageBridge(boolean propagateGrpcDeadline) {
     this.propagateGrpcDeadline = propagateGrpcDeadline;
+    this.forkGrpcContext = true;
     this.originalStorage = null;
   }
 
   public ContextStorageBridge(Context.Storage originalStorage) {
+    this(originalStorage, true);
+  }
+
+  public ContextStorageBridge(Context.Storage originalStorage, boolean forkGrpcContext) {
     propagateGrpcDeadline = false;
+    this.forkGrpcContext = forkGrpcContext;
     this.originalStorage = originalStorage;
   }
 
@@ -59,7 +68,7 @@ public final class ContextStorageBridge extends Context.Storage {
 
     if (current == toAttach) {
       Context result = current.withValue(OTEL_SCOPE, Scope.noop());
-      result = attachOriginalContextStorage(result);
+      result = attachOriginalContextStorage(result, toAttach);
       return result;
     }
 
@@ -80,13 +89,14 @@ public final class ContextStorageBridge extends Context.Storage {
 
     Scope scope = newOtelContext.makeCurrent();
     Context result = current.withValue(OTEL_SCOPE, scope);
-    result = attachOriginalContextStorage(result);
+    result = attachOriginalContextStorage(result, toAttach);
     return result;
   }
 
-  private Context attachOriginalContextStorage(Context context) {
+  private Context attachOriginalContextStorage(Context context, Context attached) {
     Context result = context;
     if (originalStorage != null) {
+      result = result.withValue(ATTACHED_CONTEXT, attached);
       Context originalToRestore = originalStorage.doAttach(result);
       result = result.withValues(ORIGINAL_CONTEXT, result, ORIGINAL_TO_RESTORE, originalToRestore);
     }
@@ -115,7 +125,9 @@ public final class ContextStorageBridge extends Context.Storage {
     io.opentelemetry.context.Context otelContext = io.opentelemetry.context.Context.current();
     Context current = otelContext.get(GRPC_CONTEXT);
     if (current == null) {
-      return Context.ROOT.withValue(OTEL_CONTEXT, otelContext);
+      // An OpenTelemetry context with no gRPC context does not hide one attached on this thread.
+      Context base = forkGrpcContext ? Context.ROOT : attachedContext(originalStorage.current());
+      return base.withValue(OTEL_CONTEXT, otelContext);
     }
     // Store the current OTel context in the gRPC context so that gRPC context propagation
     // mechanisms will also propagate the OTel context.
@@ -128,7 +140,11 @@ public final class ContextStorageBridge extends Context.Storage {
       if (!propagateGrpcDeadline && originalStorage != null) {
         Context originalCurrent = originalStorage.current();
         // check whether grpc context would have propagated without otel context
-        if (originalCurrent == null || originalCurrent == Context.ROOT) {
+        if (!forkGrpcContext) {
+          // Only a context attached on this thread applies. A context that arrived here through
+          // OpenTelemetry propagation may already be cancelled.
+          current = attachedContext(originalCurrent);
+        } else if (originalCurrent == null || originalCurrent == Context.ROOT) {
           // Because we are propagating gRPC context via OpenTelemetry here, we may also propagate a
           // deadline where it wasn't present before. Notably, this could happen with no user
           // intention when using the javaagent which will add OpenTelemetry propagation
@@ -142,5 +158,10 @@ public final class ContextStorageBridge extends Context.Storage {
       return current.withValue(OTEL_CONTEXT, otelContext);
     }
     return current;
+  }
+
+  private static Context attachedContext(Context originalCurrent) {
+    Context attached = originalCurrent == null ? null : ATTACHED_CONTEXT.get(originalCurrent);
+    return attached == null ? Context.ROOT : attached;
   }
 }

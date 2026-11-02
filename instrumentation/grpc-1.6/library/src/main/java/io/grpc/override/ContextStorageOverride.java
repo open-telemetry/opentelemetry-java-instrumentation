@@ -14,7 +14,8 @@ import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
  */
 public final class ContextStorageOverride extends Context.Storage {
 
-  private static final Context.Storage delegate = new ContextStorageBridge(true);
+  private static final Context.Storage delegate =
+      new ContextStorageBridge(new ThreadLocalContextStorage(), false);
 
   @Override
   public Context doAttach(Context toAttach) {
@@ -29,5 +30,26 @@ public final class ContextStorageOverride extends Context.Storage {
   @Override
   public Context current() {
     return delegate.current();
+  }
+
+  private static final class ThreadLocalContextStorage extends Context.Storage {
+    private static final ThreadLocal<Context> current = new ThreadLocal<>();
+
+    @Override
+    public Context doAttach(Context toAttach) {
+      Context previous = current.get();
+      current.set(toAttach);
+      return previous;
+    }
+
+    @Override
+    public void detach(Context toDetach, Context toRestore) {
+      current.set(toRestore);
+    }
+
+    @Override
+    public Context current() {
+      return current.get();
+    }
   }
 }
