@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.testcontainers-testing")
@@ -30,95 +33,73 @@ dependencies {
   latestDepTestLibrary("org.apache.pulsar:pulsar-client-admin:4.+") // see test suite below
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("version5Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java", "src/version5Test/java"))
-        }
+testing.suites {
+  register<JvmTestSuite>("version5Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java", "src/version5Test/java"))
       }
-      dependencies {
-        implementation("org.apache.pulsar:pulsar-client-v5-all:${baseVersion("5.0.0").orLatest()}")
-        implementation("javax.annotation:javax.annotation-api:1.3.2")
-        implementation("org.testcontainers:testcontainers-pulsar")
-        compileOnly("io.swagger.core.v3:swagger-annotations:2.2.55")
+    }
+    dependencies {
+      implementation("org.apache.pulsar:pulsar-client-v5-all:${baseVersion("5.0.0").orLatest()}")
+      implementation("javax.annotation:javax.annotation-api:1.3.2")
+      implementation("org.testcontainers:testcontainers-pulsar")
+      compileOnly("io.swagger.core.v3:swagger-annotations:2.2.55")
+    }
+
+    tasks.named(sources.compileJavaTaskName, JavaCompile::class).configure {
+      options.release.set(17)
+    }
+  }
+
+  executions("version5Test") {
+    configureDefault {
+      val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
+      if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+        enabled = false
       }
-      targets.all {
-        testTask.configure {
-          filter {
-            includeTestsMatching("PulsarClientV5Test")
-          }
-          jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-          systemProperty(
-            "metadataConfig",
-            "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-          )
-        }
+
+      filter {
+        includeTestsMatching("PulsarClientV5Test")
       }
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    }
+  }
+
+  executions("test") {
+    configureDefault {
+      filter {
+        excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
+      }
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    }
+
+    register("ReceiveSpanDisabled") {
+      filter {
+        includeTestsMatching("PulsarClientSuppressReceiveSpansTest")
+      }
+      include("**/PulsarClientSuppressReceiveSpansTest.*")
+    }
+
+    register("Experimental") {
+      filter {
+        excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
+      }
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+      telemetryConfig("otel.instrumentation.pulsar.experimental-span-attributes", "true")
     }
   }
 }
 
 tasks {
-  named("compileVersion5TestJava", JavaCompile::class).configure {
-    options.release.set(17)
-  }
-  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
-  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
-    named("version5Test", Test::class).configure {
-      enabled = false
-    }
-  }
-
   withType<Test>().configureEach {
     systemProperty("io.opentelemetry.pulsar-2.8.debug", "true")
-  }
-
-  val testReceiveSpanDisabled = register<Test>("testReceiveSpanDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("PulsarClientSuppressReceiveSpansTest")
+    if (otelProps.denyUnsafe) {
+      enabled = false
     }
-    include("**/PulsarClientSuppressReceiveSpansTest.*")
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-
-    jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.pulsar.experimental-span-attributes=true")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-    )
   }
 
   check {
-    dependsOn(
-      testing.suites,
-      testReceiveSpanDisabled,
-      testExperimental,
-    )
-  }
-
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
-    }
+    dependsOn(testing.suites)
   }
 }

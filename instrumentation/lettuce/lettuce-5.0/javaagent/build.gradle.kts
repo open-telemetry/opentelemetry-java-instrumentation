@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.testcontainers-testing")
@@ -25,89 +28,80 @@ dependencies {
   latestDepTestLibrary("io.lettuce:lettuce-core:5.0.+") // see test suite below
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation-api-incubator"))
-        implementation(project(":javaagent-extension-api"))
-        implementation("io.lettuce:lettuce-core:5.0.0.RELEASE")
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation-api-incubator"))
+      implementation(project(":javaagent-extension-api"))
+      implementation("io.lettuce:lettuce-core:5.0.0.RELEASE")
+    }
+  }
+
+  register<JvmTestSuite>("lettuce51Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
     }
 
-    register<JvmTestSuite>("lettuce51Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
-      }
+    dependencies {
+      val lettuceVersion = baseVersion("5.1.0.RELEASE").orLatest("5.+")
+      implementation("io.lettuce:lettuce-core:$lettuceVersion")
+      implementation("org.testcontainers:testcontainers")
+    }
+  }
 
-      dependencies {
-        val lettuceVersion = baseVersion("5.1.0.RELEASE").orLatest("5.+")
-        implementation("io.lettuce:lettuce-core:$lettuceVersion")
-        implementation("org.testcontainers:testcontainers")
+  register<JvmTestSuite>("lettuce60Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
     }
 
-    register<JvmTestSuite>("lettuce60Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
-      }
+    dependencies {
+      val lettuceVersion = baseVersion("6.0.0.RELEASE").orLatest("6.4.+")
+      implementation("io.lettuce:lettuce-core:$lettuceVersion")
+      implementation("org.testcontainers:testcontainers")
+    }
+  }
 
-      dependencies {
-        val lettuceVersion = baseVersion("6.0.0.RELEASE").orLatest("6.4.+")
-        implementation("io.lettuce:lettuce-core:$lettuceVersion")
-        implementation("org.testcontainers:testcontainers")
+  register<JvmTestSuite>("lettuce65Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java", "src/testLettuce65/java"))
       }
     }
 
-    register<JvmTestSuite>("lettuce65Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java", "src/testLettuce65/java"))
-        }
-      }
+    dependencies {
+      val lettuceVersion = baseVersion("6.5.0.RELEASE").orLatest()
+      implementation("io.lettuce:lettuce-core:$lettuceVersion")
+      implementation("org.testcontainers:testcontainers")
+    }
+  }
 
-      dependencies {
-        val lettuceVersion = baseVersion("6.5.0.RELEASE").orLatest()
-        implementation("io.lettuce:lettuce-core:$lettuceVersion")
-        implementation("org.testcontainers:testcontainers")
+  executions("test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.lettuce.experimental-span-attributes", "true")
+    }
+
+    register("ConnectionTelemetryEnabled") {
+      telemetryConfig("otel.instrumentation.lettuce.connection-telemetry.enabled", "true")
+    }
+  }
+
+  executions("lettuce51Test") {
+    configureDefault {
+      if (otelProps.denyUnsafe) {
+        // Lettuce 5.1.0 pulls in Reactor 3.2.0, whose RingBuffer accesses sun.misc.Unsafe directly.
+        enabled = false
       }
     }
   }
 }
 
 tasks {
-  if (otelProps.denyUnsafe) {
-    // Lettuce 5.1.0 pulls in Reactor 3.2.0, whose RingBuffer accesses sun.misc.Unsafe directly.
-    named("lettuce51Test", Test::class) {
-      enabled = false
-    }
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.lettuce.experimental-span-attributes=true")
-  }
-
-  val testConnectionTelemetryEnabled = register<Test>("testConnectionTelemetryEnabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.lettuce.connection-telemetry.enabled=true")
-  }
   check {
-    dependsOn(
-      testing.suites,
-      testConnectionTelemetryEnabled,
-      testExperimental,
-    )
+    dependsOn(testing.suites)
   }
 }

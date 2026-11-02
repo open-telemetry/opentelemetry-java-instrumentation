@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -26,39 +29,22 @@ dependencies {
   testImplementation("javax.servlet:javax.servlet-api:3.0.1")
 }
 
-tasks {
-  val testRequestParameterCapture = register<Test>("testRequestParameterCapture") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.servlet.experimental.request-parameters.included=test-*",
-    )
+testing.suites.executions("test") {
+  register("RequestParameterCapture") {
+    telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.included", "test-*")
   }
 
-  val testUserNameCapture = register<Test>("testUserNameCapture") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  register("UserNameCapture") {
     filter {
       includeTestsMatching("*TomcatHandlerTest.capturesUserNameFromPrincipal")
     }
-    jvmArgs("-Dotel.instrumentation.common.user.name.enabled=true")
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    systemProperty("metadataConfig", "otel.instrumentation.common.user.name.enabled=true")
+    telemetryConfig("otel.instrumentation.common.user.name.enabled", "true")
   }
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
+  register("Experimental") {
     jvmArgs("-Dotel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true")
-  }
-
-  check {
-    dependsOn(testExperimental, testRequestParameterCapture, testUserNameCapture)
   }
 }
 
