@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser.parse;
 import static io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo.DEFAULT;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.hasMultipleTargets;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerTargetGroup;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.sanitizeHostList;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE;
@@ -29,6 +30,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -148,32 +150,37 @@ class JdbcConnectionUrlParserTest {
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "jdbc:mariadb:failover://user:p,a/ss@h1:3306,h2:3306/db",
-        "jdbc:mariadb:failover://user:p,a?ss@h1:3306,h2:3306/db",
-        "jdbc:mariadb:failover://user:p,a#ss@h1:3306,h2:3306/db",
-        "jdbc:mariadb:failover://user:123,a?x=y@h1:3306,h2:3306/db",
-        "jdbc:mariadb:failover://user:123,a?x=y@address=(host=h1),address=(host=h2)/db",
-        "jdbc:mariadb:failover://user:123,a?x=y@address=(host=h1)/db",
-        "jdbc:mariadb:failover://user:123,a#ignored?x=y@/db"
+  @CsvSource(
+      delimiter = '|',
+      value = {
+        "jdbc:mariadb:failover://user:p,a/ss@h1:3306,h2:3306/db||ss@h1:3306,h2:3306/db",
+        "jdbc:mariadb:failover://user:p,a?ss@h1:3306,h2:3306/db||",
+        "jdbc:mariadb:failover://user:p,a#ss@h1:3306,h2:3306/db||db",
+        "jdbc:mariadb:failover://user:123,a?x=y@h1:3306,h2:3306/db|user:123,a:3306|",
+        "jdbc:mariadb:failover://user:123,a?x=y@address=(host=h1),address=(host=h2)/db"
+            + "|user:123,a:3306|",
+        "jdbc:mariadb:failover://user:123,a?x=y@address=(host=h1)/db|user:123,a:3306|",
+        "jdbc:mariadb:failover://user:123,a#ignored?x=y@/db|user:123,a:3306|"
       })
-  void ambiguousMariaDbCredentialsDoNotBecomeAConfiguredTarget(String url) {
+  void mariaDbMalformedCredentialsFollowUrlGrammar(String url, String target, String namespace) {
     DbInfo dbInfo = parse(url, null);
-    assertThat(dbInfo.getConfiguredServerTarget()).isNull();
-    assertThat(dbInfo.getDbNamespace()).isNull();
+    assertThat(dbInfo.getConfiguredServerTarget())
+        .isEqualTo(target == null ? null : DbServerTarget.create(target, null));
+    assertThat(dbInfo.getDbNamespace()).isEqualTo(namespace);
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "jdbc:postgresql://user:123,a/ss@pg.host:5432",
-        "jdbc:postgresql://user:123,a#ignored?x=y@pg.host:5432,pg2:5432/db"
+  @CsvSource(
+      delimiter = '|',
+      value = {
+        "jdbc:postgresql://user:123,a/ss@pg.host:5432|ss@pg.host:5432",
+        "jdbc:postgresql://user:123,a#ignored?x=y@pg.host:5432,pg2:5432/db|"
       })
-  void ambiguousPostgresCredentialsDoNotBecomeAConfiguredTarget(String url) {
+  void postgresMalformedCredentialsFollowUrlGrammar(String url, String namespace) {
     DbInfo dbInfo = parse(url, null);
-    assertThat(dbInfo.getConfiguredServerTarget()).isNull();
-    assertThat(dbInfo.getDbNamespace()).isNull();
+    assertThat(dbInfo.getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("user:123,a:5432", null));
+    assertThat(dbInfo.getDbNamespace()).isEqualTo(namespace);
   }
 
   @Test
@@ -1972,20 +1979,125 @@ class JdbcConnectionUrlParserTest {
         "postgresql://user:pa,ss/word@pg.host1:5432,pg.host2:5433/pgdb",
         "postgresql://user:p@ss,w/ord@pg.host1:5432,pg.host2:5433/pgdb"
       })
-  void testAmbiguousUserInfoIsNotExtractedAsAuthority(String url) {
-    assertThat(extractAuthority(url)).isNull();
+  void authorityEndsAtPathDelimiterEvenInMalformedCredentialUrls(String url) {
+    String authority =
+        url.substring(url.indexOf("://") + 3, url.indexOf('/', url.indexOf("://") + 3));
+    assertThat(extractAuthority(url)).isEqualTo(authority);
   }
 
   @ParameterizedTest
   @ValueSource(
       strings = {"postgresql://h1,h2/db/admin@corp.com", "postgresql://h1,h2/db#admin@corp.com"})
-  void testAtAfterCommaSeparatedAuthorityIsAmbiguous(String url) {
-    assertThat(extractAuthority(url)).isNull();
+  void testAtAfterCommaSeparatedAuthorityDoesNotHideAuthority(String url) {
+    assertThat(extractAuthority(url)).isEqualTo("h1,h2");
   }
 
   @Test
   void testAtInQueryParameterDoesNotHideAuthority() {
     assertThat(extractAuthority("postgresql://h1,h2/db?user=admin@corp.com")).isEqualTo("h1,h2");
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "/db/admin@corp.com",
+        "/db/user@other1,other2",
+        "/db#admin@corp.com",
+        "?options=user@other1,other2/db",
+        "#user@other1,other2/db"
+      })
+  void laterAtAndCommasDoNotChangeAuthorityOrTargetCount(String suffix) {
+    assertThat(extractAuthority("postgresql://h1,h2" + suffix)).isEqualTo("h1,h2");
+    assertThat(hasMultipleTargets("postgresql://h1,h2" + suffix)).isTrue();
+    assertThat(hasMultipleTargets("postgresql://h1" + suffix)).isFalse();
+    assertThat(parse("jdbc:postgresql://h1,h2" + suffix, null).getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("h1,h2", null));
+    assertThat(parse("jdbc:postgresql://h1" + suffix, null).getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("h1", null));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"/db/user@other1,other2", "?options=user@other1,other2/db"})
+  void laterAtAndCommasDoNotHideMariaDbTargets(String suffix) {
+    assertThat(parse("jdbc:mariadb:failover://h1,h2" + suffix, null).getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("h1,h2", null));
+    assertThat(parse("jdbc:mariadb:failover://h1" + suffix, null).getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("h1", null));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"/part@h1,h2/db", "?part@h1,h2/db", "#part@h1,h2/db"})
+  void malformedCredentialsAreNotInferredBeyondAuthority(String suffix) {
+    assertThat(extractAuthority("postgresql://user:123" + suffix)).isEqualTo("user:123");
+    assertThat(parse("jdbc:postgresql://user:123" + suffix, null).getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("user", 123));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"postgresql", "mysql", "mariadb:failover"})
+  void recognizedUserInfoIsStrippedFromConfiguredTargets(String type) {
+    String userInfo = "alice" + ':' + "test-secret" + '@';
+    assertThat(
+            parse("jdbc:" + type + "://" + userInfo + "h1,h2/db", null).getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("h1,h2", null));
+  }
+
+  @Test
+  void recognizedAddressPropertiesAreStrippedFromConfiguredTargets() {
+    String credentials = "(user=alice)(" + "password" + "=test-secret@,value)";
+    String url =
+        "jdbc:mariadb:failover://address=(host=h1)"
+            + credentials
+            + ",address=(host=h2)"
+            + credentials
+            + "/db";
+    assertThat(parse(url, null).getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("h1,h2", null));
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "sqlserver://h1",
+        "jtds:sqlserver://h1/db",
+        "jtds:sybase://h1",
+        "derby://h1/db",
+        "datadirect:sqlserver://h1",
+        "tibcosoftware:sqlserver://h1",
+        "h2:tcp://h1",
+        "h2:ssl://h1",
+        "hsqldb:hsql://h1",
+        "hsqldb:hsqls://h1",
+        "hsqldb:http://h1",
+        "hsqldb:https://h1"
+      })
+  void semicolonParametersDoNotChangeTargetCount(String connection) {
+    String url = "jdbc:" + connection + ";property=a,b";
+    assertThat(hasMultipleTargets(url)).isFalse();
+    assertThat(parse(url, null).getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("h1", null));
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "jdbc:db2://h1:50000;user=a,b",
+        "jdbc:as400://h1:50000;user=a,b",
+        "jdbc:informix-sqli://h1;user=a,b",
+        "jdbc:informix-direct://db;user=a,b",
+        "jdbc:oceanbase:oracle://h1;user=a,b"
+      })
+  void otherSemicolonParameterSchemesDoNotCountPropertiesAsTargets(String url) {
+    assertThat(hasMultipleTargets(url)).isFalse();
+  }
+
+  @Test
+  void mariaDbSemicolonUserInfoDoesNotFallbackForRejectedFailoverGroup() {
+    String userInfo = "user:pw;extra@";
+    String url = "jdbc:mariadb:failover://" + userInfo + "h1,unexpected=value/db";
+
+    assertThat(hasMultipleTargets(url)).isTrue();
+    assertThat(parse(url, null).getConfiguredServerTarget()).isNull();
   }
 
   private static void testVerifySystemSubtypeParsingOfUrl(ParseTestArgument argument) {
