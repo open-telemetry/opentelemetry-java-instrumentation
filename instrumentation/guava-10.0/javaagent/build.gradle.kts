@@ -45,5 +45,5 @@ testing.suites {
 }
 
 tasks.check {
-  dependsOn(testing.suites.named("version19Test"))
+  dependsOn(testing.suites)
 }
