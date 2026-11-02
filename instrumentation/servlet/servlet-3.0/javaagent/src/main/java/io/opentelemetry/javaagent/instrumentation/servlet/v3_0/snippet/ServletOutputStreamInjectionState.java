@@ -16,16 +16,17 @@ public class ServletOutputStreamInjectionState {
 
   public static void initializeInjectionStateIfNeeded(
       ServletOutputStream servletOutputStream, Servlet3SnippetInjectingResponseWrapper wrapper) {
-    InjectionState state = INJECTION_STATE.get(servletOutputStream);
-    if (state == null || state.getWrapper() != wrapper) {
-      state = new InjectionState(wrapper);
-      INJECTION_STATE.set(servletOutputStream, state);
-    }
+    INJECTION_STATE.set(servletOutputStream, wrapper.getInjectionState());
   }
 
   @Nullable
   public static InjectionState getInjectionState(ServletOutputStream servletOutputStream) {
-    return INJECTION_STATE.get(servletOutputStream);
+    InjectionState state = INJECTION_STATE.get(servletOutputStream);
+    if (state != null && !state.isCurrentRequest()) {
+      INJECTION_STATE.set(servletOutputStream, null);
+      return null;
+    }
+    return state;
   }
 
   private ServletOutputStreamInjectionState() {}

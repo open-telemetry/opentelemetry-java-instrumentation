@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -109,6 +110,72 @@ public class TestServlet5 {
             }
             return null;
           });
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetForward extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      String contentLength = req.getParameter("contentLength");
+      resp.setContentLength(contentLength == null ? 1000 : Integer.parseInt(contentLength));
+      resp.getOutputStream().write("<head>".getBytes(UTF_8));
+      if (resp.isCommitted()) {
+        throw new ServletException("Response committed before forward");
+      }
+      req.getRequestDispatcher(HTML_PRINT_WRITER.getPath()).forward(req, resp);
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.setContentType("text/html");
+      resp.getWriter().write("<head>");
+      AsyncContext context = req.startAsync();
+      context.getResponse().resetBuffer();
+      context.dispatch(HTML_PRINT_WRITER.getPath());
+    }
+  }
+
+  @WebServlet
+  public static class SnippetRejectedForward extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      ServletOutputStream output = resp.getOutputStream();
+      output.write("<head><title>before</title></head>".getBytes(UTF_8));
+      resp.flushBuffer();
+      try {
+        req.getRequestDispatcher(HTML_PRINT_WRITER.getPath()).forward(req, resp);
+      } catch (IllegalStateException expected) {
+        output.write("<head><title>after</title></head>".getBytes(UTF_8));
+        return;
+      }
+      throw new ServletException("Forward unexpectedly succeeded");
+    }
+  }
+
+  @WebServlet
+  public static class SnippetWriterAcquisitionFailure extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      String body = HTML_PRINT_WRITER.getBody();
+      resp.setContentType("text/html");
+      resp.setContentLength(body.length());
+      ServletOutputStream output = resp.getOutputStream();
+      try {
+        resp.getWriter();
+      } catch (IllegalStateException expected) {
+        output.write(body.getBytes(UTF_8));
+        return;
+      }
+      throw new ServletException("Writer acquisition unexpectedly succeeded");
     }
   }
 

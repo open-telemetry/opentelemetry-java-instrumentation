@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.Servlet3SnippetInjectingResponseWrapper;
 import javax.annotation.Nullable;
+import javax.servlet.DispatcherType;
 import javax.servlet.Servlet;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -107,17 +108,23 @@ public class Servlet3Advice {
       return new Object[] {null, request, response};
     }
 
+    HttpServletRequest httpRequest = (HttpServletRequest) request;
+    if (httpRequest.getDispatcherType() == DispatcherType.FORWARD) {
+      Servlet3SnippetInjectingResponseWrapper.resetForForward(httpRequest);
+    }
+
     String snippet = snippetInjectionHelper().getSnippet();
     if (!snippet.isEmpty()
         && !((HttpServletResponse) response)
             .containsHeader(Servlet3SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {
       response =
-          new Servlet3SnippetInjectingResponseWrapper((HttpServletResponse) response, snippet);
+          new Servlet3SnippetInjectingResponseWrapper(
+              (HttpServletRequest) request, (HttpServletResponse) response, snippet);
     }
     AdviceScope adviceScope =
         new AdviceScope(
             CallDepth.forClass(AppServerBridge.getCallDepthKey()),
-            (HttpServletRequest) request,
+            httpRequest,
             (HttpServletResponse) response,
             servletOrFilter);
     return new Object[] {adviceScope, request, response};

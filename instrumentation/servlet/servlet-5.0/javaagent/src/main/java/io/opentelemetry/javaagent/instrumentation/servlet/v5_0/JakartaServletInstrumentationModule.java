@@ -14,8 +14,10 @@ import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncCont
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncContextStartInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncStartInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.service.RequestDispatcherForwardInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletOutputStreamInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletResponseResetInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -44,6 +46,10 @@ public class JakartaServletInstrumentationModule extends InstrumentationModule {
             adviceClassName(".Servlet5OutputStreamWriteBytesAndOffsetAdvice"),
             adviceClassName(".Servlet5OutputStreamWriteBytesAdvice"),
             adviceClassName(".Servlet5OutputStreamWriteIntAdvice")),
+        new ServletResponseResetInstrumentation(
+            BASE_PACKAGE, adviceClassName(".Servlet5ResponseResetAdvice")),
+        new RequestDispatcherForwardInstrumentation(
+            BASE_PACKAGE, adviceClassName(".Servlet5RequestDispatcherForwardAdvice")),
         new HttpServletResponseInstrumentation(
             BASE_PACKAGE, adviceClassName(".response.ResponseSendAdvice")));
   }
