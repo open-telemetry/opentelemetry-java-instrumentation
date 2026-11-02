@@ -5,13 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0;
 
+import static java.util.Arrays.asList;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.LoggingConfig;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import java.util.function.Predicate;
+import javax.annotation.Nullable;
 
 public class LogbackSingletons {
 
@@ -30,7 +36,8 @@ public class LogbackSingletons {
     boolean captureTemplate = config.getBoolean("capture_template/development", false);
     boolean captureArguments = config.getBoolean("capture_arguments/development", false);
     Predicate<String> mdcAttributes =
-        SelectorConfig.resolveLegacyLiteral(config, "logback-appender", "mdc-attributes");
+        excludeTraceContextKeys(
+            SelectorConfig.resolveLegacyLiteral(config, "logback-appender", "mdc-attributes"));
     Predicate<String> loggerContextAttributes =
         SelectorConfig.resolveLegacyBoolean(
             config, "logback-appender", "logger-context-attributes");
@@ -48,6 +55,31 @@ public class LogbackSingletons {
             .setCaptureTemplate(captureTemplate)
             .setCaptureArguments(captureArguments)
             .build();
+  }
+
+  // the logback-mdc instrumentation adds the trace context to the MDC for application logs, the
+  // exported log record already carries it in dedicated fields
+  @Nullable
+  private static Predicate<String> excludeTraceContextKeys(@Nullable Predicate<String> selector) {
+    if (selector == null || !isLogbackMdcEnabled()) {
+      return selector;
+    }
+    CommonConfig commonConfig = AgentCommonConfig.get();
+    String traceIdKey = commonConfig.getTraceIdKey();
+    String spanIdKey = commonConfig.getSpanIdKey();
+    String traceFlagsKey = commonConfig.getTraceFlagsKey();
+    return key ->
+        !key.equals(traceIdKey)
+            && !key.equals(spanIdKey)
+            && !key.equals(traceFlagsKey)
+            && selector.test(key);
+  }
+
+  private static boolean isLogbackMdcEnabled() {
+    AgentDistributionConfig config = AgentDistributionConfig.get();
+    return config.isInstrumentationEnabled(
+        asList("logback-mdc-1.0", "logback-mdc", "logback"),
+        config.isInstrumentationDefaultEnabled());
   }
 
   public static LoggingEventMapper mapper() {

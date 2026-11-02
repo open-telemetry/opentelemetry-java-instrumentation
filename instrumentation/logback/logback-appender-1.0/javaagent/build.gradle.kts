@@ -45,6 +45,8 @@ dependencies {
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
 
   testImplementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
+
+  testInstrumentation(project(":instrumentation:logback:logback-mdc-1.0:javaagent"))
 }
 
 testing.suites {
@@ -113,6 +115,58 @@ testing.suites {
         filter.includeTestsMatching("*LogbackKeyValuePairSelectorTest")
         jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.excluded=*")
         systemProperty("testKeyValuePairConfiguration", "none")
+      }
+    }
+  }
+
+  register<JvmTestSuite>("logbackMdcTest") {
+    dependencies {
+      if (otelProps.testLatestDeps) {
+        implementation("ch.qos.logback:logback-classic:latest.release")
+      } else {
+        implementation("ch.qos.logback:logback-classic") {
+          version {
+            strictly("1.0.0")
+          }
+        }
+        implementation("org.slf4j:slf4j-api") {
+          version {
+            strictly("1.7.36")
+          }
+        }
+      }
+    }
+
+    executions {
+      configureDefault {
+        jvmArgs("-Dotel.instrumentation.logback-mdc.add-baggage=true")
+        jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=*")
+      }
+    }
+  }
+
+  register<JvmTestSuite>("logbackMdcDisabledTest") {
+    dependencies {
+      if (otelProps.testLatestDeps) {
+        implementation("ch.qos.logback:logback-classic:latest.release")
+      } else {
+        implementation("ch.qos.logback:logback-classic") {
+          version {
+            strictly("1.0.0")
+          }
+        }
+        implementation("org.slf4j:slf4j-api") {
+          version {
+            strictly("1.7.36")
+          }
+        }
+      }
+    }
+
+    executions {
+      configureDefault {
+        jvmArgs("-Dotel.instrumentation.logback-mdc.enabled=false")
+        jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=*")
       }
     }
   }
