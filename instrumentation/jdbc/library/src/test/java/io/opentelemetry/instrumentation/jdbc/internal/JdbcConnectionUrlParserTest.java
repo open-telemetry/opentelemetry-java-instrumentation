@@ -2060,6 +2060,7 @@ class JdbcConnectionUrlParserTest {
       strings = {
         "sqlserver://h1",
         "jtds:sqlserver://h1/db",
+        "jtds:sybase://h1",
         "derby://h1/db",
         "datadirect:sqlserver://h1",
         "tibcosoftware:sqlserver://h1",

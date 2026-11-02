@@ -277,7 +277,7 @@ public final class UrlParsingUtils {
     }
     return scheme.equals("sqlserver")
         || scheme.equals("microsoft:sqlserver")
-        || scheme.equals("jtds:sqlserver")
+        || scheme.startsWith("jtds:")
         || scheme.equals("derby")
         || scheme.equals("db2")
         || scheme.equals("as400")
