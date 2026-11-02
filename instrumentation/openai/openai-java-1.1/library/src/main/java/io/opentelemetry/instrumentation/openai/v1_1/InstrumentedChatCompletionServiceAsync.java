@@ -42,6 +42,13 @@ final class InstrumentedChatCompletionServiceAsync
   }
 
   @Override
+  protected ChatCompletionServiceAsync wrap(ChatCompletionServiceAsync delegate) {
+    return new InstrumentedChatCompletionServiceAsync(
+            delegate, instrumenter, eventLogger, captureMessageContent)
+        .createProxy();
+  }
+
+  @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     String methodName = method.getName();
     Class<?>[] parameterTypes = method.getParameterTypes();
@@ -136,7 +143,7 @@ final class InstrumentedChatCompletionServiceAsync
         context, eventLogger, chatCompletionCreateParams, captureMessageContent);
     AsyncStreamResponse<ChatCompletionChunk> result =
         delegate.createStreaming(chatCompletionCreateParams, requestOptions);
-    return new TracingAsyncStreamedResponse(
+    return new TracingAsyncStreamedResponse<>(
         result,
         new StreamListener(
             context, request, instrumenter, eventLogger, captureMessageContent, newSpan));
