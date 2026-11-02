@@ -23,7 +23,7 @@ on:
         type: boolean
         default: false
       source-run:
-        description: Earlier run supplying the initial cache for a dependency-cache experiment
+        description: Earlier benchmark run supplying an immutable cache snapshot
         type: string
       warm-seeds:
         description: Prior samples for a dependency-cache experiment
@@ -36,10 +36,14 @@ on:
         description: Profile one command per slice using the source-run snapshot
         type: boolean
         default: false
-      candidate-no-configuration-cache:
-        description: Compare identical code with candidate configuration caching disabled
-        type: boolean
-        default: false
+      candidate-mode:
+        description: Same-source setting experiment
+        type: choice
+        options:
+          - standard
+          - configuration-cache-off
+          - http-connection-ttl
+        default: standard
 
 permissions:
   contents: read
@@ -57,7 +61,7 @@ jobs:
       revision: ${{ inputs.baseline-ref }}
       source-run: ${{ inputs.source-run }}
       partitions: ${{ inputs.partitions }}
-      candidate-no-configuration-cache: ${{ inputs.candidate-no-configuration-cache }}
+      candidate-mode: ${{ inputs.candidate-mode }}
 
   dependency-cache:
     if: inputs.dependency-cache
@@ -88,9 +92,12 @@ jobs:
         env:
           ROUNDS: ${{ inputs.rounds }}
           PARTITIONS: ${{ inputs.partitions }}
+          CANDIDATE_MODE: ${{ inputs.candidate-mode }}
         run: |
           python3 - <<'PY'
           import json, os
+          if os.environ["CANDIDATE_MODE"] not in ("standard", "configuration-cache-off", "http-connection-ttl"):
+              raise ValueError("Invalid candidate mode")
           rounds = int(os.environ["ROUNDS"])
           partitions = json.loads(os.environ["PARTITIONS"])
           if not 1 <= rounds <= 10:
@@ -108,18 +115,34 @@ jobs:
         run: python3 -m unittest discover -s benchmark-muzzle -v
 
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        if: inputs.source-run == ''
         with:
           cache-read-only: true
 
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: inputs.source-run != ''
+        with:
+          name: muzzle-ci-cache-snapshot
+          path: ${{ runner.temp }}
+          run-id: ${{ inputs.source-run }}
+          github-token: ${{ github.token }}
+
       - name: Freeze the restored Gradle cache before any builds
         id: snapshot
+        env:
+          SOURCE_RUN: ${{ inputs.source-run }}
         run: |
-          sha256=$(python3 benchmark-muzzle/ci_benchmark.py snapshot \
-            --gradle-home "$HOME/.gradle" \
-            --output "$RUNNER_TEMP/gradle-snapshot.tar.gz")
+          if [[ -n "$SOURCE_RUN" ]]; then
+            sha256=$(sha256sum "$RUNNER_TEMP/gradle-snapshot.tar.gz" | cut -d' ' -f1)
+          else
+            sha256=$(python3 benchmark-muzzle/ci_benchmark.py snapshot \
+              --gradle-home "$HOME/.gradle" \
+              --output "$RUNNER_TEMP/gradle-snapshot.tar.gz")
+          fi
           echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: inputs.source-run == ''
         with:
           name: muzzle-ci-cache-snapshot
           path: ${{ runner.temp }}/gradle-snapshot.tar.gz
@@ -154,6 +177,8 @@ jobs:
         with:
           name: muzzle-ci-cache-snapshot
           path: ${{ runner.temp }}/muzzle-ci-snapshot
+          run-id: ${{ inputs.source-run || github.run_id }}
+          github-token: ${{ github.token }}
 
       - name: Run isolated live-metadata comparison
         env:
@@ -162,11 +187,13 @@ jobs:
           PARTITION: ${{ matrix.partition }}
           ROUND: ${{ matrix.round }}
           SNAPSHOT_SHA256: ${{ needs.prepare.outputs.snapshot-sha256 }}
-          NO_CONFIGURATION_CACHE: ${{ inputs.candidate-no-configuration-cache }}
+          CANDIDATE_MODE: ${{ inputs.candidate-mode }}
         run: |
           extra=()
-          if [[ "$NO_CONFIGURATION_CACHE" == "true" ]]; then
+          if [[ "$CANDIDATE_MODE" == "configuration-cache-off" ]]; then
             extra+=(--candidate-no-configuration-cache)
+          elif [[ "$CANDIDATE_MODE" == "http-connection-ttl" ]]; then
+            extra+=(--candidate-http-connection-ttl-ms 10000)
           fi
           python3 benchmark-muzzle/ci_benchmark.py run \
             --baseline "$BASELINE" --candidate "$CANDIDATE" \

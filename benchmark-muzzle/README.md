@@ -21,6 +21,9 @@ The default is all four slices. `partitions='[1]'` and `rounds=1` provide a
 functional check, not performance evidence.
 
 The workflow captures one Gradle-cache snapshot before executing any builds.
+Set `source-run=EARLIER_CI_BENCHMARK_RUN` to reuse that run's immutable
+`muzzle-ci-cache-snapshot` instead, without restoring or uploading another
+shared cache snapshot.
 Every round/slice pair runs in its own job, so five rounds create twenty
 independent jobs. Each job executes baseline, an identical-baseline control,
 and candidate on the same runner. Even rounds reverse baseline/candidate order.
@@ -167,13 +170,22 @@ Gradle resource-read operations.
 `ci_benchmark.py run` comparison. `--single-profile` records one command and
 cannot produce a paired performance comparison.
 
-`candidate-no-configuration-cache=true` tests whether storing an unused
+`candidate-mode=configuration-cache-off` tests whether storing an unused
 configuration cache costs time on fresh CI checkouts. It requires identical
 baseline and candidate source revisions and cache snapshots. Only candidate
 adds `--no-configuration-cache`; task-cache reads remain enabled. Use it with
 `profile-only=true` for a single candidate diagnostic, or without
 `profile-only` for repeated paired comparisons. Both forms verify the actual
 configuration-cache mode and complete assertion/dependency records.
+
+`candidate-mode=http-connection-ttl` instead tests a 10-second maximum HTTP
+connection lifetime. Gradle 9.8.2 maps
+`org.gradle.internal.http.idleConnectionTimeout` to Apache HTTP client's
+connection time-to-live, with a default of three minutes. The experiment
+leaves connection and read timeouts and retry counts unchanged. It probes
+whether replacing older pooled connections reduces the long successful
+resource reads seen in profiles; stale connections are a hypothesis, not
+an established diagnosis.
 
 ## Dependency-cache accumulation
 

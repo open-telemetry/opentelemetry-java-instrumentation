@@ -147,7 +147,7 @@ def discovery(checkout, destination):
     }
 
 
-def validate_build(log, actual, *, configuration_cache=True):
+def validate_build(log, actual, *, configuration_cache=True, connection_ttl_ms=None):
     if "BUILD SUCCESSFUL" not in log:
         raise ValueError("Missing successful Gradle build result")
     if "Reusing configuration cache" in log:
@@ -162,6 +162,8 @@ def validate_build(log, actual, *, configuration_cache=True):
         raise ValueError("The candidate did not disable configuration caching")
     if "MUZZLE_BENCHMARK_REMOTE enabled=true push=false" not in log:
         raise ValueError("Remote-cache read-only access was not confirmed")
+    if connection_ttl_ms is not None and f"MUZZLE_BENCHMARK_HTTP_CONNECTION_TTL {connection_ttl_ms}\n" not in log:
+        raise ValueError("The candidate HTTP connection lifetime was not confirmed")
     tasks = benchmark.task_outcomes(log)
     assertions = {task: outcome for task, outcome in tasks.items() if ":muzzle-Assert" in task}
     benchmark.require_equal(
@@ -315,6 +317,15 @@ class Comparison:
             if self.candidate_snapshot or len(set(self.revisions.values())) != 1:
                 raise ValueError("Configuration-cache comparisons require identical sources and snapshots")
             self.identity["experiment"] = "configuration-cache"
+        ttl = getattr(args, "candidate_http_connection_ttl_ms", None)
+        if ttl is not None:
+            if (
+                self.candidate_snapshot or len(set(self.revisions.values())) != 1
+                or getattr(args, "candidate_no_configuration_cache", False)
+            ):
+                raise ValueError("Connection-lifetime comparisons require identical sources/snapshots and configuration-cache modes")
+            self.identity["experiment"] = "http-connection-ttl"
+            self.identity["candidate_http_connection_ttl_ms"] = ttl
         write_json(self.reports / "identity.json", self.identity)
         self.persist()
 
@@ -335,6 +346,9 @@ class Comparison:
         sample = {"label": label, "revision": revision, "process_success": False}
         sample["configuration_cache"] = not (
             label == "candidate" and getattr(self.args, "candidate_no_configuration_cache", False)
+        )
+        sample["http_connection_ttl_ms"] = (
+            getattr(self.args, "candidate_http_connection_ttl_ms", None) if label == "candidate" else None
         )
         self.samples.append(sample)
         self.persist()
@@ -368,6 +382,8 @@ class Comparison:
             ]
         if not sample["configuration_cache"]:
             command.append("--no-configuration-cache")
+        if sample["http_connection_ttl_ms"] is not None:
+            command.append(f"-Dorg.gradle.internal.http.idleConnectionTimeout={sample['http_connection_ttl_ms']}")
         write_json(destination / "command.json", command)
         started = time.perf_counter()
         started_wall = int(time.time() * 1000)
@@ -380,7 +396,10 @@ class Comparison:
             print(f"{label}: {sample['command_ms'] / 1000:.2f}s; success={sample['process_success']}", flush=True)
         actual = benchmark.manifests(destination / "assertions")
         log = (destination / "console.log").read_text(encoding="utf-8", errors="replace")
-        tasks = validate_build(log, actual, configuration_cache=sample["configuration_cache"])
+        tasks = validate_build(
+            log, actual, configuration_cache=sample["configuration_cache"],
+            connection_ttl_ms=sample["http_connection_ttl_ms"],
+        )
         sample["task_outcomes"] = tasks
         sample["task_outcome_counts"] = dict(Counter(tasks.values()))
         sample["assertions"] = len(actual)
@@ -461,12 +480,12 @@ def load_reports(root, rounds, partitions):
                 if partition in candidate_snapshots:
                     benchmark.require_equal(candidate_snapshots[partition], value, "Warmed cache across rounds")
                 candidate_snapshots[partition] = value
-            if identity.get("experiment") == "configuration-cache":
+            if identity.get("experiment") in {"configuration-cache", "http-connection-ttl"}:
                 if (
                     len(set(identity["revisions"].values())) != 1
                     or "candidate_cache_snapshot_sha256" in identity
                 ):
-                    raise ValueError("Configuration-cache reports require identical sources and snapshots")
+                    raise ValueError("Build-setting reports require identical sources and snapshots")
             if shared is None:
                 shared = common
                 expected_revisions = identity["revisions"]
@@ -488,12 +507,18 @@ def load_reports(root, rounds, partitions):
                 log = (directory / label / "console.log").read_text(encoding="utf-8", errors="replace")
                 benchmark.require_equal(
                     sample["task_outcomes"],
-                    validate_build(log, actual, configuration_cache=sample.get("configuration_cache", True)),
+                    validate_build(
+                        log, actual, configuration_cache=sample.get("configuration_cache", True),
+                        connection_ttl_ms=sample.get("http_connection_ttl_ms"),
+                    ),
                     "Recorded task outcomes",
                 )
                 expected_cache = not (shared.get("experiment") == "configuration-cache" and label == "candidate")
                 if sample.get("configuration_cache", True) != expected_cache:
                     raise ValueError("Configuration-cache mode does not match the experiment")
+                expected_ttl = shared.get("candidate_http_connection_ttl_ms") if label == "candidate" else None
+                if sample.get("http_connection_ttl_ms") != expected_ttl:
+                    raise ValueError("Connection-lifetime mode does not match the experiment")
                 validate_diagnostics(directory / label, sample)
             reports[(round_number, partition)] = result["samples"]
     if candidate_snapshots:
@@ -595,6 +620,13 @@ def aggregate(root, destination, rounds, partitions):
             "Local and remote task-cache reads remain enabled in every command.",
             "",
         ]
+    if shared.get("experiment") == "http-connection-ttl":
+        lines[4:4] = [
+            "Both sides use identical source code, snapshots and configuration-cache modes. "
+            f"Only candidate sets the HTTP connection maximum lifetime to {shared['candidate_http_connection_ttl_ms']} ms. "
+            "Connection/read timeouts, retries, dependency selection and task-cache settings are unchanged.",
+            "",
+        ]
     for partition, entry in slices.items():
         times = entry["medians_ms"]
         lines.append(
@@ -672,6 +704,7 @@ def main():
     measure.add_argument("--operations-profile", action="store_true")
     measure.add_argument("--single-profile", action="store_true")
     measure.add_argument("--candidate-no-configuration-cache", action="store_true")
+    measure.add_argument("--candidate-http-connection-ttl-ms", type=int, choices=(10000,))
     report = commands.add_parser("report")
     report.add_argument("--inputs", type=Path, required=True)
     report.add_argument("--output", type=Path, required=True)
@@ -692,7 +725,9 @@ def main():
             if args.single_profile:
                 if not args.operations_profile:
                     parser.error("--single-profile requires --operations-profile")
-                runner.execute("candidate" if args.candidate_no_configuration_cache else "baseline")
+                runner.execute(
+                    "candidate" if args.candidate_no_configuration_cache or args.candidate_http_connection_ttl_ms else "baseline"
+                )
                 runner.persist(complete=True)
             else:
                 runner.measure()

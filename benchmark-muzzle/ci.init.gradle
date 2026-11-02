@@ -14,6 +14,7 @@ settingsEvaluated { settings ->
     }
     println("MUZZLE_BENCHMARK_REMOTE enabled=${remote.enabled} push=${remote.push}")
     println("MUZZLE_BENCHMARK_CONFIGURATION_CACHE requested=${settings.gradle.startParameter.configurationCacheRequested}")
+    println("MUZZLE_BENCHMARK_HTTP_CONNECTION_TTL ${System.getProperty('org.gradle.internal.http.idleConnectionTimeout', 'unset')}")
     settings.gradle.taskGraph.whenReady {
       println("MUZZLE_BENCHMARK_TASK_GRAPH ${System.currentTimeMillis()}")
     }

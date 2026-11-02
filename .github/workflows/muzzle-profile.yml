@@ -12,9 +12,9 @@ on:
       partitions:
         type: string
         default: '[1,2,3,4]'
-      candidate-no-configuration-cache:
-        type: boolean
-        default: false
+      candidate-mode:
+        type: string
+        default: standard
 
 permissions:
   contents: read
@@ -33,10 +33,13 @@ jobs:
         id: plan
         env:
           PARTITIONS: ${{ inputs.partitions }}
+          CANDIDATE_MODE: ${{ inputs.candidate-mode }}
         run: |
           python3 -m unittest discover -s benchmark-muzzle -q
           python3 - <<'PY'
           import json, os
+          if os.environ["CANDIDATE_MODE"] not in ("standard", "configuration-cache-off", "http-connection-ttl"):
+              raise ValueError("Invalid candidate mode")
           partitions = json.loads(os.environ["PARTITIONS"])
           if (not isinstance(partitions, list) or not partitions
               or any(type(p) is not int or p not in range(1, 5) for p in partitions)
@@ -74,11 +77,13 @@ jobs:
         env:
           REVISION: ${{ inputs.revision }}
           PARTITION: ${{ matrix.partition }}
-          NO_CONFIGURATION_CACHE: ${{ inputs.candidate-no-configuration-cache }}
+          CANDIDATE_MODE: ${{ inputs.candidate-mode }}
         run: |
           extra=()
-          if [[ "$NO_CONFIGURATION_CACHE" == "true" ]]; then
+          if [[ "$CANDIDATE_MODE" == "configuration-cache-off" ]]; then
             extra+=(--candidate-no-configuration-cache)
+          elif [[ "$CANDIDATE_MODE" == "http-connection-ttl" ]]; then
+            extra+=(--candidate-http-connection-ttl-ms 10000)
           fi
           python3 benchmark-muzzle/ci_benchmark.py run \
             --baseline "$REVISION" --candidate "$REVISION" --round 1 --partition "$PARTITION" \

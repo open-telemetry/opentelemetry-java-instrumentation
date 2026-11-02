@@ -235,6 +235,60 @@ class CiBenchmarkTest(unittest.TestCase):
             for label in ci.LABELS:
                 self.assertTrue((runner.reports / label / "console.log").is_file())
 
+    def test_connection_lifetime_changes_only_candidate_without_shortening_timeouts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runner = self.runner(Path(directory))
+            runner.args.candidate_http_connection_ttl_ms = 10000
+            runner.revisions = dict.fromkeys(("baseline", "candidate"), "before")
+            observed = []
+
+            def execute(command, **kwargs):
+                result = self.fake_build(command, **kwargs)
+                log = kwargs.get("log")
+                if log is not None:
+                    flags = [value for value in command if value.startswith("-Dorg.gradle.internal.http.")]
+                    observed.append((log.parent.name, flags))
+                    if log.parent.name == "candidate":
+                        log.write_text(log.read_text() + "MUZZLE_BENCHMARK_HTTP_CONNECTION_TTL 10000\n")
+                return result
+
+            with patch.object(benchmark, "run", side_effect=execute):
+                runner.measure()
+            self.assertEqual(observed, [
+                ("baseline", []), ("control", []),
+                ("candidate", ["-Dorg.gradle.internal.http.idleConnectionTimeout=10000"]),
+            ])
+            self.assertEqual([s["configuration_cache"] for s in runner.samples], [True, True, True])
+            with self.assertRaisesRegex(ValueError, "connection lifetime"):
+                ci.validate_build(build_log(), {ASSERTION: RECORD}, connection_ttl_ms=10000)
+
+    def test_connection_lifetime_report_verifies_same_source_and_actual_mode(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            folder = self.report_fixture(root, 1, 1, {"baseline": 100, "control": 110, "candidate": 50})
+            identity = json.loads((folder / "identity.json").read_text())
+            identity.update(
+                revisions=dict.fromkeys(("baseline", "candidate"), "before"),
+                experiment="http-connection-ttl", candidate_http_connection_ttl_ms=10000,
+            )
+            ci.write_json(folder / "identity.json", identity)
+            result = json.loads((folder / "samples.json").read_text())
+            for sample in result["samples"]:
+                sample["revision"] = "before"
+                if sample["label"] == "candidate":
+                    sample["http_connection_ttl_ms"] = 10000
+            ci.write_json(folder / "samples.json", result)
+            log = folder / "candidate/console.log"
+            log.write_text(log.read_text() + "MUZZLE_BENCHMARK_HTTP_CONNECTION_TTL 10000\n")
+            output = root / "summary"
+            summary = ci.aggregate(root, output, 1, [1])
+            self.assertEqual(summary["maximum_slice_paired"]["candidate"]["delta_ms"]["median"], -50)
+            self.assertIn("timeouts", (output / "summary.md").read_text())
+            identity["revisions"]["candidate"] = "after"
+            ci.write_json(folder / "identity.json", identity)
+            with self.assertRaisesRegex(ValueError, "identical sources"):
+                ci.load_reports(root, 1, [1])
+
     def test_failed_build_is_recorded_without_retry_or_successful_report(self):
         with tempfile.TemporaryDirectory() as directory:
             runner = self.runner(Path(directory))
