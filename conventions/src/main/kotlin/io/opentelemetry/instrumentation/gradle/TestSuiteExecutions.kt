@@ -33,11 +33,17 @@ class TestSuiteExecutions internal constructor(
   private val suite: JvmTestSuite,
 ) {
   private val common = mutableListOf<Action<Test>>()
+  private val defaultOnly = mutableListOf<Action<Test>>()
   private val variants = linkedMapOf<String, Action<Test>>()
   private var configured = false
 
   fun configureEach(action: Action<Test>) {
     common.add(action)
+  }
+
+  /** Configure the suite's default execution after common configuration. */
+  fun configureDefault(action: Action<Test>) {
+    defaultOnly.add(action)
   }
 
   /** The suffix is appended to the suite name, e.g. test + Experimental. */
@@ -56,6 +62,7 @@ class TestSuiteExecutions internal constructor(
     suite.targets.configureEach {
       testTask.configure {
         common.forEach { it.execute(this) }
+        defaultOnly.forEach { it.execute(this) }
       }
       project.tasks.named("check").configure {
         dependsOn(testTask)

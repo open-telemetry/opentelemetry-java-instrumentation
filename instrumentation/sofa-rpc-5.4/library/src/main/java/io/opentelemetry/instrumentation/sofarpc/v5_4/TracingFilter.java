@@ -5,12 +5,8 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
-import static com.alipay.sofa.rpc.core.exception.RpcErrorType.SERVER_UNDECLARED_ERROR;
-
-import com.alipay.sofa.rpc.common.RemotingConstants;
 import com.alipay.sofa.rpc.config.AbstractInterfaceConfig;
 import com.alipay.sofa.rpc.config.ConsumerConfig;
-import com.alipay.sofa.rpc.core.exception.SofaRpcException;
 import com.alipay.sofa.rpc.core.request.SofaRequest;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import com.alipay.sofa.rpc.filter.Filter;
@@ -62,8 +58,7 @@ final class TracingFilter extends Filter {
     }
 
     if (isSynchronous) {
-      instrumenter.end(
-          context, sofaRpcRequest, response, extractException(sofaRpcRequest, response));
+      instrumenter.end(context, sofaRpcRequest, response, extractException(response));
     }
 
     return response;
@@ -94,8 +89,7 @@ final class TracingFilter extends Filter {
   }
 
   @Nullable
-  private static Throwable extractException(
-      SofaRpcRequest sofaRpcRequest, @Nullable SofaResponse response) {
+  private static Throwable extractException(@Nullable SofaResponse response) {
     if (response == null) {
       return null;
     }
@@ -103,15 +97,6 @@ final class TracingFilter extends Filter {
     Object appResponse = response.getAppResponse();
     if (appResponse instanceof Throwable) {
       return (Throwable) appResponse;
-    }
-
-    if (response.isError()
-        || "true".equals(response.getResponseProp(RemotingConstants.HEAD_RESPONSE_ERROR))) {
-      String errorMsg = response.getErrorMsg();
-      if (errorMsg != null) {
-        sofaRpcRequest.markSyntheticFallbackError();
-        return new SofaRpcException(SERVER_UNDECLARED_ERROR, errorMsg);
-      }
     }
 
     return null;
@@ -130,7 +115,7 @@ final class TracingFilter extends Filter {
     if (context == null || sofaRpcRequest == null) {
       return;
     }
-    Throwable error = exception != null ? exception : extractException(sofaRpcRequest, response);
+    Throwable error = exception != null ? exception : extractException(response);
     instrumenter.end(context, sofaRpcRequest, response, error);
   }
 }

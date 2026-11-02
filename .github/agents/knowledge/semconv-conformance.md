@@ -12,9 +12,7 @@ contract, such as its schema URL or the migration that introduced the current sh
 the target from the `opentelemetry-semconv` dependency version; that version determines which
 generated constants are available, while instrumentations may intentionally preserve telemetry
 from an older convention. For a domain with multiple supported modes, resolve the effective mode
-through
-[`SemconvSelectionResolver`](../../../instrumentation-api/src/main/java/io/opentelemetry/instrumentation/api/internal/SemconvSelectionResolver.java).
-The resolver applies structured per-domain settings before stability and preview flags. Use the
+from the affected instrumentation's supported configuration and implementation. Use the
 matching released documentation rather than silently comparing
 existing telemetry with the latest conventions. If the target version cannot be established, do
 not draw a version-specific conformance conclusion. See

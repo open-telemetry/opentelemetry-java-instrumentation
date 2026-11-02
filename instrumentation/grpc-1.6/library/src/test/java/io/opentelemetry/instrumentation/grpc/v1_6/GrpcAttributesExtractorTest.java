@@ -29,11 +29,13 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class GrpcAttributesExtractorTest {
 
-  @Test
-  void selectsCanonicalAsciiMetadataKeys() {
+  @ParameterizedTest
+  @ValueSource(strings = {"INCLUDED-KEY", "INCLUDED-*", "INCLUDED-?EY"})
+  void capturesSelectedRequestHeaders(String includedPattern) {
     Metadata metadata = new Metadata();
     metadata.put(
         Metadata.Key.of("included-key", Metadata.ASCII_STRING_MARSHALLER), "included-value");
+    metadata.put(Metadata.Key.of("included-key", Metadata.ASCII_STRING_MARSHALLER), "second-value");
     metadata.put(
         Metadata.Key.of("included-excluded", Metadata.ASCII_STRING_MARSHALLER), "excluded-value");
     metadata.put(Metadata.Key.of("other-key", Metadata.ASCII_STRING_MARSHALLER), "other-value");
@@ -44,18 +46,19 @@ class GrpcAttributesExtractorTest {
         GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null);
     IncludeExclude selector =
         IncludeExclude.builder()
-            .setIncluded(asList("INCLUDED-*", "missing-key"))
+            .setIncluded(asList(includedPattern, "missing-key"))
             .setExcluded(singletonList("*-EXCLUDED"))
             .build();
     AttributesBuilder attributes = Attributes.builder();
 
     createExtractor(selector).onEnd(attributes, Context.root(), request, null, null);
 
-    assertThat(attributes.build())
+    Attributes result = attributes.build();
+    assertThat(result)
         .isEqualTo(
             Attributes.of(
-                stringArrayKey("rpc.request.metadata.included-key"),
-                singletonList("included-value")));
+                stringArrayKey("rpc.request.header.included-key"),
+                asList("included-value", "second-value")));
   }
 
   @Test
@@ -86,7 +89,7 @@ class GrpcAttributesExtractorTest {
   }
 
   @Test
-  void matchesMetadataKeysCaseInsensitively() {
+  void matchesRequestHeadersCaseInsensitively() {
     Metadata delegate = new Metadata();
     delegate.put(
         Metadata.Key.of("included-key", Metadata.ASCII_STRING_MARSHALLER), "included-value");
@@ -109,7 +112,7 @@ class GrpcAttributesExtractorTest {
     assertThat(attributes.build())
         .isEqualTo(
             Attributes.of(
-                stringArrayKey("rpc.request.metadata.included-key"),
+                stringArrayKey("rpc.request.header.included-key"),
                 singletonList("included-value")));
   }
 

@@ -67,6 +67,10 @@ public class Bridging {
 
   private static application.io.opentelemetry.api.trace.TraceState toApplication(
       TraceState agentTraceState) {
+    if (agentTraceState.isEmpty()) {
+      return application.io.opentelemetry.api.trace.TraceState.getDefault();
+    }
+
     application.io.opentelemetry.api.trace.TraceStateBuilder applicationTraceState =
         application.io.opentelemetry.api.trace.TraceState.builder();
     agentTraceState.forEach(applicationTraceState::put);
@@ -187,6 +191,10 @@ public class Bridging {
 
   private static TraceState toAgent(
       application.io.opentelemetry.api.trace.TraceState applicationTraceState) {
+    if (applicationTraceState.isEmpty()) {
+      return TraceState.getDefault();
+    }
+
     TraceStateBuilder agentTraceState = TraceState.builder();
     applicationTraceState.forEach(agentTraceState::put);
     return agentTraceState.build();

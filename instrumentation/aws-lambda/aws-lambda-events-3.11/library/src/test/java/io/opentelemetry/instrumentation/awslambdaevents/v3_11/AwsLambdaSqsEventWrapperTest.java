@@ -15,8 +15,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.when;
@@ -99,7 +97,7 @@ class AwsLambdaSqsEventWrapperTest {
                     span.hasName("process otel")
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
                             equalTo(MESSAGING_DESTINATION_NAME, "otel"),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),

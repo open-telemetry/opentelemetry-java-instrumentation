@@ -86,6 +86,9 @@ describe selectable behavior, not Muzzle implementation identities.
 - With positional matchers, use `takesArguments(n)` only when exact arity is needed to distinguish
   supported overloads, preserve helper-call compatibility, or select the required lifecycle
   boundary. Do not add an exact count merely to guarantee that an argument exists.
+- Place an existing `takesArguments(n)` check before the positional `takesArgument(index, ...)`
+  checks in the same conjunction, including partial-signature matchers. This ordering convention
+  does not require adding count or type checks or changing overload selection.
 - Omit return-type predicates unless needed to select supported methods or prevent a concrete
   incompatibility. A typed `@Advice.Return` alone does not justify a predicate; consider the supported
   API contract, covariant returns, and the actual transformation pipeline. If advice replaces the

@@ -56,6 +56,10 @@ dependencies {
 }
 
 tasks {
+  named<Javadoc>("javadoc") {
+    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
+  }
+
   withType<Test>().configureEach {
     useJUnitPlatform()
   }

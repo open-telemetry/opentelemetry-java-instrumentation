@@ -35,23 +35,21 @@ testing {
       dependencies {
         implementation("io.kubernetes:client-java-api:${baseVersion("22.0.0").orLatest()}")
       }
-      targets {
-        all {
-          testTask.configure {
-            // client-java-api 22.0.0+ requires Java 11+
-            if (testJavaVersion.isJava8) {
-              enabled = false
-            }
-          }
-        }
-      }
     }
+  }
+}
+
+tasks.named<Test>("version22Test") {
+  // client-java-api 22.0.0+ requires Java 11+
+  if (testJavaVersion.isJava8) {
+    enabled = false
   }
 }
 
 tasks {
   check {
     dependsOn(testing.suites)
+    dependsOn("version22Test")
   }
 }
 
@@ -76,19 +74,7 @@ tasks {
       }
     }
 
-  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}PreviewSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-        isEnabled = project.tasks.named(suite.name).get().enabled
-      }
-    }
-
   check {
-    dependsOn(experimentalSuites, previewSemconvSuites)
+    dependsOn(experimentalSuites)
   }
 }

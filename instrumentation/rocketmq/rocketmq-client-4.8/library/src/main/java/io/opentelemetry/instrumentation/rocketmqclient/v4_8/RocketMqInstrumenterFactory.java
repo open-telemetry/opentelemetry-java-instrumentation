@@ -45,8 +45,8 @@ class RocketMqInstrumenterFactory {
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<String> MESSAGING_CONSUMER_GROUP_NAME =
       AttributeKey.stringKey("messaging.consumer.group.name");
-  private static final AttributeKey<String> MESSAGING_ROCKETMQ_NAMESPACE =
-      AttributeKey.stringKey("messaging.rocketmq.namespace");
+  private static final AttributeKey<String> ROCKETMQ_NAMESPACE =
+      AttributeKey.stringKey("rocketmq.namespace");
 
   static Instrumenter<SendMessageContext, Void> createProducerInstrumenter(
       OpenTelemetry openTelemetry,
@@ -131,7 +131,7 @@ class RocketMqInstrumenterFactory {
       public void onStart(
           AttributesBuilder attributes, Context parentContext, SendMessageContext request) {
         String namespace = RocketMqNamespaceUtil.getNamespace(request);
-        attributes.put(MESSAGING_ROCKETMQ_NAMESPACE, namespace == null ? "" : namespace);
+        attributes.put(ROCKETMQ_NAMESPACE, namespace);
       }
 
       @Override
@@ -231,7 +231,7 @@ class RocketMqInstrumenterFactory {
       public void onStart(
           AttributesBuilder attributes, Context parentContext, RocketMqConsumerRequest request) {
         attributes.put(MESSAGING_CONSUMER_GROUP_NAME, request.getConsumerGroup());
-        attributes.put(MESSAGING_ROCKETMQ_NAMESPACE, request.getNamespace());
+        attributes.put(ROCKETMQ_NAMESPACE, request.getNamespace());
       }
 
       @Override

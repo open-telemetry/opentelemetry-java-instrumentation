@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -278,7 +279,8 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
                                 equalTo(NETWORK_PEER_ADDRESS, httpHost.getHost()),
                                 // Netty 4.1 Instrumentation collects NETWORK_PEER_PORT
                                 equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
-                                equalTo(maybeStablePeerService(), testing.expectedPeerService())),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName())),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)

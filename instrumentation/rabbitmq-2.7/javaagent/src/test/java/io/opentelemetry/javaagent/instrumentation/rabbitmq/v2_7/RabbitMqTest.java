@@ -30,9 +30,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -93,6 +90,7 @@ import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 class RabbitMqTest extends AbstractRabbitMqTest {
+
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -827,10 +825,10 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         .hasKind(SpanKind.CLIENT)
         .hasParent(parentSpan)
         .hasAttributesSatisfyingExactly(
-            equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+            equalTo(stringKey("messaging.system.name"), "rabbitmq"),
             equalTo(MESSAGING_OPERATION_NAME, operation),
             equalTo(MESSAGING_OPERATION_TYPE, "settle"),
-            equalTo(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, deliveryTag),
+            equalTo(longKey("rabbitmq.message.delivery_tag"), deliveryTag),
             satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(rabbitMqIp, null)),
             satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
             satisfies(NETWORK_PEER_PORT, AbstractAssert::isNotNull),
@@ -841,9 +839,8 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                   val.isNotNull();
                 }),
             satisfies(stringKey("rabbitmq.command"), val -> val.isIn(null, "basic." + operation)),
-            equalTo(stringKey("messaging.rabbitmq.vhost.name"), experimental("otel-test")),
-            equalTo(
-                stringKey("messaging.rabbitmq.cluster.name"), experimental("otel-test-cluster")));
+            equalTo(stringKey("rabbitmq.vhost.name"), experimental("otel-test")),
+            equalTo(stringKey("rabbitmq.cluster.name"), experimental("otel-test-cluster")));
   }
 
   private static Stream<Arguments> provideParametersForMessageCountAndTimestamp() {
@@ -1015,7 +1012,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
           span.hasAttributesSatisfying(
               equalTo(stringKey("rabbitmq.command"), "basic.publish"),
               satisfies(
-                  MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+                  stringKey("rabbitmq.destination.routing_key"),
                   val ->
                       val.satisfiesAnyOf(
                           v -> assertThat(v).isNull(),
@@ -1057,11 +1054,11 @@ class RabbitMqTest extends AbstractRabbitMqTest {
       String resource,
       Throwable exception) {
     span.hasAttributesSatisfying(
-        equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+        equalTo(stringKey("messaging.system.name"), "rabbitmq"),
         equalTo(
             MESSAGING_DESTINATION_NAME, destinationName(exchange, routingKey, operation, resource)),
         satisfies(
-            MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
+            stringKey("rabbitmq.destination.routing_key"),
             val ->
                 val.satisfiesAnyOf(
                     v -> assertThat(v).isNull(),
@@ -1071,7 +1068,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
         equalTo(MESSAGING_OPERATION_TYPE, "publish".equals(operation) ? "send" : operation),
         equalTo(MESSAGING_BATCH_MESSAGE_COUNT, null),
         satisfies(
-            MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG,
+            longKey("rabbitmq.message.delivery_tag"),
             val -> {
               if (("process".equals(operation)
                   || ("receive".equals(operation) && exception == null))) {
@@ -1080,8 +1077,8 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                 val.isNull();
               }
             }),
-        equalTo(stringKey("messaging.rabbitmq.vhost.name"), experimental("otel-test")),
-        equalTo(stringKey("messaging.rabbitmq.cluster.name"), experimental("otel-test-cluster")));
+        equalTo(stringKey("rabbitmq.vhost.name"), experimental("otel-test")),
+        equalTo(stringKey("rabbitmq.cluster.name"), experimental("otel-test-cluster")));
   }
 
   private static SpanKind expectedSpanKind(String operation) {

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 
 import com.datastax.driver.core.BatchStatement;
@@ -42,9 +43,10 @@ abstract class CassandraRequest {
     if (statement instanceof BatchStatement) {
       return create(session, (BatchStatement) statement, serverTarget);
     }
+    String queryText = getQuery(statement);
     return create(
         session,
-        singleton(getQuery(statement)),
+        queryText == null ? emptyList() : singleton(queryText),
         hasQueryValues(statement),
         null,
         null,
@@ -60,7 +62,11 @@ abstract class CassandraRequest {
     Boolean firstParameterizedQuery = null;
     int queryIndex = 0;
     for (Statement batchEntry : batchStatement.getStatements()) {
-      queryTexts.add(getQuery(batchEntry));
+      String queryText = getQuery(batchEntry);
+      if (queryText == null) {
+        continue;
+      }
+      queryTexts.add(queryText);
       boolean parameterizedQuery = hasQueryValues(batchEntry);
       if (!parameterizedQuery) {
         allQueriesParameterized = false;
@@ -129,6 +135,7 @@ abstract class CassandraRequest {
         serverTarget);
   }
 
+  @Nullable
   private static String getQuery(Statement statement) {
     String query = null;
     if (statement instanceof BoundStatement) {
@@ -137,7 +144,7 @@ abstract class CassandraRequest {
       query = ((RegularStatement) statement).getQueryString();
     }
 
-    return query == null ? "" : query;
+    return query;
   }
 
   private static boolean hasQueryValues(Statement statement) {

@@ -37,6 +37,6 @@ class JdbcInstrumentationTest extends AbstractJdbcInstrumentationTest {
 
   @Override
   protected DataSource wrap(DataSource dataSource) {
-    return telemetry.wrap(dataSource);
+    return telemetry.instrument(dataSource);
   }
 }
