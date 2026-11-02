@@ -50,71 +50,69 @@ dependencies {
   latestDepTestLibrary("org.springframework.cloud:spring-cloud-stream-binder-rabbit:3.+") // documented limitation
 }
 
-testing.suites.executions("test") {
-  register("AmqpHandoffWithRabbitInstrumentation") {
-    filter {
-      includeTestsMatching("MessageProducerSupportInstrumentationTest")
+testing.suites {
+  register<JvmTestSuite>("version41Test") {
+    dependencies {
+      implementation(project(":instrumentation:spring:spring-integration-4.1:testing"))
+      implementation("org.springframework.integration:spring-integration-core:4.1.0.RELEASE")
+      implementation("org.springframework.integration:spring-integration-amqp:4.1.0.RELEASE")
     }
-    include("**/MessageProducerSupportInstrumentationTest.*")
-    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
-    systemProperty("springIntegrationRabbitHandoffTest", "true")
-  }
-
-  register("WithRabbitInstrumentation") {
-    filter {
-      includeTestsMatching("SpringIntegrationAndRabbitTest")
-    }
-    include("**/SpringIntegrationAndRabbitTest.*")
-    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=true")
-    telemetryConfig("otel.instrumentation.spring-rabbit.enabled", "true")
-  }
-
-  register("WithProducerInstrumentation") {
-    filter {
-      includeTestsMatching("SpringCloudStreamProducerTest")
-    }
-    include("**/SpringCloudStreamProducerTest.*")
-    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
-    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
-    telemetryConfig("otel.instrumentation.spring-integration.producer.enabled", "true")
-  }
-
-  register("ProducerEnabled") {
-    filter {
-      excludeTestsMatching("SpringIntegrationAndRabbitTest")
-      excludeTestsMatching("SpringCloudStreamRabbitTest")
-    }
-    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
-    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
-    telemetryConfig("otel.instrumentation.spring-integration.producer.enabled", "true")
-  }
-
-  configureDefault {
-    filter {
-      excludeTestsMatching("SpringIntegrationAndRabbitTest")
-      excludeTestsMatching("SpringCloudStreamProducerTest")
-    }
-    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
-    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
-  }
-}
-
-testing {
-  suites {
-    register<JvmTestSuite>("version41Test") {
-      dependencies {
-        implementation(project(":instrumentation:spring:spring-integration-4.1:testing"))
-        implementation("org.springframework.integration:spring-integration-core:4.1.0.RELEASE")
-        implementation("org.springframework.integration:spring-integration-amqp:4.1.0.RELEASE")
+    targets.all {
+      testTask.configure {
+        // Exercise channel propagation independently of executor instrumentation.
+        jvmArgs("-Dotel.instrumentation.executors.enabled=false")
+        jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+        jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
       }
-      targets.all {
-        testTask.configure {
-          // Exercise channel propagation independently of executor instrumentation.
-          jvmArgs("-Dotel.instrumentation.executors.enabled=false")
-          jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
-          jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
-        }
+    }
+  }
+
+  executions("test") {
+    register("AmqpHandoffWithRabbitInstrumentation") {
+      filter {
+        includeTestsMatching("MessageProducerSupportInstrumentationTest")
       }
+      include("**/MessageProducerSupportInstrumentationTest.*")
+      jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+      systemProperty("springIntegrationRabbitHandoffTest", "true")
+    }
+
+    register("WithRabbitInstrumentation") {
+      filter {
+        includeTestsMatching("SpringIntegrationAndRabbitTest")
+      }
+      include("**/SpringIntegrationAndRabbitTest.*")
+      jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=true")
+      telemetryConfig("otel.instrumentation.spring-rabbit.enabled", "true")
+    }
+
+    register("WithProducerInstrumentation") {
+      filter {
+        includeTestsMatching("SpringCloudStreamProducerTest")
+      }
+      include("**/SpringCloudStreamProducerTest.*")
+      jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+      jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
+      telemetryConfig("otel.instrumentation.spring-integration.producer.enabled", "true")
+    }
+
+    register("ProducerEnabled") {
+      filter {
+        excludeTestsMatching("SpringIntegrationAndRabbitTest")
+        excludeTestsMatching("SpringCloudStreamRabbitTest")
+      }
+      jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+      jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
+      telemetryConfig("otel.instrumentation.spring-integration.producer.enabled", "true")
+    }
+
+    configureDefault {
+      filter {
+        excludeTestsMatching("SpringIntegrationAndRabbitTest")
+        excludeTestsMatching("SpringCloudStreamProducerTest")
+      }
+      jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+      jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
     }
   }
 }

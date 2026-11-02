@@ -123,90 +123,88 @@ dependencies {
   testLibrary("software.amazon.awssdk:sqs:2.2.0")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("s3PresignerTest") {
-      dependencies {
-        val version = baseVersion("2.10.12").orLatest()
-        implementation("software.amazon.awssdk:s3:$version")
-        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
+testing.suites {
+  register<JvmTestSuite>("s3PresignerTest") {
+    dependencies {
+      val version = baseVersion("2.10.12").orLatest()
+      implementation("software.amazon.awssdk:s3:$version")
+      implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
+    }
+  }
+
+  register<JvmTestSuite>("s3CrtTest") {
+    dependencies {
+      implementation("software.amazon.awssdk:s3:${baseVersion("2.27.21").orLatest()}")
+      implementation("software.amazon.awssdk.crt:aws-crt:${baseVersion("0.30.11").orLatest()}")
+      implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
+      implementation("org.testcontainers:testcontainers-localstack")
+    }
+  }
+
+  register<JvmTestSuite>("testBedrockRuntime") {
+    dependencies {
+      implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+      // 2.25.63 is the first release with Converse API
+      val version = baseVersion("2.25.63").orLatest()
+      implementation("software.amazon.awssdk:bedrockruntime:$version")
+    }
+  }
+
+  register<JvmTestSuite>("testRdsData") {
+    dependencies {
+      implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+      val version = baseVersion("2.5.54").orLatest()
+      implementation("software.amazon.awssdk:rdsdata:$version")
+    }
+  }
+
+  executions("test") {
+    register("ExperimentalSqs") {
+      filter.includeTestsMatching("Aws2SqsTracingTest")
+      systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", "true")
+      systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    }
+
+    register("ReceiveSpansDisabled") {
+      filter {
+        includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+      }
+      include("**/Aws2SqsSuppressReceiveSpansTest.*")
+    }
+
+    configureDefault {
+      filter {
+        excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
       }
     }
 
-    register<JvmTestSuite>("s3CrtTest") {
-      dependencies {
-        implementation("software.amazon.awssdk:s3:${baseVersion("2.27.21").orLatest()}")
-        implementation("software.amazon.awssdk.crt:aws-crt:${baseVersion("0.30.11").orLatest()}")
-        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
-        implementation("org.testcontainers:testcontainers-localstack")
-      }
+    register("ExperimentalAttributes") {
+      filter.excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+      telemetryConfig("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     }
 
-    register<JvmTestSuite>("testBedrockRuntime") {
-      dependencies {
-        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
-        // 2.25.63 is the first release with Converse API
-        val version = baseVersion("2.25.63").orLatest()
-        implementation("software.amazon.awssdk:bedrockruntime:$version")
-      }
+    register("IndividualHttpErrors") {
+      filter.includeTestsMatching("Aws2ClientRecordHttpErrorTest")
+      telemetryConfig("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
     }
 
-    register<JvmTestSuite>("testRdsData") {
-      dependencies {
-        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
-        val version = baseVersion("2.5.54").orLatest()
-        implementation("software.amazon.awssdk:rdsdata:$version")
-      }
-    }
-  }
-}
-
-testing.suites.executions("test") {
-  register("ExperimentalSqs") {
-    filter.includeTestsMatching("Aws2SqsTracingTest")
-    systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", "true")
-    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-  }
-
-  register("ReceiveSpansDisabled") {
-    filter {
-      includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    include("**/Aws2SqsSuppressReceiveSpansTest.*")
-  }
-
-  configureDefault {
-    filter {
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+    register("ReceiveTelemetry") {
+      filter.includeTestsMatching("Aws2SqsTracingTest")
+      telemetryConfig("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
     }
   }
 
-  register("ExperimentalAttributes") {
-    filter.excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    telemetryConfig("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+  executions("testBedrockRuntime") {
+    register("CaptureMessageContent") {
+      telemetryConfig("otel.instrumentation.genai.capture-message-content", "true")
+    }
   }
 
-  register("IndividualHttpErrors") {
-    filter.includeTestsMatching("Aws2ClientRecordHttpErrorTest")
-    telemetryConfig("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
-  }
-
-  register("ReceiveTelemetry") {
-    filter.includeTestsMatching("Aws2SqsTracingTest")
-    telemetryConfig("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-  }
-}
-
-testing.suites.executions("testBedrockRuntime") {
-  register("CaptureMessageContent") {
-    telemetryConfig("otel.instrumentation.genai.capture-message-content", "true")
-  }
-}
-
-testing.suites.executions("testRdsData") {
-  register("ExperimentalAttributes") {
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+  executions("testRdsData") {
+    register("ExperimentalAttributes") {
+      systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+    }
   }
 }
 

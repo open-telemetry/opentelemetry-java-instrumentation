@@ -41,106 +41,104 @@ dependencies {
   testLibrary("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
-        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
-        implementation(project(":instrumentation:reactor:reactor-3.1:library"))
-        implementation(project(":javaagent-bootstrap"))
-        implementation(project(":javaagent-extension-api"))
-        implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
-        implementation("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
-      }
-
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-          }
-        }
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+      implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
+      implementation(project(":instrumentation:reactor:reactor-3.1:library"))
+      implementation(project(":javaagent-bootstrap"))
+      implementation(project(":javaagent-extension-api"))
+      implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+      implementation("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
     }
 
-    register<JvmTestSuite>("receiveTelemetryDisabledUnitTests") {
-      sources {
-        java {
-          srcDir("src/unitTests/java")
-        }
-      }
-
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
-        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
-        implementation(project(":instrumentation:reactor:reactor-3.1:library"))
-        implementation(project(":javaagent-bootstrap"))
-        implementation(project(":javaagent-extension-api"))
-        implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
-        implementation("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
-      }
-    }
-
-    register<JvmTestSuite>("testV1_3_3") {
-      dependencies {
-        implementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
-
-        implementation("io.projectreactor.kafka:reactor-kafka:${baseVersion("1.3.3").orLatest()}")
-        if (otelProps.testLatestDeps) {
-          implementation("io.projectreactor:reactor-core:3.4.+")
-        }
-      }
-    }
-
-    register<JvmTestSuite>("testV1_3_21") {
-      dependencies {
-        implementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
-
-        implementation("io.projectreactor.kafka:reactor-kafka:${baseVersion("1.3.21").orLatest()}")
-        if (otelProps.testLatestDeps) {
-          implementation("io.projectreactor:reactor-core:3.4.+")
+    targets {
+      all {
+        testTask.configure {
+          jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
         }
       }
     }
   }
-}
 
-testing.suites.executions("test") {
-  configureEach {
-    systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
+  register<JvmTestSuite>("receiveTelemetryDisabledUnitTests") {
+    sources {
+      java {
+        srcDir("src/unitTests/java")
+      }
+    }
+
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+      implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
+      implementation(project(":instrumentation:reactor:reactor-3.1:library"))
+      implementation(project(":javaagent-bootstrap"))
+      implementation(project(":javaagent-extension-api"))
+      implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+      implementation("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
+    }
   }
 
-  configureDefault {
-    telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+  register<JvmTestSuite>("testV1_3_3") {
+    dependencies {
+      implementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
+
+      implementation("io.projectreactor.kafka:reactor-kafka:${baseVersion("1.3.3").orLatest()}")
+      if (otelProps.testLatestDeps) {
+        implementation("io.projectreactor:reactor-core:3.4.+")
+      }
+    }
   }
 
-  register("Experimental") {
-    telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-    telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
-    enabled = tasks.named<Test>("test").get().enabled
+  register<JvmTestSuite>("testV1_3_21") {
+    dependencies {
+      implementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
+
+      implementation("io.projectreactor.kafka:reactor-kafka:${baseVersion("1.3.21").orLatest()}")
+      if (otelProps.testLatestDeps) {
+        implementation("io.projectreactor:reactor-core:3.4.+")
+      }
+    }
   }
 
-  register("ReceiveSpansDisabled") {
-    telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "false")
-    enabled = tasks.named<Test>("test").get().enabled
-  }
-}
+  executions("test") {
+    configureEach {
+      systemProperty("hasConsumerGroup", otelProps.testLatestDeps)
+    }
 
-testing.suites.executions("testV1_3_3", "testV1_3_21") {
-  configureEach {
-    systemProperty("hasConsumerGroup", true)
+    configureDefault {
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    }
+
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+      telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
+      enabled = tasks.named<Test>("test").get().enabled
+    }
+
+    register("ReceiveSpansDisabled") {
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "false")
+      enabled = tasks.named<Test>("test").get().enabled
+    }
   }
 
-  register("Experimental") {
-    telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
-    enabled = tasks.named<Test>(name.removeSuffix("Experimental")).get().enabled
-  }
+  executions("testV1_3_3", "testV1_3_21") {
+    configureEach {
+      systemProperty("hasConsumerGroup", true)
+    }
 
-  register("ReceiveTelemetry") {
-    telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-    enabled = tasks.named<Test>(name.removeSuffix("ReceiveTelemetry")).get().enabled
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
+      enabled = tasks.named<Test>(name.removeSuffix("Experimental")).get().enabled
+    }
+
+    register("ReceiveTelemetry") {
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+      enabled = tasks.named<Test>(name.removeSuffix("ReceiveTelemetry")).get().enabled
+    }
   }
 }
 

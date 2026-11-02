@@ -27,25 +27,6 @@ dependencies {
   testLibrary("org.influxdb:influxdb-java:2.14")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation("org.influxdb:influxdb-java:2.4")
-      }
-    }
-
-    register<JvmTestSuite>("test24") {
-      dependencies {
-        implementation(project())
-        implementation("org.influxdb:influxdb-java:2.4")
-        implementation("org.testcontainers:testcontainers")
-      }
-    }
-  }
-}
-
 val test225RuntimeClasspath = configurations.create("test225RuntimeClasspath") {
   extendsFrom(configurations.testRuntimeClasspath.get())
   resolutionStrategy.force("org.influxdb:influxdb-java:2.25")
@@ -59,41 +40,58 @@ val test29RuntimeClasspath = configurations.create("test29RuntimeClasspath") {
   resolutionStrategy.force("org.influxdb:influxdb-java:2.9")
 }
 
-testing.suites.executions("test") {
-  configureDefault {
-    filter {
-      excludeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation("org.influxdb:influxdb-java:2.4")
     }
   }
 
-  register("QuerySanitizationDisabled") {
-    filter {
-      includeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
-    }
-    telemetryConfig("otel.instrumentation.influxdb.query-sanitization.enabled", "false")
-  }
-
-  register("225") {
-    classpath = sourceSets.test.get().output + test225RuntimeClasspath
-    systemProperty("influxdb.test.client-version", "2.25")
-    filter {
-      includeTestsMatching("InfluxDbQueryLifecycleTest")
+  register<JvmTestSuite>("test24") {
+    dependencies {
+      implementation(project())
+      implementation("org.influxdb:influxdb-java:2.4")
+      implementation("org.testcontainers:testcontainers")
     }
   }
 
-  register("213") {
-    classpath = sourceSets.test.get().output + test213RuntimeClasspath
-    include("**/InfluxDbLegacyQueryLifecycleTest.class")
-    filter {
-      includeTestsMatching("*InfluxDbLegacyQueryLifecycleTest.sameQueryReentrantAsyncQueryDuringChunkedEncodingDoesNotEndOuterQuery")
+  executions("test") {
+    configureDefault {
+      filter {
+        excludeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
+      }
     }
-  }
 
-  register("29") {
-    classpath = sourceSets.test.get().output + test29RuntimeClasspath
-    include("**/InfluxDbLegacyQueryLifecycleTest.class")
-    filter {
-      includeTestsMatching("*InfluxDbLegacyQueryLifecycleTest.sameQueryReentrantAsyncQueryDuringChunkedEncodingDoesNotEndOuterQuery")
+    register("QuerySanitizationDisabled") {
+      filter {
+        includeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
+      }
+      telemetryConfig("otel.instrumentation.influxdb.query-sanitization.enabled", "false")
+    }
+
+    register("225") {
+      classpath = sourceSets.test.get().output + test225RuntimeClasspath
+      systemProperty("influxdb.test.client-version", "2.25")
+      filter {
+        includeTestsMatching("InfluxDbQueryLifecycleTest")
+      }
+    }
+
+    register("213") {
+      classpath = sourceSets.test.get().output + test213RuntimeClasspath
+      include("**/InfluxDbLegacyQueryLifecycleTest.class")
+      filter {
+        includeTestsMatching("*InfluxDbLegacyQueryLifecycleTest.sameQueryReentrantAsyncQueryDuringChunkedEncodingDoesNotEndOuterQuery")
+      }
+    }
+
+    register("29") {
+      classpath = sourceSets.test.get().output + test29RuntimeClasspath
+      include("**/InfluxDbLegacyQueryLifecycleTest.class")
+      filter {
+        includeTestsMatching("*InfluxDbLegacyQueryLifecycleTest.sameQueryReentrantAsyncQueryDuringChunkedEncodingDoesNotEndOuterQuery")
+      }
     }
   }
 }
