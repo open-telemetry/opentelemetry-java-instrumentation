@@ -1,0 +1,57 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.tooling.instrumentation;
+
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.tooling.Utils;
+import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForceDynamicallyTypedAssignReturnedFactory;
+import java.util.function.Function;
+import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+
+final class HelperInjectionTypeTransformerImpl implements TypeTransformer {
+  private AgentBuilder.Identified.Extendable agentBuilder;
+  private final Advice.WithCustomMapping adviceMapping;
+
+  HelperInjectionTypeTransformerImpl(AgentBuilder.Identified.Extendable agentBuilder) {
+    this.agentBuilder = agentBuilder;
+    adviceMapping =
+        Advice.withCustomMapping()
+            .with(
+                new ForceDynamicallyTypedAssignReturnedFactory(
+                    new Advice.AssignReturned.Factory().withSuppressed(Throwable.class)));
+  }
+
+  @Override
+  public void applyAdviceToMethod(
+      ElementMatcher<? super MethodDescription> methodMatcher,
+      Function<Advice.WithCustomMapping, Advice.WithCustomMapping> mappingCustomizer,
+      String adviceClassName) {
+    agentBuilder =
+        agentBuilder.transform(
+            new AgentBuilder.Transformer.ForAdvice(mappingCustomizer.apply(adviceMapping))
+                .include(
+                    Utils.getBootstrapProxy(),
+                    Utils.getAgentClassLoader(),
+                    Utils.getExtensionsClassLoader())
+                // default strategy used by AgentBuilder.Transformer.ForAdvice
+                .with(AgentBuilder.PoolStrategy.Default.FAST)
+                .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
+                .advice(methodMatcher, adviceClassName));
+  }
+
+  @Override
+  public void applyTransformer(AgentBuilder.Transformer transformer) {
+    agentBuilder = agentBuilder.transform(transformer);
+  }
+
+  AgentBuilder.Identified.Extendable getAgentBuilder() {
+    return agentBuilder;
+  }
+}

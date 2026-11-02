@@ -5,27 +5,41 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForceDynamicallyTypedAssignReturnedFactory;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyBootstrap;
+import java.io.IOException;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.dynamic.ClassFileLocator;
+import net.bytebuddy.dynamic.ClassFileLocator.Resolution;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class TypeTransformerImpl implements TypeTransformer {
-  private AgentBuilder.Identified.Extendable agentBuilder;
-  private final Advice.WithCustomMapping adviceMapping;
+public final class TypeTransformerImpl implements TypeTransformer {
 
-  TypeTransformerImpl(AgentBuilder.Identified.Extendable agentBuilder) {
+  private final Advice.WithCustomMapping adviceMapping;
+  private AgentBuilder.Identified.Extendable agentBuilder;
+  private final InstrumentationModule instrumentationModule;
+
+  public TypeTransformerImpl(
+      AgentBuilder.Identified.Extendable agentBuilder, InstrumentationModule module) {
     this.agentBuilder = agentBuilder;
-    adviceMapping =
+    this.instrumentationModule = module;
+    this.adviceMapping =
         Advice.withCustomMapping()
             .with(
                 new ForceDynamicallyTypedAssignReturnedFactory(
-                    new Advice.AssignReturned.Factory().withSuppressed(Throwable.class)));
+                    new Advice.AssignReturned.Factory().withSuppressed(Throwable.class)))
+            .bootstrap(
+                IndyBootstrap.getIndyBootstrapMethod(),
+                IndyBootstrap.getAdviceBootstrapArguments(instrumentationModule),
+                TypeDescription.Generic.Visitor.Generalizing.INSTANCE);
   }
 
   @Override
@@ -36,14 +50,24 @@ final class TypeTransformerImpl implements TypeTransformer {
     agentBuilder =
         agentBuilder.transform(
             new AgentBuilder.Transformer.ForAdvice(mappingCustomizer.apply(adviceMapping))
-                .include(
-                    Utils.getBootstrapProxy(),
-                    Utils.getAgentClassLoader(),
-                    Utils.getExtensionsClassLoader())
+                .advice(methodMatcher, adviceClassName)
                 // default strategy used by AgentBuilder.Transformer.ForAdvice
                 .with(AgentBuilder.PoolStrategy.Default.FAST)
-                .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
-                .advice(methodMatcher, adviceClassName));
+                .include(getAdviceLocator(instrumentationModule.getClass().getClassLoader()))
+                .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler()));
+  }
+
+  private static ClassFileLocator getAdviceLocator(ClassLoader classLoader) {
+    ClassFileLocator classFileLocator = ClassFileLocator.ForClassLoader.of(classLoader);
+    return new AdviceLocator(
+        classFileLocator,
+        (slashClassName, bytes) -> {
+          // verify that advice does not call VirtualField.find
+          // NOTE: this check is here to help converting the advice for the indy instrumentation,
+          // it can be removed once the conversion is completed
+          AdviceVirtualFieldUsageChecker.check(bytes);
+          return bytes;
+        });
   }
 
   @Override
@@ -51,7 +75,52 @@ final class TypeTransformerImpl implements TypeTransformer {
     agentBuilder = agentBuilder.transform(transformer);
   }
 
-  AgentBuilder.Identified.Extendable getAgentBuilder() {
+  public AgentBuilder.Identified.Extendable getAgentBuilder() {
     return agentBuilder;
+  }
+
+  private static class AdviceLocator implements ClassFileLocator {
+    private final ClassFileLocator delegate;
+    private final BiFunction<String, byte[], byte[]> transform;
+
+    AdviceLocator(ClassFileLocator delegate, BiFunction<String, byte[], byte[]> transform) {
+      this.delegate = delegate;
+      this.transform = transform;
+    }
+
+    @Override
+    public Resolution locate(String name) throws IOException {
+      Resolution resolution = delegate.locate(name);
+      return new AdviceTransformingResolution(name, resolution, transform);
+    }
+
+    @Override
+    public void close() throws IOException {
+      delegate.close();
+    }
+  }
+
+  private static class AdviceTransformingResolution implements Resolution {
+    private final String name;
+    private final Resolution delegate;
+    private final BiFunction<String, byte[], byte[]> transform;
+
+    AdviceTransformingResolution(
+        String name, Resolution delegate, BiFunction<String, byte[], byte[]> transform) {
+      this.name = name;
+      this.delegate = delegate;
+      this.transform = transform;
+    }
+
+    @Override
+    public boolean isResolved() {
+      return delegate.isResolved();
+    }
+
+    @Override
+    public byte[] resolve() {
+      byte[] bytes = delegate.resolve();
+      return transform.apply(name, bytes);
+    }
   }
 }
