@@ -35,8 +35,8 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
                 new ForceDynamicallyTypedAssignReturnedFactory(
                     new Advice.AssignReturned.Factory().withSuppressed(Throwable.class)))
             .bootstrap(
-                IndyBootstrap.getIndyBootstrapMethod(),
-                IndyBootstrap.getAdviceBootstrapArguments(instrumentationModule),
+                AdviceBootstrap.getBootstrapMethod(),
+                AdviceBootstrap.createBootstrapArgumentResolverFactory(instrumentationModule),
                 TypeDescription.Generic.Visitor.Generalizing.INSTANCE);
   }
 

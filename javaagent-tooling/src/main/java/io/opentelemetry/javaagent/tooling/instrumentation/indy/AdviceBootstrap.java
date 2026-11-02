@@ -9,7 +9,7 @@ import static java.util.Arrays.asList;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 
-import io.opentelemetry.javaagent.bootstrap.IndyBootstrapDispatcher;
+import io.opentelemetry.javaagent.bootstrap.AdviceBootstrapDispatcher;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import java.lang.invoke.CallSite;
 import java.lang.invoke.ConstantCallSite;
@@ -42,7 +42,7 @@ import org.objectweb.asm.Type;
  * <pre>
  *
  *   Bootstrap CL ←──────────────────────────── Agent CL
- *       ↑ └───────── IndyBootstrapDispatcher ─ ↑ ──→ └────────────── {@link IndyBootstrap#bootstrap}
+ *       ↑ └─────── AdviceBootstrapDispatcher ─ ↑ ──→ └────────────── {@link AdviceBootstrap#bootstrap}
  *     Ext/Platform CL               ↑          │                        ╷
  *       ↑                           ╷          │                        ↓
  *     System CL                     ╷          │        {@link IndyModuleRegistry#getInstrumentationClassLoader(String, ClassLoader)}
@@ -63,16 +63,16 @@ import org.objectweb.asm.Type;
  *  ──→ class loader parent/child relationships
  * </pre>
  */
-public class IndyBootstrap {
+public class AdviceBootstrap {
 
-  private static final Logger logger = Logger.getLogger(IndyBootstrap.class.getName());
+  private static final Logger logger = Logger.getLogger(AdviceBootstrap.class.getName());
 
-  private static final Method indyBootstrapMethod;
+  private static final Method bootstrapMethod;
 
   static {
     try {
-      indyBootstrapMethod =
-          IndyBootstrapDispatcher.class.getMethod(
+      bootstrapMethod =
+          AdviceBootstrapDispatcher.class.getMethod(
               "bootstrap",
               MethodHandles.Lookup.class,
               String.class,
@@ -87,8 +87,9 @@ public class IndyBootstrap {
               MethodType.class,
               Object[].class);
 
-      IndyBootstrapDispatcher.init(
-          MethodHandles.lookup().findStatic(IndyBootstrap.class, "bootstrap", bootstrapMethodType));
+      AdviceBootstrapDispatcher.init(
+          MethodHandles.lookup()
+              .findStatic(AdviceBootstrap.class, "bootstrap", bootstrapMethodType));
 
       AdviceBootstrapState.initialize();
     } catch (Exception e) {
@@ -96,10 +97,10 @@ public class IndyBootstrap {
     }
   }
 
-  private IndyBootstrap() {}
+  private AdviceBootstrap() {}
 
-  public static Method getIndyBootstrapMethod() {
-    return indyBootstrapMethod;
+  public static Method getBootstrapMethod() {
+    return bootstrapMethod;
   }
 
   @Nullable
@@ -135,7 +136,7 @@ public class IndyBootstrap {
       MethodType adviceMethodType,
       Object[] args) {
     try {
-      // See the getAdviceBootstrapArguments method for the argument definitions
+      // See the createBootstrapArgumentResolverFactory method for the argument definitions
       return bootstrapAdvice(
           lookup,
           adviceMethodName,
@@ -152,7 +153,7 @@ public class IndyBootstrap {
   private static CallSite bootstrapAdvice(
       MethodHandles.Lookup lookup,
       String adviceMethodName,
-      MethodType invokedynamicMethodType,
+      MethodType callSiteMethodType,
       String moduleClassName,
       String adviceMethodDescriptor,
       String adviceClassName)
@@ -172,27 +173,27 @@ public class IndyBootstrap {
         if (mutableCallSite == null) {
           mutableCallSite =
               new MutableCallSite(
-                  IndyBootstrapDispatcher.generateNoopMethodHandle(invokedynamicMethodType));
+                  AdviceBootstrapDispatcher.generateNoopMethodHandle(callSiteMethodType));
           nestedState.initMutableCallSite(mutableCallSite);
         }
         return mutableCallSite;
       }
 
-      InstrumentationModuleClassLoader instrumentationClassloader =
+      InstrumentationModuleClassLoader instrumentationClassLoader =
           IndyModuleRegistry.getInstrumentationClassLoader(
               moduleClassName, lookup.lookupClass().getClassLoader());
 
       // Advices are not inlined. They are loaded as normal classes by the
-      // InstrumentationModuleClassloader and invoked via a method call from the instrumented method
-      Class<?> adviceClass = instrumentationClassloader.loadClass(adviceClassName);
+      // InstrumentationModuleClassLoader and invoked via a method call from the instrumented method
+      Class<?> adviceClass = instrumentationClassLoader.loadClass(adviceClassName);
       MethodType actualAdviceMethodType =
-          MethodType.fromMethodDescriptorString(adviceMethodDescriptor, instrumentationClassloader);
+          MethodType.fromMethodDescriptorString(adviceMethodDescriptor, instrumentationClassLoader);
 
       MethodHandle methodHandle =
-          instrumentationClassloader
+          instrumentationClassLoader
               .getLookup()
               .findStatic(adviceClass, adviceMethodName, actualAdviceMethodType)
-              .asType(invokedynamicMethodType);
+              .asType(callSiteMethodType);
 
       MutableCallSite nestedBootstrapCallSite = nestedState.getMutableCallSite();
       if (nestedBootstrapCallSite != null) {
@@ -212,19 +213,19 @@ public class IndyBootstrap {
     }
   }
 
-  static Advice.BootstrapArgumentResolver.Factory getAdviceBootstrapArguments(
+  static Advice.BootstrapArgumentResolver.Factory createBootstrapArgumentResolverFactory(
       InstrumentationModule instrumentationModule) {
-    String moduleName = instrumentationModule.getClass().getName();
+    String moduleClassName = instrumentationModule.getClass().getName();
     return (adviceMethod, exit) ->
         (instrumentedType, instrumentedMethod) ->
             asList(
-                JavaConstant.Simple.ofLoaded(moduleName),
+                JavaConstant.Simple.ofLoaded(moduleClassName),
                 JavaConstant.Simple.ofLoaded(adviceMethod.getDescriptor()),
                 JavaConstant.Simple.ofLoaded(adviceMethod.getDeclaringType().getName()));
   }
 
   /** Emit invokedynamic instruction that will call the given helper class static method. */
-  public static void emitIndyStaticCall(
+  public static void emitHelperStaticCall(
       MethodVisitor mv,
       String name,
       String descriptor,
@@ -235,7 +236,7 @@ public class IndyBootstrap {
         descriptor,
         new Handle(
             Opcodes.H_INVOKESTATIC,
-            Type.getInternalName(IndyBootstrapDispatcher.class),
+            Type.getInternalName(AdviceBootstrapDispatcher.class),
             "bootstrap",
             "(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;",
             false),
