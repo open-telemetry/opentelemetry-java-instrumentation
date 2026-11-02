@@ -1,0 +1,59 @@
+name: Measure disk cleanup
+
+on:
+  push:
+    branches:
+      - trask-conditional-disk-cleanup
+    paths:
+      - .github/workflows/measure-disk-cleanup.yml
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Measure the existing cleanup script
+        shell: bash
+        env:
+          LC_ALL: C
+        run: |
+          docker info >/dev/null
+          docker system df
+
+          available_before=$(df --block-size=1 --output=avail "$GITHUB_WORKSPACE" | tail -n 1)
+          started=$SECONDS
+          .github/scripts/gha-free-disk-space.sh | tee "$RUNNER_TEMP/disk-cleanup.log"
+          elapsed=$((SECONDS - started))
+          available_after=$(df --block-size=1 --output=avail "$GITHUB_WORKSPACE" | tail -n 1)
+          reclaimed=$((available_after - available_before))
+
+          docker_reclaimed=$(sed -n 's/^Total reclaimed space: //p' "$RUNNER_TEMP/disk-cleanup.log")
+          if [[ -z "$docker_reclaimed" ]]; then
+            echo "::error::The cleanup log did not contain Docker's reclaimed-space measurement."
+            exit 1
+          fi
+
+          {
+            printf 'Runner image: `%s`, version `%s`\n\n' "$ImageOS" "$ImageVersion"
+            printf 'Commit: `%s`\n\n' "$GITHUB_SHA"
+            printf '| Filesystem measurement | Bytes | GB | GiB |\n'
+            printf '| --- | ---: | ---: | ---: |\n'
+            awk -v before="$available_before" -v after="$available_after" -v reclaimed="$reclaimed" '
+              BEGIN {
+                printf "| Available before | %.0f | %.3f | %.3f |\n", before, before / 1000000000, before / 1073741824
+                printf "| Available after | %.0f | %.3f | %.3f |\n", after, after / 1000000000, after / 1073741824
+                printf "| Reclaimed by the whole script | %.0f | %.3f | %.3f |\n", reclaimed, reclaimed / 1000000000, reclaimed / 1073741824
+              }
+            '
+            printf '\nCleanup duration: %s seconds\n' "$elapsed"
+            printf '\nDocker-reported reclaimed space: %s\n' "$docker_reclaimed"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+          docker system df
