@@ -122,9 +122,7 @@ testing.suites {
       // add test app classes to classpath
       classpath = classpath.plus(files(layout.buildDirectory.dir("testapp/classes")))
     }
-
     register("ExceptionSignalLogs") {
-      jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
       telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
   }

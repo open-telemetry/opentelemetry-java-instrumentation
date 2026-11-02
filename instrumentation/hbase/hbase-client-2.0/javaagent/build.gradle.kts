@@ -68,17 +68,16 @@ tasks {
     withType<Test>().configureEach {
       enabled = false
     }
+  }
+}
 
-    testing.suites {
-      executions("test") {
-        register("ExceptionSignalLogs") {
-          filter {
-            includeTestsMatching("*HbaseClient20Test.testGetTimeout")
-          }
-          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-          telemetryConfig("otel.semconv.exception.signal.preview", "logs")
-        }
+testing.suites {
+  executions("test") {
+    register("ExceptionSignalLogs") {
+      filter {
+        includeTestsMatching("*HbaseClient20Test.testGetTimeout")
       }
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
   }
 }

@@ -102,7 +102,6 @@ testing.suites {
         excludeTestsMatching("*JdbcInstrumentationTest.testFailedTransaction")
       }
       jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
-      jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
       telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
 
