@@ -2062,13 +2062,32 @@ class JdbcConnectionUrlParserTest {
         "jtds:sqlserver://h1/db",
         "derby://h1/db",
         "datadirect:sqlserver://h1",
-        "tibcosoftware:sqlserver://h1"
+        "tibcosoftware:sqlserver://h1",
+        "h2:tcp://h1",
+        "h2:ssl://h1",
+        "hsqldb:hsql://h1",
+        "hsqldb:hsqls://h1",
+        "hsqldb:http://h1",
+        "hsqldb:https://h1"
       })
   void semicolonParametersDoNotChangeTargetCount(String connection) {
-    String url = "jdbc:" + connection + ";" + "password" + "=test-secret@other1,other2";
+    String url = "jdbc:" + connection + ";property=a,b";
     assertThat(hasMultipleTargets(url)).isFalse();
     assertThat(parse(url, null).getConfiguredServerTarget())
         .isEqualTo(DbServerTarget.create("h1", null));
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "jdbc:db2://h1:50000;user=a,b",
+        "jdbc:as400://h1:50000;user=a,b",
+        "jdbc:informix-sqli://h1;user=a,b",
+        "jdbc:informix-direct://db;user=a,b",
+        "jdbc:oceanbase:oracle://h1;user=a,b"
+      })
+  void otherSemicolonParameterSchemesDoNotCountPropertiesAsTargets(String url) {
+    assertThat(hasMultipleTargets(url)).isFalse();
   }
 
   @Test

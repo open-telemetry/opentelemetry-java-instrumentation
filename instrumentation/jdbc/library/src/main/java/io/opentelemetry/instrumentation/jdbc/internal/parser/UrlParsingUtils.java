@@ -279,6 +279,17 @@ public final class UrlParsingUtils {
         || scheme.equals("microsoft:sqlserver")
         || scheme.equals("jtds:sqlserver")
         || scheme.equals("derby")
+        || scheme.equals("db2")
+        || scheme.equals("as400")
+        || scheme.equals("h2:tcp")
+        || scheme.equals("h2:ssl")
+        || scheme.equals("hsqldb:hsql")
+        || scheme.equals("hsqldb:hsqls")
+        || scheme.equals("hsqldb:http")
+        || scheme.equals("hsqldb:https")
+        || scheme.equals("informix-sqli")
+        || scheme.equals("informix-direct")
+        || scheme.equals("oceanbase:oracle")
         || scheme.startsWith("datadirect:")
         || scheme.startsWith("tibcosoftware:");
   }
