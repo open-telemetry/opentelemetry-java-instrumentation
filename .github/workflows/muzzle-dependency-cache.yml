@@ -1,6 +1,23 @@
 name: Muzzle dependency-cache experiment
 
 on:
+  workflow_call:
+    inputs:
+      revision:
+        type: string
+        required: true
+      source-run:
+        type: string
+        required: true
+      partitions:
+        type: string
+        default: '[2]'
+      rounds:
+        type: string
+        default: '5'
+      warm-seeds:
+        type: string
+        default: '2'
   workflow_dispatch:
     inputs:
       revision:

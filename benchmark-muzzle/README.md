@@ -146,10 +146,11 @@ Gradle cache versus dependencies accumulated from differently seeded samples.
 Start with slice 2, the usual slowest slice, and two prior samples:
 
 ```sh
-gh workflow run muzzle-dependency-cache.yml \
+gh workflow run muzzle-performance-comparison.yml \
   --ref my-benchmark-branch \
+  -f dependency-cache=true \
   -f source-run=EARLIER_CI_BENCHMARK_RUN \
-  -f revision=REVISION_SHA \
+  -f baseline-ref=REVISION_SHA \
   -f partitions='[2]' -f warm-seeds=2 -f rounds=5
 ```
 

@@ -18,6 +18,17 @@ on:
         description: Paired rounds, each including an identical-revision control
         type: string
         default: '5'
+      dependency-cache:
+        description: Compare identical code with an accumulated dependency cache
+        type: boolean
+        default: false
+      source-run:
+        description: Earlier run supplying the initial cache for a dependency-cache experiment
+        type: string
+      warm-seeds:
+        description: Prior samples for a dependency-cache experiment
+        type: string
+        default: '2'
 
 permissions:
   contents: read
@@ -28,7 +39,18 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  dependency-cache:
+    if: inputs.dependency-cache
+    uses: ./.github/workflows/muzzle-dependency-cache.yml
+    with:
+      revision: ${{ inputs.baseline-ref }}
+      source-run: ${{ inputs.source-run }}
+      partitions: ${{ inputs.partitions }}
+      rounds: ${{ inputs.rounds }}
+      warm-seeds: ${{ inputs.warm-seeds }}
+
   prepare:
+    if: ${{ !inputs.dependency-cache }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     outputs:
