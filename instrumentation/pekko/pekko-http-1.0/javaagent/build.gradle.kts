@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -76,6 +78,15 @@ testing {
         implementation("org.apache.pekko:pekko-http_2.13:1.1.0")
         implementation("org.apache.pekko:pekko-stream_2.13:1.1.0")
       }
+      executions {
+        registerTask("pekko11NoSpanSuppressionTest") {
+          jvmArgs("-Dotel.instrumentation.common.span-suppression-strategy=none")
+
+          filter {
+            includeTestsMatching("*PekkoHttpServerInstrumentationTestAsync.successfulGetRequest")
+          }
+        }
+      }
     }
 
     // the agent matches methods of pekko classes by name, some of them are private and scala
@@ -137,19 +148,8 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val pekko11NoSpanSuppressionTest = register<Test>("pekko11NoSpanSuppressionTest") {
-    testClassesDirs = sourceSets["pekko11Test"].output.classesDirs
-    classpath = sourceSets["pekko11Test"].runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.common.span-suppression-strategy=none")
-
-    filter {
-      includeTestsMatching("*PekkoHttpServerInstrumentationTestAsync.successfulGetRequest")
-    }
-  }
-
   check {
-    dependsOn(testing.suites, pekko11NoSpanSuppressionTest)
+    dependsOn(testing.suites)
   }
 
   if (otelProps.denyUnsafe) {

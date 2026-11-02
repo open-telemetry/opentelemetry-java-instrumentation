@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.testcontainers-testing")
@@ -90,6 +93,13 @@ testing {
         // needed by S3
         implementation("javax.xml.bind:jaxb-api:2.3.1")
       }
+      if (!otelProps.testLatestDeps) {
+        executions {
+          registerTask("testBefore106ExperimentalAttributes") {
+            systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+          }
+        }
+      }
     }
 
     // We test SQS separately since we have special logic for it and want to make sure the presence of
@@ -100,6 +110,12 @@ testing {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
         implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest()}")
       }
+      executions {
+        register("ReceiveTelemetry") {
+          telemetryConfig("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+          telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+        }
+      }
     }
 
     register<JvmTestSuite>("testSqsNoReceiveTelemetry") {
@@ -107,6 +123,14 @@ testing {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
         implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest()}")
       }
+    }
+  }
+}
+
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    register("ExperimentalAttributes") {
+      telemetryConfig("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     }
   }
 }
@@ -124,43 +148,6 @@ tasks {
 
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  val testExperimentalAttributes = register<Test>("testExperimentalAttributes") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("metadataConfig", "otel.instrumentation.aws-sdk.experimental-span-attributes=true")
-  }
-
-  val testSqsReceiveTelemetry = register<Test>("testSqsReceiveTelemetry") {
-    testClassesDirs = sourceSets["testSqs"].output.classesDirs
-    classpath = sourceSets["testSqs"].runtimeClasspath
-
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.aws-sdk.experimental-span-attributes=true," +
-        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-    )
-  }
-
-  if (!otelProps.testLatestDeps) {
-    val testBefore106ExperimentalAttributes = register<Test>("testBefore106ExperimentalAttributes") {
-      testClassesDirs = sourceSets["test_before_1_11_106"].output.classesDirs
-      classpath = sourceSets["test_before_1_11_106"].runtimeClasspath
-
-      systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    }
-    check {
-      dependsOn(testBefore106ExperimentalAttributes)
-    }
-  }
-
-  check {
-    dependsOn(testExperimentalAttributes, testSqsReceiveTelemetry)
   }
 
   if (otelProps.denyUnsafe) {

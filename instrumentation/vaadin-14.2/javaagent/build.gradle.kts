@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.testcontainers-testing")
@@ -91,40 +94,22 @@ tasks {
       usesService(vaadinBuildService)
     }
   }
+}
 
-  val controllerTelemetrySuites =
-    if (otelProps.testLatestDeps) {
-      listOf("vaadin14LatestTest", "vaadinLatestTest")
-    } else {
-      listOf("vaadin142Test")
-    }
-  val controllerTelemetryTasks =
-    controllerTelemetrySuites.map { suiteName ->
-      val suiteProvider = testing.suites.named<JvmTestSuite>(suiteName)
-      val sourceTaskProvider = named<Test>(suiteName)
-      register<Test>("${suiteName}ControllerTelemetry") {
-        val suite = suiteProvider.get()
-        val sourceTask = sourceTaskProvider.get()
-        setJvmArgs(sourceTask.jvmArgs)
-        setSystemProperties(sourceTask.systemProperties)
-
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-        systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
-        isEnabled = sourceTask.enabled
-      }
-    }
-
-  check {
-    if (otelProps.testLatestDeps) {
-      dependsOn(testing.suites.named("vaadin14LatestTest"), testing.suites.named("vaadinLatestTest"))
-    } else {
-      dependsOn(testing.suites.named("vaadin142Test"))
-    }
-    dependsOn(controllerTelemetryTasks)
+val controllerTelemetrySuites =
+  if (otelProps.testLatestDeps) {
+    arrayOf("vaadin14LatestTest", "vaadinLatestTest")
+  } else {
+    arrayOf("vaadin142Test")
   }
+testing.suites.executions(*controllerTelemetrySuites) {
+  register("ControllerTelemetry") {
+    telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+  }
+}
+
+tasks.check {
+  dependsOn(controllerTelemetrySuites.map { testing.suites.named(it) })
 }
 
 configurations.configureEach {

@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -85,47 +88,33 @@ testing {
   }
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  }
+testing.suites.withType<JvmTestSuite>().configureEach {
+  executions {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
+    }
 
-  val experimentalSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-    register<Test>("${suite.name}Experimental") {
-      isEnabled = named<Test>(suite.name).get().enabled
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true")
-      systemProperty("metadataConfig", "otel.instrumentation.couchbase.emit-experimental-telemetry=true")
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
+    }
+    if (name == "version25Test") {
+      registerTask("testQuerySanitizationDisabled") {
+        filter {
+          includeTestsMatching("CouchbaseQuerySanitizationTest")
+        }
+        jvmArgs("-Dotel.instrumentation.couchbase.query-sanitization.enabled=false")
+        systemProperty("testQuerySanitizationEnabled", "false")
+      }
     }
   }
+}
 
-  val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
-    val sourceTask = named<Test>("version25Test").get()
-    isEnabled = sourceTask.enabled
-    setJvmArgs(sourceTask.jvmArgs)
-    setSystemProperties(sourceTask.systemProperties)
-    testClassesDirs = sourceTask.testClassesDirs
-    classpath = sourceTask.classpath
-
-    filter {
-      includeTestsMatching("CouchbaseQuerySanitizationTest")
-    }
-    jvmArgs("-Dotel.instrumentation.couchbase.query-sanitization.enabled=false")
-    systemProperty("testQuerySanitizationEnabled", "false")
-  }
-
-  check {
-    dependsOn(testing.suites, experimentalSuites, testQuerySanitizationDisabled)
-  }
-
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
-    }
-  }
+tasks.check {
+  dependsOn(testing.suites)
 }
