@@ -27,6 +27,7 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
 
   @Override
   public void write(String s, int off, int len) {
+    state.useWriter();
     if (!state.shouldProcessWrite()) {
       super.write(s, off, len);
       return;
@@ -39,6 +40,7 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
 
   @Override
   public void write(int b) {
+    state.useWriter();
     super.write(b);
     if (!state.shouldProcessWrite()) {
       return;
@@ -48,6 +50,7 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
 
   @Override
   public void write(char[] buf, int off, int len) {
+    state.useWriter();
     if (!state.shouldProcessWrite()) {
       super.write(buf, off, len);
       return;

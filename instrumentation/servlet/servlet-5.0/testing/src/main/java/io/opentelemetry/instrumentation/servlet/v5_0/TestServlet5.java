@@ -28,11 +28,14 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.CountDownLatch;
 
 public class TestServlet5 {
+  private static final String CACHED_WRITER_RESPONSE_ATTRIBUTE =
+      TestServlet5.class.getName() + ".cachedWriterResponse";
 
   @WebServlet
   public static class Sync extends HttpServlet {
@@ -126,6 +129,47 @@ public class TestServlet5 {
         throw new ServletException("Response committed before forward");
       }
       req.getRequestDispatcher(HTML_PRINT_WRITER.getPath()).forward(req, resp);
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetCachedWriterForward extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      CachedWriterResponseWrapper response = new CachedWriterResponseWrapper(resp);
+      response.getWriter().write("discarded-prefix");
+      req.setAttribute(CACHED_WRITER_RESPONSE_ATTRIBUTE, response);
+      req.getRequestDispatcher("/snippetCachedWriterTarget").forward(req, response);
+    }
+  }
+
+  @WebServlet
+  public static class SnippetCachedWriterTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      String body = HTML_PRINT_WRITER.getBody();
+      resp.setContentType("text/html");
+      resp.setContentLength(body.length());
+      resp.getOutputStream();
+      CachedWriterResponseWrapper response =
+          (CachedWriterResponseWrapper) req.getAttribute(CACHED_WRITER_RESPONSE_ATTRIBUTE);
+      response.getWriter().write(body);
+    }
+  }
+
+  private static class CachedWriterResponseWrapper extends HttpServletResponseWrapper {
+    private final PrintWriter writer;
+
+    CachedWriterResponseWrapper(HttpServletResponse response) throws IOException {
+      super(response);
+      writer = super.getWriter();
+    }
+
+    @Override
+    public PrintWriter getWriter() {
+      return writer;
     }
   }
 

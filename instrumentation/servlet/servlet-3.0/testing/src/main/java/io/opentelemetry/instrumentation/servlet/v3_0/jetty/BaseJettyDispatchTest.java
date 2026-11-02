@@ -42,6 +42,8 @@ public abstract class BaseJettyDispatchTest extends AbstractJettyServlet3Test {
       new ServerEndpoint("SNIPPET_FORWARD_21", "snippetForward?contentLength=21", 200, "", false);
   private static final ServerEndpoint SNIPPET_FORWARD_22 =
       new ServerEndpoint("SNIPPET_FORWARD_22", "snippetForward?contentLength=22", 200, "", false);
+  private static final ServerEndpoint SNIPPET_CACHED_WRITER_FORWARD =
+      new ServerEndpoint("SNIPPET_CACHED_WRITER_FORWARD", "snippetCachedWriterForward", 200, "");
   private static final ServerEndpoint SNIPPET_ASYNC_RESET =
       new ServerEndpoint("SNIPPET_ASYNC_RESET", "snippetAsyncReset", 200, "");
   private static final ServerEndpoint SNIPPET_REJECTED_FORWARD =
@@ -160,6 +162,10 @@ public abstract class BaseJettyDispatchTest extends AbstractJettyServlet3Test {
             "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.getPath(),
             RequestDispatcherServlet.Forward.class);
         test.addServlet(context, "/snippetForward", TestServlet3.SnippetForward.class);
+        test.addServlet(
+            context, "/snippetCachedWriterForward", TestServlet3.SnippetCachedWriterForward.class);
+        test.addServlet(
+            context, "/snippetCachedWriterTarget", TestServlet3.SnippetCachedWriterTarget.class);
         test.addServlet(context, "/snippetAsyncReset", TestServlet3.SnippetAsyncReset.class);
         test.addServlet(
             context, "/snippetRejectedForward", TestServlet3.SnippetRejectedForward.class);
@@ -306,6 +312,13 @@ public abstract class BaseJettyDispatchTest extends AbstractJettyServlet3Test {
   }
 
   @Test
+  void cachedWriterRemainsOwnedAfterForward() {
+    assumeTrue(testType == TestType.FORWARD);
+    assumeTrue(isAgentTest());
+    assertReplacementBody(SNIPPET_CACHED_WRITER_FORWARD);
+  }
+
+  @Test
   void asyncRawResetBufferDiscardsUncommittedSnippetBody() {
     assumeTrue(testType == TestType.FORWARD);
     assumeTrue(isAgentTest());
@@ -351,6 +364,7 @@ public abstract class BaseJettyDispatchTest extends AbstractJettyServlet3Test {
       String expected = HTML_PRINT_WRITER.getBody().replace("<head>", "<head>" + snippet);
       assertThat(response.contentUtf8()).isEqualTo(expected);
       assertThat(response.contentUtf8()).containsOnlyOnce(snippet);
+      assertThat(response.contentUtf8()).doesNotContain("discarded-prefix");
       assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
     } finally {
       ExperimentalSnippetHolder.setSnippet("");
