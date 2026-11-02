@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-testing")
+  id("otel.testcontainers-testing")
 }
 
 otelJava {
@@ -41,10 +42,6 @@ testing {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
   test {
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
   }

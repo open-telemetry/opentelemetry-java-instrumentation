@@ -2,6 +2,7 @@ plugins {
   id("otel.java-conventions")
   alias(springBoot31.plugins.versions)
   id("otel.spring-native-test-conventions")
+  id("otel.testcontainers-testing")
 }
 
 description = "smoke-tests-otel-starter-spring-boot-3"

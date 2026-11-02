@@ -1,6 +1,7 @@
 plugins {
   id("otel.library-instrumentation")
   id("otel.nullaway-conventions")
+  id("otel.testcontainers-testing")
 }
 
 dependencies {
@@ -36,10 +37,6 @@ testing {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
   test {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }

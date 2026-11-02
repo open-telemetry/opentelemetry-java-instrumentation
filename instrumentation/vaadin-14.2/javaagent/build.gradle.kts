@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -86,8 +87,6 @@ val vaadinBuildService =
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
     if (name.startsWith("vaadinLatestTest")) {
       usesService(vaadinBuildService)
     }
