@@ -138,9 +138,9 @@ See [Writing instrumentation](docs/contributing/writing-instrumentation.md)
 
 See [Understanding the javaagent structure](docs/contributing/javaagent-structure.md)
 
-## Understanding the instrumentation testing infrastructure
+## Understanding javaagent instrumentation testing
 
-See [Understanding the instrumentation testing infrastructure](docs/contributing/javaagent-test-infra.md)
+See [Javaagent instrumentation testing](docs/contributing/javaagent-test-infra.md)
 
 ## Debugging
 

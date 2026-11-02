@@ -156,7 +156,7 @@ Keep `suppress = Throwable.class` in both cases — it is always required.
 - **Internal infrastructure** (`instrumentation/internal/`): Instrumentations for internal
   class loading and lambda support may intentionally let errors propagate because silently
   swallowing them would corrupt JVM internals.
-- **Test code** (`testing-common/`, test sources): Not production instrumentation — suppress
+- **Test code** (`testing/testing-common/`, test sources): Not production instrumentation — suppress
   is not required.
 
 These exceptions do not need `suppress`. For methods with non-trivial bodies

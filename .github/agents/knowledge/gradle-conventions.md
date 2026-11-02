@@ -182,11 +182,11 @@ should be active in the test agent.
 - **Sibling cross-version references are required**: every javaagent module in a version
   family must list all other sibling `:javaagent` modules via `testInstrumentation`.
 
-### Exception: modules already bundled into `agent-for-testing`
+### Exception: modules already bundled into `javaagent-for-testing`
 
 A small set of javaagent modules are bundled directly into the main agent via
 `baseJavaagentLibs(...)` in `javaagent/build.gradle.kts`, and therefore into
-`agent-for-testing` as well. For these, the sibling cross-version rule does **not** apply:
+`javaagent-for-testing` as well. For these, the sibling cross-version rule does **not** apply:
 they are already loaded in every test JVM, so adding them via `testInstrumentation`
 from a sibling's `build.gradle.kts` is redundant.
 

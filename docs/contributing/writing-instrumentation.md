@@ -339,7 +339,7 @@ be directly accessible in your test code. Make sure not to use the classes from 
 instrumentation in your test code. If for some reason you need to write unit tests for the javaagent
 code, see [this section](#writing-java-agent-unit-tests).
 
-Shared support and reusable suites for agent and library instrumentation tests live in
+Shared support used by javaagent instrumentation tests lives in
 [:testing:testing-common](javaagent-test-infra.md). The repository's javaagent test plugin
 configures the agent and instrumentation initializer for you.
 
