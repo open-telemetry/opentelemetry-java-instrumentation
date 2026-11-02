@@ -185,6 +185,34 @@ class CiBenchmarkTest(unittest.TestCase):
                 self.assertEqual(sample["discovery"]["project_count"], 1)
                 self.assertTrue((runner.reports / sample["label"] / "profile").is_dir())
 
+    def test_network_profile_requires_a_flushed_nonempty_recording(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runner = self.runner(Path(directory))
+            runner.args.jfr_network = True
+
+            def execute(command, **kwargs):
+                result = self.fake_build(command, **kwargs)
+                log = kwargs.get("log")
+                if log is not None:
+                    self.assertIn(str(Path(ci.__file__).with_name("network.init.gradle")), command)
+                    self.assertIn(f"-Dmuzzle.profile.jfr={log.parent / 'network.jfr'}", command)
+                    log.write_text(log.read_text() + "MUZZLE_BENCHMARK_JFR flushed=true\n")
+                    (log.parent / "network.jfr").write_bytes(b"fixture-recording")
+                return result
+
+            with patch.object(benchmark, "run", side_effect=execute):
+                runner.execute("baseline")
+            self.assertEqual(
+                runner.samples[0]["network_jfr_sha256"],
+                benchmark.digest(runner.reports / "baseline/network.jfr"),
+            )
+        with tempfile.TemporaryDirectory() as directory:
+            runner = self.runner(Path(directory))
+            runner.args.jfr_network = True
+            with patch.object(benchmark, "run", side_effect=self.fake_build):
+                with self.assertRaisesRegex(ValueError, "Missing Flight Recorder"):
+                    runner.execute("baseline")
+
     def test_even_round_starts_with_candidate_and_still_uses_baseline_reference(self):
         with tempfile.TemporaryDirectory() as directory:
             runner = self.runner(Path(directory))
