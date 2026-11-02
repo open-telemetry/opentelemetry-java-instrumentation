@@ -6,12 +6,14 @@
 package io.opentelemetry.instrumentation.gradle
 
 import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectCollection
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.plugins.jvm.JvmTestSuite
 import org.gradle.api.tasks.testing.Test
 import org.gradle.testing.base.TestingExtension
+import org.gradle.testing.base.TestSuite
 
 class TestSuiteExecutionsPlugin : Plugin<Project> {
   override fun apply(project: Project) {
@@ -25,6 +27,22 @@ class TestSuiteExecutionsPlugin : Plugin<Project> {
 
 fun JvmTestSuite.executions(action: Action<TestSuiteExecutions>) {
   (this as ExtensionAware).extensions.getByType(TestSuiteExecutions::class.java).configure(action)
+}
+
+fun NamedDomainObjectCollection<TestSuite>.executions(
+  vararg suiteNames: String,
+  action: Action<TestSuiteExecutions>,
+) {
+  if (suiteNames.isEmpty()) {
+    withType(JvmTestSuite::class.java).configureEach { executions(action) }
+  } else {
+    suiteNames.forEach { suiteName ->
+      named(suiteName).configure {
+        require(this is JvmTestSuite) { "Test suite '$suiteName' is not a JVM test suite" }
+        executions(action)
+      }
+    }
+  }
 }
 
 /** Configuration of a suite's existing default execution and explicit variants. */
