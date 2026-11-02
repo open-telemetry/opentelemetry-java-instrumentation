@@ -61,7 +61,7 @@ tasks {
   }
 
   check {
-    dependsOn("shadedClientTest")
+    dependsOn(testing.suites)
   }
 
   if (otelProps.denyUnsafe) {
