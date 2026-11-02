@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0
 
+import org.apache.pekko.Done
 import org.apache.pekko.actor.typed.{
   ActorRef,
   ActorSystem,
@@ -36,7 +37,7 @@ object PekkoTypedActors {
   val delegator: ActorRef[TypedDelegator.Delegate] =
     spawn(TypedDelegator(), "typedDelegator")
 
-  private def spawn[T](behavior: Behavior[T], name: String): ActorRef[T] = {
+  def spawn[T](behavior: Behavior[T], name: String): ActorRef[T] = {
     implicit val actorSystem: ActorSystem[SpawnProtocol.Command] = system
     Await.result(
       system.ask[ActorRef[T]](replyTo =>
@@ -84,6 +85,37 @@ class PekkoTypedActors {
     }
   }
 
+  def stashAndUnstash(): Unit = {
+    implicit val actorSystem: ActorSystem[SpawnProtocol.Command] = system
+    // spawn the actor outside of any span, a fresh actor per call starts out locked
+    val stasher = spawn(TypedStasher(), "")
+    val parentSpan = tracer.spanBuilder("parent").startSpan()
+    val parentScope =
+      Context.current().`with`(parentSpan).makeCurrent()
+    try {
+      stasher ! TypedStasher.Greet("Pekko")
+    } finally {
+      parentScope.close()
+      parentSpan.end()
+    }
+    // sent in the root context
+    stasher ! TypedStasher.Greet("Root")
+    val unlockSpan = tracer.spanBuilder("unlock").startSpan()
+    val unlockScope =
+      Context.current().`with`(unlockSpan).makeCurrent()
+    try {
+      // wait until the stashed messages have been handled, so that the traces of one call are
+      // complete before the next call starts
+      Await.result(
+        stasher.ask[Done](replyTo => TypedStasher.Unlock(replyTo)),
+        10.seconds
+      )
+    } finally {
+      unlockScope.close()
+      unlockSpan.end()
+    }
+  }
+
   def spawnChildAndTell(): Unit = {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
@@ -95,6 +127,39 @@ class PekkoTypedActors {
       parentSpan.end()
     }
   }
+}
+
+object TypedStasher {
+  sealed trait Command
+
+  case class Greet(who: String) extends Command
+
+  case class Unlock(replyTo: ActorRef[Done]) extends Command
+
+  // stashes greetings until it is unlocked, then greets everyone that was stashed and replies
+  // once they all have been greeted
+  def apply(): Behavior[Command] =
+    Behaviors.withStash(100) { buffer =>
+      Behaviors.receiveMessage {
+        case greet: Greet =>
+          buffer.stash(greet)
+          Behaviors.same
+        case Unlock(replyTo) =>
+          val next = buffer.unstashAll(unlocked())
+          replyTo ! Done
+          next
+      }
+    }
+
+  private def unlocked(): Behavior[Command] =
+    Behaviors.receiveMessage {
+      case Greet(who) =>
+        PekkoTypedActors.tracedChild(s"Hello, $who")
+        Behaviors.same
+      case Unlock(replyTo) =>
+        replyTo ! Done
+        Behaviors.same
+    }
 }
 
 object TypedGreeter {
