@@ -4,6 +4,7 @@ import io.opentelemetry.instrumentation.gradle.telemetryConfig
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -34,7 +35,6 @@ dependencies {
 testing.suites.named<JvmTestSuite>("test") {
   executions {
     configureEach {
-      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
       if (otelProps.denyUnsafe) {
         enabled = false

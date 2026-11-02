@@ -2,6 +2,7 @@ import java.time.Duration
 
 plugins {
   id("otel.java-conventions")
+  id("otel.testcontainers-testing")
 }
 
 description = "smoke-tests"

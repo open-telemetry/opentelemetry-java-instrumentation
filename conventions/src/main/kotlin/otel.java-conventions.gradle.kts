@@ -317,18 +317,6 @@ fun isJavaVersionAllowed(version: JavaVersion): Boolean {
   return true
 }
 
-abstract class TestcontainersBuildService : BuildService<BuildServiceParameters.None>
-
-// To limit number of concurrently running resource intensive tests add
-// tasks {
-//   test {
-//     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-//   }
-// }
-gradle.sharedServices.registerIfAbsent("testcontainersBuildService", TestcontainersBuildService::class.java) {
-  maxParallelUsages.convention(2)
-}
-
 val resourceNames = listOf("Host", "Os", "Process", "ProcessRuntime")
 val resourceClassesCsv = resourceNames.joinToString(",") { "io.opentelemetry.sdk.extension.resources.${it}ResourceProvider" }
 
