@@ -12,19 +12,19 @@ import javax.annotation.Nullable;
 final class EventBusRequest {
 
   private final String address;
-  @Nullable private final Message<?> message;
+  @Nullable private final MultiMap headers;
 
-  private EventBusRequest(String address, @Nullable Message<?> message) {
+  private EventBusRequest(String address, @Nullable MultiMap headers) {
     this.address = address;
-    this.message = message;
+    this.headers = headers;
   }
 
-  static EventBusRequest forProducer(String address) {
-    return new EventBusRequest(address, null);
+  static EventBusRequest forProducer(String address, @Nullable MultiMap headers) {
+    return new EventBusRequest(address, headers);
   }
 
   static EventBusRequest forConsumer(Message<?> message) {
-    return new EventBusRequest(message.address(), message);
+    return new EventBusRequest(message.address(), message.headers());
   }
 
   String getAddress() {
@@ -33,6 +33,6 @@ final class EventBusRequest {
 
   @Nullable
   MultiMap headers() {
-    return message != null ? message.headers() : null;
+    return headers;
   }
 }

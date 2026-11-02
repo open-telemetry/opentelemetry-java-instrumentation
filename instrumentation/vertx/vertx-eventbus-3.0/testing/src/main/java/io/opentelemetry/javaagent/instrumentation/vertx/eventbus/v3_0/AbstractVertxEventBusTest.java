@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.eventbus.v3_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
@@ -14,9 +15,11 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
+import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -27,7 +30,9 @@ import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.eventbus.MessageProducer;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterAll;
@@ -43,6 +48,9 @@ import org.junit.jupiter.api.extension.RegisterExtension;
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractVertxEventBusTest {
+
+  private static final AttributeKey<List<String>> CAPTURED_HEADER =
+      stringArrayKey("messaging.header.Test-Message-Header");
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -251,6 +259,74 @@ public abstract class AbstractVertxEventBusTest {
                             equalTo(ERROR_TYPE, IllegalStateException.class.getName()))
                         .hasStatusSatisfying(status -> status.hasCode(StatusCode.ERROR))
                         .hasException(error)));
+  }
+
+  @Test
+  void captureHeaders() throws InterruptedException {
+    String address = "address.headers." + System.nanoTime();
+    EventBus eventBus = vertx.eventBus();
+
+    CountDownLatch received = new CountDownLatch(1);
+    eventBus.consumer(address, message -> received.countDown());
+
+    DeliveryOptions options = new DeliveryOptions().addHeader("Test-Message-Header", "test");
+    testing.runWithSpan("parent", () -> eventBus.send(address, "hello", options));
+
+    assertThat(received.await(10, SECONDS)).isTrue();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span ->
+                    span.hasName("send " + address)
+                        .hasKind(PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "vertx"),
+                            equalTo(MESSAGING_DESTINATION_NAME, address),
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                            equalTo(CAPTURED_HEADER, singletonList("test"))),
+                span ->
+                    span.hasName("process " + address)
+                        .hasKind(CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "vertx"),
+                            equalTo(MESSAGING_DESTINATION_NAME, address),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(CAPTURED_HEADER, singletonList("test")))));
+  }
+
+  /**
+   * Sends from {@link #vertx} to a consumer that is only registered on {@code otherNode}, so the
+   * message and its trace headers have to cross the cluster transport to reach the consumer.
+   */
+  protected void assertPropagatesToOtherNode(
+      Vertx otherNode, Consumer<MessageConsumer<Object>> awaitRegistration)
+      throws InterruptedException {
+    String address = "address.cluster." + System.nanoTime();
+
+    CountDownLatch received = new CountDownLatch(1);
+    MessageConsumer<Object> consumer =
+        otherNode
+            .eventBus()
+            .consumer(
+                address,
+                message -> {
+                  testing.runWithSpan("handler-inner", () -> {});
+                  received.countDown();
+                });
+    awaitRegistration.accept(consumer);
+
+    testing.runWithSpan("parent", () -> vertx.eventBus().send(address, "hello"));
+
+    assertThat(received.await(10, SECONDS)).isTrue();
+
+    testing.waitAndAssertTraces(
+        trace -> assertProducerConsumerTrace(trace, "parent", "send", address));
   }
 
   private static void assertProducerConsumerTrace(

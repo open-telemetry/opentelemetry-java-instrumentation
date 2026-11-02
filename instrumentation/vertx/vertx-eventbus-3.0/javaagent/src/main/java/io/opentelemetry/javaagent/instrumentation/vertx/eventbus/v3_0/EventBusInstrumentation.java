@@ -22,6 +22,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.vertx.core.MultiMap;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -84,7 +86,8 @@ class EventBusInstrumentation implements TypeInstrumentation {
     public static AdviceScope start(
         Instrumenter<EventBusRequest, Void> instrumenter,
         EventBus eventBus,
-        @Nullable String address) {
+        @Nullable String address,
+        @Nullable Object options) {
       CallDepth callDepth = CallDepth.forClass(EventBus.class);
       // send/publish/request overloads delegate to each other, only the outermost is traced
       if (callDepth.getAndIncrement() > 0
@@ -94,7 +97,10 @@ class EventBusInstrumentation implements TypeInstrumentation {
         return new AdviceScope(callDepth, null, null, null, null);
       }
 
-      EventBusRequest request = EventBusRequest.forProducer(address);
+      // the overloads that take DeliveryOptions all take it as their third argument
+      MultiMap headers =
+          options instanceof DeliveryOptions ? ((DeliveryOptions) options).getHeaders() : null;
+      EventBusRequest request = EventBusRequest.forProducer(address, headers);
       Context parentContext = Context.current();
       if (!instrumenter.shouldStart(parentContext, request)) {
         return new AdviceScope(callDepth, null, null, null, null);
@@ -122,8 +128,10 @@ class EventBusInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
-        @Advice.This EventBus eventBus, @Advice.Argument(0) @Nullable String address) {
-      return AdviceScope.start(sendInstrumenter(), eventBus, address);
+        @Advice.This EventBus eventBus,
+        @Advice.Argument(0) @Nullable String address,
+        @Advice.Argument(value = 2, optional = true) @Nullable Object options) {
+      return AdviceScope.start(sendInstrumenter(), eventBus, address, options);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -138,8 +146,10 @@ class EventBusInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
-        @Advice.This EventBus eventBus, @Advice.Argument(0) @Nullable String address) {
-      return AdviceScope.start(publishInstrumenter(), eventBus, address);
+        @Advice.This EventBus eventBus,
+        @Advice.Argument(0) @Nullable String address,
+        @Advice.Argument(value = 2, optional = true) @Nullable Object options) {
+      return AdviceScope.start(publishInstrumenter(), eventBus, address, options);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -154,8 +164,10 @@ class EventBusInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
-        @Advice.This EventBus eventBus, @Advice.Argument(0) @Nullable String address) {
-      return AdviceScope.start(requestInstrumenter(), eventBus, address);
+        @Advice.This EventBus eventBus,
+        @Advice.Argument(0) @Nullable String address,
+        @Advice.Argument(value = 2, optional = true) @Nullable Object options) {
+      return AdviceScope.start(requestInstrumenter(), eventBus, address, options);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
