@@ -45,7 +45,6 @@ testing.suites {
     }
 
     register("CreateSpansDisabled") {
-      jvmArgs("-Dotel.instrumentation.rocketmq-client.message-create-spans.enabled=false")
       systemProperty("testBatchCreateSpansDisabled", "true")
       telemetryConfig(
         "otel.instrumentation.rocketmq-client.message-create-spans.enabled",
@@ -59,7 +58,6 @@ testing.suites {
           "io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqClientTest.testBatchSendSuppression",
         )
       }
-      jvmArgs("-Dotel.instrumentation.common.span-suppression-strategy=span-kind")
       systemProperty("testBatchSendSuppression", "true")
       telemetryConfig("otel.instrumentation.common.span-suppression-strategy", "span-kind")
     }
