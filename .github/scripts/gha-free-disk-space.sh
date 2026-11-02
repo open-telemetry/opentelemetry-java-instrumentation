@@ -1,4 +1,7 @@
 #!/bin/bash -e
+# Current runners often start with around 90 GB free, but GitHub only guarantees 14 GB of disk space.
+# Keep cleanup conditional and revisit removing this script when the documented minimum increases.
+# https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories
 
 set -o pipefail
 
