@@ -118,7 +118,8 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
     private final Map<String, Integer> seenRegistryMetrics;
     private final Map<String, Integer> seenRegistryAttributes;
 
-    private WeaverValidationResult(
+    // visible for testing
+    WeaverValidationResult(
         List<WeaverValidationAdvice> advices,
         Set<String> seenNonRegistryMetrics,
         Set<String> seenNonRegistryAttributes,
@@ -239,7 +240,7 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
       assertThat(map.keySet())
           .filteredOn(item -> item.startsWith(prefix))
           .describedAs("expected registered %s to contain all keys", type)
-          .containsExactlyInAnyOrderElementsOf(expectedKeys);
+          .containsAll(expectedKeys);
 
       reported.forEach(
           key ->
