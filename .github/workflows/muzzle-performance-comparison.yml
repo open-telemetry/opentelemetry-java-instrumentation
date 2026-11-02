@@ -30,7 +30,7 @@ on:
         type: string
         default: '2'
       report-run:
-        description: Rebuild only the dependency-cache report from an existing run
+        description: Rebuild a dependency-cache or slice-count report from an existing run
         type: string
       profile-only:
         description: Profile one command per slice using the source-run snapshot
@@ -67,6 +67,7 @@ jobs:
       source-run: ${{ inputs.source-run }}
       partitions: ${{ inputs.partitions }}
       rounds: ${{ inputs.rounds }}
+      report-run: ${{ inputs.report-run }}
 
   disk-preparation:
     if: inputs.candidate-mode == 'disk-preparation' && !inputs.profile-only && !inputs.dependency-cache

@@ -15,6 +15,9 @@ on:
       rounds:
         type: string
         default: '5'
+      report-run:
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -53,6 +56,7 @@ jobs:
           PY
 
   benchmark:
+    if: inputs.report-run == ''
     needs: validate
     runs-on: ubuntu-24.04
     timeout-minutes: 180
@@ -108,6 +112,8 @@ jobs:
         with:
           pattern: muzzle-slices-[0-9]*-*
           path: ${{ runner.temp }}/groups
+          run-id: ${{ inputs.report-run || github.run_id }}
+          github-token: ${{ github.token }}
       - name: Verify identical coverage and paired maximum command times
         env:
           ROUNDS: ${{ inputs.rounds }}

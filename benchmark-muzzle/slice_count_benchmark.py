@@ -145,7 +145,10 @@ def aggregate(args):
     for number in range(1, args.rounds + 1):
         values = {label: [] for label in ci.LABELS}
         for partition in args.partitions:
-            directory = args.inputs / f"muzzle-slices-{number}-{partition}"
+            directory = ci.artifact_path(
+                args.inputs, f"muzzle-slices-{number}-{partition}", "identity.json",
+                single=args.rounds == 1 and len(args.partitions) == 1,
+            ).parent
             if not json.loads((directory / "complete.json").read_text(encoding="utf-8"))["complete"]:
                 raise ValueError("Incomplete slice-count group")
             identity, shared, manifests, samples = validate_group(directory)

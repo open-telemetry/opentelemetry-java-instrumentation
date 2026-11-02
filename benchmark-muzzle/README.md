@@ -239,6 +239,8 @@ prerequisites. They consume more runner time but do not require a larger
 persistent dependency cache. `rounds=1` and `partitions='[2]'` provide a
 functional calibration of one baseline group and its two halves, not a
 global performance claim.
+Add `report-run=SLICE_COUNT_RUN` to regenerate its report without repeating
+the four workload commands.
 
 ## Disk preparation
 

@@ -122,6 +122,20 @@ class SliceCountBenchmarkTest(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     slices.validate_group(folder)
 
+    def test_single_artifact_report_accepts_the_actions_flattened_layout(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            folder = self.fixture(root, 1, 2, dict.fromkeys(slices.ROLES, 100))
+            args = SimpleNamespace(inputs=root, output=root / "nested-summary", rounds=1, partitions=[2])
+            slices.aggregate(args)
+            expected = json.loads((args.output / "results.json").read_text())
+            for path in folder.iterdir():
+                path.rename(root / path.name)
+            folder.rmdir()
+            args.output = root / "flat-summary"
+            slices.aggregate(args)
+            self.assertEqual(json.loads((args.output / "results.json").read_text()), expected)
+
     def test_failed_command_preserves_logs_without_retry(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
