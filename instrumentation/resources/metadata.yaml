@@ -14,8 +14,3 @@ configurations:
       collected by default because they may contain sensitive information.
     type: boolean
     default: false
-  # No declarative_name: the declarative resource detector schema has no host ID toggle.
-  - name: otel.resource.providers.host-id.enabled
-    description: Enables host ID resource detection in the Java agent.
-    type: boolean
-    default: false

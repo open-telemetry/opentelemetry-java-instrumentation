@@ -62,8 +62,7 @@ class ResourceDeclarativeConfigTest {
                       .map(AttributeKey::getKey)
                       .collect(toSet());
               // ContainerResourceComponentProvider - no container attributes reliably provided
-              // HostIdResourceComponentProvider - host.id attribute not reliably provided
-              // HostResourceComponentProvider
+              // HostResourceComponentProvider - host.id attribute not reliably provided
               assertThat(attributeKeys).contains("host.arch", "host.name");
               // OsResourceComponentProvider
               assertThat(attributeKeys).contains("os.description", "os.type");
