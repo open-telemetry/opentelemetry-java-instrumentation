@@ -14,12 +14,55 @@ muzzle {
 dependencies {
   library("io.micrometer:micrometer-core:1.5.0")
 
+  bootstrap(project(":instrumentation:runtime-telemetry:bootstrap"))
   implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
 
   testImplementation(project(":instrumentation:micrometer:micrometer-1.5:testing"))
+
+  // provides the JMX metrics that jvm-metrics-ownership defers to
+  testInstrumentation(project(":instrumentation:runtime-telemetry:javaagent"))
+}
+
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation("io.micrometer:micrometer-core:1.5.0")
+      }
+    }
+  }
 }
 
 tasks {
+  val testJvmMetricsOwnership = register<Test>("testJvmMetricsOwnership") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*JvmMetricsOwnershipEnabledTest")
+    }
+    include("**/*JvmMetricsOwnershipEnabledTest.*")
+    jvmArgs(
+      "-Dotel.instrumentation.micrometer.experimental.jvm-metrics-ownership.enabled=true",
+      "-Dotel.instrumentation.micrometer.experimental.jvm-metrics-ownership.kept=jvm.classes.unloaded",
+      "-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true",
+    )
+  }
+
+  val testJvmMetricsOwnershipJfr = register<Test>("testJvmMetricsOwnershipJfr") {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*JvmMetricsOwnershipJfrTest")
+    }
+    include("**/*JvmMetricsOwnershipJfrTest.*")
+    jvmArgs(
+      "-Dotel.instrumentation.micrometer.experimental.jvm-metrics-ownership.enabled=true",
+      "-Dotel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included=jvm.class.*",
+    )
+    enabled = (otelProps.testJavaVersion ?: JavaVersion.current()).isCompatibleWith(JavaVersion.VERSION_17)
+  }
+
   val testPrometheusMode = register<Test>("testPrometheusMode") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -55,11 +98,16 @@ tasks {
       excludeTestsMatching("*TimerMillisecondsTest")
       excludeTestsMatching("*PrometheusModeTest")
       excludeTestsMatching("*HistogramGaugesTest")
+      excludeTestsMatching("*JvmMetricsOwnershipEnabledTest")
+      excludeTestsMatching("*JvmMetricsOwnershipJfrTest")
     }
   }
 
   check {
     dependsOn(
+      testing.suites,
+      testJvmMetricsOwnership,
+      testJvmMetricsOwnershipJfr,
       testBaseTimeUnit,
       testPrometheusMode,
       testHistogramGauges,

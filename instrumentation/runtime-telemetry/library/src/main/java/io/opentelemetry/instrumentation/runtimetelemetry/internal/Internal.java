@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -14,7 +15,9 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetry;
 import io.opentelemetry.instrumentation.runtimetelemetry.RuntimeTelemetryBuilder;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -22,6 +25,23 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class Internal {
+
+  @Nullable
+  private static volatile Function<RuntimeTelemetry, Set<String>> getRegisteredJmxObservers;
+
+  /**
+   * Returns the names of the JMX metrics whose observers were registered. Registration does not
+   * guarantee that a metric is exported, for example when an SDK view drops it.
+   */
+  public static Set<String> getRegisteredJmxObservers(@Nullable RuntimeTelemetry telemetry) {
+    Function<RuntimeTelemetry, Set<String>> getter = getRegisteredJmxObservers;
+    return telemetry == null || getter == null ? emptySet() : getter.apply(telemetry);
+  }
+
+  public static void internalSetRegisteredJmxObservers(
+      Function<RuntimeTelemetry, Set<String>> getter) {
+    getRegisteredJmxObservers = getter;
+  }
 
   @Nullable private static volatile BiConsumer<RuntimeTelemetryBuilder, Boolean> setDisableJmx;
 

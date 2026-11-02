@@ -282,6 +282,9 @@ targets:
       target: ':instrumentation:rmi:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:runtime-telemetry:bootstrap'
+    - type: gradle
+      path: ./
       target: ':instrumentation:runtime-telemetry:javaagent'
     - type: gradle
       path: ./
