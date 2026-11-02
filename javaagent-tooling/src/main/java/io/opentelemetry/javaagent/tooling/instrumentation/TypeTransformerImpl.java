@@ -62,9 +62,7 @@ public final class TypeTransformerImpl implements TypeTransformer {
     return new AdviceLocator(
         classFileLocator,
         (slashClassName, bytes) -> {
-          // verify that advice does not call VirtualField.find
-          // NOTE: this check is here to help converting the advice for the indy instrumentation,
-          // it can be removed once the conversion is completed
+          // Reject VirtualField.find calls in non-inlined advice, where they are not rewritten.
           AdviceVirtualFieldUsageChecker.check(bytes);
           return bytes;
         });

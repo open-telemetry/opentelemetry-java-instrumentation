@@ -126,7 +126,7 @@ public final class InstrumentationModuleInstaller {
       }
     }
     // inspect the advice classes used and decide based on that
-    return adviceInspector.useIsolatedAdvice(instrumentationModule);
+    return adviceInspector.inferHelperClassIsolation(instrumentationModule);
   }
 
   private AgentBuilder installModule(

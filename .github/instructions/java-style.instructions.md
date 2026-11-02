@@ -11,7 +11,7 @@ the stated exception before reporting a repository convention.
 - **Visibility**: use the narrowest access that works. Add `// visible for
   testing` if a production member has broader visibility solely for direct
   test access. Keep advice classes and their static entry points public for
-  indy method-handle dispatch. Ordinary helpers may use narrower access when
+  invokedynamic method-handle dispatch. Ordinary helpers may use narrower access when
   their callers and classloader boundaries permit it. A single public class
   in a module may be needed for Javadoc.
 - **Public API**: make public API classes `final` where possible; name
