@@ -46,10 +46,19 @@ testing.suites {
       implementation("org.testcontainers:testcontainers-pulsar")
       compileOnly("io.swagger.core.v3:swagger-annotations:2.2.55")
     }
+
+    tasks.named(sources.compileJavaTaskName, JavaCompile::class).configure {
+      options.release.set(17)
+    }
   }
 
   executions("version5Test") {
     configureDefault {
+      val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
+      if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+        enabled = false
+      }
+
       filter {
         includeTestsMatching("PulsarClientV5Test")
       }
@@ -83,16 +92,6 @@ testing.suites {
 }
 
 tasks {
-  named("compileVersion5TestJava", JavaCompile::class).configure {
-    options.release.set(17)
-  }
-  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
-  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
-    named("version5Test", Test::class).configure {
-      enabled = false
-    }
-  }
-
   withType<Test>().configureEach {
     systemProperty("io.opentelemetry.pulsar-2.8.debug", "true")
     if (otelProps.denyUnsafe) {

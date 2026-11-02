@@ -26,6 +26,15 @@ testing.suites {
       implementation(project(":instrumentation:sofa-rpc-5.4:testing"))
       implementation("com.alipay.sofa:sofa-rpc-all:${baseVersion("5.4.0").orLatest()}")
     }
+
+    configurations.named(sources.runtimeClasspathConfigurationName) {
+      resolutionStrategy {
+        // requires old logback (and therefore also old slf4j)
+        force("ch.qos.logback:logback-classic:1.2.13")
+        force("ch.qos.logback:logback-core:1.2.13")
+        force("org.slf4j:slf4j-api:1.7.21")
+      }
+    }
   }
 
   executions {
@@ -42,14 +51,5 @@ testing.suites {
     register("ExceptionSignalLogs") {
       telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
-  }
-}
-
-configurations.named("testSofaRpcRuntimeClasspath") {
-  resolutionStrategy {
-    // requires old logback (and therefore also old slf4j)
-    force("ch.qos.logback:logback-classic:1.2.13")
-    force("ch.qos.logback:logback-core:1.2.13")
-    force("org.slf4j:slf4j-api:1.7.21")
   }
 }

@@ -110,20 +110,13 @@ if (otelProps.testLatestDeps) {
 
 // spring 6 uses slf4j 2.0
 if (!otelProps.testLatestDeps) {
-  configurations {
-    listOf(
-      testRuntimeClasspath,
-      named("testNoReceiveTelemetryRuntimeClasspath"),
-      named("testAsyncAcksRuntimeClasspath"),
-    )
-      .forEach {
-        it.configure {
-          resolutionStrategy {
-            // requires old logback (and therefore also old slf4j)
-            force("ch.qos.logback:logback-classic:1.2.11")
-            force("org.slf4j:slf4j-api:1.7.36")
-          }
-        }
+  testing.suites.withType(JvmTestSuite::class).configureEach {
+    configurations.named(sources.runtimeClasspathConfigurationName) {
+      resolutionStrategy {
+        // requires old logback (and therefore also old slf4j)
+        force("ch.qos.logback:logback-classic:1.2.11")
+        force("org.slf4j:slf4j-api:1.7.36")
       }
+    }
   }
 }
