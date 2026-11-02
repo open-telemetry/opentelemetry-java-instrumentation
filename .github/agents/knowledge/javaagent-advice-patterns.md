@@ -45,9 +45,7 @@ suppressions to a single advice method.
 
 All `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` methods **must be `static`**. ByteBuddy
 defaults to inlining advice code directly into the instrumented method — there is no advice object
-instance. For production javaagent advice, explicitly set `inline = false` on both annotations in
-every module except `instrumentation/internal/internal-class-loader` and
-`instrumentation/internal/internal-lambda`.
+instance.
 
 ```java
 // ✅ Correct
@@ -61,14 +59,19 @@ public void onEnter(/* ... */) { /* ... */ }
 
 Advice classes should also have **no instance fields** — they are never instantiated.
 
-## Keep production advice non-inlined
+## Set `inline = false` on advice
 
-Use `inline = false` consistently throughout each production module. Mixing inlined and non-inlined advice disables automatic indy isolation.
+Explicitly set `inline = false` on every `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` method,
+except in `instrumentation/internal/internal-class-loader`, `instrumentation/internal/internal-lambda`,
+and test fixtures intentionally exercising inlined or mixed advice.
 
-Use OpenTelemetry APIs directly in non-inlined advice and ordinary helpers, for example
+Byte Buddy defaults `inline` to `true`. Mixing inlined and non-inlined advice disables automatic
+helper isolation.
+
+Use OpenTelemetry APIs directly in advice and ordinary helpers, for example
 `Context.current()` and `Span.fromContext(context)`.
 
-In genuinely inlined advice in the two internal exceptions, static interface calls cannot be
+In inlined advice in the two internal exceptions, static interface calls cannot be
 copied into pre-Java-8 class files. Call them through a Java-8-compiled helper instead.
 
 Helpers called by advice are ordinary compiled methods and are not copied into the instrumented
@@ -156,8 +159,7 @@ Keep `suppress = Throwable.class` in both cases — it is always required.
 - **Internal infrastructure** (`instrumentation/internal/`): Instrumentations for internal
   class loading and lambda support may intentionally let errors propagate because silently
   swallowing them would corrupt JVM internals.
-- **Test code** (`testing-common/`, test sources): Not production instrumentation — suppress
-  is not required.
+- **Test code** (`testing-common/`, test sources): `suppress` is not required.
 
 These exceptions do not need `suppress`. For methods with non-trivial bodies
 (library calls, collection iteration, reflection), retain it.
@@ -284,7 +286,7 @@ cleanup action follows it, close the scope and then perform that action directly
 close in `try`/`finally` solely to guard against a hypothetical failure from `Scope.close()`. Use
 `try`/`finally` when earlier fallible work must complete before the scope can be closed.
 
-### Pattern 1 — Nullable `AdviceScope` for ordinary advice
+### Pattern 1 — Nullable `AdviceScope` for conditional instrumentation
 
 Use this by default when enter advice may decide not to start instrumentation.
 
