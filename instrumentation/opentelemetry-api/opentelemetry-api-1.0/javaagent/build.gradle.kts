@@ -47,6 +47,7 @@ testing {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-api")
+        implementation(project(":javaagent-bootstrap"))
         implementation(project(":opentelemetry-api-shaded-for-instrumenting")) {
           targetConfiguration = "shadow"
         }
