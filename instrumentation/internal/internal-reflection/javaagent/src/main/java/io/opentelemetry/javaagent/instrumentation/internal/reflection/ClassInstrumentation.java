@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.instrumentation.TypeTransformerImpl;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyBootstrap;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceBootstrap;
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldList;
@@ -99,8 +99,9 @@ class ClassInstrumentation implements TypeInstrumentation {
                   super.visitVarInsn(Opcodes.ALOAD, 0);
                   if (useIsolatedHelperClasses) {
                     // ReflectionHelper is in a separate class loader that is not visible to the
-                    // instrumented class, so we need to invoke it via indy bootstrap method
-                    IndyBootstrap.emitIndyStaticCall(
+                    // instrumented class, so invoke it through the advice bootstrap's invokedynamic
+                    // call
+                    AdviceBootstrap.emitHelperStaticCall(
                         mv,
                         "filterInterfaces",
                         "([Ljava/lang/Class;Ljava/lang/Class;)[Ljava/lang/Class;",

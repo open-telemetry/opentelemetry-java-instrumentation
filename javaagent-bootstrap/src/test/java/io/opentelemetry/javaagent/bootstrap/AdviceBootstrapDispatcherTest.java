@@ -11,7 +11,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodType;
 import org.junit.jupiter.api.Test;
 
-class IndyBootstrapDispatcherTest {
+class AdviceBootstrapDispatcherTest {
 
   @Test
   void testVoidNoopMethodHandle() throws Throwable {
@@ -50,7 +50,7 @@ class IndyBootstrapDispatcherTest {
   }
 
   private static MethodHandle generateAndCheck(MethodType type) {
-    MethodHandle mh = IndyBootstrapDispatcher.generateNoopMethodHandle(type);
+    MethodHandle mh = AdviceBootstrapDispatcher.generateNoopMethodHandle(type);
     assertThat(mh.type()).isEqualTo(type);
     return mh;
   }
