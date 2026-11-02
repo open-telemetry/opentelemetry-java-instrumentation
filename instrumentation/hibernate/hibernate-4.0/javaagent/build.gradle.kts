@@ -41,53 +41,51 @@ dependencies {
   testImplementation("org.javassist:javassist:3.28.0-GA")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("version5Test") {
-      targets.all {
-        testTask.configure {
-          jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-          systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
-        }
-      }
-      dependencies {
-        sources {
-          java {
-            setSrcDirs(listOf("src/test/java"))
-          }
-          resources {
-            setSrcDirs(listOf("src/test/resources"))
-          }
-        }
-
-        implementation("com.h2database:h2:1.4.197")
-        implementation("javax.xml.bind:jaxb-api:2.2.11")
-        implementation("com.sun.xml.bind:jaxb-core:2.2.11")
-        implementation("com.sun.xml.bind:jaxb-impl:2.2.11")
-        implementation("javax.activation:activation:1.1.1")
-        implementation("org.hsqldb:hsqldb:2.0.0")
-        implementation(project(":instrumentation:hibernate:testing"))
-
-        val hibernateVersion = baseVersion("5.+").orLatest("5.0.0.Final")
-        implementation("org.hibernate:hibernate-core:$hibernateVersion")
-        implementation("org.hibernate:hibernate-entitymanager:$hibernateVersion")
-        implementation("org.springframework.data:spring-data-jpa:${baseVersion("(2.4.0,3)").orLatest("2.3.0.RELEASE")}")
+testing.suites {
+  register<JvmTestSuite>("version5Test") {
+    targets.all {
+      testTask.configure {
+        jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+        systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
       }
     }
-  }
-}
+    dependencies {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+        resources {
+          setSrcDirs(listOf("src/test/resources"))
+        }
+      }
 
-testing.suites.executions("test") {
-  register("Experimental") {
-    telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
+      implementation("com.h2database:h2:1.4.197")
+      implementation("javax.xml.bind:jaxb-api:2.2.11")
+      implementation("com.sun.xml.bind:jaxb-core:2.2.11")
+      implementation("com.sun.xml.bind:jaxb-impl:2.2.11")
+      implementation("javax.activation:activation:1.1.1")
+      implementation("org.hsqldb:hsqldb:2.0.0")
+      implementation(project(":instrumentation:hibernate:testing"))
+
+      val hibernateVersion = baseVersion("5.+").orLatest("5.0.0.Final")
+      implementation("org.hibernate:hibernate-core:$hibernateVersion")
+      implementation("org.hibernate:hibernate-entitymanager:$hibernateVersion")
+      implementation("org.springframework.data:spring-data-jpa:${baseVersion("(2.4.0,3)").orLatest("2.3.0.RELEASE")}")
+    }
   }
 
-  register("Disabled") {
-    filter {
-      includeTestsMatching("*DefaultEnablementTest")
+  executions("test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
     }
 
-    jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
+    register("Disabled") {
+      filter {
+        includeTestsMatching("*DefaultEnablementTest")
+      }
+
+      jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
+    }
   }
 }
 

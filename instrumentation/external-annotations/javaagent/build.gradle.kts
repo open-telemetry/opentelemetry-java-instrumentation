@@ -35,60 +35,58 @@ dependencies {
   testCompileOnly("org.springframework:spring-core:4.3.30.RELEASE")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":javaagent-extension-api"))
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":javaagent-extension-api"))
+    }
+  }
+
+  executions("test") {
+    register("IncludeProperty") {
+      filter {
+        includeTestsMatching("ConfiguredTraceAnnotationsTest")
       }
+      include("**/ConfiguredTraceAnnotationsTest.*")
+      jvmArgs("-Dotel.instrumentation.external-annotations.include=io.opentelemetry.javaagent.instrumentation.external.annotations.OuterClass\$InterestingMethod")
     }
-  }
-}
 
-testing.suites.executions("test") {
-  register("IncludeProperty") {
-    filter {
-      includeTestsMatching("ConfiguredTraceAnnotationsTest")
+    register("DeclarativeConfigInclude") {
+      filter {
+        includeTestsMatching("ConfiguredTraceAnnotationsTest")
+      }
+      include("**/ConfiguredTraceAnnotationsTest.*")
+      jvmArgs(
+        "-Dotel.config.file=$projectDir/src/test/resources/declarative-config-include.yaml"
+      )
     }
-    include("**/ConfiguredTraceAnnotationsTest.*")
-    jvmArgs("-Dotel.instrumentation.external-annotations.include=io.opentelemetry.javaagent.instrumentation.external.annotations.OuterClass\$InterestingMethod")
-  }
 
-  register("DeclarativeConfigInclude") {
-    filter {
-      includeTestsMatching("ConfiguredTraceAnnotationsTest")
+    register("ExcludeMethodsProperty") {
+      filter {
+        includeTestsMatching("TracedMethodsExclusionTest")
+      }
+      include("**/TracedMethodsExclusionTest.*")
+      jvmArgs(
+        "-Dotel.instrumentation.external-annotations.exclude-methods=io.opentelemetry.javaagent.instrumentation.external.annotations.TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]"
+      )
     }
-    include("**/ConfiguredTraceAnnotationsTest.*")
-    jvmArgs(
-      "-Dotel.config.file=$projectDir/src/test/resources/declarative-config-include.yaml"
-    )
-  }
 
-  register("ExcludeMethodsProperty") {
-    filter {
-      includeTestsMatching("TracedMethodsExclusionTest")
+    register("DeclarativeConfigExcludeMethods") {
+      filter {
+        includeTestsMatching("TracedMethodsExclusionTest")
+      }
+      include("**/TracedMethodsExclusionTest.*")
+      jvmArgs(
+        "-Dotel.config.file=$projectDir/src/test/resources/declarative-config-exclude-methods.yaml"
+      )
     }
-    include("**/TracedMethodsExclusionTest.*")
-    jvmArgs(
-      "-Dotel.instrumentation.external-annotations.exclude-methods=io.opentelemetry.javaagent.instrumentation.external.annotations.TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]"
-    )
-  }
 
-  register("DeclarativeConfigExcludeMethods") {
-    filter {
-      includeTestsMatching("TracedMethodsExclusionTest")
-    }
-    include("**/TracedMethodsExclusionTest.*")
-    jvmArgs(
-      "-Dotel.config.file=$projectDir/src/test/resources/declarative-config-exclude-methods.yaml"
-    )
-  }
-
-  configureDefault {
-    filter {
-      excludeTestsMatching("ConfiguredTraceAnnotationsTest")
-      excludeTestsMatching("TracedMethodsExclusionTest")
+    configureDefault {
+      filter {
+        excludeTestsMatching("ConfiguredTraceAnnotationsTest")
+        excludeTestsMatching("TracedMethodsExclusionTest")
+      }
     }
   }
 }
