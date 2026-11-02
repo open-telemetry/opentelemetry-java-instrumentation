@@ -51,7 +51,7 @@ tasks {
   }
 
   check {
-    dependsOn("unitTests")
+    dependsOn(testing.suites)
   }
 }
 
