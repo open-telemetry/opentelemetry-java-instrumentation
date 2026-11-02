@@ -21,6 +21,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -40,6 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -54,6 +57,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractVertxEventBusTest {
 
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-eventbus-3.0";
   private static final AttributeKey<List<String>> CAPTURED_HEADER =
       stringArrayKey("messaging.header.Test-Message-Header");
 
@@ -107,6 +111,8 @@ public abstract class AbstractVertxEventBusTest {
 
     testing.waitAndAssertTraces(
         trace -> assertProducerConsumerTrace(trace, "parent", "send", address));
+    assertProducerMetrics("send", address);
+    assertConsumerMetrics(address, null);
   }
 
   @Test
@@ -131,6 +137,8 @@ public abstract class AbstractVertxEventBusTest {
     // via EventBusImpl.createMessage, so the consumer joins the same trace.
     testing.waitAndAssertTraces(
         trace -> assertProducerConsumerTrace(trace, "parent", "publish", address));
+    assertProducerMetrics("publish", address);
+    assertConsumerMetrics(address, null);
   }
 
   @Test
@@ -153,6 +161,8 @@ public abstract class AbstractVertxEventBusTest {
 
     testing.waitAndAssertTraces(
         trace -> assertProducerConsumerTrace(trace, "parent", "request", address));
+    assertProducerMetrics("request", address);
+    assertConsumerMetrics(address, null);
   }
 
   @Test
@@ -329,6 +339,8 @@ public abstract class AbstractVertxEventBusTest {
                             equalTo(ERROR_TYPE, IllegalStateException.class.getName()))
                         .hasStatusSatisfying(status -> status.hasCode(StatusCode.ERROR))
                         .hasException(error)));
+    assertProducerMetrics("send", address);
+    assertConsumerMetrics(address, IllegalStateException.class.getName());
   }
 
   @Test
@@ -417,6 +429,82 @@ public abstract class AbstractVertxEventBusTest {
             equalTo(MESSAGING_DESTINATION_NAME, address),
             equalTo(MESSAGING_OPERATION_NAME, operationName),
             equalTo(MESSAGING_OPERATION_TYPE, "send"));
+  }
+
+  private static void assertProducerMetrics(String operationName, String address) {
+    Attributes attributes = metricAttributes(operationName, address, null);
+    assertDurationMetric(
+        "messaging.client.operation.duration",
+        address,
+        attributes.toBuilder().put(MESSAGING_OPERATION_TYPE, "send").build());
+    assertCounterMetric("messaging.client.sent.messages", address, attributes);
+  }
+
+  private static void assertConsumerMetrics(String address, @Nullable String errorType) {
+    Attributes attributes = metricAttributes("process", address, errorType);
+    assertDurationMetric("messaging.process.duration", address, attributes);
+    assertCounterMetric("messaging.client.consumed.messages", address, attributes);
+  }
+
+  private static Attributes metricAttributes(
+      String operationName, String address, @Nullable String errorType) {
+    AttributesBuilder attributes =
+        Attributes.builder()
+            .put(stringKey("messaging.system.name"), "vertx")
+            .put(MESSAGING_DESTINATION_NAME, address)
+            .put(MESSAGING_OPERATION_NAME, operationName);
+    if (errorType != null) {
+      attributes.put(ERROR_TYPE, errorType);
+    }
+    return attributes.build();
+  }
+
+  // metrics accumulate across tests, so only the points of this test's address are looked at
+  private static void assertDurationMetric(
+      String metricName, String address, Attributes attributes) {
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        metricName,
+        metrics ->
+            metrics
+                .singleElement()
+                .satisfies(
+                    metric ->
+                        assertThat(metric.getHistogramData().getPoints())
+                            .filteredOn(
+                                point ->
+                                    address.equals(
+                                        point.getAttributes().get(MESSAGING_DESTINATION_NAME)))
+                            .singleElement()
+                            .satisfies(
+                                point -> {
+                                  assertThat(point.getCount()).isEqualTo(1);
+                                  assertThat(point.getSum()).isGreaterThan(0);
+                                  assertThat(point.getAttributes()).isEqualTo(attributes);
+                                })));
+  }
+
+  private static void assertCounterMetric(
+      String metricName, String address, Attributes attributes) {
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        metricName,
+        metrics ->
+            metrics
+                .singleElement()
+                .satisfies(
+                    metric ->
+                        assertThat(metric.getLongSumData().getPoints())
+                            .filteredOn(
+                                point ->
+                                    address.equals(
+                                        point.getAttributes().get(MESSAGING_DESTINATION_NAME)))
+                            .singleElement()
+                            .satisfies(
+                                point -> {
+                                  assertThat(point.getValue()).isEqualTo(1);
+                                  assertThat(point.getAttributes()).isEqualTo(attributes);
+                                })));
   }
 
   private static SpanDataAssert assertConsumer(SpanDataAssert span, String address) {
