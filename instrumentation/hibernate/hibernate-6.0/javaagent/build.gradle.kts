@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -36,36 +39,42 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("hibernate6Test") {
-      targets.all {
-        testTask.configure {
-          jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-          systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
-        }
-      }
-      dependencies {
-        implementation("com.h2database:h2:1.4.197")
-        implementation("org.hsqldb:hsqldb:2.0.0")
-        implementation(project(":instrumentation:hibernate:testing"))
-        implementation("org.hibernate.orm:hibernate-core:${baseVersion("6.0.0.Final").orLatest("6.+")}")
-      }
+testing.suites {
+  register<JvmTestSuite>("hibernate6Test") {
+    dependencies {
+      implementation("com.h2database:h2:1.4.197")
+      implementation("org.hsqldb:hsqldb:2.0.0")
+      implementation(project(":instrumentation:hibernate:testing"))
+      implementation("org.hibernate.orm:hibernate-core:${baseVersion("6.0.0.Final").orLatest("6.+")}")
+    }
+  }
+
+  register<JvmTestSuite>("hibernate7Test") {
+    dependencies {
+      implementation("com.h2database:h2:1.4.197")
+      implementation("org.hsqldb:hsqldb:2.0.0")
+      implementation(project(":instrumentation:hibernate:testing"))
+      implementation("org.hibernate.orm:hibernate-core:${baseVersion("7.0.0.Final").orLatest("7.+")}")
+    }
+  }
+
+  executions("hibernate6Test", "hibernate7Test") {
+    configureDefault {
+      telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
+    }
+  }
+
+  executions("test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
     }
 
-    register<JvmTestSuite>("hibernate7Test") {
-      targets.all {
-        testTask.configure {
-          jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-          systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
-        }
+    register("Disabled") {
+      filter {
+        includeTestsMatching("*DefaultEnablementTest")
       }
-      dependencies {
-        implementation("com.h2database:h2:1.4.197")
-        implementation("org.hsqldb:hsqldb:2.0.0")
-        implementation(project(":instrumentation:hibernate:testing"))
-        implementation("org.hibernate.orm:hibernate-core:${baseVersion("7.0.0.Final").orLatest("7.+")}")
-      }
+
+      jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
     }
   }
 }
@@ -88,25 +97,7 @@ tasks {
     }
   }
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
-  }
-
-  val testDisabled = register<Test>("testDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*DefaultEnablementTest")
-    }
-
-    jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
-  }
-
   check {
-    dependsOn(testing.suites, testDisabled, testExperimental)
+    dependsOn(testing.suites)
   }
 }

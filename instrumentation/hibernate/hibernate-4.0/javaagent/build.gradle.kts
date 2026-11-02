@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -38,38 +41,50 @@ dependencies {
   testImplementation("org.javassist:javassist:3.28.0-GA")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("version5Test") {
-      targets.all {
-        testTask.configure {
-          jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-          systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
+testing.suites {
+  register<JvmTestSuite>("version5Test") {
+    dependencies {
+      sources {
+        java {
+          setSrcDirs(listOf("src/test/java"))
+        }
+        resources {
+          setSrcDirs(listOf("src/test/resources"))
         }
       }
-      dependencies {
-        sources {
-          java {
-            setSrcDirs(listOf("src/test/java"))
-          }
-          resources {
-            setSrcDirs(listOf("src/test/resources"))
-          }
-        }
 
-        implementation("com.h2database:h2:1.4.197")
-        implementation("javax.xml.bind:jaxb-api:2.2.11")
-        implementation("com.sun.xml.bind:jaxb-core:2.2.11")
-        implementation("com.sun.xml.bind:jaxb-impl:2.2.11")
-        implementation("javax.activation:activation:1.1.1")
-        implementation("org.hsqldb:hsqldb:2.0.0")
-        implementation(project(":instrumentation:hibernate:testing"))
+      implementation("com.h2database:h2:1.4.197")
+      implementation("javax.xml.bind:jaxb-api:2.2.11")
+      implementation("com.sun.xml.bind:jaxb-core:2.2.11")
+      implementation("com.sun.xml.bind:jaxb-impl:2.2.11")
+      implementation("javax.activation:activation:1.1.1")
+      implementation("org.hsqldb:hsqldb:2.0.0")
+      implementation(project(":instrumentation:hibernate:testing"))
 
-        val hibernateVersion = baseVersion("5.+").orLatest("5.0.0.Final")
-        implementation("org.hibernate:hibernate-core:$hibernateVersion")
-        implementation("org.hibernate:hibernate-entitymanager:$hibernateVersion")
-        implementation("org.springframework.data:spring-data-jpa:${baseVersion("(2.4.0,3)").orLatest("2.3.0.RELEASE")}")
+      val hibernateVersion = baseVersion("5.+").orLatest("5.0.0.Final")
+      implementation("org.hibernate:hibernate-core:$hibernateVersion")
+      implementation("org.hibernate:hibernate-entitymanager:$hibernateVersion")
+      implementation("org.springframework.data:spring-data-jpa:${baseVersion("(2.4.0,3)").orLatest("2.3.0.RELEASE")}")
+    }
+  }
+
+  executions("version5Test") {
+    configureDefault {
+      telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
+    }
+  }
+
+  executions("test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
+    }
+
+    register("Disabled") {
+      filter {
+        includeTestsMatching("*DefaultEnablementTest")
       }
+
+      jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
     }
   }
 }
@@ -86,25 +101,7 @@ tasks {
     }
   }
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
-  }
-
-  val testDisabled = register<Test>("testDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*DefaultEnablementTest")
-    }
-
-    jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
-  }
-
   check {
-    dependsOn(testing.suites, testDisabled, testExperimental)
+    dependsOn(testing.suites)
   }
 }
