@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -39,13 +42,6 @@ testing {
   }
 }
 
-tasks.named<Test>("version22Test") {
-  // client-java-api 22.0.0+ requires Java 11+
-  if (testJavaVersion.isJava8) {
-    enabled = false
-  }
-}
-
 tasks {
   check {
     dependsOn(testing.suites)
@@ -53,28 +49,21 @@ tasks {
   }
 }
 
-tasks {
-  val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}Experimental") {
-        val sourceTask = named<Test>(suite.name).get()
-        setJvmArgs(sourceTask.jvmArgs)
-        setSystemProperties(sourceTask.systemProperties)
+testing.suites.executions("test") {
+  register("Experimental") {
+    telemetryConfig("otel.instrumentation.kubernetes-client.experimental-span-attributes", "true")
+  }
+}
 
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        val experimentalConfig = "otel.instrumentation.kubernetes-client.experimental-span-attributes=true"
-        jvmArgs("-D$experimentalConfig")
-        systemProperty(
-          "metadataConfig",
-          listOfNotNull(sourceTask.systemProperties["metadataConfig"], experimentalConfig).joinToString(","),
-        )
-        isEnabled = sourceTask.enabled
-      }
+testing.suites.executions("version22Test") {
+  configureEach {
+    // client-java-api 22.0.0+ requires Java 11+
+    if (testJavaVersion.isJava8) {
+      enabled = false
     }
+  }
 
-  check {
-    dependsOn(experimentalSuites)
+  register("Experimental") {
+    telemetryConfig("otel.instrumentation.kubernetes-client.experimental-span-attributes", "true")
   }
 }

@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-testing")
   id("otel.testcontainers-testing")
@@ -28,43 +30,36 @@ testing {
         implementation("io.vertx:vertx-kafka-client:$version")
         implementation("io.vertx:vertx-codegen:$version")
       }
-
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
-          }
-        }
-      }
     }
   }
 }
 
-tasks {
-  test {
+testing.suites.executions("test") {
+  configureEach {
     jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
   }
 
-  val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}Experimental") {
-        val sourceTask = named<Test>(suite.name).get()
-        setJvmArgs(sourceTask.jvmArgs)
-        setSystemProperties(sourceTask.systemProperties)
+  register("Experimental") {
+    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+  }
+}
 
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
+testing.suites.executions("testNoReceiveTelemetry") {
+  configureEach {
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
+  }
 
-        jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-        isEnabled = sourceTask.enabled
-      }
-    }
+  configureDefault {
+    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
+  }
 
+  register("Experimental") {
+    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+  }
+}
+
+tasks {
   check {
-    dependsOn(
-      testing.suites,
-      experimentalSuites,
-    )
+    dependsOn(testing.suites)
   }
 }

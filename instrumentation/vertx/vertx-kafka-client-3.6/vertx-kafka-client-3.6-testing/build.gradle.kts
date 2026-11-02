@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-testing")
   id("otel.testcontainers-testing")
@@ -31,43 +34,31 @@ testing {
   }
 }
 
+testing.suites.executions("test") {
+  configureEach {
+    telemetryConfig(
+      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+      "true",
+    )
+  }
+
+  register("Experimental") {
+    telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
+  }
+}
+
+testing.suites.executions("testNoReceiveTelemetry") {
+  register("Experimental") {
+    telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  test {
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-    )
-  }
-
-  val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}Experimental") {
-        val sourceTask = named<Test>(suite.name).get()
-        setJvmArgs(sourceTask.jvmArgs)
-        setSystemProperties(sourceTask.systemProperties)
-
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        val experimentalConfig = "otel.instrumentation.kafka.experimental-span-attributes=true"
-        jvmArgs("-D$experimentalConfig")
-        systemProperty(
-          "metadataConfig",
-          listOfNotNull(sourceTask.systemProperties["metadataConfig"], experimentalConfig).joinToString(","),
-        )
-        isEnabled = sourceTask.enabled
-      }
-    }
-
   check {
-    dependsOn(
-      testing.suites,
-      experimentalSuites,
-    )
+    dependsOn(testing.suites)
   }
 }

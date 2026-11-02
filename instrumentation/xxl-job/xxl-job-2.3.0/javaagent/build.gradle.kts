@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -43,6 +46,26 @@ testing {
   }
 }
 
+val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
+
+testing.suites.executions("test") {
+  register("Experimental") {
+    telemetryConfig("otel.instrumentation.xxl-job.experimental-span-attributes", "true")
+  }
+}
+
+testing.suites.executions("xxlJob33Test") {
+  configureEach {
+    if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+      enabled = false
+    }
+  }
+
+  register("Experimental") {
+    telemetryConfig("otel.instrumentation.xxl-job.experimental-span-attributes", "true")
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     // required on jdk17
@@ -50,37 +73,11 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 
-  val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}Experimental") {
-        val sourceTask = named<Test>(suite.name).get()
-        setJvmArgs(sourceTask.jvmArgs)
-        setSystemProperties(sourceTask.systemProperties)
-
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        val experimentalConfig = "otel.instrumentation.xxl-job.experimental-span-attributes=true"
-        jvmArgs("-D$experimentalConfig")
-        systemProperty(
-          "metadataConfig",
-          listOfNotNull(sourceTask.systemProperties["metadataConfig"], experimentalConfig).joinToString(","),
-        )
-        isEnabled = sourceTask.enabled
-      }
-    }
-
   named("compileXxlJob33TestJava", JavaCompile::class).configure {
     options.release.set(17)
   }
-  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
-  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
-    named("xxlJob33Test", Test::class).configure {
-      enabled = false
-    }
-  }
 
   check {
-    dependsOn(testing.suites, experimentalSuites)
+    dependsOn(testing.suites)
   }
 }

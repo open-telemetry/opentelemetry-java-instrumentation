@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-testing")
   id("otel.testcontainers-testing")
@@ -27,16 +29,31 @@ testing {
         implementation("io.vertx:vertx-kafka-client:$version")
         implementation("io.vertx:vertx-codegen:$version")
       }
-
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
-          }
-        }
-      }
     }
+  }
+}
+
+testing.suites.executions("test") {
+  configureEach {
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+  }
+
+  register("Experimental") {
+    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+  }
+}
+
+testing.suites.executions("testNoReceiveTelemetry") {
+  configureEach {
+    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
+  }
+
+  configureDefault {
+    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
+  }
+
+  register("Experimental") {
+    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
   }
 }
 
@@ -45,29 +62,7 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  test {
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-  }
-
-  val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}Experimental") {
-        val sourceTask = named<Test>(suite.name).get()
-        setJvmArgs(sourceTask.jvmArgs)
-        setSystemProperties(sourceTask.systemProperties)
-
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-        isEnabled = sourceTask.enabled
-      }
-    }
-
   check {
-    dependsOn(
-      testing.suites,
-      experimentalSuites,
-    )
+    dependsOn(testing.suites)
   }
 }
