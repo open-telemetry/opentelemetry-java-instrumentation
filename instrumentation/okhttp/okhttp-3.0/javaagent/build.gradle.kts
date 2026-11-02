@@ -49,11 +49,9 @@ testing.suites {
     }
   }
 
-  withType(JvmTestSuite::class).configureEach {
-    executions {
-      register("ExceptionSignalLogs") {
-        telemetryConfig("otel.semconv.exception.signal.preview", "logs")
-      }
+  executions {
+    register("ExceptionSignalLogs") {
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
   }
 }

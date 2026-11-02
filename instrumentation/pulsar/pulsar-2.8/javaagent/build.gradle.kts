@@ -56,29 +56,27 @@ testing.suites {
     }
   }
 
-  named<JvmTestSuite>("test") {
-    executions {
-      configureDefault {
-        filter {
-          excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
-        }
-        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+  executions("test") {
+    configureDefault {
+      filter {
+        excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
       }
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    }
 
-      register("ReceiveSpanDisabled") {
-        filter {
-          includeTestsMatching("PulsarClientSuppressReceiveSpansTest")
-        }
-        include("**/PulsarClientSuppressReceiveSpansTest.*")
+    register("ReceiveSpanDisabled") {
+      filter {
+        includeTestsMatching("PulsarClientSuppressReceiveSpansTest")
       }
+      include("**/PulsarClientSuppressReceiveSpansTest.*")
+    }
 
-      register("Experimental") {
-        filter {
-          excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
-        }
-        jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-        telemetryConfig("otel.instrumentation.pulsar.experimental-span-attributes", "true")
+    register("Experimental") {
+      filter {
+        excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
       }
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+      telemetryConfig("otel.instrumentation.pulsar.experimental-span-attributes", "true")
     }
   }
 }

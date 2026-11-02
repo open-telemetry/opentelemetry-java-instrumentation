@@ -37,11 +37,9 @@ testing.suites {
     }
   }
 
-  named<JvmTestSuite>("test") {
-    executions {
-      register("Experimental") {
-        jvmArgs("-Dotel.instrumentation.guava.experimental-span-attributes=true")
-      }
+  executions("test") {
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.guava.experimental-span-attributes=true")
     }
   }
 }

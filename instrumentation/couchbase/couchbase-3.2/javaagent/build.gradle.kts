@@ -78,18 +78,16 @@ testing.suites {
     }
   }
 
-  named<JvmTestSuite>("test") {
-    executions {
-      register("Experimental") {
-        telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
-      }
+  executions("test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
+    }
 
-      register("ExceptionSignalLogs") {
-        filter {
-          includeTestsMatching("*CouchbaseExceptionSignalTest")
-        }
-        telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+    register("ExceptionSignalLogs") {
+      filter {
+        includeTestsMatching("*CouchbaseExceptionSignalTest")
       }
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
   }
 }

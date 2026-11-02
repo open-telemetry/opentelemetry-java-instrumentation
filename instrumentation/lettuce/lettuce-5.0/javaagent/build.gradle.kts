@@ -80,15 +80,13 @@ testing.suites {
     }
   }
 
-  named<JvmTestSuite>("test") {
-    executions {
-      register("Experimental") {
-        telemetryConfig("otel.instrumentation.lettuce.experimental-span-attributes", "true")
-      }
+  executions("test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.lettuce.experimental-span-attributes", "true")
+    }
 
-      register("ConnectionTelemetryEnabled") {
-        telemetryConfig("otel.instrumentation.lettuce.connection-telemetry.enabled", "true")
-      }
+    register("ConnectionTelemetryEnabled") {
+      telemetryConfig("otel.instrumentation.lettuce.connection-telemetry.enabled", "true")
     }
   }
 }
