@@ -24,7 +24,10 @@ public class ServletOutputStreamInjectionState {
   @Nullable
   public static InjectionState getInjectionState(ServletOutputStream servletOutputStream) {
     InjectionStateReference reference = INJECTION_STATE.get(servletOutputStream);
-    InjectionState state = reference == null ? null : reference.get();
+    if (reference == null) {
+      return null;
+    }
+    InjectionState state = reference.get();
     if (state == null || !state.isCurrentRequest()) {
       INJECTION_STATE.set(servletOutputStream, null);
       return null;

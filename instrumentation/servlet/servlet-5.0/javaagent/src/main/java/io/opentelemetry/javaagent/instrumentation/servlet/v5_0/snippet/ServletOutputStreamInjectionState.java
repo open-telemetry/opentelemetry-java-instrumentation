@@ -24,7 +24,10 @@ public class ServletOutputStreamInjectionState {
   @Nullable
   public static InjectionState getInjectionState(ServletOutputStream servletOutputStream) {
     InjectionStateReference reference = VIRTUAL_FIELD.get(servletOutputStream);
-    InjectionState state = reference == null ? null : reference.get();
+    if (reference == null) {
+      return null;
+    }
+    InjectionState state = reference.get();
     if (state == null || !state.isCurrentRequest()) {
       VIRTUAL_FIELD.set(servletOutputStream, null);
       return null;
