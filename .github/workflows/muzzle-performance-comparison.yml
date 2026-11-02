@@ -37,7 +37,7 @@ on:
         type: boolean
         default: false
       candidate-mode:
-        description: Same-source setting experiment
+        description: Benchmark or targeted CI validation mode
         type: choice
         options:
           - standard
@@ -48,6 +48,7 @@ on:
           - network-profile
           - slice-discovery
           - eight-slices
+          - eight-slices-live-ci
         default: standard
 
 permissions:
@@ -59,6 +60,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  eight-slices-live-ci:
+    if: inputs.candidate-mode == 'eight-slices-live-ci' && !inputs.profile-only && !inputs.dependency-cache
+    uses: ./.github/workflows/reusable-muzzle.yml
+    with:
+      cache-read-only: true
+
   eight-slices:
     if: inputs.candidate-mode == 'eight-slices' && !inputs.profile-only && !inputs.dependency-cache
     uses: ./.github/workflows/muzzle-slice-count.yml
@@ -96,7 +103,7 @@ jobs:
       report-run: ${{ inputs.report-run }}
 
   prepare:
-    if: ${{ !inputs.dependency-cache && !inputs.profile-only && inputs.candidate-mode != 'disk-preparation' && inputs.candidate-mode != 'eight-slices' }}
+    if: ${{ !inputs.dependency-cache && !inputs.profile-only && inputs.candidate-mode != 'disk-preparation' && inputs.candidate-mode != 'eight-slices' && inputs.candidate-mode != 'eight-slices-live-ci' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     outputs:

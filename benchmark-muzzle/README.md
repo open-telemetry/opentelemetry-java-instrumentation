@@ -250,6 +250,14 @@ global performance claim.
 Add `report-run=SLICE_COUNT_RUN` to regenerate its report without repeating
 the four workload commands.
 
+`candidate-mode=eight-slices-live-ci` instead invokes the actual reusable
+Muzzle workflow from the selected branch. This is a targeted integration
+check of all eight production jobs with their normal random sampling,
+`ubuntu-latest` runner and read-only setup-gradle cache transport. It does
+not use the benchmark seed or artifact snapshots and is not a paired timing
+comparison. `baseline-ref` remains required by the dispatcher but is unused
+in this mode; the checked-out workflow revision supplies the source.
+
 ## Disk preparation
 
 `candidate-mode=disk-preparation` measures unconditional SDK/image cleanup
