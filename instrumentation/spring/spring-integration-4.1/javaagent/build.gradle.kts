@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -47,6 +50,55 @@ dependencies {
   latestDepTestLibrary("org.springframework.cloud:spring-cloud-stream-binder-rabbit:3.+") // documented limitation
 }
 
+testing.suites.executions("test") {
+  register("AmqpHandoffWithRabbitInstrumentation") {
+    filter {
+      includeTestsMatching("MessageProducerSupportInstrumentationTest")
+    }
+    include("**/MessageProducerSupportInstrumentationTest.*")
+    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+    systemProperty("springIntegrationRabbitHandoffTest", "true")
+  }
+
+  register("WithRabbitInstrumentation") {
+    filter {
+      includeTestsMatching("SpringIntegrationAndRabbitTest")
+    }
+    include("**/SpringIntegrationAndRabbitTest.*")
+    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=true")
+    telemetryConfig("otel.instrumentation.spring-rabbit.enabled", "true")
+  }
+
+  register("WithProducerInstrumentation") {
+    filter {
+      includeTestsMatching("SpringCloudStreamProducerTest")
+    }
+    include("**/SpringCloudStreamProducerTest.*")
+    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
+    telemetryConfig("otel.instrumentation.spring-integration.producer.enabled", "true")
+  }
+
+  register("ProducerEnabled") {
+    filter {
+      excludeTestsMatching("SpringIntegrationAndRabbitTest")
+      excludeTestsMatching("SpringCloudStreamRabbitTest")
+    }
+    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
+    telemetryConfig("otel.instrumentation.spring-integration.producer.enabled", "true")
+  }
+
+  configureDefault {
+    filter {
+      excludeTestsMatching("SpringIntegrationAndRabbitTest")
+      excludeTestsMatching("SpringCloudStreamProducerTest")
+    }
+    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
+  }
+}
+
 testing {
   suites {
     register<JvmTestSuite>("version41Test") {
@@ -68,73 +120,8 @@ testing {
 }
 
 tasks {
-  val testAmqpHandoffWithRabbitInstrumentation =
-    register<Test>("testAmqpHandoffWithRabbitInstrumentation") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      filter {
-        includeTestsMatching("MessageProducerSupportInstrumentationTest")
-      }
-      include("**/MessageProducerSupportInstrumentationTest.*")
-      jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
-      systemProperty("springIntegrationRabbitHandoffTest", "true")
-    }
-
-  val testWithRabbitInstrumentation = register<Test>("testWithRabbitInstrumentation") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("SpringIntegrationAndRabbitTest")
-    }
-    include("**/SpringIntegrationAndRabbitTest.*")
-    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=true")
-    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.spring-rabbit.enabled=true")
-  }
-
-  val testWithProducerInstrumentation = register<Test>("testWithProducerInstrumentation") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("SpringCloudStreamProducerTest")
-    }
-    include("**/SpringCloudStreamProducerTest.*")
-    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
-    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
-    jvmArgs("-Dotel.instrumentation.spring-integration.producer.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.spring-integration.producer.enabled=true")
-  }
-
-  val testProducerEnabled = register<Test>("testProducerEnabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      excludeTestsMatching("SpringIntegrationAndRabbitTest")
-      excludeTestsMatching("SpringCloudStreamRabbitTest")
-    }
-    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
-    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
-    jvmArgs("-Dotel.instrumentation.spring-integration.producer.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.spring-integration.producer.enabled=true")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("SpringIntegrationAndRabbitTest")
-      excludeTestsMatching("SpringCloudStreamProducerTest")
-    }
-    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
-    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
-  }
-
   check {
-    dependsOn(
-      testing.suites,
-      testAmqpHandoffWithRabbitInstrumentation,
-      testWithRabbitInstrumentation,
-      testWithProducerInstrumentation,
-      testProducerEnabled,
-    )
+    dependsOn(testing.suites)
   }
 
   withType<Test>().configureEach {
