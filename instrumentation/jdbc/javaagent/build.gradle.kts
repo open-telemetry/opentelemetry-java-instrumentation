@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -45,100 +48,70 @@ dependencies {
 }
 
 tasks {
-  val testSlick = register<Test>("testSlick") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("SlickTest")
-    }
-    include("**/SlickTest.*")
-  }
-
-  val testSqlCommenter = register<Test>("testSqlCommenter") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("SqlCommenterTest")
-    }
-    include("**/SqlCommenterTest.*")
-    // This property is read in TestAgentSqlCommenterCustomizer, we use it instead of the
-    // otel.instrumentation.jdbc.experimental.sqlcommenter.enabled to test that the
-    // SqlCommenterCustomizer is run.
-    jvmArgs("-Dotel.testing.sqlcommenter.enabled=true")
-  }
-
-  val testCaptureParameters = register<Test>("testCaptureParameters") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("PreparedStatementParametersTest")
-    }
-    jvmArgs("-Dotel.instrumentation.jdbc.experimental.capture-query-parameters=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.jdbc.experimental.capture-query-parameters=true",
-    )
-  }
-
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("SlickTest")
-      excludeTestsMatching("SqlCommenterTest")
-      excludeTestsMatching("PreparedStatementParametersTest")
-      excludeTestsMatching("*JdbcInstrumentationTest.testCommitTransaction")
-      excludeTestsMatching("*JdbcInstrumentationTest.testRollbackTransaction")
-      excludeTestsMatching("*JdbcInstrumentationTest.testFailedTransaction")
-    }
-    jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
-  }
-
-  val testTransactions = register<Test>("testTransactions") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("*JdbcInstrumentationTest.testCommitTransaction")
-      includeTestsMatching("*JdbcInstrumentationTest.testRollbackTransaction")
-      includeTestsMatching("*JdbcInstrumentationTest.testFailedTransaction")
-    }
-    jvmArgs("-Dotel.instrumentation.jdbc.experimental.transaction.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.jdbc.experimental.transaction.enabled=true",
-    )
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("SlickTest")
-      excludeTestsMatching("SqlCommenterTest")
-      excludeTestsMatching("PreparedStatementParametersTest")
-      excludeTestsMatching("*JdbcInstrumentationTest.testCommitTransaction")
-      excludeTestsMatching("*JdbcInstrumentationTest.testRollbackTransaction")
-      excludeTestsMatching("*JdbcInstrumentationTest.testFailedTransaction")
-    }
-    jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
-  }
-
-  check {
-    dependsOn(testSlick)
-    dependsOn(testSqlCommenter)
-    dependsOn(testCaptureParameters)
-    dependsOn(testExceptionSignalLogs)
-    dependsOn(testTransactions)
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+testing.suites {
+  executions("test") {
+    configureDefault {
+      filter {
+        excludeTestsMatching("SlickTest")
+        excludeTestsMatching("SqlCommenterTest")
+        excludeTestsMatching("PreparedStatementParametersTest")
+        excludeTestsMatching("*JdbcInstrumentationTest.testCommitTransaction")
+        excludeTestsMatching("*JdbcInstrumentationTest.testRollbackTransaction")
+        excludeTestsMatching("*JdbcInstrumentationTest.testFailedTransaction")
+      }
+      jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
+    }
+
+    register("Slick") {
+      filter {
+        includeTestsMatching("SlickTest")
+      }
+      include("**/SlickTest.*")
+    }
+
+    register("SqlCommenter") {
+      filter {
+        includeTestsMatching("SqlCommenterTest")
+      }
+      include("**/SqlCommenterTest.*")
+      // This property is read in TestAgentSqlCommenterCustomizer, we use it instead of the
+      // otel.instrumentation.jdbc.experimental.sqlcommenter.enabled to test that the
+      // SqlCommenterCustomizer is run.
+      jvmArgs("-Dotel.testing.sqlcommenter.enabled=true")
+    }
+
+    register("CaptureParameters") {
+      filter {
+        includeTestsMatching("PreparedStatementParametersTest")
+      }
+      telemetryConfig("otel.instrumentation.jdbc.experimental.capture-query-parameters", "true")
+    }
+
+    register("ExceptionSignalLogs") {
+      filter {
+        excludeTestsMatching("SlickTest")
+        excludeTestsMatching("SqlCommenterTest")
+        excludeTestsMatching("PreparedStatementParametersTest")
+        excludeTestsMatching("*JdbcInstrumentationTest.testCommitTransaction")
+        excludeTestsMatching("*JdbcInstrumentationTest.testRollbackTransaction")
+        excludeTestsMatching("*JdbcInstrumentationTest.testFailedTransaction")
+      }
+      jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+    }
+
+    register("Transactions") {
+      filter {
+        includeTestsMatching("*JdbcInstrumentationTest.testCommitTransaction")
+        includeTestsMatching("*JdbcInstrumentationTest.testRollbackTransaction")
+        includeTestsMatching("*JdbcInstrumentationTest.testFailedTransaction")
+      }
+      telemetryConfig("otel.instrumentation.jdbc.experimental.transaction.enabled", "true")
+    }
   }
 }
