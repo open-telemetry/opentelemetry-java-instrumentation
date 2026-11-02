@@ -64,20 +64,27 @@ describe selectable behavior, not Muzzle implementation identities.
   class needs class-level `@SuppressWarnings("unused")`. In `transform()`, reference nested
   advice by `getClass().getName() + "$AdviceName"`; resolving
   `InnerAdvice.class` or a library class literal from the agent loader can cause premature
-  class loading. Do not name an exit advice method `onEnter` or vice versa. Method
-  signature matchers may use accessible `java.base` types available at the minimum
+  class loading. Do not name an exit advice method `onEnter` or vice versa. Positional
+  argument and return-type matchers may use accessible `java.base` types available at the minimum
   supported Java version; keep `named(...)` for instrumented-library types.
   With dynamic advice typing, match only signatures that guarantee assignability.
 - Omit explicit `typing = Assigner.Typing.DYNAMIC` on `@Advice.AssignReturned` mappings,
   including nested argument and field mappings, when using the standard transformation pipeline;
   its postprocessor supplies dynamic typing. This does not apply to advice parameter bindings.
   Verify custom pipelines separately.
-- For a fixed signature consisting of primitive types or accessible `java.base` types available
-  at the minimum supported Java version, use `takesArguments(Type...)`, including parameters
-  the advice does not use. Do not expand it into positional matchers to remove unused checks.
-- Use positional `takesArgument` matchers for instrumented-library types or parameter types that
-  vary across supported versions. Retain type checks only for arguments the advice uses or that
-  distinguish supported methods.
+- For a complete, nonempty signature of exact parameter types, prefer Byte Buddy's
+  `takesArguments(Class<?>...)` when every parameter is a primitive or a public `java.base` type
+  that is safely accessible and available at the module's minimum supported Java version. If any
+  parameter is a library type or otherwise unsafe or unavailable, use
+  `AgentElementMatchers.takesArguments(String...)` with the exact ordered erased type names,
+  including primitive names such as `"int"`. Do not infer safety from a `java.*` package prefix or
+  the current build JDK. When both overload families are needed, explicitly import both
+  `takesArguments` methods; avoid a bare `takesArguments()` call. For a zero-parameter signature,
+  use `takesArguments(0)`.
+- Keep positional `takesArgument(...)` matchers for intentionally partial signatures or predicates
+  that cannot be expressed as exact type names, such as subtype checks or parameter-type
+  alternatives across supported versions. Do not add otherwise unnecessary parameter checks
+  merely to use an exact-signature matcher.
 - When advice binds a library argument as `Object` to support different known parameter types
   across versions, use `takesArgument(index, namedOneOf(...))` with those type names instead of
   `any()` or a custom argument-count check. The positional matcher already guarantees that the
