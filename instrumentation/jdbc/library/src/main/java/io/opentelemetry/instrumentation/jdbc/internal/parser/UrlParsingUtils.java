@@ -258,11 +258,29 @@ public final class UrlParsingUtils {
       return false;
     }
 
-    int authorityStart = protocol + 3;
-    int authorityEnd = indexOfAny(jdbcUrl, authorityStart, '/', '?', '#', ';');
-    authorityEnd = authorityEnd < 0 ? jdbcUrl.length() : authorityEnd;
-    String authority = jdbcUrl.substring(authorityStart, authorityEnd);
+    String authority = extractAuthority(jdbcUrl);
+    if (authority == null) {
+      return false;
+    }
+    if (usesSemicolonParameters(jdbcUrl.substring(0, protocol))) {
+      int semicolon = authority.indexOf(';');
+      if (semicolon >= 0) {
+        authority = authority.substring(0, semicolon);
+      }
+    }
     return splitHostList(stripUserInfo(authority)).size() > 1;
+  }
+
+  private static boolean usesSemicolonParameters(String scheme) {
+    if (scheme.startsWith("jdbc:")) {
+      scheme = scheme.substring("jdbc:".length());
+    }
+    return scheme.equals("sqlserver")
+        || scheme.equals("microsoft:sqlserver")
+        || scheme.equals("jtds:sqlserver")
+        || scheme.equals("derby")
+        || scheme.startsWith("datadirect:")
+        || scheme.startsWith("tibcosoftware:");
   }
 
   // IPv6 brackets and address=(...) blocks may contain commas.

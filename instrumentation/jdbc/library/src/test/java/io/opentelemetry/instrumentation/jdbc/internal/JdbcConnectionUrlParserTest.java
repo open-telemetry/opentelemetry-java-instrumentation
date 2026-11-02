@@ -2056,12 +2056,28 @@ class JdbcConnectionUrlParserTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"sqlserver://h1", "jtds:sqlserver://h1/db", "derby://h1/db"})
+  @ValueSource(
+      strings = {
+        "sqlserver://h1",
+        "jtds:sqlserver://h1/db",
+        "derby://h1/db",
+        "datadirect:sqlserver://h1",
+        "tibcosoftware:sqlserver://h1"
+      })
   void semicolonParametersDoNotChangeTargetCount(String connection) {
     String url = "jdbc:" + connection + ";" + "password" + "=test-secret@other1,other2";
     assertThat(hasMultipleTargets(url)).isFalse();
     assertThat(parse(url, null).getConfiguredServerTarget())
         .isEqualTo(DbServerTarget.create("h1", null));
+  }
+
+  @Test
+  void mariaDbSemicolonUserInfoDoesNotFallbackForRejectedFailoverGroup() {
+    String userInfo = "user:pw;extra@";
+    String url = "jdbc:mariadb:failover://" + userInfo + "h1,unexpected=value/db";
+
+    assertThat(hasMultipleTargets(url)).isTrue();
+    assertThat(parse(url, null).getConfiguredServerTarget()).isNull();
   }
 
   private static void testVerifySystemSubtypeParsingOfUrl(ParseTestArgument argument) {
