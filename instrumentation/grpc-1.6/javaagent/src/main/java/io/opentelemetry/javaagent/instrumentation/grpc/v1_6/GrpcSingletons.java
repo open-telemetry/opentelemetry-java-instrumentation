@@ -50,13 +50,14 @@ public class GrpcSingletons {
         GrpcTelemetry.builder(openTelemetry)
             .setEmitMessageEvents(emitMessageEvents)
             .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes);
-    IncludeExclude clientRequestMetadata = grpcConfig.getClientRequestMetadata();
-    if (clientRequestMetadata != null) {
-      telemetryBuilder.setClientRequestMetadata(clientRequestMetadata);
+    IncludeExclude clientRequestHeaders = grpcConfig.getClientRequestHeaders();
+    if (clientRequestHeaders != null) {
+      telemetryBuilder.setClientRequestHeaders(clientRequestHeaders);
     }
-    IncludeExclude serverRequestMetadata = grpcConfig.getServerRequestMetadata();
-    if (serverRequestMetadata != null) {
-      telemetryBuilder.setServerRequestMetadata(serverRequestMetadata);
+
+    IncludeExclude serverRequestHeaders = grpcConfig.getServerRequestHeaders();
+    if (serverRequestHeaders != null) {
+      telemetryBuilder.setServerRequestHeaders(serverRequestHeaders);
     }
     telemetry = telemetryBuilder.build();
   }

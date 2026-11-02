@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -67,80 +70,35 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:3.+") // see testing-webflux7 module
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  test {
-    // server tests require controller-telemetry, which is off by default
-    exclude("**/server/**")
-  }
-
-  val testControllerTelemetry = register<Test>("testControllerTelemetry") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    include("**/server/**")
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.controller-telemetry.enabled=true"
-    )
-  }
-
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    exclude("**/server/**")
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    include("**/client/**")
-    jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
-    systemProperty("metadataConfig", "otel.instrumentation.http.client.emit-experimental-telemetry=true")
-  }
-
-  val testControllerTelemetryPreviewSemconv = register<Test>("testControllerTelemetryPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    include("**/server/**")
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.controller-telemetry.enabled=true," +
-        "otel.semconv-stability.preview=service.peer"
-    )
-  }
-
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.controller-telemetry.enabled=true," +
-        "otel.semconv.exception.signal.preview=logs"
-    )
-  }
-
-  check {
-    dependsOn(
-      testControllerTelemetry,
-      testExperimental,
-      testPreviewSemconv,
-      testControllerTelemetryPreviewSemconv,
-      testExceptionSignalLogs
-    )
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+    configureDefault {
+      // server tests require controller-telemetry, which is off by default
+      exclude("**/server/**")
+    }
+    register("ControllerTelemetry") {
+      include("**/server/**")
+      telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+    }
+    register("PreviewSemconv") {
+      exclude("**/server/**")
+      telemetryConfig("otel.semconv-stability.preview", "service.peer")
+    }
+    register("Experimental") {
+      include("**/client/**")
+      telemetryConfig("otel.instrumentation.http.client.emit-experimental-telemetry", "true")
+    }
+    register("ExceptionSignalLogs") {
+      telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+    }
   }
 }
 

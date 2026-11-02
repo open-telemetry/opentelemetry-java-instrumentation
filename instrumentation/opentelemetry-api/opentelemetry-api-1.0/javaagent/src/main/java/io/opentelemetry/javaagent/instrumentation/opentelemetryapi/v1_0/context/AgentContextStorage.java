@@ -179,13 +179,13 @@ public class AgentContextStorage
   @Override
   public application.io.opentelemetry.context.Context current() {
     Context agentContext = Context.current();
+    if (agentContext == Context.root()) {
+      return root;
+    }
     application.io.opentelemetry.context.Context applicationContext =
         agentContext.get(APPLICATION_CONTEXT);
     if (applicationContext == null) {
       applicationContext = applicationRoot;
-    }
-    if (applicationContext == applicationRoot && agentContext == Context.root()) {
-      return root;
     }
     return new AgentContextWrapper(agentContext, applicationContext);
   }

@@ -30,8 +30,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
@@ -401,7 +399,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                   equalTo(AWS_SQS_QUEUE_URL, QUEUE_URL),
                   equalTo(MESSAGING_DESTINATION_NAME, "somequeue"),
                   satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                  equalTo(MESSAGING_SYSTEM, AWS_SQS))));
+                  equalTo(stringKey("messaging.system.name"), "aws.sqs"))));
       attributes.add(equalTo(MESSAGING_OPERATION_NAME, "send"));
       attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "send"));
     }

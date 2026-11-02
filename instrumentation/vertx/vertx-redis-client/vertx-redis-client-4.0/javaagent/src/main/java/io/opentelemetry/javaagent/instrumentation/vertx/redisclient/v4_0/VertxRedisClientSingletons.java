@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -50,7 +50,7 @@ public class VertxRedisClientSingletons {
                 RedisSpanNameExtractor.create(getter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(getter))
             .addAttributesExtractor(
-                ServicePeerAttributesExtractor.create(getter, GlobalOpenTelemetry.get()))
+                ServerServiceAttributesExtractor.create(getter, GlobalOpenTelemetry.get()))
             .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);

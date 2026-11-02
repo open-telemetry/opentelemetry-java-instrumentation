@@ -8,9 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 import static io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil.serializeKey;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import java.util.Objects;
@@ -18,6 +17,11 @@ import javax.annotation.Nullable;
 import org.apache.kafka.connect.sink.SinkRecord;
 
 final class KafkaConnectBatchRecordAttributes {
+
+  // copied from KafkaIncubatingAttributes
+  private static final AttributeKey<String> KAFKA_MESSAGE_KEY =
+      AttributeKey.stringKey("kafka.message.key");
+  private static final AttributeKey<Long> KAFKA_OFFSET = AttributeKey.longKey("kafka.offset");
 
   private boolean initialized;
   @Nullable private String commonDestination;
@@ -60,9 +64,9 @@ final class KafkaConnectBatchRecordAttributes {
     // messaging.batch.message_count, so they stay on the links even when the batch happens to
     // carry a single record
     if (partition != null) {
-      attributes.put(MESSAGING_KAFKA_OFFSET, record.kafkaOffset());
+      attributes.put(KAFKA_OFFSET, record.kafkaOffset());
     }
-    attributes.put(MESSAGING_KAFKA_MESSAGE_KEY, serializeKey(record.key()));
+    attributes.put(KAFKA_MESSAGE_KEY, serializeKey(record.key()));
     return attributes.build();
   }
 

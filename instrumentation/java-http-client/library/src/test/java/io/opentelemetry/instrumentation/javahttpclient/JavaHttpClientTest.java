@@ -25,7 +25,7 @@ class JavaHttpClientTest {
           .setRequestHeaders(AbstractHttpClientTest.TEST_HEADERS)
           .setResponseHeaders(AbstractHttpClientTest.TEST_HEADERS)
           .build()
-          .wrap(httpClient);
+          .instrument(httpClient);
     }
   }
 

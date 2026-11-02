@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
@@ -19,7 +20,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -133,7 +133,7 @@ abstract class AbstractJms1Test {
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             messagingDestinationName(destinationName, isTemporary),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -147,7 +147,7 @@ abstract class AbstractJms1Test {
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             messagingDestinationName(destinationName, isTemporary),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -221,7 +221,7 @@ abstract class AbstractJms1Test {
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             messagingDestinationName(destinationName, isTemporary),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -241,7 +241,7 @@ abstract class AbstractJms1Test {
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             messagingDestinationName(destinationName, isTemporary),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -299,7 +299,7 @@ abstract class AbstractJms1Test {
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             messagingDestinationName(destinationName, isTemporary),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -316,7 +316,7 @@ abstract class AbstractJms1Test {
                         .hasNoParent()
                         .hasTotalRecordedLinks(0)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             messagingDestinationName(destinationName, isTemporary),
                             equalTo(MESSAGING_OPERATION_NAME, "receive"),
                             equalTo(MESSAGING_OPERATION_TYPE, "receive"),
@@ -486,7 +486,7 @@ abstract class AbstractJms1Test {
     return Attributes.of(
         MESSAGING_OPERATION_NAME,
         operationName,
-        MESSAGING_SYSTEM,
+        stringKey("messaging.system.name"),
         "jms",
         MESSAGING_DESTINATION_NAME,
         destination);

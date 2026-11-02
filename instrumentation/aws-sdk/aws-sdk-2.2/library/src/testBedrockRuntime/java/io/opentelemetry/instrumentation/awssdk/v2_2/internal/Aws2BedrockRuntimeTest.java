@@ -105,7 +105,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
   @Override
   protected BedrockRuntimeAsyncClient configureBedrockRuntimeClient(
       BedrockRuntimeAsyncClient client) {
-    return telemetry.wrapBedrockRuntimeClient(client);
+    return telemetry.instrumentBedrockRuntimeClient(client);
   }
 
   @Test
@@ -417,7 +417,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .addExecutionInterceptor(telemetry.createExecutionInterceptor())
             .build());
     configureClient(builder);
-    BedrockRuntimeAsyncClient client = telemetry.wrapBedrockRuntimeClient(builder.build());
+    BedrockRuntimeAsyncClient client = telemetry.instrumentBedrockRuntimeClient(builder.build());
 
     String modelId = "amazon.nova-micro-v1:0";
     List<Message> messages = new ArrayList<>();
@@ -1232,7 +1232,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .addExecutionInterceptor(telemetry.createExecutionInterceptor())
             .build());
     configureClient(builder);
-    BedrockRuntimeAsyncClient client = telemetry.wrapBedrockRuntimeClient(builder.build());
+    BedrockRuntimeAsyncClient client = telemetry.instrumentBedrockRuntimeClient(builder.build());
 
     String modelId = "amazon.nova-micro-v1:0";
     Document toolConfig =
@@ -2069,7 +2069,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .addExecutionInterceptor(telemetry.createExecutionInterceptor())
             .build());
     configureClient(builder);
-    BedrockRuntimeAsyncClient client = telemetry.wrapBedrockRuntimeClient(builder.build());
+    BedrockRuntimeAsyncClient client = telemetry.instrumentBedrockRuntimeClient(builder.build());
 
     String modelId = "anthropic.claude-3-5-sonnet-20240620-v1:0";
     Document tools =

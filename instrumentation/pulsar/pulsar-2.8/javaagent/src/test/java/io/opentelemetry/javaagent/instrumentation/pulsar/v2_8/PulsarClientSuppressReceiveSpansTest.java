@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
@@ -14,7 +15,6 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.mockito.Mockito.mock;
@@ -86,7 +86,8 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                                             .hasValue(1)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "pulsar"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                                                 equalTo(
                                                     MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
@@ -140,7 +141,8 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                                             .hasValue(1)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "pulsar"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                                                 equalTo(
                                                     MESSAGING_DESTINATION_SUBSCRIPTION_NAME,

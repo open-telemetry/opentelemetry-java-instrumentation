@@ -68,28 +68,32 @@ optional `example`). The `required` keys must be a subset of `properties`.
 property's `default`, then to a `<property-name>` placeholder. Set it on every property whose
 placeholder would not be self-explanatory.
 
-`service_peer_mapping` — flat form is a `host=service` map, declarative form is a list of
-`{peer, service_name}`:
+`server_service_mapping` — flat form is a `target=service_name` map, declarative form is a list of
+`{target, service_name, service_namespace}`:
 
 ```yaml
-- name: otel.instrumentation.common.peer-service-mapping
-  declarative_name: java.common.service_peer_mapping
-  description: Used to specify a mapping from host names or IP addresses to peer services.
+- name: otel.instrumentation.common.server-service-mapping
+  declarative_name: java.common.server_service_mapping
+  description: Maps server addresses or configured targets to logical server service identities.
   type: map
   default: ""
   declarative_type: structured_list
   declarative_schema:
     type: object
-    required: [ peer, service_name ]
+    required: [ target ]
     properties:
-      peer:
+      target:
         type: string
-        description: Host name or IP address to match against.
-        example: host
+        description: Server address or complete configured target to match against.
+        example: payments.example.com
       service_name:
         type: string
-        description: Peer service name to record for matching peers.
-        example: serviceName
+        description: Logical server service name to record for matching targets.
+        example: payments
+      service_namespace:
+        type: string
+        description: Logical server service namespace to record for matching targets.
+        example: checkout
 ```
 
 `url_template_rules` is **declarative-only** (no flat property) — it omits `name`:

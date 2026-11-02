@@ -34,7 +34,7 @@ class OpenAiClientAsyncInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToReturned
     public static OpenAIClientAsync onExit(@Advice.Return OpenAIClientAsync client) {
-      return telemetry().wrap(client);
+      return telemetry().instrument(client);
     }
   }
 }

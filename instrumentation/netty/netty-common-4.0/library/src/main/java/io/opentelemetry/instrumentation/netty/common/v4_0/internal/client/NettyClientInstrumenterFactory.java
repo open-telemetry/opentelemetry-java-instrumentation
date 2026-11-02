@@ -11,7 +11,7 @@ import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -71,7 +71,7 @@ public final class NettyClientInstrumenterFactory {
     }
 
     builder.addAttributesExtractor(
-        HttpClientServicePeerAttributesExtractor.create(getter, openTelemetry));
+        HttpClientServerServiceAttributesExtractor.create(getter, openTelemetry));
 
     if (!connectionTelemetryFullyEnabled) {
       setHttpClientExceptionEventExtractor(builder);

@@ -1,0 +1,102 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.jdbc.internal;
+
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.entry;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+
+class JdbcServiceMappingTest {
+
+  private static final String GROUP_TARGET = "pg.host1:5432,pg.host2:5433";
+  private static final String DEFAULT_PORT_GROUP_TARGET = "orcl.host1,orcl.host2";
+
+  @Test
+  void groupTargetCanBeMatchedExactly() {
+    DbRequest request =
+        request(
+            DbInfo.builder()
+                .dbSystemName(POSTGRESQL)
+                .configuredServerTarget(DbServerTarget.create(GROUP_TARGET, null))
+                .build());
+
+    assertThat(resolve(request, "localhost")).isEmpty();
+    assertThat(resolve(request, GROUP_TARGET))
+        .containsOnly(entry(stringKey("server.service.name"), "myService"));
+  }
+
+  @Test
+  void singleHostIsMatchedByAHostKeyedMappingByDefault() {
+    DbRequest request =
+        request(
+            DbInfo.builder()
+                .dbSystemName(POSTGRESQL)
+                .configuredServerTarget(DbServerTarget.create("localhost", 5432))
+                .build());
+
+    assertThat(resolve(request, "localhost"))
+        .containsOnly(entry(stringKey("server.service.name"), "myService"));
+  }
+
+  @Test
+  void defaultPortGroupTargetCanBeMatchedExactly() {
+    DbRequest request =
+        request(
+            DbInfo.builder()
+                .dbSystemName("oracle.db")
+                .configuredServerTarget(DbServerTarget.create(DEFAULT_PORT_GROUP_TARGET, null))
+                .build());
+
+    assertThat(resolve(request, DEFAULT_PORT_GROUP_TARGET))
+        .containsOnly(entry(stringKey("server.service.name"), "myService"));
+  }
+
+  private static DbRequest request(DbInfo dbInfo) {
+    return DbRequest.create(dbInfo, "SELECT 1", false);
+  }
+
+  private static Attributes resolve(DbRequest request, String target) {
+    AttributesExtractor<DbRequest, Void> extractor =
+        ServerServiceAttributesExtractor.create(new JdbcAttributesGetter(), openTelemetry(target));
+    AttributesBuilder attributes = Attributes.builder();
+    extractor.onEnd(attributes, Context.root(), request, null, null);
+    return attributes.build();
+  }
+
+  private static ExtendedOpenTelemetry openTelemetry(String target) {
+    DeclarativeConfigProperties entry = mock(DeclarativeConfigProperties.class);
+    when(entry.getString("target")).thenReturn(target);
+    when(entry.getString("service_name")).thenReturn("myService");
+    when(entry.getString("service_namespace")).thenReturn(null);
+
+    List<DeclarativeConfigProperties> entries = asList(entry);
+    DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
+    when(commonConfig.getStructuredList("server_service_mapping", emptyList())).thenReturn(entries);
+
+    ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
+    when(openTelemetry.getGeneralInstrumentationConfig())
+        .thenReturn(DeclarativeConfigProperties.empty());
+    when(openTelemetry.getInstrumentationConfig("common")).thenReturn(commonConfig);
+    return openTelemetry;
+  }
+}

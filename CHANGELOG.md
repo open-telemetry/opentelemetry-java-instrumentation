@@ -4,6 +4,16 @@
 
 ### ⚠️ Breaking changes
 
+- Configured service mappings now emit `server.service.name` and `server.service.namespace`, and no longer emit `peer.service`, `service.peer.name`, or `service.peer.namespace`. Rename `otel.instrumentation.common.peer-service-mapping` to `otel.instrumentation.common.server-service-mapping`; in YAML, use `java.common.server_service_mapping` with `target` instead of `peer`.
+- Rename `otel.instrumentation.grpc.{client,server}.request-metadata.{included,excluded}` to
+  `otel.instrumentation.grpc.{client,server}.request-headers.{included,excluded}`.
+- Captured gRPC request attributes now use `rpc.request.header.<key>` instead of
+  `rpc.request.metadata.<key>`.
+- Rename `messaging.system` to `messaging.system.name` (`aws_sqs` becomes `aws.sqs`) and adopt
+  the system-specific attribute renames from
+  [semantic-conventions #4250](https://github.com/open-telemetry/semantic-conventions/pull/4250).
+  Experimental messaging attributes also lose the `messaging.` prefix (for example,
+  `messaging.kafka.bootstrap.servers` becomes `kafka.bootstrap.servers`).
 - AWS Lambda invocation spans now replace alias suffixes in `cloud.resource_id` with the resolved
   function version when available.
 - AWS Lambda spans now use `faas.invocation.id` instead of `faas.invocation_id` for invocation IDs.
@@ -221,11 +231,6 @@
   `structuredAttributesIncluded` and `structuredAttributesExcluded` in XML, or
   `setStructuredAttributes(IncludeExclude)` programmatically.
   Log4j `MapMessage` keys are emitted as their original log attribute names.
-- Service-peer semantic conventions now require `otel.semconv-stability.preview=service.peer`
-  (or `service.peer/dup` for dual emission). The `service.peer` and `service.peer/dup`
-  values in `otel.semconv-stability.opt-in` no longer select them.
-  For declarative configuration, move these values from `general.stability_opt_in_list` to
-  `java.common.semconv_stability.preview`.
 - Micrometer timers and distribution summaries no longer emit separate `.max` gauge metrics; use the
   maximum from their histogram instead. Custom meter statistic suffixes are appended after the base
   name passes through the naming convention (for example, Prometheus mode changes
@@ -255,8 +260,8 @@
   respectively.
 - Remove `otel.instrumentation.grpc.capture-metadata.client.request` and
   `otel.instrumentation.grpc.capture-metadata.server.request`.
-  Use `otel.instrumentation.grpc.client.request-metadata.included` and
-  `otel.instrumentation.grpc.server.request-metadata.included`.
+  Use `otel.instrumentation.grpc.client.request-headers.included` and
+  `otel.instrumentation.grpc.server.request-headers.included`.
 - Captured messaging header attribute keys now preserve dashes unconditionally; for example,
   `messaging.header.Test_Message_Id` is now `messaging.header.Test-Message-Id`. Replace
   `otel.instrumentation.messaging.experimental.headers.included=Test-Message-*` with
@@ -350,6 +355,17 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Remove the deprecated `ServicePeerAttributesExtractor`,
+  `HttpClientServicePeerAttributesExtractor`, `ServicePeerResolver`, and
+  `expectedPeerService()` APIs; use `ServerServiceAttributesExtractor`,
+  `HttpClientServerServiceAttributesExtractor`, and `ServiceMappingResolver` instead. Replace
+  `expectedPeerService()` with `TestServerServiceMapping.expectedMappedServiceName()` in
+  service-mapping tests.
+- Rename `GrpcTelemetryBuilder.setClientRequestMetadata` and
+  `GrpcTelemetryBuilder.setServerRequestMetadata` to their `RequestHeaders` forms. Remove
+  `setCapturedClientRequestMetadata` and `setCapturedServerRequestMetadata`.
+- Rename public library instrumentation entrypoints from `wrap`/`wrapXxx` to `instrument`
+  overloads, retaining distinct `instrumentXxx` names where required.
 - In `opentelemetry-instrumentation-api-incubator`, custom `RpcAttributesGetter` implementations
   must implement `getRpcSystemName` and `getRpcMethod`, returning the RPC system name and fully
   qualified method name such as `my.Service/Method`, respectively. The legacy `getSystem`,

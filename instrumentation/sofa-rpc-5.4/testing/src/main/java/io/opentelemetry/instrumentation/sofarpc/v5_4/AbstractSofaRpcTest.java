@@ -9,8 +9,8 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -184,7 +184,8 @@ public abstract class AbstractSofaRpcTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                 equalTo(RPC_METHOD, genericServiceSpanName()),
-                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -300,7 +301,8 @@ public abstract class AbstractSofaRpcTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM_NAME, "sofarpc"),
                                 equalTo(RPC_METHOD, genericServiceSpanName()),
-                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -463,7 +465,8 @@ public abstract class AbstractSofaRpcTest {
                                 equalTo(
                                     RPC_METHOD,
                                     "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwException"),
-                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -590,7 +593,8 @@ public abstract class AbstractSofaRpcTest {
                                 equalTo(
                                     RPC_METHOD,
                                     "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/throwBusinessException"),
-                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(
@@ -656,7 +660,8 @@ public abstract class AbstractSofaRpcTest {
                                 equalTo(
                                     RPC_METHOD,
                                     "io.opentelemetry.instrumentation.sofarpc.v5_4.api.ErrorService/timeout"),
-                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                                 satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                                 satisfies(

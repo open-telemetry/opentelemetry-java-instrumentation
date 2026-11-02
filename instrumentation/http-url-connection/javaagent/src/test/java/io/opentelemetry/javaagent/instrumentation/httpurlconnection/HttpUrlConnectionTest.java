@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.StreamUtils.readLines;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -136,7 +137,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(URL_FULL, url.toString()),
                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS),
-                equalTo(maybeStablePeerService(), testing.expectedPeerService())));
+                equalTo(stringKey("server.service.name"), expectedMappedServiceName())));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -181,7 +182,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(URL_FULL, url.toString()),
                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS),
-                equalTo(maybeStablePeerService(), testing.expectedPeerService())));
+                equalTo(stringKey("server.service.name"), expectedMappedServiceName())));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -234,7 +235,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(URL_FULL, url.toString()),
                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS),
-                equalTo(maybeStablePeerService(), testing.expectedPeerService())));
+                equalTo(stringKey("server.service.name"), expectedMappedServiceName())));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -289,7 +290,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(URL_FULL, url.toString()),
                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS),
-                equalTo(maybeStablePeerService(), testing.expectedPeerService())));
+                equalTo(stringKey("server.service.name"), expectedMappedServiceName())));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -332,7 +333,7 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(URL_FULL, uri),
                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                 equalTo(ERROR_TYPE, "java.net.ConnectException"),
-                equalTo(maybeStablePeerService(), testing.expectedPeerService())));
+                equalTo(stringKey("server.service.name"), expectedMappedServiceName())));
 
     testing.waitAndAssertTraces(
         trace ->

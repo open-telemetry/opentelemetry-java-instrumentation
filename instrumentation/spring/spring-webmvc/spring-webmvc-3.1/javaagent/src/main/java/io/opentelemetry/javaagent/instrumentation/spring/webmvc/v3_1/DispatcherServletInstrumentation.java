@@ -23,7 +23,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.v3_1.OpenTelemetryHandlerMappingFilter;
 
 class DispatcherServletInstrumentation implements TypeInstrumentation {
 
@@ -37,8 +36,8 @@ class DispatcherServletInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isProtected()
             .and(named("onRefresh"))
-            .and(takesArgument(0, named("org.springframework.context.ApplicationContext")))
-            .and(takesArguments(1)),
+            .and(takesArguments(1))
+            .and(takesArgument(0, named("org.springframework.context.ApplicationContext"))),
         getClass().getName() + "$HandlerMappingAdvice");
     transformer.applyAdviceToMethod(
         isProtected()
