@@ -358,6 +358,8 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Testing exporters now use delta-preferred metric temporality by default; up-down counters are
+  cumulative.
 - Remove the deprecated `ServicePeerAttributesExtractor`,
   `HttpClientServicePeerAttributesExtractor`, `ServicePeerResolver`, and
   `expectedPeerService()` APIs; use `ServerServiceAttributesExtractor`,
