@@ -7,22 +7,25 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
+import io.opentelemetry.javaagent.bootstrap.servlet.InjectionStateReference;
 import jakarta.servlet.ServletOutputStream;
 import javax.annotation.Nullable;
 
 public class ServletOutputStreamInjectionState {
-  private static final VirtualField<ServletOutputStream, InjectionState> VIRTUAL_FIELD =
-      VirtualField.find(ServletOutputStream.class, InjectionState.class);
+  private static final VirtualField<ServletOutputStream, InjectionStateReference> VIRTUAL_FIELD =
+      VirtualField.find(ServletOutputStream.class, InjectionStateReference.class);
 
   public static void initializeInjectionStateIfNeeded(
       ServletOutputStream servletOutputStream, Servlet5SnippetInjectingResponseWrapper wrapper) {
-    VIRTUAL_FIELD.set(servletOutputStream, wrapper.getInjectionState());
+    VIRTUAL_FIELD.set(
+        servletOutputStream, new InjectionStateReference(wrapper.getStreamInjectionState()));
   }
 
   @Nullable
   public static InjectionState getInjectionState(ServletOutputStream servletOutputStream) {
-    InjectionState state = VIRTUAL_FIELD.get(servletOutputStream);
-    if (state != null && !state.isCurrentRequest()) {
+    InjectionStateReference reference = VIRTUAL_FIELD.get(servletOutputStream);
+    InjectionState state = reference == null ? null : reference.get();
+    if (state == null || !state.isCurrentRequest()) {
       VIRTUAL_FIELD.set(servletOutputStream, null);
       return null;
     }
