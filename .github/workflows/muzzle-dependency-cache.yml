@@ -1,0 +1,210 @@
+name: Muzzle dependency-cache experiment
+
+on:
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: Identical source revision for warmups and both measured conditions
+        type: string
+        default: b20b9ea9e86774ad08cc5e858289807a9561de14
+      source-run:
+        description: Earlier CI benchmark run supplying muzzle-ci-cache-snapshot
+        type: string
+        required: true
+      partitions:
+        description: Sorted JSON array of slices; start with critical slice 2
+        type: string
+        default: '[2]'
+      rounds:
+        description: Paired rounds with an identical-cache control
+        type: string
+        default: '5'
+      warm-seeds:
+        description: Prior differently seeded samples retained without action cache cleanup
+        type: string
+        default: '2'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: muzzle-dependency-cache-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    outputs:
+      rounds: ${{ steps.plan.outputs.rounds }}
+      partitions: ${{ steps.plan.outputs.partitions }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Validate inputs and runner
+        id: plan
+        env:
+          ROUNDS: ${{ inputs.rounds }}
+          PARTITIONS: ${{ inputs.partitions }}
+          WARM_SEEDS: ${{ inputs.warm-seeds }}
+        run: |
+          python3 -m unittest discover -s benchmark-muzzle -v
+          python3 - <<'PY'
+          import json, os
+          rounds = int(os.environ["ROUNDS"])
+          partitions = json.loads(os.environ["PARTITIONS"])
+          if not 1 <= rounds <= 10 or not 1 <= int(os.environ["WARM_SEEDS"]) <= 5:
+              raise ValueError("Invalid measured rounds or warm-seed count")
+          if (not isinstance(partitions, list) or not partitions
+              or any(type(p) is not int or p not in range(1, 5) for p in partitions)
+              or partitions != sorted(set(partitions))):
+              raise ValueError("Invalid slices")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write("rounds=" + json.dumps(list(range(1, rounds + 1))) + "\n")
+              out.write("partitions=" + json.dumps(partitions) + "\n")
+          PY
+
+  warm:
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: ${{ fromJSON(needs.validate.outputs.partitions) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - run: .github/scripts/gha-free-disk-space.sh
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 25.0.5+8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: muzzle-ci-cache-snapshot
+          path: ${{ runner.temp }}/initial
+          run-id: ${{ inputs.source-run }}
+          github-token: ${{ github.token }}
+      - name: Accumulate differently seeded dependency resolutions
+        env:
+          REVISION: ${{ inputs.revision }}
+          PARTITION: ${{ matrix.partition }}
+          WARM_SEEDS: ${{ inputs.warm-seeds }}
+        run: |
+          python3 benchmark-muzzle/dependency_cache_benchmark.py warm \
+            --revision "$REVISION" --partition "$PARTITION" --warm-seeds "$WARM_SEEDS" \
+            --cache-snapshot "$RUNNER_TEMP/initial/gradle-snapshot.tar.gz" \
+            --snapshot-sha256 "$(sha256sum "$RUNNER_TEMP/initial/gradle-snapshot.tar.gz" | cut -d' ' -f1)" \
+            --work-dir "$RUNNER_TEMP/dependency-warm" \
+            --output "$RUNNER_TEMP/dependency-snapshot.tar.gz"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: dependency-cache-reports-${{ matrix.partition }}
+          path: ${{ runner.temp }}/dependency-warm/reports
+          retention-days: 30
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dependency-cache-plan-${{ matrix.partition }}
+          path: ${{ runner.temp }}/dependency-warm/reports/warming.json
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dependency-cache-snapshot-${{ matrix.partition }}
+          path: ${{ runner.temp }}/dependency-snapshot.tar.gz
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+
+  benchmark:
+    needs: [validate, warm]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        round: ${{ fromJSON(needs.validate.outputs.rounds) }}
+        partition: ${{ fromJSON(needs.validate.outputs.partitions) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - run: .github/scripts/gha-free-disk-space.sh
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 25.0.5+8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: muzzle-ci-cache-snapshot
+          path: ${{ runner.temp }}/initial
+          run-id: ${{ inputs.source-run }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dependency-cache-snapshot-${{ matrix.partition }}
+          path: ${{ runner.temp }}/warmed
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dependency-cache-plan-${{ matrix.partition }}
+          path: ${{ runner.temp }}/plan
+      - name: Compare original and accumulated dependency caches
+        env:
+          REVISION: ${{ inputs.revision }}
+          PARTITION: ${{ matrix.partition }}
+          ROUND: ${{ matrix.round }}
+        run: |
+          initial_sha=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["initial_snapshot_sha256"])' "$RUNNER_TEMP/plan/warming.json")
+          candidate_sha=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["candidate_snapshot"]["sha256"])' "$RUNNER_TEMP/plan/warming.json")
+          python3 benchmark-muzzle/ci_benchmark.py run \
+            --baseline "$REVISION" --candidate "$REVISION" \
+            --partition "$PARTITION" --round "$ROUND" \
+            --cache-snapshot "$RUNNER_TEMP/initial/gradle-snapshot.tar.gz" --snapshot-sha256 "$initial_sha" \
+            --candidate-cache-snapshot "$RUNNER_TEMP/warmed/dependency-snapshot.tar.gz" --candidate-snapshot-sha256 "$candidate_sha" \
+            --work-dir "$RUNNER_TEMP/muzzle-ci"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: muzzle-ci-${{ matrix.round }}-${{ matrix.partition }}
+          path: ${{ runner.temp }}/muzzle-ci/reports
+          if-no-files-found: error
+          retention-days: 30
+
+  report:
+    if: always() && needs.warm.result == 'success'
+    needs: [validate, warm, benchmark]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: muzzle-ci-[0-9]*-*
+          path: ${{ runner.temp }}/results
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: dependency-cache-plan-*
+          path: ${{ runner.temp }}/plans
+      - name: Verify workload and cache provenance
+        env:
+          ROUNDS: ${{ inputs.rounds }}
+          PARTITIONS: ${{ needs.validate.outputs.partitions }}
+        run: |
+          mapfile -t partitions < <(python3 -c 'import json,os; print(*json.loads(os.environ["PARTITIONS"]), sep="\n")')
+          python3 benchmark-muzzle/dependency_cache_benchmark.py report \
+            --inputs "$RUNNER_TEMP/results" --plans "$RUNNER_TEMP/plans" \
+            --output "$RUNNER_TEMP/summary" --rounds "$ROUNDS" --partitions "${partitions[@]}"
+          cat "$RUNNER_TEMP/summary/summary.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: dependency-cache-summary
+          path: ${{ runner.temp }}/summary
+          retention-days: 30

@@ -212,10 +212,18 @@ class Comparison:
         self.snapshot = args.cache_snapshot.resolve()
         if benchmark.digest(self.snapshot) != args.snapshot_sha256:
             raise ValueError("The cache snapshot SHA-256 does not match the prepared artifact")
+        self.candidate_snapshot = getattr(args, "candidate_cache_snapshot", None)
+        candidate_digest = getattr(args, "candidate_snapshot_sha256", None)
+        if bool(self.candidate_snapshot) != bool(candidate_digest):
+            raise ValueError("Both candidate cache snapshot and SHA-256 are required")
+        if self.candidate_snapshot and benchmark.digest(self.candidate_snapshot) != candidate_digest:
+            raise ValueError("The candidate cache snapshot SHA-256 does not match")
         self.revisions = {
             label: self.git("rev-parse", "--verify", "--end-of-options", f"{ref}^{{commit}}").decode().strip()
             for label, ref in (("baseline", args.baseline), ("candidate", args.candidate))
         }
+        if self.candidate_snapshot and len(set(self.revisions.values())) != 1:
+            raise ValueError("Dependency-cache comparisons require identical source revisions")
         runtime = {
             path: hashlib.sha256(self.git("show", f"{self.revisions['baseline']}:{path}")).hexdigest()
             for path in benchmark.RUNTIME_FILES
@@ -249,6 +257,7 @@ class Comparison:
         if version is None or version[1] != required_java.split(".")[0]:
             raise ValueError(f"PATH must select JDK {required_java}")
         workload = json.loads(Path(__file__).with_name("workload.json").read_text(encoding="utf-8"))
+        workload["seed"] = getattr(args, "seed", workload["seed"])
         self.identity = {
             "schema": 1,
             "revisions": self.revisions,
@@ -268,6 +277,9 @@ class Comparison:
             "runner_image": os.environ.get("ImageVersion"),
             "workflow_run": os.environ.get("GITHUB_RUN_ID"),
         }
+        if self.candidate_snapshot:
+            self.identity["experiment"] = "dependency-cache"
+            self.identity["candidate_cache_snapshot_sha256"] = candidate_digest
         write_json(self.reports / "identity.json", self.identity)
         self.persist()
 
@@ -277,7 +289,7 @@ class Comparison:
     def persist(self, complete=False):
         write_json(self.reports / "samples.json", {"complete": complete, "samples": self.samples})
 
-    def execute(self, label):
+    def execute(self, label, *, retain_home=False):
         sample_root = self.root / label
         sample_root.mkdir()
         checkout = sample_root / "checkout"
@@ -293,7 +305,10 @@ class Comparison:
         benchmark.run(["git", "-C", str(checkout), "checkout", "--quiet", "--detach", revision])
         sample["checkout_ms"] = (time.perf_counter() - started) * 1000
         started = time.perf_counter()
-        restore_snapshot(self.snapshot, home)
+        selected_snapshot = (
+            getattr(self, "candidate_snapshot", None) if label == "candidate" else None
+        ) or self.snapshot
+        restore_snapshot(selected_snapshot, home)
         sample["cache_restore_ms"] = (time.perf_counter() - started) * 1000
         if list(checkout.rglob("muzzleRepo")) or list(checkout.rglob("configuration-cache")):
             raise ValueError("The checkout already contains metadata or a configuration cache")
@@ -342,7 +357,9 @@ class Comparison:
         self.persist()
         # Only these newly created per-sample directories are disposable.
         shutil.rmtree(checkout)
-        shutil.rmtree(home)
+        if not retain_home:
+            shutil.rmtree(home)
+        return home
 
     def measure(self):
         for label in benchmark.order(self.args.round - 1):
@@ -362,6 +379,7 @@ def load_reports(root, rounds, partitions):
     shared = None
     expected_revisions = None
     references = {}
+    candidate_snapshots = {}
     for partition in partitions:
         for round_number in range(1, rounds + 1):
             directory = root / f"muzzle-ci-{round_number}-{partition}"
@@ -371,8 +389,15 @@ def load_reports(root, rounds, partitions):
                 raise ValueError(f"Incomplete or misidentified comparison: {directory}")
             common = {
                 key: value for key, value in identity.items()
-                if key not in {"partition", "round", "platform"}
+                if key not in {"partition", "round", "platform", "candidate_cache_snapshot_sha256"}
             }
+            if identity.get("experiment") == "dependency-cache":
+                if len(set(identity["revisions"].values())) != 1:
+                    raise ValueError("Dependency-cache reports require identical source revisions")
+                value = identity["candidate_cache_snapshot_sha256"]
+                if partition in candidate_snapshots:
+                    benchmark.require_equal(candidate_snapshots[partition], value, "Warmed cache across rounds")
+                candidate_snapshots[partition] = value
             if shared is None:
                 shared = common
                 expected_revisions = identity["revisions"]
@@ -397,6 +422,8 @@ def load_reports(root, rounds, partitions):
                 )
                 validate_diagnostics(directory / label, sample)
             reports[(round_number, partition)] = result["samples"]
+    if candidate_snapshots:
+        shared = dict(shared, candidate_cache_snapshots=candidate_snapshots)
     return shared, references, reports
 
 
@@ -478,6 +505,13 @@ def aggregate(root, destination, rounds, partitions):
         "| Slice | Assertions | Baseline median | Control median | Candidate median | Paired candidate change |",
         "| --- | ---: | ---: | ---: | ---: | ---: |",
     ]
+    if shared.get("experiment") == "dependency-cache":
+        lines[4:4] = [
+            "Both sides use identical source code. Only the candidate's Gradle dependency cache "
+            "was populated by earlier, differently seeded Muzzle samples. All non-dependency "
+            "snapshot entries are preserved from the original snapshot.",
+            "",
+        ]
     for partition, entry in slices.items():
         times = entry["medians_ms"]
         lines.append(
@@ -550,6 +584,8 @@ def main():
     measure.add_argument("--work-dir", type=Path, required=True)
     measure.add_argument("--cache-snapshot", type=Path, required=True)
     measure.add_argument("--snapshot-sha256", required=True)
+    measure.add_argument("--candidate-cache-snapshot", type=Path)
+    measure.add_argument("--candidate-snapshot-sha256")
     report = commands.add_parser("report")
     report.add_argument("--inputs", type=Path, required=True)
     report.add_argument("--output", type=Path, required=True)

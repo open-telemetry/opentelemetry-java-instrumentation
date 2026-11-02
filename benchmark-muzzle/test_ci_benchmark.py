@@ -305,7 +305,7 @@ class CiBenchmarkTest(unittest.TestCase):
                     ci.Comparison(SimpleNamespace(repository=root, work_dir=path))
 
     def test_preflight_checks_snapshot_and_refuses_remote_writer_credentials(self):
-        for defect in ("snapshot", "credentials", None):
+        for defect in ("snapshot", "credentials", "candidate-snapshot", "revision", "valid-candidate", None):
             with self.subTest(defect=defect), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 archive, digest = self.snapshot(root)
@@ -316,6 +316,11 @@ class CiBenchmarkTest(unittest.TestCase):
                     cache_snapshot=archive, snapshot_sha256="wrong" if defect == "snapshot" else digest,
                     baseline="before", candidate="after", partition=1, round=1,
                 )
+                if defect in ("candidate-snapshot", "revision", "valid-candidate"):
+                    args.candidate_cache_snapshot = archive
+                    args.candidate_snapshot_sha256 = "wrong" if defect == "candidate-snapshot" else digest
+                    if defect == "valid-candidate":
+                        args.candidate = args.baseline
 
                 def git(*arguments):
                     if arguments[0] == "rev-parse":
@@ -333,8 +338,13 @@ class CiBenchmarkTest(unittest.TestCase):
                     patch.object(benchmark, "run", return_value=b"openjdk 25.0.5 fixture"),
                     patch.dict(os.environ, {"DEVELOCITY_ACCESS_KEY": "fixture" if defect == "credentials" else ""}),
                 ):
-                    if defect:
-                        with self.assertRaisesRegex(ValueError, "SHA-256" if defect == "snapshot" else "writer credentials"):
+                    if defect not in (None, "valid-candidate"):
+                        message = (
+                            "SHA-256" if defect in ("snapshot", "candidate-snapshot")
+                            else "identical source revisions" if defect == "revision"
+                            else "writer credentials"
+                        )
+                        with self.assertRaisesRegex(ValueError, message):
                             ci.Comparison(args)
                     else:
                         runner = ci.Comparison(args)

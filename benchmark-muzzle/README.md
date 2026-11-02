@@ -139,6 +139,45 @@ python3 -m unittest discover -s benchmark-muzzle -v
 on each for their inputs. Measurements run on Linux, while unit tests also
 support Windows.
 
+## Dependency-cache accumulation
+
+`muzzle-dependency-cache.yml` compares identical source code with the original
+Gradle cache versus dependencies accumulated from differently seeded samples.
+Start with slice 2, the usual slowest slice, and two prior samples:
+
+```sh
+gh workflow run muzzle-dependency-cache.yml \
+  --ref my-benchmark-branch \
+  -f source-run=EARLIER_CI_BENCHMARK_RUN \
+  -f revision=REVISION_SHA \
+  -f partitions='[2]' -f warm-seeds=2 -f rounds=5
+```
+
+The source run must still retain `muzzle-ci-cache-snapshot`. Each prior sample
+gets a fresh checkout and cold Aether metadata, but retains its Gradle home
+for the next prior sample. Warmups use seeds 1730 onwards; measurements use
+seed 1729. Assertions execute in warmups as well as measurements.
+
+The final candidate snapshot replaces only `caches/modules-2` in the original
+snapshot. Compilation outputs, task caches, script caches, wrapper and
+toolchains come from the original snapshot on both sides. Baseline and control
+use the original snapshot. Candidate uses the dependency-warmed snapshot.
+Every measured command still gets its own fresh checkout and independent home,
+with live version discovery and remote task-cache writes disabled.
+
+This models retaining dependencies between main runs with
+`cache-cleanup: never`; it does not change production workflows or write to the
+shared Actions cache. The pinned setup-gradle action's
+[cleanup integration test](https://github.com/gradle/actions/blob/3f5f9adaf7d9fecd50b5935e54106014257a94e6/.github/workflows/integ-test-cache-cleanup.yml)
+confirms that default cleanup removes versions unused by the next build.
+Enabling writes alone therefore does not guarantee accumulation.
+
+The report includes the prior seeds, snapshot sizes and measured assertion
+task overlap with prior samples. That overlap is not a dependency-cache hit
+ratio. A short run does not establish long-term storage growth or retention.
+Single-slice results do not establish the maximum across all four slices;
+use `partitions='[1,2,3,4]'` for that comparison.
+
 ## Frozen-workspace comparison
 
 `benchmark.py` retains the separate tuning experiment for a cold daemon and
