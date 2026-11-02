@@ -40,9 +40,14 @@ final class MysqlHostParser {
     List<HostPort> hosts = new ArrayList<>();
     boolean firstHostProperties = false;
     for (String segment : splitHostList(authority)) {
-      String entry = stripUserInfo(segment.trim(), mysql);
-      HostPort host = entry == null ? null : parseHost(entry, mysql);
-      if (entry == null || host == null) {
+      String entry = segment.trim();
+      // MariaDB parses address properties directly, including any @ in their values.
+      HostPort host = !mysql && isAddressHost(entry) ? parseHost(entry, false) : null;
+      if (host == null) {
+        entry = stripUserInfo(entry);
+        host = parseHost(entry, mysql);
+      }
+      if (host == null) {
         logger.fine("Unable to parse a configured MySQL/MariaDB host");
         return null;
       }
@@ -55,51 +60,10 @@ final class MysqlHostParser {
     return new HostList(Collections.unmodifiableList(hosts), firstHostProperties);
   }
 
-  @Nullable
-  private static String stripUserInfo(String entry, boolean mysql) {
+  private static String stripUserInfo(String entry) {
+    // Connector/J splits each authority entry at its first raw @ before decoding properties.
     int at = entry.indexOf('@');
-    if (at < 0) {
-      return entry;
-    }
-    if (isAtInHostProperties(entry, at)) {
-      // MariaDB accepts an at sign in an ignored address property; Connector/J splits at it.
-      return !mysql && isAddressHost(entry) ? entry : null;
-    }
-    if (decodeProperty(entry.substring(0, at)) == null) {
-      return null;
-    }
-    String host = entry.substring(at + 1).trim();
-    return host.indexOf('@') >= 0 || host.startsWith("(") ? null : host;
-  }
-
-  private static boolean isAtInHostProperties(String entry, int at) {
-    int start = isAddressHost(entry) ? "address=".length() : 0;
-    while (start < at && Character.isWhitespace(entry.charAt(start))) {
-      start++;
-    }
-    if (start >= at || entry.charAt(start) != '(') {
-      return false;
-    }
-    int equals = entry.indexOf('=', start + 1);
-    Pattern keyPattern = isAddressHost(entry) ? ADDRESS_KEY_PATTERN : PROPERTY_KEY_PATTERN;
-    if (equals < 0
-        || equals >= at
-        || !keyPattern.matcher(entry.substring(start + 1, equals).trim()).matches()) {
-      return false;
-    }
-    int depth = 0;
-    for (int i = start; i < at; i++) {
-      char c = entry.charAt(i);
-      if (depth == 0 && c != '(' && !Character.isWhitespace(c)) {
-        return false;
-      }
-      if (c == '(') {
-        depth++;
-      } else if (c == ')') {
-        depth--;
-      }
-    }
-    return depth > 0;
+    return at < 0 ? entry : entry.substring(at + 1).trim();
   }
 
   private static boolean isAddressHost(String entry) {
@@ -155,12 +119,7 @@ final class MysqlHostParser {
   @Nullable
   private static HostPort parseHostProperties(String entry, boolean mysql) {
     boolean address = isAddressHost(entry);
-    if (!address
-        && (!mysql
-            || !entry.endsWith(")")
-            || !hasBalancedParentheses(entry)
-            || entry.indexOf('@') >= 0
-            || entry.indexOf('#') >= 0)) {
+    if (!address && (!mysql || !entry.endsWith(")") || !hasBalancedParentheses(entry))) {
       return null;
     }
     Map<String, String> properties = new HashMap<>();
@@ -201,17 +160,19 @@ final class MysqlHostParser {
       } else if (key.equalsIgnoreCase("port")) {
         key = "port";
       }
-      String value = equals < 0 ? "" : property.substring(equals + 1).trim();
-      value = mysql ? decodeProperty(value) : value;
-      if (value == null || (key.isEmpty() && !value.isEmpty())) {
-        return null;
-      }
       if (key.equals("host") || key.equals("port")) {
+        String value = equals < 0 ? "" : property.substring(equals + 1).trim();
+        value = mysql ? decodeProperty(value) : value;
+        if (value == null) {
+          return null;
+        }
         // Repeated endpoint keys can have case-sensitive driver precedence.
         if (properties.containsKey(key)) {
           return null;
         }
         properties.put(key, value);
+      } else if (key.isEmpty() && equals >= 0 && !property.substring(equals + 1).trim().isEmpty()) {
+        return null;
       }
       start = end + 1;
     }

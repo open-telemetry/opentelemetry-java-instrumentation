@@ -80,29 +80,26 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     int hostsStart = jdbcUrl.indexOf("://") + 3;
     int hostsEnd = indexOfAny(jdbcUrl, hostsStart, '/', '?', '#');
     hostsEnd = hostsEnd < 0 ? jdbcUrl.length() : hostsEnd;
-    // A raw @ after the authority may terminate credentials containing an unescaped /, ? or #.
-    // Reject it before parsing URL fields, even in query values; encoded %40 is unambiguous.
-    if (jdbcUrl.indexOf('@', hostsEnd) >= 0) {
-      logger.fine("Unable to determine MySQL/MariaDB host boundaries safely");
-      ctx.resolveConfiguredServerTarget(null);
-      return;
-    }
     HostList parsedHosts =
         MysqlHostParser.parseHostList(jdbcUrl.substring(hostsStart, hostsEnd), mysql);
     List<HostPort> hosts = parsedHosts == null ? null : parsedHosts.hosts();
     boolean hostProperties = parsedHosts != null && parsedHosts.firstHostProperties();
     resolveHostGroup(hosts, ctx);
-    String normalizedUrl = jdbcUrl.toLowerCase(Locale.ROOT);
-    boolean parsedUrlFields = parseDatabasePath(jdbcUrl, hostsEnd, ctx);
+    int fragmentStart = mysql ? jdbcUrl.indexOf('#', hostsEnd) : -1;
+    String pathAndQuery =
+        jdbcUrl
+            .substring(hostsEnd, fragmentStart < 0 ? jdbcUrl.length() : fragmentStart)
+            .toLowerCase(Locale.ROOT);
+    boolean parsedUrlFields = parseDatabasePath(pathAndQuery, extractSubtype(jdbcUrl) != null, ctx);
     if (hosts == null || hosts.isEmpty()) {
       if (parsedUrlFields) {
-        ctx.applyCommonParams(normalizedUrl, "?", "&");
+        ctx.applyCommonParams(pathAndQuery, "?", "&");
       }
       return;
     }
     if (parsedUrlFields && hostProperties) {
       // Explicit host properties take precedence over common URL parameters.
-      ctx.applyCommonParams(normalizedUrl, "?", "&");
+      ctx.applyCommonParams(pathAndQuery, "?", "&");
     }
     HostPort firstHost = hosts.get(0);
     ctx.host(firstHost.host());
@@ -110,7 +107,7 @@ public final class MysqlUrlParser implements JdbcUrlParser {
       ctx.port(firstHost.port());
     }
     if (parsedUrlFields && !hostProperties) {
-      ctx.applyCommonParams(normalizedUrl, "?", "&");
+      ctx.applyCommonParams(pathAndQuery, "?", "&");
     }
     if (hosts.size() == 1) {
       ctx.resolveConfiguredServerTarget(
@@ -135,9 +132,9 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     ctx.resolveConfiguredServerTarget(builder.build());
   }
 
-  private static boolean parseDatabasePath(String jdbcUrl, int hostsEnd, ParseContext ctx) {
-    String pathAndQuery = jdbcUrl.substring(hostsEnd).toLowerCase(Locale.ROOT);
-    if (extractSubtype(jdbcUrl) != null) {
+  private static boolean parseDatabasePath(
+      String pathAndQuery, boolean hasSubtype, ParseContext ctx) {
+    if (hasSubtype) {
       int queryStart = pathAndQuery.indexOf('?');
       String path = queryStart < 0 ? pathAndQuery : pathAndQuery.substring(0, queryStart);
       if (path.startsWith("/") && path.length() > 1) {

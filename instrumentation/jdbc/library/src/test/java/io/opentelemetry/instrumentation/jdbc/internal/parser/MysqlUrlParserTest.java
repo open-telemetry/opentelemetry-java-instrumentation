@@ -160,6 +160,8 @@ class MysqlUrlParserTest {
     List<String> suffixes =
         asList(
             "/db",
+            "/db?sessionVariables=email='user@example.com',sql_mode=ANSI",
+            "?sessionVariables=email='user@example.com',sql_mode=ANSI",
             "/db?sessionVariables=email='user%40example.com',sql_mode=ANSI",
             "?sessionVariables=email='user%40example.com',sql_mode=ANSI");
 
@@ -204,9 +206,6 @@ class MysqlUrlParserTest {
     List<String> authorities = new ArrayList<>();
     authorities.add(String.join(",", hosts));
     for (int i = 0; i < hosts.length; i++) {
-      if (hosts[i].startsWith("(")) {
-        continue;
-      }
       for (String userInfo :
           asList("user:example@", "(user):ex(ample)@", "user%40example:p%40ss@")) {
         String[] entries = hosts.clone();
@@ -222,84 +221,110 @@ class MysqlUrlParserTest {
   }
 
   @ParameterizedTest
-  @MethodSource("ambiguousCredentialUrls")
-  void validHostsCannotRecoverAnAmbiguousCredentialBoundary(String url) {
+  @ValueSource(
+      strings = {
+        "jdbc:mysql://user:123/a@h2:3306,h3:3306/db",
+        "jdbc:mysql://user:123?x=y@h2",
+        "jdbc:mysql://h1,(host=h2)/db?user=admin@example.com",
+        "jdbc:mysql://h1/db@tenant",
+        "jdbc:mysql://h1/db#ignored@h2",
+        "jdbc:mysql://h1/db?user=admin@example.com&password=p/a?ss@word",
+        "jdbc:mysql://h1/db?password=p%26host%3Dother%26port%3D2222"
+      })
+  void urlComponentsFollowConnectorJGrammar(String url) {
+    ConnectionUrl expected = ConnectionUrl.getConnectionUrlInstance(url, new Properties());
+    DbServerTargetBuilder target = DbServerTarget.builder(3306);
+    for (HostInfo host : expected.getHostsList()) {
+      target.addEndpoint(normalizeHost(host.getHost()), host.getPort());
+    }
+
     DbInfo info = JdbcConnectionUrlParser.parse(url, null);
 
-    assertThat(info.getConfiguredServerTarget()).isNull();
-    assertThat(info.getDbNamespace()).isNull();
+    assertThat(info.getConfiguredServerTarget()).isEqualTo(target.build());
+    assertThat(info.getDbNamespace())
+        .isEqualTo(expected.getDatabase().isEmpty() ? null : expected.getDatabase());
   }
 
-  private static Stream<Arguments> ambiguousCredentialUrls() {
-    List<String> urls = new ArrayList<>();
+  @ParameterizedTest
+  @MethodSource("credentialUrls")
+  void credentialsDoNotAffectConnectionAttributes(String url, String withoutCredentials) {
+    assertThat(ConnectionUrl.getConnectionUrlInstance(url, new Properties()).getHostsList())
+        .allSatisfy(
+            host -> {
+              assertThat(host.getUser()).isEqualTo("alice@example.com");
+              assertThat(host.getPassword()).isEqualTo("p/a?s#s@word,=(value)");
+            });
+    DbInfo info = JdbcConnectionUrlParser.parse(url, null);
+
+    assertThat(info.getConfiguredServerTarget()).isNotNull();
+    assertThat(info).isEqualTo(JdbcConnectionUrlParser.parse(withoutCredentials, null));
+  }
+
+  private static Stream<Arguments> credentialUrls() {
+    String user = "alice%40example.com";
+    String password = "p%2Fa%3Fs%23s%40word%2C%3D%28value%29";
+    String query = "?user=" + user + "&password=" + password;
+    List<Arguments> urls = new ArrayList<>();
     for (String prefix :
-        asList(
-            "jdbc:mysql://",
-            "jdbc:mysql:replication://",
-            "jdbc:mariadb://",
-            "jdbc:mariadb:sequential://")) {
-      List<String> hostForms = new ArrayList<>(asList("h1:3306", "address=(host=h1)"));
-      if (prefix.startsWith("jdbc:mysql:")) {
-        hostForms.add("(host=h1)");
-      }
-      for (String host : hostForms) {
-        for (int hostCount : asList(0, 1, 6)) {
-          for (int credentialIndex = 0; credentialIndex <= hostCount; credentialIndex++) {
-            List<String> entries = new ArrayList<>();
-            for (int i = 0; i < hostCount; i++) {
-              entries.add(host);
-            }
-            entries.add(credentialIndex, "user:123");
-            for (String suffix :
-                asList(
-                    "/a@h2:3306,h3:3306/db",
-                    "/a@h2:3306,h3:3306/db?user=admin@corp.com",
-                    "?x=y@h2",
-                    "?x=y@h2&serverName=query-host&portNumber=2222&databaseName=query-db",
-                    "?x=y@h2:3306,h3:3306/db",
-                    "?x=y@h2:3306,h3:3306",
-                    "?x=y@h2:3306,h3:invalid",
-                    "?x=y@h2:3306,",
-                    "?x=y@h2:3306,h3:3306&user=admin@corp.com",
-                    "?x=/a@h2:3306,h3:3306",
-                    "?x=y@address=(host=h2)/db",
-                    "?x=y@(host=h2,port=3306)",
-                    "?missing@h2:3306",
-                    "/db@",
-                    "/db#@",
-                    "#ignored?x=y@h2:3306,h3:3306/db",
-                    "/db?user=admin@corp.com#ignored@h2")) {
-              urls.add(prefix + String.join(",", entries) + suffix);
-            }
+        asList("jdbc:mysql://", "jdbc:mysql:loadbalance://", "jdbc:mysql:replication://")) {
+      for (int hostCount : asList(1, 2, 6)) {
+        List<String> hosts = new ArrayList<>();
+        for (int i = 1; i <= hostCount; i++) {
+          hosts.add("h" + i + ":" + i + "111");
+        }
+        String withoutCredentials = prefix + String.join(",", hosts) + "/db";
+        urls.add(
+            argumentSet(
+                withoutCredentials + query, withoutCredentials + query, withoutCredentials));
+        for (int i = 0; i < hostCount; i++) {
+          String host = "h" + (i + 1);
+          int port = (i + 1) * 1000 + 111;
+          String keyValue =
+              "(host=" + host + ",port=" + port + ",user=" + user + ",password=" + password + ")";
+          String address =
+              "address=(host="
+                  + host
+                  + ")(port="
+                  + port
+                  + ")(user="
+                  + user
+                  + ")(password="
+                  + password
+                  + ")";
+          for (String entry :
+              asList(
+                  user + ":" + password + "@" + hosts.get(i),
+                  keyValue,
+                  address,
+                  user + ":" + password + "@" + keyValue,
+                  user + ":" + password + "@" + address,
+                  user
+                      + ":"
+                      + password
+                      + "@(host="
+                      + host
+                      + ",port="
+                      + port
+                      + ",password=other@value)")) {
+            List<String> entries = new ArrayList<>(hosts);
+            entries.set(i, entry);
+            String url = prefix + String.join(",", entries) + "/db" + query;
+            urls.add(argumentSet(url, url, withoutCredentials));
           }
         }
       }
     }
-    return urls.stream().distinct().map(url -> argumentSet(url, url));
-  }
-
-  @ParameterizedTest
-  @MethodSource("ambiguousCredentialUrls")
-  void rejectedCredentialBoundariesCannotUseQueryOrDataSourceFallbacks(String url) {
-    Properties properties = new Properties();
-    properties.setProperty("serverName", "fallback");
-    properties.setProperty("portNumber", "1111");
-    assertThat(JdbcConnectionUrlParser.parse(url, properties).getConfiguredServerTarget()).isNull();
+    return urls.stream();
   }
 
   @ParameterizedTest
   @MethodSource("queryUrls")
-  void queryAtSignsRequirePercentEncoding(String url, String encodedUrl, boolean multipleHosts) {
+  void queryAtSignsDoNotChangeHostOrNamespaceParsing(String url, boolean multipleHosts) {
     DbInfo info = JdbcConnectionUrlParser.parse(url, null);
 
-    assertThat(info.getConfiguredServerTarget()).isNull();
-    assertThat(info.getDbNamespace()).isNull();
-
-    DbInfo encodedInfo = JdbcConnectionUrlParser.parse(encodedUrl, null);
-
-    assertThat(encodedInfo.getConfiguredServerTarget())
+    assertThat(info.getConfiguredServerTarget())
         .isEqualTo(DbServerTarget.create(multipleHosts ? "h1,h2" : "h1", null));
-    assertThat(encodedInfo.getDbNamespace()).isEqualTo(url.contains("/db") ? "db" : null);
+    assertThat(info.getDbNamespace()).isEqualTo(url.contains("/db") ? "db" : null);
   }
 
   private static Stream<Arguments> queryUrls() {
@@ -328,12 +353,9 @@ class MysqlUrlParserTest {
                     "?user=admin@corp.com&serverSslCert=/etc/ssl/ca.pem",
                     "?user=admin@corp.com#ignored")) {
               String url = prefix + authority + path + query;
-              urls.add(
-                  argumentSet(
-                      url,
-                      url,
-                      prefix + authority + path + query.replace("@", "%40"),
-                      multipleHosts));
+              urls.add(argumentSet(url, url, multipleHosts));
+              String encodedUrl = prefix + authority + path + query.replace("@", "%40");
+              urls.add(argumentSet(encodedUrl, encodedUrl, multipleHosts));
             }
           }
         }
@@ -358,6 +380,17 @@ class MysqlUrlParserTest {
 
     assertThat(info.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1", null));
     assertThat(info.getDbNamespace()).isEqualTo(namespace);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"jdbc:mysql://h1:1111/db", "jdbc:mysql:replication://h1:1111/db"})
+  void fragmentsDoNotProvideConnectionProperties(String url) {
+    DbInfo info =
+        JdbcConnectionUrlParser.parse(
+            url + "#ignored@h2?serverName=wrong&portNumber=2222&databaseName=wrong", null);
+
+    assertThat(info.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1", 1111));
+    assertThat(info.getDbNamespace()).isEqualTo("db");
   }
 
   @ParameterizedTest
@@ -402,7 +435,6 @@ class MysqlUrlParserTest {
         "h1:1111,address=(ignored=(host=h2))(port=2222)",
         "h1:1111,address=(host=h2)unconsumed",
         "h1:1111,(host=h2)unconsumed",
-        "h1:1111,(host=h2,other=bad%encoding)",
         "h1:1111,[(host=h2),(host=h3)]",
         "h1,h2,h3,h4,h5,(host=h6,port=65536)",
         "h1,h2,h3,h4,h5,user:example@other@h6",
@@ -442,28 +474,22 @@ class MysqlUrlParserTest {
         "(host=h1,=value)",
         "(host=h1,$key=value)",
         "(host=h1,\u2003key=value)",
-        "(host=h1,other=bad%encoding)",
         "(%host=h1)",
         "(host=h1%20)",
         "(host=%09h1)",
         "(host=h1%29%28port%3d1111)",
         "(host=fe80::1%25eth0)",
         "(host=h1,other=value@h2)",
-        "(host=h1,other=value@h2",
-        "h1,address=(host=h2)(user=other@h3",
-        "h1,(host=h2,other=value@h3",
-        "(host=h1,other=value#h2)",
-        "user:example@(host=h1)",
-        "user:ex(ample)@(host=h1)",
         "[(host=h1),(host=h2)]",
         "(host=h1),address=(port=1111)"
       })
-  void unsafeEntriesInvalidateTheWholeTargetWithoutDiscardingTheDatabase(String authority) {
+  void unrepresentableEntriesInvalidateTheWholeTargetWithoutDiscardingTheDatabase(
+      String authority) {
     assertThat(MysqlHostParser.parseHostList(authority, true)).isNull();
     DbInfo info = JdbcConnectionUrlParser.parse("jdbc:mysql://" + authority + "/db", null);
 
     assertThat(info.getConfiguredServerTarget()).isNull();
-    assertThat(info.getDbNamespace()).isEqualTo(authority.indexOf('#') < 0 ? "db" : null);
+    assertThat(info.getDbNamespace()).isEqualTo("db");
   }
 
   @Test
