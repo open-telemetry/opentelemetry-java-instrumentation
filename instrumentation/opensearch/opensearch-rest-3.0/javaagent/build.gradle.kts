@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -30,10 +31,4 @@ dependencies {
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent"))
 
   testImplementation(project(":instrumentation:opensearch:opensearch-rest-common-1.0:testing"))
-}
-
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
 }

@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -21,10 +22,4 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:mongo:mongo-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:mongo:mongo-4.0:javaagent"))
-}
-
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
 }

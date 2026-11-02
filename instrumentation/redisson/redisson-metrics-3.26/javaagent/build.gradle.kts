@@ -1,6 +1,7 @@
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -20,10 +21,4 @@ dependencies {
   testImplementation(project(":instrumentation:redisson:redisson-metrics-common-2.3:testing"))
   testInstrumentation(project(":instrumentation:redisson:redisson-metrics-2.3:javaagent"))
   testInstrumentation(project(":instrumentation:redisson:redisson-metrics-3.18:javaagent"))
-}
-
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
 }

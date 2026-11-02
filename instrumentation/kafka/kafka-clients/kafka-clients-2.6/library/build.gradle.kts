@@ -3,6 +3,7 @@ import org.gradle.api.plugins.jvm.JvmTestSuite
 
 plugins {
   id("otel.library-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 dependencies {
@@ -22,7 +23,6 @@ dependencies {
 testing.suites.named<JvmTestSuite>("test") {
   executions {
     configureEach {
-      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
     }
 

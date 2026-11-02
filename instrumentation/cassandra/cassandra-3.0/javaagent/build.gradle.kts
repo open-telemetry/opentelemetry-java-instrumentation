@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -43,7 +44,6 @@ configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.g
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
   if (otelProps.denyUnsafe) {
