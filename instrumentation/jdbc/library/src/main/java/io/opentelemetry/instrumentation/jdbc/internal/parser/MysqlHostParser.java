@@ -16,10 +16,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -122,7 +120,8 @@ final class MysqlHostParser {
     if (!address && (!mysql || !entry.endsWith(")") || !hasBalancedParentheses(entry))) {
       return null;
     }
-    Map<String, String> properties = new HashMap<>();
+    String host = null;
+    String port = null;
     int limit = address ? entry.length() : entry.length() - 1;
     int start = address ? "address=".length() : 1;
     Pattern keyPattern = address ? ADDRESS_KEY_PATTERN : PROPERTY_KEY_PATTERN;
@@ -155,29 +154,25 @@ final class MysqlHostParser {
       if (key == null) {
         return null;
       }
-      if (key.equalsIgnoreCase("host")) {
-        key = "host";
-      } else if (key.equalsIgnoreCase("port")) {
-        key = "port";
-      }
-      if (key.equals("host") || key.equals("port")) {
+      boolean hostKey = key.equalsIgnoreCase("host");
+      boolean portKey = key.equalsIgnoreCase("port");
+      if (hostKey || portKey) {
         String value = equals < 0 ? "" : property.substring(equals + 1).trim();
         value = mysql ? decodeProperty(value) : value;
-        if (value == null) {
-          return null;
-        }
         // Repeated endpoint keys can have case-sensitive driver precedence.
-        if (properties.containsKey(key)) {
+        if (value == null || (hostKey && host != null) || (portKey && port != null)) {
           return null;
         }
-        properties.put(key, value);
+        if (hostKey) {
+          host = value;
+        } else {
+          port = value;
+        }
       } else if (key.isEmpty() && equals >= 0 && !property.substring(equals + 1).trim().isEmpty()) {
         return null;
       }
       start = end + 1;
     }
-    String host = properties.get("host");
-    String port = properties.get("port");
     port = port == null || port.isEmpty() ? null : port;
     if (host == null
         || !host.equals(host.trim())

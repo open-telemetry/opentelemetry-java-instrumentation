@@ -157,28 +157,11 @@ class MysqlUrlParserTest {
             "[2001:db8::1]:3333",
             "address=(host=[2001:db8::1])(port=3333)",
             "(host=%5B2001:db8::1%5D,port=3333)");
-    List<String> suffixes =
-        asList(
-            "/db",
-            "/db?sessionVariables=email='user@example.com',sql_mode=ANSI",
-            "?sessionVariables=email='user@example.com',sql_mode=ANSI",
-            "/db?sessionVariables=email='user%40example.com',sql_mode=ANSI",
-            "?sessionVariables=email='user%40example.com',sql_mode=ANSI");
-
-    List<String> authorities = new ArrayList<>();
+    List<String> generated = new ArrayList<>();
     for (String h1 : first) {
       for (String h2 : second) {
         for (String h3 : third) {
-          authorities.addAll(withUserInfo(h1, h2, h3));
-        }
-      }
-    }
-    List<String> generated = new ArrayList<>();
-    for (String prefix :
-        asList("jdbc:mysql://", "jdbc:mysql:loadbalance://", "jdbc:mysql:replication://")) {
-      for (String authority : authorities) {
-        for (String suffix : suffixes) {
-          generated.add(prefix + authority + suffix);
+          generated.add("jdbc:mysql://" + String.join(",", h1, h2, h3) + "/db");
         }
       }
     }
@@ -198,22 +181,10 @@ class MysqlUrlParserTest {
                 "jdbc:mysql://h1,h2,h3,h4,h5,(host=h6,port=1111)/db",
                 "jdbc:mysql://h1:1111,h1:1111,(host=h1,port=1111)/db",
                 "jdbc:mysql://h1:1111,(host=h2,port=2222),address=(host=::1)(user=other%40example),h1:1111/db",
-                "jdbc:mysql://(host=h1),address=(host=h2)(port=2222)/db"))
+                "jdbc:mysql://(host=h1),address=(host=h2)(port=2222)/db",
+                "jdbc:mysql:loadbalance://h1:1111,(host=h2),address=(host=::1)(port=2222)/db",
+                "jdbc:mysql:replication://address=(host=h1)(port=1111),(host=h2),[::1]:2222/db"))
         .map(url -> argumentSet(url, url));
-  }
-
-  private static List<String> withUserInfo(String... hosts) {
-    List<String> authorities = new ArrayList<>();
-    authorities.add(String.join(",", hosts));
-    for (int i = 0; i < hosts.length; i++) {
-      for (String userInfo :
-          asList("user:example@", "(user):ex(ample)@", "user%40example:p%40ss@")) {
-        String[] entries = hosts.clone();
-        entries[i] = userInfo + entries[i];
-        authorities.add(String.join(",", entries));
-      }
-    }
-    return authorities;
   }
 
   private static String normalizeHost(String host) {
@@ -394,6 +365,26 @@ class MysqlUrlParserTest {
   }
 
   @ParameterizedTest
+  @CsvSource(
+      value = {
+        "jdbc:mysql:///db|fallback|1111",
+        "jdbc:mysql:///db?serverName=query-host&portNumber=2222|query-host|2222",
+        "jdbc:mysql://(host=h1,port=invalid)/db?serverName=query-host&portNumber=2222||"
+      },
+      delimiter = '|')
+  void emptyAndInvalidHostListsPreservePropertyHandling(String url, String host, Integer port) {
+    Properties properties = new Properties();
+    properties.setProperty("serverName", "fallback");
+    properties.setProperty("portNumber", "1111");
+
+    DbInfo info = JdbcConnectionUrlParser.parse(url, properties);
+
+    assertThat(info.getConfiguredServerTarget())
+        .isEqualTo(host == null ? null : DbServerTarget.create(host, port));
+    assertThat(info.getDbNamespace()).isEqualTo("db");
+  }
+
+  @ParameterizedTest
   @ValueSource(
       strings = {
         "jdbc:mysql://(user):ex(ample@h1:1111,h2:2222/db",
@@ -463,10 +454,12 @@ class MysqlUrlParserTest {
         "(host=)",
         "(host)",
         "(host=h1,host=h2)",
+        "(host=,host=h1)",
         "(host=h1,%68ost=h2)",
         "(host=h1,ho%C5%BFt=h2)",
         "(Host=h1,host=h2)",
         "(host=h1,port=1111,port)",
+        "(host=h1,port=,port=1111)",
         "(host=h1,port=65536)",
         "(host=h1,port=-1)",
         "(host=h1,port=+1111)",

@@ -91,25 +91,21 @@ public final class MysqlUrlParser implements JdbcUrlParser {
             .substring(hostsEnd, fragmentStart < 0 ? jdbcUrl.length() : fragmentStart)
             .toLowerCase(Locale.ROOT);
     boolean parsedUrlFields = parseDatabasePath(pathAndQuery, extractSubtype(jdbcUrl) != null, ctx);
-    if (hosts == null || hosts.isEmpty()) {
-      if (parsedUrlFields) {
-        ctx.applyCommonParams(pathAndQuery, "?", "&");
-      }
-      return;
-    }
     if (parsedUrlFields && hostProperties) {
       // Explicit host properties take precedence over common URL parameters.
       ctx.applyCommonParams(pathAndQuery, "?", "&");
     }
-    HostPort firstHost = hosts.get(0);
-    ctx.host(firstHost.host());
-    if (firstHost.port() != null) {
-      ctx.port(firstHost.port());
+    if (hosts != null && !hosts.isEmpty()) {
+      HostPort firstHost = hosts.get(0);
+      ctx.host(firstHost.host());
+      if (firstHost.port() != null) {
+        ctx.port(firstHost.port());
+      }
     }
     if (parsedUrlFields && !hostProperties) {
       ctx.applyCommonParams(pathAndQuery, "?", "&");
     }
-    if (hosts.size() == 1) {
+    if (hosts != null && hosts.size() == 1) {
       ctx.resolveConfiguredServerTarget(
           DbServerTarget.builder(DEFAULT_PORT)
               .addEndpoint(ctx.host(), ctx.port() == null ? -1 : ctx.port())
