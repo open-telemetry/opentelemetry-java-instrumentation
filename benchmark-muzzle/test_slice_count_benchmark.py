@@ -97,21 +97,14 @@ class SliceCountBenchmarkTest(unittest.TestCase):
             )
             self.assertEqual([command["partition"] for command in slices.plan(1, 3)], [3, 3, 3, 7])
 
-    def test_missing_coverage_changed_caches_or_changed_commands_invalidate_results(self):
-        for defect in ("workload", "cache", "command", "identity"):
+    def test_missing_coverage_or_changed_commands_invalidate_results(self):
+        for defect in ("workload", "command", "identity"):
             with self.subTest(defect=defect), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 folder = self.fixture(root, 1, 1, dict.fromkeys(slices.ROLES, 100))
                 if defect == "workload":
                     path = next((folder / "candidate-b/candidate/assertions").glob("*.txt"))
                     path.write_text(path.read_text().replace("sha256", "different"))
-                elif defect == "cache":
-                    path = folder / "candidate-b/samples.json"
-                    value = json.loads(path.read_text())
-                    value["samples"][0]["task_outcomes"][":commonCompile"] = "EXECUTED"
-                    ci.write_json(path, value)
-                    log = folder / "candidate-b/candidate/console.log"
-                    log.write_text(log.read_text().replace(":commonCompile FROM-CACHE", ":commonCompile"))
                 elif defect == "command":
                     ci.write_json(folder / "candidate-b/candidate/command.json", [":instrumentation:muzzle1", "-PmuzzleSlices=4"])
                 else:
@@ -121,6 +114,37 @@ class SliceCountBenchmarkTest(unittest.TestCase):
                     ci.write_json(path, value)
                 with self.assertRaises(ValueError):
                     slices.validate_group(folder)
+
+    def test_cache_variation_is_explicit_and_sensitivity_does_not_hide_a_cache_advantage(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            folder = self.fixture(root, 1, 2, {
+                "baseline": 10000, "control": 10010, "candidate-a": 8000, "candidate-b": 7000,
+            })
+            for role in slices.ROLES:
+                cached = role.startswith("candidate")
+                path = folder / role / "samples.json"
+                raw = json.loads(path.read_text())
+                sample = raw["samples"][0]
+                sample["task_outcomes"][":commonCompile"] = "FROM-CACHE" if cached else "EXECUTED"
+                ci.write_json(path, raw)
+                log = folder / role / sample["label"] / "console.log"
+                if not cached:
+                    log.write_text(log.read_text().replace(":commonCompile FROM-CACHE", ":commonCompile"))
+                profile = folder / role / sample["label"] / "profile/profile-fixture.html"
+                profile.write_text(profile.read_text() + (
+                    "<h2>Task Execution</h2><table><tr><td>:commonCompile</td>"
+                    f"<td>{'0.001s' if cached else '2s'}</td><td></td></tr></table>"
+                ))
+            (folder / "complete.json").unlink()
+            args = SimpleNamespace(inputs=root, output=root / "summary", rounds=1, partitions=[2])
+            slices.aggregate(args)
+            result = json.loads((args.output / "results.json").read_text())
+            self.assertEqual(result["maximum_slice_paired"]["candidate"]["delta_ms"]["median"], -2000)
+            self.assertEqual(result["cache_sensitivity"]["candidate_paired"]["delta_ms"]["median"], 1)
+            self.assertTrue(result["cache_sensitivity"]["fully_profiled"])
+            self.assertEqual(len(result["groups"][0]["cache"]["variations"]), 1)
+            self.assertIn("Original group-validation markers", (args.output / "summary.md").read_text())
 
     def test_single_artifact_report_accepts_the_actions_flattened_layout(self):
         with tempfile.TemporaryDirectory() as directory:

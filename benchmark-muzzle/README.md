@@ -227,9 +227,15 @@ order in even rounds. Five rounds use twenty jobs and eighty workload
 commands, not eighty jobs.
 
 Reports reject changed dependency records, overlapping or missing checks,
-changed metadata coverage, and different task-cache outcomes. Aggregate
-slice tasks themselves are excluded from task-outcome equality because
+changed metadata coverage, and different task sets. Aggregate
+slice tasks themselves are excluded from task-set equality because
 the layouts intentionally contain different aggregate task names.
+Live remote-cache reads can miss even for the identical control. The report
+records every varying task outcome and its observed profile duration.
+An adverse sensitivity adds those task durations to candidate commands and
+removes them from baseline commands. This is diagnostic, not a formal causal
+bound; unprofiled varying tasks make the sensitivity incomplete. Compare
+the raw effect, identical control and cache sensitivity before claiming a win.
 Each round compares the maximum of four baseline commands with the maximum
 of eight candidate commands. This is not an observed Actions fan-out
 completion time or total PR time.

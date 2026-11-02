@@ -71,12 +71,15 @@ def measure(args):
 
 def validate_group(directory):
     identity = json.loads((directory / "identity.json").read_text(encoding="utf-8"))
+    if identity["experiment"] != "slice-count":
+        raise ValueError("The group is not a slice-count experiment")
     expected_plan = plan(identity["round"], identity["partition"])
     benchmark.require_equal(expected_plan, identity["plan"], "Slice-count command plan")
     shared = None
     manifests = {}
     samples = {}
     discoveries = {}
+    task_durations = {}
     for command in expected_plan:
         role = command["role"]
         report = directory / role
@@ -109,6 +112,13 @@ def validate_group(directory):
             raise ValueError("The recorded command does not select the expected slice")
         benchmark.require_equal(sample["task_outcomes"], ci.validate_build(log, actual), "Recorded task outcomes")
         ci.validate_diagnostics(output, sample)
+        profile = list((output / "profile").glob("profile-*.html"))[0]
+        parser = ci.ProfileParser()
+        parser.feed(profile.read_text(encoding="utf-8"))
+        task_durations[role] = {
+            row[0]: ci.duration_ms(row[1]) for row in parser.tables["Task Execution"]
+            if row[0] in sample["task_outcomes"]
+        }
         manifests[role] = actual
         samples[role] = sample
         discoveries[role] = sample["discovery"]["projects"]
@@ -119,22 +129,39 @@ def validate_group(directory):
         manifests["baseline"], manifests["candidate-a"] | manifests["candidate-b"],
         "Combined eight-slice compatibility workload",
     )
-    benchmark.require_equal(samples["baseline"]["task_outcomes"], samples["control"]["task_outcomes"], "Four-slice task-cache control")
-    combined_tasks = dict(samples["candidate-a"]["task_outcomes"])
-    for task, outcome in samples["candidate-b"]["task_outcomes"].items():
-        if task in combined_tasks and combined_tasks[task] != outcome:
-            raise ValueError("Shared eight-slice tasks have different cache outcomes")
-        combined_tasks[task] = outcome
     benchmark.require_equal(
-        {task: outcome for task, outcome in samples["baseline"]["task_outcomes"].items() if not re.fullmatch(r":instrumentation:muzzle[1-8]", task)},
-        {task: outcome for task, outcome in combined_tasks.items() if not re.fullmatch(r":instrumentation:muzzle[1-8]", task)},
-        "Combined eight-slice task-cache outcomes",
+        set(samples["baseline"]["task_outcomes"]), set(samples["control"]["task_outcomes"]),
+        "Four-slice task-set control",
+    )
+    combined_tasks = samples["candidate-a"]["task_outcomes"] | samples["candidate-b"]["task_outcomes"]
+    benchmark.require_equal(
+        {task for task in samples["baseline"]["task_outcomes"] if not re.fullmatch(r":instrumentation:muzzle[1-8]", task)},
+        {task for task in combined_tasks if not re.fullmatch(r":instrumentation:muzzle[1-8]", task)},
+        "Combined eight-slice task coverage",
     )
     benchmark.require_equal(discoveries["baseline"], discoveries["control"], "Four-slice discovery control")
     if discoveries["candidate-a"].keys() & discoveries["candidate-b"].keys():
         raise ValueError("Eight-slice discovery projects overlap")
     benchmark.require_equal(discoveries["baseline"], discoveries["candidate-a"] | discoveries["candidate-b"], "Combined discovery coverage")
-    return identity, shared, manifests, samples
+    variations = []
+    affected_ms = dict.fromkeys(ROLES, 0)
+    unprofiled = []
+    tasks = set().union(*(sample["task_outcomes"] for sample in samples.values()))
+    for task in sorted(tasks):
+        outcomes = {role: sample["task_outcomes"][task] for role, sample in samples.items() if task in sample["task_outcomes"]}
+        if len(set(outcomes.values())) <= 1:
+            continue
+        durations = {}
+        for role in outcomes:
+            duration = task_durations[role].get(task)
+            durations[role] = duration
+            if duration is None:
+                unprofiled.append({"role": role, "task": task})
+            else:
+                affected_ms[role] += duration
+        variations.append({"task": task, "outcomes": outcomes, "profile_ms": durations})
+    cache = {"variations": variations, "affected_task_duration_sum_ms": affected_ms, "unprofiled": unprofiled}
+    return identity, shared, manifests, samples, cache
 
 
 def aggregate(args):
@@ -142,16 +169,16 @@ def aggregate(args):
     reference = {}
     conditions = None
     groups = []
+    sensitivity = []
     for number in range(1, args.rounds + 1):
         values = {label: [] for label in ci.LABELS}
+        adjusted = {label: [] for label in ci.LABELS}
         for partition in args.partitions:
             directory = ci.artifact_path(
                 args.inputs, f"muzzle-slices-{number}-{partition}", "identity.json",
                 single=args.rounds == 1 and len(args.partitions) == 1,
             ).parent
-            if not json.loads((directory / "complete.json").read_text(encoding="utf-8"))["complete"]:
-                raise ValueError("Incomplete slice-count group")
-            identity, shared, manifests, samples = validate_group(directory)
+            identity, shared, manifests, samples, cache = validate_group(directory)
             if identity["round"] != number or identity["partition"] != partition:
                 raise ValueError("Misidentified slice-count group")
             common = {key: value for key, value in shared.items() if key != "round"}
@@ -164,9 +191,25 @@ def aggregate(args):
             values["baseline"].append(samples["baseline"]["command_ms"])
             values["control"].append(samples["control"]["command_ms"])
             values["candidate"].extend(samples[role]["command_ms"] for role in ("candidate-a", "candidate-b"))
-            groups.append({"round": number, "partition": partition, "samples": samples})
+            adjusted["baseline"].append(max(1, samples["baseline"]["command_ms"] - cache["affected_task_duration_sum_ms"]["baseline"]))
+            adjusted["control"].append(max(1, samples["control"]["command_ms"] - cache["affected_task_duration_sum_ms"]["control"]))
+            adjusted["candidate"].extend(
+                samples[role]["command_ms"] + cache["affected_task_duration_sum_ms"][role]
+                for role in ("candidate-a", "candidate-b")
+            )
+            marker = directory / "complete.json"
+            original_validation = (
+                "passed" if marker.is_file() and json.loads(marker.read_text(encoding="utf-8"))["complete"]
+                else "complete commands revalidated; original group marker unavailable"
+            )
+            groups.append({
+                "round": number, "partition": partition, "samples": samples,
+                "cache": cache, "original_validation": original_validation,
+            })
         row = [{"label": label, "command_ms": max(durations)} for label, durations in values.items()]
         maxima.append({"round": number, "samples": row, "paired": ci.paired_values(row, "command_ms")})
+        adjusted_row = [{"label": label, "command_ms": max(durations)} for label, durations in adjusted.items()]
+        sensitivity.append({"round": number, "samples": adjusted_row, "paired": ci.paired_values(adjusted_row, "command_ms")})
     args.output.mkdir(parents=True, exist_ok=False)
     result = {
         "complete": True, "conditions": conditions, "rounds": args.rounds,
@@ -176,6 +219,19 @@ def aggregate(args):
                 field: ci.spread([row["paired"][label][field] for row in maxima])
                 for field in ("delta_ms", "percent")
             } for label in ("candidate", "control")
+        },
+        "cache_sensitivity": {
+            "fully_profiled": all(not group["cache"]["unprofiled"] for group in groups),
+            "maximum_slice_rounds": sensitivity,
+            "candidate_paired": {
+                field: ci.spread([row["paired"]["candidate"][field] for row in sensitivity])
+                for field in ("delta_ms", "percent")
+            },
+            "interpretation": (
+                "Adverse sensitivity adds all recorded durations of cache-varying tasks to candidate commands "
+                "and removes them from baseline commands. This intentionally penalizes candidate; it is not "
+                "a formal causal bound on cache/network effects. Unprofiled varying tasks leave this analysis incomplete."
+            ),
         },
     }
     ci.write_json(args.output / "results.json", result)
@@ -190,6 +246,18 @@ def aggregate(args):
         "The primary estimator takes the maximum of four baseline or eight candidate commands "
         "within each round. It is not observed Actions fan-out completion or whole-PR wall time. "
         "Setup and cache transfer/extraction costs are excluded from this command metric.", "",
+        "Live remote-cache reads can miss even for the identical control. Task sets and compatibility "
+        "records must match, but cache outcomes are recorded as variation, not assumed constant.", "",
+        "## Cache-read variation", "",
+        "| Round | Group | Tasks with varying outcomes | Unprofiled task instances |",
+        "| --- | ---: | ---: | ---: |",
+        *[
+            f"| {group['round']} | {group['partition']} | {len(group['cache']['variations'])} "
+            f"| {len(group['cache']['unprofiled'])} |" for group in groups
+        ],
+        "",
+        result["cache_sensitivity"]["interpretation"], "",
+        "## Maximum command time", "",
         "| Round | Four-slice maximum | Identical control | Eight-slice maximum |",
         "| --- | ---: | ---: | ---: |",
     ]
@@ -199,6 +267,20 @@ def aggregate(args):
     for label in ("candidate", "control"):
         paired = result["maximum_slice_paired"][label]
         lines += ["", f"{label.capitalize()} median paired change: {paired['delta_ms']['median'] / 1000:+.2f}s, {paired['percent']['median']:+.2f}%."]
+    cache_result = result["cache_sensitivity"]
+    lines += [
+        "", f"Adverse cache-task sensitivity: {cache_result['candidate_paired']['delta_ms']['median'] / 1000:+.2f}s, "
+        f"{cache_result['candidate_paired']['percent']['median']:+.2f}%. "
+        f"All varying task durations available: {cache_result['fully_profiled']}.",
+    ]
+    revalidated = sum(group["original_validation"] != "passed" for group in groups)
+    if revalidated:
+        lines += [
+            "", f"Original group-validation markers were unavailable for {revalidated} groups. "
+            "This report revalidated every complete command, source identity, profile and full "
+            "compatibility record under the documented cache-variation analysis. "
+            "The original workflow failures remain part of the evidence.",
+        ]
     lines += [
         "", "Eight slices use more runners and repeat startup, build configuration and shared prerequisites. "
         "This experiment does not increase persistent cache storage or reduce tested versions. "
