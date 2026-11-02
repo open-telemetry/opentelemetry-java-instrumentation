@@ -24,7 +24,10 @@ final class AgentContextWrapper implements application.io.opentelemetry.context.
               "application.io.opentelemetry.api.trace.SpanContextKey",
               "io.opentelemetry.api.trace.SpanContextKey",
               Bridging::toApplication,
-              Bridging::toAgentOrNull));
+              Bridging::toAgentOrNull,
+              // Span.fromContext() then returns the span that was stored, not a new wrapper
+              // that has to convert its SpanContext again
+              /* keepApplicationValue= */ true));
     } catch (Throwable ignored) {
       // reflection error; in practice should never happen, we can ignore it
     }
