@@ -212,6 +212,9 @@ Those commands retain the exact assertion/dependency records and sample
 free disk space once per second during Gradle execution.
 Their runner image is `ubuntu-latest`; do not treat comparisons with the
 ordinary Ubuntu 24.04 profiles as paired Gradle timing evidence.
+`candidate-mode=disk-preparation-control` with `profile-only=true` runs
+unconditional cleanup on that same production image for a matched
+functional and task-cache control.
 
 ## Dependency-cache accumulation
 

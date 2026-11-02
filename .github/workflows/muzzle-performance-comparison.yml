@@ -44,6 +44,7 @@ on:
           - configuration-cache-off
           - http-connection-ttl
           - disk-preparation
+          - disk-preparation-control
         default: standard
 
 permissions:

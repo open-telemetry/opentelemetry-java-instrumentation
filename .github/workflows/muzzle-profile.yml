@@ -38,7 +38,7 @@ jobs:
           python3 -m unittest discover -s benchmark-muzzle -q
           python3 - <<'PY'
           import json, os
-          if os.environ["CANDIDATE_MODE"] not in ("standard", "configuration-cache-off", "http-connection-ttl", "disk-preparation"):
+          if os.environ["CANDIDATE_MODE"] not in ("standard", "configuration-cache-off", "http-connection-ttl", "disk-preparation", "disk-preparation-control"):
               raise ValueError("Invalid candidate mode")
           partitions = json.loads(os.environ["PARTITIONS"])
           if (not isinstance(partitions, list) or not partitions
@@ -51,7 +51,7 @@ jobs:
 
   profile:
     needs: validate
-    runs-on: ${{ inputs.candidate-mode == 'disk-preparation' && 'ubuntu-latest' || 'ubuntu-24.04' }}
+    runs-on: ${{ startsWith(inputs.candidate-mode, 'disk-preparation') && 'ubuntu-latest' || 'ubuntu-24.04' }}
     timeout-minutes: 120
     strategy:
       fail-fast: false
