@@ -495,8 +495,10 @@ def aggregate(root, destination, rounds, partitions):
         "# Fresh-checkout Muzzle comparison", "",
         f"Baseline `{shared['revisions']['baseline']}`; candidate `{shared['revisions']['candidate']}`.",
         "",
-        "Fresh checkouts and independent Gradle homes restored from one immutable snapshot. "
-        "Live Aether metadata, online dependencies, read-only remote cache, and no assertion caching.",
+        "Fresh checkouts and independent Gradle homes restored from "
+        + ("condition-specific immutable snapshots. " if shared.get("experiment") == "dependency-cache"
+           else "one immutable snapshot. ")
+        + "Live Aether metadata, online dependencies, read-only remote cache, and no assertion caching.",
         "",
         "The primary metric is the maximum Gradle command duration across slices in each round. "
         "It is not the observed Actions fan-out completion time or total PR time. "

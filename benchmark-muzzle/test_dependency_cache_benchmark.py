@@ -224,6 +224,7 @@ class DependencyCacheTest(unittest.TestCase):
             result = json.loads((args.output / "results.json").read_text())
             self.assertEqual(result["maximum_slice_paired"]["candidate"]["delta_ms"]["median"], -50)
             self.assertIn("cache-cleanup: never", (args.output / "summary.md").read_text())
+            self.assertIn("condition-specific immutable snapshots", (args.output / "summary.md").read_text())
             self.assertEqual(result["cache_warming"]["1"]["warm_seeds"], [1730, 1731])
 
 
