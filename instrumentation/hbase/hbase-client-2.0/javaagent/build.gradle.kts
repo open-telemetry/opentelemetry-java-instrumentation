@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.testcontainers-testing")
@@ -57,24 +60,24 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("*HbaseClient20Test.testGetTimeout")
-    }
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
-  }
-
   check {
-    dependsOn(testing.suites, testExceptionSignalLogs)
+    dependsOn(testing.suites)
   }
 
   if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
+    }
+  }
+}
+
+testing.suites {
+  executions("test") {
+    register("ExceptionSignalLogs") {
+      filter {
+        includeTestsMatching("*HbaseClient20Test.testGetTimeout")
+      }
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
   }
 }
