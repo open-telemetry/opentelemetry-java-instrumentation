@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.executions
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -83,6 +84,11 @@ kotlin {
 testing {
   suites {
     register<JvmTestSuite>("version13Test") {
+      targets.configureEach {
+        testTask.configure {
+          jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
+        }
+      }
       dependencies {
         implementation("io.opentelemetry:opentelemetry-extension-kotlin")
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -96,27 +102,24 @@ testing {
         implementation(project(":instrumentation-annotations"))
       }
     }
+
+    executions("test") {
+      configureDefault {
+        jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
+      }
+      register("Disabled") {
+        filter { includeTestsMatching("*DefaultEnablementTest") }
+      }
+    }
   }
 }
 
 tasks {
-  withType<Test>().configureEach {
-    if (name != "testDisabled") {
-      jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
-    }
-  }
-
   named("byteBuddyKotlin") {
     enabled = false
   }
 
-  val testDisabled = register<Test>("testDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter { includeTestsMatching("*DefaultEnablementTest") }
-  }
-
   check {
-    dependsOn(testing.suites, testDisabled)
+    dependsOn(testing.suites)
   }
 }

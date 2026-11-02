@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -55,6 +58,16 @@ testing {
         implementation("org.springframework.amqp:spring-rabbit:2.0.1.RELEASE")
       }
     }
+
+    executions("test") {
+      register("SpringDisabled") {
+        filter {
+          includeTestsMatching("*SpringRabbitRegistrationTest")
+          includeTestsMatching("*SpringRabbitTemplateTest")
+        }
+        telemetryConfig("otel.instrumentation.spring-rabbit.enabled", "false")
+      }
+    }
   }
 }
 
@@ -68,23 +81,8 @@ tasks {
     }
   }
 
-  val testSpringDisabled = register<Test>("testSpringDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*SpringRabbitRegistrationTest")
-      includeTestsMatching("*SpringRabbitTemplateTest")
-    }
-    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
-
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.spring-rabbit.enabled=false",
-    )
-  }
-
   check {
-    dependsOn(testing.suites, testSpringDisabled)
+    dependsOn(testing.suites)
   }
 }
 

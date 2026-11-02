@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-testing")
 }
@@ -22,38 +25,27 @@ dependencies {
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+") // see servlet-5.0 module
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  }
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+}
 
-  val testRequestParameterCapture = register<Test>("testRequestParameterCapture") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+testing {
+  suites {
+    executions("test") {
+      register("RequestParameterCapture") {
+        telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.included", "test-*")
+        telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.excluded", "test-secret")
+      }
 
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.excluded=test-secret")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.servlet.experimental.request-parameters.included=test-*," +
-        "otel.instrumentation.servlet.experimental.request-parameters.excluded=test-secret",
-    )
-  }
-
-  val testUserNameCapture = register<Test>("testUserNameCapture") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*Servlet3UserNameTest.capturesUserNameFromPrincipal")
+      register("UserNameCapture") {
+        filter {
+          includeTestsMatching("*Servlet3UserNameTest.capturesUserNameFromPrincipal")
+        }
+        telemetryConfig("otel.instrumentation.common.user.name.enabled", "true")
+      }
     }
-    jvmArgs("-Dotel.instrumentation.common.user.name.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.user.name.enabled=true")
-  }
-
-  check {
-    dependsOn(testRequestParameterCapture, testUserNameCapture)
   }
 }
 

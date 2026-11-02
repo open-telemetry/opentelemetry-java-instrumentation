@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -102,6 +103,27 @@ testing {
         implementation(sourceSets["test"].output)
       }
     }
+
+    executions("test") {
+      // this does not apply to testReceiveSpansDisabled
+      configureDefault {
+        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+      }
+
+      register("JmsDisabled") {
+        filter {
+          includeTestsMatching(
+            "*.receivingMessageInSpringListenerGeneratesSpansWithJmsDisabled",
+          )
+        }
+        telemetryConfig("otel.instrumentation.jms.enabled", "false")
+        // receive telemetry is enabled here because the jms instrumentation that would create the
+        // receive operation is disabled, so the process operation owns the messaging telemetry
+        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+
+        systemProperty("testJmsDisabled", "true")
+      }
+    }
   }
 }
 
@@ -112,37 +134,7 @@ configurations {
 }
 
 tasks {
-  // this does not apply to testReceiveSpansDisabled
-  test {
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-    )
-  }
-
-  val testJmsDisabled = register<Test>("testJmsDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching(
-        "*.receivingMessageInSpringListenerGeneratesSpansWithJmsDisabled",
-      )
-    }
-    jvmArgs("-Dotel.instrumentation.jms.enabled=false")
-    // receive telemetry is enabled here because the jms instrumentation that would create the
-    // receive operation is disabled, so the process operation owns the messaging telemetry
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-
-    systemProperty("testJmsDisabled", "true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.jms.enabled=false," +
-        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-    )
-  }
-
   check {
-    dependsOn(testing.suites, testJmsDisabled)
+    dependsOn(testing.suites)
   }
 }
