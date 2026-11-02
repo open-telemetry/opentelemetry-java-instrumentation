@@ -11,11 +11,7 @@ import static java.util.logging.Level.FINE;
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import io.opentelemetry.javaagent.bootstrap.servlet.SnippetInjectingResponseWrapper;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.snippet.SnippetInjectingPrintWriter;
-import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5ResponseInjectionState;
-import jakarta.servlet.DispatcherType;
 import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.ServletResponse;
-import jakarta.servlet.ServletResponseWrapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
@@ -42,15 +38,19 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
 
   public static final String FAKE_SNIPPET_HEADER = "FAKE_SNIPPET_HEADER";
 
-  private static final String STATE_ATTRIBUTE =
-      Servlet5SnippetInjectingResponseWrapper.class.getName() + ".state";
+  private static final int UNSET = -1;
+  private static final String REQUEST_LIFETIME_ATTRIBUTE =
+      Servlet5SnippetInjectingResponseWrapper.class.getName() + ".request";
+  private static final String STREAM_STATE_ATTRIBUTE =
+      Servlet5SnippetInjectingResponseWrapper.class.getName() + ".streamState";
   private final String snippet;
   private final int snippetLength;
 
-  private final InjectionState injectionState;
+  @Nullable private final HttpServletRequest request;
+  private final InjectionState streamInjectionState;
+  private long contentLength = UNSET;
 
   @Nullable private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
-  @Nullable private PrintWriter delegatePrintWriter;
 
   public Servlet5SnippetInjectingResponseWrapper(HttpServletResponse response, String snippet) {
     this(null, response, snippet);
@@ -59,86 +59,33 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
   public Servlet5SnippetInjectingResponseWrapper(
       @Nullable HttpServletRequest request, HttpServletResponse response, String snippet) {
     super(response);
+    this.request = request;
     this.snippet = snippet;
     snippetLength = snippet.length();
-    Object previous = request == null ? null : request.getAttribute(STATE_ATTRIBUTE);
-    if (previous instanceof InjectionState
-        && request != null
-        && request.getDispatcherType() != DispatcherType.ERROR
-        && ((InjectionState) previous).getWrapper()
-            instanceof Servlet5SnippetInjectingResponseWrapper
-        && unwrapResponse(
-                ((Servlet5SnippetInjectingResponseWrapper) ((InjectionState) previous).getWrapper())
-                    .getResponse())
-            == unwrapResponse(response)) {
-      injectionState = (InjectionState) previous;
-      injectionState.setWrapper(this);
-    } else {
-      // Request attributes survive async dispatch and are cleared when the container recycles it.
-      injectionState =
-          new InjectionState(
-              this,
-              () ->
-                  request == null || request.getAttribute(STATE_ATTRIBUTE) == getInjectionState());
-      if (request != null) {
-        request.setAttribute(STATE_ATTRIBUTE, injectionState);
-      }
+
+    Object requestToken = request == null ? null : request.getAttribute(REQUEST_LIFETIME_ATTRIBUTE);
+    if (request != null && requestToken == null) {
+      requestToken = new Object();
+      request.setAttribute(REQUEST_LIFETIME_ATTRIBUTE, requestToken);
+      request.removeAttribute(STREAM_STATE_ATTRIBUTE);
     }
-    Servlet5ResponseInjectionState.set(response, injectionState);
-  }
-
-  public static void beginForward(HttpServletRequest request) {
-    Object state = request.getAttribute(STATE_ATTRIBUTE);
-    if (state instanceof InjectionState) {
-      ((InjectionState) state).beginForward();
-    }
-  }
-
-  public static void resetForForward(HttpServletRequest request) {
-    Object state = request.getAttribute(STATE_ATTRIBUTE);
-    if (state instanceof InjectionState) {
-      ((InjectionState) state).resetForForward();
-    }
-  }
-
-  public static void finishForward(HttpServletRequest request, boolean successful) {
-    Object state = request.getAttribute(STATE_ATTRIBUTE);
-    if (state instanceof InjectionState) {
-      ((InjectionState) state).finishForward(successful);
-    }
-  }
-
-  private static ServletResponse unwrapResponse(ServletResponse response) {
-    while (response instanceof ServletResponseWrapper) {
-      response = ((ServletResponseWrapper) response).getResponse();
-    }
-    return response;
-  }
-
-  public InjectionState getInjectionState() {
-    return injectionState;
-  }
-
-  @Override
-  public void resetBuffer() {
-    super.resetBuffer();
-    injectionState.resetBuffer();
-  }
-
-  @Override
-  public void reset() {
-    super.reset();
-    injectionState.reset();
-    snippetInjectingPrintWriter = null;
-    delegatePrintWriter = null;
+    Object currentRequestToken = requestToken;
+    streamInjectionState =
+        new InjectionState(
+            this,
+            () ->
+                request == null
+                    || request.getAttribute(REQUEST_LIFETIME_ATTRIBUTE) == currentRequestToken);
   }
 
   @Override
   public boolean containsHeader(String name) {
     // this function is overridden in order to make sure the response is wrapped
     // but not wrapped twice
-    // The request attribute tracks body state, not whether this response is wrapped:
-    // async dispatch preserves attributes but may pass down the original response.
+    // we don't use req.setAttribute
+    // because async requests pass down their attributes, but don't pass down our wrapped response
+    // and so we would see the presence of the attribute and think the response was already wrapped
+    // when it really is not
     // see also https://docs.oracle.com/javaee/7/api/javax/servlet/AsyncContext.html
     if (name.equals(FAKE_SNIPPET_HEADER)) {
       return true;
@@ -161,7 +108,7 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
   private void handleHeader(String name, String value) {
     if ("Content-Length".equalsIgnoreCase(name)) {
       try {
-        injectionState.setContentLength(Long.parseLong(value));
+        contentLength = Long.parseLong(value);
       } catch (NumberFormatException e) {
         logger.log(FINE, "Failed to parse the Content-Length header", e);
       }
@@ -171,7 +118,7 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
   @Override
   public void setIntHeader(String name, int value) {
     if ("Content-Length".equalsIgnoreCase(name)) {
-      injectionState.setContentLength(value);
+      contentLength = value;
     }
     super.setIntHeader(name, value);
   }
@@ -179,39 +126,43 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
   @Override
   public void addIntHeader(String name, int value) {
     if ("Content-Length".equalsIgnoreCase(name)) {
-      injectionState.setContentLength(value);
+      contentLength = value;
     }
     super.addIntHeader(name, value);
   }
 
   @Override
   public void setContentLength(int len) {
-    injectionState.setContentLength(len);
+    contentLength = len;
     super.setContentLength(len);
   }
 
   @Override
   public void setContentLengthLong(long length) {
-    injectionState.setContentLength(length);
+    contentLength = length;
     super.setContentLengthLong(length);
   }
 
   @Override
   public ServletOutputStream getOutputStream() throws IOException {
     ServletOutputStream output = super.getOutputStream();
+    if (request != null) {
+      request.setAttribute(STREAM_STATE_ATTRIBUTE, streamInjectionState);
+    }
     initializeInjectionStateIfNeeded(output, this);
     return output;
   }
 
+  InjectionState getStreamInjectionState() {
+    return streamInjectionState;
+  }
+
   @Override
   public PrintWriter getWriter() throws IOException {
-    PrintWriter writer = super.getWriter();
-    if (snippetInjectingPrintWriter == null || writer != delegatePrintWriter) {
+    if (snippetInjectingPrintWriter == null) {
       snippetInjectingPrintWriter =
-          new SnippetInjectingPrintWriter(writer, snippet, injectionState);
-      delegatePrintWriter = writer;
+          new SnippetInjectingPrintWriter(super.getWriter(), snippet, this);
     }
-    injectionState.useWriter();
     return snippetInjectingPrintWriter;
   }
 
@@ -227,16 +178,8 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
 
   @Override
   public void updateContentLengthIfPreviouslySet() {
-    if (injectionState.hasContentLength()) {
-      setContentLength((int) injectionState.getContentLength() + snippetLength);
-      injectionState.markContentLengthAdjusted();
-    }
-  }
-
-  @Override
-  public void resetContentLengthIfPreviouslyAdjusted() {
-    if (injectionState.isContentLengthAdjusted()) {
-      setContentLength((int) injectionState.getContentLength() - snippetLength);
+    if (contentLength != UNSET) {
+      setContentLength((int) contentLength + snippetLength);
     }
   }
 
@@ -245,6 +188,6 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
     // if content-length was set and response was already committed (headers sent to the client),
     // then it is not safe to inject because the content-length header cannot be updated to account
     // for the snippet length
-    return injectionState.hasContentLength() && isCommitted();
+    return contentLength != UNSET && isCommitted();
   }
 }

@@ -27,8 +27,8 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class InjectionStateLifetimeTest {
@@ -39,138 +39,41 @@ class InjectionStateLifetimeTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  void reusedStreamDoesNotInjectOldStateIntoWriter(boolean fixedLength) throws IOException {
+  void recycledStreamDoesNotAffectNextRequestWriter(boolean fixedLength) throws IOException {
     Fixture fixture = new Fixture();
     Servlet5SnippetInjectingResponseWrapper first = fixture.wrap();
     first.setContentType("text/plain");
     first.setContentLength(5);
     first.getOutputStream().write("Hello".getBytes(UTF_8));
-    assertThat(fixture.content()).isEqualTo("Hello");
     InjectionState oldState = ServletOutputStreamInjectionState.getInjectionState(fixture.stream);
 
     fixture.recycle();
     Servlet5SnippetInjectingResponseWrapper second = fixture.wrap();
-    PrintWriter writer = second.getWriter();
-    assertThat(oldState.shouldProcessWrite()).isFalse();
     second.setContentType("text/html");
     if (fixedLength) {
       second.setContentLength(HTML.length());
     }
-    writer.write(HTML);
-    writer.flush();
+    second.getWriter().write(HTML);
+    second.getWriter().flush();
 
+    assertThat(oldState.isCurrentRequest()).isFalse();
     assertThat(ServletOutputStreamInjectionState.getInjectionState(fixture.stream)).isNull();
     assertThat(fixture.content()).isEqualTo(INJECTED);
     assertThat(fixture.content()).containsOnlyOnce(SNIPPET);
     assertThat(fixture.contentLength).isEqualTo(fixedLength ? INJECTED.length() : -1);
   }
 
-  @ParameterizedTest
-  @EnumSource(Output.class)
-  void redispatchRetainsPartialMatchAndInjectsOnce(Output output) throws IOException {
-    Fixture fixture = new Fixture();
-    Servlet5SnippetInjectingResponseWrapper first = fixture.wrap();
-    first.setContentType("text/html");
-    first.setContentLength(12);
-    fixture.write(first, output, "<he");
-
-    Servlet5SnippetInjectingResponseWrapper dispatched = fixture.wrap();
-    assertThat(dispatched.getInjectionState()).isSameAs(first.getInjectionState());
-    fixture.write(dispatched, output, "ad><head>");
-    fixture.write(first, output, "<head>");
-
-    assertThat(fixture.content()).isEqualTo("<head>" + SNIPPET + "<head><head>");
-    assertThat(fixture.contentLength).isEqualTo(12 + SNIPPET.length());
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void streamStateSurvivesHandlerExitUntilContainerWrites(boolean recycled) throws IOException {
+  @Test
+  void acquiredStreamRemainsActiveAfterServiceAndDispatch() throws IOException {
     Fixture fixture = new Fixture();
     Servlet5SnippetInjectingResponseWrapper wrapper = fixture.wrap();
+    wrapper.setContentType("text/html");
     wrapper.getOutputStream();
-    wrapper.setContentType("text/html");
-    if (recycled) {
-      fixture.recycle();
-      fixture.contentType = "text/html";
-    }
-    // Async writes and container finalization can use the raw stream without reacquiring it.
+    when(fixture.request.getDispatcherType()).thenReturn(DispatcherType.ASYNC);
+
     fixture.stream.write(HTML.getBytes(UTF_8));
-    assertThat(fixture.content()).isEqualTo(recycled ? HTML : INJECTED);
-  }
 
-  @ParameterizedTest
-  @EnumSource(Output.class)
-  void errorDispatchDoesNotInheritAbandonedContentLength(Output output) throws IOException {
-    Fixture fixture = new Fixture();
-    Servlet5SnippetInjectingResponseWrapper first = fixture.wrap();
-    first.setContentLength(5);
-    first.setContentType("text/plain");
-    fixture.write(first, Output.STREAM, "Hello");
-    fixture.bytes.reset();
-    fixture.contentLength = -1;
-    fixture.contentType = null;
-    when(fixture.request.getDispatcherType()).thenReturn(DispatcherType.ERROR);
-
-    Servlet5SnippetInjectingResponseWrapper error = fixture.wrap();
-    assertThat(error.getInjectionState()).isNotSameAs(first.getInjectionState());
-    error.setContentType("text/html");
-    fixture.write(error, output, HTML);
     assertThat(fixture.content()).isEqualTo(INJECTED);
-    assertThat(fixture.contentLength).isEqualTo(-1);
-  }
-
-  @ParameterizedTest
-  @EnumSource(Output.class)
-  void resetDiscardsBodyStateAndAllowsNewOutputSelection(Output output) throws IOException {
-    Fixture fixture = new Fixture();
-    Servlet5SnippetInjectingResponseWrapper wrapper = fixture.wrap();
-    wrapper.setContentType("text/html");
-    wrapper.setContentLength(1000);
-    fixture.write(wrapper, output == Output.WRITER ? Output.STREAM : Output.WRITER, "<head>");
-    wrapper.reset();
-    fixture.bytes.reset();
-    fixture.contentLength = -1;
-    wrapper.setContentType("text/html");
-    fixture.write(wrapper, output, HTML);
-    assertThat(fixture.content()).isEqualTo(INJECTED);
-    assertThat(fixture.contentLength).isEqualTo(-1);
-  }
-
-  @ParameterizedTest
-  @EnumSource(Output.class)
-  void resetBufferDiscardsPartialMatchAcrossRedispatch(Output output) throws IOException {
-    Fixture fixture = new Fixture();
-    Servlet5SnippetInjectingResponseWrapper wrapper = fixture.wrap();
-    wrapper.setContentType("text/html");
-    fixture.write(wrapper, output, "<he");
-    wrapper.resetBuffer();
-    fixture.bytes.reset();
-    fixture.write(fixture.wrap(), output, "ad><head>");
-    assertThat(fixture.content()).isEqualTo("ad><head>" + SNIPPET);
-  }
-
-  @ParameterizedTest
-  @EnumSource(Output.class)
-  void resetBufferDoesNotAdjustContentLengthTwice(Output output) throws IOException {
-    Fixture fixture = new Fixture();
-    Servlet5SnippetInjectingResponseWrapper wrapper = fixture.wrap();
-    wrapper.setContentType("text/html");
-    wrapper.setContentLength(HTML.length());
-    fixture.write(wrapper, output, HTML);
-    assertThat(fixture.contentLength).isEqualTo(INJECTED.length());
-
-    wrapper.resetBuffer();
-    fixture.bytes.reset();
-    assertThat(fixture.contentLength).isEqualTo(HTML.length());
-    fixture.write(fixture.wrap(), output, HTML);
-    assertThat(fixture.content()).isEqualTo(INJECTED);
-    assertThat(fixture.contentLength).isEqualTo(INJECTED.length());
-  }
-
-  enum Output {
-    STREAM,
-    WRITER
   }
 
   private static class Fixture {
@@ -219,6 +122,13 @@ class InjectionStateLifetimeTest {
               })
           .when(request)
           .setAttribute(anyString(), any());
+      doAnswer(
+              invocation -> {
+                attributes.remove(invocation.getArgument(0));
+                return null;
+              })
+          .when(request)
+          .removeAttribute(anyString());
       when(response.getContentType()).thenAnswer(invocation -> contentType);
       when(response.getCharacterEncoding()).thenReturn(UTF_8.name());
       doAnswer(
@@ -236,7 +146,8 @@ class InjectionStateLifetimeTest {
           .when(response)
           .setContentLength(anyInt());
       when(response.getOutputStream()).thenReturn(stream);
-      when(response.getWriter()).thenReturn(new PrintWriter(new OutputStreamWriter(stream, UTF_8)));
+      when(response.getWriter())
+          .thenAnswer(invocation -> new PrintWriter(new OutputStreamWriter(stream, UTF_8)));
     }
 
     Servlet5SnippetInjectingResponseWrapper wrap() {
@@ -248,17 +159,6 @@ class InjectionStateLifetimeTest {
       bytes.reset();
       contentType = null;
       contentLength = -1;
-    }
-
-    void write(Servlet5SnippetInjectingResponseWrapper wrapper, Output output, String text)
-        throws IOException {
-      assertThat(wrapper.getResponse()).isSameAs(response);
-      if (output == Output.STREAM) {
-        wrapper.getOutputStream().write(text.getBytes(UTF_8));
-      } else {
-        wrapper.getWriter().write(text);
-        wrapper.getWriter().flush();
-      }
     }
 
     String content() {

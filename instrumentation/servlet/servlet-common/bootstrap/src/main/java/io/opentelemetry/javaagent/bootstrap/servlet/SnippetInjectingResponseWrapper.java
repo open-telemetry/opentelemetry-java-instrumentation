@@ -11,8 +11,6 @@ public interface SnippetInjectingResponseWrapper {
 
   void updateContentLengthIfPreviouslySet();
 
-  void resetContentLengthIfPreviouslyAdjusted();
-
   boolean isNotSafeToInject();
 
   String getCharacterEncoding();

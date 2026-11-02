@@ -15,13 +15,8 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
 
   public SnippetInjectingPrintWriter(
       PrintWriter writer, String snippet, SnippetInjectingResponseWrapper wrapper) {
-    this(writer, snippet, new InjectionState(wrapper));
-  }
-
-  public SnippetInjectingPrintWriter(PrintWriter writer, String snippet, InjectionState state) {
     super(writer);
-    this.state = state;
-    state.useWriter();
+    state = new InjectionState(wrapper);
     this.snippet = snippet;
   }
 
