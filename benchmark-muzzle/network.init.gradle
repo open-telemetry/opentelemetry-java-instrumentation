@@ -1,0 +1,54 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import jdk.jfr.Configuration
+import jdk.jfr.Recording
+import java.time.Duration
+import org.gradle.internal.operations.BuildOperationDescriptor
+import org.gradle.internal.operations.BuildOperationListener
+import org.gradle.internal.operations.BuildOperationListenerManager
+import org.gradle.internal.operations.OperationFinishEvent
+import org.gradle.internal.operations.OperationIdentifier
+import org.gradle.internal.operations.OperationProgressEvent
+import org.gradle.internal.operations.OperationStartEvent
+
+if (gradle.parent == null) {
+  def output = System.getProperty("muzzle.profile.jfr")
+  if (!output) {
+    throw new GradleException("muzzle.profile.jfr is required")
+  }
+  def file = new File(output)
+  file.parentFile.mkdirs()
+  def recording = new Recording(Configuration.getConfiguration("profile"))
+  recording.enable("jdk.SocketRead").withThreshold(Duration.ofMillis(10)).withStackTrace()
+  recording.enable("jdk.SocketWrite").withThreshold(Duration.ofMillis(10)).withStackTrace()
+  recording.enable("jdk.ThreadPark").withThreshold(Duration.ofMillis(100)).withStackTrace()
+  recording.enable("jdk.JavaMonitorEnter").withThreshold(Duration.ofMillis(100)).withStackTrace()
+  recording.setMaxSize(512L * 1024 * 1024)
+  recording.start()
+  println("MUZZLE_BENCHMARK_JFR started=true")
+  def flushed = new java.util.concurrent.atomic.AtomicBoolean()
+  def listener = new BuildOperationListener() {
+    void started(BuildOperationDescriptor operation, OperationStartEvent event) {
+    }
+
+    void progress(OperationIdentifier id, OperationProgressEvent event) {
+    }
+
+    void finished(BuildOperationDescriptor operation, OperationFinishEvent event) {
+      if (operation.details?.class?.name == "org.gradle.execution.RunRootBuildWorkBuildOperationType\$Details" &&
+        flushed.compareAndSet(false, true)) {
+        try {
+          recording.stop()
+          recording.dump(file.toPath())
+          println("MUZZLE_BENCHMARK_JFR flushed=true")
+        } finally {
+          recording.close()
+        }
+      }
+    }
+  }
+  gradle.services.get(BuildOperationListenerManager).addListener(listener)
+}

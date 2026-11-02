@@ -38,7 +38,7 @@ jobs:
           python3 -m unittest discover -s benchmark-muzzle -q
           python3 - <<'PY'
           import json, os
-          if os.environ["CANDIDATE_MODE"] not in ("standard", "configuration-cache-off", "http-connection-ttl", "disk-preparation", "disk-preparation-control"):
+          if os.environ["CANDIDATE_MODE"] not in ("standard", "configuration-cache-off", "http-connection-ttl", "disk-preparation", "disk-preparation-control", "network-profile"):
               raise ValueError("Invalid candidate mode")
           partitions = json.loads(os.environ["PARTITIONS"])
           if (not isinstance(partitions, list) or not partitions
@@ -94,6 +94,8 @@ jobs:
             extra+=(--candidate-no-configuration-cache)
           elif [[ "$CANDIDATE_MODE" == "http-connection-ttl" ]]; then
             extra+=(--candidate-http-connection-ttl-ms 10000)
+          elif [[ "$CANDIDATE_MODE" == "network-profile" ]]; then
+            extra+=(--jfr-network)
           fi
           python3 benchmark-muzzle/ci_benchmark.py run \
             --baseline "$REVISION" --candidate "$REVISION" --round 1 --partition "$PARTITION" \

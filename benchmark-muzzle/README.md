@@ -187,6 +187,13 @@ whether replacing older pooled connections reduces the long successful
 resource reads seen in profiles; stale connections are a hypothesis, not
 an established diagnosis.
 
+`candidate-mode=network-profile` with `profile-only=true` adds a Flight
+Recorder diagnostic to the single-command profile. It captures socket
+read/write waits, execution samples and long thread/monitor waits inside
+the Gradle daemon. A build-operation listener flushes `network.jfr` before the command
+finishes. This mode is diagnostic, not timing-comparison evidence; it does
+not change network deadlines, retries or dependency selection.
+
 ## Disk preparation
 
 `candidate-mode=disk-preparation` measures unconditional SDK/image cleanup

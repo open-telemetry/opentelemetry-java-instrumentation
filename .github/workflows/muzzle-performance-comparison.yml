@@ -45,6 +45,7 @@ on:
           - http-connection-ttl
           - disk-preparation
           - disk-preparation-control
+          - network-profile
         default: standard
 
 permissions:

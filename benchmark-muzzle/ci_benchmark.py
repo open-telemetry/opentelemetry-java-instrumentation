@@ -328,6 +328,10 @@ class Comparison:
             )
         if getattr(args, "single_profile", False):
             self.identity["experiment"] = "operation-profile"
+        if getattr(args, "jfr_network", False):
+            self.identity["network_profiler_sha256"] = benchmark.digest(
+                Path(__file__).with_name("network.init.gradle"),
+            )
         if getattr(args, "candidate_no_configuration_cache", False):
             if self.candidate_snapshot or len(set(self.revisions.values())) != 1:
                 raise ValueError("Configuration-cache comparisons require identical sources and snapshots")
@@ -396,6 +400,11 @@ class Comparison:
                 "--init-script", str(Path(__file__).with_name("operations.init.gradle")),
                 f"-Dmuzzle.profile.output={destination / 'operations.jsonl'}",
             ]
+        if getattr(self.args, "jfr_network", False):
+            command += [
+                "--init-script", str(Path(__file__).with_name("network.init.gradle")),
+                f"-Dmuzzle.profile.jfr={destination / 'network.jfr'}",
+            ]
         if not sample["configuration_cache"]:
             command.append("--no-configuration-cache")
         if sample["http_connection_ttl_ms"] is not None:
@@ -423,6 +432,14 @@ class Comparison:
             log, actual, configuration_cache=sample["configuration_cache"],
             connection_ttl_ms=sample["http_connection_ttl_ms"],
         )
+        if getattr(self.args, "jfr_network", False):
+            recording = destination / "network.jfr"
+            if (
+                "MUZZLE_BENCHMARK_JFR flushed=true" not in log
+                or not recording.is_file() or recording.stat().st_size == 0
+            ):
+                raise ValueError("Missing Flight Recorder network profile")
+            sample["network_jfr_sha256"] = benchmark.digest(recording)
         sample["task_outcomes"] = tasks
         sample["task_outcome_counts"] = dict(Counter(tasks.values()))
         sample["assertions"] = len(actual)
@@ -726,6 +743,7 @@ def main():
     measure.add_argument("--candidate-snapshot-sha256")
     measure.add_argument("--operations-profile", action="store_true")
     measure.add_argument("--single-profile", action="store_true")
+    measure.add_argument("--jfr-network", action="store_true")
     measure.add_argument("--candidate-no-configuration-cache", action="store_true")
     measure.add_argument("--candidate-http-connection-ttl-ms", type=int, choices=(10000,))
     report = commands.add_parser("report")
