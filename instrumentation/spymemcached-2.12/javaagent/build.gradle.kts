@@ -32,15 +32,13 @@ testing.suites {
     }
   }
 
-  named<JvmTestSuite>("test") {
-    executions {
-      configureEach {
-        systemProperty("testLatestDeps", otelProps.testLatestDeps)
-      }
+  executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
 
-      register("Experimental") {
-        telemetryConfig("otel.instrumentation.spymemcached.experimental-span-attributes", "true")
-      }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.spymemcached.experimental-span-attributes", "true")
     }
   }
 }

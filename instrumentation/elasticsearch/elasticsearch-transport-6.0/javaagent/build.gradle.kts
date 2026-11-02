@@ -73,18 +73,16 @@ testing.suites {
     }
   }
 
-  withType(JvmTestSuite::class).configureEach {
-    executions {
-      configureEach {
-        systemProperty("testLatestDeps", otelProps.testLatestDeps)
-        if (otelProps.denyUnsafe) {
-          enabled = false
-        }
+  executions {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+      if (otelProps.denyUnsafe) {
+        enabled = false
       }
+    }
 
-      register("Experimental") {
-        telemetryConfig("otel.instrumentation.elasticsearch.experimental-span-attributes", "true")
-      }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.elasticsearch.experimental-span-attributes", "true")
     }
   }
 }

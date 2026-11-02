@@ -21,42 +21,40 @@ dependencies {
   testImplementation(project(":instrumentation:micrometer:micrometer-1.5:testing"))
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
-    configureEach {
-      jvmArgs("-Dotel.instrumentation.micrometer.enabled=true")
-    }
+testing.suites.executions("test") {
+  configureEach {
+    jvmArgs("-Dotel.instrumentation.micrometer.enabled=true")
+  }
 
-    configureDefault {
-      filter {
-        excludeTestsMatching("*TimerMillisecondsTest")
-        excludeTestsMatching("*PrometheusModeTest")
-        excludeTestsMatching("*HistogramGaugesTest")
-      }
+  configureDefault {
+    filter {
+      excludeTestsMatching("*TimerMillisecondsTest")
+      excludeTestsMatching("*PrometheusModeTest")
+      excludeTestsMatching("*HistogramGaugesTest")
     }
+  }
 
-    register("PrometheusMode") {
-      filter {
-        includeTestsMatching("*PrometheusModeTest")
-      }
-      include("**/*PrometheusModeTest.*")
-      jvmArgs("-Dotel.instrumentation.micrometer.prometheus-mode.enabled=true")
+  register("PrometheusMode") {
+    filter {
+      includeTestsMatching("*PrometheusModeTest")
     }
+    include("**/*PrometheusModeTest.*")
+    jvmArgs("-Dotel.instrumentation.micrometer.prometheus-mode.enabled=true")
+  }
 
-    register("BaseTimeUnit") {
-      filter {
-        includeTestsMatching("*TimerMillisecondsTest")
-      }
-      include("**/*TimerMillisecondsTest.*")
-      jvmArgs("-Dotel.instrumentation.micrometer.base-time-unit=milliseconds")
+  register("BaseTimeUnit") {
+    filter {
+      includeTestsMatching("*TimerMillisecondsTest")
     }
+    include("**/*TimerMillisecondsTest.*")
+    jvmArgs("-Dotel.instrumentation.micrometer.base-time-unit=milliseconds")
+  }
 
-    register("HistogramGauges") {
-      filter {
-        includeTestsMatching("*HistogramGaugesTest")
-      }
-      include("**/*HistogramGaugesTest.*")
-      jvmArgs("-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true")
+  register("HistogramGauges") {
+    filter {
+      includeTestsMatching("*HistogramGaugesTest")
     }
+    include("**/*HistogramGaugesTest.*")
+    jvmArgs("-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true")
   }
 }

@@ -71,24 +71,22 @@ testing.suites {
     }
   }
 
-  named<JvmTestSuite>("test") {
-    executions {
-      configureDefault {
-        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-      }
+  executions("test") {
+    configureDefault {
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    }
 
-      register("Experimental") {
-        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-        telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
-      }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+      telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
+    }
 
-      register("SpringDisabled") {
-        filter {
-          includeTestsMatching("SpringKafkaMockConsumerTest")
-        }
-        systemProperty("springDisabled", true)
-        telemetryConfig("otel.instrumentation.spring-kafka.enabled", "false")
+    register("SpringDisabled") {
+      filter {
+        includeTestsMatching("SpringKafkaMockConsumerTest")
       }
+      systemProperty("springDisabled", true)
+      telemetryConfig("otel.instrumentation.spring-kafka.enabled", "false")
     }
   }
 }
