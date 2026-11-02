@@ -45,7 +45,6 @@ import kotlinx.coroutines.yield
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assumptions
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -554,7 +553,6 @@ class KotlinCoroutinesInstrumentationTest {
 
   @ParameterizedTest
   @ValueSource(booleans = [false, true])
-  @Disabled("Tail-call @WithSpan continuations can resume application code on the wrong thread, breaking dispatcher confinement and thread-bound state such as Spring transactions: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20744")
   fun `tail delay preserves dispatcher`(annotated: Boolean) {
     val threads = runBlocking {
       withContext(singleThread.asCoroutineDispatcher()) {
@@ -585,7 +583,6 @@ class KotlinCoroutinesInstrumentationTest {
 
   @ParameterizedTest
   @ValueSource(booleans = [false, true])
-  @Disabled("Tail-call @WithSpan continuations can resume application code on the wrong thread, breaking dispatcher confinement and thread-bound state such as Spring transactions: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20744")
   fun `tail withContext preserves dispatcher`(annotated: Boolean) {
     val threads = runBlocking {
       withContext(singleThread.asCoroutineDispatcher()) {
