@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -61,8 +63,8 @@ testing {
     // pekko 2.x has only milestone releases so far, which latest dep testing skips, run the tests
     // against them explicitly, pekko 2.x requires java 17 and has no scala 2.12 artifacts
     register<JvmTestSuite>("pekko2Test") {
-      targets.all {
-        testTask.configure {
+      executions {
+        configureEach {
           // agrona, used by artery in pekko 2.x, accesses jdk internals
           jvmArgs("--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED")
         }
@@ -75,8 +77,8 @@ testing {
     }
 
     register<JvmTestSuite>("pekko2Scala3Test") {
-      targets.all {
-        testTask.configure {
+      executions {
+        configureEach {
           // agrona, used by artery in pekko 2.x, accesses jdk internals
           jvmArgs("--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED")
         }
