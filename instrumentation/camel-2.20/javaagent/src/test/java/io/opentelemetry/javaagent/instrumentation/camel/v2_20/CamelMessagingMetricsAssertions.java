@@ -22,6 +22,7 @@ import io.opentelemetry.sdk.metrics.data.MetricData;
 import java.util.HashSet;
 import java.util.Set;
 
+@SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
 public class CamelMessagingMetricsAssertions {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.camel-2.20";

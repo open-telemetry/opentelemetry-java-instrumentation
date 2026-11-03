@@ -43,6 +43,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
 class JmsCamelTest {
 
   @RegisterExtension

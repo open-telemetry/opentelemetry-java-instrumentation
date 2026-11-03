@@ -1,3 +1,22 @@
 imports:
   metrics:
-    - jvm.*
+    - jvm.buffer.count
+    - jvm.buffer.memory.limit
+    - jvm.buffer.memory.used
+    - jvm.class.count
+    - jvm.class.loaded
+    - jvm.class.unloaded
+    - jvm.cpu.count
+    - jvm.cpu.recent_utilization
+    - jvm.cpu.time
+    - jvm.file_descriptor.count
+    - jvm.file_descriptor.limit
+    - jvm.gc.duration
+    - jvm.memory.committed
+    - jvm.memory.init
+    - jvm.memory.limit
+    - jvm.memory.used
+    - jvm.memory.used_after_last_gc
+    - jvm.system.cpu.load_1m
+    - jvm.system.cpu.utilization
+    - jvm.thread.count

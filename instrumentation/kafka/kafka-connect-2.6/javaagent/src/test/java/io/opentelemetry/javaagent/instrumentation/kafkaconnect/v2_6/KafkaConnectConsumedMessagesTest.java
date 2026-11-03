@@ -143,6 +143,7 @@ class KafkaConnectConsumedMessagesTest {
                 assertRecordLink(link, "22222222222222222222222222222222", "2222222222222222", 11));
   }
 
+  @SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
   private static void assertRecordLink(LinkData link, String traceId, String spanId, long offset) {
     assertThat(link.getSpanContext().getTraceId()).isEqualTo(traceId);
     assertThat(link.getSpanContext().getSpanId()).isEqualTo(spanId);

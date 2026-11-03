@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 import org.apache.rocketmq.client.java.impl.producer.SendReceiptImpl;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 
+@SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
 class RocketMqProducerAttributeExtractor
     implements AttributesExtractor<PublishingMessageImpl, SendReceiptImpl> {
 

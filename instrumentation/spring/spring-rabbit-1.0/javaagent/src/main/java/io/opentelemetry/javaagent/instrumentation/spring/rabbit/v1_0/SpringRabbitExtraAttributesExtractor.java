@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 import org.springframework.amqp.core.Message;
 
+@SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
 class SpringRabbitExtraAttributesExtractor
     implements AttributesExtractor<SpringRabbitRequest, Void> {
 

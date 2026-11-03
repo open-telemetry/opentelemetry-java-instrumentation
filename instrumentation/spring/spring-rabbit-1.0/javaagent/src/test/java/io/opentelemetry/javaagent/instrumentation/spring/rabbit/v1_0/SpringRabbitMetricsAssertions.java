@@ -19,6 +19,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 
+@SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
 class SpringRabbitMetricsAssertions {
 
   private static final String RABBIT_INSTRUMENTATION_NAME = "io.opentelemetry.rabbitmq-2.7";

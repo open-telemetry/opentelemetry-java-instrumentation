@@ -17,6 +17,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.message.MessageView;
 
+@SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
 class RocketMqReceiveBatchMessageAttributeExtractor
     implements AttributesExtractor<RocketMqReceiveRequest, List<MessageView>> {
 

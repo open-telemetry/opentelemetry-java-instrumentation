@@ -37,6 +37,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
+@SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
 public abstract class AbstractSpringKafkaTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractSpringKafkaTest.class);

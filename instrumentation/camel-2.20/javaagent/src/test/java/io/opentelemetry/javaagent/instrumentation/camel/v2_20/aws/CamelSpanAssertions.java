@@ -23,6 +23,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
 class CamelSpanAssertions {
 
   private CamelSpanAssertions() {}
