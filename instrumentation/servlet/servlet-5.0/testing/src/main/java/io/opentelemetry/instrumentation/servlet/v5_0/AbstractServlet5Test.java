@@ -46,6 +46,9 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
                   "otel.instrumentation.servlet.experimental.request-parameters.excluded")
               != null;
 
+  private static final boolean REQUEST_BODY_CAPTURE_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.servlet.experimental.capture-request-body.enabled");
+
   @RegisterExtension
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
@@ -89,7 +92,7 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
       options.setHasResponseCustomizer(e -> true);
       options.setHasResponseSpan(this::hasResponseSpan);
     }
-    options.setTestRequestBodyCapture(true);
+    options.setTestRequestBodyCapture(REQUEST_BODY_CAPTURE_ENABLED);
   }
 
   protected boolean isAgentTest() {

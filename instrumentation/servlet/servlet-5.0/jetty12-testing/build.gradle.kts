@@ -24,7 +24,7 @@ testing.suites {
   executions("test") {
     register("Experimental") {
       telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.included", "test-parameter")
-      telemetryConfig("otel.instrumentation.servlet.experimental.capture-request-body.enabled","true")
+      telemetryConfig("otel.instrumentation.servlet.experimental.capture-request-body.enabled", "true")
     }
   }
 }
