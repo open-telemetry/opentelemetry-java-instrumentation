@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSemconvAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -16,6 +16,7 @@ class RabbitChannelSettleAttributesExtractor
     implements AttributesExtractor<ChannelAndMethod, Void> {
 
   @Override
+  @SuppressWarnings("deprecation") // retaining legacy messaging attributes
   public void onStart(
       AttributesBuilder attributes, Context parentContext, ChannelAndMethod channelAndMethod) {
     attributes.put(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, channelAndMethod.getDeliveryTag());

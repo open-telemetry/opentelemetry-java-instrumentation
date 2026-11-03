@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSemconvAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSemconvAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
 
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -23,6 +23,7 @@ class RabbitReceiveExtraAttributesExtractor
       AttributesBuilder attributes, Context parentContext, ReceiveRequest request) {}
 
   @Override
+  @SuppressWarnings("deprecation") // retaining legacy messaging attributes
   public void onEnd(
       AttributesBuilder attributes,
       Context context,

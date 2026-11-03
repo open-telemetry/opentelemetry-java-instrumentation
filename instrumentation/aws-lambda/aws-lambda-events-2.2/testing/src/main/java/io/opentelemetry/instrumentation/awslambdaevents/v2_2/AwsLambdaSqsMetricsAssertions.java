@@ -11,14 +11,15 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 
 public class AwsLambdaSqsMetricsAssertions {
 
+  @SuppressWarnings("deprecation") // asserting the legacy messaging.system metric attribute
   public static void assertMetrics(
       InstrumentationExtension testing,
       String instrumentationName,
@@ -59,9 +60,7 @@ public class AwsLambdaSqsMetricsAssertions {
                                             .hasSumGreaterThan(0.0)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(
-                                                    AttributeKey.stringKey("messaging.system"),
-                                                    AWS_SQS),
+                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                                                 equalTo(ERROR_TYPE, errorType))))));
     testing.waitAndAssertMetrics(
@@ -82,9 +81,7 @@ public class AwsLambdaSqsMetricsAssertions {
                                             .hasValue(consumedMessageCount)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(
-                                                    AttributeKey.stringKey("messaging.system"),
-                                                    AWS_SQS),
+                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                                                 equalTo(ERROR_TYPE, errorType))))));
     assertMetricNamesAbsent(

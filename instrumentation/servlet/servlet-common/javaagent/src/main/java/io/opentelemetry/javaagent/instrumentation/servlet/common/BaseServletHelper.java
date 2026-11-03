@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.servlet.common;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER_FILTER;
+import static io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes.ENDUSER_ID;
 import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -36,8 +36,6 @@ import javax.annotation.Nullable;
 
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   private static final ServletConfig servletConfig = ServletConfig.get();
-  // copied from EnduserIncubatingAttributes
-  private static final AttributeKey<String> ENDUSER_ID = AttributeKey.stringKey("enduser.id");
 
   protected final Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
       instrumenter;
@@ -167,6 +165,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
    * ServletAdditionalAttributesExtractor} as an attribute extractor. When SERVER span is not
    * created by servlet instrumentation we call this method on exit from the last servlet or filter.
    */
+  @SuppressWarnings("deprecation") // retaining enduser.id in legacy mode
   private void captureEnduserId(Span serverSpan, REQUEST request) {
     if (!AgentCommonConfig.get().getUserConfig().isNameEnabled()) {
       return;
