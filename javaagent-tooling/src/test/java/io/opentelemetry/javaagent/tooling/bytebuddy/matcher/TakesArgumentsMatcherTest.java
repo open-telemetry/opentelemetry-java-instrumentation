@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
@@ -90,6 +91,17 @@ class TakesArgumentsMatcherTest {
             "string",
             matchers(namedOneOf("java.lang.String", "java.lang.Long")),
             true));
+  }
+
+  @Test
+  void matchesSignaturesUsingAllTakesArgumentsOverloads() {
+    MethodDescription mixed = method("mixed");
+    MethodDescription noArguments = method("noArguments");
+
+    assertThat(takesArguments(String.class, int.class).matches(mixed)).isTrue();
+    assertThat(takesArguments(named("java.lang.String"), is(int.class)).matches(mixed)).isTrue();
+    assertThat(takesArguments(2).matches(mixed)).isTrue();
+    assertThat(takesArguments(0).matches(noArguments)).isTrue();
   }
 
   @Test

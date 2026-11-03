@@ -78,26 +78,31 @@ not require changing the other. Preserve existing controls and ordering when mai
   accessible `java.base` types available at the minimum supported Java version. Keep `named(...)`
   for instrumented-library types, inaccessible JDK types, and types unavailable at that minimum.
   Compiling against a type or having a `java.*` package name does not prove agent-loader safety.
-- For a complete, nonempty signature, prefer Byte Buddy's class-based `takesArguments(Type.class...)`
-  when every parameter is a primitive or a public, safely accessible `java.base` type available at
-  the module's minimum supported Java version. Otherwise use `AgentElementMatchers.takesArguments(...)`
-  with one matcher per parameter, in order; use `is(Type.class)` for safe types and
-  `named("fully.qualified.Type")` for instrumented-library types or types that are unsafe to load.
-  Mix these matchers when a signature contains both kinds, and preserve array dimensions with the
-  corresponding class literal or readable name. Keep the helper for richer parameter predicates.
-  Do not infer safety from a `java.*` package prefix or the current build JDK. When both this helper
-  and Byte Buddy's count-based `takesArguments(int)` are needed, explicitly import both
-  `takesArguments` methods and avoid a bare `takesArguments()` call. For a zero-parameter signature,
-  use `takesArguments(0)`.
-- Keep positional `takesArgument(...)` matchers for intentionally partial signatures or predicates
-  that cannot be expressed as exact type names, such as subtype checks or parameter-type
-  alternatives across supported versions. Do not add otherwise unnecessary parameter checks
-  merely to use an exact-signature matcher.
+- For complete, nonempty signatures with exact parameter types, prefer Byte Buddy's class-based
+  `takesArguments(Type.class...)` when every parameter is a primitive or a public, safely accessible
+  `java.base` type available at the module's minimum supported Java version. Otherwise use
+  `AgentElementMatchers.takesArguments(...)` with one matcher per parameter, in order, for library,
+  unsafe, or unavailable types and richer predicates. Use `is(Type.class)` for safe types and
+  `named("fully.qualified.Type")` for instrumented-library types or types that are unsafe to load;
+  for example, `takesArguments(named("redis.clients.jedis.commands.ProtocolCommand"),
+  is(byte[][].class))` matches that erased signature without loading the library type. Mix matcher
+  kinds as needed and preserve array dimensions. Richer predicates include subtype checks and
+  parameter alternatives such as `namedOneOf(...)`. Do not infer safety from a `java.*` package
+  prefix or the current build JDK.
+  When a file needs both this helper and any Byte Buddy `takesArguments(...)` overload, explicitly
+  import both methods and avoid a bare `takesArguments()` call. For a zero-parameter signature, use
+  `takesArguments(0)`.
+- Keep positional `takesArgument(...)` matchers for intentionally partial signatures. Use a complete
+  ordered matcher list when the helper can express the signature, including richer predicates or
+  parameter alternatives. Do not add otherwise unnecessary parameter constraints solely to make a
+  partial signature complete.
 - When advice binds a library argument as `Object` to support different known parameter types
-  across versions, use `takesArgument(index, namedOneOf(...))` with those type names instead of
-  `any()` or a custom argument-count check. The positional matcher already guarantees that the
-  argument exists. `takesArgument(index, Object.class)` matches a parameter declared exactly as
-  `Object`, not any reference type.
+  across versions, use `namedOneOf(...)` with those type names instead of `any()` or a custom
+  argument-count check. Use `takesArgument(index, namedOneOf(...))` for an intentionally partial
+  signature; include the predicate in `AgentElementMatchers.takesArguments(...)` when matching a
+  complete signature. The positional matcher already guarantees that the argument exists.
+  `takesArgument(index, Object.class)` matches a parameter declared exactly as `Object`, not any
+  reference type.
 - With positional matchers, use `takesArguments(n)` only when exact arity is needed to distinguish
   supported overloads, preserve helper-call compatibility, or select the required lifecycle
   boundary. Do not add an exact count merely to guarantee that an argument exists.
