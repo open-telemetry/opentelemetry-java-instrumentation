@@ -131,7 +131,7 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
       this.seenRegistryAttributes = seenRegistryAttributes;
     }
 
-    private static WeaverValidationResult fromJson(JsonNode json) {
+    static WeaverValidationResult fromJson(JsonNode json) {
       List<WeaverValidationAdvice> advices = new ArrayList<>();
 
       Consumer<JsonNode> parseValidationAdvice =
@@ -240,6 +240,15 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
           .filteredOn(item -> item.startsWith(prefix))
           .describedAs("expected registered %s to contain all keys", type)
           .containsAll(expectedKeys);
+
+      map.forEach(
+          (key, count) -> {
+            if (key.startsWith(prefix) && !expectedKeys.contains(key)) {
+              assertThat(count)
+                  .describedAs("expected registered %s to have zero count for key %s", type, key)
+                  .isZero();
+            }
+          });
 
       reported.forEach(
           key ->
