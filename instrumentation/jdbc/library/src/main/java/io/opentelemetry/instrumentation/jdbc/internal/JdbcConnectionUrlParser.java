@@ -138,6 +138,12 @@ public final class JdbcConnectionUrlParser {
     String type = jdbcUrl.substring(0, typeLoc);
     JdbcUrlParser parser = typeParsers.get(type);
     ParseContext ctx = ParseContext.of(type, props);
+    if (parser == null && jdbcUrl.indexOf(';') >= 0) {
+      ctx.system("other_sql");
+      ctx.applyDataSourceProperties();
+      return ctx.toDbInfo();
+    }
+
     String authority =
         (parser == null ? GenericUrlParser.INSTANCE : parser).extractAuthority(jdbcUrl);
     if (authority != null && hasMultipleTargets(authority)) {

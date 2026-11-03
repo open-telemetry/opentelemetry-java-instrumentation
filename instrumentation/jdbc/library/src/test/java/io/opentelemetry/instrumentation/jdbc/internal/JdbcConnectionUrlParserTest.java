@@ -97,6 +97,65 @@ class JdbcConnectionUrlParserTest {
         .isEqualTo(DbServerTarget.create("pg.host", null));
   }
 
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "jdbc:vendor://h1;******@synthetic-one,synthetic-two",
+        "jdbc:vendor://h1/db;password=synthetic-secret",
+        "jdbc:vendor://alice:123;rest@db.example/orders"
+      })
+  void unknownDriverSemicolonDoesNotExposeUrlDerivedInfo(String url) {
+    DbInfo dbInfo = parse(url, null);
+    DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);
+    JdbcAttributesGetter attributesGetter = new JdbcAttributesGetter();
+
+    assertThat(dbInfo.getDbSystemName()).isEqualTo("other_sql");
+    assertThat(dbInfo.getDbNamespace()).isNull();
+    assertThat(dbInfo.getConfiguredServerTarget()).isNull();
+    assertThat(attributesGetter.getDbNamespace(request)).isNull();
+    assertThat(attributesGetter.getServerAddress(request)).isNull();
+    assertThat(attributesGetter.getServerPort(request)).isNull();
+  }
+
+  @Test
+  void unknownDriverSemicolonPreservesDataSourceProperties() {
+    Properties properties = new Properties();
+    properties.setProperty("serverName", "property.host");
+    properties.setProperty("portNumber", "5433");
+    properties.setProperty("databaseName", "property_db");
+
+    DbInfo dbInfo =
+        parse(
+            "jdbc:vendor://url.host/url_db;serverName=url.host;portNumber=1234"
+                + ";databaseName=url_db",
+            properties);
+
+    assertThat(dbInfo.getDbSystemName()).isEqualTo("other_sql");
+    assertThat(dbInfo.getDbNamespace()).isEqualTo("property_db");
+    assertThat(dbInfo.getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("property.host", 5433));
+  }
+
+  @Test
+  void unknownDriverWithoutSemicolonUsesGenericParsing() {
+    DbInfo dbInfo = parse("jdbc:vendor://db.example:5432/orders", null);
+
+    assertThat(dbInfo.getDbSystemName()).isEqualTo("other_sql");
+    assertThat(dbInfo.getDbNamespace()).isEqualTo("orders");
+    assertThat(dbInfo.getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("db.example", 5432));
+  }
+
+  @Test
+  void knownDriverSemicolonUserInfoStillUsesItsParser() {
+    DbInfo dbInfo = parse("jdbc:mysql://alice:123;rest@db.example/orders", null);
+
+    assertThat(dbInfo.getDbSystemName()).isEqualTo(MYSQL);
+    assertThat(dbInfo.getDbNamespace()).isEqualTo("orders");
+    assertThat(dbInfo.getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("db.example", null));
+  }
+
   @Test
   void omittedDefaultPortIsNotReportedInConfiguredTarget() {
     DbInfo dbInfo = parse("jdbc:postgresql://pg.host/db", null);
