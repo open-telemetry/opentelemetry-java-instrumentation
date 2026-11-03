@@ -124,11 +124,9 @@ testing.suites {
     }
   }
 
-  named<JvmTestSuite>("test") {
-    executions {
-      register("ExperimentalAttributes") {
-        telemetryConfig("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-      }
+  executions("test") {
+    register("ExperimentalAttributes") {
+      telemetryConfig("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     }
   }
 }
