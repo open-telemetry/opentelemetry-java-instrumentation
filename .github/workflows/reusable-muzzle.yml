@@ -47,4 +47,4 @@ jobs:
           cache-read-only: ${{ inputs.cache-read-only }}
 
       - name: Run muzzle
-        run: ./gradlew ${{ matrix.task }} -PmuzzleSlices=8
+        run: ./gradlew ${{ matrix.task }}

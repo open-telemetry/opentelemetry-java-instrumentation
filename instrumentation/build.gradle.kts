@@ -4,11 +4,7 @@ plugins {
 
 val instrumentationProjectTest = tasks.named("test")
 
-val muzzleSlices = providers.gradleProperty("muzzleSlices")
-  .map { it.toIntOrNull() ?: 0 }
-  .getOrElse(4)
-require(muzzleSlices == 4 || muzzleSlices == 8) { "muzzleSlices must be 4 or 8" }
-val instrumentationProjectMuzzle = (1..muzzleSlices).map { tasks.register("muzzle$it") }
+val instrumentationProjectMuzzle = (1..8).map { tasks.register("muzzle$it") }
 
 var counter = 0
 subprojects {
@@ -23,7 +19,7 @@ subprojects {
     // relying on predictable ordering of subprojects
     // (see https://docs.gradle.org/current/dsl/org.gradle.api.Project.html#N14CB4)
     // since we are splitting these muzzleX tasks across different github action jobs
-    instrumentationProjectMuzzle[counter++ % muzzleSlices].configure {
+    instrumentationProjectMuzzle[counter++ % instrumentationProjectMuzzle.size].configure {
       dependsOn(subProj.tasks.named("muzzle"))
     }
   }
