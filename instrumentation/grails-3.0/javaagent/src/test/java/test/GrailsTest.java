@@ -15,6 +15,9 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static java.util.Arrays.asList;
 
 import grails.boot.GrailsApp;
@@ -22,7 +25,6 @@ import grails.boot.config.GrailsAutoConfiguration;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
@@ -162,7 +164,7 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
     span.hasName(handlerSpanName).hasKind(SpanKind.INTERNAL);
 
     span.hasAttributesSatisfyingExactly(
-        SemconvCodeStabilityUtil.codeFunctionAssertions(handlerClass, handlerMethod));
+        equalTo(CODE_FUNCTION_NAME, handlerClass + "." + handlerMethod));
 
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
@@ -186,7 +188,7 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
     span.hasKind(SpanKind.INTERNAL)
         .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
         .hasAttributesSatisfyingExactly(
-            SemconvCodeStabilityUtil.codeFunctionSuffixAssertions(methodName));
+            satisfies(CODE_FUNCTION_NAME, val -> val.endsWith("." + methodName)));
     return span;
   }
 
@@ -200,8 +202,7 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
           span.hasName("ErrorController." + actionName)
               .hasKind(SpanKind.INTERNAL)
               .hasAttributesSatisfyingExactly(
-                  SemconvCodeStabilityUtil.codeFunctionAssertions(
-                      "test.ErrorController", actionName));
+                  equalTo(CODE_FUNCTION_NAME, "test.ErrorController." + actionName));
         });
     if (endpoint == NOT_FOUND) {
       spanAssertions.add(
@@ -209,7 +210,7 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
               span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
                   .hasKind(SpanKind.INTERNAL)
                   .hasAttributesSatisfyingExactly(
-                      SemconvCodeStabilityUtil.codeFunctionSuffixAssertions("sendError")));
+                      satisfies(CODE_FUNCTION_NAME, val -> val.endsWith(".sendError"))));
     }
     return spanAssertions;
   }

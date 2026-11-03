@@ -16,7 +16,7 @@ import java.util.List;
 public class QuartzInstrumentationModule extends InstrumentationModule {
 
   public QuartzInstrumentationModule() {
-    super("quartz", "quartz-2.0");
+    super("quartz-2.0", "quartz");
   }
 
   @Override

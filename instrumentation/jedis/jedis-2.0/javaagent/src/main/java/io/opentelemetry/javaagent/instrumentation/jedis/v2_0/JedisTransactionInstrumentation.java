@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.transactionFraming;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.currentTransactionFraming;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.instrumenter;
@@ -14,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.BatchState;
@@ -35,10 +33,7 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(named("exec"), getClass().getName() + "$ExecAdvice");
-    if (emitStableDatabaseSemconv()) {
-      transformer.applyAdviceToMethod(
-          named("execGetResponse"), getClass().getName() + "$ExecAdvice");
-    }
+    transformer.applyAdviceToMethod(named("execGetResponse"), getClass().getName() + "$ExecAdvice");
     transformer.applyAdviceToMethod(named("discard"), getClass().getName() + "$DiscardAdvice");
   }
 
@@ -75,7 +70,7 @@ class JedisTransactionInstrumentation implements TypeInstrumentation {
         request =
             JedisRequest.createTransaction(
                 batchState.getRequests(), batchState.getTransactionFramingPeerAddress());
-        Context parentContext = Java8BytecodeBridge.currentContext();
+        Context parentContext = Context.current();
         if (instrumenter().shouldStart(parentContext, request)) {
           context = instrumenter().start(parentContext, request);
         }

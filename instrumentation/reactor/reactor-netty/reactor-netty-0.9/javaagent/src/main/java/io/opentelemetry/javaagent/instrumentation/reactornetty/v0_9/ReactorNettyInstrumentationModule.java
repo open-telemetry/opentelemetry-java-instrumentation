@@ -27,7 +27,7 @@ import reactor.netty.http.client.HttpClient;
 public class ReactorNettyInstrumentationModule extends InstrumentationModule {
 
   public ReactorNettyInstrumentationModule() {
-    super("reactor-netty", "reactor-netty-0.9");
+    super("reactor-netty-0.9", "reactor-netty");
   }
 
   @Override

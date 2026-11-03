@@ -19,7 +19,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class AkkaHttpServerRouteInstrumentationModule extends InstrumentationModule {
   public AkkaHttpServerRouteInstrumentationModule() {
-    super("akka-http", "akka-http-10.0", "akka-http-server", "akka-http-server-route");
+    super("akka-http-10.0", "akka-http-server", "akka-http", "akka");
   }
 
   @Override

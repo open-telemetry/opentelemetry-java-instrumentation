@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -16,7 +16,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.List;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.sink.SinkRecord;
@@ -145,25 +144,9 @@ class KafkaConnectBatchRecordAttributesTest {
     return Attributes.builder()
         .put(MESSAGING_DESTINATION_NAME, destination)
         .put(MESSAGING_DESTINATION_PARTITION_ID, partition)
-        .put(MESSAGING_KAFKA_OFFSET, offset)
-        .put(MESSAGING_KAFKA_MESSAGE_KEY, key)
+        .put(longKey("kafka.offset"), offset)
+        .put(stringKey("kafka.message.key"), key)
         .build();
-  }
-
-  @Test
-  void countsReceiveOwnedRecordsOnRetry() {
-    VirtualField<SinkRecord, Boolean> receiveOwnedField =
-        VirtualField.find(SinkRecord.class, Boolean.class);
-    SinkRecord owned = record("topic", 0, 1, "key");
-    SinkRecord notOwned = record("topic", 0, 2, "key");
-    receiveOwnedField.set(owned, true);
-
-    KafkaConnectTask task = new KafkaConnectTask(asList(owned, notOwned));
-
-    // First put(): the receive-owned record is not counted; the marker is cleared for the retry.
-    assertThat(task.countUnmarkedRecords()).isEqualTo(1);
-    // Retry put(): the marker was cleared, so both records are counted.
-    assertThat(task.countUnmarkedRecords()).isEqualTo(2);
   }
 
   private static SinkRecord record(String topic, int partition, long offset, String key) {

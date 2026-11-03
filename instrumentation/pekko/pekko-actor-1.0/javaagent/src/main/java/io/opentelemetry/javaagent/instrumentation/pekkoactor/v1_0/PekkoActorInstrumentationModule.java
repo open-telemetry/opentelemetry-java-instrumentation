@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class PekkoActorInstrumentationModule extends InstrumentationModule {
   public PekkoActorInstrumentationModule() {
-    super("pekko-actor", "pekko-actor-1.0");
+    super("pekko-actor-1.0", "pekko-actor", "pekko");
   }
 
   @Override

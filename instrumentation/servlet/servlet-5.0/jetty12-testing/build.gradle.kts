@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-testing")
 }
@@ -17,13 +20,10 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
-tasks {
-  test {
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-parameter")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.servlet.experimental.request-parameters.included=test-parameter",
-    )
+testing.suites {
+  executions("test") {
+    register("RequestParameterCapture") {
+      telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.included", "test-parameter")
+    }
   }
 }

@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -41,11 +43,60 @@ dependencies {
   testImplementation(project(":instrumentation-annotations"))
 }
 
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation("io.opentelemetry:opentelemetry-api")
+      implementation(project(":javaagent-bootstrap"))
+      implementation(project(":opentelemetry-api-shaded-for-instrumenting")) {
+        targetConfiguration = "shadow"
+      }
+    }
+  }
+
+  executions("test") {
+    register("CommonDefaultDisabled") {
+      filter {
+        includeTestsMatching("*DefaultEnablementTest")
+      }
+      jvmArgs(
+        "-Dotel.instrumentation.common.default-enabled=false",
+        "-Dotel.instrumentation.opentelemetry-instrumentation-annotations.enabled=true"
+      )
+    }
+
+    register("Disabled") {
+      filter {
+        includeTestsMatching("*DefaultEnablementTest")
+      }
+      jvmArgs(
+        "-Dotel.instrumentation.common.default-enabled=false",
+        "-Dotel.instrumentation.opentelemetry-api.enabled=false",
+        "-Dotel.instrumentation.opentelemetry-instrumentation-annotations.enabled=true"
+      )
+    }
+  }
+}
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+}
+
 configurations.configureEach {
   if (name == "testRuntimeClasspath" || name == "testCompileClasspath") {
     resolutionStrategy {
       // earliest version that works with our test harness
       force("io.opentelemetry:opentelemetry-api:1.4.0")
+      force("io.opentelemetry:opentelemetry-context:1.4.0")
+      // SDK 1.67 requires AttributesBuilder.removeIf(), which is absent from API 1.4.
+      force("io.opentelemetry:opentelemetry-sdk:1.66.0")
+      force("io.opentelemetry:opentelemetry-sdk-common:1.66.0")
+      force("io.opentelemetry:opentelemetry-sdk-trace:1.66.0")
+      force("io.opentelemetry:opentelemetry-sdk-metrics:1.66.0")
+      force("io.opentelemetry:opentelemetry-sdk-logs:1.66.0")
+      force("io.opentelemetry:opentelemetry-sdk-testing:1.66.0")
     }
   }
   if (name == "testRuntimeClasspath") {

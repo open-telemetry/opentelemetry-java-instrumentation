@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.job;
 
-import static net.bytebuddy.matcher.ElementMatchers.isArray;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -33,7 +32,9 @@ public class JobParserJobFactoryBeanInstrumentation implements TypeInstrumentati
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$InitAdvice");
     transformer.applyAdviceToMethod(
-        named("setJobExecutionListeners").and(takesArguments(1)).and(takesArgument(0, isArray())),
+        named("setJobExecutionListeners")
+            .and(takesArguments(1))
+            .and(takesArgument(0, named("org.springframework.batch.core.JobExecutionListener[]"))),
         getClass().getName() + "$SetListenersAdvice");
   }
 

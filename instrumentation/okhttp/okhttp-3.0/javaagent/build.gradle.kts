@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -23,48 +26,32 @@ dependencies {
   testInstrumentation(project(":instrumentation:okhttp:okhttp-2.2:javaagent"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("http2Test") {
-      dependencies {
-        implementation("com.squareup.okhttp3:okhttp:${baseVersion("3.11.0").orLatest()}")
-        if (otelProps.testLatestDeps) {
-          compileOnly("com.google.android:annotations:4.1.1.4")
-        }
-        implementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
+testing.suites {
+  register<JvmTestSuite>("http2Test") {
+    dependencies {
+      implementation("com.squareup.okhttp3:okhttp:${baseVersion("3.11.0").orLatest()}")
+      if (otelProps.testLatestDeps) {
+        compileOnly("com.google.android:annotations:4.1.1.4")
       }
+      implementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
     }
   }
-}
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+  register<JvmTestSuite>("okhttp4Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
+      }
+    }
+    dependencies {
+      implementation("com.squareup.okhttp3:okhttp:4.12.0")
+      implementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
+    }
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
-      }
+  executions {
+    register("ExceptionSignalLogs") {
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
-
-  val exceptionSignalLogsSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}ExceptionSignalLogs") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-        systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
-      }
-    }
-
-  check {
-    dependsOn(testing.suites, stableSemconvSuites, exceptionSignalLogsSuites)
   }
 }

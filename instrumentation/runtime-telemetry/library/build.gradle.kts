@@ -85,10 +85,6 @@ dependencies {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
   // Configure testJava17 compilation for Java 17
   named<JavaCompile>("compileTestJava17Java") {
     dependsOn("compileJava17Java")

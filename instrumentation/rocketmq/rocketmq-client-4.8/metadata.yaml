@@ -9,22 +9,19 @@ configurations:
   - name: otel.instrumentation.rocketmq-client.message-create-spans.enabled
     declarative_name: java.rocketmq_client.message_create_spans.enabled
     description: >
-      Enables per-message Create spans for batch sends when stable messaging semantic conventions
-      are enabled. Overrides the common messaging setting. Disabling this retains Send spans and
+      Enables per-message Create spans for batch sends.
+      Overrides the common messaging setting. Disabling this retains Send spans and
       context propagation and does not affect single-message sends.
     type: boolean
     default: true
   - ref: messaging.batch-send.message-creation-spans.enabled
   - ref: messaging.headers.included
   - ref: messaging.headers.excluded
-  - ref: messaging.capture-headers
-  - ref: messaging.deprecated-headers.included
-  - ref: messaging.deprecated-headers.excluded
   - name: otel.instrumentation.rocketmq-client.experimental-span-attributes
     declarative_name: java.rocketmq_client.experimental_span_attributes/development
     description: >
-      Enables capturing experimental span attributes `messaging.rocketmq.message.tag`,
-      `messaging.rocketmq.broker_address`, `messaging.rocketmq.send_result`,
-      `messaging.rocketmq.queue_id`, and `messaging.rocketmq.queue_offset`.
+      Enables capturing experimental span attributes `rocketmq.message.tag`,
+      `rocketmq.broker_address`, `rocketmq.send_result`,
+      `rocketmq.queue_id`, and `rocketmq.queue_offset`.
     type: boolean
     default: false

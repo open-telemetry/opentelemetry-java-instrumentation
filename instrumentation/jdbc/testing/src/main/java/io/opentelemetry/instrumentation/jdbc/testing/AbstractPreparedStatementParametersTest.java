@@ -5,25 +5,16 @@
 
 package io.opentelemetry.instrumentation.jdbc.testing;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_PARAMETER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_SUMMARY;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -38,6 +29,8 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -66,16 +59,18 @@ public abstract class AbstractPreparedStatementParametersTest {
   private static final String DATABASE_NAME = "jdbcUnitTest";
   private static final String DATABASE_NAME_LOWER = DATABASE_NAME.toLowerCase(Locale.ROOT);
 
-  private static final Map<String, String> JDBC_URLS =
-      ImmutableMap.of(
-          "h2", "jdbc:h2:mem:" + DATABASE_NAME,
-          "derby", "jdbc:derby:memory:" + DATABASE_NAME,
-          "hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME,
-          "sqlite", "jdbc:sqlite:file:" + DATABASE_NAME + "?mode=memory");
-  private static final Map<String, String> jdbcUserNames = Maps.newHashMap();
+  private static final Map<String, String> JDBC_URLS;
+  private static final Map<String, String> jdbcUserNames = new HashMap<>();
   private static final Properties connectionProps = new Properties();
 
   static {
+    Map<String, String> jdbcUrls = new HashMap<>();
+    jdbcUrls.put("h2", "jdbc:h2:mem:" + DATABASE_NAME);
+    jdbcUrls.put("derby", "jdbc:derby:memory:" + DATABASE_NAME);
+    jdbcUrls.put("hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME);
+    jdbcUrls.put("sqlite", "jdbc:sqlite:file:" + DATABASE_NAME + "?mode=memory");
+    JDBC_URLS = Collections.unmodifiableMap(jdbcUrls);
+
     jdbcUserNames.put("derby", "APP");
     jdbcUserNames.put("h2", null);
     jdbcUserNames.put("hsqldb", "SA");
@@ -94,7 +89,7 @@ public abstract class AbstractPreparedStatementParametersTest {
             null,
             "SELECT 3, ?",
             "SELECT 3, ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "SELECT",
             "h2:mem:",
             null),
         Arguments.of(
@@ -121,7 +116,7 @@ public abstract class AbstractPreparedStatementParametersTest {
             null,
             "SELECT 3, ?",
             "SELECT 3, ?",
-            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DATABASE_NAME_LOWER,
+            "SELECT",
             "sqlite:memory:",
             null));
   }
@@ -141,12 +136,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         query,
         sanitizedQuery,
         spanName,
-        url,
-        table,
         statement -> statement.setBoolean(1, true),
         "true");
   }
@@ -166,12 +158,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         query,
         sanitizedQuery,
         spanName,
-        url,
-        table,
         statement -> statement.setByte(1, (byte) 42),
         "42");
   }
@@ -191,12 +180,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         query,
         sanitizedQuery,
         spanName,
-        url,
-        table,
         statement -> statement.setShort(1, (short) 0),
         "0");
   }
@@ -216,12 +202,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         query,
         sanitizedQuery,
         spanName,
-        url,
-        table,
         statement -> statement.setInt(1, 0),
         "0");
   }
@@ -241,12 +224,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         query,
         sanitizedQuery,
         spanName,
-        url,
-        table,
         statement -> statement.setLong(1, 0),
         "0");
   }
@@ -266,12 +246,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         query,
         sanitizedQuery,
         spanName,
-        url,
-        table,
         statement -> statement.setFloat(1, 0.1f),
         "0.1");
   }
@@ -291,12 +268,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         query,
         sanitizedQuery,
         spanName,
-        url,
-        table,
         statement -> statement.setDouble(1, 0.1),
         "0.1");
   }
@@ -316,12 +290,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         query,
         sanitizedQuery,
         spanName,
-        url,
-        table,
         statement -> statement.setBigDecimal(1, BigDecimal.ZERO),
         "0");
   }
@@ -341,12 +312,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         query,
         sanitizedQuery,
         spanName,
-        url,
-        table,
         statement -> statement.setString(1, "S"),
         "S");
   }
@@ -366,12 +334,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         query,
         sanitizedQuery,
         spanName,
-        url,
-        table,
         statement -> statement.setObject(1, "S"),
         "S");
   }
@@ -395,12 +360,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         query,
         sanitizedQuery,
         spanName,
-        url,
-        table,
         statement -> statement.setObject(1, new IdType()),
         "id");
   }
@@ -423,12 +385,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         query,
         sanitizedQuery,
         spanName,
-        url,
-        table,
         statement -> statement.setObject(1, "S", Types.CHAR),
         "S");
   }
@@ -451,12 +410,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         updatedQuery,
         updatedQuerySanitized,
         spanName,
-        url,
-        table,
         statement -> statement.setDate(1, Date.valueOf("2000-01-01")),
         "2000-01-01");
   }
@@ -479,12 +435,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         updatedQuery,
         updatedQuerySanitized,
         spanName,
-        url,
-        table,
         statement -> statement.setDate(1, Date.valueOf("2000-01-01"), Calendar.getInstance()),
         "2000-01-01");
   }
@@ -507,12 +460,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         updatedQuery,
         updatedQuerySanitized,
         spanName,
-        url,
-        table,
         statement -> statement.setTime(1, Time.valueOf("00:00:00")),
         "00:00:00");
   }
@@ -535,12 +485,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         updatedQuery,
         updatedQuerySanitized,
         spanName,
-        url,
-        table,
         statement -> statement.setTime(1, Time.valueOf("00:00:00"), Calendar.getInstance()),
         "00:00:00");
   }
@@ -563,12 +510,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         updatedQuery,
         updatedQuerySanitized,
         spanName,
-        url,
-        table,
         statement -> statement.setTimestamp(1, Timestamp.valueOf("2000-01-01 00:00:00")),
         "2000-01-01 00:00:00.0");
   }
@@ -591,12 +535,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         updatedQuery,
         updatedQuerySanitized,
         spanName,
-        url,
-        table,
         statement ->
             statement.setTimestamp(
                 1, Timestamp.valueOf("2000-01-01 00:00:00"), Calendar.getInstance()),
@@ -621,12 +562,9 @@ public abstract class AbstractPreparedStatementParametersTest {
     test(
         system,
         connection,
-        username,
         query,
         sanitizedQuery,
         spanName,
-        url,
-        table,
         statement -> statement.setNString(1, "S"),
         "S");
   }
@@ -634,12 +572,9 @@ public abstract class AbstractPreparedStatementParametersTest {
   private void test(
       String system,
       Connection connection,
-      String username,
       String query,
       String sanitizedQuery,
       String spanName,
-      String url,
-      String table,
       ThrowingConsumer<PreparedStatement, SQLException> setParameter,
       String expectedParameterValue)
       throws SQLException {
@@ -669,21 +604,11 @@ public abstract class AbstractPreparedStatementParametersTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), DATABASE_NAME_LOWER),
-                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                                 equalTo(
-                                    DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                                equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    emitStableDatabaseSemconv() ? null : "SELECT"),
-                                equalTo(
-                                    maybeStable(DB_SQL_TABLE),
-                                    emitStableDatabaseSemconv() ? null : table),
-                                equalTo(
-                                    DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv() ? spanName : null),
+                                    DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
+                                equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
+                                equalTo(DB_QUERY_TEXT, sanitizedQuery),
+                                equalTo(DB_QUERY_SUMMARY, spanName),
                                 equalTo(
                                     DB_QUERY_PARAMETER.getAttributeKey("0"),
                                     expectedParameterValue))));

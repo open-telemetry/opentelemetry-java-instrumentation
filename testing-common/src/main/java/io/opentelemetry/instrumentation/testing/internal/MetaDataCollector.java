@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.testing.internal;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributeType;
 import io.opentelemetry.api.internal.InternalAttributeKeyImpl;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.testing.internal.jackson.annotation.JsonInclude;
 import io.opentelemetry.testing.internal.jackson.annotation.JsonProperty;
 import io.opentelemetry.testing.internal.jackson.dataformat.yaml.YAMLFactory;
@@ -57,7 +57,7 @@ public class MetaDataCollector {
 
   public static void writeTelemetryToFiles(
       String path,
-      Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope,
+      Map<InstrumentationScopeInfo, Map<String, CollectedMetric>> metricsByScope,
       Map<InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
           spansByScopeAndKind,
       Map<InstrumentationScopeInfo, Map<CollectedEvent.Key, CollectedEvent>> eventsByScope,
@@ -203,7 +203,7 @@ public class MetaDataCollector {
 
   private static void writeMetricData(
       String instrumentationPath,
-      Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope) {
+      Map<InstrumentationScopeInfo, Map<String, CollectedMetric>> metricsByScope) {
 
     if (metricsByScope.isEmpty()) {
       return;
@@ -220,16 +220,16 @@ public class MetaDataCollector {
       metricsData.when = when;
       metricsData.metricsByScope = new ArrayList<>();
 
-      for (Map.Entry<InstrumentationScopeInfo, Map<String, MetricData>> entry :
+      for (Map.Entry<InstrumentationScopeInfo, Map<String, CollectedMetric>> entry :
           metricsByScope.entrySet()) {
         InstrumentationScopeInfo scope = entry.getKey();
-        Map<String, MetricData> metrics = entry.getValue();
+        Map<String, CollectedMetric> metrics = entry.getValue();
 
         ScopeMetrics scopeMetrics = new ScopeMetrics();
         scopeMetrics.scope = scope.getName();
         scopeMetrics.metrics = new ArrayList<>();
 
-        for (MetricData metric : metrics.values()) {
+        for (CollectedMetric metric : metrics.values()) {
           Metric metricInfo = new Metric();
           metricInfo.name = metric.getName();
           metricInfo.description = metric.getDescription();
@@ -237,32 +237,13 @@ public class MetaDataCollector {
           metricInfo.unit = metric.getUnit();
           metricInfo.attributes = new ArrayList<>();
 
-          // Capture isMonotonic for SUM types to help infer instrument type
-          switch (metric.getType()) {
-            case LONG_SUM:
-              metricInfo.isMonotonic = metric.getLongSumData().isMonotonic();
-              break;
-            case DOUBLE_SUM:
-              metricInfo.isMonotonic = metric.getDoubleSumData().isMonotonic();
-              break;
-            default:
-              metricInfo.isMonotonic = null;
-              break;
+          metricInfo.isMonotonic = metric.isMonotonic();
+          for (AttributeKey<?> key : metric.getAttributeKeys()) {
+            AttributeInfo attr = new AttributeInfo();
+            attr.name = key.getKey();
+            attr.type = key.getType().toString();
+            metricInfo.attributes.add(attr);
           }
-
-          metric.getData().getPoints().stream()
-              .findFirst()
-              .ifPresent(
-                  point ->
-                      point
-                          .getAttributes()
-                          .forEach(
-                              (key, value) -> {
-                                AttributeInfo attr = new AttributeInfo();
-                                attr.name = key.getKey();
-                                attr.type = key.getType().toString();
-                                metricInfo.attributes.add(attr);
-                              }));
 
           scopeMetrics.metrics.add(metricInfo);
         }

@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
 import static java.util.Collections.emptySet;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.metrics.Meter;
 import java.io.Closeable;
 import java.util.Collections;
@@ -30,34 +29,25 @@ import jdk.jfr.consumer.RecordingStream;
  */
 public class JfrConfig {
 
-  private boolean useLegacyCpuCountMetric = false;
-
   public static JfrConfig create() {
     return new JfrConfig();
   }
 
   private JfrConfig() {}
 
-  /**
-   * Sets whether to use the legacy metric name {@code jvm.cpu.limit} instead of the standard {@code
-   * jvm.cpu.count}. This is for backward compatibility with previous versions.
-   */
-  @CanIgnoreReturnValue
-  public JfrConfig setUseLegacyJfrCpuCountMetric(boolean useLegacy) {
-    this.useLegacyCpuCountMetric = useLegacy;
-    return this;
-  }
-
   public JfrTelemetry buildJfrTelemetry(
       Predicate<String> metricNamePredicate,
-      Meter meter,
+      Predicate<String> schemaMetricPredicate,
+      Meter schemaMeter,
+      Meter meterWithoutSchema,
       boolean requireCompleteJmxReplacement,
       boolean emitExperimentalJmxMetrics) {
     JfrRuntimeMetrics telemetry =
         JfrRuntimeMetrics.build(
-            meter,
             metricNamePredicate,
-            useLegacyCpuCountMetric,
+            schemaMetricPredicate,
+            schemaMeter,
+            meterWithoutSchema,
             requireCompleteJmxReplacement,
             emitExperimentalJmxMetrics);
     if (telemetry == null) {
@@ -139,9 +129,10 @@ public class JfrConfig {
 
     @Nullable
     static JfrRuntimeMetrics build(
-        Meter meter,
         Predicate<String> metricNamePredicate,
-        boolean useLegacyCpuCountMetric,
+        Predicate<String> schemaMetricPredicate,
+        Meter schemaMeter,
+        Meter meterWithoutSchema,
         boolean requireCompleteJmxReplacement,
         boolean emitExperimentalJmxMetrics) {
       if (!isJfrAvailable()) {
@@ -149,11 +140,16 @@ public class JfrConfig {
       }
       List<RecordedEventHandler> handlers =
           HandlerRegistry.getHandlers(
-              meter,
-              metricNamePredicate,
-              useLegacyCpuCountMetric,
+              schemaMeter,
+              metricNamePredicate.and(schemaMetricPredicate),
               requireCompleteJmxReplacement,
               emitExperimentalJmxMetrics);
+      handlers.addAll(
+          HandlerRegistry.getHandlers(
+              meterWithoutSchema,
+              metricNamePredicate.and(schemaMetricPredicate.negate()),
+              requireCompleteJmxReplacement,
+              emitExperimentalJmxMetrics));
       if (handlers.isEmpty()) {
         return null;
       }

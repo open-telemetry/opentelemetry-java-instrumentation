@@ -51,17 +51,6 @@ class RocketMqConsumerProcessAttributeGetter
   }
 
   @Override
-  public Long getMessageBodySize(MessageView messageView) {
-    return (long) messageView.getBody().remaining();
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(MessageView messageView) {
-    return null;
-  }
-
-  @Override
   public String getMessageId(MessageView messageView, @Nullable ConsumeResult unused) {
     return messageView.getMessageId().toString();
   }
@@ -82,7 +71,10 @@ class RocketMqConsumerProcessAttributeGetter
   @Override
   public String getErrorType(
       MessageView messageView, @Nullable ConsumeResult consumeResult, @Nullable Throwable error) {
-    return consumeResult == ConsumeResult.FAILURE ? ConsumeResult.FAILURE.name() : null;
+    if (consumeResult == ConsumeResult.FAILURE) {
+      return ConsumeResult.FAILURE.name();
+    }
+    return error == null ? null : error.getClass().getName();
   }
 
   @Override

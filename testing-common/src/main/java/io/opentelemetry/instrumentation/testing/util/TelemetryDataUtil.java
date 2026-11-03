@@ -13,6 +13,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
@@ -31,6 +32,14 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 public class TelemetryDataUtil {
+
+  public static SpanContext asRemote(SpanContext spanContext) {
+    return SpanContext.createFromRemoteParent(
+        spanContext.getTraceId(),
+        spanContext.getSpanId(),
+        spanContext.getTraceFlags(),
+        spanContext.getTraceState());
+  }
 
   public static Comparator<List<SpanData>> orderByRootSpanKind(SpanKind... spanKinds) {
     List<SpanKind> list = asList(spanKinds);

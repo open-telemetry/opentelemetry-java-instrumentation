@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.metro.v2_2;
 
-import static io.opentelemetry.javaagent.extension.instrumentation.internal.DeprecatedInstrumentationNames.expandDeprecatedNames;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
@@ -19,8 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class MetroInstrumentationModule extends InstrumentationModule {
 
   public MetroInstrumentationModule() {
-    super(
-        "metro", expandDeprecatedNames("jaxws-2.0-metro-2.2|deprecated:jaxws-metro-2.2", "jaxws"));
+    super("jaxws-2.0-metro-2.2", "jaxws-metro", "jaxws");
   }
 
   @Override

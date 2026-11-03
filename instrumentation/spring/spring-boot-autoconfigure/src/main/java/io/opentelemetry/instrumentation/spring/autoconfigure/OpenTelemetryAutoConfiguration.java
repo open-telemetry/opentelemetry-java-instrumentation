@@ -17,7 +17,6 @@ import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigBridge;
-import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
 import io.opentelemetry.instrumentation.logging.internal.AbstractSpanLoggingCustomizerProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigDisabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigEnabled;
@@ -212,24 +211,6 @@ public class OpenTelemetryAutoConfiguration {
         return new SpringOpenTelemetrySdk(sdk, configProvider);
       }
 
-      /**
-       * Expose the {@link ConfigProperties} bean for use in other auto-configurations.
-       *
-       * <p>Not using spring boot properties directly, because declarative configuration does not
-       * integrate with spring boot properties.
-       *
-       * @deprecated This {@link ConfigProperties} compatibility bean will be removed in 3.0.
-       *     Auto-configurations that support the experimental Declarative Configuration should use
-       *     the Declarative Config API directly.
-       */
-      @Deprecated // will be removed in 3.0
-      @Bean
-      ConfigProperties otelProperties(OpenTelemetry openTelemetry) {
-        return new DeclarativeConfigPropertiesBridgeBuilder()
-            .buildFromInstrumentationConfig(
-                configProviderFrom(openTelemetry).getInstrumentationConfig());
-      }
-
       private static ConfigProvider configProviderFrom(OpenTelemetry openTelemetry) {
         if (openTelemetry instanceof ExtendedOpenTelemetry) {
           return ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider();
@@ -306,11 +287,6 @@ public class OpenTelemetryAutoConfiguration {
     }
 
     @Bean
-    ConfigProperties otelProperties() {
-      return DefaultConfigProperties.createFromMap(emptyMap());
-    }
-
-    @Bean
     ConfigProvider configProvider() {
       return ConfigProvider.noop();
     }
@@ -318,6 +294,11 @@ public class OpenTelemetryAutoConfiguration {
     @Configuration
     @Conditional(DeclarativeConfigDisabled.class)
     static class PropertiesConfig {
+      @Bean
+      ConfigProperties otelProperties() {
+        return DefaultConfigProperties.createFromMap(emptyMap());
+      }
+
       /**
        * Is only added so that we have the same converters as with active OpenTelemetry SDK
        *
@@ -334,6 +315,7 @@ public class OpenTelemetryAutoConfiguration {
   @Configuration
   @ConditionalOnBean(OpenTelemetry.class)
   @ConditionalOnMissingBean({ConfigProperties.class})
+  @Conditional(DeclarativeConfigDisabled.class)
   static class FallbackConfigProperties {
     @Bean
     ConfigProperties otelProperties(ApplicationContext applicationContext) {

@@ -34,8 +34,7 @@ class MessageInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void after(@Advice.This Message<?> message) {
-      // Clean context to prevent memory leak.
-      VirtualFieldStore.clear(message);
+      VirtualFieldStore.clearProcessParentContext(message);
     }
   }
 }

@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -44,9 +43,8 @@ class OutboundEnvelopeInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This OutboundEnvelope envelope) {
-      Context context = Java8BytecodeBridge.currentContext();
-      OUTBOUND_ENVELOPE_CONTEXT.set(
-          envelope, context == Java8BytecodeBridge.rootContext() ? null : context);
+      Context context = Context.current();
+      OUTBOUND_ENVELOPE_CONTEXT.set(envelope, context == Context.root() ? null : context);
     }
   }
 

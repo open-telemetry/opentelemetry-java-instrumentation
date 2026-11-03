@@ -14,7 +14,8 @@ import io.opentelemetry.api.trace.SpanContext;
 public interface SpanLinksBuilder {
 
   /**
-   * Adds a link to the newly created {@code Span}. Invalid {@link SpanContext}s will be skipped.
+   * Adds a link to the newly created {@code Span}. Link recording is delegated to the underlying
+   * {@link SpanBuilder}.
    *
    * @param spanContext the context of the linked {@code Span}.
    * @return this.
@@ -24,12 +25,13 @@ public interface SpanLinksBuilder {
   SpanLinksBuilder addLink(SpanContext spanContext);
 
   /**
-   * Adds a link to the newly created {@code Span}. Invalid {@link SpanContext}s will be skipped.
+   * Adds a link to the newly created {@code Span}. Link recording is delegated to the underlying
+   * {@link SpanBuilder}.
    *
    * @param spanContext the context of the linked {@code Span}.
    * @param attributes the attributes of the {@code Link}.
    * @return this.
-   * @see SpanBuilder#addLink(SpanContext)
+   * @see SpanBuilder#addLink(SpanContext, Attributes)
    */
   @CanIgnoreReturnValue
   SpanLinksBuilder addLink(SpanContext spanContext, Attributes attributes);

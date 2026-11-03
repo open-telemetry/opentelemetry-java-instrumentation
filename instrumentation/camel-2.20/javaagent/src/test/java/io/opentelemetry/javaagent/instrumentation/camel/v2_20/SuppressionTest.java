@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -29,9 +29,8 @@ import java.util.function.Consumer;
 class SuppressionTest {
 
   private static final boolean NESTED_HTTP_CLIENT_SPAN =
-      "semconv"
-          .equals(
-              System.getProperty("otel.instrumentation.experimental.span-suppression-strategy"));
+      !"span-kind"
+          .equals(System.getProperty("otel.instrumentation.common.span-suppression-strategy"));
 
   /** Returns the number of spans that the nested http client instrumentation adds to a trace. */
   static int nestedHttpClientSpans() {
@@ -44,6 +43,7 @@ class SuppressionTest {
       String url,
       String serverAddress,
       long serverPort,
+      String expectedMappedServiceName,
       SpanData parent) {
     if (!NESTED_HTTP_CLIENT_SPAN) {
       return;
@@ -57,7 +57,7 @@ class SuppressionTest {
                     equalTo(HTTP_REQUEST_METHOD, method),
                     equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                     equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                    equalTo(maybeStablePeerService(), "test-peer-service"),
+                    equalTo(stringKey("server.service.name"), expectedMappedServiceName),
                     equalTo(SERVER_ADDRESS, serverAddress),
                     equalTo(SERVER_PORT, serverPort),
                     equalTo(URL_FULL, url)));

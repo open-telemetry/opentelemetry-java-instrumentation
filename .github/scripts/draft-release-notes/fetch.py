@@ -4,11 +4,13 @@
 This script is the source of truth for release-note draft generation. It emits
 the raw markdown scaffold on stdout and prepares a local bundle of per-PR
 patches and metadata under build/changelog-bundle/.
+Missing discussion references are recorded as unavailable in the bundle.
 """
 
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import re
 import shutil
@@ -24,6 +26,12 @@ from typing import Any, Callable
 REPO = "open-telemetry/opentelemetry-java-instrumentation"
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_BUNDLE_DIR = REPO_ROOT / "build" / "changelog-bundle"
+RELEASE_CONFIG_SPEC = importlib.util.spec_from_file_location(
+    "release_config", REPO_ROOT / ".github" / "scripts" / "release-config.py"
+)
+release_config = importlib.util.module_from_spec(RELEASE_CONFIG_SPEC)
+assert RELEASE_CONFIG_SPEC.loader is not None
+RELEASE_CONFIG_SPEC.loader.exec_module(release_config)
 AUTHOR_FILTER = r"^(?!renovate\[bot\] )"
 SRC_MAIN_JAVA_PATHSPEC = "*/src/main/**/*.java"
 PR_SUFFIX_RE = re.compile(r"\s*\(#(\d+)\)$")
@@ -101,6 +109,7 @@ def run_command(args: list[str], check: bool = True) -> subprocess.CompletedProc
         encoding="utf-8",
         errors="replace",
         check=check,
+        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
     )
 
 
@@ -109,13 +118,24 @@ def load_json(args: list[str]) -> Any:
     return json.loads(result.stdout)
 
 
-def load_json_with_retry(args: list[str]) -> Any:
-    """Run a `gh` command with retries to absorb transient API failures."""
+def load_json_with_retry(args: list[str], *, optional_ref: int | None = None) -> Any:
+    """Retry transient API failures and retain missing optional references."""
     last_error: subprocess.CalledProcessError | None = None
     for attempt in range(1, GH_FETCH_RETRIES + 1):
         try:
             return load_json(args)
         except subprocess.CalledProcessError as e:
+            if optional_ref is not None and (
+                f"Could not resolve to an issue or pull request with the number of {optional_ref}."
+                in (e.stderr or "")
+            ):
+                warn(f"Reference #{optional_ref} is unavailable; retaining a placeholder in the bundle.")
+                return {
+                    "number": optional_ref,
+                    "title": f"Unavailable reference #{optional_ref}",
+                    "url": f"https://github.com/{REPO}/issues/{optional_ref}",
+                    "unavailable": True,
+                }
             last_error = e
             if attempt == GH_FETCH_RETRIES:
                 break
@@ -150,23 +170,13 @@ def compute_default_range(version: str) -> str:
     if match is None:
         raise RuntimeError(f"unexpected version: {version}")
 
-    major = int(match.group(1))
-    minor = int(match.group(2))
     changelog = (REPO_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-
-    if minor == 0:
-        prior_major = major - 1
-        prior_minor_match = re.search(
-            rf"^## Version {prior_major}\.(\d+)\..*$",
-            changelog,
-            re.MULTILINE,
-        )
-        if prior_minor_match is None:
+    prior_version = release_config.prior_release_version(version, changelog)
+    if prior_version is None:
+        if int(match.group(2)) == 0:
             return "HEAD"
-        prior_minor = int(prior_minor_match.group(1))
-        return f"v{prior_major}.{prior_minor}.0..HEAD"
-
-    return f"v{major}.{minor - 1}.0..HEAD"
+        raise RuntimeError(f"no previous release found for {version}")
+    return f"v{prior_version}..HEAD"
 
 
 def get_commit_hashes(range_spec: str) -> list[str]:
@@ -407,6 +417,7 @@ def render_discussion_markdown(title: str, items: Any, item_type: str) -> str:
 def extract_reference_numbers(texts: list[str], excluded_numbers: set[int]) -> list[int]:
     references: set[int] = set()
     for text in texts:
+        text = re.sub(r"\[[^\]]*\]\((https?://[^\s)]+)\)", r"\1", text)
         for match in ISSUE_REF_RE.finditer(text):
             number = match.group(1) or match.group(2)
             if number is None:
@@ -461,7 +472,8 @@ def fetch_ref_data(ref_number: int) -> dict[str, Any]:
             REPO,
             "--json",
             "number,title,author,body,comments,labels,state,url",
-        ]
+        ],
+        optional_ref=ref_number,
     )
 
 

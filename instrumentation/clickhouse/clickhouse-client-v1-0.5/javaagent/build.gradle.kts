@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -15,29 +16,9 @@ dependencies {
   implementation(project(":instrumentation:clickhouse:clickhouse-client-common-0.5:javaagent"))
   compileOnly("com.clickhouse:clickhouse-client:0.5.0")
 
-  testImplementation("com.google.guava:guava")
   testLibrary("com.clickhouse:clickhouse-client:0.5.0")
   testLibrary("com.clickhouse:clickhouse-http-client:0.5.0")
   testLibrary("org.apache.httpcomponents.client5:httpclient5:5.2.3")
 
   testInstrumentation(project(":instrumentation:clickhouse:clickhouse-client-v2-0.8:javaagent"))
-}
-
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
 }

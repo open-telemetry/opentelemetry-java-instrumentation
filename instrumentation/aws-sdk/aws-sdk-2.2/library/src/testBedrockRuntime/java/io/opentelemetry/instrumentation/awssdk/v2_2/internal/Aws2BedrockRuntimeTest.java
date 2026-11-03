@@ -20,7 +20,6 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.INPUT;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.OUTPUT;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,7 +38,9 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import software.amazon.awssdk.awscore.eventstream.EventStreamResponseHandler;
 import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.core.async.SdkPublisher;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.document.Document;
 import software.amazon.awssdk.protocols.json.SdkJsonGenerator;
@@ -73,9 +74,7 @@ import software.amazon.awssdk.services.bedrockruntime.model.ToolUseBlockDelta;
 import software.amazon.awssdk.services.bedrockruntime.model.ToolUseBlockStart;
 import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
 
-// TODO: Remove after https://github.com/open-telemetry/semantic-conventions-genai/issues/247
-// is resolved.
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // using deprecated semconv
 class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
 
   @RegisterExtension
@@ -106,7 +105,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
   @Override
   protected BedrockRuntimeAsyncClient configureBedrockRuntimeClient(
       BedrockRuntimeAsyncClient client) {
-    return telemetry.wrapBedrockRuntimeClient(client);
+    return telemetry.instrumentBedrockRuntimeClient(client);
   }
 
   @Test
@@ -181,7 +180,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -228,7 +227,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -317,7 +316,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -364,7 +363,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -418,7 +417,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .addExecutionInterceptor(telemetry.createExecutionInterceptor())
             .build());
     configureClient(builder);
-    BedrockRuntimeAsyncClient client = telemetry.wrapBedrockRuntimeClient(builder.build());
+    BedrockRuntimeAsyncClient client = telemetry.instrumentBedrockRuntimeClient(builder.build());
 
     String modelId = "amazon.nova-micro-v1:0";
     List<Message> messages = new ArrayList<>();
@@ -527,7 +526,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -574,7 +573,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -683,7 +682,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -730,7 +729,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -804,6 +803,33 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         .build())
                 .build())
         .build();
+  }
+
+  @Test
+  void telemetryParsingFailureDoesNotEscapeTheStream() {
+    EventStreamResponseHandler<Object, Object> delegate =
+        new EventStreamResponseHandler<Object, Object>() {
+          @Override
+          public void responseReceived(Object response) {}
+
+          @Override
+          public void onEventStream(SdkPublisher<Object> publisher) {}
+
+          @Override
+          public void exceptionOccurred(Throwable throwable) {}
+
+          @Override
+          public void complete() {}
+        };
+    BedrockRuntimeImpl.BedrockRuntimeStreamResponseHandler<Object, Object> handler =
+        new BedrockRuntimeImpl.BedrockRuntimeStreamResponseHandler<Object, Object>(delegate) {
+          @Override
+          protected void handleEvent(Object event) {
+            throw new IllegalStateException("malformed event");
+          }
+        };
+
+    handler.handleEventSafely(new Object());
   }
 
   @Test
@@ -941,7 +967,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -987,7 +1013,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1105,7 +1131,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -1152,7 +1178,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1206,7 +1232,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .addExecutionInterceptor(telemetry.createExecutionInterceptor())
             .build());
     configureClient(builder);
-    BedrockRuntimeAsyncClient client = telemetry.wrapBedrockRuntimeClient(builder.build());
+    BedrockRuntimeAsyncClient client = telemetry.instrumentBedrockRuntimeClient(builder.build());
 
     String modelId = "amazon.nova-micro-v1:0";
     Document toolConfig =
@@ -1383,7 +1409,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -1429,7 +1455,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1591,7 +1617,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -1638,7 +1664,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1800,7 +1826,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -1846,7 +1872,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1942,7 +1968,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -1989,7 +2015,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -2043,7 +2069,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .addExecutionInterceptor(telemetry.createExecutionInterceptor())
             .build());
     configureClient(builder);
-    BedrockRuntimeAsyncClient client = telemetry.wrapBedrockRuntimeClient(builder.build());
+    BedrockRuntimeAsyncClient client = telemetry.instrumentBedrockRuntimeClient(builder.build());
 
     String modelId = "anthropic.claude-3-5-sonnet-20240620-v1:0";
     Document tools =
@@ -2223,7 +2249,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -2269,7 +2295,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx0)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -2406,7 +2432,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -2453,7 +2479,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx1)
-                    .hasBody(Value.of(emptyMap())),
+                    .hasBody((Value<?>) null),
             log ->
                 log.hasAttributesSatisfyingExactly(
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),

@@ -62,6 +62,8 @@ class CrashEarlyJdk8Test {
   void testCrashOnEarlyJdk8() throws Exception {
     result = target.execInContainer("/bin/sh", "-c", "/test.sh");
     assertThat(result.getExitCode()).isZero();
+    assertThat(result.getStdout()).contains("test program completed successfully");
+    assertThat(result.getStderr()).doesNotContain("OpenTelemetry Javaagent failed to start");
   }
 
   @AfterEach

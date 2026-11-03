@@ -23,7 +23,7 @@ class Ec2ClientTest extends AbstractEc2ClientTest {
   public AmazonEC2ClientBuilder configureClient(AmazonEC2ClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true)
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
             .build()
             .createRequestHandler());
   }

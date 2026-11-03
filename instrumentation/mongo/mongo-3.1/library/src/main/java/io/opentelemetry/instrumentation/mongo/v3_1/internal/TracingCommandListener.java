@@ -21,16 +21,17 @@ import javax.annotation.Nullable;
  */
 public final class TracingCommandListener implements CommandListener {
 
-  private final Instrumenter<CommandStartedEvent, Void> instrumenter;
+  private final Instrumenter<CommandStartedEvent, CommandSucceededEvent> instrumenter;
   private final Map<Integer, ContextAndRequest> requestMap;
   @Nullable private final MongoServerTarget configuredTarget;
 
-  public TracingCommandListener(Instrumenter<CommandStartedEvent, Void> instrumenter) {
+  public TracingCommandListener(
+      Instrumenter<CommandStartedEvent, CommandSucceededEvent> instrumenter) {
     this(instrumenter, null);
   }
 
   public TracingCommandListener(
-      Instrumenter<CommandStartedEvent, Void> instrumenter,
+      Instrumenter<CommandStartedEvent, CommandSucceededEvent> instrumenter,
       @Nullable MongoServerTarget configuredTarget) {
     this.instrumenter = instrumenter;
     this.requestMap = new ConcurrentHashMap<>();
@@ -51,7 +52,7 @@ public final class TracingCommandListener implements CommandListener {
   public void commandSucceeded(CommandSucceededEvent event) {
     ContextAndRequest contextAndRequest = requestMap.remove(event.getRequestId());
     if (contextAndRequest != null) {
-      instrumenter.end(contextAndRequest.getContext(), contextAndRequest.getRequest(), null, null);
+      instrumenter.end(contextAndRequest.getContext(), contextAndRequest.getRequest(), event, null);
     }
   }
 

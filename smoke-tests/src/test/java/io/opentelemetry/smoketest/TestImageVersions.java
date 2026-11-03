@@ -9,16 +9,16 @@ package io.opentelemetry.smoketest;
 public class TestImageVersions {
 
   // smoke-test-spring-boot
-  public static final String SPRING_BOOT_VERSION = "20260908.34272316197";
+  public static final String SPRING_BOOT_VERSION = "20261007.37549989900";
 
   // smoke-test-grpc
-  public static final String GRPC_VERSION = "20260908.34190084723";
+  public static final String GRPC_VERSION = "20261007.37549990052";
 
   // smoke-test-play
-  public static final String PLAY_VERSION = "20260825.32803070850";
+  public static final String PLAY_VERSION = "20261007.37549989769";
 
   // smoke-test-quarkus
-  public static final String QUARKUS_VERSION = "20260908.34191901987";
+  public static final String QUARKUS_VERSION = "20261007.37549989866";
 
   // smoke-test-security-manager
   public static final String SECURITY_MANAGER_VERSION = "20260825.32803070890";
@@ -27,7 +27,7 @@ public class TestImageVersions {
   public static final String ZULU_OPENJDK_8U31_VERSION = "20260825.32803070904";
 
   // smoke-test-servlet-* (all servlet variants)
-  public static final String SERVLET_VERSION = "20260825.32803070686";
+  public static final String SERVLET_VERSION = "20261007.37549989456";
 
   private TestImageVersions() {}
 }

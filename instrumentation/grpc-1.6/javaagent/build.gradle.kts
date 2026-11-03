@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -28,63 +31,37 @@ dependencies {
   testImplementation(project(":instrumentation:grpc-1.6:testing"))
 }
 
-tasks {
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          systemProperty("testLatestDeps", otelProps.testLatestDeps)
+          // The agent context debug mechanism isn't compatible with the bridge approach which may add a
+          // gRPC context to the root.
+          jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
+          jvmArgs("-Dotel.instrumentation.grpc.client.request-headers.included=some-*-key")
+          jvmArgs("-Dotel.instrumentation.grpc.client.request-headers.excluded=*-excluded-key")
+          jvmArgs("-Dotel.instrumentation.grpc.server.request-headers.included=some-*-key")
+          jvmArgs("-Dotel.instrumentation.grpc.server.request-headers.excluded=*-excluded-key")
+          // latest dep test occasionally fails because network type is ipv6 instead of the expected ipv4
+          // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
+          jvmArgs("-Djava.net.preferIPv4Stack=true")
 
-    systemProperty("metadataConfig", "otel.instrumentation.grpc.experimental-span-attributes=true")
-    jvmArgs("-Dotel.instrumentation.grpc.experimental-span-attributes=true")
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
-  }
-
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
-  }
-
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    // The agent context debug mechanism isn't compatible with the bridge approach which may add a
-    // gRPC context to the root.
-    jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
-    jvmArgs("-Dotel.instrumentation.grpc.client.request-metadata.included=some-*-key")
-    jvmArgs("-Dotel.instrumentation.grpc.client.request-metadata.excluded=*-excluded-key")
-    jvmArgs("-Dotel.instrumentation.grpc.server.request-metadata.included=some-*-key")
-    jvmArgs("-Dotel.instrumentation.grpc.server.request-metadata.excluded=*-excluded-key")
-    // latest dep test occasionally fails because network type is ipv6 instead of the expected ipv4
-    // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
-    jvmArgs("-Djava.net.preferIPv4Stack=true")
-
-    // exclude our grpc library instrumentation, the ContextStorageOverride contained within it
-    // breaks the tests
-    classpath = classpath.filter {
-      !it.absolutePath.contains("opentelemetry-grpc-1.6")
+          // exclude our grpc library instrumentation, the ContextStorageOverride contained within it
+          // breaks the tests
+          classpath = classpath.filter {
+            !it.absolutePath.contains("opentelemetry-grpc-1.6")
+          }
+        }
+        register("Experimental") {
+          telemetryConfig("otel.instrumentation.grpc.experimental-span-attributes", "true")
+        }
+        register("ExceptionSignalLogs") {
+          telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+        }
+      }
     }
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  check {
-    dependsOn(testExperimental, testStableSemconv, testBothSemconv, testExceptionSignalLogs)
   }
 }
 

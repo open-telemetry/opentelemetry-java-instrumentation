@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0.server.route;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.http.scaladsl.server.RequestContext;
 import akka.http.scaladsl.server.RouteResult;
@@ -28,8 +29,12 @@ class RouteConcatenationInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ApplyAdvice");
-    transformer.applyAdviceToMethod(named("$tilde"), getClass().getName() + "$ApplyAdvice");
+    transformer.applyAdviceToMethod(
+        isConstructor().and(takesArgument(0, named("scala.Function1"))),
+        getClass().getName() + "$ApplyAdvice");
+    transformer.applyAdviceToMethod(
+        named("$tilde").and(takesArgument(0, named("scala.Function1"))),
+        getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")

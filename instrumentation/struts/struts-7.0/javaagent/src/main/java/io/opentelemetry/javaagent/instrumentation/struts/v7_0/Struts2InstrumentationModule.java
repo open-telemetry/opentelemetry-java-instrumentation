@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class Struts2InstrumentationModule extends InstrumentationModule {
 
   public Struts2InstrumentationModule() {
-    super("struts", "struts-7.0");
+    super("struts-7.0", "struts");
   }
 
   @Override

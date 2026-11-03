@@ -79,7 +79,7 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
       RedisServerTarget target = JedisServerTargets.ofNodes(nodes);
       JedisClusterTargetAccessor.setTarget(handler, target);
       Context context = JedisSingletons.configuredTargetContext(target);
-      return context != null ? context.makeCurrent() : null;
+      return context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -105,7 +105,7 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
       JedisClusterCommandContext.enterConnectionAcquisition();
       Context context =
           JedisSingletons.configuredTargetContext(JedisClusterTargetAccessor.getTarget(handler));
-      return context != null ? context.makeCurrent() : null;
+      return context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -125,7 +125,7 @@ class JedisClusterInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(@Advice.This JedisClusterConnectionHandler handler) {
       Context context =
           JedisSingletons.configuredTargetContext(JedisClusterTargetAccessor.getTarget(handler));
-      return context != null ? context.makeCurrent() : null;
+      return context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

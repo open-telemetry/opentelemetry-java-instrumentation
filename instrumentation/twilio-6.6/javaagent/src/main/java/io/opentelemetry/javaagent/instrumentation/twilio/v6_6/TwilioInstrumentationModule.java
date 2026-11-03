@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.twilio.v6_6;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -16,12 +15,12 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class TwilioInstrumentationModule extends InstrumentationModule {
   public TwilioInstrumentationModule() {
-    super("twilio", "twilio-6.6");
+    super("twilio-6.6", "twilio");
   }
 
   @Override
   public boolean defaultEnabled() {
-    return super.defaultEnabled() && !AgentCommonConfig.get().isV3Preview();
+    return false;
   }
 
   @Override

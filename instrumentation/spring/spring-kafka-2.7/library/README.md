@@ -48,7 +48,7 @@ public class KafkaInstrumentationConfig {
   public DefaultKafkaProducerFactoryCustomizer producerInstrumentation(
       OpenTelemetry openTelemetry) {
     KafkaTelemetry kafkaTelemetry = KafkaTelemetry.create(openTelemetry);
-    return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap);
+    return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::instrument);
   }
 }
 ```
@@ -69,7 +69,7 @@ public class KafkaInstrumentationConfig {
   public DefaultKafkaProducerFactoryCustomizer producerInstrumentation(
       OpenTelemetry openTelemetry) {
     KafkaTelemetry kafkaTelemetry = KafkaTelemetry.create(openTelemetry);
-    return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap);
+    return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::instrument);
   }
 }
 ```

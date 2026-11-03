@@ -6,14 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
+import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -24,10 +26,12 @@ import io.vertx.redis.client.Command;
 import io.vertx.redis.client.impl.RedisStandaloneConnection;
 import io.vertx.redis.client.impl.RedisURI;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 public class VertxRedisClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-redis-client-4.0";
+  private static final Logger logger = Logger.getLogger(VertxRedisClientSingletons.class.getName());
   private static final Instrumenter<VertxRedisClientRequest, Void> instrumenter;
 
   private static final ScopedThreadValue<RedisURI> currentRedisUri = new ScopedThreadValue<>();
@@ -38,26 +42,16 @@ public class VertxRedisClientSingletons {
 
   static {
     VertxRedisClientAttributesGetter getter = new VertxRedisClientAttributesGetter();
-    // Redis semantic conventions don't follow the regular pattern of adding db.namespace to the
-    // span name.
-    VertxRedisClientAttributesGetter spanNameAttributesGetter =
-        new VertxRedisClientAttributesGetter() {
-          @Override
-          @Nullable
-          public String getDbNamespace(VertxRedisClientRequest request) {
-            return null;
-          }
-        };
 
     InstrumenterBuilder<VertxRedisClientRequest, Void> builder =
         Instrumenter.<VertxRedisClientRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                DbClientSpanNameExtractor.create(spanNameAttributesGetter))
+                RedisSpanNameExtractor.create(getter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(getter))
-            .addAttributesExtractor(new VertxRedisClientAttributesExtractor())
             .addAttributesExtractor(
-                ServicePeerAttributesExtractor.create(getter, GlobalOpenTelemetry.get()))
+                ServerServiceAttributesExtractor.create(getter, GlobalOpenTelemetry.get()))
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
 
@@ -76,12 +70,19 @@ public class VertxRedisClientSingletons {
         .toCompletionStage()
         .whenComplete(
             (value, throwable) -> {
-              instrumenter().end(context, request, null, throwable);
-              try (Scope ignore = parentContext.makeCurrent()) {
-                if (throwable != null) {
-                  result.completeExceptionally(throwable);
-                } else {
-                  result.complete(value);
+              try {
+                Throwable error =
+                    throwable != null ? throwable : VertxRedisClientError.findResponseError(value);
+                instrumenter().end(context, request, null, error);
+              } catch (Throwable t) {
+                logger.log(WARNING, "Failed to end the Vert.x Redis span", t);
+              } finally {
+                try (Scope ignore = parentContext.makeCurrent()) {
+                  if (throwable != null) {
+                    result.completeExceptionally(throwable);
+                  } else {
+                    result.complete(value);
+                  }
                 }
               }
             });

@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class CassandraInstrumentationModule extends InstrumentationModule {
   public CassandraInstrumentationModule() {
-    super("cassandra", "cassandra-3.0");
+    super("cassandra-3.0", "cassandra");
   }
 
   @Override

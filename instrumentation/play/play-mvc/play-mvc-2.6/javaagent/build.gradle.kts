@@ -8,26 +8,26 @@ val playVersion = "2.6.0"
 muzzle {
   pass {
     group.set("com.typesafe.play")
-    module.set("play_$scalaVersion")
-    versions.set("[$playVersion,)")
+    module.set("play_2.11")
+    versions.set("[2.6.0,)")
     assertInverse.set(true)
   }
   pass {
     group.set("com.typesafe.play")
     module.set("play_2.12")
-    versions.set("[$playVersion,)")
+    versions.set("[2.6.0,)")
     assertInverse.set(true)
   }
   pass {
     group.set("com.typesafe.play")
     module.set("play_2.13")
-    versions.set("[$playVersion,)")
+    versions.set("[2.6.0,)")
     assertInverse.set(true)
   }
   pass {
     group.set("org.playframework")
     module.set("play_3")
-    versions.set("[$playVersion,)")
+    versions.set("(,)")
     assertInverse.set(true)
   }
 }
@@ -71,12 +71,11 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty(
       "metadataConfig",
-      "otel.instrumentation.common.experimental.controller-telemetry.enabled=true"
+      "otel.instrumentation.common.controller-telemetry.enabled=true"
     )
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
   }
 
   val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()

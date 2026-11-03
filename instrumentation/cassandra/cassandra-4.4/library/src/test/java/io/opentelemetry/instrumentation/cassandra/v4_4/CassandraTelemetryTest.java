@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -61,8 +60,8 @@ class CassandraTelemetryTest {
   }
 
   @Test
-  void standardWrapHasNoStableTarget() {
-    CassandraRequest request = execute(telemetry.wrap(session));
+  void standardWrapHasNoServerTarget() {
+    CassandraRequest request = execute(telemetry.instrument(session));
 
     assertThat(request.getServerTarget()).isNull();
     verify(session, never()).getContext();
@@ -72,7 +71,7 @@ class CassandraTelemetryTest {
   void explicitContactPointsProvideTheCompleteTarget() {
     CassandraRequest request =
         execute(
-            telemetry.wrap(
+            telemetry.instrument(
                 session,
                 asList(
                     InetSocketAddress.createUnresolved("configured.example.com", 9042),
@@ -87,7 +86,7 @@ class CassandraTelemetryTest {
     List<InetSocketAddress> contactPoints =
         new ArrayList<>(
             singletonList(InetSocketAddress.createUnresolved("configured.example.com", 9142)));
-    CqlSession wrappedSession = telemetry.wrap(session, contactPoints);
+    CqlSession wrappedSession = telemetry.instrument(session, contactPoints);
 
     contactPoints.clear();
 
@@ -96,10 +95,7 @@ class CassandraTelemetryTest {
 
   @Test
   void capturedContactPointsIncludeDriverConfiguration() {
-    if (emitStableDatabaseSemconv()) {
-      configureContactPoints("configured.example.com:9042");
-    }
-
+    configureContactPoints("configured.example.com:9042");
     CassandraRequest request = execute(CassandraTelemetryUtil.wrap(telemetry, session, emptySet()));
 
     assertTarget(request, "configured.example.com", null);
@@ -107,10 +103,7 @@ class CassandraTelemetryTest {
 
   @Test
   void capturedContactPointsCombineBuilderAndDriverConfiguration() {
-    if (emitStableDatabaseSemconv()) {
-      configureContactPoints("configured.example.com:9042");
-    }
-
+    configureContactPoints("configured.example.com:9042");
     CassandraRequest request =
         execute(
             CassandraTelemetryUtil.wrap(
@@ -142,12 +135,8 @@ class CassandraTelemetryTest {
 
   private static void assertTarget(CassandraRequest request, String address, Integer port) {
     DbServerTarget target = request.getServerTarget();
-    if (emitStableDatabaseSemconv()) {
-      assertThat(target).isNotNull();
-      assertThat(target.getAddress()).isEqualTo(address);
-      assertThat(target.getPort()).isEqualTo(port);
-    } else {
-      assertThat(target).isNull();
-    }
+    assertThat(target).isNotNull();
+    assertThat(target.getAddress()).isEqualTo(address);
+    assertThat(target.getPort()).isEqualTo(port);
   }
 }

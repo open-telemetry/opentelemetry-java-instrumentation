@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class FinatraInstrumentationModule extends InstrumentationModule {
   public FinatraInstrumentationModule() {
-    super("finatra", "finatra-2.9");
+    super("finatra-2.9", "finatra");
   }
 
   @Override

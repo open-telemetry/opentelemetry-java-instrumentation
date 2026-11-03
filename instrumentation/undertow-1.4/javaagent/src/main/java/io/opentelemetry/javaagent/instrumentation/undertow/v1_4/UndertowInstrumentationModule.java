@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class UndertowInstrumentationModule extends InstrumentationModule {
 
   public UndertowInstrumentationModule() {
-    super("undertow", "undertow-1.4");
+    super("undertow-1.4", "undertow");
   }
 
   @Override

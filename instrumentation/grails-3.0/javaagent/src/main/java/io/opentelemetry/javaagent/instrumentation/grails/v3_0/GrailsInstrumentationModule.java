@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class GrailsInstrumentationModule extends InstrumentationModule {
   public GrailsInstrumentationModule() {
-    super("grails", "grails-3.0");
+    super("grails-3.0", "grails");
   }
 
   @Override

@@ -13,18 +13,16 @@ import javax.annotation.Nullable;
  * operation type</a>.
  */
 public enum MessagingOperationType {
-  CREATE("create", "create"),
-  SEND("send", "publish"),
-  RECEIVE("receive", "receive"),
-  PROCESS("process", "process"),
-  SETTLE("settle", "settle");
+  CREATE("create"),
+  SEND("send"),
+  RECEIVE("receive"),
+  PROCESS("process"),
+  SETTLE("settle");
 
   private final String value;
-  private final String legacyOperationName;
 
-  MessagingOperationType(String value, String legacyOperationName) {
+  MessagingOperationType(String value) {
     this.value = value;
-    this.legacyOperationName = legacyOperationName;
   }
 
   String value() {
@@ -43,15 +41,5 @@ public enum MessagingOperationType {
       }
     }
     return null;
-  }
-
-  /**
-   * Returns the operation name used by the old messaging semantic conventions, i.e. the value of
-   * the {@code messaging.operation} attribute and the operation part of the old span name. The
-   * v1.43 conventions require a system-specific operation name, which callers have to provide
-   * explicitly.
-   */
-  String legacyOperationName() {
-    return legacyOperationName;
   }
 }

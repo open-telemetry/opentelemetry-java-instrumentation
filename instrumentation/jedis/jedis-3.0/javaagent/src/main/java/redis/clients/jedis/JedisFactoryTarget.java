@@ -12,21 +12,15 @@ import javax.annotation.Nullable;
 // virtual field carrier.
 public final class JedisFactoryTarget {
 
-  private static final VirtualField<JedisFactory, JedisFactoryTarget> TARGET =
-      VirtualField.find(JedisFactory.class, JedisFactoryTarget.class);
-
-  private final Object value;
-
-  private JedisFactoryTarget(Object value) {
-    this.value = value;
-  }
+  private static final VirtualField<JedisFactory, Object> TARGET =
+      VirtualField.find(JedisFactory.class, Object.class, "configuredTarget");
 
   public static boolean isInstance(Object factory) {
     return factory instanceof JedisFactory;
   }
 
   public static void set(Object factory, Object target) {
-    TARGET.set((JedisFactory) factory, new JedisFactoryTarget(target));
+    TARGET.set((JedisFactory) factory, target);
   }
 
   @Nullable
@@ -34,7 +28,8 @@ public final class JedisFactoryTarget {
     if (!(factory instanceof JedisFactory)) {
       return null;
     }
-    JedisFactoryTarget target = TARGET.get((JedisFactory) factory);
-    return target == null ? null : target.value;
+    return TARGET.get((JedisFactory) factory);
   }
+
+  private JedisFactoryTarget() {}
 }

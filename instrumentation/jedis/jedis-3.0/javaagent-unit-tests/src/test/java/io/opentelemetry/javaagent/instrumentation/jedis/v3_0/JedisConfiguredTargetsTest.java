@@ -105,14 +105,16 @@ class JedisConfiguredTargetsTest {
   }
 
   @Test
-  void requestSkipsCapturedConnectionTargetForLegacySemconv() {
+  void requestUsesCapturedConnectionTarget() {
     Connection connection = new Connection("direct", 6379);
     JedisConfiguredTargets.setConnectionTarget(
-        connection, RedisServerTarget.ofEndpoint("configured:6379"));
+        connection, RedisServerTarget.ofEndpoint("configured:6380"));
 
     JedisRequest request = JedisRequest.create(connection, Protocol.Command.GET, emptyList());
 
-    assertThat(request.getServerTarget()).isNull();
+    assertThat(request.getServerTarget())
+        .extracting(RedisServerTarget::getAddress, RedisServerTarget::getPort)
+        .containsExactly("configured", 6380);
   }
 
   @Test

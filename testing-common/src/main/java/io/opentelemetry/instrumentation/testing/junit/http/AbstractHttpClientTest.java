@@ -7,11 +7,13 @@ package io.opentelemetry.instrumentation.testing.junit.http;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -43,6 +45,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
@@ -51,12 +54,15 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.SchemaUrls;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -78,6 +84,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -96,6 +103,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   public static final IncludeExclude TEST_HEADERS =
       IncludeExclude.builder().setIncluded("X-Test-*").build();
 
+  // Matches the non-loopback target in the shared javaagent server-service mapping fixture.
+  static final URI PROXY_TARGET_URI = URI.create("http://192.0.2.1:8080/success");
+
   static final String BASIC_AUTH_KEY = "custom-authorization-header";
   static final String BASIC_AUTH_VAL = "plain text auth token";
 
@@ -109,6 +119,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   }
 
   protected InstrumentationTestRunner testing;
+
+  @RegisterExtension final AutoCleanupExtension proxyCleanup = AutoCleanupExtension.create();
+
   private HttpClientTestServer server;
 
   private HttpClientTestOptions options;
@@ -137,6 +150,79 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
       throw new AssertionError(
           "Subclasses of AbstractHttpClientTest must register HttpClientInstrumentationExtension");
     }
+  }
+
+  @Test
+  void requestThroughProxy() throws Exception {
+    assumeTrue(options.getTestProxy());
+
+    URI uri = PROXY_TARGET_URI;
+    String method = "GET";
+    AtomicReference<URI> receivedRequestUri = new AtomicReference<>();
+
+    HttpServer proxy =
+        HttpServer.create(
+            new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 0), 0);
+    proxyCleanup.deferCleanup(() -> proxy.stop(0));
+
+    proxy.createContext(
+        "/success",
+        exchange -> {
+          try {
+            receivedRequestUri.set(exchange.getRequestURI());
+            exchange.sendResponseHeaders(200, -1);
+          } finally {
+            exchange.close();
+          }
+        });
+    proxy.start();
+
+    InetSocketAddress proxyAddress = proxy.getAddress();
+    REQUEST request = buildRequest(method, uri, emptyMap());
+    int responseCode = sendRequestWithProxy(request, method, uri, emptyMap(), proxyAddress);
+
+    assertThat(responseCode).isEqualTo(200);
+    assertThat(receivedRequestUri.get()).isEqualTo(uri);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertProxyClientSpan(span, uri, method, responseCode, proxyAddress)));
+  }
+
+  SpanDataAssert assertProxyClientSpan(
+      SpanDataAssert span,
+      URI uri,
+      String method,
+      int responseCode,
+      InetSocketAddress proxyAddress) {
+    Set<AttributeKey<?>> httpAttributes = options.getHttpAttributes().apply(uri);
+    boolean expectPeer = options.getExpectProxyNetworkPeerAttributes();
+
+    return span.hasName(options.getExpectedClientSpanNameMapper().apply(uri, method))
+        .hasKind(SpanKind.CLIENT)
+        .hasNoParent()
+        .hasStatus(StatusData.unset())
+        .hasAttributesSatisfyingExactly(
+            equalTo(
+                HTTP_REQUEST_METHOD, httpAttributes.contains(HTTP_REQUEST_METHOD) ? method : null),
+            equalTo(HTTP_RESPONSE_STATUS_CODE, responseCode),
+            equalTo(
+                NETWORK_PROTOCOL_VERSION,
+                httpAttributes.contains(NETWORK_PROTOCOL_VERSION)
+                    ? options.getHttpProtocolVersion().apply(uri)
+                    : null),
+            equalTo(SERVER_ADDRESS, httpAttributes.contains(SERVER_ADDRESS) ? uri.getHost() : null),
+            equalTo(
+                SERVER_PORT, httpAttributes.contains(SERVER_PORT) ? (long) uri.getPort() : null),
+            equalTo(URL_FULL, httpAttributes.contains(URL_FULL) ? uri.toString() : null),
+            equalTo(
+                NETWORK_PEER_ADDRESS,
+                expectPeer ? proxyAddress.getAddress().getHostAddress() : null),
+            equalTo(NETWORK_PEER_PORT, expectPeer ? (long) proxyAddress.getPort() : null),
+            equalTo(URL_TEMPLATE, options.getExpectedUrlTemplateMapper().apply(uri)),
+            equalTo(stringKey("server.service.name"), expectedMappedServiceName()))
+        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_41_0));
   }
 
   @ParameterizedTest
@@ -1124,11 +1210,12 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
-              String expectedPeerService = testing.expectedPeerService();
-              if (expectedPeerService != null) {
-                assertThat(attrs).containsEntry(maybeStablePeerService(), expectedPeerService);
+              String mappedServiceName = expectedMappedServiceName();
+              if (mappedServiceName != null) {
+                assertThat(attrs)
+                    .containsEntry(stringKey("server.service.name"), mappedServiceName);
               } else {
-                assertThat(attrs).doesNotContainKey(maybeStablePeerService());
+                assertThat(attrs).doesNotContainKey(stringKey("server.service.name"));
               }
 
               // we're opting out of these attributes in the new semconv
@@ -1206,10 +1293,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 assertThat(attrs).doesNotContainKey(HTTP_REQUEST_RESEND_COUNT);
               }
             })
-        .satisfies(
-            spanData ->
-                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                    .isEqualTo(SchemaUrls.V1_41_0));
+        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_41_0));
   }
 
   protected static SpanDataAssert assertServerSpan(SpanDataAssert span) {

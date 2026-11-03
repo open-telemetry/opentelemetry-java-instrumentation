@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3.HibernateOperation;
@@ -56,7 +55,7 @@ class QueryInstrumentation implements TypeInstrumentation {
 
       SessionInfo sessionInfo = QUERY_SESSION_INFO.get(query);
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Context.current();
       HibernateOperation hibernateOperation =
           new HibernateOperation(getOperationNameForQuery(query.getQueryString()), sessionInfo);
 

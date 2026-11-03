@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class KafkaClientsInstrumentationModule extends InstrumentationModule {
   public KafkaClientsInstrumentationModule() {
-    super("kafka-clients", "kafka-clients-0.11", "kafka");
+    super("kafka-clients-0.11", "kafka-clients", "kafka");
   }
 
   @Override

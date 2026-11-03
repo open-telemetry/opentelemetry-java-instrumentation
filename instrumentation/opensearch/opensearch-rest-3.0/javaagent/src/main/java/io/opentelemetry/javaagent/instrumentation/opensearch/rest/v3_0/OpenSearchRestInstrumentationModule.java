@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class OpenSearchRestInstrumentationModule extends InstrumentationModule {
   public OpenSearchRestInstrumentationModule() {
-    super("opensearch-rest", "opensearch-rest-3.0", "opensearch");
+    super("opensearch-rest-3.0", "opensearch-rest", "opensearch");
   }
 
   @Override

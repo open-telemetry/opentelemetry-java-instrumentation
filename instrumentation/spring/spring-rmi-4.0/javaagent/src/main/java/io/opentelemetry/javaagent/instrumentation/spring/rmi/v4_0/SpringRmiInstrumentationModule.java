@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringRmiInstrumentationModule extends InstrumentationModule {
 
   public SpringRmiInstrumentationModule() {
-    super("spring-rmi", "spring-rmi-4.0");
+    super("spring-rmi-4.0", "spring-rmi");
   }
 
   @Override

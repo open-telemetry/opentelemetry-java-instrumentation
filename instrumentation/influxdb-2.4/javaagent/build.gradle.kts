@@ -1,5 +1,9 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -23,13 +27,70 @@ dependencies {
   testLibrary("org.influxdb:influxdb-java:2.14")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("test24") {
-      dependencies {
-        implementation(project())
-        implementation("org.influxdb:influxdb-java:2.4")
-        implementation("org.testcontainers:testcontainers")
+val test225RuntimeClasspath = configurations.create("test225RuntimeClasspath") {
+  extendsFrom(configurations.testRuntimeClasspath.get())
+  resolutionStrategy.force("org.influxdb:influxdb-java:2.25")
+}
+val test213RuntimeClasspath = configurations.create("test213RuntimeClasspath") {
+  extendsFrom(configurations.testRuntimeClasspath.get())
+  resolutionStrategy.force("org.influxdb:influxdb-java:2.13")
+}
+val test29RuntimeClasspath = configurations.create("test29RuntimeClasspath") {
+  extendsFrom(configurations.testRuntimeClasspath.get())
+  resolutionStrategy.force("org.influxdb:influxdb-java:2.9")
+}
+
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation("org.influxdb:influxdb-java:2.4")
+    }
+  }
+
+  register<JvmTestSuite>("test24") {
+    dependencies {
+      implementation(project())
+      implementation("org.influxdb:influxdb-java:2.4")
+      implementation("org.testcontainers:testcontainers")
+    }
+  }
+
+  executions("test") {
+    configureDefault {
+      filter {
+        excludeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
+      }
+    }
+
+    register("QuerySanitizationDisabled") {
+      filter {
+        includeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
+      }
+      telemetryConfig("otel.instrumentation.influxdb.query-sanitization.enabled", "false")
+    }
+
+    register("225") {
+      classpath = sourceSets.test.get().output + test225RuntimeClasspath
+      systemProperty("influxdb.test.client-version", "2.25")
+      filter {
+        includeTestsMatching("InfluxDbQueryLifecycleTest")
+      }
+    }
+
+    register("213") {
+      classpath = sourceSets.test.get().output + test213RuntimeClasspath
+      include("**/InfluxDbLegacyQueryLifecycleTest.class")
+      filter {
+        includeTestsMatching("*InfluxDbLegacyQueryLifecycleTest.sameQueryReentrantAsyncQueryDuringChunkedEncodingDoesNotEndOuterQuery")
+      }
+    }
+
+    register("29") {
+      classpath = sourceSets.test.get().output + test29RuntimeClasspath
+      include("**/InfluxDbLegacyQueryLifecycleTest.class")
+      filter {
+        includeTestsMatching("*InfluxDbLegacyQueryLifecycleTest.sameQueryReentrantAsyncQueryDuringChunkedEncodingDoesNotEndOuterQuery")
       }
     }
   }
@@ -40,77 +101,10 @@ tasks {
     // we disable the okhttp instrumentation, so we don't need to assert on the okhttp spans
     // from the okhttp instrumentation we need OkHttp3IgnoredTypesConfigurer to fix context leaks
     jvmArgs("-Dotel.instrumentation.okhttp.enabled=false")
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  if (!otelProps.testLatestDeps) {
-    check {
-      dependsOn(testing.suites)
-    }
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
-    }
-  }
-
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .associate { suite ->
-      suite.name to register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        filter {
-          excludeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
-        }
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-        jvmArgs("-Dotel.semconv-stability.opt-in=database")
-      }
-    }
-
-  val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
-    }
-    systemProperty("metadataConfig", "otel.instrumentation.common.db.query-sanitization.enabled=false")
-    jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
-  }
-
-  val testQuerySanitizationEnabledOverride = register<Test>("testQuerySanitizationEnabledOverride") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("InfluxDbClientTest.testQueryWithTwoArguments")
-    }
-    systemProperty("metadataConfig", "otel.instrumentation.common.db.query-sanitization.enabled=false,otel.instrumentation.influxdb.query-sanitization.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
-    jvmArgs("-Dotel.instrumentation.influxdb.query-sanitization.enabled=true")
-  }
-
-  val testQuerySanitizationDisabledStableSemconv = register<Test>("testQuerySanitizationDisabledStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
-    }
-    systemProperty("metadataConfig", "otel.instrumentation.common.db.query-sanitization.enabled=false,otel.semconv-stability.opt-in=database")
-    jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   check {
-    dependsOn(
-      if (otelProps.testLatestDeps) listOf(stableSemconvSuites.getValue("test")) else stableSemconvSuites.values,
-      testQuerySanitizationDisabled,
-      testQuerySanitizationDisabledStableSemconv,
-      testQuerySanitizationEnabledOverride
-    )
+    dependsOn(testing.suites)
   }
 }

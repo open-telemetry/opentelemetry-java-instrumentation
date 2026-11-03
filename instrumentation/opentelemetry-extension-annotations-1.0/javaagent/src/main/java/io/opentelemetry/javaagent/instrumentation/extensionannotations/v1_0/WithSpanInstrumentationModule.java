@@ -16,7 +16,7 @@ import java.util.List;
 public class WithSpanInstrumentationModule extends InstrumentationModule {
 
   public WithSpanInstrumentationModule() {
-    super("opentelemetry-extension-annotations", "opentelemetry-extension-annotations-1.0");
+    super("opentelemetry-extension-annotations-1.0", "opentelemetry-extension-annotations");
   }
 
   @Override

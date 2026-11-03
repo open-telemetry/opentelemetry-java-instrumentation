@@ -16,23 +16,14 @@ public abstract class ClickHouseDbRequest {
   @Nullable private volatile DbServerTarget peer;
 
   public static ClickHouseDbRequest create(
-      @Nullable String host,
-      @Nullable Integer port,
       @Nullable DbServerTarget peer,
       @Nullable DbServerTarget serverTarget,
       @Nullable String namespace,
       String sql) {
-    ClickHouseDbRequest request =
-        new AutoValue_ClickHouseDbRequest(host, port, serverTarget, namespace, sql);
+    ClickHouseDbRequest request = new AutoValue_ClickHouseDbRequest(serverTarget, namespace, sql);
     request.peer = peer;
     return request;
   }
-
-  @Nullable
-  public abstract String getHost();
-
-  @Nullable
-  public abstract Integer getPort();
 
   @Nullable
   public final String getPeerAddress() {

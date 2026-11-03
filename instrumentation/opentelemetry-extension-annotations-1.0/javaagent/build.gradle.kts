@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -31,19 +33,21 @@ tasks {
   compileTestJava {
     options.compilerArgs.add("-parameters")
   }
-  test {
-    jvmArgs("-Dotel.instrumentation.opentelemetry-annotations.exclude-methods=io.opentelemetry.test.annotation.TracedWithSpan[ignored]")
-  }
+}
 
-  val testDeclarativeConfig = register<Test>("testDeclarativeConfig") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs(
-      "-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml"
-    )
-  }
-
-  check {
-    dependsOn(testDeclarativeConfig)
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureDefault {
+      jvmArgs("-Dotel.instrumentation.opentelemetry-annotations.exclude-methods=io.opentelemetry.test.annotation.TracedWithSpan[ignored]")
+    }
+    register("DeclarativeConfig") {
+      filter {
+        includeTestsMatching("WithSpanInstrumentationTest.excludedMethod")
+        includeTestsMatching("WithSpanInstrumentationTest.deriveAutomaticName")
+      }
+      jvmArgs(
+        "-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml"
+      )
+    }
   }
 }

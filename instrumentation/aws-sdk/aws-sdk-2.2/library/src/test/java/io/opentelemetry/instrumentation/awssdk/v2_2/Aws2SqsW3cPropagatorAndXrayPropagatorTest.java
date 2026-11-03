@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -42,7 +41,6 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
 
   @Test
   void testPreservesCustomBatchCreationContexts() {
-    assumeTrue(emitStableMessagingSemconv());
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);
     SqsClient client = configureSqsClient(builder.build());
@@ -102,10 +100,9 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
 
   @Test
   void testDisabledCreateSpansPreserveCustomBatchCreationContexts() {
-    assumeTrue(emitStableMessagingSemconv());
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true)
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
             .setUseConfiguredPropagatorForMessaging(true)
             .setUseXrayPropagator(false);
     telemetryBuilder.setBatchSendMessageCreationSpansEnabled(false);
@@ -134,7 +131,7 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
                 SendMessageBatchRequestEntry.builder().id("i2").messageBody("e2").build())
             .build();
 
-    try (SqsClient client = disabledTelemetry.wrap(builder.build())) {
+    try (SqsClient client = disabledTelemetry.instrument(builder.build())) {
       client.createQueue(createQueueRequest);
       client.sendMessageBatch(batchRequest);
 
@@ -186,7 +183,6 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
 
   @Test
   void testCreatesContextsWhenOnlyOnePropagatorIsOccupied() {
-    assumeTrue(emitStableMessagingSemconv());
     assumeTrue(supportsMessageSystemAttributes());
     SqsClientBuilder builder = SqsClient.builder();
     configureSdkClient(builder);

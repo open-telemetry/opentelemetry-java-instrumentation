@@ -24,13 +24,13 @@ import javax.annotation.Nullable;
  * Resolves an {@code included}/{@code excluded} selector and its deprecated include-only
  * predecessor, so that precedence and deprecation warnings are uniform across instrumentations.
  *
- * <p>The property names are derived from the instrumentation and selector names. For {@code
- * ("messaging", "headers")}, experimental resolution reads the {@code headers/development} node and
- * {@code otel.instrumentation.messaging.experimental.headers.included|excluded}. Stable resolution
- * reads the {@code headers} node and {@code
- * otel.instrumentation.messaging.headers.included|excluded}. Both modes fall back to the deprecated
- * experimental {@code capture_headers/development} node and {@code
- * otel.instrumentation.messaging.experimental.capture-headers} flat property.
+ * <p>The property names are derived from the instrumentation and selector names. Experimental
+ * resolution reads the {@code <selector>/development} node and the corresponding {@code
+ * otel.instrumentation.<instrumentation>.experimental.<selector>.included|excluded} flat
+ * properties. Stable resolution reads the {@code <selector>} node and the corresponding {@code
+ * otel.instrumentation.<instrumentation>.<selector>.included|excluded} properties. Both modes fall
+ * back to the deprecated experimental {@code capture_<selector>/development} node and {@code
+ * otel.instrumentation.<instrumentation>.experimental.capture-<selector>} flat property.
  *
  * <p>Flat system properties are read directly only when {@code systemPropertyFallback} is {@code
  * true}; otherwise the flat names describe the equivalent form of the supplied declarative
@@ -281,51 +281,6 @@ public final class SelectorConfig {
         instrumentationName,
         deprecatedSelectorName,
         selectorFlatProperties(instrumentationName, selectorName, Stability.EXPERIMENTAL));
-    return deprecated ? value -> true : null;
-  }
-
-  /**
-   * Returns a predicate matching a deprecated selector or its deprecated boolean predecessor.
-   *
-   * <p>Warns when either setting is applied and directs users to {@code replacementFlatProperties}.
-   */
-  @Nullable
-  static Predicate<String> resolveDeprecatedLegacyBoolean(
-      DeclarativeConfigProperties config,
-      String instrumentationName,
-      String selectorName,
-      String deprecatedSelectorName,
-      String replacementFlatProperties) {
-    IncludeExclude selector =
-        getSelector(config, instrumentationName, selectorName, Stability.EXPERIMENTAL, false);
-    if (selector != null) {
-      String deprecatedFlatProperties =
-          selectorFlatProperties(instrumentationName, selectorName, Stability.EXPERIMENTAL);
-      warnOnce(
-          deprecatedFlatProperties + ":deprecated",
-          "The "
-              + deprecatedFlatProperties
-              + " settings and the equivalent declarative configuration properties are deprecated"
-              + " and will be removed in 3.0. Use "
-              + replacementFlatProperties
-              + " or equivalent declarative configuration instead.");
-      return selector::matches;
-    }
-    Boolean deprecated =
-        config.getBoolean("capture_" + nodeName(deprecatedSelectorName) + "/development");
-    if (deprecated == null) {
-      return null;
-    }
-    String deprecatedFlatProperty =
-        deprecatedFlatProperty(instrumentationName, deprecatedSelectorName);
-    warnOnce(
-        deprecatedFlatProperty + ":deprecated",
-        "The "
-            + deprecatedFlatProperty
-            + " setting and the equivalent declarative configuration property are deprecated and"
-            + " will be removed in 3.0. Use "
-            + replacementFlatProperties
-            + " or equivalent declarative configuration instead.");
     return deprecated ? value -> true : null;
   }
 

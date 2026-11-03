@@ -32,6 +32,8 @@ public final class AgentInitializer {
   public static void initialize(
       Instrumentation inst, File javaagentFile, boolean fromPremain, @Nullable String agentArgs)
       throws Exception {
+    InstrumentationHolder.setInstrumentation(inst);
+    JavaagentFileHolder.setJavaagentFile(javaagentFile);
     if (agentClassLoader != null) {
       return;
     }
@@ -318,6 +320,13 @@ public final class AgentInitializer {
     // named module, e.g. "jdk.compiler/com.sun.tools.javac.Main", match the module name then
     int slashIndex = first.indexOf('/');
     String name = slashIndex == -1 ? first : first.substring(0, slashIndex);
+
+    // java HelloWorld.java runs the application through the source launcher
+    String mainClass = slashIndex == -1 ? first : first.substring(slashIndex + 1);
+    if (mainClass.equals("com.sun.tools.javac.launcher.Main")
+        || mainClass.equals("com.sun.tools.javac.launcher.SourceLauncher")) {
+      return false;
+    }
 
     return name.startsWith("java.")
         || name.startsWith("jdk.")

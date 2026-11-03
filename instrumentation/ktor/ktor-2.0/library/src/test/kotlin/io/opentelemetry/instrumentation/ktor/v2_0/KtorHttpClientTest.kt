@@ -20,7 +20,7 @@ class KtorHttpClientTest : AbstractKtorHttpClientTest() {
 
   override fun HttpClientConfig<*>.installTracing() {
     install(KtorClientTelemetry) {
-      setOpenTelemetry(testingExtension.openTelemetry)
+      openTelemetry(testingExtension.openTelemetry)
       requestHeaders(AbstractHttpClientTest.TEST_HEADERS)
       responseHeaders(AbstractHttpClientTest.TEST_HEADERS)
     }

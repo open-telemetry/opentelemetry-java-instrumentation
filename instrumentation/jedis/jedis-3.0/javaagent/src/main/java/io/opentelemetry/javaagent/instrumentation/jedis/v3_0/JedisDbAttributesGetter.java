@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
@@ -14,7 +12,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import javax.annotation.Nullable;
 
-class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
+final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
   @Override
   public String getDbSystemName(JedisRequest request) {
@@ -26,12 +24,6 @@ class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, 
   public String getDbNamespace(JedisRequest request) {
     Long databaseIndex = request.getDatabaseIndex();
     return databaseIndex != null ? String.valueOf(databaseIndex) : null;
-  }
-
-  @Override
-  @Nullable
-  public String getDbName(JedisRequest request) {
-    return null;
   }
 
   @Override
@@ -53,9 +45,6 @@ class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, 
   @Override
   @Nullable
   public String getServerAddress(JedisRequest request) {
-    if (!emitStableDatabaseSemconv()) {
-      return request.getConnection().getHost();
-    }
     RedisServerTarget target = request.getServerTarget();
     return target != null ? target.getAddress() : null;
   }
@@ -63,9 +52,6 @@ class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, 
   @Override
   @Nullable
   public Integer getServerPort(JedisRequest request) {
-    if (!emitStableDatabaseSemconv()) {
-      return request.getConnection().getPort();
-    }
     RedisServerTarget target = request.getServerTarget();
     return target != null ? target.getPort() : null;
   }

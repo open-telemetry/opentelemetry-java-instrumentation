@@ -3,8 +3,8 @@ plugins {
   id("com.gradleup.shadow")
 }
 
-val testInstrumentation by configurations.creating
-val testAgent by configurations.creating
+val testInstrumentation = configurations.create("testInstrumentation")
+val testAgent = configurations.create("testAgent")
 
 dependencies {
   compileOnly("io.opentelemetry:opentelemetry-sdk")

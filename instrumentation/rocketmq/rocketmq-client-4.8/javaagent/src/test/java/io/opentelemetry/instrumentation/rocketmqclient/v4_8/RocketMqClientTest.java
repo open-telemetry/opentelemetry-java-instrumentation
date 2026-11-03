@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -38,6 +37,7 @@ import java.util.function.Consumer;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
+import org.apache.rocketmq.client.producer.MQProducer;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
@@ -58,7 +58,9 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
   }
 
   @Override
-  void configureMqProducer(DefaultMQProducer producer) {}
+  MQProducer configureMqProducer(DefaultMQProducer producer) {
+    return producer;
+  }
 
   @Override
   void configureMqPushConsumer(DefaultMQPushConsumer consumer) {}
@@ -75,7 +77,6 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
 
   @Test
   void testNestedBatchSendRestoresOuterState() throws Exception {
-    assumeTrue(emitStableMessagingSemconv());
     String topic = BaseConf.initTopic();
     List<Message> inner =
         asList(
@@ -120,7 +121,6 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
 
   @Test
   void testBatchSendStateCleanupOnException() {
-    assumeTrue(emitStableMessagingSemconv());
     List<Message> messages =
         asList(
             new Message("unused", "one".getBytes(UTF_8)),
@@ -164,7 +164,6 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
   @SuppressWarnings("deprecation")
   @Test
   void testAsyncBatchQueueTimeout() throws Exception {
-    assumeTrue(emitStableMessagingSemconv());
     String topic = BaseConf.initTopic();
     CapturingExecutor executor = new CapturingExecutor();
     ExecutorService originalExecutor =

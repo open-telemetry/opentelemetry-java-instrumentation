@@ -16,7 +16,7 @@ import java.util.List;
 public class GuavaInstrumentationModule extends InstrumentationModule {
 
   public GuavaInstrumentationModule() {
-    super("guava", "guava-10.0");
+    super("guava-10.0", "guava");
   }
 
   @Override

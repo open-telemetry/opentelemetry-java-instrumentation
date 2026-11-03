@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 
 class ElasticJobCodeAttributesGetter implements CodeAttributesGetter<ElasticJobProcessRequest> {
   @Override
@@ -14,7 +14,7 @@ class ElasticJobCodeAttributesGetter implements CodeAttributesGetter<ElasticJobP
   }
 
   @Override
-  public String getMethodName(ElasticJobProcessRequest request) {
+  public String getCodeMethodName(ElasticJobProcessRequest request) {
     return request.getUserMethodName();
   }
 }

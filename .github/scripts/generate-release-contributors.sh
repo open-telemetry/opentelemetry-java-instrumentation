@@ -2,20 +2,18 @@
 
 # this should be run on the release branch
 
-# NOTE if you need to run this script locally, you will need to first:
-#   git fetch upstream main
-#   git push origin upstream/main:main
-#   export GITHUB_REPOSITORY=open-telemetry/opentelemetry-java-instrumentation
+# Local runs require the development branch under origin and GITHUB_REPOSITORY.
 
 from_version=$1
+development_branch=${2:-main}
 
 # get the date of the first commit that was not in the from_version
 from=$(git log --reverse --pretty=format:"%cI" "$from_version..HEAD" | head -1)
 
-# get the last commit on main that was included in the release
-to=$(git merge-base origin/main HEAD | xargs git log -1 --pretty=format:"%cI")
+# get the last commit on the development branch included in the release
+to=$(git merge-base "origin/$development_branch" HEAD | xargs git log -1 --pretty=format:"%cI")
 
-contributors1=$(gh api graphql --paginate -F q="repo:$GITHUB_REPOSITORY is:pr base:main is:merged merged:$from..$to" -f query='
+contributors1=$(gh api graphql --paginate -F q="repo:$GITHUB_REPOSITORY is:pr base:$development_branch is:merged merged:$from..$to" -f query='
 query($q: String!, $endCursor: String) {
   search(query: $q, type: ISSUE, first: 100, after: $endCursor) {
     edges {
@@ -54,7 +52,7 @@ query($q: String!, $endCursor: String) {
 # but not necessarily through closingIssuesReferences (e.g. addressing just a part of an issue)
 #
 # note: [^0-9<&#;] below excludes HTML entity markers to avoid matching &#1234; as issue #1234
-contributors2=$(gh api graphql --paginate -F q="repo:$GITHUB_REPOSITORY is:pr base:main is:merged merged:$from..$to" -f query='
+contributors2=$(gh api graphql --paginate -F q="repo:$GITHUB_REPOSITORY is:pr base:$development_branch is:merged merged:$from..$to" -f query='
 query($q: String!, $endCursor: String) {
   search(query: $q, type: ISSUE, first: 100, after: $endCursor) {
     edges {

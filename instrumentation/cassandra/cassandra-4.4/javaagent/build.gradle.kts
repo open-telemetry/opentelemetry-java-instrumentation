@@ -1,5 +1,8 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -41,66 +44,30 @@ dependencies {
   testInstrumentation(project(":instrumentation:cassandra:cassandra-4.0:javaagent"))
 }
 
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+// Run these tests with the shaded driver because the response-channel instrumentation
+// must also match and work with the driver's relocated Netty classes.
+fun shadedRuntimeClasspath(name: String, version: String) = configurations.create(name) {
+  isCanBeConsumed = false
+  isCanBeResolved = true
+  extendsFrom(configurations.testRuntimeClasspath.get())
+  resolutionStrategy.dependencySubstitution {
+    substitute(module("com.datastax.oss:java-driver-core"))
+      .using(module("com.datastax.oss:java-driver-core-shaded:$version"))
+    substitute(module("org.apache.cassandra:java-driver-core"))
+      .using(module("com.datastax.oss:java-driver-core-shaded:$version"))
   }
+}
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  // Run these tests with the shaded driver because the response-channel instrumentation
-  // must also match and work with the driver's relocated Netty classes.
-  fun registerShadedTest(
-    name: String,
-    version: String,
-    semconvOptIn: String? = null,
-  ): org.gradle.api.tasks.TaskProvider<Test> {
-    val shadedClasspath =
-      configurations.create("${name}RuntimeClasspath") {
-        isCanBeConsumed = false
-        isCanBeResolved = true
-        extendsFrom(configurations.testRuntimeClasspath.get())
-        resolutionStrategy.dependencySubstitution {
-          substitute(module("com.datastax.oss:java-driver-core"))
-            .using(module("com.datastax.oss:java-driver-core-shaded:$version"))
-          substitute(module("org.apache.cassandra:java-driver-core"))
-            .using(module("com.datastax.oss:java-driver-core-shaded:$version"))
+testing.suites {
+  executions("test") {
+    mapOf("Shaded" to "4.4.0", "ShadedLatest" to "4.17.0").forEach { (suffix, version) ->
+      val shadedClasspath = shadedRuntimeClasspath("test${suffix}RuntimeClasspath", version)
+      register(suffix) {
+        classpath = files(sourceSets.test.get().output, shadedClasspath)
+        if (otelProps.denyUnsafe) {
+          systemProperty("com.datastax.oss.driver.shaded.netty.noUnsafe", "true")
         }
       }
-    return register<Test>(name) {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = files(sourceSets.test.get().output, shadedClasspath)
-      if (otelProps.denyUnsafe) {
-        systemProperty("com.datastax.oss.driver.shaded.netty.noUnsafe", "true")
-      }
-      if (semconvOptIn != null) {
-        jvmArgs("-Dotel.semconv-stability.opt-in=$semconvOptIn")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=$semconvOptIn")
-      }
     }
-  }
-
-  val testShaded = registerShadedTest("testShaded", "4.4.0")
-  val testShadedStableSemconv =
-    registerShadedTest("testShadedStableSemconv", "4.4.0", semconvOptIn = "database")
-  val testShadedLatest = registerShadedTest("testShadedLatest", "4.17.0")
-  val testShadedLatestStableSemconv =
-    registerShadedTest("testShadedLatestStableSemconv", "4.17.0", semconvOptIn = "database")
-
-  check {
-    dependsOn(
-      testStableSemconv,
-      testShaded,
-      testShadedStableSemconv,
-      testShadedLatest,
-      testShadedLatestStableSemconv,
-    )
   }
 }

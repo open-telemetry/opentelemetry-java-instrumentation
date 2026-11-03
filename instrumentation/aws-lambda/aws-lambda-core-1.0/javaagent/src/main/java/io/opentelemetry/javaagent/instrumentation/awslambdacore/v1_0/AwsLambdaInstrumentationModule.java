@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AwsLambdaInstrumentationModule extends InstrumentationModule {
 
   public AwsLambdaInstrumentationModule() {
-    super("aws-lambda-core", "aws-lambda-core-1.0", "aws-lambda");
+    super("aws-lambda-core-1.0", "aws-lambda");
   }
 
   @Override

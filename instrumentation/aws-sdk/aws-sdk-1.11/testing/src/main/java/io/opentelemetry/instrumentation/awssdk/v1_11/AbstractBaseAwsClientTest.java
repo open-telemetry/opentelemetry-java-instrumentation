@@ -30,7 +30,6 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.AnonymousAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.handlers.RequestHandler2;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension;
 import java.lang.reflect.Field;
@@ -43,13 +42,11 @@ import org.junit.jupiter.api.TestInstance;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class AbstractBaseAwsClientTest {
+public abstract class AbstractBaseAwsClientTest extends AbstractAwsSdkTest {
   protected static final AWSStaticCredentialsProvider credentialsProvider =
       new AWSStaticCredentialsProvider(new AnonymousAWSCredentials());
   protected final MockWebServerExtension server = new MockWebServerExtension();
   protected AwsClientBuilder.EndpointConfiguration endpoint;
-
-  protected abstract InstrumentationExtension testing();
 
   protected abstract boolean hasRequestId();
 
@@ -109,7 +106,7 @@ public abstract class AbstractBaseAwsClientTest {
                                   equalTo(RPC_SYSTEM, "aws-api"),
                                   satisfies(RPC_SERVICE, val -> val.contains(service)),
                                   equalTo(RPC_METHOD, operation),
-                                  equalTo(stringKey("aws.agent"), "java-aws-sdk")));
+                                  equalTo(stringKey("aws.agent"), experimental("java-aws-sdk"))));
 
                       if (hasRequestId()) {
                         attributes.add(

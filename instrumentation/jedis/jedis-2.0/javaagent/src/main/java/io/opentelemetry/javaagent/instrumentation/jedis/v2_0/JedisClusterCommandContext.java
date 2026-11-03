@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.currentCommandContext;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.instrumenter;
 
@@ -18,9 +17,8 @@ public final class JedisClusterCommandContext {
   private int executionDepth;
   private int connectionAcquisitionDepth;
 
-  @Nullable
   public static JedisClusterCommandContext create() {
-    return emitStableDatabaseSemconv() ? new JedisClusterCommandContext() : null;
+    return new JedisClusterCommandContext();
   }
 
   private JedisClusterCommandContext() {}

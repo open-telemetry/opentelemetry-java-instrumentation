@@ -1,5 +1,9 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -102,17 +106,24 @@ tasks {
     into(file(layout.buildDirectory.dir("testapp/web")))
   }
 
-  test {
+  withType<Test>().configureEach {
     dependsOn(sourceSets["testapp"].output)
     dependsOn(copyTestWebapp)
-
-    // add test app classes to classpath
-    classpath = sourceSets.test.get().runtimeClasspath.plus(files(layout.buildDirectory.dir("testapp/classes")))
 
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+}
+
+testing.suites {
+  executions("test") {
+    configureEach {
+      // add test app classes to classpath
+      classpath = classpath.plus(files(layout.buildDirectory.dir("testapp/classes")))
+    }
+    register("ExceptionSignalLogs") {
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+    }
   }
 }

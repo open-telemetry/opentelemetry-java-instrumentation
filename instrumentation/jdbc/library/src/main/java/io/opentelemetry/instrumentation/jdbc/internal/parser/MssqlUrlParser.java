@@ -29,13 +29,10 @@ import javax.annotation.Nullable;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@SuppressWarnings("deprecation") // supporting old semconv until 3.0
 public final class MssqlUrlParser implements JdbcUrlParser {
 
   // copied from DbAttributes.DbSystemNameValues
   private static final String MICROSOFT_SQL_SERVER = "microsoft.sql_server";
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
-  private static final String MSSQL = "mssql";
 
   private static final String DEFAULT_HOST = "localhost";
   private static final int DEFAULT_PORT = 1433;
@@ -47,15 +44,8 @@ public final class MssqlUrlParser implements JdbcUrlParser {
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(MICROSOFT_SQL_SERVER);
-    ctx.oldSemconvSystem(MSSQL);
     ctx.defaultHost(DEFAULT_HOST);
     ctx.defaultPort(DEFAULT_PORT);
-
-    // Extract subtype from URL like microsoft:sqlserver://...
-    String subtype = UrlParsingUtils.extractSubtype(jdbcUrl);
-    if (subtype != null) {
-      ctx.subtype(subtype);
-    }
 
     // Layer 3: URL params (SQL Server-specific: servername)
     // Parse semicolon-delimited parameters once and apply both standard and
@@ -333,14 +323,11 @@ public final class MssqlUrlParser implements JdbcUrlParser {
    *       parameter)
    * </ul>
    */
-  @SuppressWarnings("deprecation") // dbName is deprecated, to be removed in 3.0
   private static void setNamespace(ParseContext ctx, String instanceName) {
     String database = ctx.databaseName();
 
     // When we have an instance name
     if (instanceName != null && !instanceName.isEmpty()) {
-      // Preserve old behavior: dbName is the instance name (not the database name)
-      ctx.dbName(instanceName);
       // If there's a non-empty database that's different from instance: format as instance|database
       if (database != null && !database.isEmpty() && !database.equals(instanceName)) {
         ctx.namespace(instanceName + "|" + database);

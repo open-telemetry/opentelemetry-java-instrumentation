@@ -25,10 +25,10 @@ import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.pool.TypePool;
 
 /**
- * Inspect advice classes used by the given instrumentation module and determine whether the
- * instrumentation should inject helper classes into the instrumented classloader or load them into
- * separate class loader. The decision is made based on the {@code inline} attribute of {@link
- * Advice.OnMethodEnter} and {@link Advice.OnMethodExit} annotations.
+ * Inspect advice classes used by the given instrumentation module and determine whether it should
+ * use the isolated classloader path. The selection is based on the {@code inline} attribute of
+ * {@link Advice.OnMethodEnter} and {@link Advice.OnMethodExit} annotations. An explicit helper
+ * class strategy can override this selection.
  */
 public class AdviceInspector {
 
@@ -38,7 +38,92 @@ public class AdviceInspector {
     this.classFileLocator = classFileLocator;
   }
 
-  public boolean useIsolatedAdvice(InstrumentationModule instrumentationModule) {
+  public boolean inferHelperClassIsolation(InstrumentationModule instrumentationModule) {
+    Boolean result =
+        inferHelperClassIsolation(instrumentationModule, adviceClassNames(instrumentationModule));
+
+    // we aren't able to tell whether the instrumentation is ready to use the isolated classloader
+    // path, so assume not
+    return result != null ? result : false;
+  }
+
+  @Nullable
+  public Boolean inferHelperClassIsolation(
+      InstrumentationModule instrumentationModule, Collection<String> adviceClassNames) {
+    AdviceMode mode = inspect(adviceClassNames);
+    if (mode == AdviceMode.MIXED) {
+      return null;
+    }
+    if (mode == AdviceMode.ALL_INLINE) {
+      return false;
+    }
+    // When all advice has inlining disabled, the instrumentation can use the isolated classloader
+    // path.
+    if (mode == AdviceMode.ALL_NON_INLINE) {
+      return true;
+    }
+
+    // Without advice annotations, helper registrations indicate that this AgentBuilder.Transformer
+    // instrumentation needs isolated helper loading.
+    if (!instrumentationModule.injectedClassNames().isEmpty()) {
+      return true;
+    }
+    if (!instrumentationModule.exposedClassNames().isEmpty()) {
+      return true;
+    }
+
+    // we aren't able to tell whether the instrumentation is ready to use the isolated classloader
+    // path
+    return null;
+  }
+
+  // visible for testing
+  public AdviceMode inspect(InstrumentationModule instrumentationModule) {
+    return inspect(adviceClassNames(instrumentationModule));
+  }
+
+  private AdviceMode inspect(Collection<String> adviceClassNames) {
+    TypePool typePool = AgentBuilder.PoolStrategy.Default.FAST.typePool(classFileLocator, null);
+
+    int inlineCount = 0;
+    int nonInlineCount = 0;
+    for (String adviceClassName : adviceClassNames) {
+      TypeDescription type = typePool.describe(adviceClassName).resolve();
+      MethodList<MethodDescription.InDefinedShape> methodList = type.getDeclaredMethods();
+      for (MethodDescription.InDefinedShape method : methodList) {
+        for (AnnotationDescription annotation : method.getDeclaredAnnotations()) {
+          if (Advice.OnMethodEnter.class.getName().equals(annotation.getAnnotationType().getName())
+              || Advice.OnMethodExit.class
+                  .getName()
+                  .equals(annotation.getAnnotationType().getName())) {
+            AnnotationValue<?, ?> value = annotation.getValue("inline");
+            // Helper placement is independent of advice inlining; an explicit helper class strategy
+            // can override this inference.
+            // Advice with inline = false indicates that the instrumentation can use the isolated
+            // classloader path. Advice with inline = true could still use isolated helpers, but we
+            // assume that it is not ready to use the isolated classloader path.
+            if (value.getState().isDefined() && Boolean.FALSE.equals(value.resolve())) {
+              nonInlineCount++;
+            } else {
+              inlineCount++;
+            }
+          }
+        }
+      }
+    }
+    if (inlineCount > 0 && nonInlineCount > 0) {
+      return AdviceMode.MIXED;
+    }
+    if (inlineCount > 0) {
+      return AdviceMode.ALL_INLINE;
+    }
+    if (nonInlineCount > 0) {
+      return AdviceMode.ALL_NON_INLINE;
+    }
+    return AdviceMode.NO_ADVICE;
+  }
+
+  private static Set<String> adviceClassNames(InstrumentationModule instrumentationModule) {
     Set<String> adviceClassNames = new HashSet<>();
     for (TypeInstrumentation typeInstrumentation : instrumentationModule.typeInstrumentations()) {
       typeInstrumentation.transform(
@@ -55,73 +140,13 @@ public class AdviceInspector {
             public void applyTransformer(AgentBuilder.Transformer transformer) {}
           });
     }
-    Boolean result = useIsolatedAdvice(instrumentationModule, adviceClassNames);
-
-    // we aren't able to tell whether the instrumentation is ready for indy instrumentation or not,
-    // so we assume that it is not
-    return result != null ? result : false;
+    return adviceClassNames;
   }
 
-  @Nullable
-  public Boolean useIsolatedAdvice(
-      InstrumentationModule instrumentationModule, Collection<String> adviceClassNames) {
-    TypePool typePool = AgentBuilder.PoolStrategy.Default.FAST.typePool(classFileLocator, null);
-
-    int inlineCount = 0;
-    int nonInlineCount = 0;
-    for (String adviceClassName : adviceClassNames) {
-      TypeDescription type = typePool.describe(adviceClassName).resolve();
-      MethodList<MethodDescription.InDefinedShape> methodList = type.getDeclaredMethods();
-      for (MethodDescription.InDefinedShape method : methodList) {
-        for (AnnotationDescription annotation : method.getDeclaredAnnotations()) {
-          if (Advice.OnMethodEnter.class.getName().equals(annotation.getAnnotationType().getName())
-              || Advice.OnMethodExit.class
-                  .getName()
-                  .equals(annotation.getAnnotationType().getName())) {
-            AnnotationValue<?, ?> value = annotation.getValue("inline");
-            // While it is possible to use non-inline advice with the non-indy instrumentation, by
-            // adding the advice classes as helper classes, we assume that nobody relies on that.
-            // Having a non-inline advice is treated as a marker that the instrumentation can use
-            // indy.
-            // Similarly inline advice could be used with indy instrumentation, but we assume that
-            // if inline advice is used, then it is not indy ready.
-            if (value.getState().isDefined() && Boolean.FALSE.equals(value.resolve())) {
-              nonInlineCount++;
-            } else {
-              inlineCount++;
-            }
-          }
-        }
-      }
-    }
-    // mixed inline and non-inline advice
-    if (inlineCount > 0 && nonInlineCount > 0) {
-      return null;
-    }
-    if (inlineCount > 0) {
-      return false;
-    }
-    // While it is possible to use non-inline advice with the non-indy instrumentation, by
-    // adding the advice classes as helper classes, we assume that nobody relies on that.
-    // Having all advice non-inline is treated as a marker that the instrumentation can use indy.
-    // Similarly inline advice could be used with indy instrumentation. For now, we default to
-    // non-indy instrumentation in that case, but users can override that by explicitly choosing
-    // whether to inject or isolate helper classes when mixed advice is used.
-    if (nonInlineCount > 0) {
-      return true;
-    }
-
-    // no advice annotations were used so the instrumentation is using an AgentBuilder.Transformer
-    // injected class names makes sense only for indy instrumentation
-    if (!instrumentationModule.injectedClassNames().isEmpty()) {
-      return true;
-    }
-    // exposed class names makes sense only for indy instrumentation
-    if (!instrumentationModule.exposedClassNames().isEmpty()) {
-      return true;
-    }
-
-    // we aren't able to tell whether the instrumentation is ready for indy instrumentation or not
-    return null;
+  public enum AdviceMode {
+    NO_ADVICE,
+    ALL_INLINE,
+    ALL_NON_INLINE,
+    MIXED
   }
 }

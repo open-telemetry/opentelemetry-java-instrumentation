@@ -40,16 +40,12 @@ public class DubboProtocolInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetInvokerAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Timer onEnter() {
-      if (!DubboUnknownServiceHelper.isEnabled()) {
-        return null;
-      }
       return Timer.start();
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Argument(0) Object channelObj,
         @Advice.Argument(1) Invocation inv,

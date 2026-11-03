@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitInstrumenterHelper.consumerDestinationName;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitInstrumenterHelper.isGeneratedQueueName;
 import static java.util.Collections.emptyList;
@@ -31,26 +30,16 @@ final class RabbitReceiveAttributesGetter
   @Override
   public String getDestination(ReceiveRequest request) {
     GetResponse response = request.getResponse();
-    if (emitStableMessagingSemconv()) {
-      return consumerDestinationName(
-          response == null ? null : response.getEnvelope().getExchange(),
-          response == null ? null : response.getEnvelope().getRoutingKey(),
-          request.getQueue());
-    }
-    if (response == null) {
-      return null;
-    }
-    return normalizeExchangeName(response.getEnvelope().getExchange());
+    return consumerDestinationName(
+        response == null ? null : response.getEnvelope().getExchange(),
+        response == null ? null : response.getEnvelope().getRoutingKey(),
+        request.getQueue());
   }
 
   @Nullable
   @Override
   public String getDestinationTemplate(ReceiveRequest request) {
     return null;
-  }
-
-  private static String normalizeExchangeName(String exchange) {
-    return exchange == null || exchange.isEmpty() ? "<default>" : exchange;
   }
 
   @Override
@@ -60,24 +49,12 @@ final class RabbitReceiveAttributesGetter
 
   @Override
   public boolean isAnonymousDestination(ReceiveRequest request) {
-    return emitStableMessagingSemconv() && isGeneratedQueueName(request.getQueue());
+    return isGeneratedQueueName(request.getQueue());
   }
 
   @Nullable
   @Override
   public String getConversationId(ReceiveRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageBodySize(ReceiveRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(ReceiveRequest request) {
     return null;
   }
 

@@ -74,24 +74,6 @@ public final class ArmeriaClientTelemetryBuilder {
   }
 
   /**
-   * Configures HTTP request headers to capture as span attributes.
-   *
-   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
-   * patterns.
-   *
-   * @param requestHeaders HTTP header names to capture.
-   * @deprecated Use {@link #setRequestHeaders(IncludeExclude)} instead, which matches glob patterns
-   *     rather than literal header names. May be removed in the next minor release.
-   */
-  @Deprecated // may be removed in the next minor release
-  @CanIgnoreReturnValue
-  public ArmeriaClientTelemetryBuilder setCapturedRequestHeaders(
-      Collection<String> requestHeaders) {
-    builder.setCapturedRequestHeaders(requestHeaders);
-    return this;
-  }
-
-  /**
    * Configures which HTTP response headers are captured as span attributes.
    *
    * <p>Header values are captured under the {@code http.response.header.<key>} attribute key. The
@@ -106,24 +88,6 @@ public final class ArmeriaClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder setResponseHeaders(IncludeExclude responseHeaders) {
     builder.setResponseHeaders(responseHeaders);
-    return this;
-  }
-
-  /**
-   * Configures HTTP response headers to capture as span attributes.
-   *
-   * <p>The header names are matched literally, so {@code *} and {@code ?} are not treated as glob
-   * patterns.
-   *
-   * @param responseHeaders HTTP header names to capture.
-   * @deprecated Use {@link #setResponseHeaders(IncludeExclude)} instead, which matches glob
-   *     patterns rather than literal header names. May be removed in the next minor release.
-   */
-  @Deprecated // may be removed in the next minor release
-  @CanIgnoreReturnValue
-  public ArmeriaClientTelemetryBuilder setCapturedResponseHeaders(
-      Collection<String> responseHeaders) {
-    builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 

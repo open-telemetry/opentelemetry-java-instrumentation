@@ -5,18 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -24,6 +22,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.RedisURI;
@@ -129,109 +128,68 @@ class LettuceClusterClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                    span.hasName("SET " + configuredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : null),
-                            equalTo(SERVER_PORT, null),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(maybeStable(DB_STATEMENT), "SET CLUSTER_COMMAND_KEY ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))),
+                            equalTo(SERVER_ADDRESS, configuredTarget),
+                            equalTo(NETWORK_PEER_ADDRESS, host),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "SET CLUSTER_COMMAND_KEY ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "PIPELINE SET " + configuredTarget
-                                : "PIPELINE SET")
+                    span.hasName("PIPELINE SET " + configuredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, configuredTarget),
+                            equalTo(NETWORK_PEER_ADDRESS, host),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
                             equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : null),
-                            equalTo(SERVER_PORT, null),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                emitStableDatabaseSemconv()
-                                    ? "SET CLUSTER_BATCH_KEY_1 ?; SET CLUSTER_BATCH_KEY_2 ?"
-                                    : "SET CLUSTER_BATCH_KEY_1 ?;SET CLUSTER_BATCH_KEY_2 ?"),
-                            equalTo(maybeStable(DB_OPERATION), "PIPELINE SET"),
-                            equalTo(
-                                DB_OPERATION_BATCH_SIZE,
-                                emitStableDatabaseSemconv() ? Long.valueOf(2) : null))),
+                                DB_QUERY_TEXT,
+                                "SET CLUSTER_BATCH_KEY_1 ?; SET CLUSTER_BATCH_KEY_2 ?"),
+                            equalTo(DB_OPERATION_NAME, "PIPELINE SET"),
+                            equalTo(DB_OPERATION_BATCH_SIZE, Long.valueOf(2)))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                    span.hasName("SET " + configuredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : null),
-                            equalTo(SERVER_PORT, null),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, null),
-                            equalTo(maybeStable(DB_STATEMENT), "SET CLUSTER_REACTIVE_KEY ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))),
+                            equalTo(SERVER_ADDRESS, configuredTarget),
+                            equalTo(NETWORK_PEER_ADDRESS, host),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET CLUSTER_REACTIVE_KEY ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + configuredTarget : "SET")
+                    span.hasName("SET " + configuredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : null),
-                            equalTo(SERVER_PORT, null),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, null),
-                            equalTo(maybeStable(DB_STATEMENT), "SET NODE_REACTIVE_KEY ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))),
+                            equalTo(SERVER_ADDRESS, configuredTarget),
+                            equalTo(NETWORK_PEER_ADDRESS, host),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "SET NODE_REACTIVE_KEY ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "PUBLISH " + configuredTarget : "PUBLISH")
+                    span.hasName("PUBLISH " + configuredTarget)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? configuredTarget : null),
-                            equalTo(SERVER_PORT, null),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS, emitStableDatabaseSemconv() ? host : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv() ? Long.valueOf(port) : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, null),
-                            equalTo(maybeStable(DB_STATEMENT), "PUBLISH CLUSTER_CHANNEL ?"),
-                            equalTo(maybeStable(DB_OPERATION), "PUBLISH"))));
+                            equalTo(SERVER_ADDRESS, configuredTarget),
+                            equalTo(NETWORK_PEER_ADDRESS, host),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "PUBLISH CLUSTER_CHANNEL ?"),
+                            equalTo(DB_OPERATION_NAME, "PUBLISH"))));
 
     redisServer.assertNoFailure();
   }
@@ -253,7 +211,14 @@ class LettuceClusterClientTest {
     testing.clearData();
 
     assertThat(redirectConnection.sync().set("REDIRECT_WARMUP_KEY", "value")).isEqualTo("OK");
-    testing.waitForTraces(emitStableDatabaseSemconv() ? 1 : 2);
+    await()
+        .untilAsserted(
+            () ->
+                assertThat(testing.spans())
+                    .anySatisfy(
+                        span ->
+                            assertThat(span.getAttributes().get(DB_QUERY_TEXT))
+                                .isEqualTo("SET REDIRECT_WARMUP_KEY ?")));
     source.resetRedirect();
     testing.clearData();
 
@@ -263,37 +228,19 @@ class LettuceClusterClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "SET " + source.getHost() + ":" + source.getPort()
-                                : "SET")
+                    span.hasName("SET " + source.getHost() + ":" + source.getPort())
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                SERVER_ADDRESS,
-                                emitStableDatabaseSemconv() ? source.getHost() : null),
-                            equalTo(
-                                SERVER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? Long.valueOf(source.getPort())
-                                    : null),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                emitStableDatabaseSemconv() ? target.getHost() : null),
-                            equalTo(
-                                NETWORK_PEER_PORT,
-                                emitStableDatabaseSemconv()
-                                    ? Long.valueOf(target.getPort())
-                                    : null),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, emitStableDatabaseSemconv() ? "0" : null),
-                            equalTo(maybeStable(DB_STATEMENT), "SET REDIRECT_KEY ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET")));
+                            equalTo(SERVER_ADDRESS, source.getHost()),
+                            equalTo(SERVER_PORT, Long.valueOf(source.getPort())),
+                            equalTo(NETWORK_PEER_ADDRESS, target.getHost()),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(target.getPort())),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_QUERY_TEXT, "SET REDIRECT_KEY ?"),
+                            equalTo(DB_OPERATION_NAME, "SET")));
     List<Consumer<TraceAssert>> traceAssertions = new ArrayList<>();
     traceAssertions.add(traceAssertion);
-    if (!emitStableDatabaseSemconv()) {
-      traceAssertions.add(traceAssertion);
-    }
     testing.waitAndAssertTraces(traceAssertions);
 
     source.assertNoFailure();

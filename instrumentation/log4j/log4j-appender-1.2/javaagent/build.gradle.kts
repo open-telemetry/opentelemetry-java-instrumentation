@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -28,12 +30,6 @@ configurations {
   }
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental log attributes
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
-}
-
 tasks {
   test {
     jvmArgs(
@@ -41,56 +37,32 @@ tasks {
       "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
     )
   }
+}
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          // TODO run tests both with and without experimental log attributes
+          jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
+          jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
+        }
+        register("LegacyMdcAttributes") {
+          filter.includeTestsMatching("*Log4jMdcSelectorTest")
 
-    jvmArgs(
-      "-Dotel.semconv-stability.opt-in=code",
-      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
-      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
-    )
-  }
+          // the deprecated setting matches keys literally, so "*" alongside another entry does not
+          // capture every key
+          jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*,legacy")
+          systemProperty("testMdcConfiguration", "legacy")
+        }
+        register("MdcAttributeExclusionsOnly") {
+          filter.includeTestsMatching("*Log4jMdcSelectorTest")
 
-  val testLegacyMdcAttributes = register<Test>("testLegacyMdcAttributes") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter.includeTestsMatching("*Log4jMdcSelectorTest")
-
-    // the deprecated setting matches keys literally, so "*" alongside another entry does not
-    // capture every key
-    jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*,legacy")
-    systemProperty("testMdcConfiguration", "legacy")
-  }
-
-  val testMdcAttributeExclusionsOnly = register<Test>("testMdcAttributeExclusionsOnly") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter.includeTestsMatching("*Log4jMdcSelectorTest")
-
-    jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret")
-    systemProperty("testMdcConfiguration", "exclude-only")
-  }
-
-  val testMdcAttributePrecedence = register<Test>("testMdcAttributePrecedence") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter.includeTestsMatching("*Log4jMdcSelectorTest")
-
-    jvmArgs(
-      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=new",
-      "-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=legacy",
-    )
-    systemProperty("testMdcConfiguration", "precedence")
-  }
-
-  check {
-    dependsOn(
-      testStableSemconv,
-      testLegacyMdcAttributes,
-      testMdcAttributeExclusionsOnly,
-      testMdcAttributePrecedence,
-    )
+          jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret")
+          systemProperty("testMdcConfiguration", "exclude-only")
+        }
+      }
+    }
   }
 }

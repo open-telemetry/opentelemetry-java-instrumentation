@@ -26,14 +26,5 @@ class SqlQueryAnalyzerUtil {
         key -> analyzer.analyze(key.getQueryText(), key.getDialect()));
   }
 
-  static SqlQuery analyzeWithSummary(String queryText, SqlDialect dialect) {
-    Map<CacheKey, SqlQuery> map =
-        InstrumenterContext.computeIfAbsent(
-            "sanitized-sql-map-with-summary", unused -> new HashMap<>());
-    return map.computeIfAbsent(
-        CacheKey.create(queryText, dialect),
-        key -> analyzer.analyzeWithSummary(key.getQueryText(), key.getDialect()));
-  }
-
   private SqlQueryAnalyzerUtil() {}
 }

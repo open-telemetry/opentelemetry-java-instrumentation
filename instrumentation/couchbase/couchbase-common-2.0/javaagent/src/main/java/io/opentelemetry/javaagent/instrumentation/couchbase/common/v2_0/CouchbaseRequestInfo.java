@@ -6,13 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0;
 
 import static io.opentelemetry.context.ContextKey.named;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.net.SocketAddress;
 import java.util.Map;
@@ -37,6 +34,7 @@ public abstract class CouchbaseRequestInfo {
   @Nullable private String localAddress;
   @Nullable private String operationId;
   @Nullable private volatile Node node;
+  @Nullable private CouchbaseRequestInfo assemblyRequest;
 
   public static CouchbaseRequestInfo create(
       @Nullable String bucket,
@@ -47,21 +45,18 @@ public abstract class CouchbaseRequestInfo {
         methodOperationNames
             .get(declaringClass)
             .computeIfAbsent(methodName, m -> computeOperation(declaringClass, m));
-    return new AutoValue_CouchbaseRequestInfo(bucket, null, null, operation, true, serverTarget);
+    return new AutoValue_CouchbaseRequestInfo(bucket, null, false, operation, serverTarget);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated old semconv operation
   public static CouchbaseRequestInfo create(
       @Nullable String bucket, @Nullable DbServerTarget serverTarget, Object query) {
-    SqlQuery sqlQuery = emitOldDatabaseSemconv() ? CouchbaseQuerySanitizer.analyze(query) : null;
-    SqlQuery sqlQueryWithSummary =
-        emitStableDatabaseSemconv() ? CouchbaseQuerySanitizer.analyzeWithSummary(query) : null;
-    String operation = sqlQuery != null ? sqlQuery.getOperationName() : null;
-    if (operation == null && sqlQueryWithSummary != null) {
-      operation = sqlQueryWithSummary.getOperationName();
-    }
+    String sqlQueryText = CouchbaseQueryText.getSqlQueryText(query);
     return new AutoValue_CouchbaseRequestInfo(
-        bucket, sqlQuery, sqlQueryWithSummary, operation, false, serverTarget);
+        bucket,
+        sqlQueryText != null ? sqlQueryText : CouchbaseQueryText.getNonSqlQueryText(query),
+        sqlQueryText != null,
+        null,
+        serverTarget);
   }
 
   private static String computeOperation(Class<?> declaringClass, String methodName) {
@@ -83,15 +78,12 @@ public abstract class CouchbaseRequestInfo {
   public abstract String getBucket();
 
   @Nullable
-  public abstract SqlQuery getSqlQuery();
+  public abstract String getQueryText();
 
-  @Nullable
-  public abstract SqlQuery getSqlQueryWithSummary();
+  public abstract boolean isSqlQuery();
 
   @Nullable
   public abstract String getOperation();
-
-  public abstract boolean isMethodCall();
 
   @Nullable
   public abstract DbServerTarget getServerTarget();
@@ -107,13 +99,11 @@ public abstract class CouchbaseRequestInfo {
   }
 
   private CouchbaseRequestInfo copy() {
-    return new AutoValue_CouchbaseRequestInfo(
-        getBucket(),
-        getSqlQuery(),
-        getSqlQueryWithSummary(),
-        getOperation(),
-        isMethodCall(),
-        getServerTarget());
+    CouchbaseRequestInfo copy =
+        new AutoValue_CouchbaseRequestInfo(
+            getBucket(), getQueryText(), isSqlQuery(), getOperation(), getServerTarget());
+    copy.assemblyRequest = this;
+    return copy;
   }
 
   @Nullable
@@ -136,66 +126,28 @@ public abstract class CouchbaseRequestInfo {
 
   @Nullable
   public Node getNode() {
-    return node;
+    Node node = this.node;
+    // SDK 2.0 sends eagerly during observable assembly, before the subscription has its own state.
+    return node != null || assemblyRequest == null ? node : assemblyRequest.node;
   }
 
-  public void setNode(@Nullable SocketAddress peerAddress, @Nullable String backendAddress) {
+  public void setNode(@Nullable SocketAddress peerAddress) {
     if (peerAddress == null) {
       return;
     }
-    // Replace both values atomically so retries cannot pair data from different nodes.
-    node = new Node(peerAddress, backendAddress);
+    node = new Node(peerAddress);
   }
 
   public static final class Node {
 
     private final SocketAddress peerAddress;
-    @Nullable private final String backendAddress;
-    private final int backendPort;
 
-    private Node(SocketAddress peerAddress, @Nullable String backendAddress) {
+    private Node(SocketAddress peerAddress) {
       this.peerAddress = peerAddress;
-      if (backendAddress == null) {
-        this.backendAddress = null;
-        this.backendPort = 0;
-        return;
-      }
-      int portSeparator = backendAddress.lastIndexOf(':');
-      if (portSeparator < 0 || (backendAddress.startsWith("[") && backendAddress.endsWith("]"))) {
-        this.backendAddress = stripBrackets(backendAddress);
-        this.backendPort = 0;
-      } else {
-        this.backendAddress = stripBrackets(backendAddress.substring(0, portSeparator));
-        this.backendPort = parsePort(backendAddress.substring(portSeparator + 1));
-      }
     }
 
     public SocketAddress getPeerAddress() {
       return peerAddress;
-    }
-
-    @Nullable
-    public String getBackendAddress() {
-      return backendAddress;
-    }
-
-    public int getBackendPort() {
-      return backendPort;
-    }
-
-    @Nullable
-    private static String stripBrackets(String host) {
-      String stripped =
-          host.startsWith("[") && host.endsWith("]") ? host.substring(1, host.length() - 1) : host;
-      return stripped.isEmpty() ? null : stripped;
-    }
-
-    private static int parsePort(String port) {
-      try {
-        return Integer.parseInt(port);
-      } catch (NumberFormatException ignored) {
-        return 0;
-      }
     }
   }
 }

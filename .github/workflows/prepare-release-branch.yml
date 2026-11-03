@@ -15,10 +15,7 @@ jobs:
 
       - name: Verify prerequisites
         run: |
-          if [[ $GITHUB_REF_NAME != main ]]; then
-            echo this workflow should only be run against main
-            exit 1
-          fi
+          python .github/scripts/release-config.py prepare --ref "$GITHUB_REF_NAME"
 
           if ! grep --quiet "^## Unreleased$" CHANGELOG.md; then
             echo the change log is missing an \"Unreleased\" section
@@ -33,30 +30,20 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # history is needed to allow fast-forward push below in case
-          # re-running this workflow after merging additional PRs to main
+          # re-running this workflow after merging additional PRs to the development branch
           fetch-depth: 0
           persist-credentials: false
 
       - name: Set release branch variables
-        run: |
-          version=$(.github/scripts/get-version.sh)
-          version=${version//-SNAPSHOT/}
-          if [[ $version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
-            release_branch_name=$(echo $version | sed -E 's/([0-9]+)\.([0-9]+)\.0/release\/v\1.\2.x/')
-          else
-            echo "unexpected version: $version"
-            exit 1
-          fi
-
-          echo "VERSION=$version" >> $GITHUB_ENV
-          echo "RELEASE_BRANCH_NAME=$release_branch_name" >> $GITHUB_ENV
+        # Sets VERSION, DEVELOPMENT_BRANCH, RELEASE_BRANCH_NAME, and NEXT_VERSION.
+        run: python .github/scripts/release-config.py prepare --ref "$GITHUB_REF_NAME" >> "$GITHUB_ENV"
 
       - name: Update version
         run: .github/scripts/update-version.sh $VERSION
 
       - name: Update download link version
         run: |
-          sed -Ei "s,https://github\.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$VERSION/," README.md
+          sed -Ei "s,https://github\.com/open-telemetry/opentelemetry-java-instrumentation/releases/(latest/download|download/v[0-9]+\.[0-9]+\.[0-9]+)/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$VERSION/," README.md
 
       - name: Update the change log with the approximate release date
         run: |
@@ -66,7 +53,7 @@ jobs:
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh
 
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         id: otelbot-token
         with:
           client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
@@ -92,7 +79,7 @@ jobs:
             --body "$message." \
             --base $RELEASE_BRANCH_NAME
 
-  create-pull-request-against-main:
+  create-pull-request-against-development-branch:
     runs-on: ubuntu-latest
     needs:
       - prereqs
@@ -102,33 +89,22 @@ jobs:
           persist-credentials: false
 
       - name: Set environment variables
-        run: |
-          version=$(.github/scripts/get-version.sh)
-          version=${version//-SNAPSHOT/}
-          if [[ $version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
-            major="${BASH_REMATCH[1]}"
-            minor="${BASH_REMATCH[2]}"
-            next_version="$major.$((minor + 1)).0"
-          else
-            echo "unexpected version: $version"
-            exit 1
-          fi
-          echo "NEXT_VERSION=${next_version}-SNAPSHOT" >> $GITHUB_ENV
-          echo "VERSION=$version" >> $GITHUB_ENV
+        # Sets VERSION, DEVELOPMENT_BRANCH, RELEASE_BRANCH_NAME, and NEXT_VERSION.
+        run: python .github/scripts/release-config.py prepare --ref "$GITHUB_REF_NAME" >> "$GITHUB_ENV"
 
       - name: Update version
         run: .github/scripts/update-version.sh $NEXT_VERSION
 
-      - name: Update the change log on main
+      - name: Update the change log on the development branch
         run: |
-          # the actual release date on main will be updated at the end of the release workflow
+          # the actual release date will be updated at the end of the release workflow
           date=$(date "+%Y-%m-%d")
           .github/scripts/update-changelog-for-release.sh "$VERSION" "$date" --keep-unreleased-section
 
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh
 
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         id: otelbot-token
         with:
           client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
@@ -136,7 +112,7 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
 
-      - name: Create pull request against main
+      - name: Create pull request against the development branch
         env:
           # pull requests from secrets.GITHUB_TOKEN do not run workflows
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
@@ -152,4 +128,4 @@ jobs:
           gh pr create \
             --title "$message" \
             --body "$body" \
-            --base main
+            --base "$DEVELOPMENT_BRANCH"

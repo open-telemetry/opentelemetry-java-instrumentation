@@ -57,7 +57,6 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, named("io.nats.client.impl.Headers")))
             .and(takesArgument(2, byte[].class))
-            .and(takesArgument(3, Duration.class))
             .and(returns(named("io.nats.client.Message"))),
         getClass().getName() + "$RequestHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
@@ -108,7 +107,6 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, named("io.nats.client.impl.Headers")))
             .and(takesArgument(2, byte[].class))
-            .and(takesArgument(3, Duration.class))
             .and(returns(CompletableFuture.class)),
         getClass().getName() + "$RequestTimeoutFutureHeadersBodyAdvice");
     transformer.applyAdviceToMethod(

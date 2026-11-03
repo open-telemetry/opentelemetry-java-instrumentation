@@ -16,6 +16,8 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.ClusterResource;
+import org.apache.kafka.common.ClusterResourceListener;
 import org.apache.kafka.common.TopicPartition;
 
 /**
@@ -24,7 +26,8 @@ import org.apache.kafka.common.TopicPartition;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
+public class OpenTelemetryConsumerInterceptor<K, V>
+    implements ConsumerInterceptor<K, V>, ClusterResourceListener {
 
   public static final String CONFIG_KEY_KAFKA_CONSUMER_TELEMETRY_SUPPLIER =
       "opentelemetry.kafka-consumer-telemetry.supplier";
@@ -32,6 +35,8 @@ public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerIntercept
   @Nullable private KafkaConsumerTelemetry consumerTelemetry;
   @Nullable private String consumerGroup;
   @Nullable private String clientId;
+  // Populated by Kafka via ClusterResourceListener once the cluster metadata is first resolved.
+  @Nullable private volatile String clusterId;
 
   @Override
   @CanIgnoreReturnValue
@@ -39,17 +44,28 @@ public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerIntercept
     if (consumerTelemetry == null) {
       return records;
     }
-    Context receiveContext = consumerTelemetry.buildAndFinishSpan(records, consumerGroup, clientId);
+    Context receiveContext =
+        consumerTelemetry.buildAndFinishSpan(records, consumerGroup, clientId, clusterId);
     if (receiveContext == null) {
       receiveContext = Context.current();
     }
     KafkaConsumerContext consumerContext =
-        KafkaConsumerContextUtil.create(receiveContext, consumerGroup, clientId);
+        KafkaConsumerContextUtil.create(receiveContext, consumerGroup, clientId, clusterId);
     return consumerTelemetry.addTracing(records, consumerContext);
   }
 
   @Override
   public void onCommit(Map<TopicPartition, OffsetAndMetadata> offsets) {}
+
+  @Override
+  public void onUpdate(ClusterResource clusterResource) {
+    if (clusterResource != null) {
+      String id = clusterResource.clusterId();
+      if (id != null && !id.isEmpty()) {
+        clusterId = id;
+      }
+    }
+  }
 
   @Override
   public void close() {}

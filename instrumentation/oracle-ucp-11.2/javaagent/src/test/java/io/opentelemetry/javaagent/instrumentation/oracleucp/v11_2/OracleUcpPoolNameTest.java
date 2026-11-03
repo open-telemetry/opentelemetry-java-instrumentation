@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.oracleucp.v11_2;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -33,10 +32,8 @@ class OracleUcpPoolNameTest {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.oracle-ucp-11.2";
   private static final AttributeKey<String> POOL_NAME_KEY =
-      AttributeKey.stringKey(
-          emitStableDatabaseSemconv() ? "db.client.connection.pool.name" : "pool.name");
-  private static final String CONNECTION_USAGE_METRIC_NAME =
-      emitStableDatabaseSemconv() ? "db.client.connection.count" : "db.client.connections.usage";
+      AttributeKey.stringKey("db.client.connection.pool.name");
+  private static final String CONNECTION_USAGE_METRIC_NAME = "db.client.connection.count";
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -47,10 +44,8 @@ class OracleUcpPoolNameTest {
     UniversalConnectionPool universalConnectionPool = startPool(connectionPool);
 
     try {
-      assertPoolMetricsWithDatabaseAttributes(
-          emitStableDatabaseSemconv() ? "orders" : "db.example:1522/orders");
-      assertThat(connectionPool.getConnectionPoolName())
-          .isNotEqualTo(emitStableDatabaseSemconv() ? "orders" : "db.example:1522/orders");
+      assertPoolMetricsWithDatabaseAttributes("orders");
+      assertThat(connectionPool.getConnectionPoolName()).isNotEqualTo("orders");
     } finally {
       universalConnectionPool.stop();
     }
@@ -79,7 +74,7 @@ class OracleUcpPoolNameTest {
     UniversalConnectionPool universalConnectionPool = startPool(connectionPool);
 
     try {
-      assertPoolMetrics(emitStableDatabaseSemconv() ? "oracle.db" : "oracle-ucp");
+      assertPoolMetrics("oracle.db");
     } finally {
       universalConnectionPool.stop();
     }
@@ -96,8 +91,7 @@ class OracleUcpPoolNameTest {
     UniversalConnectionPool universalConnectionPool = startPool(connectionPool);
 
     try {
-      assertPoolMetrics(
-          emitStableDatabaseSemconv() ? "inventory" : "properties.example:1523/inventory");
+      assertPoolMetrics("inventory");
     } finally {
       universalConnectionPool.stop();
     }
@@ -116,8 +110,7 @@ class OracleUcpPoolNameTest {
     UniversalConnectionPool universalConnectionPool = startPool(connectionPool);
 
     try {
-      assertPoolMetrics(
-          emitStableDatabaseSemconv() ? "inventory" : "properties.example:1523/inventory");
+      assertPoolMetrics("inventory");
     } finally {
       universalConnectionPool.stop();
     }
@@ -139,7 +132,7 @@ class OracleUcpPoolNameTest {
     UniversalConnectionPool universalConnectionPool = startPool(connectionPool);
 
     try {
-      assertPoolMetrics(emitStableDatabaseSemconv() ? "billing" : "setters.example:1524/billing");
+      assertPoolMetrics("billing");
     } finally {
       universalConnectionPool.stop();
     }
@@ -153,15 +146,13 @@ class OracleUcpPoolNameTest {
     UniversalConnectionPool universalConnectionPool = startPool(connectionPool);
 
     try {
-      assertPoolMetricsWithDatabaseAttributes(
-          emitStableDatabaseSemconv() ? "orders" : "db.example:1522/orders");
+      assertPoolMetricsWithDatabaseAttributes("orders");
 
       universalConnectionPool.stop();
       testing.clearData();
       universalConnectionPool.start();
 
-      assertPoolMetricsWithDatabaseAttributes(
-          emitStableDatabaseSemconv() ? "orders" : "db.example:1522/orders");
+      assertPoolMetricsWithDatabaseAttributes("orders");
     } finally {
       universalConnectionPool.stop();
     }
@@ -175,8 +166,7 @@ class OracleUcpPoolNameTest {
     UniversalConnectionPool universalConnectionPool = startPool(connectionPool);
 
     try {
-      assertPoolMetricsWithDatabaseAttributes(
-          emitStableDatabaseSemconv() ? "orders" : "db.example:1522/orders");
+      assertPoolMetricsWithDatabaseAttributes("orders");
 
       universalConnectionPool.stop();
       testing.clearData();
@@ -202,8 +192,7 @@ class OracleUcpPoolNameTest {
     try {
       assertThat(firstPool.getConnectionPoolName())
           .isNotEqualTo(secondPool.getConnectionPoolName());
-      assertConnectionUsagePoolNames(
-          emitStableDatabaseSemconv() ? "orders" : "db.example:1522/orders");
+      assertConnectionUsagePoolNames("orders");
     } finally {
       firstConnectionPool.stop();
       secondConnectionPool.stop();

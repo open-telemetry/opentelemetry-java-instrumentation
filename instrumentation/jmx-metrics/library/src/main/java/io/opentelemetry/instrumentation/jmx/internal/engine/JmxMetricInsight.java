@@ -52,7 +52,8 @@ public class JmxMetricInsight {
       MetricConfiguration conf,
       Supplier<List<? extends MBeanServerConnection>> connections,
       HandlerRegistry handlerRegistry,
-      IncludeExclude metrics) {
+      IncludeExclude metrics,
+      IncludeExclude unstableMetrics) {
     if (conf.isEmpty()) {
       logger.log(
           FINE,
@@ -62,7 +63,8 @@ public class JmxMetricInsight {
     } else {
 
       MetricRegistrar registrar =
-          new MetricRegistrar(openTelemetry, INSTRUMENTATION_SCOPE, VERSION_LOOKUP_NAME, metrics);
+          new MetricRegistrar(
+              openTelemetry, INSTRUMENTATION_SCOPE, VERSION_LOOKUP_NAME, metrics, unstableMetrics);
       BeanFinder finder = new BeanFinder(conf, registrar, handlerRegistry, discoveryDelay);
       finder.discoverBeans(connections);
 

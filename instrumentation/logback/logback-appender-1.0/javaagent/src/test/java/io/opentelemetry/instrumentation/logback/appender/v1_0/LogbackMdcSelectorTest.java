@@ -88,9 +88,6 @@ class LogbackMdcSelectorTest {
       case "legacy-all":
         // a deprecated list whose only entry is "*" still captures every MDC key
         return new HashMap<>(MDC_ENTRIES);
-      case "precedence":
-        expectedKeys = singletonList("new");
-        break;
       case "exclude-only":
         expectedKeys = asList("key1", "keyLong", "request-id", "user-a", "legacy", "new", "*");
         break;

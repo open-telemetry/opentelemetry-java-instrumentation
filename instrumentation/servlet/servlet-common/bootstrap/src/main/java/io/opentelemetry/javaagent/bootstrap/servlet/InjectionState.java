@@ -28,6 +28,18 @@ public final class InjectionState {
     return headTagBytesSeen == HEAD_TAG_WRITTEN_FAKE_VALUE;
   }
 
+  public boolean shouldProcessWrite() {
+    if (isHeadTagWritten()) {
+      return false;
+    }
+    if (!wrapper.isContentTypeTextHtml()) {
+      // A partial head tag must not span writes of non-HTML content.
+      headTagBytesSeen = 0;
+      return false;
+    }
+    return true;
+  }
+
   /**
    * Returns true when the byte is the last character of "<head>" and now is the right time to
    * inject. Otherwise, returns false.
@@ -39,7 +51,7 @@ public final class InjectionState {
     if (inHeadTag(b)) {
       headTagBytesSeen++;
     } else {
-      headTagBytesSeen = 0;
+      headTagBytesSeen = b == '<' ? 1 : 0;
     }
     if (headTagBytesSeen > HEAD_TAG_PREFIX_LENGTH && b == '>') {
       setHeadTagWritten();

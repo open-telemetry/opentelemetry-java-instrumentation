@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -9,7 +10,7 @@ muzzle {
     versions.set("[2.0.0,3.0.0)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("jedis-2.3-cluster")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterInstrumentationModule")
   }
   pass {
     // instrumentation-docs:ignore - verification only, the directive above is the range we document
@@ -19,7 +20,7 @@ muzzle {
     versions.set("[2.3.0,3.0.0)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("jedis-2.0-core")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisInstrumentationModule")
   }
 }
 
@@ -30,9 +31,8 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
+  implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
 
-  testInstrumentation(project(":instrumentation:jedis:jedis-1.4:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-4.0:javaagent"))
 
@@ -48,14 +48,6 @@ testing {
         implementation(project(":instrumentation-api-incubator"))
         implementation("redis.clients:jedis:2.0.0")
       }
-
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          }
-        }
-      }
     }
 
     register<JvmTestSuite>("version23Test") {
@@ -68,24 +60,7 @@ testing {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .matching { it.name != "unitTests" }
-    .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
-      }
-    }
-
   check {
-    dependsOn(testing.suites, stableSemconvSuites)
+    dependsOn(testing.suites)
   }
 }

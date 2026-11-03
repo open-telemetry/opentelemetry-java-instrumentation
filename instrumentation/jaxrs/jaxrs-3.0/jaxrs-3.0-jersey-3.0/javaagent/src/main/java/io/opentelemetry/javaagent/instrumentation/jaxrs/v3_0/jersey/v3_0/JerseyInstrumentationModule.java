@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class JerseyInstrumentationModule extends InstrumentationModule {
   public JerseyInstrumentationModule() {
-    super("jaxrs", "jaxrs-3.0", "jersey", "jersey-3.0");
+    super("jaxrs-3.0-jersey-3.0", "jaxrs-jersey", "jaxrs");
   }
 
   @Override

@@ -77,9 +77,6 @@ class LogbackLoggerContextSelectorTest {
       case "legacy":
         // the deprecated setting captures every logger context property
         return new HashMap<>(LOGGER_CONTEXT_PROPERTIES);
-      case "precedence":
-        expectedKeys = singletonList("new");
-        break;
       case "exclude-only":
         expectedKeys = asList("key1", "keyLong", "request-id", "new");
         break;

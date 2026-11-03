@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.assertTraceparentHeader;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -59,7 +58,7 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
                     span ->
-                        span.hasName(emitStableMessagingSemconv() ? "request sub" : "sub publish")
+                        span.hasName("request sub")
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -308,31 +307,23 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
                           // publisher: parent + publish
                           span -> span.hasName("parent").hasNoParent(),
                           span ->
-                              span.hasName(
-                                      emitStableMessagingSemconv() ? "request sub" : "sub publish")
+                              span.hasName("request sub")
                                   .hasKind(SpanKind.PRODUCER)
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
                                       messagingAttributes("request", "sub", clientId)),
                           // subscriber: process + publish(response)
                           span ->
-                              span.hasName(
-                                      emitStableMessagingSemconv() ? "process sub" : "sub process")
+                              span.hasName("process sub")
                                   .hasKind(SpanKind.CONSUMER)
                                   .hasParent(trace.getSpan(1)),
                           span ->
-                              span.hasName(
-                                      emitStableMessagingSemconv()
-                                          ? "publish _INBOX."
-                                          : "(temporary) publish")
+                              span.hasName("publish _INBOX.")
                                   .hasKind(SpanKind.PRODUCER)
                                   .hasParent(trace.getSpan(2)),
                           // publisher: process
                           span ->
-                              span.hasName(
-                                      emitStableMessagingSemconv()
-                                          ? "process _INBOX."
-                                          : "(temporary) process")
+                              span.hasName("process _INBOX.")
                                   .hasKind(SpanKind.CONSUMER)
                                   .hasParent(trace.getSpan(3))
                                   .hasAttributesSatisfyingExactly(
@@ -355,7 +346,7 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasNoParent(),
                     span ->
-                        span.hasName(emitStableMessagingSemconv() ? "request sub" : "sub publish")
+                        span.hasName("request sub")
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasException(exception)
@@ -364,10 +355,6 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
                                     "request",
                                     "sub",
                                     clientId,
-                                    equalTo(
-                                        ERROR_TYPE,
-                                        emitStableMessagingSemconv()
-                                            ? exception.getClass().getName()
-                                            : null)))));
+                                    equalTo(ERROR_TYPE, exception.getClass().getName())))));
   }
 }

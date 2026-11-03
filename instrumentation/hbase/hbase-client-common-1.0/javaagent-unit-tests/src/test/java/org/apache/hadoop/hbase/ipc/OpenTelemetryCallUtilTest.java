@@ -10,8 +10,8 @@ import static org.mockito.Mockito.mock;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseRequest;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.RequestAndContext;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -122,8 +122,7 @@ class OpenTelemetryCallUtilTest {
   }
 
   private static RequestAndContext requestAndContext() {
-    HbaseRequest request =
-        HbaseRequest.create("Get", null, "user", "logical-host", 4321, "logical-target", null);
+    HbaseRequest request = HbaseRequest.create("Get", null, "logical-target", null);
     return RequestAndContext.create(request, mock(Scope.class), mock(Context.class));
   }
 }

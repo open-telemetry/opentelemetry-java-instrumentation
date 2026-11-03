@@ -12,6 +12,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestHandler;
 import io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal.AwsLambdaSqsInstrumenterFactory;
+import io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal.SqsProcessingSelection;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.time.Duration;
 import javax.annotation.Nullable;
@@ -60,8 +61,11 @@ public abstract class TracingSqsEventHandler
   @Override
   public SQSBatchResponse doHandleRequest(SQSEvent event, Context context) {
     io.opentelemetry.context.Context parentContext = io.opentelemetry.context.Context.current();
-    if (instrumenter.shouldStart(parentContext, event)) {
-      io.opentelemetry.context.Context otelContext = instrumenter.start(parentContext, event);
+    boolean processingSelected = SqsProcessingSelection.isSelected(parentContext, event);
+    if (!processingSelected && instrumenter.shouldStart(parentContext, event)) {
+      io.opentelemetry.context.Context selectedContext =
+          SqsProcessingSelection.select(parentContext, event);
+      io.opentelemetry.context.Context otelContext = instrumenter.start(selectedContext, event);
       Throwable error = null;
       try (Scope ignored = otelContext.makeCurrent()) {
         return handleEvent(event, context);

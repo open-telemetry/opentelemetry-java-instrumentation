@@ -23,11 +23,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelDirection;
 import java.net.URI;
@@ -90,30 +85,6 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
     return sendOperationName;
   }
 
-  @Override
-  public String getOperationName(
-      Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
-
-    if ("mqtt".equals(component)) {
-      return stripSchemeAndOptions(endpoint);
-    }
-    return getDestination(exchange, endpoint);
-  }
-
-  @Override
-  public void pre(
-      AttributesBuilder attributes,
-      Exchange exchange,
-      Endpoint endpoint,
-      CamelDirection camelDirection) {
-    super.pre(attributes, exchange, endpoint, camelDirection);
-
-    if (emitOldMessagingSemconv()) {
-      attributes.put(MESSAGING_DESTINATION_NAME, getDestination(exchange, endpoint));
-      attributes.put(MESSAGING_MESSAGE_ID, getMessageId(exchange));
-    }
-  }
-
   /**
    * This method identifies the destination from the supplied exchange and/or endpoint.
    *
@@ -126,8 +97,6 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
       case "cometds":
       case "cometd":
         return URI.create(endpoint.getEndpointUri()).getPath().substring(1);
-      case "rabbitmq":
-        return (String) exchange.getIn().getHeader("rabbitmq.EXCHANGE_NAME");
       case "stomp":
         String destination = stripSchemeAndOptions(endpoint);
         if (destination.startsWith("queue:")) {
@@ -145,7 +114,7 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
   }
 
   @Nullable
-  public String getStableDestination(
+  public String getDestination(
       Exchange exchange, Endpoint endpoint, CamelDirection camelDirection) {
     if (!component.equals("rabbitmq")) {
       return getDestination(exchange, endpoint);
@@ -220,7 +189,10 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
    * @return The message id, or null if no id exists for the exchange
    */
   @Nullable
-  protected String getMessageId(Exchange exchange) {
+  public String getMessageId(Exchange exchange) {
+    if (system.equals("jms") || system.equals("amqp")) {
+      return (String) exchange.getIn().getHeader("JMSMessageID");
+    }
     switch (component) {
       case "aws-sns":
         return (String) exchange.getIn().getHeader("CamelAwsSnsMessageId");
@@ -228,19 +200,9 @@ public class MessagingSpanDecorator extends BaseSpanDecorator {
         return (String) exchange.getIn().getHeader("CamelAwsSqsMessageId");
       case "ironmq":
         return (String) exchange.getIn().getHeader("CamelIronMQMessageId");
-      case "jms":
-        return (String) exchange.getIn().getHeader("JMSMessageID");
       default:
         return null;
     }
-  }
-
-  @Nullable
-  public String getStableMessageId(Exchange exchange) {
-    if (system.equals("jms") || system.equals("amqp")) {
-      return (String) exchange.getIn().getHeader("JMSMessageID");
-    }
-    return getMessageId(exchange);
   }
 
   @Nullable

@@ -7,5 +7,12 @@ semantic_conventions:
   - DATABASE_CLIENT_SPANS
   - DATABASE_CLIENT_METRICS
 configurations:
+  - name: otel.instrumentation.vertx-redis-client.query-sanitization.enabled
+    declarative_name: java.vertx_redis_client.query_sanitization.enabled
+    description: >
+      Enables query sanitization for Vert.x Redis client queries. Overrides
+      `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when
+      unset, that setting applies.
+    type: boolean
   - ref: common.db.query-sanitization.enabled
-  - ref: common.peer-service-mapping
+  - ref: common.server-service-mapping

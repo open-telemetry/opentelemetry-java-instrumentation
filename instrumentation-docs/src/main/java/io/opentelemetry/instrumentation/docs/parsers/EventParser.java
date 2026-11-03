@@ -24,6 +24,14 @@ import java.util.Set;
 public class EventParser {
 
   /**
+   * Name of the event emitted by the {@code Instrumenter}'s default exception event extractor when
+   * an instrumentation does not define its own domain-specific exception event (e.g. {@code
+   * rpc.client.call.exception}). It describes no instrumentation-specific behavior, so it is left
+   * out of the generated documentation.
+   */
+  private static final String GENERIC_EXCEPTION_EVENT_NAME = "exception";
+
+  /**
    * Pull events from the `.telemetry` directory, filter them by scope, and return them keyed by the
    * `when` condition.
    *
@@ -67,6 +75,9 @@ public class EventParser {
           continue;
         }
         for (EmittedEvents.Event event : scopeEvents.getEvents()) {
+          if (GENERIC_EXCEPTION_EVENT_NAME.equals(event.getName())) {
+            continue;
+          }
           AggregatedEvent aggregated =
               eventsByKey.computeIfAbsent(EventKey.of(event), k -> new AggregatedEvent());
           addEventAttributes(event, aggregated.attributes);

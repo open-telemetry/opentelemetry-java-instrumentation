@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class GatewayWebMvcInstrumentationModule extends InstrumentationModule {
 
   public GatewayWebMvcInstrumentationModule() {
-    super("spring-cloud-gateway", "spring-cloud-gateway-webmvc-4.3");
+    super("spring-cloud-gateway-webmvc-4.3", "spring-cloud-gateway");
   }
 
   @Override

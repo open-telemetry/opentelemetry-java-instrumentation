@@ -16,7 +16,7 @@ import java.util.List;
 public class LogbackInstrumentationModule extends InstrumentationModule {
 
   public LogbackInstrumentationModule() {
-    super("logback-appender", "logback-appender-1.0");
+    super("logback-appender-1.0", "logback-appender", "logback");
   }
 
   @Override

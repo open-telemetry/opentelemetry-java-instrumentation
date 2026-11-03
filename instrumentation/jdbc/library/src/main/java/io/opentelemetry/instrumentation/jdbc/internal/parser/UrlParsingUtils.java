@@ -78,6 +78,7 @@ public final class UrlParsingUtils {
    * @return a map of key-value pairs
    */
   // Source: https://stackoverflow.com/a/13592567
+  @SuppressWarnings("PreferCharsetOverload") // URLDecoder.decode accepts Charset since 10
   public static Map<String, String> splitQuery(String query, String separator) {
     if (query == null || query.isEmpty()) {
       return emptyMap();
@@ -118,36 +119,6 @@ public final class UrlParsingUtils {
     } catch (NumberFormatException e) {
       logger.log(FINE, e.getMessage(), e);
       return null;
-    }
-  }
-
-  /**
-   * Build the short URL for db.connection_string attribute.
-   *
-   * @param type the JDBC type (e.g., "postgresql", "mysql")
-   * @param subtype optional subtype (e.g., "thin" for Oracle, "aurora" for MySQL)
-   * @param host the host name
-   * @param port the port number
-   * @return the short URL in format "type:[subtype:]//host:port" or "type:" if no host
-   */
-  public static String buildShortUrl(
-      String type, @Nullable String subtype, @Nullable String host, @Nullable Integer port) {
-    StringBuilder url = new StringBuilder();
-    appendTypePrefix(url, type, subtype);
-    if (host != null) {
-      url.append("//");
-      appendHostPort(url, host, port);
-    }
-    return url.toString();
-  }
-
-  private static void appendTypePrefix(
-      StringBuilder builder, String type, @Nullable String subtype) {
-    builder.append(type);
-    builder.append(':');
-    if (subtype != null) {
-      builder.append(subtype);
-      builder.append(':');
     }
   }
 

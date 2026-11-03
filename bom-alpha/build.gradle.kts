@@ -24,4 +24,4 @@ dependencies {
   otelBom.addExtra(semconvConstraint.group, "opentelemetry-semconv-incubating", semconvAlphaVersion)
 }
 
-otelBom.projectFilter.set { it.findProperty("otel.stable") != "true" }
+otelBom.projectFilter.set { it.extra.properties["otel.stable"] != "true" }

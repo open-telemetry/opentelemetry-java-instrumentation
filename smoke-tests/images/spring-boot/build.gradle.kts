@@ -8,7 +8,7 @@ plugins {
   id("otel.java-conventions")
 
   id("com.google.cloud.tools.jib")
-  id("org.springframework.boot") version "4.1.1"
+  id("org.springframework.boot") version "4.1.2"
 }
 
 dependencies {
@@ -46,11 +46,16 @@ java {
   } else if (targetJDK == "17") {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+  } else if (targetJDK == "21") {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
   }
 }
 
 springBoot {
   buildInfo {
+    // Leave out the timestamp so Gradle can reuse cached results.
+    excludes.add("time")
     properties {
       version = "1.2.3"
     }

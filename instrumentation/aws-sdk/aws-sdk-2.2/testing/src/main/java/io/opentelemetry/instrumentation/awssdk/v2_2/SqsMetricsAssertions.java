@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -14,8 +14,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -29,15 +27,10 @@ final class SqsMetricsAssertions {
 
   static void assertProducerMetrics(
       InstrumentationExtension testing, int serverPort, long operationCount, long messageCount) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertClientOperationDuration(testing, serverPort, operationCount, "send", "send");
     assertMessageCounter(
         testing, "messaging.client.sent.messages", "send", messageCount, serverPort);
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   static void assertReceiveAndProcessMetrics(
@@ -45,37 +38,23 @@ final class SqsMetricsAssertions {
       int serverPort,
       long receiveOperationCount,
       long messageCount) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertClientOperationDuration(testing, serverPort, receiveOperationCount, "receive", "receive");
     assertMessageCounter(
         testing, "messaging.client.consumed.messages", "receive", messageCount, serverPort);
     assertProcessDuration(testing, serverPort, messageCount);
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   static void assertProcessMetrics(
       InstrumentationExtension testing, int serverPort, long messageCount) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertMessageCounter(
         testing, "messaging.client.consumed.messages", "process", messageCount, serverPort);
     assertProcessDuration(testing, serverPort, messageCount);
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   static void assertSettleMetrics(
       InstrumentationExtension testing, int serverPort, long operationCount) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertClientOperationDuration(testing, serverPort, operationCount, "delete", "settle");
     // settling messages does not deliver anything to the application
@@ -84,7 +63,6 @@ final class SqsMetricsAssertions {
             metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
         .extracting(MetricData::getName)
         .doesNotContain("messaging.client.consumed.messages");
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   private static void assertClientOperationDuration(
@@ -116,7 +94,8 @@ final class SqsMetricsAssertions {
                                             .hasBucketBoundaries(DURATION_BUCKETS)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "aws.sqs"),
                                                 equalTo(ERROR_TYPE, null),
                                                 equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                                                 equalTo(MESSAGING_OPERATION_TYPE, operationType),
@@ -148,7 +127,8 @@ final class SqsMetricsAssertions {
                                             .hasBucketBoundaries(DURATION_BUCKETS)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "aws.sqs"),
                                                 equalTo(ERROR_TYPE, null),
                                                 equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                                                 equalTo(SERVER_ADDRESS, "localhost"),
@@ -180,33 +160,13 @@ final class SqsMetricsAssertions {
                                         point
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "aws.sqs"),
                                                 equalTo(ERROR_TYPE, null),
                                                 equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 equalTo(SERVER_PORT, serverPort))
                                             .hasValue(messageCount)))));
-  }
-
-  private static void assertNoMessagingMetrics(InstrumentationExtension testing) {
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
-                    && metric.getName().startsWith("messaging."))
-        .isEmpty();
-  }
-
-  private static void assertNoDeprecatedMessagingMetrics(InstrumentationExtension testing) {
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-        .extracting(MetricData::getName)
-        .doesNotContain(
-            "messaging.publish.duration",
-            "messaging.publish.messages",
-            "messaging.receive.duration",
-            "messaging.receive.messages");
   }
 
   private SqsMetricsAssertions() {}

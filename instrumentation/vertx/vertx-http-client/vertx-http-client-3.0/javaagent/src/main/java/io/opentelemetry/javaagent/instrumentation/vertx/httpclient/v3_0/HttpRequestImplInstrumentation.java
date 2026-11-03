@@ -30,7 +30,10 @@ class HttpRequestImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(2, String.class)).and(takesArgument(3, int.class)),
+        isConstructor()
+            .and(takesArgument(0, named("io.vertx.core.http.impl.HttpClientImpl")))
+            .and(takesArgument(2, String.class))
+            .and(takesArgument(3, int.class)),
         getClass().getName() + "$Vertx30Advice");
     transformer.applyAdviceToMethod(
         isConstructor()

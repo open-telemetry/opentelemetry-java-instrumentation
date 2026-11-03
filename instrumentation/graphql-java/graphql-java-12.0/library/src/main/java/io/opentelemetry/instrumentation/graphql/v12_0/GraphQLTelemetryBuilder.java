@@ -40,15 +40,6 @@ public final class GraphQLTelemetryBuilder {
   }
 
   /**
-   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead. Will be removed in 3.0.
-   */
-  @Deprecated // to be removed in 3.0
-  @CanIgnoreReturnValue
-  public GraphQLTelemetryBuilder setSanitizeQuery(boolean sanitizeQuery) {
-    return setQuerySanitizationEnabled(sanitizeQuery);
-  }
-
-  /**
    * Sets whether GraphQL operation name is added to the span name. Default is {@code false}.
    *
    * <p>WARNING: GraphQL operation name is provided by the client and can have high cardinality. Use
@@ -59,16 +50,6 @@ public final class GraphQLTelemetryBuilder {
       boolean addOperationNameToSpanName) {
     this.addOperationNameToSpanName = addOperationNameToSpanName;
     return this;
-  }
-
-  /**
-   * @deprecated Use {@link #setOperationNameInSpanNameEnabled(boolean)} instead. Will be removed in
-   *     3.0.
-   */
-  @Deprecated // to be removed in 3.0
-  @CanIgnoreReturnValue
-  public GraphQLTelemetryBuilder setAddOperationNameToSpanName(boolean addOperationNameToSpanName) {
-    return setOperationNameInSpanNameEnabled(addOperationNameToSpanName);
   }
 
   /**

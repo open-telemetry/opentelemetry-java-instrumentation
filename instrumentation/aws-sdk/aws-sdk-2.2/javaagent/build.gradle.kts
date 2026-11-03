@@ -1,7 +1,10 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -15,10 +18,10 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.BedrockRuntimeInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SqsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SnsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.LambdaInstrumentationModule")
   }
 
   fail {
@@ -31,7 +34,7 @@ muzzle {
 
     // "fail" asserts that *all* the instrumentation modules fail to load, but the core one is
     // actually expected to succeed, so exclude it from checks.
-    excludeInstrumentationName("aws-sdk-2.2-core")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.AwsSdkInstrumentationModule")
   }
 
   pass {
@@ -43,9 +46,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.BedrockRuntimeInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SnsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.LambdaInstrumentationModule")
   }
 
   pass {
@@ -56,9 +59,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.BedrockRuntimeInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SqsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.LambdaInstrumentationModule")
   }
   pass {
     group.set("software.amazon.awssdk")
@@ -69,9 +72,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-bedrock-runtime")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.BedrockRuntimeInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SqsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SnsInstrumentationModule")
   }
   pass {
     group.set("software.amazon.awssdk")
@@ -81,9 +84,9 @@ muzzle {
     // client, which is not target of instrumentation anyways.
     extraDependency("software.amazon.awssdk:protocol-core")
 
-    excludeInstrumentationName("aws-sdk-2.2-lambda")
-    excludeInstrumentationName("aws-sdk-2.2-sqs")
-    excludeInstrumentationName("aws-sdk-2.2-sns")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.LambdaInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SqsInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.SnsInstrumentationModule")
   }
 }
 
@@ -120,172 +123,98 @@ dependencies {
   testLibrary("software.amazon.awssdk:sqs:2.2.0")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("s3PresignerTest") {
-      dependencies {
-        val version = baseVersion("2.10.12").orLatest()
-        implementation("software.amazon.awssdk:s3:$version")
-        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
+testing.suites {
+  register<JvmTestSuite>("s3PresignerTest") {
+    dependencies {
+      val version = baseVersion("2.10.12").orLatest()
+      implementation("software.amazon.awssdk:s3:$version")
+      implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
+    }
+  }
+
+  register<JvmTestSuite>("s3CrtTest") {
+    dependencies {
+      implementation("software.amazon.awssdk:s3:${baseVersion("2.27.21").orLatest()}")
+      implementation("software.amazon.awssdk.crt:aws-crt:${baseVersion("0.30.11").orLatest()}")
+      implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
+      implementation("org.testcontainers:testcontainers-localstack")
+    }
+  }
+
+  register<JvmTestSuite>("testBedrockRuntime") {
+    dependencies {
+      implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+      // 2.25.63 is the first release with Converse API
+      val version = baseVersion("2.25.63").orLatest()
+      implementation("software.amazon.awssdk:bedrockruntime:$version")
+    }
+  }
+
+  register<JvmTestSuite>("testRdsData") {
+    dependencies {
+      implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+      val version = baseVersion("2.5.54").orLatest()
+      implementation("software.amazon.awssdk:rdsdata:$version")
+    }
+  }
+
+  executions("test") {
+    register("ExperimentalSqs") {
+      filter.includeTestsMatching("Aws2SqsTracingTest")
+      systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", "true")
+      systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    }
+
+    register("ReceiveSpansDisabled") {
+      filter {
+        includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+      }
+      include("**/Aws2SqsSuppressReceiveSpansTest.*")
+    }
+
+    configureDefault {
+      filter {
+        excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
       }
     }
 
-    register<JvmTestSuite>("s3CrtTest") {
-      dependencies {
-        implementation("software.amazon.awssdk:s3:${baseVersion("2.27.21").orLatest()}")
-        implementation("software.amazon.awssdk.crt:aws-crt:${baseVersion("0.30.11").orLatest()}")
-        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
-        implementation("org.testcontainers:testcontainers-localstack")
-      }
-
-      targets {
-        all {
-          testTask.configure {
-            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-          }
-        }
-      }
+    register("ExperimentalAttributes") {
+      filter.excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+      telemetryConfig("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     }
 
-    register<JvmTestSuite>("testBedrockRuntime") {
-      dependencies {
-        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
-        // 2.25.63 is the first release with Converse API
-        val version = baseVersion("2.25.63").orLatest()
-        implementation("software.amazon.awssdk:bedrockruntime:$version")
-      }
-
-      targets {
-        all {
-          testTask.configure {
-            // TODO run tests both with and without genai message capture
-            systemProperty("otel.instrumentation.genai.capture-message-content", "true")
-          }
-        }
-      }
+    register("IndividualHttpErrors") {
+      filter.includeTestsMatching("Aws2ClientRecordHttpErrorTest")
+      telemetryConfig("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
     }
 
-    register<JvmTestSuite>("testRdsData") {
-      dependencies {
-        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
-        val version = baseVersion("2.5.54").orLatest()
-        implementation("software.amazon.awssdk:rdsdata:$version")
-      }
+    register("ReceiveTelemetry") {
+      filter.includeTestsMatching("Aws2SqsTracingTest")
+      telemetryConfig("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    }
+  }
+
+  executions("testBedrockRuntime") {
+    register("CaptureMessageContent") {
+      telemetryConfig("otel.instrumentation.genai.capture-message-content", "true")
+    }
+  }
+
+  executions("testRdsData") {
+    register("ExperimentalAttributes") {
+      systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     }
   }
 }
 
 tasks {
-  val testExperimentalSqs = register<Test>("testExperimentalSqs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", "true")
-    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-  }
-
-  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    include("**/Aws2SqsSuppressReceiveSpansTest.*")
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  val testRdsDataStableSemconv = register<Test>("testRdsDataStableSemconv") {
-    val testRdsDataSourceSet = sourceSets["testRdsData"]
-    testClassesDirs = testRdsDataSourceSet.output.classesDirs
-    classpath = testRdsDataSourceSet.runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("*Sqs*")
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testMessagingPreviewReceiveSpansDisabled = register<Test>("testMessagingPreviewReceiveSpansDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    include("**/Aws2SqsSuppressReceiveSpansTest.*")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("*Sqs*")
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   check {
-    dependsOn(
-      testing.suites,
-      testExperimentalSqs,
-      testStableSemconv,
-      testRdsDataStableSemconv,
-      testReceiveSpansDisabled,
-      testMessagingPreview,
-      testMessagingPreviewReceiveSpansDisabled,
-      testBothSemconv
-    )
-  }
-
-  withType<Test>().configureEach {
-    // TODO run tests both with and without experimental span attributes
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+    dependsOn(testing.suites)
   }
 
   withType<ShadowJar>().configureEach {

@@ -50,19 +50,6 @@ final class KafkaConsumerAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public Long getMessageBodySize(KafkaProcessRequest request) {
-    long size = request.getRecord().serializedValueSize();
-    return size >= 0 ? size : null;
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(KafkaProcessRequest request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getMessageId(KafkaProcessRequest request, @Nullable Void unused) {

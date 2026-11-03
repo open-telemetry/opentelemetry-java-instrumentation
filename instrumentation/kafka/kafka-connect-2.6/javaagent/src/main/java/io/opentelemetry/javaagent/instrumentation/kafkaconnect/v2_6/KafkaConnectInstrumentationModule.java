@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class KafkaConnectInstrumentationModule extends InstrumentationModule {
 
   public KafkaConnectInstrumentationModule() {
-    super("kafka-connect", "kafka-connect-2.6");
+    super("kafka-connect-2.6", "kafka-connect", "kafka");
   }
 
   @Override

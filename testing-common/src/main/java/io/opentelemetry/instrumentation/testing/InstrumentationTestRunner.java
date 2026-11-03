@@ -18,6 +18,7 @@ import io.opentelemetry.api.internal.InternalAttributeKeyImpl;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.CollectedEvent;
+import io.opentelemetry.instrumentation.testing.internal.CollectedMetric;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
@@ -65,7 +66,8 @@ public abstract class InstrumentationTestRunner {
   // in the OpenTelemetry API bridging tests where some of the newer OpenTelemetry APIs used by
   // Instrumenter are absent.
   @Nullable private TestInstrumenters testInstrumenters;
-  protected Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope = new HashMap<>();
+  protected Map<InstrumentationScopeInfo, Map<String, CollectedMetric>> metricsByScope =
+      new HashMap<>();
   protected Set<InstrumentationScopeInfo> instrumentationScopes = new HashSet<>();
 
   /**
@@ -103,19 +105,6 @@ public abstract class InstrumentationTestRunner {
   public abstract List<LogRecordData> getExportedLogRecords();
 
   public abstract boolean forceFlushCalled();
-
-  /**
-   * Returns the peer service name expected on spans that target a local test server, or {@code
-   * null} when no peer service is expected.
-   *
-   * <p>Peer service mapping is a javaagent-only feature, so only javaagent tests expect a value.
-   * Library instrumentation never applies the peer service extractor; library users add peer
-   * service through their own attributes extractor.
-   */
-  @Nullable
-  public String expectedPeerService() {
-    return null;
-  }
 
   /** Return a list of all captured traces, where each trace is a sorted list of spans. */
   public List<List<SpanData>> traces() {
@@ -250,13 +239,13 @@ public abstract class InstrumentationTestRunner {
 
   private void collectEmittedMetrics(List<MetricData> metrics) {
     for (MetricData metric : metrics) {
-      Map<String, MetricData> scopeMap =
+      Map<String, CollectedMetric> scopeMap =
           this.metricsByScope.computeIfAbsent(
               metric.getInstrumentationScopeInfo(), m -> new HashMap<>());
 
-      if (!scopeMap.containsKey(metric.getName())) {
-        scopeMap.put(metric.getName(), metric);
-      }
+      scopeMap
+          .computeIfAbsent(metric.getName(), name -> new CollectedMetric(metric))
+          .collect(metric);
 
       InstrumentationScopeInfo scopeInfo = metric.getInstrumentationScopeInfo();
       if (!scopeInfo.getName().equals("test")) {

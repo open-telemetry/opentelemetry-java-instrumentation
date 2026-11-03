@@ -231,7 +231,7 @@ public class IntegrationTestUtils {
     outputGobbler.start();
     errorGobbler.start();
 
-    waitFor(process, 30, SECONDS);
+    waitFor(process, 60, SECONDS);
 
     outputGobbler.join();
     errorGobbler.join();

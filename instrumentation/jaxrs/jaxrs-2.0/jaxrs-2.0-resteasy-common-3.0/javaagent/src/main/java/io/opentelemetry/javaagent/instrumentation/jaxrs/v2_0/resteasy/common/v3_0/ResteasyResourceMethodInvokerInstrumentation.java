@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.resteasy.com
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -39,7 +39,7 @@ public class ResteasyResourceMethodInvokerInstrumentation implements TypeInstrum
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This ResourceMethodInvoker resourceInvoker) {
       String name = INVOKER_NAME.get(resourceInvoker);
-      ResteasySpanName.INSTANCE.updateServerSpanName(Java8BytecodeBridge.currentContext(), name);
+      ResteasySpanName.INSTANCE.updateServerSpanName(Context.current(), name);
     }
   }
 }

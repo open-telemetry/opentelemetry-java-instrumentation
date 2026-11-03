@@ -24,8 +24,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class DefaultEnablementTest {
 
-  private static final boolean V3_PREVIEW =
-      Boolean.getBoolean("otel.instrumentation.common.v3-preview");
+  private static final boolean INSTRUMENTATION_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.twilio.enabled");
 
   private static final String MESSAGE_RESPONSE_BODY =
       "{\"body\":\"Hello, World!\",\"sid\":\"MM123\",\"status\":\"sent\"}";
@@ -52,14 +52,14 @@ class DefaultEnablementTest {
                     .create(twilioRestClient));
 
     assertThat(message.getBody()).isEqualTo("Hello, World!");
-    if (V3_PREVIEW) {
-      testing.waitAndAssertTraces(
-          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
-    } else {
+    if (INSTRUMENTATION_ENABLED) {
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span -> span.hasName("parent"), span -> span.hasName("MessageCreator.create")));
+    } else {
+      testing.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));
     }
   }
 }

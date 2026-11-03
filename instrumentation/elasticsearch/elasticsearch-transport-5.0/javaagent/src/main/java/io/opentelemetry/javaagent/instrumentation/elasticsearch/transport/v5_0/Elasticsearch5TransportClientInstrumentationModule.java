@@ -16,7 +16,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class Elasticsearch5TransportClientInstrumentationModule extends InstrumentationModule {
   public Elasticsearch5TransportClientInstrumentationModule() {
-    super("elasticsearch-transport", "elasticsearch-transport-5.0", "elasticsearch");
+    super("elasticsearch-transport-5.0", "elasticsearch-transport", "elasticsearch");
   }
 
   @Override

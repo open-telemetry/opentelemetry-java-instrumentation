@@ -7,10 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0.HbaseSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.RequestAndContext;
 import java.io.IOException;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -30,12 +31,13 @@ class IpcCallInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("callComplete"), getClass().getName() + "$CallCompleteAdvice");
     transformer.applyAdviceToMethod(
-        named("setTimeout"), getClass().getName() + "$SetTimeoutAdvice");
+        named("setTimeout").and(takesArgument(0, IOException.class)),
+        getClass().getName() + "$SetTimeoutAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CallCompleteAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.This Object call,
         @Advice.FieldValue(value = "error") @Nullable IOException callError) {
@@ -52,7 +54,7 @@ class IpcCallInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class SetTimeoutAdvice {
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This Object call,
         @Advice.Argument(0) IOException timeoutError,

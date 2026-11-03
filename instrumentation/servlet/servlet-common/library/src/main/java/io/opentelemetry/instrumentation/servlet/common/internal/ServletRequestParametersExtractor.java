@@ -10,10 +10,8 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
@@ -89,11 +87,6 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
   }
 
   private static AttributeKey<List<String>> createKey(String parameterName) {
-    if (!SemconvStability.v3Preview()) {
-      // normalize parameter name similarly as is done with header names when header values are
-      // captured as span attributes
-      parameterName = parameterName.toLowerCase(Locale.ROOT);
-    }
     String key = "servlet.request.parameter." + parameterName;
     return AttributeKey.stringArrayKey(key);
   }

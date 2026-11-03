@@ -44,23 +44,10 @@ public final class ProcessResource {
       Pattern.compile(
           "(-D[^=]*(password|secret)[^=]*=).*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
-  @Deprecated // to be removed in 3.0
-  private static final Resource INSTANCE = create(true);
-
   /**
-   * Returns a factory for a {@link Resource} which provides information about the current running
-   * process, including the command-line attributes.
-   *
-   * @deprecated Use {@link #create(boolean) create(true)} to retain the current behavior, or {@link
-   *     #create()} to omit the potentially sensitive {@code process.command_args} and {@code
-   *     process.command_line} attributes. Will be removed in 3.0.
+   * Returns a {@link Resource} which provides information about the current running process,
+   * without the potentially sensitive command-line attributes.
    */
-  @Deprecated // to be removed in 3.0
-  public static Resource get() {
-    return INSTANCE;
-  }
-
-  /** Returns a {@link Resource} which provides information about the current running process. */
   public static Resource create() {
     return create(false);
   }
@@ -69,7 +56,10 @@ public final class ProcessResource {
    * Returns a {@link Resource} which provides information about the current running process.
    *
    * <p>Warning: command-line resource attributes may contain sensitive information. Only set {@code
-   * emitCommandAttributes} to {@code true} when this risk is acceptable.
+   * emitCommandAttributes} to {@code true} when this risk is acceptable. When false, the {@code
+   * process.command_args} and {@code process.command_line} attributes are omitted.
+   *
+   * @param emitCommandAttributes whether to include potentially sensitive command-line attributes
    */
   public static Resource create(boolean emitCommandAttributes) {
     try {
@@ -117,7 +107,7 @@ public final class ProcessResource {
       }
     }
 
-    return Resource.create(attributes.build(), SchemaUrls.V1_24_0);
+    return Resource.create(attributes.build(), SchemaUrls.V1_40_0);
   }
 
   private static void addCommandAttributes(AttributesBuilder attributes, String executablePath) {

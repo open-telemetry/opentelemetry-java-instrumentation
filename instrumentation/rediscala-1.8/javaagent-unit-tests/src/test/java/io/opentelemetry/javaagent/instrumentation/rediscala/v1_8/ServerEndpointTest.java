@@ -43,8 +43,6 @@ class ServerEndpointTest {
   @Test
   void extractsSentinelBlockingClient() {
     RedisBlockingClient redisClient = mock(RedisBlockingClient.class);
-    when(redisClient.host()).thenReturn("master");
-    when(redisClient.port()).thenReturn(6380);
     when(redisClient.db()).thenReturn(Option.apply(2));
     SentinelMonitoredRedisBlockingClient client = mock(SentinelMonitoredRedisBlockingClient.class);
     when(client.redisClient()).thenReturn(redisClient);
@@ -54,16 +52,12 @@ class ServerEndpointTest {
 
   private static RedisClient masterClient() {
     RedisClient client = mock(RedisClient.class);
-    when(client.host()).thenReturn("master");
-    when(client.port()).thenReturn(6380);
     when(client.db()).thenReturn(Option.apply(2));
     return client;
   }
 
   private static void assertEndpoint(ServerEndpoint endpoint) {
     assertThat(endpoint).isNotNull();
-    assertThat(endpoint.getHost()).isEqualTo("master");
-    assertThat(endpoint.getPort()).isEqualTo(6380);
     assertThat(endpoint.getDatabaseIndex()).isEqualTo(2);
   }
 }

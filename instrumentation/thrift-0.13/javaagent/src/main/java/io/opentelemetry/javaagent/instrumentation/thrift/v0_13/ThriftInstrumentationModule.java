@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ThriftInstrumentationModule extends InstrumentationModule {
 
   public ThriftInstrumentationModule() {
-    super("thrift", "thrift-0.13");
+    super("thrift-0.13", "thrift");
   }
 
   @Override

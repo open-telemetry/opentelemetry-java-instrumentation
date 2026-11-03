@@ -15,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.whereAny;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
@@ -75,7 +74,7 @@ class AddingSpanAttributesInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Origin Method method,
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args) {
-      Span otelSpan = Java8BytecodeBridge.currentSpan();
+      Span otelSpan = Span.current();
       if (otelSpan.isRecording() && otelSpan.getSpanContext().isValid()) {
         otelSpan.setAllAttributes(attributes().extract(method, args));
       }

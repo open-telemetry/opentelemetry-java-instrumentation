@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class CxfInstrumentationModule extends InstrumentationModule {
   public CxfInstrumentationModule() {
-    super("jaxrs", "jaxrs-2.0", "cxf", "cxf-3.2");
+    super("jaxrs-2.0-cxf-3.2", "jaxrs-cxf", "jaxrs");
   }
 
   @Override

@@ -6,12 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0;
 
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -23,7 +19,6 @@ import io.opentelemetry.instrumentation.api.semconv.url.internal.UrlSanitizer;
 import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
-import org.apache.http.HttpHost;
 import org.elasticsearch.client.Response;
 
 /**
@@ -33,10 +28,8 @@ import org.elasticsearch.client.Response;
 final class ElasticsearchClientAttributeExtractor
     implements AttributesExtractor<ElasticsearchRestRequest, Response> {
 
-  private static final String PATH_PARTS_ATTRIBUTE_PREFIX = "db.elasticsearch.path_parts.";
   private static final String OPERATION_PARAMETER_ATTRIBUTE_PREFIX = "db.operation.parameter.";
 
-  private static final Cache<String, AttributeKey<String>> pathPartKeysCache = Cache.bounded(64);
   private static final Cache<String, AttributeKey<String>> operationParameterKeysCache =
       Cache.bounded(64);
 
@@ -47,17 +40,6 @@ final class ElasticsearchClientAttributeExtractor
       Set<String> knownMethods, Set<String> sensitiveQueryParameters) {
     this.knownMethods = new HashSet<>(knownMethods);
     this.sensitiveQueryParameters = new HashSet<>(sensitiveQueryParameters);
-  }
-
-  private static void setServerAttributes(AttributesBuilder attributes, Response response) {
-    if (emitStableDatabaseSemconv()) {
-      return;
-    }
-    HttpHost host = response.getHost();
-    if (host != null) {
-      attributes.put(SERVER_ADDRESS, host.getHostName());
-      attributes.put(SERVER_PORT, (long) host.getPort());
-    }
   }
 
   private void setUrlAttribute(AttributesBuilder attributes, Response response) {
@@ -78,18 +60,10 @@ final class ElasticsearchClientAttributeExtractor
     endpointDef.processPathParts(
         request.getEndpoint(),
         (key, value) -> {
-          if (emitStableDatabaseSemconv()) {
-            attributes.put(
-                operationParameterKeysCache.computeIfAbsent(
-                    key, k -> AttributeKey.stringKey(OPERATION_PARAMETER_ATTRIBUTE_PREFIX + k)),
-                value);
-          }
-          if (emitOldDatabaseSemconv()) {
-            attributes.put(
-                pathPartKeysCache.computeIfAbsent(
-                    key, k -> AttributeKey.stringKey(PATH_PARTS_ATTRIBUTE_PREFIX + k)),
-                value);
-          }
+          attributes.put(
+              operationParameterKeysCache.computeIfAbsent(
+                  key, k -> AttributeKey.stringKey(OPERATION_PARAMETER_ATTRIBUTE_PREFIX + k)),
+              value);
         });
   }
 
@@ -116,7 +90,6 @@ final class ElasticsearchClientAttributeExtractor
 
     if (response != null) {
       setUrlAttribute(attributes, response);
-      setServerAttributes(attributes, response);
     }
   }
 }

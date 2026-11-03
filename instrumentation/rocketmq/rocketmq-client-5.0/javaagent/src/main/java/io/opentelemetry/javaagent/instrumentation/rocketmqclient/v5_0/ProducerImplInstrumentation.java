@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0.Roc
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
@@ -18,6 +17,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
@@ -43,24 +43,16 @@ final class ProducerImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("send0")
             .and(isPrivate())
-            .and(takesArguments(6))
             .and(
                 takesArgument(
                     0,
                     named(
                         "org.apache.rocketmq.shaded.com.google.common.util.concurrent.SettableFuture")))
-            .and(takesArgument(1, String.class))
-            .and(takesArgument(2, named("org.apache.rocketmq.client.java.message.MessageType")))
             .and(takesArgument(3, List.class))
-            .and(takesArgument(4, List.class))
-            .and(takesArgument(5, int.class)),
+            .and(takesArgument(4, List.class)),
         getClass().getName() + "$SendAdvice");
 
-    transformer.applyAdviceToMethod(
-        named("sendAsync")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("org.apache.rocketmq.client.apis.message.Message"))),
-        getClass().getName() + "$SendAsyncAdvice");
+    transformer.applyAdviceToMethod(named("sendAsync"), getClass().getName() + "$SendAsyncAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -73,8 +65,11 @@ final class ProducerImplInstrumentation implements TypeInstrumentation {
       Instrumenter<PublishingMessageImpl, SendReceiptImpl> instrumenter = producerInstrumenter();
       int count = messages.size();
       List<SettableFuture<SendReceiptImpl>> futures = FutureConverter.convert(future0, count);
+      @Nullable
       String namespace =
-          messageQueues.isEmpty() ? "" : messageQueues.get(0).getTopicResource().getNamespace();
+          messageQueues.isEmpty()
+              ? null
+              : StringUtils.emptyToNull(messageQueues.get(0).getTopicResource().getNamespace());
       for (int i = 0; i < count; i++) {
         PublishingMessageImpl message = messages.get(i);
         VirtualFieldStore.setNamespaceByMessage(message, namespace);

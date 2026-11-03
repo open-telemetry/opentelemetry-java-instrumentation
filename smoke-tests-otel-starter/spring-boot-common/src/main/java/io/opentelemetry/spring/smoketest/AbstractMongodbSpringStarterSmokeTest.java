@@ -5,9 +5,7 @@
 
 package io.opentelemetry.spring.smoketest;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.stableDbSystemName;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.MONGODB;
 
 import com.mongodb.client.MongoClient;
@@ -20,7 +18,6 @@ abstract class AbstractMongodbSpringStarterSmokeTest extends AbstractSpringStart
 
   @Autowired protected MongoClient mongoClient;
 
-  @SuppressWarnings("deprecation") // uses deprecated semconv
   @Test
   void mongodb() {
     runMongoClientTest(
@@ -38,7 +35,7 @@ abstract class AbstractMongodbSpringStarterSmokeTest extends AbstractSpringStart
                       span ->
                           span.hasKind(SpanKind.CLIENT)
                               .hasName("listDatabases admin")
-                              .hasAttribute(maybeStable(DB_SYSTEM), stableDbSystemName(MONGODB))));
+                              .hasAttribute(DB_SYSTEM_NAME, MONGODB)));
         });
   }
 

@@ -24,6 +24,7 @@ otelJava {
       )
     )
   )
+  javaToolchainVersion.set(minJavaVersionSupported)
 }
 
 tasks.withType<JavaCompile>().configureEach {

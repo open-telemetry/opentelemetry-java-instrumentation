@@ -43,7 +43,6 @@ tasks.test {
   jvmArgs("-Dotel.instrumentation.apache-shenyu.experimental-span-attributes=true")
 
   systemProperty("metadataConfig", "otel.instrumentation.apache-shenyu.experimental-span-attributes=true")
-  systemProperty("collectMetadata", otelProps.collectMetadata)
 
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")

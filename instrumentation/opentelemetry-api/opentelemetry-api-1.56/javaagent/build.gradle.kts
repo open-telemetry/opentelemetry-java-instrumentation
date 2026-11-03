@@ -17,7 +17,7 @@ dependencies {
 }
 
 configurations.configureEach {
-  if (name.endsWith("testRuntimeClasspath", true) || name.endsWith("testCompileClasspath", true)) {
+  if (name == "testRuntimeClasspath" || name == "testCompileClasspath") {
     resolutionStrategy {
       force("io.opentelemetry:opentelemetry-api:1.56.0")
       force("io.opentelemetry:opentelemetry-api-incubator:1.56.0-alpha")
@@ -25,8 +25,30 @@ configurations.configureEach {
   }
 }
 
-tasks.test {
-  jvmArgs(
-    "-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml"
-  )
+testing {
+  suites {
+    register<JvmTestSuite>("incubatorTest") {
+      dependencies {
+        implementation("io.opentelemetry:opentelemetry-api-incubator:1.67.0-alpha")
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.config.file=$projectDir/src/incubatorTest/resources/declarative-config.yaml")
+          }
+        }
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+
+  test {
+    jvmArgs("-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml")
+  }
 }

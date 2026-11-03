@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class LettuceInstrumentationModule extends InstrumentationModule {
   public LettuceInstrumentationModule() {
-    super("lettuce", "lettuce-4.0");
+    super("lettuce-4.0", "lettuce");
   }
 
   @Override
@@ -26,7 +26,6 @@ public class LettuceInstrumentationModule extends InstrumentationModule {
         new LettuceAsyncCommandsInstrumentation(),
         new LettuceCommandHandlerInstrumentation(),
         new LettuceCommandWrapperInstrumentation(),
-        new LettuceConnectionInstrumentation(),
         new LettuceReactiveCommandDispatcherInstrumentation(),
         new LettuceObservableCommandInstrumentation(),
         new LettuceConnectInstrumentation(),

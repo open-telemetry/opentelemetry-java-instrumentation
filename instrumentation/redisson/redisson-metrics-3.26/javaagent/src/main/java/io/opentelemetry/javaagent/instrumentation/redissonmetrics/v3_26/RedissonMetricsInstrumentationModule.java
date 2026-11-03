@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RedissonMetricsInstrumentationModule extends InstrumentationModule {
 
   public RedissonMetricsInstrumentationModule() {
-    super("redisson-metrics", "redisson-metrics-3.26");
+    super("redisson-metrics-3.26", "redisson-metrics", "redisson");
   }
 
   @Override

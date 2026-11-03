@@ -51,6 +51,7 @@ public class SpanKeyBridging {
         application.io.opentelemetry.instrumentation.api.internal.SpanKey.DB_CLIENT,
         SpanKey.DB_CLIENT);
 
+    putIfPresent(map, "GEN_AI_CLIENT", SpanKey.GEN_AI_CLIENT);
     putIfPresent(map, "PRODUCER_CREATE", SpanKey.PRODUCER_CREATE);
     map.put(
         application.io.opentelemetry.instrumentation.api.internal.SpanKey.PRODUCER,

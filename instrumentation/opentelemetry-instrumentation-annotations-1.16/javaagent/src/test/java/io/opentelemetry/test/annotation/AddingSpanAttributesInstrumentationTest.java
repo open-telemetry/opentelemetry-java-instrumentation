@@ -8,14 +8,14 @@ package io.opentelemetry.test.annotation;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.annotations.AddingSpanAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -34,13 +34,6 @@ class AddingSpanAttributesInstrumentationTest {
             new ExtractAttributesUsingAddingSpanAttributes()
                 .withSpanTakesPrecedence("foo", "bar", null, "baz"));
 
-    List<AttributeAssertion> attributesAssertions =
-        new ArrayList<>(
-            SemconvCodeStabilityUtil.codeFunctionAssertions(
-                ExtractAttributesUsingAddingSpanAttributes.class, "withSpanTakesPrecedence"));
-    attributesAssertions.add(equalTo(stringKey("implicitName"), "foo"));
-    attributesAssertions.add(equalTo(stringKey("explicitName"), "bar"));
-
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -50,7 +43,13 @@ class AddingSpanAttributesInstrumentationTest {
                             "ExtractAttributesUsingAddingSpanAttributes.withSpanTakesPrecedence")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
-                        .hasAttributesSatisfyingExactly(attributesAssertions)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                ExtractAttributesUsingAddingSpanAttributes.class.getName()
+                                    + ".withSpanTakesPrecedence"),
+                            equalTo(stringKey("implicitName"), "foo"),
+                            equalTo(stringKey("explicitName"), "bar"))));
   }
 
   @Test
@@ -81,37 +80,9 @@ class AddingSpanAttributesInstrumentationTest {
   }
 
   @Test
-  void constructorOnlyAddingSpanAttributesDoesNotTransformType() {
-    testing.runWithSpan(
-        "root", () -> new ConstructorOnlyAddingSpanAttributes("foo", "bar", null, "baz"));
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("root")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0)));
-  }
-
-  @Test
-  void constructorAndMethodAddingSpanAttributesIgnoresConstructor() {
-    testing.runWithSpan(
-        "root",
-        () ->
-            new ConstructedWithAddingSpanAttributes("foo", "bar", null, "baz")
-                .addAttributes("method"));
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("root")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("methodAttribute"), "method"))));
+  void annotationTargetsMethodsOnly() {
+    assertThat(AddingSpanAttributes.class.getAnnotation(Target.class).value())
+        .containsExactly(ElementType.METHOD);
   }
 
   @Test

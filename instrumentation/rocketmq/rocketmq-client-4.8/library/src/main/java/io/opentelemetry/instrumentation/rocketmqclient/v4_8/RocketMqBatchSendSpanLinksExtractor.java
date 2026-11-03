@@ -15,12 +15,11 @@ import java.util.List;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 
 final class RocketMqBatchSendSpanLinksExtractor implements SpanLinksExtractor<SendMessageContext> {
-  private static final VirtualField<SendMessageContext, MessageCreationContexts>
-      MESSAGE_CREATION_CONTEXTS =
-          VirtualField.find(SendMessageContext.class, MessageCreationContexts.class);
+  private static final VirtualField<SendMessageContext, List<Context>> MESSAGE_CREATION_CONTEXTS =
+      VirtualField.find(SendMessageContext.class, List.class, "messageCreationContexts");
 
   static void setContexts(SendMessageContext request, List<Context> contexts) {
-    MESSAGE_CREATION_CONTEXTS.set(request, new MessageCreationContexts(contexts));
+    MESSAGE_CREATION_CONTEXTS.set(request, contexts);
   }
 
   static void clearContexts(SendMessageContext request) {
@@ -32,16 +31,16 @@ final class RocketMqBatchSendSpanLinksExtractor implements SpanLinksExtractor<Se
   }
 
   static long getBatchMessageCount(SendMessageContext request) {
-    MessageCreationContexts contexts = MESSAGE_CREATION_CONTEXTS.get(request);
-    return contexts == null ? 0 : contexts.contexts.size();
+    List<Context> contexts = MESSAGE_CREATION_CONTEXTS.get(request);
+    return contexts == null ? 0 : contexts.size();
   }
 
   static boolean allMessagesHaveCreationContext(SendMessageContext request) {
-    MessageCreationContexts contexts = MESSAGE_CREATION_CONTEXTS.get(request);
-    if (contexts == null || contexts.contexts.isEmpty()) {
+    List<Context> contexts = MESSAGE_CREATION_CONTEXTS.get(request);
+    if (contexts == null || contexts.isEmpty()) {
       return false;
     }
-    for (Context context : contexts.contexts) {
+    for (Context context : contexts) {
       if (!Span.fromContext(context).getSpanContext().isValid()) {
         return false;
       }
@@ -52,23 +51,13 @@ final class RocketMqBatchSendSpanLinksExtractor implements SpanLinksExtractor<Se
   @Override
   public void extract(
       SpanLinksBuilder spanLinks, Context parentContext, SendMessageContext request) {
-    MessageCreationContexts contexts = MESSAGE_CREATION_CONTEXTS.get(request);
+    List<Context> contexts = MESSAGE_CREATION_CONTEXTS.get(request);
     if (contexts == null) {
       return;
     }
-    for (Context context : contexts.contexts) {
+    for (Context context : contexts) {
       SpanContext spanContext = Span.fromContext(context).getSpanContext();
-      if (spanContext.isValid()) {
-        spanLinks.addLink(spanContext);
-      }
-    }
-  }
-
-  static final class MessageCreationContexts {
-    private final List<Context> contexts;
-
-    private MessageCreationContexts(List<Context> contexts) {
-      this.contexts = contexts;
+      spanLinks.addLink(spanContext);
     }
   }
 }

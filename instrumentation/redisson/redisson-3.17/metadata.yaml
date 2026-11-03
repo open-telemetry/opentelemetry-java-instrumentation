@@ -4,3 +4,12 @@ semantic_conventions:
   - DATABASE_CLIENT_SPANS
   - DATABASE_CLIENT_METRICS
 library_link: https://github.com/redisson/redisson
+configurations:
+  - name: otel.instrumentation.redisson.query-sanitization.enabled
+    declarative_name: java.redisson.query_sanitization.enabled
+    description: >
+      Enables query sanitization for Redisson queries. Overrides
+      `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when
+      unset, that setting applies.
+    type: boolean
+  - ref: common.db.query-sanitization.enabled

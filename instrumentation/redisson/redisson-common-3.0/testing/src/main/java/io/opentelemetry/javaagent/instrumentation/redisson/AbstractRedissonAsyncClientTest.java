@@ -7,26 +7,23 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
-import static io.opentelemetry.semconv.NetworkAttributes.NetworkTypeValues.IPV4;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.trace.Span;
@@ -43,6 +40,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
@@ -60,9 +58,12 @@ import org.redisson.api.RBucket;
 import org.redisson.api.RFuture;
 import org.redisson.api.RScheduledExecutorService;
 import org.redisson.api.RScheduledFuture;
+import org.redisson.api.RScript;
 import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.RedisException;
 import org.redisson.client.codec.StringCodec;
+import org.redisson.client.protocol.Decoder;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
 import org.testcontainers.containers.GenericContainer;
@@ -109,6 +110,12 @@ public abstract class AbstractRedissonAsyncClientTest {
       newAddress = "redis://" + address;
     }
     Config config = new Config();
+    try {
+      // script cache is enabled by default in 3.46.0
+      Config.class.getMethod("setUseScriptCache", boolean.class).invoke(config, false);
+    } catch (NoSuchMethodException ignored) {
+      // ignored
+    }
     SingleServerConfig singleServerConfig = config.useSingleServer();
     singleServerConfig.setAddress(newAddress);
     singleServerConfig.setTimeout(30_000);
@@ -157,18 +164,124 @@ public abstract class AbstractRedissonAsyncClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + address : "SET")
+                    span.hasName("SET " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
-                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))));
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"))));
+  }
+
+  @Test
+  void asyncCustomServerErrorIsRecordedInSpanAndMetrics() {
+    RFuture<?> future =
+        redisson
+            .getScript()
+            .evalAsync(
+                RScript.Mode.READ_WRITE,
+                "return redis.error_reply('CUSTOM diagnostic details')",
+                RScript.ReturnType.VALUE);
+    assertThatThrownBy(() -> future.toCompletableFuture().get(TIMEOUT.toMillis(), MILLISECONDS))
+        .hasCauseInstanceOf(RedisException.class);
+
+    AtomicReference<String> instrumentationName = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasKind(CLIENT)
+                      .hasAttributesSatisfying(
+                          attributes ->
+                              assertThat(attributes.asMap()).containsEntry(ERROR_TYPE, "CUSTOM")));
+        });
+
+    testing.waitAndAssertMetrics(
+        instrumentationName.get(),
+        metrics ->
+            metrics
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributesSatisfying(
+                                    attributes ->
+                                        assertThat(attributes.asMap())
+                                            .containsEntry(ERROR_TYPE, "CUSTOM")))));
+  }
+
+  @Test
+  void asyncWrongTypeErrorIsRecordedInSpanAndMetrics() throws IOException, InterruptedException {
+    assertThat(
+            redisServer
+                .execInContainer("redis-cli", "lpush", "async-wrong-type", "value")
+                .getExitCode())
+        .isZero();
+    assertThatThrownBy(
+            () ->
+                redisson
+                    .<String>getBucket("async-wrong-type")
+                    .getAsync()
+                    .toCompletableFuture()
+                    .join())
+        .hasRootCauseInstanceOf(RedisException.class);
+    assertErrorTypeOnSpanAndMetric("WRONGTYPE");
+
+    assertThat(
+            redisson
+                .getScript()
+                .evalAsync(RScript.Mode.READ_ONLY, "return 1", RScript.ReturnType.VALUE)
+                .toCompletableFuture()
+                .join())
+        .isEqualTo(1L);
+    assertErrorTypeOnSpanAndMetric(null);
+  }
+
+  @Test
+  void asyncFailedBatchErrorPrefixIsRecordedInSpanAndMetrics() {
+    RBatch batch = createBatch(redisson);
+    batch
+        .getScript()
+        .evalAsync(
+            RScript.Mode.READ_WRITE,
+            "return redis.error_reply('Batch.Code! diagnostic')",
+            RScript.ReturnType.VALUE);
+
+    assertThatThrownBy(() -> batch.executeAsync().toCompletableFuture().join())
+        .hasRootCauseInstanceOf(RedisException.class);
+
+    assertErrorTypeOnSpanAndMetric("Batch.Code!");
+  }
+
+  @Test
+  void asyncClientSideDecodeFailureKeepsExceptionClassFallback()
+      throws IOException, InterruptedException {
+    assertThat(
+            redisServer
+                .execInContainer("redis-cli", "set", "async-client-side-decode-error", "value")
+                .getExitCode())
+        .isZero();
+    RBucket<String> bucket =
+        redisson.getBucket(
+            "async-client-side-decode-error",
+            new StringCodec() {
+              @Override
+              public Decoder<Object> getValueDecoder() {
+                return (buffer, state) -> {
+                  throw new RedisException("ERR client-side decode failure");
+                };
+              }
+            });
+    assertThatThrownBy(() -> bucket.getAsync().toCompletableFuture().join())
+        .hasRootCauseInstanceOf(RedisException.class);
+
+    assertErrorTypeOnSpanAndMetric(RedisException.class.getName());
   }
 
   @Test
@@ -194,20 +307,61 @@ public abstract class AbstractRedissonAsyncClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SADD " + address : "SADD")
+                    span.hasName("SADD " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
-                            equalTo(maybeStable(DB_STATEMENT), "SADD set1 ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SADD"))
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_QUERY_TEXT, "SADD set1 ?"),
+                            equalTo(DB_OPERATION_NAME, "SADD"))
                         .hasParent(trace.getSpan(0)),
                 span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
+  }
+
+  private static void assertErrorTypeOnSpanAndMetric(String expectedErrorType) {
+    AtomicReference<String> instrumentationName = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasKind(CLIENT)
+                      .hasAttributesSatisfying(
+                          attributes -> {
+                            if (expectedErrorType == null) {
+                              assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE);
+                            } else {
+                              assertThat(attributes.asMap())
+                                  .containsEntry(ERROR_TYPE, expectedErrorType);
+                            }
+                          }));
+        });
+    testing.waitAndAssertMetrics(
+        instrumentationName.get(),
+        metrics ->
+            metrics
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfying(
+                                        attributes -> {
+                                          if (expectedErrorType == null) {
+                                            assertThat(attributes.asMap())
+                                                .doesNotContainKey(ERROR_TYPE);
+                                          } else {
+                                            assertThat(attributes.asMap())
+                                                .containsEntry(ERROR_TYPE, expectedErrorType);
+                                          }
+                                        }))));
+    testing.clearData();
   }
 
   // regression test for
@@ -313,55 +467,46 @@ public abstract class AbstractRedissonAsyncClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "MULTI SET " + address : "DB Query")
+                    span.hasName("MULTI SET " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
-                            equalTo(
-                                DB_OPERATION_NAME,
-                                emitStableDatabaseSemconv() ? "MULTI SET" : null),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_OPERATION_NAME, "MULTI SET"),
                             // db.operation.batch.size is not emitted because MULTI transaction
                             // telemetry is split across wrapper and command spans, so this span
                             // does not represent the full logical batch.
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                emitStableDatabaseSemconv()
-                                    ? "MULTI; SET batch1 ?"
-                                    : "MULTI;SET batch1 ?"))
+                            equalTo(DB_QUERY_TEXT, "MULTI; SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SET " + address : "SET")
+                    span.hasName("SET " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
-                            equalTo(maybeStable(DB_STATEMENT), "SET batch2 ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET"))
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_QUERY_TEXT, "SET batch2 ?"),
+                            equalTo(DB_OPERATION_NAME, "SET"))
                         .hasParent(trace.getSpan(0)),
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "EXEC " + address : "EXEC")
+                    span.hasName("EXEC " + address)
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TYPE, emitOldDatabaseSemconv() ? IPV4 : null),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace()),
-                            equalTo(maybeStable(DB_STATEMENT), "EXEC"),
-                            equalTo(maybeStable(DB_OPERATION), "EXEC"))
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, dbNamespace("0")),
+                            equalTo(DB_QUERY_TEXT, "EXEC"),
+                            equalTo(DB_OPERATION_NAME, "EXEC"))
                         .hasParent(trace.getSpan(0)),
                 span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
   }
@@ -375,8 +520,12 @@ public abstract class AbstractRedissonAsyncClientTest {
     return false;
   }
 
-  private String dbNamespace() {
-    return emitStableDatabaseSemconv() && hasDatabaseIndex() ? "0" : null;
+  private String dbNamespace(String databaseIndex) {
+    return hasDatabaseIndex() ? databaseIndex : null;
+  }
+
+  protected RBatch createBatch(RedissonClient redisson) {
+    return redisson.createBatch(BatchOptions.defaults());
   }
 
   private static class MyCallable implements Serializable, Callable<Object> {

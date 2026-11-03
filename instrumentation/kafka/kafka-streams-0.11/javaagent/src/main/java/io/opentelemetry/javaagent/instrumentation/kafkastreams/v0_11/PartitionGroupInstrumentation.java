@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11.KafkaStreamsSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11.StateHolder.holder;
 import static net.bytebuddy.matcher.ElementMatchers.isPackagePrivate;
@@ -60,7 +59,7 @@ class PartitionGroupInstrumentation implements TypeInstrumentation {
       Context receiveContext = consumerContext.getContext();
 
       // use the receive CONSUMER span as parent if it's available
-      Context parentContext = receiveContext != null ? receiveContext : currentContext();
+      Context parentContext = receiveContext != null ? receiveContext : Context.current();
       KafkaProcessRequest request = KafkaProcessRequest.create(consumerContext, record.value);
 
       if (!instrumenter().shouldStart(parentContext, request)) {

@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class GrizzlyInstrumentationModule extends InstrumentationModule {
   public GrizzlyInstrumentationModule() {
-    super("grizzly", "grizzly-2.3");
+    super("grizzly-2.3", "grizzly");
   }
 
   @Override

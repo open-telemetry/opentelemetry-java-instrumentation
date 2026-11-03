@@ -16,7 +16,7 @@ import java.util.List;
 public class InstrumentationApiInstrumentationModule extends InstrumentationModule {
 
   public InstrumentationApiInstrumentationModule() {
-    super("opentelemetry-instrumentation-api", "opentelemetry-instrumentation-api-1.14");
+    super("opentelemetry-instrumentation-api-1.14", "opentelemetry-instrumentation-api");
   }
 
   @Override

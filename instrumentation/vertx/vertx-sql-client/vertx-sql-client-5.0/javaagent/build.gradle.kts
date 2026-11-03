@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -61,22 +62,11 @@ testing {
 }
 
 tasks {
-  withType<Test>()
-    .matching { it.name != "unitTests" }
-    .configureEach {
-      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-      systemProperty("collectMetadata", otelProps.collectMetadata)
-      systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv)
+    dependsOn(testing.suites)
   }
 }

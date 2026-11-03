@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v3_0;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.couchbase.client.core.env.TimeoutConfig;
 import com.couchbase.client.core.error.DocumentNotFoundException;
@@ -35,6 +35,7 @@ import org.testcontainers.couchbase.BucketDefinition;
 import org.testcontainers.couchbase.CouchbaseContainer;
 import org.testcontainers.couchbase.CouchbaseService;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class CouchbaseClient30Test {
 
   private static final boolean EXPERIMENTAL_TELEMETRY =
@@ -94,23 +95,18 @@ class CouchbaseClient30Test {
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
           assertThat(trace.getSpan(0).getInstrumentationScopeInfo().getName())
-              .isEqualTo(
-                  v3Preview()
-                      ? "io.opentelemetry.couchbase-3.0"
-                      : "io.opentelemetry.javaagent.couchbase-3.0");
-          if (emitSdkDetailSpans()) {
+              .isEqualTo("io.opentelemetry.couchbase-3.0");
+          if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasKind(v3Preview() ? CLIENT : INTERNAL)
+                    span.hasKind(CLIENT)
                         .hasName("get")
                         .hasStatus(StatusData.unset())
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("peer.service"), "kv"),
                             satisfies(
-                                stringKey("couchbase.operation_id"),
-                                value -> value.startsWith("0x")),
-                            equalTo(stringKey("couchbase.document_id"), "id")),
+                                stringKey("couchbase.operation_id"), val -> val.startsWith("0x")),
+                            equalTo(stringKey("couchbase.document_id"), experimental("id"))),
                 span ->
                     span.hasKind(INTERNAL)
                         .hasName("dispatch_to_server")
@@ -122,12 +118,50 @@ class CouchbaseClient30Test {
                         .hasName("get")
                         .hasStatus(StatusData.unset())
                         .hasNoParent()
-                        .hasTotalAttributeCount(0));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("couchbase.operation_id"), experimental("0x")),
+                            equalTo(stringKey("couchbase.document_id"), experimental("id"))));
           }
         });
   }
 
-  private static boolean emitSdkDetailSpans() {
-    return !v3Preview() || EXPERIMENTAL_TELEMETRY;
+  @Test
+  void testAsyncErrorEmitsSpans() {
+    assertThatThrownBy(() -> collection.async().get("async-id").join())
+        .hasCauseInstanceOf(DocumentNotFoundException.class);
+
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace -> {
+          if (EXPERIMENTAL_TELEMETRY) {
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CLIENT)
+                        .hasName("get")
+                        .hasStatus(StatusData.unset())
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                stringKey("couchbase.operation_id"), val -> val.startsWith("0x")),
+                            equalTo(stringKey("couchbase.document_id"), experimental("async-id"))),
+                span ->
+                    span.hasKind(INTERNAL)
+                        .hasName("dispatch_to_server")
+                        .hasParent(trace.getSpan(0)));
+          } else {
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(CLIENT)
+                        .hasName("get")
+                        .hasStatus(StatusData.unset())
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("couchbase.operation_id"), experimental("0x")),
+                            equalTo(stringKey("couchbase.document_id"), experimental("async-id"))));
+          }
+        });
+  }
+
+  private static <T> T experimental(T value) {
+    return EXPERIMENTAL_TELEMETRY ? value : null;
   }
 }

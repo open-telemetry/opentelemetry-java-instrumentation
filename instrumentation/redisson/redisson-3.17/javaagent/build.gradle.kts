@@ -1,5 +1,8 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -21,27 +24,34 @@ dependencies {
   testImplementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("redisson324Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
+testing.suites {
+  register<JvmTestSuite>("redisson324Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
+      }
+    }
+
+    dependencies {
+      implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
+      // Redisson 3.24.3 routes configuration through ServiceManager.
+      implementation("org.redisson:redisson:3.24.3")
+    }
+
+    targets.all {
+      testTask.configure {
+        filter {
+          includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
+          includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
         }
       }
+    }
 
-      dependencies {
-        implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
-        // Redisson 3.24.3 routes configuration through ServiceManager.
-        implementation("org.redisson:redisson:3.24.3")
-      }
-
-      targets.all {
-        testTask.configure {
-          filter {
-            includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
-            includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
-          }
+    executions {
+      register("ServerTarget") {
+        filter {
+          includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
+          includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
         }
       }
     }
@@ -51,34 +61,10 @@ testing {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  val redisson324StableSemconv = testing.suites.withType(JvmTestSuite::class)
-    .matching { it.name == "redisson324Test" }
-    .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-        filter {
-          includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
-          includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
-        }
-        jvmArgs("-Dotel.semconv-stability.opt-in=database")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-      }
-    }
 
   check {
-    dependsOn(testing.suites, testStableSemconv, redisson324StableSemconv)
+    dependsOn(testing.suites)
   }
 
   if (otelProps.denyUnsafe) {

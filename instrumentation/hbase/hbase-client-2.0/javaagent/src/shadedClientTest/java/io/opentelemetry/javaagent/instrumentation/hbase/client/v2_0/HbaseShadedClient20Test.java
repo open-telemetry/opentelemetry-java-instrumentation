@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -58,7 +57,7 @@ class HbaseShadedClient20Test extends AbstractHbaseTest {
 
   @Override
   protected boolean reportsNetworkPeerAddress() {
-    return emitStableDatabaseSemconv();
+    return true;
   }
 
   @Override

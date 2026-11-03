@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CassandraClientInstrumentationModule extends InstrumentationModule {
 
   public CassandraClientInstrumentationModule() {
-    super("cassandra", "cassandra-4.0");
+    super("cassandra-4.0", "cassandra");
   }
 
   @Override

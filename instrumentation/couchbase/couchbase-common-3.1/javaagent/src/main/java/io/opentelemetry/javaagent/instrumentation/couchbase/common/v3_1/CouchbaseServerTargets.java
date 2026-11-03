@@ -51,7 +51,7 @@ public class CouchbaseServerTargets {
 
   public static void registerFromSeedNodes(
       Core core, @Nullable Set<SeedNode> seedNodes, @Nullable CoreEnvironment environment) {
-    if (seedNodes == null) {
+    if (seedNodes == null || get(core) != null) {
       return;
     }
     CouchbaseServerTarget target = null;

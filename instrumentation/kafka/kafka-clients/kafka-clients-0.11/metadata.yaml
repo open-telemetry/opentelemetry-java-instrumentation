@@ -1,4 +1,7 @@
-description: This instrumentation enables messaging spans for Kafka producers and consumers, and collects internal Kafka client metrics.
+description: >
+  This instrumentation enables messaging spans for Kafka producers and consumers. Native Kafka
+  client metrics are collected only when the separate `kafka-clients-metrics` instrumentation is
+  enabled.
 display_name: Apache Kafka Client
 library_link: https://kafka.apache.org/
 semantic_conventions:
@@ -11,14 +14,11 @@ configurations:
     default: true
   - name: otel.instrumentation.kafka.experimental-span-attributes
     declarative_name: java.kafka.experimental_span_attributes/development
-    description: Enables the capture of the experimental consumer attributes `kafka.record.queue_time_ms` and `messaging.kafka.bootstrap.servers`.
+    description: Enables the capture of the experimental consumer attributes `kafka.record.queue_time_ms` and `kafka.bootstrap.servers`.
     type: boolean
     default: false
   - ref: messaging.headers.included
   - ref: messaging.headers.excluded
-  - ref: messaging.capture-headers
-  - ref: messaging.deprecated-headers.included
-  - ref: messaging.deprecated-headers.excluded
   - name: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
     declarative_name: java.common.messaging.receive_telemetry/development.enabled
     description: >
@@ -26,4 +26,3 @@ configurations:
       only a span link connecting it to the producer trace.
     type: boolean
     default: false
-  - ref: messaging.deprecated-receive-telemetry.enabled

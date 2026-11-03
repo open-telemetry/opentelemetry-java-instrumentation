@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.scala.forkjoin.v2_8;
 
-import static io.opentelemetry.javaagent.extension.instrumentation.internal.DeprecatedInstrumentationNames.expandDeprecatedNames;
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
@@ -16,11 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class ScalaConcurrentInstrumentationModule extends InstrumentationModule {
   public ScalaConcurrentInstrumentationModule() {
-    super(
-        "scala-forkjoin",
-        expandDeprecatedNames(
-            "scala-forkjoin|deprecated:scala-fork-join",
-            "scala-forkjoin-2.8|deprecated:scala-fork-join-2.8"));
+    super("scala-forkjoin-2.8", "scala-forkjoin");
   }
 
   @Override

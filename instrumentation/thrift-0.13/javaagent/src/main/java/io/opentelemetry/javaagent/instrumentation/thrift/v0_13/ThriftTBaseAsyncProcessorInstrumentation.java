@@ -39,13 +39,14 @@ class ThriftTBaseAsyncProcessorInstrumentation implements TypeInstrumentation {
   public static class ProcessAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void methodEnter(
+        @Advice.This Object processor,
         @Advice.Argument(0) AbstractNonblockingServer.AsyncFrameBuffer fb,
         @Advice.FieldValue("iface") Object iface) {
       ServerOutProtocolDecorator serverOutProtocolDecorator =
           (ServerOutProtocolDecorator) fb.getOutputProtocol();
       serverOutProtocolDecorator.resetExceptionState();
 
-      String serviceName = iface.getClass().getName();
+      String serviceName = ThriftSingletons.getServerServiceName(processor, iface);
       ((ServerInProtocolDecorator) fb.getInputProtocol()).setServiceName(serviceName);
     }
 

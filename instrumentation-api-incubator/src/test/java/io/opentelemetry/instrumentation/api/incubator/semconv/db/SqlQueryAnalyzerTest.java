@@ -7,9 +7,8 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import java.util.Random;
 import java.util.function.Function;
@@ -18,22 +17,79 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
-@SuppressWarnings("deprecation") // testing deprecated old db semconv accessors
 class SqlQueryAnalyzerTest {
 
   private static final SqlQueryAnalyzer ANALYZER = SqlQueryAnalyzer.create(true);
 
   private static SqlQuery analyze(String sql) {
-    return emitStableDatabaseSemconv()
-        ? ANALYZER.analyzeWithSummary(sql, DOUBLE_QUOTES_ARE_STRING_LITERALS)
-        : ANALYZER.analyze(sql, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    return ANALYZER.analyze(sql, DOUBLE_QUOTES_ARE_STRING_LITERALS);
   }
 
   private static SqlQuery analyze(String sql, SqlDialect dialect) {
-    return emitStableDatabaseSemconv()
-        ? ANALYZER.analyzeWithSummary(sql, dialect)
-        : ANALYZER.analyze(sql, dialect);
+    return ANALYZER.analyze(sql, dialect);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void nullQuery(boolean sanitizationEnabled) {
+    SqlQuery result =
+        SqlQueryAnalyzer.create(sanitizationEnabled)
+            .analyze(null, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+
+    assertThat(result.getQueryText()).isNull();
+    assertThat(result.getQuerySummary()).isNull();
+    assertThat(result.getOperationName()).isNull();
+    assertThat(result.getCollectionName()).isNull();
+    assertThat(result.getStoredProcedureName()).isNull();
+  }
+
+  @Test
+  void sanitizationDisabled() {
+    String query = "CALL unsanitized_procedure('secret')";
+    SqlQuery result =
+        SqlQueryAnalyzer.create(false).analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+
+    assertThat(result.getQueryText()).isEqualTo(query);
+    assertThat(result.getQuerySummary()).isNull();
+    assertThat(result.getOperationName()).isNull();
+    assertThat(result.getCollectionName()).isNull();
+    assertThat(result.getStoredProcedureName()).isNull();
+    assertThat(SqlQueryAnalyzer.isCached(query, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isFalse();
+  }
+
+  @Test
+  void cacheDistinguishesDialects() {
+    String query = "SELECT \"dialect_value\" FROM dialect_cache_test";
+
+    SqlQuery literals = analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    SqlQuery identifiers = analyze(query, DOUBLE_QUOTES_ARE_IDENTIFIERS);
+
+    assertThat(literals.getQueryText()).isEqualTo("SELECT ? FROM dialect_cache_test");
+    assertThat(identifiers.getQueryText()).isEqualTo(query);
+    assertThat(literals.getQuerySummary()).isEqualTo("SELECT dialect_cache_test");
+    assertThat(identifiers.getQuerySummary()).isEqualTo("SELECT dialect_cache_test");
+    assertThat(analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isSameAs(literals);
+    assertThat(analyze(query, DOUBLE_QUOTES_ARE_IDENTIFIERS)).isSameAs(identifiers);
+  }
+
+  @Test
+  void cacheThreshold() {
+    String prefix = "SELECT 1234 FROM cache_threshold_test";
+    String query = prefix + repeat(' ', 10 * 1024 - prefix.length());
+    SqlQuery result = analyze(query);
+
+    assertThat(result.getQueryText()).isEqualTo("SELECT ? FROM cache_threshold_test ");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT cache_threshold_test");
+    assertThat(SqlQueryAnalyzer.isCached(query, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isTrue();
+    assertThat(analyze(query)).isSameAs(result);
+
+    String largeQuery = query + " ";
+    SqlQuery largeResult = analyze(largeQuery);
+    assertThat(largeResult).isEqualTo(result);
+    assertThat(SqlQueryAnalyzer.isCached(largeQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isFalse();
+    assertThat(analyze(largeQuery)).isEqualTo(largeResult).isNotSameAs(largeResult);
   }
 
   @ParameterizedTest
@@ -41,11 +97,7 @@ class SqlQueryAnalyzerTest {
   void sanitizeSql(String original, String expected, String expectedQuerySummary) {
     SqlQuery result = analyze(original, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     assertThat(result.getQueryText()).isEqualTo(expected);
-    if (emitStableDatabaseSemconv()) {
-      assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
-    } else {
-      assertThat(result.getQuerySummary()).isNull();
-    }
+    assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
   }
 
   @ParameterizedTest
@@ -54,15 +106,9 @@ class SqlQueryAnalyzerTest {
     SqlQuery result = analyze(original, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     SqlQuery expected = expectedFunction.apply(original);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
-    if (emitStableDatabaseSemconv()) {
-      assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
-      assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
-      assertThat(result.getQuerySummary()).isEqualTo(expected.getQuerySummary());
-    } else {
-      assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
-      assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
-      assertThat(result.getQuerySummary()).isNull();
-    }
+    assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
+    assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
+    assertThat(result.getQuerySummary()).isEqualTo(expected.getQuerySummary());
     assertThat(result.getStoredProcedureName()).isEqualTo(expected.getStoredProcedureName());
   }
 
@@ -71,11 +117,7 @@ class SqlQueryAnalyzerTest {
   void sanitizeSensitive(String original, String expected, String expectedQuerySummary) {
     SqlQuery result = analyze(original);
     assertThat(result.getQueryText()).isEqualTo(expected);
-    if (emitStableDatabaseSemconv()) {
-      assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
-    } else {
-      assertThat(result.getQuerySummary()).isNull();
-    }
+    assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
   }
 
   @Test
@@ -84,6 +126,7 @@ class SqlQueryAnalyzerTest {
         ANALYZER.analyze("GRANT SELECT ON password TO admin", DOUBLE_QUOTES_ARE_STRING_LITERALS);
 
     assertThat(result.getQueryText()).isEqualTo("GRANT SELECT ON password TO admin");
+    assertThat(result.getQuerySummary()).isEqualTo("GRANT");
   }
 
   @Test
@@ -95,31 +138,13 @@ class SqlQueryAnalyzerTest {
 
     assertThat(result.getQueryText())
         .isEqualTo("SELECT ?; GRANT ALL PRIVILEGES ON database.* TO user IDENTIFIED BY ?");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT; GRANT");
   }
 
   @Test
   void sanitizeDdlObjectNamedPassword() {
     SqlQuery result =
         ANALYZER.analyze(
-            "CREATE USER password PASSWORD Password1", DOUBLE_QUOTES_ARE_STRING_LITERALS);
-
-    assertThat(result.getQueryText()).isEqualTo("CREATE USER password PASSWORD ?");
-  }
-
-  @Test
-  void sanitizeGrantObjectNamedPasswordWithSummary() {
-    SqlQuery result =
-        ANALYZER.analyzeWithSummary(
-            "GRANT SELECT ON password TO admin", DOUBLE_QUOTES_ARE_STRING_LITERALS);
-
-    assertThat(result.getQueryText()).isEqualTo("GRANT SELECT ON password TO admin");
-    assertThat(result.getQuerySummary()).isEqualTo("GRANT");
-  }
-
-  @Test
-  void sanitizeDdlObjectNamedPasswordWithSummary() {
-    SqlQuery result =
-        ANALYZER.analyzeWithSummary(
             "CREATE USER password PASSWORD Password1", DOUBLE_QUOTES_ARE_STRING_LITERALS);
 
     assertThat(result.getQueryText()).isEqualTo("CREATE USER password PASSWORD ?");
@@ -204,6 +229,341 @@ class SqlQueryAnalyzerTest {
             "UPDATE users"));
   }
 
+  @ParameterizedTest
+  @MethodSource("blockCommentArgs")
+  void sanitizeBlockComments(String original, String expected, String expectedQuerySummary) {
+    SqlQuery result = analyze(original);
+
+    assertThat(result.getQueryText()).isEqualTo(expected);
+    assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
+  }
+
+  private static Stream<Arguments> blockCommentArgs() {
+    return Stream.of(
+        argumentSet(
+            "nested comment before an apostrophe",
+            "SELECT /* outer /* inner */ don't */ 'secret'",
+            "SELECT /* outer ?",
+            "SELECT"),
+        argumentSet(
+            "multiple nested comments before the operation",
+            "/* outer /* middle /* inner */ */ */ SELECT 'secret'",
+            "/* outer ?",
+            null),
+        argumentSet(
+            "nested opener inside a quoted comment value",
+            "SELECT /* 'text /* inner */ text' */ 'secret'",
+            "SELECT /* 'text ?",
+            "SELECT"),
+        argumentSet(
+            "non-nesting dialect closes at the first terminator",
+            "SELECT /* outer /* inner */ 'text */ secret'",
+            "SELECT /* outer ?",
+            "SELECT"),
+        argumentSet(
+            "line comment marker inside a block comment",
+            "SELECT /* -- ignored */ 'secret'",
+            "SELECT /* -- ignored */ ?",
+            "SELECT"),
+        argumentSet(
+            "double quote before the comment terminator",
+            "SELECT /* \"ignored */ 'secret' AS \"alias\"",
+            "SELECT /* \"ignored */ ? AS ?",
+            "SELECT"),
+        argumentSet(
+            "quoted identifier before the comment terminator",
+            "SELECT /* schema.\"ignored */ 'secret' AS \"alias\"",
+            "SELECT /* schema.\"ignored */ ? AS ?",
+            "SELECT"),
+        argumentSet(
+            "backtick before the comment terminator",
+            "SELECT /* `ignored */ 'secret' AS `alias`",
+            "SELECT /* `ignored */ ? AS `alias`",
+            "SELECT"),
+        argumentSet(
+            "bracket before the comment terminator",
+            "SELECT /* [ignored */ 'secret' AS [alias]",
+            "SELECT /* [ignored */ ? AS [alias]",
+            "SELECT"),
+        argumentSet(
+            "dollar quotes before the comment terminator",
+            "SELECT /* $$ ignored */ 'secret', $$other$$",
+            "SELECT /* $$ ignored */ ?, ?",
+            "SELECT"),
+        argumentSet(
+            "dollar tag before the comment terminator",
+            "SELECT /* $tag$ ignored */ 'secret'",
+            "SELECT /* ?*/ ?",
+            "SELECT"),
+        argumentSet(
+            "nested opener inside a dollar-quoted comment value",
+            "SELECT /* $tag$ /* inner */ $tag$ */ 'secret'",
+            "SELECT /* ?",
+            "SELECT"),
+        argumentSet(
+            "sanitized comment values",
+            "SELECT /* user='secret' id=42 value=$tag$secret$tag$ */ 'secret' FROM users",
+            "SELECT /* user=? id=? value=? */ ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "comment delimiters inside a literal",
+            "SELECT '/* outer /* inner */ */' FROM users",
+            "SELECT ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "comment delimiters inside a dollar-quoted literal",
+            "SELECT $tag$/* outer /* inner */ */$tag$ FROM users",
+            "SELECT ? FROM users",
+            "SELECT users"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {1024, 4096, 8192, 16384})
+  void bracketsInCommentDoNotHideTerminator(int count) {
+    String comment = "/* " + repeat('[', count) + " */";
+
+    SqlQuery result = analyze("SELECT " + comment + " 'secret' AS [alias]");
+
+    assertThat(result.getQueryText()).isEqualTo("SELECT " + comment + " ? AS [alias]");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT");
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {1024, 4096, 8192, 16384})
+  void unterminatedBracketIdentifiersAreRedacted(int count) {
+    SqlQuery result = analyze("SELECT * FROM " + repeat('[', count) + " 'secret'");
+
+    assertThat(result.getQueryText()).isEqualTo("SELECT * FROM ?");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT");
+    assertThat(result.getCollectionName()).isNull();
+  }
+
+  @ParameterizedTest
+  @MethodSource("bracketIdentifierArgs")
+  void sanitizeBracketIdentifiers(String original, String expected, String expectedQuerySummary) {
+    SqlQuery result = analyze(original);
+
+    assertThat(result.getQueryText()).isEqualTo(expected);
+    assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
+  }
+
+  private static Stream<Arguments> bracketIdentifierArgs() {
+    return Stream.of(
+        argumentSet("empty unfinished identifier", "SELECT [", "SELECT ?", "SELECT"),
+        argumentSet(
+            "unfinished identifier contains a literal",
+            "SELECT [unfinished 'secret'",
+            "SELECT ?",
+            "SELECT"),
+        argumentSet(
+            "unfinished identifier after a complete statement",
+            "SELECT * FROM users; SELECT [unfinished 'secret'",
+            "SELECT * FROM users; SELECT ?",
+            "SELECT users; SELECT"),
+        argumentSet(
+            "closing bracket takes precedence",
+            "SELECT [[column], 'secret' FROM [users]",
+            "SELECT [[column], ? FROM [users]",
+            "SELECT [users]"),
+        argumentSet(
+            "qualified bracket identifiers",
+            "SELECT * FROM [schema].[[table] WHERE value = 'secret'",
+            "SELECT * FROM [schema].[[table] WHERE value = ?",
+            "SELECT [schema].[[table]"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {1024, 4096, 8192, 16384})
+  void numericPrefixesInCommentDoNotHideTerminator(int count) {
+    String comment = "/* " + repeat('+', count) + " */";
+
+    SqlQuery result = analyze("SELECT " + comment + " 'secret' FROM users");
+
+    assertThat(result.getQueryText()).isEqualTo("SELECT " + comment + " ? FROM users");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT users");
+  }
+
+  @ParameterizedTest
+  @MethodSource("numericPrefixArgs")
+  void sanitizeNumericPrefixes(String original, String expected, String expectedQuerySummary) {
+    SqlQuery result = analyze(original);
+
+    assertThat(result.getQueryText()).isEqualTo(expected);
+    assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
+  }
+
+  private static Stream<Arguments> numericPrefixArgs() {
+    return Stream.of(
+        argumentSet(
+            "numeric prefix without a number",
+            "SELECT .+-.+- 'secret' FROM users",
+            "SELECT .+-.+- ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "numeric prefix followed by a number",
+            "SELECT +++123, 'secret' FROM users",
+            "SELECT ?, ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "number inside a comment",
+            "SELECT /* +++123 */ 'secret' FROM users",
+            "SELECT /* ? */ ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "line comment embedded in a numeric prefix",
+            "SELECT +-- FROM ignored\n'secret' FROM users",
+            "SELECT +-- FROM ignored ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "line comment without a space after its marker",
+            "SELECT +--ignored\n'secret'",
+            "SELECT +--ignored ?",
+            "SELECT"),
+        argumentSet(
+            "mixed numeric prefix before a line comment",
+            "SELECT .+-+-- FROM ignored\r\n'secret' FROM users",
+            "SELECT .+-+-- FROM ignored ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "line comment marker inside a block comment",
+            "SELECT /* +-.-+-- ignored */ 'secret' FROM users",
+            "SELECT /* +-.-+-- ignored */ ? FROM users",
+            "SELECT users"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("backslashArgs")
+  void sanitizeBackslashes(String original, String expected, String expectedQuerySummary) {
+    for (SqlDialect dialect :
+        new SqlDialect[] {DOUBLE_QUOTES_ARE_STRING_LITERALS, DOUBLE_QUOTES_ARE_IDENTIFIERS}) {
+      SqlQuery result = analyze(original, dialect);
+
+      assertThat(result.getQueryText()).isEqualTo(expected);
+      assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
+    }
+  }
+
+  private static Stream<Arguments> backslashArgs() {
+    return Stream.of(
+        argumentSet(
+            "backslash-escaped apostrophe",
+            "SELECT name FROM users WHERE name = 'O\\'Brien' AND password = 'secret'",
+            "SELECT name FROM users WHERE name = ?",
+            "SELECT users"),
+        argumentSet(
+            "standard string ending with a backslash",
+            "SELECT name FROM users WHERE path = 'C:\\' AND password = 'secret'",
+            "SELECT name FROM users WHERE path = ?",
+            "SELECT users"),
+        argumentSet(
+            "insert with a backslash-escaped apostrophe",
+            "INSERT INTO users(name, password) VALUES('O\\'Brien', 'secret')",
+            "INSERT INTO users(name, password) VALUES(?",
+            "INSERT users"),
+        argumentSet(
+            "PostgreSQL escape string", "SELECT E'O\\'Brien', 'secret'", "SELECT E?", "SELECT"),
+        argumentSet(
+            "PostgreSQL escape string continuation",
+            "SELECT e'first'\n'O\\'Brien' FROM users",
+            "SELECT e? ?",
+            "SELECT"),
+        argumentSet(
+            "backslash-escaped double quote",
+            "SELECT name FROM users WHERE name = \"O\\\"Brien\" AND password = 'secret'",
+            "SELECT name FROM users WHERE name = ?",
+            "SELECT users"),
+        argumentSet(
+            "double-quoted standard string ending with a backslash",
+            "SELECT name FROM users WHERE path = \"C:\\\" AND password = 'secret'",
+            "SELECT name FROM users WHERE path = ?",
+            "SELECT users"),
+        argumentSet(
+            "ambiguous quote in a qualified identifier",
+            "SELECT * FROM schema.\"O\\\"Brien' WHERE password='secret\"",
+            "SELECT * FROM ?",
+            "SELECT"),
+        argumentSet(
+            "backslash-escaped backtick",
+            "SELECT * FROM `O\\`Brien' WHERE password='secret`",
+            "SELECT * FROM ?",
+            "SELECT"),
+        argumentSet(
+            "odd backslash run", "SELECT 'C:\\\\\\', 'secret' FROM users", "SELECT ?", "SELECT"),
+        argumentSet(
+            "backslash before doubled apostrophes",
+            "SELECT 'a\\''b', 'secret' FROM users",
+            "SELECT ?",
+            "SELECT"),
+        argumentSet(
+            "ambiguous quote in a comment value",
+            "SELECT /* value='O\\'Brien' password='secret' */ 'secret'",
+            "SELECT /* value=?",
+            "SELECT"),
+        argumentSet(
+            "SQL keywords inside an escaped literal",
+            "SELECT 'O\\' FROM secret_table WHERE value = ' FROM public_table",
+            "SELECT ?",
+            "SELECT"),
+        argumentSet(
+            "backslash away from a quote",
+            "SELECT 'C:\\folder', 'secret' FROM users",
+            "SELECT ?, ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "even backslash run",
+            "SELECT 'C:\\\\', 'secret' FROM users",
+            "SELECT ?, ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "longer even backslash run",
+            "SELECT 'C:\\\\\\\\', 'secret' FROM users",
+            "SELECT ?, ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "even backslash run before doubled apostrophes",
+            "SELECT 'a\\\\''b', 'secret' FROM users",
+            "SELECT ?, ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "backslash before a different quote",
+            "SELECT 'a\\\"b', 'secret' FROM users",
+            "SELECT ?, ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "backslashes inside dollar quotes",
+            "SELECT $tag$O\\'Brien$tag$, 'secret' FROM users",
+            "SELECT ?, ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "backslash inside a bracket-quoted identifier",
+            "SELECT [C:\\] FROM [users]",
+            "SELECT [C:\\] FROM [users]",
+            "SELECT [users]"));
+  }
+
+  @Test
+  void ambiguousQuotingDoesNotPopulateTargets() {
+    SqlQuery result = analyze("SELECT 'O\\' FROM secret_table WHERE value = ' FROM public_table");
+
+    assertThat(result.getQueryText()).isEqualTo("SELECT ?");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT");
+    assertThat(result.getCollectionName()).isNull();
+    assertThat(result.getStoredProcedureName()).isNull();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void unambiguousDoubleQuotesRetainDialectBehavior(boolean identifiers) {
+    SqlQuery result =
+        analyze(
+            "SELECT * FROM \"C:\\\\\"",
+            identifiers ? DOUBLE_QUOTES_ARE_IDENTIFIERS : DOUBLE_QUOTES_ARE_STRING_LITERALS);
+
+    assertThat(result.getQueryText())
+        .isEqualTo(identifiers ? "SELECT * FROM \"C:\\\\\"" : "SELECT * FROM ?");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT \"C:\\\\\"");
+  }
+
   @Test
   void veryLongSelectStatementsAreOk() {
     StringBuilder sb = new StringBuilder("SELECT * FROM table WHERE");
@@ -217,15 +577,9 @@ class SqlQueryAnalyzerTest {
     SqlQuery result = analyze(query);
 
     assertThat(result.getQueryText()).isEqualTo(analyzedQuery);
-    if (emitStableDatabaseSemconv()) {
-      assertThat(result.getOperationName()).isEqualTo("SELECT");
-      assertThat(result.getCollectionName()).isEqualTo("table");
-      assertThat(result.getQuerySummary()).isEqualTo("SELECT table");
-    } else {
-      assertThat(result.getOperationName()).isEqualTo("SELECT");
-      assertThat(result.getCollectionName()).isEqualTo("table");
-      assertThat(result.getQuerySummary()).isNull();
-    }
+    assertThat(result.getOperationName()).isEqualTo("SELECT");
+    assertThat(result.getCollectionName()).isEqualTo("table");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT table");
   }
 
   @ParameterizedTest
@@ -234,15 +588,9 @@ class SqlQueryAnalyzerTest {
     SqlQuery result = analyze(actual, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     SqlQuery expected = expectFunc.apply(actual);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
-    if (emitStableDatabaseSemconv()) {
-      assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
-      assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
-      assertThat(result.getQuerySummary()).isEqualTo(expected.getQuerySummary());
-    } else {
-      assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
-      assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
-      assertThat(result.getQuerySummary()).isNull();
-    }
+    assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
+    assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
+    assertThat(result.getQuerySummary()).isEqualTo(expected.getQuerySummary());
     assertThat(result.getStoredProcedureName()).isEqualTo(expected.getStoredProcedureName());
   }
 
@@ -285,11 +633,7 @@ class SqlQueryAnalyzerTest {
     SqlQuery result = analyze(s.toString());
     assertThat(result.getQueryText().length()).isLessThanOrEqualTo(AutoSqlSanitizer.LIMIT);
     assertThat(result.getQueryText()).doesNotContain("1234");
-    if (emitStableDatabaseSemconv()) {
-      assertThat(result.getQuerySummary()).startsWith("SELECT TABLE SELECT TABLE SELECT TABLE");
-    } else {
-      assertThat(result.getQuerySummary()).isNull();
-    }
+    assertThat(result.getQuerySummary()).startsWith("SELECT TABLE SELECT TABLE SELECT TABLE");
   }
 
   @Test
@@ -356,7 +700,6 @@ class SqlQueryAnalyzerTest {
 
   @Test
   void querySummaryIsTruncated() {
-    assumeTrue(emitStableDatabaseSemconv());
     // Build a query with many tables to exceed 255 character limit
     StringBuilder sql = new StringBuilder("SELECT * FROM ");
     for (int i = 0; i < 50; i++) {
@@ -367,7 +710,7 @@ class SqlQueryAnalyzerTest {
     }
     String result =
         SqlQueryAnalyzer.create(true)
-            .analyzeWithSummary(sql.toString(), DOUBLE_QUOTES_ARE_STRING_LITERALS)
+            .analyze(sql.toString(), DOUBLE_QUOTES_ARE_STRING_LITERALS)
             .getQuerySummary();
     assertThat(result).isNotNull();
     assertThat(result)
@@ -380,7 +723,7 @@ class SqlQueryAnalyzerTest {
   void querySummaryTruncationDoesNotSplitSurrogatePair() {
     String beforePair = repeat('A', 254);
 
-    String summary = SqlQuery.createWithSummary(null, null, beforePair + "😀").getQuerySummary();
+    String summary = SqlQuery.create(null, null, null, null, beforePair + "😀").getQuerySummary();
 
     assertThat(summary).isEqualTo(beforePair);
   }
@@ -388,7 +731,6 @@ class SqlQueryAnalyzerTest {
   @ParameterizedTest
   @MethodSource("operationCaseArgs")
   void querySummaryPreservesOperationCase(String original, String expectedQuerySummary) {
-    assumeTrue(emitStableDatabaseSemconv());
     SqlQuery result = analyze(original, DOUBLE_QUOTES_ARE_STRING_LITERALS);
     assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
   }
@@ -471,6 +813,20 @@ class SqlQueryAnalyzerTest {
         Arguments.of("SELECT 123-45-6789", "SELECT ?", "SELECT"),
         Arguments.of("SELECT 1/2/34", "SELECT ?/?/?", "SELECT"),
 
+        // An apostrophe in a block comment doesn't start a string
+        Arguments.of(
+            "SELECT name FROM users /* don't cache */ WHERE password = 'hunter2'",
+            "SELECT name FROM users /* don't cache */ WHERE password = ?",
+            "SELECT users"),
+        Arguments.of(
+            "SELECT a FROM t /* it's */ WHERE b = 'x' AND c = 'y'",
+            "SELECT a FROM t /* it's */ WHERE b = ? AND c = ?",
+            "SELECT t"),
+        Arguments.of(
+            "SELECT a FROM t /* user='bob' */ WHERE b = 'x'",
+            "SELECT a FROM t /* user=? */ WHERE b = ?",
+            "SELECT t"),
+
         // Basic ' strings
         Arguments.of(
             "SELECT * FROM TABLE WHERE FIELD = ''",
@@ -547,65 +903,22 @@ class SqlQueryAnalyzerTest {
 
   private static Function<String, SqlQuery> expect(
       String operation, String collectionName, String querySummary) {
-    return expect(operation, collectionName, operation, collectionName, querySummary);
-  }
-
-  private static Function<String, SqlQuery> expect(
-      String operation,
-      String collectionName,
-      String stableOperationName,
-      String stableCollectionName,
-      String querySummary) {
-    return sql ->
-        emitStableDatabaseSemconv()
-            ? SqlQuery.createWithSummary(
-                sql, stableOperationName, stableCollectionName, null, querySummary)
-            : SqlQuery.create(sql, operation, collectionName);
+    return sql -> SqlQuery.create(sql, operation, collectionName, null, querySummary);
   }
 
   private static Function<String, SqlQuery> expect(
       String sql, String operation, String collectionName, String querySummary) {
-    return expect(sql, operation, collectionName, operation, collectionName, querySummary);
-  }
-
-  private static Function<String, SqlQuery> expect(
-      String sql,
-      String operation,
-      String collectionName,
-      String stableOperationName,
-      String stableCollectionName,
-      String querySummary) {
-    return ignored ->
-        emitStableDatabaseSemconv()
-            ? SqlQuery.createWithSummary(
-                sql, stableOperationName, stableCollectionName, null, querySummary)
-            : SqlQuery.create(sql, operation, collectionName);
+    return ignored -> SqlQuery.create(sql, operation, collectionName, null, querySummary);
   }
 
   private static Function<String, SqlQuery> expectStoredProcedure(
       String operation, String storedProcedureName, String querySummary) {
-    return expectStoredProcedureWithStableOperation(
-        operation, storedProcedureName, operation, querySummary);
+    return sql -> SqlQuery.create(sql, operation, null, storedProcedureName, querySummary);
   }
 
   private static Function<String, SqlQuery> expectStoredProcedure(
       String sql, String operation, String storedProcedureName, String querySummary) {
-    return ignored ->
-        emitStableDatabaseSemconv()
-            ? SqlQuery.createWithSummary(sql, operation, null, storedProcedureName, querySummary)
-            : SqlQuery.create(sql, operation, storedProcedureName);
-  }
-
-  private static Function<String, SqlQuery> expectStoredProcedureWithStableOperation(
-      String operation,
-      String storedProcedureName,
-      String stableOperationName,
-      String querySummary) {
-    return sql ->
-        emitStableDatabaseSemconv()
-            ? SqlQuery.createWithSummary(
-                sql, stableOperationName, null, storedProcedureName, querySummary)
-            : SqlQuery.create(sql, operation, storedProcedureName);
+    return ignored -> SqlQuery.create(sql, operation, null, storedProcedureName, querySummary);
   }
 
   private static Stream<Arguments> simplifyArgs() {
@@ -613,22 +926,17 @@ class SqlQueryAnalyzerTest {
         // Select
         Arguments.of(
             "SELECT x, y, z FROM schema.table",
-            expect("SELECT", "schema.table", "SELECT", "schema.table", "SELECT schema.table")),
+            expect("SELECT", "schema.table", "SELECT schema.table")),
         Arguments.of(
             "SELECT x, y, z FROM `schema table`",
-            expect("SELECT", "schema table", "SELECT", "`schema table`", "SELECT `schema table`")),
+            expect("SELECT", "`schema table`", "SELECT `schema table`")),
         Arguments.of(
             "SELECT x, y, z FROM `schema`.`table`",
             expect("SELECT", "`schema`.`table`", "SELECT `schema`.`table`")),
         Arguments.of(
             "SELECT x, y, z FROM \"schema table\"",
             expect(
-                "SELECT x, y, z FROM ?",
-                "SELECT",
-                "schema table",
-                "SELECT",
-                "\"schema table\"",
-                "SELECT \"schema table\"")),
+                "SELECT x, y, z FROM ?", "SELECT", "\"schema table\"", "SELECT \"schema table\"")),
         // double-quoted dot-separated identifiers are matched as IDENTIFIER, not DOUBLE_QUOTED_STR,
         // so they are always preserved regardless of dialect
         Arguments.of(
@@ -636,267 +944,190 @@ class SqlQueryAnalyzerTest {
             expect("SELECT", "\"schema\".\"table\"", "SELECT \"schema\".\"table\"")),
         Arguments.of(
             "WITH subquery as (select a from b) SELECT x, y, z FROM table",
-            expect("SELECT", null, "select", "b", "select b SELECT table")),
+            expect("select", "b", "select b SELECT table")),
         Arguments.of(
             "SELECT x, y, (select a from b) as z FROM table",
-            expect("SELECT", null, "SELECT", "b", "SELECT select b table")),
+            expect("SELECT", "b", "SELECT select b table")),
         Arguments.of(
             "select delete, insert into, merge, update from table", // invalid SQL
-            expect("SELECT", "table", "select", "table", "select table")),
+            expect("select", "table", "select table")),
         Arguments.of(
-            "select col /* from table2 */ from table",
-            expect("SELECT", "table", "select", "table", "select table")),
+            "select col /* from table2 */ from table", expect("select", "table", "select table")),
         Arguments.of(
             "select col from table join anotherTable",
-            expect("SELECT", null, "select", "table", "select table anotherTable")),
+            expect("select", "table", "select table anotherTable")),
         Arguments.of(
             "SELECT * FROM t1 LEFT JOIN t2 ON t1.id = t2.id JOIN t3 ON t2.x = t3.x",
-            expect("SELECT", null, "SELECT", "t1", "SELECT t1 t2 t3")),
+            expect("SELECT", "t1", "SELECT t1 t2 t3")),
         Arguments.of(
             "select col from (select * from anotherTable)",
-            expect("SELECT", null, "select", "anotherTable", "select select anotherTable")),
+            expect("select", "anotherTable", "select select anotherTable")),
         Arguments.of(
             "select col from (select * from anotherTable) alias",
-            expect("SELECT", null, "select", "anotherTable", "select select anotherTable")),
+            expect("select", "anotherTable", "select select anotherTable")),
         Arguments.of(
             "SELECT * FROM (SELECT * FROM t1) sub, t3",
-            expect("SELECT", null, "SELECT", "t1", "SELECT SELECT t1 t3")),
+            expect("SELECT", "t1", "SELECT SELECT t1 t3")),
         Arguments.of(
             "SELECT * FROM (SELECT * FROM t1) s1, (SELECT * FROM t2) s2",
-            expect("SELECT", null, "SELECT", "t1", "SELECT SELECT t1 SELECT t2")),
+            expect("SELECT", "t1", "SELECT SELECT t1 SELECT t2")),
         Arguments.of(
             "SELECT * FROM (SELECT * FROM t1) sub, t2 JOIN t3 ON t2.id = t3.id",
-            expect("SELECT", null, "SELECT", "t1", "SELECT SELECT t1 t2 t3")),
+            expect("SELECT", "t1", "SELECT SELECT t1 t2 t3")),
         Arguments.of(
             "select col from table1 union select col from table2",
-            expect("SELECT", null, "select", "table1", "select table1 select table2")),
+            expect("select", "table1", "select table1 select table2")),
         Arguments.of(
             "SELECT id, name FROM employees UNION ALL SELECT id, name FROM contractors UNION SELECT id, name FROM vendors",
-            expect(
-                "SELECT",
-                null,
-                "SELECT",
-                "employees",
-                "SELECT employees SELECT contractors SELECT vendors")),
+            expect("SELECT", "employees", "SELECT employees SELECT contractors SELECT vendors")),
         // Parenthesized table with UNION - identifier cancels pending subquery push
         Arguments.of(
             "SELECT * FROM (t UNION SELECT * FROM t2), t3",
-            expect("SELECT", null, "SELECT", "t", "SELECT t SELECT t2")),
+            expect("SELECT", "t", "SELECT t SELECT t2")),
         Arguments.of(
             "select id, (select max(foo) from (select foo from foos union all select foo from bars)) as foo from main_table",
-            expect(
-                "SELECT",
-                null,
-                "select",
-                "foos",
-                "select select select foos select bars main_table")),
+            expect("select", "foos", "select select select foos select bars main_table")),
         Arguments.of(
             "select col from table where col in (select * from anotherTable)",
-            expect("SELECT", null, "select", "table", "select table select anotherTable")),
+            expect("select", "table", "select table select anotherTable")),
         Arguments.of(
             "SELECT * FROM (SELECT * FROM inner1 JOIN inner2 ON inner1.id = inner2.id) AS sub",
-            expect("SELECT", null, "SELECT", "inner1", "SELECT SELECT inner1 inner2")),
+            expect("SELECT", "inner1", "SELECT SELECT inner1 inner2")),
         Arguments.of(
             "SELECT * FROM (VALUES (1,2), (3,4)) AS t(a, b)",
             expect("SELECT * FROM (VALUES (?,?), (?,?)) AS t(a, b)", "SELECT", null, "SELECT")),
         Arguments.of("SELECT * FROM t1 CROSS APPLY t2", expect("SELECT", "t1", "SELECT t1 t2")),
         Arguments.of(
             "SELECT * FROM t1 OUTER APPLY (SELECT * FROM t2 WHERE t2.id = t1.id)",
-            expect("SELECT", null, "SELECT", "t1", "SELECT t1 SELECT t2")),
+            expect("SELECT", "t1", "SELECT t1 SELECT t2")),
         Arguments.of(
             "SELECT * FROM t1, LATERAL (SELECT * FROM t2 WHERE t2.id = t1.id)",
-            expect("SELECT", null, "SELECT", "t1", "SELECT t1 SELECT t2")),
+            expect("SELECT", "t1", "SELECT t1 SELECT t2")),
         Arguments.of(
-            "select col from table1, table2",
-            expect("SELECT", null, "select", "table1", "select table1 table2")),
+            "select col from table1, table2", expect("select", "table1", "select table1 table2")),
         Arguments.of(
             "select col from table1 t1, table2 t2",
-            expect("SELECT", null, "select", "table1", "select table1 table2")),
+            expect("select", "table1", "select table1 table2")),
         Arguments.of(
             "select col from table1 as t1, table2 as t2",
-            expect("SELECT", null, "select", "table1", "select table1 table2")),
+            expect("select", "table1", "select table1 table2")),
         Arguments.of(
             "select col from table where col in (1, 2, 3)",
-            expect(
-                "select col from table where col in (?)",
-                "SELECT",
-                "table",
-                "select",
-                "table",
-                "select table")),
+            expect("select col from table where col in (?)", "select", "table", "select table")),
         Arguments.of(
             "select 'a' IN(x, 'b') from table where col in (1) and z IN( '3', '4' )",
             expect(
                 "select ? IN(x, ?) from table where col in (?) and z IN(?)",
-                "SELECT",
-                "table",
                 "select",
                 "table",
                 "select table")),
         Arguments.of(
-            "select col from table order by col, col2",
-            expect("SELECT", "table", "select", "table", "select table")),
+            "select col from table order by col, col2", expect("select", "table", "select table")),
         Arguments.of(
             "select ąś∂ń© from źćļńĶ order by col, col2",
-            expect("SELECT", "źćļńĶ", "select", "źćļńĶ", "select źćļńĶ")),
-        Arguments.of(
-            "select 12345678", expect("select ?", "SELECT", null, "select", null, "select")),
+            expect("select", "źćļńĶ", "select źćļńĶ")),
+        Arguments.of("select 12345678", expect("select ?", "select", null, "select")),
         Arguments.of(
             "/* update comment */ select * from table1",
-            expect("SELECT", "table1", "select", "table1", "select table1")),
-        Arguments.of(
-            "select /*((*/abc from table",
-            expect("SELECT", "table", "select", "table", "select table")),
-        Arguments.of(
-            "SeLeCT * FrOm TAblE", expect("SELECT", "TAblE", "SeLeCT", "TAblE", "SeLeCT TAblE")),
-        Arguments.of(
-            "select next value in hibernate_sequence",
-            expect("SELECT", null, "select", null, "select")),
+            expect("select", "table1", "select table1")),
+        Arguments.of("select /*((*/abc from table", expect("select", "table", "select table")),
+        Arguments.of("SeLeCT * FrOm TAblE", expect("SeLeCT", "TAblE", "SeLeCT TAblE")),
+        Arguments.of("select next value in hibernate_sequence", expect("select", null, "select")),
 
         // EXPLAIN - preserved as prefix command in summary
         Arguments.of(
-            "EXPLAIN SELECT * FROM users",
-            expect("SELECT", "users", "EXPLAIN", "users", "EXPLAIN SELECT users")),
+            "EXPLAIN SELECT * FROM users", expect("EXPLAIN", "users", "EXPLAIN SELECT users")),
 
         // hibernate/jpa
-        Arguments.of(
-            "from schema.table",
-            expect("SELECT", "schema.table", "select", "schema.table", "select schema.table")),
+        Arguments.of("from schema.table", expect("select", "schema.table", "select schema.table")),
         Arguments.of("FROM schema.table", expect("SELECT", "schema.table", "SELECT schema.table")),
         Arguments.of(
-            "/* update comment */ from table1",
-            expect("SELECT", "table1", "select", "table1", "select table1")),
+            "/* update comment */ from table1", expect("select", "table1", "select table1")),
 
         // Insert
-        Arguments.of(
-            " insert into table where lalala",
-            expect("INSERT", "table", "insert", "table", "insert table")),
+        Arguments.of(" insert into table where lalala", expect("insert", "table", "insert table")),
         Arguments.of(
             "insert into metrics.users (id) values (1)",
             expect(
                 "insert into metrics.users (id) values (?)",
-                "INSERT",
-                "metrics.users",
                 "insert",
                 "metrics.users",
                 "insert metrics.users")),
         Arguments.of(
             "insert insert into table where lalala", // invalid SQL
-            expect("INSERT", "table", "insert", "table", "insert table")),
+            expect("insert", "table", "insert table")),
         Arguments.of(
-            "insert into db.table where lalala",
-            expect("INSERT", "db.table", "insert", "db.table", "insert db.table")),
+            "insert into db.table where lalala", expect("insert", "db.table", "insert db.table")),
         Arguments.of(
             "insert into `db table` where lalala",
-            expect("INSERT", "db table", "insert", "`db table`", "insert `db table`")),
+            expect("insert", "`db table`", "insert `db table`")),
         Arguments.of(
             "insert into \"db table\" where lalala",
-            expect(
-                "insert into ? where lalala",
-                "INSERT",
-                "db table",
-                "insert",
-                "\"db table\"",
-                "insert \"db table\"")),
-        Arguments.of("insert without i-n-t-o", expect("INSERT", null, "insert", null, "insert")),
+            expect("insert into ? where lalala", "insert", "\"db table\"", "insert \"db table\"")),
+        Arguments.of("insert without i-n-t-o", expect("insert", null, "insert")),
 
         // Delete
         Arguments.of(
             "delete from table where something something",
-            expect("DELETE", "table", "delete", "table", "delete table")),
+            expect("delete", "table", "delete table")),
         Arguments.of(
             "delete from `my table` where something something",
-            expect("DELETE", "my table", "delete", "`my table`", "delete `my table`")),
+            expect("delete", "`my table`", "delete `my table`")),
         Arguments.of(
             "delete from \"my table\" where something something",
             expect(
                 "delete from ? where something something",
-                "DELETE",
-                "my table",
                 "delete",
                 "\"my table\"",
                 "delete \"my table\"")),
         Arguments.of(
             "delete from foo where x IN (1,2,3)",
-            expect(
-                "delete from foo where x IN (?)", "DELETE", "foo", "delete", "foo", "delete foo")),
-        Arguments.of(
-            "delete from 12345678",
-            expect("delete from ?", "DELETE", null, "delete", null, "delete")),
-        Arguments.of(
-            "delete   (((", expect("delete (((", "DELETE", null, "delete", null, "delete")),
+            expect("delete from foo where x IN (?)", "delete", "foo", "delete foo")),
+        Arguments.of("delete from 12345678", expect("delete from ?", "delete", null, "delete")),
+        Arguments.of("delete   (((", expect("delete (((", "delete", null, "delete")),
 
         // Update
         Arguments.of(
             "update table set answer=42",
-            expect(
-                "update table set answer=?", "UPDATE", "table", "update", "table", "update table")),
+            expect("update table set answer=?", "update", "table", "update table")),
         Arguments.of(
             "update `my table` set answer=42",
-            expect(
-                "update `my table` set answer=?",
-                "UPDATE",
-                "my table",
-                "update",
-                "`my table`",
-                "update `my table`")),
+            expect("update `my table` set answer=?", "update", "`my table`", "update `my table`")),
         Arguments.of(
             "update `my table` set answer=42 where x IN('a', 'b') AND y In ('a',  'b')",
             expect(
                 "update `my table` set answer=? where x IN(?) AND y In (?)",
-                "UPDATE",
-                "my table",
                 "update",
                 "`my table`",
                 "update `my table`")),
         Arguments.of(
             "update \"my table\" set answer=42",
-            expect(
-                "update ? set answer=?",
-                "UPDATE",
-                "my table",
-                "update",
-                "\"my table\"",
-                "update \"my table\"")),
-        Arguments.of("update /*table", expect("UPDATE", null, "update", null, "update")),
+            expect("update ? set answer=?", "update", "\"my table\"", "update \"my table\"")),
+        Arguments.of("update /*table", expect("update", null, "update")),
 
         // Call
         Arguments.of(
-            "call test_proc()",
-            expectStoredProcedureWithStableOperation(
-                "CALL", "test_proc", "call", "call test_proc")),
+            "call test_proc()", expectStoredProcedure("call", "test_proc", "call test_proc")),
         Arguments.of(
-            "call test_proc",
-            expectStoredProcedureWithStableOperation(
-                "CALL", "test_proc", "call", "call test_proc")),
+            "call test_proc", expectStoredProcedure("call", "test_proc", "call test_proc")),
         // Hibernate uses "call next value for sequence" on HSQLDB and H2 to get sequence values,
         // while it uses SELECT for this on most other databases.
         Arguments.of(
             "call next value for hibernate_sequence",
-            expect("CALL", null, "call", null, "call hibernate_sequence")),
+            expect("call", null, "call hibernate_sequence")),
         Arguments.of(
             "call db.test_proc",
-            expectStoredProcedureWithStableOperation(
-                "CALL", "db.test_proc", "call", "call db.test_proc")),
+            expectStoredProcedure("call", "db.test_proc", "call db.test_proc")),
 
         // Merge
-        Arguments.of("merge into table", expect("MERGE", "table", "merge", "table", "merge table")),
-        Arguments.of(
-            "merge into `my table`",
-            expect("MERGE", "my table", "merge", "`my table`", "merge `my table`")),
+        Arguments.of("merge into table", expect("merge", "table", "merge table")),
+        Arguments.of("merge into `my table`", expect("merge", "`my table`", "merge `my table`")),
         Arguments.of(
             "merge into \"my table\"",
-            expect(
-                "merge into ?",
-                "MERGE",
-                "my table",
-                "merge",
-                "\"my table\"",
-                "merge \"my table\"")),
+            expect("merge into ?", "merge", "\"my table\"", "merge \"my table\"")),
         Arguments.of(
-            "merge table (into is optional in some dbs)",
-            expect("MERGE", "table", "merge", "table", "merge table")),
-        Arguments.of("merge (into )))", expect("MERGE", null, "merge", null, "merge")),
+            "merge table (into is optional in some dbs)", expect("merge", "table", "merge table")),
+        Arguments.of("merge (into )))", expect("merge", null, "merge")),
 
         // Unknown operation
         Arguments.of("and now for something completely different", expect(null, null, null)),
@@ -915,13 +1146,7 @@ class SqlQueryAnalyzerTest {
         // Multi-statement SQL with semicolons
         Arguments.of(
             "SELECT * FROM t1; SELECT * FROM t2",
-            expect(
-                "SELECT * FROM t1; SELECT * FROM t2",
-                "SELECT",
-                null,
-                "SELECT",
-                "t1",
-                "SELECT t1; SELECT t2")),
+            expect("SELECT * FROM t1; SELECT * FROM t2", "SELECT", "t1", "SELECT t1; SELECT t2")),
         Arguments.of(
             "SELECT * FROM t1; INSERT INTO t2 VALUES (1)",
             expect(
@@ -937,83 +1162,52 @@ class SqlQueryAnalyzerTest {
         // PostgreSQL ONLY keyword (inherits from parent table only, not children)
         Arguments.of(
             "SELECT * FROM ONLY parent",
-            expect(
-                "SELECT * FROM ONLY parent",
-                "SELECT",
-                "ONLY",
-                "SELECT",
-                "parent",
-                "SELECT parent")),
+            expect("SELECT * FROM ONLY parent", "SELECT", "parent", "SELECT parent")),
         Arguments.of(
             "DELETE FROM ONLY parent WHERE id = 1",
-            expect(
-                "DELETE FROM ONLY parent WHERE id = ?",
-                "DELETE",
-                "ONLY",
-                "DELETE",
-                "parent",
-                "DELETE parent")),
+            expect("DELETE FROM ONLY parent WHERE id = ?", "DELETE", "parent", "DELETE parent")),
         Arguments.of(
             "UPDATE ONLY parent SET x = 1",
-            expect(
-                "UPDATE ONLY parent SET x = ?",
-                "UPDATE",
-                "ONLY",
-                "UPDATE",
-                "parent",
-                "UPDATE parent")),
+            expect("UPDATE ONLY parent SET x = ?", "UPDATE", "parent", "UPDATE parent")),
 
         // Standalone VALUES clause
-        Arguments.of("VALUES (1)", expect("VALUES (?)", null, null, "VALUES", null, "VALUES")),
+        Arguments.of("VALUES (1)", expect("VALUES (?)", "VALUES", null, "VALUES")),
         Arguments.of(
-            "VALUES (1, 'a'), (2, 'b')",
-            expect("VALUES (?, ?), (?, ?)", null, null, "VALUES", null, "VALUES")),
+            "VALUES (1, 'a'), (2, 'b')", expect("VALUES (?, ?), (?, ?)", "VALUES", null, "VALUES")),
 
         // EXECUTE/EXEC stored procedure calls
         Arguments.of(
             "EXEC my_procedure",
-            emitStableDatabaseSemconv()
-                ? expectStoredProcedure("EXEC", "my_procedure", "EXEC my_procedure")
-                : expect("EXEC my_procedure", null, null, null)),
+            expectStoredProcedure("EXEC", "my_procedure", "EXEC my_procedure")),
         Arguments.of(
             "EXECUTE db.my_procedure @param=1",
-            emitStableDatabaseSemconv()
-                ? expectStoredProcedure(
-                    "EXECUTE db.my_procedure @param=?",
-                    "EXECUTE",
-                    "db.my_procedure",
-                    "EXECUTE db.my_procedure")
-                : expect("EXECUTE db.my_procedure @param=?", null, null, null)),
+            expectStoredProcedure(
+                "EXECUTE db.my_procedure @param=?",
+                "EXECUTE",
+                "db.my_procedure",
+                "EXECUTE db.my_procedure")),
 
         // SQL Server bracket-quoted identifiers
         Arguments.of(
-            "SELECT * FROM [my table]",
-            expect("SELECT", "my", "SELECT", "[my table]", "SELECT [my table]")),
+            "SELECT * FROM [my table]", expect("SELECT", "[my table]", "SELECT [my table]")),
         Arguments.of(
             "SELECT * FROM [schema].[table]",
-            expect("SELECT", "schema", "SELECT", "[schema].[table]", "SELECT [schema].[table]")),
+            expect("SELECT", "[schema].[table]", "SELECT [schema].[table]")),
         Arguments.of(
             "SELECT [column] FROM [table] WHERE [field] = 1",
             expect(
                 "SELECT [column] FROM [table] WHERE [field] = ?",
-                "SELECT",
-                "table",
                 "SELECT",
                 "[table]",
                 "SELECT [table]")),
 
         // MySQL escaped backticks
         Arguments.of(
-            "SELECT * FROM `my``table`",
-            // collection name should be "my`table"
-            // not fixing as collection name is only captured by old semconv jflex
-            expect("SELECT", "my", "SELECT", "`my``table`", "SELECT `my``table`")),
+            "SELECT * FROM `my``table`", expect("SELECT", "`my``table`", "SELECT `my``table`")),
         Arguments.of(
             "SELECT * FROM `table` WHERE `col``name` = 1",
             expect(
                 "SELECT * FROM `table` WHERE `col``name` = ?",
-                "SELECT",
-                "table",
                 "SELECT",
                 "`table`",
                 "SELECT `table`")),
@@ -1058,40 +1252,24 @@ class SqlQueryAnalyzerTest {
 
         // Subqueries in comma-separated FROM lists - state properly isolated via operation stack
         Arguments.of(
-            "SELECT * FROM a, (SELECT * FROM b), c",
-            expect("SELECT", null, "SELECT", "a", "SELECT a SELECT b c")),
+            "SELECT * FROM a, (SELECT * FROM b), c", expect("SELECT", "a", "SELECT a SELECT b c")),
         Arguments.of(
             "SELECT * FROM (SELECT * FROM inner1), (SELECT * FROM inner2), outer_table",
-            expect(
-                "SELECT",
-                null,
-                "SELECT",
-                "inner1",
-                "SELECT SELECT inner1 SELECT inner2 outer_table")),
+            expect("SELECT", "inner1", "SELECT SELECT inner1 SELECT inner2 outer_table")),
 
         // Parenthesized table name - not a subquery - valid on MySQL
-        Arguments.of(
-            "SELECT * FROM (TABLE)", expect("SELECT", null, "SELECT", "TABLE", "SELECT TABLE")),
+        Arguments.of("SELECT * FROM (TABLE)", expect("SELECT", "TABLE", "SELECT TABLE")),
 
         // TRUNCATE statement
         Arguments.of(
             "TRUNCATE TABLE users",
-            expect(
-                "TRUNCATE TABLE users",
-                null,
-                null,
-                "TRUNCATE TABLE",
-                "users",
-                "TRUNCATE TABLE users")),
+            expect("TRUNCATE TABLE users", "TRUNCATE TABLE", "users", "TRUNCATE TABLE users")),
         Arguments.of(
-            "TRUNCATE users",
-            expect("TRUNCATE users", null, null, "TRUNCATE", null, "TRUNCATE users")),
+            "TRUNCATE users", expect("TRUNCATE users", "TRUNCATE", null, "TRUNCATE users")),
         Arguments.of(
             "TRUNCATE TABLE schema.table",
             expect(
                 "TRUNCATE TABLE schema.table",
-                null,
-                null,
                 "TRUNCATE TABLE",
                 "schema.table",
                 "TRUNCATE TABLE schema.table")),
@@ -1099,143 +1277,89 @@ class SqlQueryAnalyzerTest {
         // REPLACE statement (MySQL)
         Arguments.of(
             "REPLACE INTO users VALUES (1, 'name')",
-            expect(
-                "REPLACE INTO users VALUES (?, ?)",
-                null,
-                null,
-                "REPLACE",
-                "users",
-                "REPLACE users")),
+            expect("REPLACE INTO users VALUES (?, ?)", "REPLACE", "users", "REPLACE users")),
         Arguments.of(
             "REPLACE users SET name = 'foo'",
-            expect("REPLACE users SET name = ?", null, null, "REPLACE", "users", "REPLACE users")),
+            expect("REPLACE users SET name = ?", "REPLACE", "users", "REPLACE users")),
         Arguments.of(
             "REPLACE INTO db.table (col) VALUES (1)",
             expect(
                 "REPLACE INTO db.table (col) VALUES (?)",
-                null,
-                null,
                 "REPLACE",
                 "db.table",
                 "REPLACE db.table")),
 
         // Transaction control statements
-        Arguments.of("BEGIN", expect("BEGIN", null, null, "BEGIN", null, "BEGIN")),
+        Arguments.of("BEGIN", expect("BEGIN", "BEGIN", null, "BEGIN")),
         Arguments.of(
-            "BEGIN TRANSACTION",
-            expect("BEGIN TRANSACTION", null, null, "BEGIN", null, "BEGIN TRANSACTION")),
-        Arguments.of("COMMIT", expect("COMMIT", null, null, "COMMIT", null, "COMMIT")),
+            "BEGIN TRANSACTION", expect("BEGIN TRANSACTION", "BEGIN", null, "BEGIN TRANSACTION")),
+        Arguments.of("COMMIT", expect("COMMIT", "COMMIT", null, "COMMIT")),
         Arguments.of(
             "COMMIT TRANSACTION",
-            expect("COMMIT TRANSACTION", null, null, "COMMIT", null, "COMMIT TRANSACTION")),
-        Arguments.of("ROLLBACK", expect("ROLLBACK", null, null, "ROLLBACK", null, "ROLLBACK")),
+            expect("COMMIT TRANSACTION", "COMMIT", null, "COMMIT TRANSACTION")),
+        Arguments.of("ROLLBACK", expect("ROLLBACK", "ROLLBACK", null, "ROLLBACK")),
         Arguments.of(
             "ROLLBACK TRANSACTION",
-            expect("ROLLBACK TRANSACTION", null, null, "ROLLBACK", null, "ROLLBACK TRANSACTION")),
+            expect("ROLLBACK TRANSACTION", "ROLLBACK", null, "ROLLBACK TRANSACTION")),
 
         // LOCK statement
         Arguments.of(
-            "LOCK TABLE users",
-            expect("LOCK TABLE users", null, null, "LOCK", "users", "LOCK TABLE users")),
+            "LOCK TABLE users", expect("LOCK TABLE users", "LOCK", "users", "LOCK TABLE users")),
         Arguments.of(
             "LOCK TABLE users IN EXCLUSIVE MODE",
-            expect(
-                "LOCK TABLE users IN EXCLUSIVE MODE",
-                null,
-                null,
-                "LOCK",
-                "users",
-                "LOCK TABLE users")),
+            expect("LOCK TABLE users IN EXCLUSIVE MODE", "LOCK", "users", "LOCK TABLE users")),
         Arguments.of(
             "LOCK TABLES users WRITE, orders READ",
-            expect(
-                "LOCK TABLES users WRITE, orders READ",
-                null,
-                null,
-                "LOCK",
-                "users",
-                "LOCK TABLES users")),
+            expect("LOCK TABLES users WRITE, orders READ", "LOCK", "users", "LOCK TABLES users")),
 
         // USE statement
-        Arguments.of("USE mydb", expect("USE mydb", null, null, "USE", null, "USE mydb")),
+        Arguments.of("USE mydb", expect("USE mydb", "USE", null, "USE mydb")),
         Arguments.of(
-            "USE `my database`",
-            expect("USE `my database`", null, null, "USE", null, "USE `my database`")),
+            "USE `my database`", expect("USE `my database`", "USE", null, "USE `my database`")),
 
         // GRANT statement
         Arguments.of(
             "GRANT SELECT ON users TO some_user",
-            expect("GRANT SELECT ON users TO some_user", "SELECT", null, "GRANT", null, "GRANT")),
+            expect("GRANT SELECT ON users TO some_user", "GRANT", null, "GRANT")),
         Arguments.of(
             "GRANT ALL PRIVILEGES ON database.* TO 'user'@'host'",
-            expect(
-                "GRANT ALL PRIVILEGES ON database.* TO ?@?", null, null, "GRANT", null, "GRANT")),
+            expect("GRANT ALL PRIVILEGES ON database.* TO ?@?", "GRANT", null, "GRANT")),
 
         // REVOKE statement
         Arguments.of(
             "REVOKE SELECT ON users FROM some_user",
-            expect(
-                "REVOKE SELECT ON users FROM some_user",
-                "SELECT",
-                "some_user",
-                "REVOKE",
-                null,
-                "REVOKE")),
+            expect("REVOKE SELECT ON users FROM some_user", "REVOKE", null, "REVOKE")),
         Arguments.of(
             "REVOKE ALL PRIVILEGES ON database.* FROM 'user'@'host'",
-            expect(
-                "REVOKE ALL PRIVILEGES ON database.* FROM ?@?",
-                "SELECT",
-                null,
-                "REVOKE",
-                null,
-                "REVOKE")),
+            expect("REVOKE ALL PRIVILEGES ON database.* FROM ?@?", "REVOKE", null, "REVOKE")),
 
         // SHOW statement
-        Arguments.of("SHOW TABLES", expect("SHOW TABLES", null, null, "SHOW", null, "SHOW")),
+        Arguments.of("SHOW TABLES", expect("SHOW TABLES", "SHOW", null, "SHOW")),
         Arguments.of(
-            "SHOW CREATE TABLE users",
-            expect("SHOW CREATE TABLE users", "CREATE TABLE", "users", "SHOW", null, "SHOW")),
-        Arguments.of("SHOW DATABASES", expect("SHOW DATABASES", null, null, "SHOW", null, "SHOW")),
+            "SHOW CREATE TABLE users", expect("SHOW CREATE TABLE users", "SHOW", null, "SHOW")),
+        Arguments.of("SHOW DATABASES", expect("SHOW DATABASES", "SHOW", null, "SHOW")),
 
         // SQL keywords used as identifiers (table names)
-        // Note: old semconv path (collectionName) doesn't handle keywords as identifiers
         Arguments.of(
             "SELECT * FROM insert WHERE x = 1",
-            expect(
-                "SELECT * FROM insert WHERE x = ?",
-                "SELECT",
-                "WHERE",
-                "SELECT",
-                "insert",
-                "SELECT insert")),
-        Arguments.of(
-            "SELECT * FROM update", expect("SELECT", null, "SELECT", "update", "SELECT update")),
-        Arguments.of(
-            "SELECT * FROM delete", expect("SELECT", null, "SELECT", "delete", "SELECT delete")),
-        Arguments.of("SELECT * FROM call", expect("SELECT", null, "SELECT", "call", "SELECT call")),
-        Arguments.of(
-            "SELECT * FROM merge", expect("SELECT", null, "SELECT", "merge", "SELECT merge")),
-        Arguments.of(
-            "SELECT * FROM create", expect("SELECT", null, "SELECT", "create", "SELECT create")),
-        Arguments.of("SELECT * FROM drop", expect("SELECT", null, "SELECT", "drop", "SELECT drop")),
-        Arguments.of(
-            "SELECT * FROM alter", expect("SELECT", null, "SELECT", "alter", "SELECT alter")),
+            expect("SELECT * FROM insert WHERE x = ?", "SELECT", "insert", "SELECT insert")),
+        Arguments.of("SELECT * FROM update", expect("SELECT", "update", "SELECT update")),
+        Arguments.of("SELECT * FROM delete", expect("SELECT", "delete", "SELECT delete")),
+        Arguments.of("SELECT * FROM call", expect("SELECT", "call", "SELECT call")),
+        Arguments.of("SELECT * FROM merge", expect("SELECT", "merge", "SELECT merge")),
+        Arguments.of("SELECT * FROM create", expect("SELECT", "create", "SELECT create")),
+        Arguments.of("SELECT * FROM drop", expect("SELECT", "drop", "SELECT drop")),
+        Arguments.of("SELECT * FROM alter", expect("SELECT", "alter", "SELECT alter")),
         Arguments.of("SELECT * FROM exec", expect("SELECT", "exec", "SELECT exec")),
         Arguments.of("SELECT * FROM execute", expect("SELECT", "execute", "SELECT execute")),
 
         // Oracle database link syntax (table@dblink)
         Arguments.of(
             "SELECT * FROM users@remote_db",
-            expect("SELECT", "users", "SELECT", "users@remote_db", "SELECT users@remote_db")),
+            expect("SELECT", "users@remote_db", "SELECT users@remote_db")),
         Arguments.of(
             "SELECT * FROM schema.users@remote_db",
-            expect(
-                "SELECT",
-                "schema.users",
-                "SELECT",
-                "schema.users@remote_db",
-                "SELECT schema.users@remote_db")),
+            expect("SELECT", "schema.users@remote_db", "SELECT schema.users@remote_db")),
 
         // SQL keywords used as column names
         Arguments.of(
@@ -1250,44 +1374,36 @@ class SqlQueryAnalyzerTest {
         // CTEs (Common Table Expressions) - CTE names are filtered from query summary
         Arguments.of(
             "WITH cte AS (SELECT a FROM b) SELECT * FROM cte",
-            expect("SELECT", null, "SELECT", "b", "SELECT b SELECT")),
+            expect("SELECT", "b", "SELECT b SELECT")),
         Arguments.of(
             "WITH cte AS (VALUES (1, 'a'), (2, 'b')) SELECT * FROM cte",
             expect(
-                "WITH cte AS (VALUES (?, ?), (?, ?)) SELECT * FROM cte",
-                "SELECT",
-                "cte",
-                "SELECT",
-                null,
-                "SELECT")),
+                "WITH cte AS (VALUES (?, ?), (?, ?)) SELECT * FROM cte", "SELECT", null, "SELECT")),
         // Multiple CTEs - CTE references filtered in main query
         Arguments.of(
             "WITH a AS (SELECT * FROM t1), b AS (SELECT * FROM t2) SELECT * FROM a JOIN b ON a.id = b.id",
-            expect("SELECT", null, "SELECT", "t1", "SELECT t1 SELECT t2 SELECT")),
+            expect("SELECT", "t1", "SELECT t1 SELECT t2 SELECT")),
         // Recursive CTE - self-reference filtered in CTE body and main query
         Arguments.of(
             "WITH RECURSIVE cte AS (SELECT id FROM t WHERE parent IS NULL UNION ALL SELECT t.id FROM t JOIN cte ON t.parent = cte.id) SELECT * FROM cte",
-            expect("SELECT", null, "SELECT", "t", "SELECT t SELECT t SELECT")));
+            expect("SELECT", "t", "SELECT t SELECT t SELECT")));
   }
 
   private static Stream<Arguments> ddlArgs() {
     return Stream.of(
         Arguments.of(
-            "CREATE TABLE `table`",
-            expect("CREATE TABLE", "table", "CREATE TABLE", "`table`", "CREATE TABLE `table`")),
+            "CREATE TABLE `table`", expect("CREATE TABLE", "`table`", "CREATE TABLE `table`")),
         Arguments.of(
             "CREATE TABLE ks.users ( id UUID PRIMARY KEY, name text )",
             expect("CREATE TABLE", "ks.users", "CREATE TABLE ks.users")),
         Arguments.of(
             "create table ks.users ( id UUID PRIMARY KEY, name text )",
-            expect(
-                "CREATE table", "ks.users", "create table", "ks.users", "create table ks.users")),
+            expect("create table", "ks.users", "create table ks.users")),
         Arguments.of("CREATE KEYSPACE sync_test", expect("CREATE", null, "CREATE KEYSPACE")),
         Arguments.of(
             "CREATE TABLE IF NOT EXISTS table",
             expect("CREATE TABLE", "table", "CREATE TABLE table")),
-        Arguments.of(
-            "DROP TABLE `if`", expect("DROP TABLE", "if", "DROP TABLE", "`if`", "DROP TABLE `if`")),
+        Arguments.of("DROP TABLE `if`", expect("DROP TABLE", "`if`", "DROP TABLE `if`")),
         Arguments.of(
             "ALTER TABLE table ADD CONSTRAINT c FOREIGN KEY (foreign_id) REFERENCES ref (id)",
             expect("ALTER TABLE", "table", "ALTER TABLE table")),
@@ -1299,15 +1415,10 @@ class SqlQueryAnalyzerTest {
             expect("DROP INDEX", null, "DROP INDEX types_name")),
         Arguments.of(
             "CREATE VIEW tmp AS SELECT type FROM table WHERE id = ?",
-            expect("CREATE VIEW", null, "CREATE VIEW", "table", "CREATE VIEW tmp SELECT table")),
+            expect("CREATE VIEW", "table", "CREATE VIEW tmp SELECT table")),
         Arguments.of(
             "CREATE PROCEDURE p AS SELECT * FROM table GO",
-            expect(
-                "CREATE PROCEDURE",
-                null,
-                "CREATE PROCEDURE",
-                "table",
-                "CREATE PROCEDURE p SELECT table")),
+            expect("CREATE PROCEDURE", "table", "CREATE PROCEDURE p SELECT table")),
         // ALTER TABLE with DROP/ADD clauses
         Arguments.of(
             "ALTER TABLE t2 DROP COLUMN c, DROP COLUMN d",
@@ -1325,15 +1436,11 @@ class SqlQueryAnalyzerTest {
                 "CREATE TABLE users (password VARCHAR(?))",
                 "CREATE TABLE",
                 "users",
-                "CREATE TABLE",
-                "users",
                 "CREATE TABLE users")),
         Arguments.of(
             "create table users (password VARCHAR(255))",
             expect(
                 "create table users (password VARCHAR(?))",
-                "CREATE table",
-                "users",
                 "create table",
                 "users",
                 "create table users")),
@@ -1348,8 +1455,6 @@ class SqlQueryAnalyzerTest {
             "alter table users ADD COLUMN password VARCHAR(255)",
             expect(
                 "alter table users ADD COLUMN password VARCHAR(?)",
-                "ALTER table",
-                "users",
                 "alter table",
                 "users",
                 "alter table users")),
@@ -1374,45 +1479,33 @@ class SqlQueryAnalyzerTest {
     SqlQuery result = analyze(original, DOUBLE_QUOTES_ARE_IDENTIFIERS);
     SqlQuery expected = expectedFunction.apply(original);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
-    if (emitStableDatabaseSemconv()) {
-      assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
-      assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
-      assertThat(result.getQuerySummary()).isEqualTo(expected.getQuerySummary());
-    } else {
-      assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
-      assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
-      assertThat(result.getQuerySummary()).isNull();
-    }
+    assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
+    assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
+    assertThat(result.getQuerySummary()).isEqualTo(expected.getQuerySummary());
   }
 
   private static Stream<Arguments> doubleQuotesAsIdentifiersArgs() {
     return Stream.of(
         // When dialect treats double quotes as identifiers, quoted text is preserved in query
-        Arguments.of(
-            "SELECT * FROM \"TABLE\"",
-            expect("SELECT", "TABLE", "SELECT", "\"TABLE\"", "SELECT \"TABLE\"")),
+        Arguments.of("SELECT * FROM \"TABLE\"", expect("SELECT", "\"TABLE\"", "SELECT \"TABLE\"")),
         Arguments.of(
             "SELECT x, y, z FROM \"schema table\"",
-            expect(
-                "SELECT", "schema table", "SELECT", "\"schema table\"", "SELECT \"schema table\"")),
+            expect("SELECT", "\"schema table\"", "SELECT \"schema table\"")),
         Arguments.of(
             "insert into \"db table\" where lalala",
-            expect("INSERT", "db table", "insert", "\"db table\"", "insert \"db table\"")),
+            expect("insert", "\"db table\"", "insert \"db table\"")),
         Arguments.of(
             "delete from \"my table\" where something something",
-            expect("DELETE", "my table", "delete", "\"my table\"", "delete \"my table\"")),
+            expect("delete", "\"my table\"", "delete \"my table\"")),
         Arguments.of(
             "update \"my table\" set answer=42",
             expect(
                 "update \"my table\" set answer=?",
-                "UPDATE",
-                "my table",
                 "update",
                 "\"my table\"",
                 "update \"my table\"")),
         Arguments.of(
-            "merge into \"my table\"",
-            expect("MERGE", "my table", "merge", "\"my table\"", "merge \"my table\"")));
+            "merge into \"my table\"", expect("merge", "\"my table\"", "merge \"my table\"")));
   }
 
   private static String repeat(char value, int count) {

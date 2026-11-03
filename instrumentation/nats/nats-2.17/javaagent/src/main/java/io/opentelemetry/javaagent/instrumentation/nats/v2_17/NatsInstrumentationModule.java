@@ -16,7 +16,7 @@ import java.util.List;
 public class NatsInstrumentationModule extends InstrumentationModule {
 
   public NatsInstrumentationModule() {
-    super("nats", "nats-2.17");
+    super("nats-2.17", "nats");
   }
 
   @Override

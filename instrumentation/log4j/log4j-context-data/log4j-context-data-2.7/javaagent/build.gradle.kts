@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -30,28 +32,27 @@ tasks {
     }
     jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
   }
+}
 
-  val testAddBaggage = register<Test>("testAddBaggage") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("Log4j27BaggageTest")
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("AddBaggage") {
+          filter {
+            includeTestsMatching("Log4j27BaggageTest")
+          }
+          jvmArgs("-Dotel.instrumentation.log4j-context-data.add-baggage=true")
+        }
+        register("LoggingKeys") {
+          filter {
+            includeTestsMatching("Log4j27LoggingKeysTest")
+          }
+          jvmArgs("-Dotel.instrumentation.common.logging.trace-id-key=trace_id_test")
+          jvmArgs("-Dotel.instrumentation.common.logging.span-id-key=span_id_test")
+          jvmArgs("-Dotel.instrumentation.common.logging.trace-flags-key=trace_flags_test")
+        }
+      }
     }
-    jvmArgs("-Dotel.instrumentation.log4j-context-data.add-baggage=true")
-  }
-
-  val testLoggingKeys = register<Test>("testLoggingKeys") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("Log4j27LoggingKeysTest")
-    }
-    jvmArgs("-Dotel.instrumentation.common.logging.trace-id-key=trace_id_test")
-    jvmArgs("-Dotel.instrumentation.common.logging.span-id-key=span_id_test")
-    jvmArgs("-Dotel.instrumentation.common.logging.trace-flags-key=trace_flags_test")
-  }
-
-  named("check") {
-    dependsOn(testAddBaggage, testLoggingKeys)
   }
 }

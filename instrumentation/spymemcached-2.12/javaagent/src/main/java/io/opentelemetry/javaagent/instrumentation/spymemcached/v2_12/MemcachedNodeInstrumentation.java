@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -46,8 +46,7 @@ class MemcachedNodeInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
         @Advice.This MemcachedNode node, @Advice.Argument(0) Operation operation) {
-      SpymemcachedRequestContext.captureHandlingNode(
-          Java8BytecodeBridge.currentContext(), operation, node);
+      SpymemcachedRequestContext.captureHandlingNode(Context.current(), operation, node);
     }
   }
 }

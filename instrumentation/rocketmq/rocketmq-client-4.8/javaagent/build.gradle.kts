@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -22,83 +25,41 @@ dependencies {
   testLibrary("org.apache.rocketmq:rocketmq-test:4.8.0")
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+testing.suites {
+  executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+      jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
 
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+      // with default settings tests will fail when disk is 90% full
+      jvmArgs("-Drocketmq.broker.diskSpaceWarningLevelRatio=1.0")
+    }
 
-    // with default settings tests will fail when disk is 90% full
-    jvmArgs("-Drocketmq.broker.diskSpaceWarningLevelRatio=1.0")
-  }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.rocketmq-client.experimental-span-attributes", "true")
+    }
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.rocketmq-client.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.rocketmq-client.experimental-span-attributes=true")
-  }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testMessagingPreviewCreateSpansDisabled =
-    register<Test>("testMessagingPreviewCreateSpansDisabled") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      jvmArgs("-Dotel.semconv-stability.preview=messaging")
-      jvmArgs("-Dotel.instrumentation.rocketmq-client.message-create-spans.enabled=false")
+    register("CreateSpansDisabled") {
       systemProperty("testBatchCreateSpansDisabled", "true")
-      systemProperty(
-        "metadataConfig",
-        "otel.semconv-stability.preview=messaging," +
-          "otel.instrumentation.rocketmq-client.message-create-spans.enabled=false",
+      telemetryConfig(
+        "otel.instrumentation.rocketmq-client.message-create-spans.enabled",
+        "false",
       )
     }
 
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
-
-  val testBatchSendSuppression = register<Test>("testBatchSendSuppression") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching(
-        "io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqClientTest.testBatchSendSuppression",
-      )
+    register("BatchSendSuppression") {
+      filter {
+        includeTestsMatching(
+          "io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqClientTest.testBatchSendSuppression",
+        )
+      }
+      systemProperty("testBatchSendSuppression", "true")
+      telemetryConfig("otel.instrumentation.common.span-suppression-strategy", "span-kind")
     }
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    jvmArgs("-Dotel.instrumentation.experimental.span-suppression-strategy=span-kind")
-    systemProperty("testBatchSendSuppression", "true")
-    systemProperty(
-      "metadataConfig",
-      "otel.semconv-stability.preview=messaging," +
-        "otel.instrumentation.experimental.span-suppression-strategy=span-kind",
-    )
-  }
-
-  check {
-    dependsOn(
-      testExperimental,
-      testMessagingPreview,
-      testMessagingPreviewCreateSpansDisabled,
-      testBatchSendSuppression,
-      testBothSemconv,
-    )
   }
 }

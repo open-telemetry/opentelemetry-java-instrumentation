@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.rediscala.v1_8.RediscalaSingletons.instrumenter;
@@ -26,7 +25,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import redis.ActorRequest;
 import redis.BufferedRequest;
-import redis.RedisClientActorLike;
 import redis.RedisCommand;
 import redis.Request;
 import redis.RoundRobinPoolRequest;
@@ -80,14 +78,8 @@ class RequestInstrumentation implements TypeInstrumentation {
           return null;
         }
 
-        ServerEndpoint endpoint = null;
-        RedisServerTarget serverTarget = null;
-        if (emitStableDatabaseSemconv()) {
-          endpoint = ServerEndpoint.create(action, cmd.isMasterOnly());
-          serverTarget = RediscalaServerTargets.get(action);
-        } else if (action instanceof RedisClientActorLike) {
-          endpoint = ServerEndpoint.create((RedisClientActorLike) action);
-        }
+        ServerEndpoint endpoint = ServerEndpoint.create(action, cmd.isMasterOnly());
+        RedisServerTarget serverTarget = RediscalaServerTargets.get(action);
         RediscalaRequest request = RediscalaRequest.create(cmd, endpoint, serverTarget);
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {

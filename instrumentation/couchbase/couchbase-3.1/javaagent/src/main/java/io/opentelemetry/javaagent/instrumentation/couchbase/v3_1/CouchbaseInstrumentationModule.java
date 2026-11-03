@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
-import static io.opentelemetry.javaagent.extension.instrumentation.internal.DeprecatedInstrumentationNames.expandDeprecatedNames;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -22,9 +21,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class CouchbaseInstrumentationModule extends InstrumentationModule {
   public CouchbaseInstrumentationModule() {
-    super(
-        "couchbase",
-        expandDeprecatedNames("couchbase-3.1|deprecated:couchbase-3.1.6", "couchbase"));
+    super("couchbase-3.1", "couchbase");
   }
 
   @Override

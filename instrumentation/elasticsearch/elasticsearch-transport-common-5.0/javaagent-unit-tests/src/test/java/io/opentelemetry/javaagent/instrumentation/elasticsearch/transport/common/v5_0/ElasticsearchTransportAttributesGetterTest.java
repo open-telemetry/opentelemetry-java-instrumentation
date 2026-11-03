@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -33,7 +32,7 @@ class ElasticsearchTransportAttributesGetterTest {
     NodeDisconnectedException error = new NodeDisconnectedException(null, "GetAction");
 
     assertThat(extractEndAttributes(error).get(ERROR_TYPE))
-        .isEqualTo(emitStableDatabaseSemconv() ? NodeDisconnectedException.class.getName() : null);
+        .isEqualTo(NodeDisconnectedException.class.getName());
   }
 
   @Test
@@ -41,7 +40,7 @@ class ElasticsearchTransportAttributesGetterTest {
     NoNodeAvailableException error = new NoNodeAvailableException("no nodes are available");
 
     assertThat(extractEndAttributes(error).get(ERROR_TYPE))
-        .isEqualTo(emitStableDatabaseSemconv() ? NoNodeAvailableException.class.getName() : null);
+        .isEqualTo(NoNodeAvailableException.class.getName());
   }
 
   @Test
@@ -49,7 +48,7 @@ class ElasticsearchTransportAttributesGetterTest {
     ElasticsearchException error = new ElasticsearchException("plain error");
 
     assertThat(extractEndAttributes(error).get(ERROR_TYPE))
-        .isEqualTo(emitStableDatabaseSemconv() ? ElasticsearchException.class.getName() : null);
+        .isEqualTo(ElasticsearchException.class.getName());
   }
 
   @Test
@@ -61,7 +60,7 @@ class ElasticsearchTransportAttributesGetterTest {
     // not treat it as a wrapper and unwrapCause() leaves it alone. The transport failure itself is
     // the most specific description of what went wrong here, so it is reported as-is.
     assertThat(extractEndAttributes(error).get(ERROR_TYPE))
-        .isEqualTo(emitStableDatabaseSemconv() ? TransportException.class.getName() : null);
+        .isEqualTo(TransportException.class.getName());
   }
 
   @Test
@@ -70,8 +69,7 @@ class ElasticsearchTransportAttributesGetterTest {
         new ElasticsearchStatusException("status error", RestStatus.INTERNAL_SERVER_ERROR);
 
     assertThat(extractEndAttributes(error).get(ERROR_TYPE))
-        .isEqualTo(
-            emitStableDatabaseSemconv() ? ElasticsearchStatusException.class.getName() : null);
+        .isEqualTo(ElasticsearchStatusException.class.getName());
   }
 
   @Test
@@ -80,7 +78,7 @@ class ElasticsearchTransportAttributesGetterTest {
         new RemoteTransportException("remote error", new IndexNotFoundException("invalid-index"));
 
     assertThat(extractEndAttributes(error).get(ERROR_TYPE))
-        .isEqualTo(emitStableDatabaseSemconv() ? IndexNotFoundException.class.getName() : null);
+        .isEqualTo(IndexNotFoundException.class.getName());
   }
 
   private static Attributes extractEndAttributes(Throwable error) {

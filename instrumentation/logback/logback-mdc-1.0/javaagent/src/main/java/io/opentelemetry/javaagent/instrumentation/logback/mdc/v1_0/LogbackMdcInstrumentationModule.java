@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class LogbackMdcInstrumentationModule extends InstrumentationModule {
   public LogbackMdcInstrumentationModule() {
-    super("logback-mdc", "logback-mdc-1.0");
+    super("logback-mdc-1.0", "logback-mdc", "logback");
   }
 
   @Override

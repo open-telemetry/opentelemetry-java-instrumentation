@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -17,11 +18,11 @@ class TimerHistogramGaugesTest extends AbstractTimerHistogramGaugesTest {
   @RegisterExtension
   static final MicrometerTestingExtension micrometerExtension =
       new MicrometerTestingExtension(testing) {
-        @SuppressWarnings("deprecation") // testing the deprecated builder method
         @Override
         OpenTelemetryMeterRegistryBuilder configureOtelRegistry(
             OpenTelemetryMeterRegistryBuilder registry) {
-          return registry.setMicrometerHistogramGaugesEnabled(true);
+          Experimental.setMicrometerHistogramGaugesEnabled(registry, true);
+          return registry;
         }
       };
 

@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.javahttpserver;
 
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sun.net.httpserver.Filter;
@@ -72,12 +71,11 @@ class JavaHttpServerHeaderSelectorTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing deprecated API
   void capturesHeadersConfiguredByName() throws Exception {
     start(
         JavaHttpServerTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList("X-Test-Request"))
-            .setCapturedResponseHeaders(singletonList("X-Test-Response"))
+            .setRequestHeaders(IncludeExclude.builder().setIncluded("X-Test-Request").build())
+            .setResponseHeaders(IncludeExclude.builder().setIncluded("X-Test-Response").build())
             .build()
             .createFilter());
 
@@ -98,14 +96,8 @@ class JavaHttpServerHeaderSelectorTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // testing deprecated API
-  void deprecatedSettersMatchHeaderNamesLiterally() throws Exception {
-    start(
-        JavaHttpServerTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(singletonList("*"))
-            .setCapturedResponseHeaders(singletonList("*"))
-            .build()
-            .createFilter());
+  void doesNotCaptureHeadersByDefault() throws Exception {
+    start(JavaHttpServerTelemetry.builder(testing.getOpenTelemetry()).build().createFilter());
 
     send();
 
@@ -115,9 +107,6 @@ class JavaHttpServerHeaderSelectorTest {
                 span ->
                     span.hasAttributesSatisfying(
                         attributes -> {
-                          // implementing header name enumeration must not turn the deprecated
-                          // exact-name setters into wildcard matching, since "*" is a legal header
-                          // name character and capturing every header would expose credentials
                           assertThat(headerValues(attributes, "http.request.header.x-test-request"))
                               .isNull();
                           assertThat(headerValues(attributes, "http.request.header.authorization"))

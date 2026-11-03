@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JedisInstrumentationModule extends InstrumentationModule {
 
   public JedisInstrumentationModule() {
-    super("jedis", "jedis-3.0");
+    super("jedis-3.0", "jedis");
   }
 
   @Override

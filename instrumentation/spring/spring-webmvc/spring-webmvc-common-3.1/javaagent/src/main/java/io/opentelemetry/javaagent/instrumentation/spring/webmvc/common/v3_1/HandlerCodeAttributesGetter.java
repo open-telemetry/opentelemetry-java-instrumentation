@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webmvc.common.v3_1;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 import org.springframework.web.HttpRequestHandler;
@@ -29,7 +29,7 @@ class HandlerCodeAttributesGetter implements CodeAttributesGetter<Object> {
   }
 
   @Override
-  public String getMethodName(Object handler) {
+  public String getCodeMethodName(Object handler) {
     if (handler instanceof HandlerMethod) {
       // name span based on the class and method name defined in the handler
       Method method = ((HandlerMethod) handler).getMethod();

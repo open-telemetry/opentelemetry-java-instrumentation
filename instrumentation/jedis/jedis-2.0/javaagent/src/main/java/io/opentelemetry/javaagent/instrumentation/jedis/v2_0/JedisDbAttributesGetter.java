@@ -5,15 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
+final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
   @Override
   public String getDbSystemName(JedisRequest request) {
@@ -25,12 +23,6 @@ class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, 
   public String getDbNamespace(JedisRequest request) {
     Long databaseIndex = request.getDatabaseIndex();
     return databaseIndex != null ? String.valueOf(databaseIndex) : null;
-  }
-
-  @Override
-  @Nullable
-  public String getDbName(JedisRequest request) {
-    return null;
   }
 
   @Override
@@ -52,9 +44,6 @@ class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, 
   @Override
   @Nullable
   public String getServerAddress(JedisRequest request) {
-    if (!emitStableDatabaseSemconv()) {
-      return request.getConnection().getHost();
-    }
     RedisServerTarget target = JedisSingletons.connectionTarget(request.getConnection());
     return target != null ? target.getAddress() : null;
   }
@@ -62,9 +51,6 @@ class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, 
   @Override
   @Nullable
   public Integer getServerPort(JedisRequest request) {
-    if (!emitStableDatabaseSemconv()) {
-      return request.getConnection().getPort();
-    }
     RedisServerTarget target = JedisSingletons.connectionTarget(request.getConnection());
     return target != null ? target.getPort() : null;
   }
@@ -73,6 +59,6 @@ class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, 
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       JedisRequest request, @Nullable Void unused) {
-    return emitStableDatabaseSemconv() ? request.getPeerAddress() : null;
+    return request.getPeerAddress();
   }
 }

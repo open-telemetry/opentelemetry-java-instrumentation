@@ -16,7 +16,7 @@ import org.apache.pekko.pattern.ask
 import org.apache.pekko.util.Timeout
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Tracer
-import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
+import io.opentelemetry.context.Context
 
 import scala.concurrent.duration._
 
@@ -51,7 +51,7 @@ class PekkoActors {
   def basicTell(): Unit = {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
-      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
+      Context.current().`with`(parentSpan).makeCurrent()
     try {
       howdyGreeter ! WhoToGreet("Pekko")
       howdyGreeter ! Greet
@@ -64,7 +64,7 @@ class PekkoActors {
   def basicAsk(): Unit = {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
-      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
+      Context.current().`with`(parentSpan).makeCurrent()
     try {
       howdyGreeter ! WhoToGreet("Pekko")
       howdyGreeter ? Greet
@@ -77,7 +77,7 @@ class PekkoActors {
   def basicForward(): Unit = {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
-      Java8BytecodeBridge.currentContext().`with`(parentSpan).makeCurrent()
+      Context.current().`with`(parentSpan).makeCurrent()
     try {
       helloGreeter ! WhoToGreet("Pekko")
       helloGreeter ? Greet

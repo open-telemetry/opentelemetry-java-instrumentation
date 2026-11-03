@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -16,13 +15,9 @@ import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
-import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OPENSEARCH;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -96,26 +91,13 @@ abstract class AbstractOpenSearchTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName(
-                                emitStableDatabaseSemconv()
-                                    ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
-                                    : "GET")
+                        span.hasName("GET " + httpHost.getHost() + ":" + httpHost.getPort())
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    emitStableDatabaseSemconv() ? null : "GET /_cluster/health"),
-                                equalTo(NETWORK_TYPE, null),
-                                equalTo(
-                                    SERVER_ADDRESS,
-                                    emitStableDatabaseSemconv() ? httpHost.getHost() : null),
-                                equalTo(
-                                    SERVER_PORT,
-                                    emitStableDatabaseSemconv()
-                                        ? Long.valueOf(httpHost.getPort())
-                                        : null)),
+                                equalTo(DB_SYSTEM_NAME, OPENSEARCH),
+                                equalTo(DB_OPERATION_NAME, "GET"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -127,7 +109,9 @@ abstract class AbstractOpenSearchTest {
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(maybeStablePeerService(), "test-peer-service"))));
+                                equalTo(
+                                    stringKey("server.service.name"),
+                                    expectedMappedServiceName()))));
   }
 
   @Test
@@ -155,27 +139,14 @@ abstract class AbstractOpenSearchTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName(
-                                emitStableDatabaseSemconv()
-                                    ? "GET " + httpHost.getHost() + ":" + httpHost.getPort()
-                                    : "GET")
+                        span.hasName("GET " + httpHost.getHost() + ":" + httpHost.getPort())
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                                equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    emitStableDatabaseSemconv() ? null : "GET /_cluster/health"),
-                                equalTo(NETWORK_TYPE, null),
-                                equalTo(
-                                    SERVER_ADDRESS,
-                                    emitStableDatabaseSemconv() ? httpHost.getHost() : null),
-                                equalTo(
-                                    SERVER_PORT,
-                                    emitStableDatabaseSemconv()
-                                        ? Long.valueOf(httpHost.getPort())
-                                        : null)),
+                                equalTo(DB_SYSTEM_NAME, OPENSEARCH),
+                                equalTo(DB_OPERATION_NAME, "GET"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -187,7 +158,8 @@ abstract class AbstractOpenSearchTest {
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(maybeStablePeerService(), "test-peer-service")),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName())),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
@@ -215,16 +187,11 @@ abstract class AbstractOpenSearchTest {
         .waitAndAssertTraces(
             trace ->
                 assertThat(trace.getSpan(0))
-                    .hasName(emitStableDatabaseSemconv() ? "GET " + nodeList : "GET")
+                    .hasName("GET " + nodeList)
                     .hasKind(SpanKind.CLIENT)
                     .hasAttributesSatisfyingExactly(
-                        equalTo(maybeStable(DB_SYSTEM), OPENSEARCH),
-                        equalTo(maybeStable(DB_OPERATION), "GET"),
-                        equalTo(
-                            maybeStable(DB_STATEMENT),
-                            emitStableDatabaseSemconv() ? null : "GET /_cluster/health"),
-                        equalTo(NETWORK_TYPE, null),
-                        equalTo(SERVER_ADDRESS, emitStableDatabaseSemconv() ? nodeList : null),
-                        equalTo(SERVER_PORT, null)));
+                        equalTo(DB_SYSTEM_NAME, OPENSEARCH),
+                        equalTo(DB_OPERATION_NAME, "GET"),
+                        equalTo(SERVER_ADDRESS, nodeList)));
   }
 }

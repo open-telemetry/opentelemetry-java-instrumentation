@@ -41,6 +41,7 @@ class RestClientInstrumentation implements TypeInstrumentation {
             .and(takesArguments(7))
             .and(takesArgument(0, String.class)) // method
             .and(takesArgument(1, String.class)) // endpoint
+            .and(takesArgument(3, named("org.apache.http.HttpEntity")))
             .and(takesArgument(5, named("org.elasticsearch.client.ResponseListener"))),
         getClass().getName() + "$PerformRequestAsyncAdvice");
   }

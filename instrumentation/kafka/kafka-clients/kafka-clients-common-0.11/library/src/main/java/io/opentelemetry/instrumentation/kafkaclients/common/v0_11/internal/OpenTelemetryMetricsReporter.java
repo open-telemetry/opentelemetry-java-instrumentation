@@ -14,12 +14,14 @@ import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.GuardedBy;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
+import org.apache.kafka.common.ClusterResource;
+import org.apache.kafka.common.ClusterResourceListener;
 import org.apache.kafka.common.metrics.KafkaMetric;
 import org.apache.kafka.common.metrics.MetricsReporter;
 
@@ -35,7 +37,8 @@ import org.apache.kafka.common.metrics.MetricsReporter;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public final class OpenTelemetryMetricsReporter implements MetricsReporter {
+public final class OpenTelemetryMetricsReporter
+    implements MetricsReporter, ClusterResourceListener {
 
   public static final String CONFIG_KEY_OPENTELEMETRY_SUPPLIER = "opentelemetry.supplier";
   public static final String CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME =
@@ -46,10 +49,12 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
   @Nullable private static volatile Listener listener;
 
   @Nullable private volatile Meter meter;
+  // Populated by Kafka via ClusterResourceListener once the cluster metadata is first resolved.
+  @Nullable private volatile String clusterId;
   private final Object lock = new Object();
 
   @GuardedBy("lock")
-  private final List<RegisteredObservable> registeredObservables = new ArrayList<>();
+  private final Set<RegisteredObservable> registeredObservables = new LinkedHashSet<>();
 
   /**
    * Reset for test by resetting the {@link #meter} to {@code null} and closing all registered
@@ -86,36 +91,43 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
     }
 
     RegisteredObservable registeredObservable =
-        KafkaMetricRegistry.getRegisteredObservable(currentMeter, metric);
+        KafkaMetricRegistry.getRegisteredObservable(currentMeter, metric, () -> clusterId);
     if (registeredObservable == null) {
       logger.log(FINEST, "Metric changed but cannot map to instrument: {0}", metric.metricName());
       return;
     }
 
     Set<AttributeKey<?>> attributeKeys = registeredObservable.getAttributes().asMap().keySet();
+    List<RegisteredObservable> observablesToClose = new ArrayList<>();
     synchronized (lock) {
-      for (Iterator<RegisteredObservable> it = registeredObservables.iterator(); it.hasNext(); ) {
-        RegisteredObservable curRegisteredObservable = it.next();
+      for (RegisteredObservable curRegisteredObservable : registeredObservables) {
         Set<AttributeKey<?>> curAttributeKeys =
             curRegisteredObservable.getAttributes().asMap().keySet();
         if (curRegisteredObservable.getKafkaMetricName().equals(metric.metricName())) {
-          logger.log(FINEST, "Replacing instrument: {0}", curRegisteredObservable);
-          closeInstrument(curRegisteredObservable.getObservable());
-          it.remove();
+          observablesToClose.add(curRegisteredObservable);
         } else if (curRegisteredObservable
                 .getInstrumentDescriptor()
                 .equals(registeredObservable.getInstrumentDescriptor())
             && attributeKeys.size() > curAttributeKeys.size()
             && attributeKeys.containsAll(curAttributeKeys)) {
-          logger.log(
-              FINEST,
-              "Replacing instrument with higher dimension version: {0}",
-              curRegisteredObservable);
-          closeInstrument(curRegisteredObservable.getObservable());
-          it.remove();
+          observablesToClose.add(curRegisteredObservable);
         }
       }
+    }
 
+    for (RegisteredObservable curRegisteredObservable : observablesToClose) {
+      if (curRegisteredObservable.getKafkaMetricName().equals(metric.metricName())) {
+        logger.log(FINEST, "Replacing instrument: {0}", curRegisteredObservable);
+      } else {
+        logger.log(
+            FINEST,
+            "Replacing instrument with higher dimension version: {0}",
+            curRegisteredObservable);
+      }
+      closeInstrumentAndRemove(curRegisteredObservable);
+    }
+
+    synchronized (lock) {
       registeredObservables.add(registeredObservable);
     }
   }
@@ -123,14 +135,17 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
   @Override
   public void metricRemoval(KafkaMetric metric) {
     logger.log(FINEST, "Metric removed: {0}", metric.metricName());
+    List<RegisteredObservable> observablesToClose = new ArrayList<>();
     synchronized (lock) {
-      for (Iterator<RegisteredObservable> it = registeredObservables.iterator(); it.hasNext(); ) {
-        RegisteredObservable current = it.next();
+      for (RegisteredObservable current : registeredObservables) {
         if (current.getKafkaMetricName().equals(metric.metricName())) {
-          closeInstrument(current.getObservable());
-          it.remove();
+          observablesToClose.add(current);
         }
       }
+    }
+
+    for (RegisteredObservable current : observablesToClose) {
+      closeInstrumentAndRemove(current);
     }
   }
 
@@ -139,12 +154,39 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
     closeAllInstruments();
   }
 
+  // Kafka invokes this once the cluster metadata is first resolved (KIP-78). The id is read from
+  // the client's own metadata, so no extra broker connection is opened.
+  @Override
+  public void onUpdate(ClusterResource clusterResource) {
+    if (clusterResource == null) {
+      return;
+    }
+    String id = clusterResource.clusterId();
+    if (id == null || id.isEmpty()) {
+      return;
+    }
+    // No lock: clusterId is volatile and nothing else here is guarded. Taking `lock` would put the
+    // Kafka network thread behind instrument bookkeeping held across closeAllInstruments().
+    if (!id.equals(clusterId)) {
+      clusterId = id;
+    }
+  }
+
   private void closeAllInstruments() {
+    List<RegisteredObservable> observablesToClose;
     synchronized (lock) {
-      for (Iterator<RegisteredObservable> it = registeredObservables.iterator(); it.hasNext(); ) {
-        closeInstrument(it.next().getObservable());
-        it.remove();
-      }
+      observablesToClose = new ArrayList<>(registeredObservables);
+    }
+
+    for (RegisteredObservable registeredObservable : observablesToClose) {
+      closeInstrumentAndRemove(registeredObservable);
+    }
+  }
+
+  private void closeInstrumentAndRemove(RegisteredObservable registeredObservable) {
+    closeInstrument(registeredObservable.getObservable());
+    synchronized (lock) {
+      registeredObservables.remove(registeredObservable);
     }
   }
 

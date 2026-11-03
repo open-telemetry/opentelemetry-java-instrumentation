@@ -9,7 +9,6 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.v3Preview;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockito.Mockito.mock;
@@ -21,7 +20,6 @@ import com.couchbase.client.core.cnc.RequestTracer;
 import com.couchbase.client.core.env.CoreEnvironment;
 import com.couchbase.client.core.msg.RequestContext;
 import com.couchbase.client.core.msg.kv.BaseKeyValueRequest;
-import com.couchbase.client.core.service.ServiceType;
 import com.couchbase.client.java.env.ClusterEnvironment;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -52,7 +50,6 @@ class CouchbaseRequestTracerTest {
     InternalSpan requestSpan = requestTracer.internalSpan("get", parent);
 
     BaseKeyValueRequest request = mock(BaseKeyValueRequest.class);
-    when(request.serviceType()).thenReturn(ServiceType.KV);
     when(request.operationId()).thenReturn("0x17");
     when(request.key()).thenReturn("document".getBytes(UTF_8));
 
@@ -74,7 +71,7 @@ class CouchbaseRequestTracerTest {
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
-          if (emitSdkDetailSpans()) {
+          if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 CouchbaseRequestTracerTest::assertParentSpan,
                 span -> assertRequestSpan(span, trace.getSpan(0)),
@@ -84,7 +81,8 @@ class CouchbaseRequestTracerTest {
                     span.hasName("dispatch_to_server")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(equalTo(longKey("peer.latency"), 42L)));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(longKey("peer.latency"), experimental(42L))));
           } else {
             trace.hasSpansSatisfyingExactly(
                 CouchbaseRequestTracerTest::assertParentSpan,
@@ -101,7 +99,6 @@ class CouchbaseRequestTracerTest {
     InternalSpan requestSpan = requestTracer.internalSpan("get", parent);
 
     BaseKeyValueRequest request = mock(BaseKeyValueRequest.class);
-    when(request.serviceType()).thenReturn(ServiceType.KV);
     when(request.key()).thenReturn("document".getBytes(UTF_8));
 
     RequestContext requestContext = mock(RequestContext.class);
@@ -117,7 +114,7 @@ class CouchbaseRequestTracerTest {
 
     testing.waitAndAssertTracesWithoutScopeVersionVerification(
         trace -> {
-          if (emitSdkDetailSpans()) {
+          if (EXPERIMENTAL_TELEMETRY) {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span -> span.hasName("get").hasParent(trace.getSpan(0)),
@@ -134,26 +131,21 @@ class CouchbaseRequestTracerTest {
   }
 
   private static void assertParentSpan(SpanDataAssert span) {
-    span.hasName("parent").hasKind(v3Preview() ? CLIENT : INTERNAL).hasNoParent();
+    span.hasName("parent").hasKind(CLIENT).hasNoParent();
   }
 
   private static void assertRequestSpan(SpanDataAssert span, SpanData parent) {
-    span.hasKind(v3Preview() ? CLIENT : INTERNAL)
+    span.hasKind(CLIENT)
         .hasName("get")
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("peer.service"), experimental("kv")),
             equalTo(stringKey("couchbase.operation_id"), experimental("0x17")),
             equalTo(stringKey("couchbase.document_id"), experimental("document")),
             equalTo(stringKey("couchbase.client_context.request_id"), experimental("abc")));
   }
 
-  private static boolean emitSdkDetailSpans() {
-    return !v3Preview() || EXPERIMENTAL_TELEMETRY;
-  }
-
   private static <T> T experimental(T value) {
-    return !v3Preview() || EXPERIMENTAL_TELEMETRY ? value : null;
+    return EXPERIMENTAL_TELEMETRY ? value : null;
   }
 
   private static RequestTracer createRequestTracer() {

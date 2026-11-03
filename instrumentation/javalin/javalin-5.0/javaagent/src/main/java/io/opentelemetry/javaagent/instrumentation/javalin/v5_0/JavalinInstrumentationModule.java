@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JavalinInstrumentationModule extends InstrumentationModule {
 
   public JavalinInstrumentationModule() {
-    super("javalin", "javalin-5.0");
+    super("javalin-5.0", "javalin");
   }
 
   @Override

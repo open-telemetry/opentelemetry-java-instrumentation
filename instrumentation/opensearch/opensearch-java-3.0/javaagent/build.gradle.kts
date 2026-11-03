@@ -1,5 +1,9 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -42,119 +46,20 @@ dependencies {
   testImplementation("software.amazon.awssdk:regions:2.26.0")
 }
 
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
-      excludeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
-      excludeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
-    }
-  }
-
-  val testDisabledCaptureSearchQuery = register<Test>("testDisabledCaptureSearchQuery") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
-    }
-    jvmArgs("-Dotel.instrumentation.opensearch.capture-search-query=false")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.opensearch.capture-search-query=false",
-    )
-  }
-
-  val testDeprecatedCaptureSearchQueryV3Preview =
-    register<Test>("testDeprecatedCaptureSearchQueryV3Preview") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureDefault {
       filter {
-        includeTestsMatching("OpenSearchCaptureSearchQueryTest")
+        excludeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
+        excludeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
       }
-      jvmArgs(
-        "-Dotel.instrumentation.opensearch.capture-search-query=false",
-        "-Dotel.instrumentation.common.v3-preview=true",
-      )
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.opensearch.capture-search-query=false,otel.instrumentation.common.v3-preview=true",
-      )
     }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("OpenSearchDisabledCaptureSearchQueryTest")
-      excludeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
-      excludeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
-    }
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
-      includeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
-    }
-    jvmArgs("-Dotel.instrumentation.opensearch.query-sanitization.enabled=false")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.opensearch.query-sanitization.enabled=false",
-    )
-  }
-
-  val testQuerySanitizationEnabledOverride = register<Test>("testQuerySanitizationEnabledOverride") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("OpenSearchCaptureSearchQueryTest.shouldCaptureSearchQueryBody")
-    }
-    jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
-    jvmArgs("-Dotel.instrumentation.opensearch.query-sanitization.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.db.query-sanitization.enabled=false,otel.instrumentation.opensearch.query-sanitization.enabled=true",
-    )
-  }
-
-  val testQuerySanitizationDisabledStableSemconv =
-    register<Test>("testQuerySanitizationDisabledStableSemconv") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-
+    register("QuerySanitizationDisabled") {
       filter {
         includeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
+        includeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
       }
-      jvmArgs("-Dotel.instrumentation.common.db.query-sanitization.enabled=false")
-      jvmArgs("-Dotel.semconv-stability.opt-in=database")
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.common.db.query-sanitization.enabled=false,otel.semconv-stability.opt-in=database",
-      )
+      telemetryConfig("otel.instrumentation.opensearch.query-sanitization.enabled", "false")
     }
-
-  check {
-    dependsOn(
-      testStableSemconv,
-      testDisabledCaptureSearchQuery,
-      testDeprecatedCaptureSearchQueryV3Preview,
-      testQuerySanitizationDisabled,
-      testQuerySanitizationDisabledStableSemconv,
-      testQuerySanitizationEnabledOverride,
-    )
   }
 }

@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.io.IOException;
@@ -14,17 +17,24 @@ import javax.servlet.http.HttpServletResponse;
 
 class TestServlet extends HttpServlet {
 
+  private static final boolean TRACE_ID_REQUEST_ATTRIBUTE_ENABLED =
+      Boolean.getBoolean(
+          "otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled");
+
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     String path = req.getServletPath();
 
-    // these are set by servlet instrumentation
-    if (req.getAttribute("trace_id") == null) {
-      throw new IllegalStateException("trace_id attribute not found");
-    }
-    if (req.getAttribute("span_id") == null) {
-      throw new IllegalStateException("span_id attribute not found");
-    }
+    assertThat(req.getAttribute("trace_id"))
+        .isEqualTo(
+            TRACE_ID_REQUEST_ATTRIBUTE_ENABLED
+                ? Span.current().getSpanContext().getTraceId()
+                : null);
+    assertThat(req.getAttribute("span_id"))
+        .isEqualTo(
+            TRACE_ID_REQUEST_ATTRIBUTE_ENABLED
+                ? Span.current().getSpanContext().getSpanId()
+                : null);
 
     ServerEndpoint serverEndpoint = ServerEndpoint.forPath(path);
     if (serverEndpoint != null) {
