@@ -49,39 +49,18 @@ dependencies {
   testInstrumentation(project(":instrumentation:tomcat:tomcat-10.0:javaagent"))
 }
 
-val controllerTelemetrySuites =
-  if (otelProps.testLatestDeps) {
-    arrayOf("vaadin14LatestTest", "vaadinLatestTest")
-  } else {
-    arrayOf("vaadin142Test")
-  }
-
 testing.suites {
-  register<JvmTestSuite>("vaadin142Test") {
-    dependencies {
-      implementation(project(":instrumentation:vaadin-14.2:testing"))
-      implementation("com.vaadin:vaadin-spring-boot-starter:14.2.0")
-    }
-    if (!otelProps.testLatestDeps) {
-      executions {
-        register("ControllerTelemetry") {
-          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
-        }
-      }
-    }
-  }
-
-  register<JvmTestSuite>("vaadin14LatestTest") {
+  register<JvmTestSuite>("vaadin14Test") {
     dependencies {
       implementation(project(":instrumentation:vaadin-14.2:testing"))
       // 14.12 requires license
-      implementation("com.vaadin:vaadin-spring-boot-starter:14.11.+")
+      implementation(
+        "com.vaadin:vaadin-spring-boot-starter:${baseVersion("14.2.0").orLatest("14.11.+")}"
+      )
     }
-    if (otelProps.testLatestDeps) {
-      executions {
-        register("ControllerTelemetry") {
-          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
-        }
+    executions {
+      register("ControllerTelemetry") {
+        telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
       }
     }
   }
@@ -105,7 +84,10 @@ testing.suites {
 }
 
 tasks.check {
-  dependsOn(controllerTelemetrySuites.map { testing.suites.named(it) })
+  dependsOn(testing.suites.named("vaadin14Test"))
+  if (otelProps.testLatestDeps) {
+    dependsOn(testing.suites.named("vaadinLatestTest"))
+  }
 }
 
 configurations.configureEach {
