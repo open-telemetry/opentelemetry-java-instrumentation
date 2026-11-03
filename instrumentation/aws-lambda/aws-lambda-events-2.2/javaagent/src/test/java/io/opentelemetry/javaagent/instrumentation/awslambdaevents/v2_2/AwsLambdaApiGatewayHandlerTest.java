@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
-import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_TRIGGER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -84,7 +84,7 @@ class AwsLambdaApiGatewayHandlerTest {
                         .hasTraceId("ee13e7026227ebf4c74278ae29691d7a")
                         .hasParentSpanId("0000000000000456")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(FAAS_INVOCATION_ID, "1-22-2024"),
+                            equalTo(stringKey("faas.invocation_id"), "1-22-2024"),
                             equalTo(FAAS_TRIGGER, "http"),
                             equalTo(HTTP_REQUEST_METHOD, "PUT"),
                             equalTo(USER_AGENT_ORIGINAL, "Clever Client"),
