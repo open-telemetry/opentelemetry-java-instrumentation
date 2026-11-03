@@ -45,7 +45,8 @@ class PekkoHttpServerInstrumentationTestHttp2
 
   override protected def setupServer(): AnyRef = {
     PekkoHttpTestHttp2WebServer.start(port)
-    null
+    // returning the server makes the inherited teardown call stopServer
+    PekkoHttpTestHttp2WebServer
   }
 
   override protected def stopServer(server: Object): Unit =
@@ -169,7 +170,7 @@ class PekkoHttpServerInstrumentationTestHttp2
     val headers = RequestHeaders
       .builder(
         HttpMethod.GET,
-        "/" + ServerEndpoint.SUCCESS.rawPath()
+        resolveAddress(ServerEndpoint.SUCCESS, protocolPrefix)
       )
     (1 to 100).foreach(i => headers.add(s"x-header-$i", "value"))
     val badResponse = client

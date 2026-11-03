@@ -80,7 +80,7 @@ object PekkoHttpTestHttp2WebServer {
     val getHandler = PekkoHttpTestAsyncHandler.asyncHandler
     request =>
       if (
-        request.method == GET && request.uri.path.toString == "/" + SEPARATE_EXECUTOR.getPath
+        request.method == GET && request.uri.path.toString == SEPARATE_EXECUTOR.getPath
       ) {
         separateExecutorHandler()
       } else if (request.method == GET) {
