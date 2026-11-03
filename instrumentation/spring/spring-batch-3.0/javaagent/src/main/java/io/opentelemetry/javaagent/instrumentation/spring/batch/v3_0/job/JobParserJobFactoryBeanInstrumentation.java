@@ -32,7 +32,7 @@ public class JobParserJobFactoryBeanInstrumentation implements TypeInstrumentati
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$InitAdvice");
     transformer.applyAdviceToMethod(
         named("setJobExecutionListeners")
-            .and(takesArguments("org.springframework.batch.core.JobExecutionListener[]")),
+            .and(takesArguments(named("org.springframework.batch.core.JobExecutionListener[]"))),
         getClass().getName() + "$SetListenersAdvice");
   }
 

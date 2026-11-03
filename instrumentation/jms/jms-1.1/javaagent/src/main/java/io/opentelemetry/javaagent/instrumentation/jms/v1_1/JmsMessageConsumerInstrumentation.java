@@ -56,7 +56,7 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$ConsumerAdvice");
     transformer.applyAdviceToMethod(
         named("setMessageListener")
-            .and(takesArguments("javax.jms.MessageListener"))
+            .and(takesArguments(named("javax.jms.MessageListener")))
             .and(isPublic()),
         getClass().getName() + "$SetMessageListenerAdvice");
   }

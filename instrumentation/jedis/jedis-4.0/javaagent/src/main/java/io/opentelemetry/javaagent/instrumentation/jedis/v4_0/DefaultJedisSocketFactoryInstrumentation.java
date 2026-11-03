@@ -39,7 +39,7 @@ class DefaultJedisSocketFactoryInstrumentation implements TypeInstrumentation {
         isConstructor().and(takesArgument(0, named("redis.clients.jedis.HostAndPort"))),
         getClass().getName() + "$HostAndPortAdvice");
     transformer.applyAdviceToMethod(
-        named("updateHostAndPort").and(takesArguments("redis.clients.jedis.HostAndPort")),
+        named("updateHostAndPort").and(takesArguments(named("redis.clients.jedis.HostAndPort"))),
         getClass().getName() + "$HostAndPortAdvice");
   }
 

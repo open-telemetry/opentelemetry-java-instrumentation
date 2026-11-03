@@ -28,7 +28,7 @@ class CategoryInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("callAppenders"))
-            .and(takesArguments("org.apache.log4j.spi.LoggingEvent")),
+            .and(takesArguments(named("org.apache.log4j.spi.LoggingEvent"))),
         getClass().getName() + "$CallAppendersAdvice");
   }
 

@@ -30,7 +30,7 @@ final class HikariConfigInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("setPoolName"), getClass().getName() + "$SetPoolNameAdvice");
     transformer.applyAdviceToMethod(
-        named("copyStateTo").and(takesArguments("com.zaxxer.hikari.HikariConfig")),
+        named("copyStateTo").and(takesArguments(named("com.zaxxer.hikari.HikariConfig"))),
         getClass().getName() + "$CopyStateToAdvice");
   }
 

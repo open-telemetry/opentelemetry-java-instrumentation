@@ -32,7 +32,7 @@ class LogbackInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("callAppenders"))
-            .and(takesArguments("ch.qos.logback.classic.spi.ILoggingEvent")),
+            .and(takesArguments(named("ch.qos.logback.classic.spi.ILoggingEvent"))),
         getClass().getName() + "$CallAppendersAdvice");
   }
 

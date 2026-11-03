@@ -56,10 +56,10 @@ class ParsingErrorHandlerInstrumentation implements TypeInstrumentation {
             .and(not(isBridge()))
             .and(
                 takesArguments(
-                    "org.apache.pekko.http.scaladsl.model.StatusCode",
-                    "org.apache.pekko.http.scaladsl.model.ErrorInfo",
-                    "org.apache.pekko.event.LoggingAdapter",
-                    "org.apache.pekko.http.scaladsl.settings.ServerSettings")),
+                    named("org.apache.pekko.http.scaladsl.model.StatusCode"),
+                    named("org.apache.pekko.http.scaladsl.model.ErrorInfo"),
+                    named("org.apache.pekko.event.LoggingAdapter"),
+                    named("org.apache.pekko.http.scaladsl.settings.ServerSettings"))),
         getClass().getName() + "$HandleAdvice");
   }
 

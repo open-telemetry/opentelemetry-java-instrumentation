@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper.Handler.DefineClassContext;
@@ -31,11 +32,16 @@ class DefineClassInstrumentation implements TypeInstrumentation {
         named("defineClass")
             .and(
                 takesArguments(
-                    String.class, byte[].class, int.class, int.class, ProtectionDomain.class)),
+                    is(String.class),
+                    is(byte[].class),
+                    is(int.class),
+                    is(int.class),
+                    is(ProtectionDomain.class))),
         getClass().getName() + "$DefineClassAdvice");
     transformer.applyAdviceToMethod(
         named("defineClass")
-            .and(takesArguments(String.class, ByteBuffer.class, ProtectionDomain.class)),
+            .and(
+                takesArguments(is(String.class), is(ByteBuffer.class), is(ProtectionDomain.class))),
         getClass().getName() + "$DefineClassWithThreeArgsAdvice");
   }
 

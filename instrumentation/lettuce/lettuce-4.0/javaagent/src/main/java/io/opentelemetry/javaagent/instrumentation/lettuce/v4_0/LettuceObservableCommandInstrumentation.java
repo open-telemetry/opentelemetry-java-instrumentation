@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONTEXT;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -35,7 +37,7 @@ class LettuceObservableCommandInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf("complete", "cancel")
             .and(takesArguments(0))
-            .or(named("completeExceptionally").and(takesArguments(Throwable.class))),
+            .or(named("completeExceptionally").and(takesArguments(is(Throwable.class)))),
         getClass().getName() + "$TerminalAdvice");
   }
 

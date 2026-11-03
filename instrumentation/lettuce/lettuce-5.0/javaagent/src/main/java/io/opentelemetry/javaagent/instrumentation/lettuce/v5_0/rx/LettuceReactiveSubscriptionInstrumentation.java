@@ -29,7 +29,7 @@ public class LettuceReactiveSubscriptionInstrumentation implements TypeInstrumen
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("subscribe").and(takesArguments("org.reactivestreams.Subscriber")),
+        named("subscribe").and(takesArguments(named("org.reactivestreams.Subscriber"))),
         getClass().getName() + "$SubscribeAdvice");
   }
 

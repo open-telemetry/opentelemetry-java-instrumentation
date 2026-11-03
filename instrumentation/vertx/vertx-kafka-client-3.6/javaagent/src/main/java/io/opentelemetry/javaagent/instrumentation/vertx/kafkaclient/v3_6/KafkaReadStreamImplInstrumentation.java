@@ -35,10 +35,10 @@ class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("handler").and(takesArguments("io.vertx.core.Handler")),
+        named("handler").and(takesArguments(named("io.vertx.core.Handler"))),
         getClass().getName() + "$HandlerAdvice");
     transformer.applyAdviceToMethod(
-        named("batchHandler").and(takesArguments("io.vertx.core.Handler")),
+        named("batchHandler").and(takesArguments(named("io.vertx.core.Handler"))),
         getClass().getName() + "$BatchHandlerAdvice");
     transformer.applyAdviceToMethod(
         nameStartsWith("lambda$run$")

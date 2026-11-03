@@ -31,7 +31,7 @@ class DispatcherHandlerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("handle"))
-            .and(takesArguments("org.springframework.web.server.ServerWebExchange")),
+            .and(takesArguments(named("org.springframework.web.server.ServerWebExchange"))),
         getClass().getName() + "$HandleAdvice");
     transformer.applyAdviceToMethod(
         named("handleResult")

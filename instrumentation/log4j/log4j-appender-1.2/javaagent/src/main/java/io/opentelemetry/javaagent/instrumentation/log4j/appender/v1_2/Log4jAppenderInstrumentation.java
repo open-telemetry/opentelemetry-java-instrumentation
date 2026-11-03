@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.log4j.appender.v1_2;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -34,10 +35,10 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
             .and(named("forcedLog"))
             .and(
                 takesArguments(
-                    "java.lang.String",
-                    "org.apache.log4j.Priority",
-                    "java.lang.Object",
-                    "java.lang.Throwable")),
+                    is(String.class),
+                    named("org.apache.log4j.Priority"),
+                    is(Object.class),
+                    is(Throwable.class))),
         getClass().getName() + "$ForcedLogAdvice");
   }
 

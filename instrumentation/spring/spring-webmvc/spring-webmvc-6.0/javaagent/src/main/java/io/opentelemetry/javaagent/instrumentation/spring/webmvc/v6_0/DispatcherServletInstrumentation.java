@@ -36,7 +36,7 @@ class DispatcherServletInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isProtected()
             .and(named("onRefresh"))
-            .and(takesArguments("org.springframework.context.ApplicationContext")),
+            .and(takesArguments(named("org.springframework.context.ApplicationContext"))),
         getClass().getName() + "$HandlerMappingAdvice");
     transformer.applyAdviceToMethod(
         isProtected()

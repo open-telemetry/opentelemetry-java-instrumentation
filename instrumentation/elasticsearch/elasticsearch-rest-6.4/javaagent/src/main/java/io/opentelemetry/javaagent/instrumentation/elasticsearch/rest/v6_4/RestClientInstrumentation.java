@@ -38,8 +38,8 @@ class RestClientInstrumentation implements TypeInstrumentation {
         named("performRequestAsyncNoCatch")
             .and(
                 takesArguments(
-                    "org.elasticsearch.client.Request",
-                    "org.elasticsearch.client.ResponseListener")),
+                    named("org.elasticsearch.client.Request"),
+                    named("org.elasticsearch.client.ResponseListener"))),
         getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 

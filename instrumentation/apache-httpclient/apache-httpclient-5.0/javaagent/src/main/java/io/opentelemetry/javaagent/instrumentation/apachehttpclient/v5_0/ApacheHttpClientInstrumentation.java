@@ -48,7 +48,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments("org.apache.hc.core5.http.ClassicHttpRequest")),
+            .and(takesArguments(named("org.apache.hc.core5.http.ClassicHttpRequest"))),
         getClass().getName() + "$RequestAdvice");
 
     transformer.applyAdviceToMethod(
@@ -56,8 +56,8 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(not(isAbstract()))
             .and(
                 takesArguments(
-                    "org.apache.hc.core5.http.ClassicHttpRequest",
-                    "org.apache.hc.core5.http.protocol.HttpContext")),
+                    named("org.apache.hc.core5.http.ClassicHttpRequest"),
+                    named("org.apache.hc.core5.http.protocol.HttpContext"))),
         getClass().getName() + "$RequestAdvice");
 
     transformer.applyAdviceToMethod(
@@ -65,8 +65,8 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(not(isAbstract()))
             .and(
                 takesArguments(
-                    "org.apache.hc.core5.http.HttpHost",
-                    "org.apache.hc.core5.http.ClassicHttpRequest")),
+                    named("org.apache.hc.core5.http.HttpHost"),
+                    named("org.apache.hc.core5.http.ClassicHttpRequest"))),
         getClass().getName() + "$RequestWithHostAdvice");
 
     transformer.applyAdviceToMethod(
@@ -74,9 +74,9 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(not(isAbstract()))
             .and(
                 takesArguments(
-                    "org.apache.hc.core5.http.HttpHost",
-                    "org.apache.hc.core5.http.ClassicHttpRequest",
-                    "org.apache.hc.core5.http.protocol.HttpContext")),
+                    named("org.apache.hc.core5.http.HttpHost"),
+                    named("org.apache.hc.core5.http.ClassicHttpRequest"),
+                    named("org.apache.hc.core5.http.protocol.HttpContext"))),
         getClass().getName() + "$RequestWithHostAdvice");
 
     transformer.applyAdviceToMethod(
@@ -84,8 +84,8 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(not(isAbstract()))
             .and(
                 takesArguments(
-                    "org.apache.hc.core5.http.ClassicHttpRequest",
-                    "org.apache.hc.core5.http.io.HttpClientResponseHandler")),
+                    named("org.apache.hc.core5.http.ClassicHttpRequest"),
+                    named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
         getClass().getName() + "$RequestWithHandlerAdvice");
 
     transformer.applyAdviceToMethod(
@@ -93,9 +93,9 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(not(isAbstract()))
             .and(
                 takesArguments(
-                    "org.apache.hc.core5.http.ClassicHttpRequest",
-                    "org.apache.hc.core5.http.protocol.HttpContext",
-                    "org.apache.hc.core5.http.io.HttpClientResponseHandler")),
+                    named("org.apache.hc.core5.http.ClassicHttpRequest"),
+                    named("org.apache.hc.core5.http.protocol.HttpContext"),
+                    named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
         getClass().getName() + "$RequestWithContextAndHandlerAdvice");
 
     transformer.applyAdviceToMethod(
@@ -103,9 +103,9 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(not(isAbstract()))
             .and(
                 takesArguments(
-                    "org.apache.hc.core5.http.HttpHost",
-                    "org.apache.hc.core5.http.ClassicHttpRequest",
-                    "org.apache.hc.core5.http.io.HttpClientResponseHandler")),
+                    named("org.apache.hc.core5.http.HttpHost"),
+                    named("org.apache.hc.core5.http.ClassicHttpRequest"),
+                    named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
         getClass().getName() + "$RequestWithHostAndHandlerAdvice");
 
     transformer.applyAdviceToMethod(
@@ -113,10 +113,10 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(not(isAbstract()))
             .and(
                 takesArguments(
-                    "org.apache.hc.core5.http.HttpHost",
-                    "org.apache.hc.core5.http.ClassicHttpRequest",
-                    "org.apache.hc.core5.http.protocol.HttpContext",
-                    "org.apache.hc.core5.http.io.HttpClientResponseHandler")),
+                    named("org.apache.hc.core5.http.HttpHost"),
+                    named("org.apache.hc.core5.http.ClassicHttpRequest"),
+                    named("org.apache.hc.core5.http.protocol.HttpContext"),
+                    named("org.apache.hc.core5.http.io.HttpClientResponseHandler"))),
         getClass().getName() + "$RequestWithHostAndContextAndHandlerAdvice");
   }
 

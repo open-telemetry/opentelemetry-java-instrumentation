@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.log4j.appender.v2_17;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -45,12 +46,12 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
             .and(named("log"))
             .and(
                 takesArguments(
-                    "org.apache.logging.log4j.Level",
-                    "org.apache.logging.log4j.Marker",
-                    "java.lang.String",
-                    "java.lang.StackTraceElement",
-                    "org.apache.logging.log4j.message.Message",
-                    "java.lang.Throwable")),
+                    named("org.apache.logging.log4j.Level"),
+                    named("org.apache.logging.log4j.Marker"),
+                    is(String.class),
+                    is(StackTraceElement.class),
+                    named("org.apache.logging.log4j.message.Message"),
+                    is(Throwable.class))),
         getClass().getName() + "$LogAdvice");
     transformer.applyAdviceToMethod(
         isProtected()
@@ -58,11 +59,11 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
             .and(named("logMessage"))
             .and(
                 takesArguments(
-                    "java.lang.String",
-                    "org.apache.logging.log4j.Level",
-                    "org.apache.logging.log4j.Marker",
-                    "org.apache.logging.log4j.message.Message",
-                    "java.lang.Throwable")),
+                    is(String.class),
+                    named("org.apache.logging.log4j.Level"),
+                    named("org.apache.logging.log4j.Marker"),
+                    named("org.apache.logging.log4j.message.Message"),
+                    is(Throwable.class))),
         getClass().getName() + "$LogMessageAdvice");
   }
 

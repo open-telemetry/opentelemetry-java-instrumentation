@@ -56,7 +56,7 @@ public class Mongo31InstrumentationModule extends InstrumentationModule {
               declaresMethod(
                   named("addCommandListener")
                       .and(isPublic())
-                      .and(takesArguments("com.mongodb.event.CommandListener"))));
+                      .and(takesArguments(named("com.mongodb.event.CommandListener")))));
     }
 
     @Override

@@ -28,7 +28,7 @@ class R2dbcInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("find").and(takesArguments("io.r2dbc.spi.ConnectionFactoryOptions")),
+        named("find").and(takesArguments(named("io.r2dbc.spi.ConnectionFactoryOptions"))),
         getClass().getName() + "$FactoryAdvice");
   }
 

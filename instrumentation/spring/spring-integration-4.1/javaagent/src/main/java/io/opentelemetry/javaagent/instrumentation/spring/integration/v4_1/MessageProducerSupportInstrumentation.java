@@ -27,7 +27,7 @@ class MessageProducerSupportInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("sendMessage").and(takesArguments("org.springframework.messaging.Message")),
+        named("sendMessage").and(takesArguments(named("org.springframework.messaging.Message"))),
         getClass().getName() + "$SendMessageAdvice");
   }
 

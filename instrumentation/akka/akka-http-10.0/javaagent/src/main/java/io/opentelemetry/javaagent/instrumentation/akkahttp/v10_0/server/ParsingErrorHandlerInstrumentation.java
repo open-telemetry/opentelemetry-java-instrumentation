@@ -41,10 +41,10 @@ class ParsingErrorHandlerInstrumentation implements TypeInstrumentation {
             .and(not(isBridge()))
             .and(
                 takesArguments(
-                    "akka.http.scaladsl.model.StatusCode",
-                    "akka.http.scaladsl.model.ErrorInfo",
-                    "akka.event.LoggingAdapter",
-                    "akka.http.scaladsl.settings.ServerSettings")),
+                    named("akka.http.scaladsl.model.StatusCode"),
+                    named("akka.http.scaladsl.model.ErrorInfo"),
+                    named("akka.event.LoggingAdapter"),
+                    named("akka.http.scaladsl.settings.ServerSettings"))),
         getClass().getName() + "$HandleAdvice");
   }
 

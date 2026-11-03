@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.undertow.v1_4;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.undertow.v1_4.UndertowSingletons.PROPAGATED_CONTEXT;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
@@ -30,7 +31,7 @@ class HttpServerExchangeInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("dispatch").and(takesArguments(Executor.class, Runnable.class)),
+        named("dispatch").and(takesArguments(is(Executor.class), is(Runnable.class))),
         getClass().getName() + "$DispatchAdvice");
   }
 

@@ -34,7 +34,7 @@ class MemcachedNodeInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("addOp").and(takesArguments("net.spy.memcached.ops.Operation")),
+        named("addOp").and(takesArguments(named("net.spy.memcached.ops.Operation"))),
         getClass().getName() + "$AddOperationAdvice");
   }
 

@@ -37,14 +37,14 @@ class RestClientInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("performRequest").and(takesArguments("org.elasticsearch.client.Request")),
+        named("performRequest").and(takesArguments(named("org.elasticsearch.client.Request"))),
         getClass().getName() + "$PerformRequestAdvice");
     transformer.applyAdviceToMethod(
         named("performRequestAsync")
             .and(
                 takesArguments(
-                    "org.elasticsearch.client.Request",
-                    "org.elasticsearch.client.ResponseListener")),
+                    named("org.elasticsearch.client.Request"),
+                    named("org.elasticsearch.client.ResponseListener"))),
         getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 

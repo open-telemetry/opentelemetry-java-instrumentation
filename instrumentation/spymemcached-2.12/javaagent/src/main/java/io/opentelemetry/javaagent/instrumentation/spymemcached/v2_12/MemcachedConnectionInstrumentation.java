@@ -31,10 +31,12 @@ class MemcachedConnectionInstrumentation implements TypeInstrumentation {
         named("addOperation")
             .and(
                 takesArguments(
-                    "net.spy.memcached.MemcachedNode", "net.spy.memcached.ops.Operation")),
+                    named("net.spy.memcached.MemcachedNode"),
+                    named("net.spy.memcached.ops.Operation"))),
         getClass().getName() + "$AddOperationAdvice");
     transformer.applyAdviceToMethod(
-        named("redistributeOperation").and(takesArguments("net.spy.memcached.ops.Operation")),
+        named("redistributeOperation")
+            .and(takesArguments(named("net.spy.memcached.ops.Operation"))),
         getClass().getName() + "$RedistributeOperationAdvice");
   }
 

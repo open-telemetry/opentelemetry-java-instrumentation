@@ -6,7 +6,9 @@
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
@@ -31,56 +33,70 @@ class TakesArgumentsMatcherTest {
 
   @ParameterizedTest
   @MethodSource("signatureCases")
-  void matchesSignature(String methodName, String[] parameterNames, boolean expected) {
-    assertThat(takesArguments(parameterNames).matches(method(methodName))).isEqualTo(expected);
+  void matchesSignature(
+      String methodName,
+      ElementMatcher<? super TypeDescription>[] parameterMatchers,
+      boolean expected) {
+    assertThat(takesArguments(parameterMatchers).matches(method(methodName))).isEqualTo(expected);
   }
 
   private static Stream<Arguments> signatureCases() {
     return Stream.of(
         argumentSet(
-            "exact names", "exact", new String[] {"java.lang.String", "java.lang.Integer"}, true),
+            "exact names",
+            "exact",
+            matchers(named("java.lang.String"), named("java.lang.Integer")),
+            true),
         argumentSet(
             "wrong type",
             "wrongType",
-            new String[] {"java.lang.String", "java.lang.Integer"},
+            matchers(named("java.lang.String"), named("java.lang.Integer")),
             false),
         argumentSet(
             "parameter order",
             "reversed",
-            new String[] {"java.lang.String", "java.lang.Integer"},
+            matchers(named("java.lang.String"), named("java.lang.Integer")),
             false),
         argumentSet(
             "too few actual parameters",
             "tooFew",
-            new String[] {"java.lang.String", "java.lang.Integer"},
+            matchers(named("java.lang.String"), named("java.lang.Integer")),
             false),
         argumentSet(
             "too many actual parameters",
             "tooMany",
-            new String[] {"java.lang.String", "java.lang.Integer"},
+            matchers(named("java.lang.String"), named("java.lang.Integer")),
             false),
-        argumentSet("primitive names", "primitives", new String[] {"int", "boolean"}, true),
-        argumentSet("primitive array names", "primitiveArray", new String[] {"byte[]"}, true),
         argumentSet(
-            "reference array names", "referenceArray", new String[] {"java.lang.Object[]"}, true),
+            "primitive types", "primitives", matchers(is(int.class), is(boolean.class)), true),
+        argumentSet("primitive array", "primitiveArray", matchers(is(byte[].class)), true),
+        argumentSet("reference array", "referenceArray", matchers(is(Object[].class)), true),
         argumentSet(
-            "multidimensional array names",
-            "multidimensionalArray",
-            new String[] {"byte[][]"},
+            "multidimensional array", "multidimensionalArray", matchers(is(byte[][].class)), true),
+        argumentSet(
+            "wrong array component type", "primitiveArray", matchers(is(int[].class)), false),
+        argumentSet(
+            "wrong array dimension", "multidimensionalArray", matchers(is(byte[].class)), false),
+        argumentSet("empty matchers and signature", "noArguments", matchers(), true),
+        argumentSet("empty matchers and nonempty signature", "string", matchers(), false),
+        argumentSet("generic erasure", "generic", matchers(named("java.util.List")), true),
+        argumentSet(
+            "mixed name and class matchers",
+            "mixed",
+            matchers(named("java.lang.String"), is(int.class)),
             true),
-        argumentSet("wrong array component type", "primitiveArray", new String[] {"int[]"}, false),
         argumentSet(
-            "wrong array dimension", "multidimensionalArray", new String[] {"byte[]"}, false),
-        argumentSet("empty names and signature", "noArguments", new String[0], true),
-        argumentSet("empty names and nonempty signature", "string", new String[0], false),
-        argumentSet("generic erasure", "generic", new String[] {"java.util.List"}, true));
+            "multiple accepted names",
+            "string",
+            matchers(namedOneOf("java.lang.String", "java.lang.Long")),
+            true));
   }
 
   @Test
-  void expectedNamesAreCopiedOnConstruction() {
-    String[] names = {"java.lang.String"};
-    ElementMatcher.Junction<MethodDescription> matcher = takesArguments(names);
-    names[0] = "java.lang.Integer";
+  void expectedMatchersAreCopiedOnConstruction() {
+    ElementMatcher<? super TypeDescription>[] matchers = matchers(named("java.lang.String"));
+    ElementMatcher.Junction<MethodDescription> matcher = takesArguments(matchers);
+    matchers[0] = named("java.lang.Integer");
 
     assertThat(matcher.matches(method("string"))).isTrue();
   }
@@ -92,7 +108,9 @@ class TakesArgumentsMatcherTest {
     when(method.getParameters()).thenAnswer(invocation -> parameters);
     when(parameters.size()).thenReturn(1);
 
-    assertThat(takesArguments("java.lang.String", "java.lang.Integer").matches(method)).isFalse();
+    assertThat(
+            takesArguments(named("java.lang.String"), named("java.lang.Integer")).matches(method))
+        .isFalse();
 
     verify(method).getParameters();
     verify(parameters).size();
@@ -110,7 +128,9 @@ class TakesArgumentsMatcherTest {
     when(parameterTypes.get(0))
         .thenReturn(new TypeDescription.ForLoadedType(Long.class).asGenericType());
 
-    assertThat(takesArguments("java.lang.String", "java.lang.Integer").matches(method)).isFalse();
+    assertThat(
+            takesArguments(named("java.lang.String"), named("java.lang.Integer")).matches(method))
+        .isFalse();
 
     verify(parameterTypes).get(0);
     verifyNoMoreInteractions(parameterTypes);
@@ -146,4 +166,13 @@ class TakesArgumentsMatcherTest {
   private static void generic(List<String> values) {}
 
   private static void string(String value) {}
+
+  private static void mixed(String value, int number) {}
+
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  private static ElementMatcher<? super TypeDescription>[] matchers(
+      ElementMatcher<? super TypeDescription>... matchers) {
+    return matchers;
+  }
 }

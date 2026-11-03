@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.WebfluxSingletons.httpRouteGetter;
 import static io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.WebfluxSingletons.instrumenter;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -50,7 +51,7 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
             .and(named("handle"))
             .and(
                 takesArguments(
-                    "org.springframework.web.server.ServerWebExchange", "java.lang.Object")),
+                    named("org.springframework.web.server.ServerWebExchange"), is(Object.class))),
         getClass().getName() + "$HandleAdvice");
   }
 

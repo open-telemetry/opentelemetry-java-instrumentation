@@ -39,7 +39,7 @@ class BootstrapInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArguments(0)), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        named("resolver").and(takesArguments("io.netty.resolver.AddressResolverGroup")),
+        named("resolver").and(takesArguments(named("io.netty.resolver.AddressResolverGroup"))),
         getClass().getName() + "$SetResolverAdvice");
     transformer.applyAdviceToMethod(
         named("doConnect")

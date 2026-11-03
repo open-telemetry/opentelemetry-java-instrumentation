@@ -45,8 +45,8 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
         named("execute")
             .and(
                 takesArguments(
-                    "play.shaded.ahc.org.asynchttpclient.Request",
-                    "play.shaded.ahc.org.asynchttpclient.AsyncHandler")),
+                    named("play.shaded.ahc.org.asynchttpclient.Request"),
+                    named("play.shaded.ahc.org.asynchttpclient.AsyncHandler"))),
         adviceName);
   }
 }

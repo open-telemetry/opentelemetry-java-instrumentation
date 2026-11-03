@@ -30,7 +30,7 @@ final class MongoClientSettingsBuildersInstrumentation implements TypeInstrument
             declaresMethod(
                 named("addCommandListener")
                     .and(isPublic())
-                    .and(takesArguments("com.mongodb.event.CommandListener"))))
+                    .and(takesArguments(named("com.mongodb.event.CommandListener")))))
         .and(declaresField(named("commandListeners")));
   }
 

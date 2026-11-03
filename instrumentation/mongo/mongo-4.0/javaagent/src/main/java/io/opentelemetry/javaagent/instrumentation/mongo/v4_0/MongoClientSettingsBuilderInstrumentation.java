@@ -29,7 +29,7 @@ final class MongoClientSettingsBuilderInstrumentation implements TypeInstrumenta
             declaresMethod(
                 named("addCommandListener")
                     .and(isPublic())
-                    .and(takesArguments("com.mongodb.event.CommandListener"))));
+                    .and(takesArguments(named("com.mongodb.event.CommandListener")))));
   }
 
   @Override

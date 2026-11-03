@@ -38,7 +38,7 @@ class ContainerRequestFilterInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("filter").and(takesArguments("javax.ws.rs.container.ContainerRequestContext")),
+        named("filter").and(takesArguments(named("javax.ws.rs.container.ContainerRequestContext"))),
         getClass().getName() + "$RequestFilterAdvice");
   }
 

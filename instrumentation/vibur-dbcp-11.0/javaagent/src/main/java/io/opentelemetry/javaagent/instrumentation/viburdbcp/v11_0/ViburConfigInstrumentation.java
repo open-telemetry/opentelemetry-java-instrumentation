@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.viburdbcp.v11_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -27,7 +28,7 @@ final class ViburConfigInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic().and(named("setName")).and(takesArguments(String.class)),
+        isPublic().and(named("setName")).and(takesArguments(is(String.class))),
         getClass().getName() + "$SetNameAdvice");
   }
 

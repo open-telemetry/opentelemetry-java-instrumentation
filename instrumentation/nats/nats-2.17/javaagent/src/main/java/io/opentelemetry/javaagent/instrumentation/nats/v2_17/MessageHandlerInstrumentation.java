@@ -32,7 +32,7 @@ class MessageHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic().and(named("onMessage")).and(takesArguments("io.nats.client.Message")),
+        isPublic().and(named("onMessage")).and(takesArguments(named("io.nats.client.Message"))),
         getClass().getName() + "$OnMessageAdvice");
   }
 

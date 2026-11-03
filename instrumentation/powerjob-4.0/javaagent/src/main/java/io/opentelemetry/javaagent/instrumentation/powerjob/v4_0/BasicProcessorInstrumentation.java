@@ -40,7 +40,7 @@ class BasicProcessorInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("process")
             .and(isPublic())
-            .and(takesArguments("tech.powerjob.worker.core.processor.TaskContext")),
+            .and(takesArguments(named("tech.powerjob.worker.core.processor.TaskContext"))),
         getClass().getName() + "$ProcessAdvice");
   }
 

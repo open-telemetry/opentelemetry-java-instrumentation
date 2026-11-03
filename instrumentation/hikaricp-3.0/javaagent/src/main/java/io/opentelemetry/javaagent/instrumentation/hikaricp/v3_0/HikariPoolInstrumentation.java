@@ -32,7 +32,7 @@ class HikariPoolInstrumentation implements TypeInstrumentation {
     // configure anything
     transformer.applyAdviceToMethod(
         named("setMetricsTrackerFactory")
-            .and(takesArguments("com.zaxxer.hikari.metrics.MetricsTrackerFactory")),
+            .and(takesArguments(named("com.zaxxer.hikari.metrics.MetricsTrackerFactory"))),
         getClass().getName() + "$SetMetricsTrackerFactoryAdvice");
   }
 

@@ -50,7 +50,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments("org.apache.http.client.methods.HttpUriRequest")),
+            .and(takesArguments(named("org.apache.http.client.methods.HttpUriRequest"))),
         getClass().getName() + "$UriRequestAdvice");
 
     transformer.applyAdviceToMethod(
@@ -58,8 +58,8 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(not(isAbstract()))
             .and(
                 takesArguments(
-                    "org.apache.http.client.methods.HttpUriRequest",
-                    "org.apache.http.protocol.HttpContext")),
+                    named("org.apache.http.client.methods.HttpUriRequest"),
+                    named("org.apache.http.protocol.HttpContext"))),
         getClass().getName() + "$UriRequestAdvice");
 
     transformer.applyAdviceToMethod(
@@ -67,8 +67,8 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(not(isAbstract()))
             .and(
                 takesArguments(
-                    "org.apache.http.client.methods.HttpUriRequest",
-                    "org.apache.http.client.ResponseHandler")),
+                    named("org.apache.http.client.methods.HttpUriRequest"),
+                    named("org.apache.http.client.ResponseHandler"))),
         getClass().getName() + "$UriRequestWithHandlerAdvice");
 
     transformer.applyAdviceToMethod(
@@ -76,15 +76,17 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(not(isAbstract()))
             .and(
                 takesArguments(
-                    "org.apache.http.client.methods.HttpUriRequest",
-                    "org.apache.http.client.ResponseHandler",
-                    "org.apache.http.protocol.HttpContext")),
+                    named("org.apache.http.client.methods.HttpUriRequest"),
+                    named("org.apache.http.client.ResponseHandler"),
+                    named("org.apache.http.protocol.HttpContext"))),
         getClass().getName() + "$UriRequestWithHandlerAdvice");
 
     transformer.applyAdviceToMethod(
         named("execute")
             .and(not(isAbstract()))
-            .and(takesArguments("org.apache.http.HttpHost", "org.apache.http.HttpRequest")),
+            .and(
+                takesArguments(
+                    named("org.apache.http.HttpHost"), named("org.apache.http.HttpRequest"))),
         getClass().getName() + "$RequestAdvice");
 
     transformer.applyAdviceToMethod(
@@ -92,9 +94,9 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(not(isAbstract()))
             .and(
                 takesArguments(
-                    "org.apache.http.HttpHost",
-                    "org.apache.http.HttpRequest",
-                    "org.apache.http.protocol.HttpContext")),
+                    named("org.apache.http.HttpHost"),
+                    named("org.apache.http.HttpRequest"),
+                    named("org.apache.http.protocol.HttpContext"))),
         getClass().getName() + "$RequestAdvice");
 
     transformer.applyAdviceToMethod(
@@ -102,9 +104,9 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(not(isAbstract()))
             .and(
                 takesArguments(
-                    "org.apache.http.HttpHost",
-                    "org.apache.http.HttpRequest",
-                    "org.apache.http.client.ResponseHandler")),
+                    named("org.apache.http.HttpHost"),
+                    named("org.apache.http.HttpRequest"),
+                    named("org.apache.http.client.ResponseHandler"))),
         getClass().getName() + "$RequestWithHandlerAdvice");
 
     transformer.applyAdviceToMethod(
@@ -112,10 +114,10 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
             .and(not(isAbstract()))
             .and(
                 takesArguments(
-                    "org.apache.http.HttpHost",
-                    "org.apache.http.HttpRequest",
-                    "org.apache.http.client.ResponseHandler",
-                    "org.apache.http.protocol.HttpContext")),
+                    named("org.apache.http.HttpHost"),
+                    named("org.apache.http.HttpRequest"),
+                    named("org.apache.http.client.ResponseHandler"),
+                    named("org.apache.http.protocol.HttpContext"))),
         getClass().getName() + "$RequestWithHandlerAdvice");
   }
 
