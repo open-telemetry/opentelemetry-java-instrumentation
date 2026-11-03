@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsf.myfaces.v3_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jsf.common.jakarta.JsfServerSpanNaming;
@@ -36,7 +36,7 @@ class RestoreViewExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Argument(0) FacesContext facesContext) {
-      JsfServerSpanNaming.updateViewName(currentContext(), facesContext);
+      JsfServerSpanNaming.updateViewName(Context.current(), facesContext);
     }
   }
 }

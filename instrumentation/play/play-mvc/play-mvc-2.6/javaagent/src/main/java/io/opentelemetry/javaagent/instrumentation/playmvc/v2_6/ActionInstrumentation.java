@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.playmvc.v2_6;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.playmvc.v2_6.Play26Singletons.instrumenter;
@@ -94,7 +93,7 @@ class ActionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static AdviceScope onEnter() {
-      return AdviceScope.start(currentContext());
+      return AdviceScope.start(Context.current());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

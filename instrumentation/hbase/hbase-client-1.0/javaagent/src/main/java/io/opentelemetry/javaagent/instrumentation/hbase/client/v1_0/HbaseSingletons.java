@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseRequest;
 
 public class HbaseSingletons {
 

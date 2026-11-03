@@ -1,6 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
-
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -22,18 +19,21 @@ dependencies {
 
 testing {
   suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          systemProperty("testLatestDeps", otelProps.testLatestDeps)
-        }
-        register("PreviewSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "rpc")
-        }
-        register("BothSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "rpc/dup")
-        }
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:thrift-0.13:testing"))
       }
     }
   }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+}
+
+tasks.test {
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
 }

@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -110,7 +111,7 @@ class Netty40ConnectionSpanTest {
                   span.hasAttributesSatisfyingExactly(
                       equalTo(NETWORK_TRANSPORT, "tcp"),
                       equalTo(NETWORK_TYPE, "ipv4"),
-                      equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                      equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                       equalTo(SERVER_ADDRESS, uri.getHost()),
                       equalTo(SERVER_PORT, uri.getPort()),
                       equalTo(NETWORK_PEER_PORT, uri.getPort()),
@@ -142,7 +143,7 @@ class Netty40ConnectionSpanTest {
                       satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", null)),
                       equalTo(SERVER_ADDRESS, uri.getHost()),
                       equalTo(SERVER_PORT, uri.getPort()),
-                      equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                      equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                       satisfies(NETWORK_PEER_PORT, val -> val.isIn((long) uri.getPort(), null)),
                       satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn("127.0.0.1", null)));
                 }));

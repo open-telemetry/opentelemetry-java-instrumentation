@@ -20,8 +20,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
@@ -41,7 +39,6 @@ import com.amazonaws.services.sqs.model.SendMessageRequest;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
@@ -69,8 +66,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest extends AbstractAwsSdk
 
   @BeforeEach
   void setUp() {
-    sqsPort = PortUtils.findOpenPort();
-    sqsRestServer = SQSRestServerBuilder.withPort(sqsPort).withInterface("localhost").start();
+    sqsRestServer = SQSRestServerBuilder.withPort(0).withInterface("localhost").start();
+    sqsPort = sqsRestServer.waitUntilStarted().localAddress().getPort();
 
     AWSStaticCredentialsProvider credentials =
         new AWSStaticCredentialsProvider(new BasicAWSCredentials("x", "x"));
@@ -358,7 +355,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest extends AbstractAwsSdk
             equalTo(URL_FULL, "http://localhost:" + sqsPort),
             equalTo(SERVER_ADDRESS, "localhost"),
             equalTo(SERVER_PORT, sqsPort),
-            equalTo(MESSAGING_SYSTEM, AWS_SQS),
+            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
             equalTo(MESSAGING_OPERATION_NAME, "send"),
             equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -382,7 +379,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest extends AbstractAwsSdk
             equalTo(URL_FULL, "http://localhost:" + sqsPort),
             equalTo(SERVER_ADDRESS, "localhost"),
             equalTo(SERVER_PORT, sqsPort),
-            equalTo(MESSAGING_SYSTEM, AWS_SQS),
+            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
             equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
             equalTo(MESSAGING_OPERATION_NAME, "process"),
             equalTo(MESSAGING_OPERATION_TYPE, "process"),

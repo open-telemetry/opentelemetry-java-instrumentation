@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -149,11 +148,20 @@ class ApacheHttpClientRequest {
   }
 
   @Nullable
-  InetSocketAddress getNetworkPeerAddress() {
+  String getNetworkPeerAddress() {
     if (target == null) {
       return null;
     }
     InetAddress inetAddress = target.getAddress();
-    return inetAddress == null ? null : new InetSocketAddress(inetAddress, target.getPort());
+    return inetAddress == null ? null : inetAddress.getHostAddress();
+  }
+
+  @Nullable
+  Integer getNetworkPeerPort() {
+    if (target == null || target.getAddress() == null) {
+      return null;
+    }
+    int port = target.getPort();
+    return port > 0 ? port : null;
   }
 }

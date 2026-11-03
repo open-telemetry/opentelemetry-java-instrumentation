@@ -24,8 +24,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
@@ -57,8 +55,6 @@ import com.amazonaws.services.sqs.model.SendMessageBatchRequestEntry;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -88,10 +84,7 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
   private static AmazonSQSAsync sqsClient;
 
   protected boolean receiveTelemetryEnabled() {
-    return testing() instanceof AgentInstrumentationExtension
-        ? Boolean.getBoolean(
-            "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled")
-        : Boolean.getBoolean("test.messagingReceiveTelemetryEnabled");
+    return Boolean.getBoolean("test.messagingReceiveTelemetryEnabled");
   }
 
   protected abstract AmazonSQSAsyncClientBuilder configureClient(
@@ -109,8 +102,8 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
 
   @BeforeEach
   void setUp() {
-    sqsPort = PortUtils.findOpenPort();
-    sqsRestServer = SQSRestServerBuilder.withPort(sqsPort).withInterface("localhost").start();
+    sqsRestServer = SQSRestServerBuilder.withPort(0).withInterface("localhost").start();
+    sqsPort = sqsRestServer.waitUntilStarted().localAddress().getPort();
 
     sqsClient = configureClient(newClientBuilder()).build();
   }
@@ -226,7 +219,7 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
                 equalTo(SERVER_ADDRESS, "localhost"),
                 equalTo(SERVER_PORT, sqsPort),
-                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
                 equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                 satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1")));
@@ -267,7 +260,7 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
                 equalTo(SERVER_ADDRESS, "localhost"),
                 equalTo(SERVER_PORT, sqsPort),
-                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
                 equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1")));
@@ -317,7 +310,7 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
                 equalTo(SERVER_ADDRESS, "localhost"),
                 equalTo(SERVER_PORT, sqsPort),
-                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
                 equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                 satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1")));
@@ -534,7 +527,7 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                           .hasKind(SpanKind.PRODUCER)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                              equalTo(stringKey("messaging.system.name"), "aws.sqs"),
                               equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                               equalTo(MESSAGING_OPERATION_NAME, "create"),
                               equalTo(MESSAGING_OPERATION_TYPE, "create")));
@@ -547,7 +540,7 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                           .hasKind(SpanKind.PRODUCER)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                              equalTo(stringKey("messaging.system.name"), "aws.sqs"),
                               equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                               equalTo(MESSAGING_OPERATION_NAME, "create"),
                               equalTo(MESSAGING_OPERATION_TYPE, "create")));
@@ -560,7 +553,7 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                           .hasKind(SpanKind.PRODUCER)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                              equalTo(stringKey("messaging.system.name"), "aws.sqs"),
                               equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                               equalTo(MESSAGING_OPERATION_NAME, "create"),
                               equalTo(MESSAGING_OPERATION_TYPE, "create")));
@@ -584,7 +577,7 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, sqsPort),
-                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
                                 equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -638,7 +631,7 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, sqsPort),
                                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
                                 equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                                 equalTo(MESSAGING_OPERATION_NAME, "delete"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "settle"))));
@@ -677,7 +670,7 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                                   equalTo(SERVER_ADDRESS, "localhost"),
                                   equalTo(SERVER_PORT, sqsPort),
                                   equalTo(NETWORK_PROTOCOL_VERSION, "1.1")));
-                      attributes.add(equalTo(MESSAGING_SYSTEM, AWS_SQS));
+                      attributes.add(equalTo(stringKey("messaging.system.name"), "aws.sqs"));
                       attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
                       attributes.add(equalTo(MESSAGING_OPERATION_NAME, "delete"));
                       attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
@@ -805,7 +798,7 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, sqsPort),
-                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
+                                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
                                 equalTo(MESSAGING_DESTINATION_NAME, "missing"),
                                 equalTo(MESSAGING_OPERATION_NAME, "delete"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "settle"),

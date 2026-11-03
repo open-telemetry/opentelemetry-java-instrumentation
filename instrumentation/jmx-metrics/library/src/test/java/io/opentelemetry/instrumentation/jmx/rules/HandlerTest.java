@@ -71,6 +71,11 @@ class HandlerTest {
     JmxTelemetry telemetry =
         JmxTelemetry.builder(testing.getOpenTelemetry())
             .addRules(getClass().getResourceAsStream("/jmx/rules/handler.yaml"))
+            .setInternalMetricsSystemFilter(IncludeExclude.builder().setIncluded("jvm").build())
+            .setMetrics(
+                IncludeExclude.builder()
+                    .setIncluded("test.thread.count", "jvm.thread.count")
+                    .build())
             .setServiceClassLoader(
                 new ClassLoader(this.getClass().getClassLoader()) {
                   @Override
@@ -90,6 +95,21 @@ class HandlerTest {
         metric ->
             metric
                 .hasName("test.thread.count")
+                .satisfies(
+                    data -> assertThat(data.getInstrumentationScopeInfo().getSchemaUrl()).isNull())
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.isNotMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point.hasValueSatisfying(value -> value.isGreaterThan(0)))),
+        metric ->
+            metric
+                .hasName("jvm.thread.count")
+                .satisfies(
+                    data ->
+                        assertThat(data.getInstrumentationScopeInfo().getSchemaUrl())
+                            .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
                 .hasLongSumSatisfying(
                     sum ->
                         sum.isNotMonotonic()

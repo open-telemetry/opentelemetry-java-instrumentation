@@ -12,7 +12,6 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcClientExceptionEventExtractor;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
@@ -47,8 +46,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessContextCustomizer;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
-import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSemconvSelection;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -58,6 +55,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -163,26 +161,28 @@ public final class AwsSdkInstrumenterFactory {
       httpClientSuppressionAttributesExtractor =
           new AwsSdkHttpClientSuppressionAttributesExtractor();
 
-  private final AttributesExtractor<ExecutionAttributes, Response> rpcAttributesExtractor =
-      RpcClientAttributesExtractor.create(new AwsSdkRpcAttributesGetter());
+  private static final AttributesExtractor<ExecutionAttributes, Response>
+      awsSdkAttributesExtractor = new AwsSdkAttributesExtractor();
 
   private final List<AttributesExtractor<ExecutionAttributes, Response>>
       defaultAttributesExtractors =
-          asList(rpcAttributesExtractor, httpClientSuppressionAttributesExtractor);
+          asList(awsSdkAttributesExtractor, httpClientSuppressionAttributesExtractor);
 
   private final List<AttributesExtractor<ExecutionAttributes, Response>>
       extendedAttributesExtractors =
           asList(
-              rpcAttributesExtractor,
+              awsSdkAttributesExtractor,
               experimentalAttributesExtractor,
               httpClientSuppressionAttributesExtractor);
 
   private final List<AttributesExtractor<ExecutionAttributes, Response>>
-      defaultConsumerAttributesExtractors = asList(rpcAttributesExtractor, httpAttributesExtractor);
+      defaultConsumerAttributesExtractors =
+          asList(awsSdkAttributesExtractor, httpAttributesExtractor);
 
   private final List<AttributesExtractor<ExecutionAttributes, Response>>
       extendedConsumerAttributesExtractors =
-          asList(rpcAttributesExtractor, httpAttributesExtractor, experimentalAttributesExtractor);
+          asList(
+              awsSdkAttributesExtractor, httpAttributesExtractor, experimentalAttributesExtractor);
 
   private final OpenTelemetry openTelemetry;
   @Nullable private final TextMapPropagator messagingPropagator;
@@ -212,7 +212,7 @@ public final class AwsSdkInstrumenterFactory {
         AwsSdkInstrumenterFactory::spanName,
         SpanKindExtractor.alwaysClient(),
         attributesExtractors(),
-        builder -> setRpcClientExceptionEventExtractor(builder),
+        builder -> {},
         true);
   }
 
@@ -511,7 +511,7 @@ public final class AwsSdkInstrumenterFactory {
     InstrumenterBuilder<REQUEST, RESPONSE> builder =
         Instrumenter.<REQUEST, RESPONSE>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-            .setSchemaUrl(RpcSemconvSelection.Selection.forOpenTelemetry(openTelemetry).schemaUrl())
+            .setSchemaUrl(SchemaUrls.V1_44_0)
             .addAttributesExtractors(attributeExtractors)
             .setEnabled(enabled);
     customizer.accept(builder);

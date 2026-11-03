@@ -1,6 +1,4 @@
 import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
-
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -92,9 +90,6 @@ tasks {
         if (ratpack14Test) {
           systemProperty("ratpack14Test", true)
         }
-      }
-      register("PreviewSemconv") {
-        telemetryConfig("otel.semconv-stability.preview", "service.peer")
       }
       register("ControllerTelemetryDisabled") {
         filter {

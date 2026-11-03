@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-testing")
 }
@@ -17,24 +20,11 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
-tasks {
-
-  withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-body.enabled=true")
-  }
-
-  val testRequestParameterCapture = register<Test>("testRequestParameterCapture") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-parameter")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.servlet.experimental.request-parameters.included=test-parameter",
-    )
-  }
-
-  check {
-    dependsOn(testRequestParameterCapture)
+testing.suites {
+  executions("test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.included", "test-parameter")
+      telemetryConfig("otel.instrumentation.servlet.experimental.capture-request-body.enabled","true")
+    }
   }
 }

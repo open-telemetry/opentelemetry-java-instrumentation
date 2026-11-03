@@ -28,7 +28,6 @@ val DEPENDENCY_BOMS = listOf(
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
   "com.fasterxml.jackson:jackson-bom:2.22.4",
-  "com.google.guava:guava-bom:33.7.2-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
@@ -37,8 +36,8 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.1"
-val errorProneVersion = "2.50.0"
-val byteBuddyVersion = "1.18.14"
+val errorProneVersion = "2.52.0"
+val byteBuddyVersion = "1.18.17"
 val asmVersion = "9.11.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
@@ -86,7 +85,7 @@ val DEPENDENCIES = listOf(
   "io.r2dbc:r2dbc-proxy:1.1.7.RELEASE",
   "ch.qos.logback:logback-classic:1.3.16", // 1.4+ requires Java 11+
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.14.2",
+  "com.uber.nullaway:nullaway:0.14.3",
   "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.11.0",
   "commons-codec:commons-codec:1.23.0",
@@ -118,13 +117,7 @@ val DEPENDENCIES = listOf(
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.10",
   "org.elasticmq:elasticmq-rest-sqs_2.13:1.7.1",
-  "io.github.netmikey.logunit:logunit-jul:2.0.0",
-
-  // OSGi runtime verification (see :smoke-tests-osgi). Versions track opentelemetry-java's osgi tests.
-  "org.apache.felix:org.apache.felix.framework:7.0.5",
-  "org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.8",
-  "org.osgi:osgi.core:8.0.0",
-  "org.osgi:org.osgi.test.junit5:1.3.0"
+  "io.github.netmikey.logunit:logunit-jul:2.0.0"
 )
 
 javaPlatform {

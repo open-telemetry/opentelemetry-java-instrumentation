@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbExceptionEventExtractors.setDbClientExceptionEventExtractor;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
@@ -17,19 +18,24 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSche
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import retrofit2.Callback;
 
 public class InfluxDbSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.influxdb-2.4";
 
-  private static final Instrumenter<InfluxDbQuery, Void> queryInstrumenter;
+  private static final Instrumenter<InfluxDbQuery, InfluxDbResponse> queryInstrumenter;
   private static final Instrumenter<InfluxDbOperation, Void> requestInstrumenter;
+  public static final VirtualField<Callback<?>, InfluxDbQueryState> CALLBACK_QUERY_STATE =
+      VirtualField.find(Callback.class, InfluxDbQueryState.class);
 
   static {
     InfluxDbQueryAttributesGetter queryAttributesGetter = new InfluxDbQueryAttributesGetter();
 
-    InstrumenterBuilder<InfluxDbQuery, Void> queryBuilder =
-        Instrumenter.<InfluxDbQuery, Void>builder(
+    InstrumenterBuilder<InfluxDbQuery, InfluxDbResponse> queryBuilder =
+        Instrumenter.<InfluxDbQuery, InfluxDbResponse>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(queryAttributesGetter))
@@ -39,6 +45,14 @@ public class InfluxDbSingletons {
                         DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "influxdb"))
                     .build())
             .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
+            .setSpanStatusExtractor(
+                (status, request, response, error) -> {
+                  if (response != null && response.getErrorType() != null) {
+                    status.setStatus(StatusCode.ERROR);
+                  } else {
+                    SpanStatusExtractor.getDefault().extract(status, request, response, error);
+                  }
+                })
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(queryBuilder);
 
@@ -59,7 +73,7 @@ public class InfluxDbSingletons {
     requestInstrumenter = modifyBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  public static Instrumenter<InfluxDbQuery, Void> queryInstrumenter() {
+  public static Instrumenter<InfluxDbQuery, InfluxDbResponse> queryInstrumenter() {
     return queryInstrumenter;
   }
 

@@ -51,7 +51,7 @@ class JdbcTelemetryTest {
   @Test
   void buildWithDefaults() throws SQLException {
     JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
-    DataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.instrument(new TestDataSource());
 
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
@@ -84,7 +84,7 @@ class JdbcTelemetryTest {
   @MethodSource("groupTargets")
   void groupTargetUsesNormalizedPorts(String url, String expectedAddress) throws SQLException {
     JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
-    DataSource dataSource = telemetry.wrap(new TestDataSource(url));
+    DataSource dataSource = telemetry.instrument(new TestDataSource(url));
 
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
@@ -122,7 +122,7 @@ class JdbcTelemetryTest {
   void spanNameFallsBackToGroupTarget() throws SQLException {
     JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
     DataSource dataSource =
-        telemetry.wrap(new TestDataSource("jdbc:postgresql://pg.host1:15432,pg.host2:15432"));
+        telemetry.instrument(new TestDataSource("jdbc:postgresql://pg.host1:15432,pg.host2:15432"));
 
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("invalid"));
@@ -149,7 +149,7 @@ class JdbcTelemetryTest {
     doThrow(new SQLException("BOOM", sqlState, errorCode))
         .when(statement)
         .execute(Mockito.anyString());
-    DataSource dataSource = telemetry.wrap(source);
+    DataSource dataSource = telemetry.instrument(source);
 
     assertThatCode(
             () ->
@@ -216,7 +216,7 @@ class JdbcTelemetryTest {
             .setTransactionInstrumenterEnabled(false)
             .build();
 
-    DataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.instrument(new TestDataSource());
 
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
@@ -232,7 +232,7 @@ class JdbcTelemetryTest {
             .setDataSourceInstrumenterEnabled(false)
             .build();
 
-    DataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.instrument(new TestDataSource());
 
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
@@ -251,7 +251,7 @@ class JdbcTelemetryTest {
             .setStatementInstrumenterEnabled(false)
             .build();
 
-    DataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.instrument(new TestDataSource());
 
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
@@ -270,7 +270,7 @@ class JdbcTelemetryTest {
             .setTransactionInstrumenterEnabled(true)
             .build();
 
-    DataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.instrument(new TestDataSource());
 
     testing.runWithSpan(
         "parent",
@@ -295,7 +295,7 @@ class JdbcTelemetryTest {
             .setTransactionInstrumenterEnabled(true)
             .build();
 
-    DataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.instrument(new TestDataSource());
 
     testing.runWithSpan("parent", () -> dataSource.getConnection().commit());
 
@@ -327,7 +327,7 @@ class JdbcTelemetryTest {
             .setQuerySanitizationEnabled(false)
             .build();
 
-    DataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.instrument(new TestDataSource());
 
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
@@ -342,7 +342,7 @@ class JdbcTelemetryTest {
   @Test
   void statementReturnsWrappedConnection() throws SQLException {
     JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
-    DataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.instrument(new TestDataSource());
     Connection connection = dataSource.getConnection();
     Statement statement = connection.createStatement();
     assertThat(statement.getConnection()).isInstanceOf(OpenTelemetryConnection.class);
@@ -355,7 +355,7 @@ class JdbcTelemetryTest {
   @Test
   void batchStatement() throws SQLException {
     JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
-    DataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.instrument(new TestDataSource());
 
     testing.runWithSpan(
         "parent",

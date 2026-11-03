@@ -7,21 +7,22 @@ package io.opentelemetry.javaagent.instrumentation.gwt.v2_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -58,8 +59,7 @@ class GwtTest {
   private static URI address;
 
   private static void startServer() throws Exception {
-    port = PortUtils.findOpenPort();
-    server = new Server(port);
+    server = new Server(0);
     for (Connector connector : server.getConnectors()) {
       ((ServerConnector) connector).setHost("localhost");
     }
@@ -70,6 +70,7 @@ class GwtTest {
 
     server.setHandler(webAppContext);
     server.start();
+    port = ((ServerConnector) server.getConnectors()[0]).getLocalPort();
   }
 
   private static void stopServer() throws Exception {
@@ -105,7 +106,6 @@ class GwtTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // using deprecated semconv
   void testGwt() {
     RemoteWebDriver driver = getDriver();
     cleanup.deferCleanup(driver::close);
@@ -162,13 +162,14 @@ class GwtTest {
                         .hasNoParent(),
                 span ->
                     span.hasName("test.gwt.shared.MessageService/sendMessage")
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, "gwt"),
-                            equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
-                            equalTo(RPC_METHOD, "sendMessage"))));
+                            equalTo(RPC_SYSTEM_NAME, "gwt"),
+                            equalTo(RPC_METHOD, "test.gwt.shared.MessageService/sendMessage"))));
 
+    assertDurationMetrics(null);
     testing.clearData();
 
     // click a button to trigger calling java code
@@ -184,15 +185,17 @@ class GwtTest {
                         .hasNoParent(),
                 span ->
                     span.hasName("test.gwt.shared.MessageService/sendMessage")
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
                         .hasException(emitExceptionAsSpanEvents() ? new IOException() : null)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, "gwt"),
-                            equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
-                            equalTo(RPC_METHOD, "sendMessage"))));
+                            equalTo(RPC_SYSTEM_NAME, "gwt"),
+                            equalTo(RPC_METHOD, "test.gwt.shared.MessageService/sendMessage"),
+                            equalTo(ERROR_TYPE, IOException.class.getName()))));
 
+    assertDurationMetrics(IOException.class.getName());
     if (emitExceptionAsLogs()) {
       SpanData rpcSpan =
           testing.spans().stream()
@@ -207,5 +210,31 @@ class GwtTest {
                   .hasSpanContext(rpcSpan.getSpanContext())
                   .hasException(new IOException()));
     }
+  }
+
+  private static void assertDurationMetrics(String errorType) {
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.gwt-2.0",
+        metric ->
+            metric
+                .hasName("rpc.server.call.duration")
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                .hasUnit("s")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasSumGreaterThan(0)
+                                    .hasBucketBoundaries(
+                                        0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0,
+                                        5.0, 10.0, 50.0, 100.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(RPC_SYSTEM_NAME, "gwt"),
+                                        equalTo(
+                                            RPC_METHOD,
+                                            "test.gwt.shared.MessageService/sendMessage"),
+                                        equalTo(ERROR_TYPE, errorType)))));
   }
 }

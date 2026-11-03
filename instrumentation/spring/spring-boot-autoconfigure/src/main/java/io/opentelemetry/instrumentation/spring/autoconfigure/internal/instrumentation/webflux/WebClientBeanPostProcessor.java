@@ -59,7 +59,7 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
             .filters(
                 filters -> {
                   if (isFilterNotPresent(filters)) {
-                    getWebfluxClientTelemetry(openTelemetry).addFilter(filters);
+                    filters.add(getWebfluxClientTelemetry(openTelemetry).createFilter());
                     filterAdded.set(true);
                   }
                 });

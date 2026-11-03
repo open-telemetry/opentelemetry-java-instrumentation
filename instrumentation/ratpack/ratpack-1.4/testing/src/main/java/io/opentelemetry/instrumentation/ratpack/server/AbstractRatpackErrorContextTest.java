@@ -12,7 +12,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -67,10 +66,7 @@ public abstract class AbstractRatpackErrorContextTest {
             spec ->
                 spec.serverConfig(
                         config ->
-                            config
-                                .port(PortUtils.findOpenPort())
-                                .address(InetAddress.getByName("localhost"))
-                                .threads(1))
+                            config.port(0).address(InetAddress.getByName("localhost")).threads(1))
                     .handlers(
                         chain -> {
                           chain.register(
@@ -137,10 +133,7 @@ public abstract class AbstractRatpackErrorContextTest {
         RatpackServer.start(
             spec ->
                 spec.serverConfig(
-                        config ->
-                            config
-                                .port(PortUtils.findOpenPort())
-                                .address(InetAddress.getByName("localhost")))
+                        config -> config.port(0).address(InetAddress.getByName("localhost")))
                     .handlers(
                         chain -> {
                           chain.get(
@@ -154,7 +147,7 @@ public abstract class AbstractRatpackErrorContextTest {
                                                   .get(
                                                       new URI(
                                                           "http://localhost:"
-                                                              + ctx.getServerConfig().getPort()
+                                                              + server.getBindPort()
                                                               + "/downstream"))
                                                   .then(
                                                       response ->

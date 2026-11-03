@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONNECTION_DATABASE_INDEX;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.connectInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -79,7 +78,7 @@ class LettuceConnectInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static AdviceScope onEnter(@Advice.Argument(1) RedisURI redisUri) {
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       if (!connectInstrumenter().shouldStart(parentContext, redisUri)) {
         return null;
       }

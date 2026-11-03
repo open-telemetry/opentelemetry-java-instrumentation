@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -41,35 +44,24 @@ dependencies {
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+") // documented limitation
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // skip jar scanning using environment variables:
-    // http://tomcat.apache.org/tomcat-7.0-doc/config/systemprops.html#JAR_Scanning
-    // having this set allows us to test with old versions of the tomcat api since
-    // JarScanFilter did not exist in the tomcat 7 api
-    jvmArgs("-Dorg.apache.catalina.startup.ContextConfig.jarsToSkip=*")
-    jvmArgs("-Dorg.apache.catalina.startup.TldConfig.jarsToSkip=*")
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      // skip jar scanning using environment variables:
+      // http://tomcat.apache.org/tomcat-7.0-doc/config/systemprops.html#JAR_Scanning
+      // having this set allows us to test with old versions of the tomcat api since
+      // JarScanFilter did not exist in the tomcat 7 api
+      jvmArgs("-Dorg.apache.catalina.startup.ContextConfig.jarsToSkip=*")
+      jvmArgs("-Dorg.apache.catalina.startup.TldConfig.jarsToSkip=*")
 
-    // required on jdk17
-    jvmArgs("--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED")
-    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    jvmArgs("-Dotel.instrumentation.common.view-telemetry.enabled=true")
-  }
-
-  test {
-    systemProperty("metadataConfig", "otel.instrumentation.common.view-telemetry.enabled=true")
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.jsp.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true")
-  }
-
-  check {
-    dependsOn(testExperimental)
+      // required on jdk17
+      jvmArgs("--add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED")
+      jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+      telemetryConfig("otel.instrumentation.common.view-telemetry.enabled", "true")
+    }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.jsp.experimental-span-attributes", "true")
+    }
   }
 }

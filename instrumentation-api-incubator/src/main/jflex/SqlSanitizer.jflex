@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 %unicode
 %ignorecase
 
-%state DOLLAR_STRING
+%state BLOCK_COMMENT DOLLAR_STRING
 
 COMMA                = ","
 OPEN_PAREN           = "("
@@ -46,6 +46,7 @@ DOLLAR_QUOTED_STR    = "$$" [^$]* "$$"
 DOLLAR_TAG_START     = "$" {UNQUOTED_IDENTIFIER} "$"
 BACKTICK_QUOTED_STR  = "`" ("``" | [^`])* "`"
 BRACKET_QUOTED_STR   = "[" [^\]]* "]"
+UNTERMINATED_BRACKET_STR = "[" [^\]]*
 POSTGRE_PARAM_MARKER = "$"[0-9]*
 WHITESPACE           = [ \t\r\n]+
 
@@ -84,6 +85,49 @@ WHITESPACE           = [ \t\r\n]+
 
   private void appendCurrentFragment() {
     builder.append(zzBuffer, zzStartRead, zzMarkedPos - zzStartRead);
+  }
+
+  private boolean appendCommentLiteral(boolean sanitize) {
+    String text = yytext();
+    if (text.contains("/*") || text.contains("*/")) {
+      // Quotes have no syntactic meaning in a block comment and cannot hide its delimiters.
+      yypushback(yylength() - 1);
+      appendCurrentFragment();
+    } else if (sanitizeAmbiguousRemainder()) {
+      return true;
+    } else if (sanitize) {
+      builder.append('?');
+    } else {
+      appendCurrentFragment();
+    }
+    return false;
+  }
+
+  private boolean sanitizeAmbiguousRemainder() {
+    if (zzBuffer[zzStartRead] == '$') {
+      return false;
+    }
+    char quote = 0;
+    int backslashes = 0;
+    for (int i = zzStartRead; i < zzMarkedPos; i++) {
+      char c = zzBuffer[i];
+      if (quote == 0) {
+        if (c == '\'' || c == '"' || c == '`') {
+          quote = c;
+        } else if (c == '[') {
+          quote = ']';
+        }
+      } else if (c == quote) {
+        if (quote != ']' && backslashes % 2 != 0) {
+          // Backslash escaping depends on connection settings that the dialect does not describe.
+          builder.append('?');
+          return true;
+        }
+        quote = 0;
+      }
+      backslashes = c == '\\' ? backslashes + 1 : 0;
+    }
+    return false;
   }
 
   private boolean isOverLimit() {
@@ -1168,6 +1212,7 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   {IDENTIFIER} {
+          if (sanitizeAmbiguousRemainder()) return YYEOF;
           if (!insideComment) {
             // If we see an identifier where we expected a subquery, it's a parenthesized table name
             cancelPendingSubqueryIfNeeded();
@@ -1205,6 +1250,7 @@ WHITESPACE           = [ \t\r\n]+
 
   {OPEN_COMMENT}  {
           insideComment = true;
+          yybegin(BLOCK_COMMENT);
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
@@ -1220,13 +1266,32 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
 
+  [.+-]+ {
+          // Leave an embedded -- for the line-comment rule.
+          for (int i = zzStartRead + 1; i < zzMarkedPos; i++) {
+            if (zzBuffer[i - 1] == '-' && zzBuffer[i] == '-') {
+              yypushback(zzMarkedPos - i + 1);
+              break;
+            }
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+
   // here is where the actual sanitization happens
-  {BASIC_NUM} | {HEX_NUM} | {QUOTED_STR} | {DOLLAR_QUOTED_STR} {
+  {BASIC_NUM} | {HEX_NUM} | {DOLLAR_QUOTED_STR} {
+          builder.append('?');
+          if (isOverLimit()) return YYEOF;
+      }
+
+  {QUOTED_STR} {
+          if (sanitizeAmbiguousRemainder()) return YYEOF;
           builder.append('?');
           if (isOverLimit()) return YYEOF;
       }
 
   {DOUBLE_QUOTED_STR} {
+          if (sanitizeAmbiguousRemainder()) return YYEOF;
           if (!insideComment) {
             // Always notify the operation about double-quoted tokens regardless of dialect so
             // that summarization works correctly even when the dialect treats them as string
@@ -1247,12 +1312,19 @@ WHITESPACE           = [ \t\r\n]+
       }
 
   {BACKTICK_QUOTED_STR} | {BRACKET_QUOTED_STR} | {POSTGRE_PARAM_MARKER} {
+        if (sanitizeAmbiguousRemainder()) return YYEOF;
         if (!insideComment) {
           operation.handleIdentifier();
         }
         appendCurrentFragment();
         if (isOverLimit()) return YYEOF;
     }
+
+  {UNTERMINATED_BRACKET_STR} {
+          // Consume an unfinished identifier once instead of retrying from every opening bracket.
+          builder.append('?');
+          return YYEOF;
+      }
 
   {DOLLAR_TAG_START} {
           // Start of a tagged dollar-quoted string like $tag$...$tag$
@@ -1270,13 +1342,73 @@ WHITESPACE           = [ \t\r\n]+
       }
 }
 
+<BLOCK_COMMENT> {
+  {OPEN_COMMENT} {
+          // Nested comments are dialect-dependent, so neither interpretation is safe to assume.
+          builder.append('?');
+          return YYEOF;
+      }
+
+  {CLOSE_COMMENT} {
+          insideComment = false;
+          yybegin(YYINITIAL);
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+
+  {QUOTED_STR} | {DOLLAR_QUOTED_STR} {
+          if (appendCommentLiteral(true)) return YYEOF;
+          if (isOverLimit()) return YYEOF;
+      }
+
+  {DOUBLE_QUOTED_STR} {
+          if (appendCommentLiteral(!dialect.doubleQuotesAreIdentifiers())) return YYEOF;
+          if (isOverLimit()) return YYEOF;
+      }
+
+  {BACKTICK_QUOTED_STR} {
+          if (appendCommentLiteral(false)) return YYEOF;
+          if (isOverLimit()) return YYEOF;
+      }
+
+  {DOLLAR_TAG_START} {
+          dollarTag = yytext();
+          yybegin(DOLLAR_STRING);
+      }
+
+  {UNQUOTED_IDENTIFIER} | {POSTGRE_PARAM_MARKER} {
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+
+  {BASIC_NUM} | {HEX_NUM} {
+          builder.append('?');
+          if (isOverLimit()) return YYEOF;
+      }
+
+  [.+-]+ {
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+
+  {WHITESPACE} {
+          builder.append(' ');
+          if (isOverLimit()) return YYEOF;
+      }
+
+  [^] {
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+}
+
 <DOLLAR_STRING> {
   {DOLLAR_TAG_START} {
           // Check if this is the closing tag
           if (yytext().equals(dollarTag)) {
             builder.append('?');
             dollarTag = null;
-            yybegin(YYINITIAL);
+            yybegin(insideComment ? BLOCK_COMMENT : YYINITIAL);
             if (isOverLimit()) return YYEOF;
           }
           // else: different tag, continue consuming
@@ -1286,9 +1418,28 @@ WHITESPACE           = [ \t\r\n]+
           // Single dollar sign, not part of a tag - continue consuming
       }
 
-  [^$]+ {
+  {OPEN_COMMENT} {
+          if (insideComment) {
+            builder.append('?');
+            return YYEOF;
+          }
+      }
+
+  {CLOSE_COMMENT} {
+          if (insideComment) {
+            builder.append("?*/");
+            dollarTag = null;
+            insideComment = false;
+            yybegin(YYINITIAL);
+            if (isOverLimit()) return YYEOF;
+          }
+      }
+
+  [^$/*]+ {
           // Consume non-dollar characters
       }
+
+  [/*] {}
 
   <<EOF>> {
           // Unterminated dollar-quoted string - output what we have as ?

@@ -2,6 +2,7 @@ import java.time.Duration
 
 plugins {
   id("otel.library-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 val baseAgent = configurations.create("baseAgent") {
@@ -72,7 +73,6 @@ tasks {
       filter {
         includeTestsMatching(testClass)
       }
-      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     }
   }
 

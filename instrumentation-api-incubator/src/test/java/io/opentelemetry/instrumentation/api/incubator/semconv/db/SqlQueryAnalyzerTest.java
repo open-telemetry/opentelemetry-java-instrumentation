@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import java.util.Random;
 import java.util.function.Function;
@@ -226,6 +227,341 @@ class SqlQueryAnalyzerTest {
             "UPDATE users SET password = \"Password1\"",
             "UPDATE users SET password = ?",
             "UPDATE users"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("blockCommentArgs")
+  void sanitizeBlockComments(String original, String expected, String expectedQuerySummary) {
+    SqlQuery result = analyze(original);
+
+    assertThat(result.getQueryText()).isEqualTo(expected);
+    assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
+  }
+
+  private static Stream<Arguments> blockCommentArgs() {
+    return Stream.of(
+        argumentSet(
+            "nested comment before an apostrophe",
+            "SELECT /* outer /* inner */ don't */ 'secret'",
+            "SELECT /* outer ?",
+            "SELECT"),
+        argumentSet(
+            "multiple nested comments before the operation",
+            "/* outer /* middle /* inner */ */ */ SELECT 'secret'",
+            "/* outer ?",
+            null),
+        argumentSet(
+            "nested opener inside a quoted comment value",
+            "SELECT /* 'text /* inner */ text' */ 'secret'",
+            "SELECT /* 'text ?",
+            "SELECT"),
+        argumentSet(
+            "non-nesting dialect closes at the first terminator",
+            "SELECT /* outer /* inner */ 'text */ secret'",
+            "SELECT /* outer ?",
+            "SELECT"),
+        argumentSet(
+            "line comment marker inside a block comment",
+            "SELECT /* -- ignored */ 'secret'",
+            "SELECT /* -- ignored */ ?",
+            "SELECT"),
+        argumentSet(
+            "double quote before the comment terminator",
+            "SELECT /* \"ignored */ 'secret' AS \"alias\"",
+            "SELECT /* \"ignored */ ? AS ?",
+            "SELECT"),
+        argumentSet(
+            "quoted identifier before the comment terminator",
+            "SELECT /* schema.\"ignored */ 'secret' AS \"alias\"",
+            "SELECT /* schema.\"ignored */ ? AS ?",
+            "SELECT"),
+        argumentSet(
+            "backtick before the comment terminator",
+            "SELECT /* `ignored */ 'secret' AS `alias`",
+            "SELECT /* `ignored */ ? AS `alias`",
+            "SELECT"),
+        argumentSet(
+            "bracket before the comment terminator",
+            "SELECT /* [ignored */ 'secret' AS [alias]",
+            "SELECT /* [ignored */ ? AS [alias]",
+            "SELECT"),
+        argumentSet(
+            "dollar quotes before the comment terminator",
+            "SELECT /* $$ ignored */ 'secret', $$other$$",
+            "SELECT /* $$ ignored */ ?, ?",
+            "SELECT"),
+        argumentSet(
+            "dollar tag before the comment terminator",
+            "SELECT /* $tag$ ignored */ 'secret'",
+            "SELECT /* ?*/ ?",
+            "SELECT"),
+        argumentSet(
+            "nested opener inside a dollar-quoted comment value",
+            "SELECT /* $tag$ /* inner */ $tag$ */ 'secret'",
+            "SELECT /* ?",
+            "SELECT"),
+        argumentSet(
+            "sanitized comment values",
+            "SELECT /* user='secret' id=42 value=$tag$secret$tag$ */ 'secret' FROM users",
+            "SELECT /* user=? id=? value=? */ ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "comment delimiters inside a literal",
+            "SELECT '/* outer /* inner */ */' FROM users",
+            "SELECT ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "comment delimiters inside a dollar-quoted literal",
+            "SELECT $tag$/* outer /* inner */ */$tag$ FROM users",
+            "SELECT ? FROM users",
+            "SELECT users"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {1024, 4096, 8192, 16384})
+  void bracketsInCommentDoNotHideTerminator(int count) {
+    String comment = "/* " + repeat('[', count) + " */";
+
+    SqlQuery result = analyze("SELECT " + comment + " 'secret' AS [alias]");
+
+    assertThat(result.getQueryText()).isEqualTo("SELECT " + comment + " ? AS [alias]");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT");
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {1024, 4096, 8192, 16384})
+  void unterminatedBracketIdentifiersAreRedacted(int count) {
+    SqlQuery result = analyze("SELECT * FROM " + repeat('[', count) + " 'secret'");
+
+    assertThat(result.getQueryText()).isEqualTo("SELECT * FROM ?");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT");
+    assertThat(result.getCollectionName()).isNull();
+  }
+
+  @ParameterizedTest
+  @MethodSource("bracketIdentifierArgs")
+  void sanitizeBracketIdentifiers(String original, String expected, String expectedQuerySummary) {
+    SqlQuery result = analyze(original);
+
+    assertThat(result.getQueryText()).isEqualTo(expected);
+    assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
+  }
+
+  private static Stream<Arguments> bracketIdentifierArgs() {
+    return Stream.of(
+        argumentSet("empty unfinished identifier", "SELECT [", "SELECT ?", "SELECT"),
+        argumentSet(
+            "unfinished identifier contains a literal",
+            "SELECT [unfinished 'secret'",
+            "SELECT ?",
+            "SELECT"),
+        argumentSet(
+            "unfinished identifier after a complete statement",
+            "SELECT * FROM users; SELECT [unfinished 'secret'",
+            "SELECT * FROM users; SELECT ?",
+            "SELECT users; SELECT"),
+        argumentSet(
+            "closing bracket takes precedence",
+            "SELECT [[column], 'secret' FROM [users]",
+            "SELECT [[column], ? FROM [users]",
+            "SELECT [users]"),
+        argumentSet(
+            "qualified bracket identifiers",
+            "SELECT * FROM [schema].[[table] WHERE value = 'secret'",
+            "SELECT * FROM [schema].[[table] WHERE value = ?",
+            "SELECT [schema].[[table]"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {1024, 4096, 8192, 16384})
+  void numericPrefixesInCommentDoNotHideTerminator(int count) {
+    String comment = "/* " + repeat('+', count) + " */";
+
+    SqlQuery result = analyze("SELECT " + comment + " 'secret' FROM users");
+
+    assertThat(result.getQueryText()).isEqualTo("SELECT " + comment + " ? FROM users");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT users");
+  }
+
+  @ParameterizedTest
+  @MethodSource("numericPrefixArgs")
+  void sanitizeNumericPrefixes(String original, String expected, String expectedQuerySummary) {
+    SqlQuery result = analyze(original);
+
+    assertThat(result.getQueryText()).isEqualTo(expected);
+    assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
+  }
+
+  private static Stream<Arguments> numericPrefixArgs() {
+    return Stream.of(
+        argumentSet(
+            "numeric prefix without a number",
+            "SELECT .+-.+- 'secret' FROM users",
+            "SELECT .+-.+- ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "numeric prefix followed by a number",
+            "SELECT +++123, 'secret' FROM users",
+            "SELECT ?, ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "number inside a comment",
+            "SELECT /* +++123 */ 'secret' FROM users",
+            "SELECT /* ? */ ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "line comment embedded in a numeric prefix",
+            "SELECT +-- FROM ignored\n'secret' FROM users",
+            "SELECT +-- FROM ignored ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "line comment without a space after its marker",
+            "SELECT +--ignored\n'secret'",
+            "SELECT +--ignored ?",
+            "SELECT"),
+        argumentSet(
+            "mixed numeric prefix before a line comment",
+            "SELECT .+-+-- FROM ignored\r\n'secret' FROM users",
+            "SELECT .+-+-- FROM ignored ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "line comment marker inside a block comment",
+            "SELECT /* +-.-+-- ignored */ 'secret' FROM users",
+            "SELECT /* +-.-+-- ignored */ ? FROM users",
+            "SELECT users"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("backslashArgs")
+  void sanitizeBackslashes(String original, String expected, String expectedQuerySummary) {
+    for (SqlDialect dialect :
+        new SqlDialect[] {DOUBLE_QUOTES_ARE_STRING_LITERALS, DOUBLE_QUOTES_ARE_IDENTIFIERS}) {
+      SqlQuery result = analyze(original, dialect);
+
+      assertThat(result.getQueryText()).isEqualTo(expected);
+      assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
+    }
+  }
+
+  private static Stream<Arguments> backslashArgs() {
+    return Stream.of(
+        argumentSet(
+            "backslash-escaped apostrophe",
+            "SELECT name FROM users WHERE name = 'O\\'Brien' AND password = 'secret'",
+            "SELECT name FROM users WHERE name = ?",
+            "SELECT users"),
+        argumentSet(
+            "standard string ending with a backslash",
+            "SELECT name FROM users WHERE path = 'C:\\' AND password = 'secret'",
+            "SELECT name FROM users WHERE path = ?",
+            "SELECT users"),
+        argumentSet(
+            "insert with a backslash-escaped apostrophe",
+            "INSERT INTO users(name, password) VALUES('O\\'Brien', 'secret')",
+            "INSERT INTO users(name, password) VALUES(?",
+            "INSERT users"),
+        argumentSet(
+            "PostgreSQL escape string", "SELECT E'O\\'Brien', 'secret'", "SELECT E?", "SELECT"),
+        argumentSet(
+            "PostgreSQL escape string continuation",
+            "SELECT e'first'\n'O\\'Brien' FROM users",
+            "SELECT e? ?",
+            "SELECT"),
+        argumentSet(
+            "backslash-escaped double quote",
+            "SELECT name FROM users WHERE name = \"O\\\"Brien\" AND password = 'secret'",
+            "SELECT name FROM users WHERE name = ?",
+            "SELECT users"),
+        argumentSet(
+            "double-quoted standard string ending with a backslash",
+            "SELECT name FROM users WHERE path = \"C:\\\" AND password = 'secret'",
+            "SELECT name FROM users WHERE path = ?",
+            "SELECT users"),
+        argumentSet(
+            "ambiguous quote in a qualified identifier",
+            "SELECT * FROM schema.\"O\\\"Brien' WHERE password='secret\"",
+            "SELECT * FROM ?",
+            "SELECT"),
+        argumentSet(
+            "backslash-escaped backtick",
+            "SELECT * FROM `O\\`Brien' WHERE password='secret`",
+            "SELECT * FROM ?",
+            "SELECT"),
+        argumentSet(
+            "odd backslash run", "SELECT 'C:\\\\\\', 'secret' FROM users", "SELECT ?", "SELECT"),
+        argumentSet(
+            "backslash before doubled apostrophes",
+            "SELECT 'a\\''b', 'secret' FROM users",
+            "SELECT ?",
+            "SELECT"),
+        argumentSet(
+            "ambiguous quote in a comment value",
+            "SELECT /* value='O\\'Brien' password='secret' */ 'secret'",
+            "SELECT /* value=?",
+            "SELECT"),
+        argumentSet(
+            "SQL keywords inside an escaped literal",
+            "SELECT 'O\\' FROM secret_table WHERE value = ' FROM public_table",
+            "SELECT ?",
+            "SELECT"),
+        argumentSet(
+            "backslash away from a quote",
+            "SELECT 'C:\\folder', 'secret' FROM users",
+            "SELECT ?, ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "even backslash run",
+            "SELECT 'C:\\\\', 'secret' FROM users",
+            "SELECT ?, ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "longer even backslash run",
+            "SELECT 'C:\\\\\\\\', 'secret' FROM users",
+            "SELECT ?, ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "even backslash run before doubled apostrophes",
+            "SELECT 'a\\\\''b', 'secret' FROM users",
+            "SELECT ?, ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "backslash before a different quote",
+            "SELECT 'a\\\"b', 'secret' FROM users",
+            "SELECT ?, ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "backslashes inside dollar quotes",
+            "SELECT $tag$O\\'Brien$tag$, 'secret' FROM users",
+            "SELECT ?, ? FROM users",
+            "SELECT users"),
+        argumentSet(
+            "backslash inside a bracket-quoted identifier",
+            "SELECT [C:\\] FROM [users]",
+            "SELECT [C:\\] FROM [users]",
+            "SELECT [users]"));
+  }
+
+  @Test
+  void ambiguousQuotingDoesNotPopulateTargets() {
+    SqlQuery result = analyze("SELECT 'O\\' FROM secret_table WHERE value = ' FROM public_table");
+
+    assertThat(result.getQueryText()).isEqualTo("SELECT ?");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT");
+    assertThat(result.getCollectionName()).isNull();
+    assertThat(result.getStoredProcedureName()).isNull();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void unambiguousDoubleQuotesRetainDialectBehavior(boolean identifiers) {
+    SqlQuery result =
+        analyze(
+            "SELECT * FROM \"C:\\\\\"",
+            identifiers ? DOUBLE_QUOTES_ARE_IDENTIFIERS : DOUBLE_QUOTES_ARE_STRING_LITERALS);
+
+    assertThat(result.getQueryText())
+        .isEqualTo(identifiers ? "SELECT * FROM \"C:\\\\\"" : "SELECT * FROM ?");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT \"C:\\\\\"");
   }
 
   @Test
@@ -476,6 +812,20 @@ class SqlQueryAnalyzerTest {
         Arguments.of("SELECT DEADBEEF", "SELECT DEADBEEF", "SELECT"),
         Arguments.of("SELECT 123-45-6789", "SELECT ?", "SELECT"),
         Arguments.of("SELECT 1/2/34", "SELECT ?/?/?", "SELECT"),
+
+        // An apostrophe in a block comment doesn't start a string
+        Arguments.of(
+            "SELECT name FROM users /* don't cache */ WHERE password = 'hunter2'",
+            "SELECT name FROM users /* don't cache */ WHERE password = ?",
+            "SELECT users"),
+        Arguments.of(
+            "SELECT a FROM t /* it's */ WHERE b = 'x' AND c = 'y'",
+            "SELECT a FROM t /* it's */ WHERE b = ? AND c = ?",
+            "SELECT t"),
+        Arguments.of(
+            "SELECT a FROM t /* user='bob' */ WHERE b = 'x'",
+            "SELECT a FROM t /* user=? */ WHERE b = ?",
+            "SELECT t"),
 
         // Basic ' strings
         Arguments.of(

@@ -35,6 +35,9 @@ public final class SqlQueryAnalyzer {
   /**
    * Returns sanitized query text, a low-cardinality summary, and operation and target names.
    *
+   * <p>When quote or comment boundaries are ambiguous across dialects or connection settings, the
+   * remaining query text is replaced with {@code ?} and summary extraction stops.
+   *
    * <p>When sanitization is disabled, returns the original query text without analysis.
    */
   public SqlQuery analyze(@Nullable String query, SqlDialect dialect) {

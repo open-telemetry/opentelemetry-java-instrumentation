@@ -9,35 +9,65 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
+import org.influxdb.dto.QueryResult;
 
 public class InfluxDbObjectWrapper {
 
-  @SuppressWarnings("unchecked") // we check types before casting
-  public static Object wrap(Object object, Context parentContext) {
-    if (object instanceof Consumer) {
-      return (Consumer<Object>)
-          o -> {
-            try (Scope ignore = parentContext.makeCurrent()) {
-              ((Consumer<Object>) object).accept(o);
-            }
-          };
-    } else if (object instanceof BiConsumer) {
-      return (BiConsumer<Object, Object>)
-          (o1, o2) -> {
-            try (Scope ignore = parentContext.makeCurrent()) {
-              ((BiConsumer<Object, Object>) object).accept(o1, o2);
-            }
-          };
-    } else if (object instanceof Runnable) {
-      return (Runnable)
-          () -> {
-            try (Scope ignore = parentContext.makeCurrent()) {
-              ((Runnable) object).run();
-            }
-          };
+  @Nullable
+  public static <T> Consumer<T> wrapConsumer(
+      @Nullable Consumer<T> callback, Context parentContext, InfluxDbQueryState state) {
+    if (callback == null) {
+      return null;
     }
+    return value -> {
+      if (value instanceof QueryResult) {
+        state.observe((QueryResult) value);
+      } else if (value instanceof Throwable) {
+        state.onFailure((Throwable) value);
+      }
+      try (Scope ignore = parentContext.makeCurrent()) {
+        callback.accept(value);
+      } catch (Throwable t) {
+        state.onCallbackError(t);
+        throw t;
+      }
+    };
+  }
 
-    return object;
+  @Nullable
+  public static <T, U> BiConsumer<T, U> wrapBiConsumer(
+      @Nullable BiConsumer<T, U> callback, Context parentContext, InfluxDbQueryState state) {
+    if (callback == null) {
+      return null;
+    }
+    return (value1, value2) -> {
+      if (value2 instanceof QueryResult) {
+        state.observe((QueryResult) value2);
+      }
+      try (Scope ignore = parentContext.makeCurrent()) {
+        callback.accept(value1, value2);
+      } catch (Throwable t) {
+        state.onCallbackError(t);
+        throw t;
+      }
+    };
+  }
+
+  @Nullable
+  public static Runnable wrapRunnable(
+      @Nullable Runnable callback, Context parentContext, InfluxDbQueryState state) {
+    if (callback == null) {
+      return null;
+    }
+    return () -> {
+      try (Scope ignore = parentContext.makeCurrent()) {
+        callback.run();
+      } catch (Throwable t) {
+        state.onCallbackError(t);
+        throw t;
+      }
+    };
   }
 
   private InfluxDbObjectWrapper() {}

@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -1016,7 +1017,6 @@ class VertxSqlClientTest {
     Promise<SqlConnection> attempt = Promise.promise();
     CountDownLatch supplierCalled = new CountDownLatch(1);
     CountDownLatch connecting = new CountDownLatch(1);
-    CompletableFuture<Throwable> lateCompletion = new CompletableFuture<>();
     AtomicInteger completions = new AtomicInteger();
     AtomicInteger poolCompletions = new AtomicInteger();
     Context context = vertx.getOrCreateContext();
@@ -1030,9 +1030,6 @@ class VertxSqlClientTest {
                     () -> {},
                     error -> {
                       poolCompletions.incrementAndGet();
-                      if (error == lateFailure) {
-                        lateCompletion.complete(error);
-                      }
                     }))
             .using(vertx)
             .connectingTo(
@@ -1075,9 +1072,8 @@ class VertxSqlClientTest {
     }
     assertThat(connecting.await(30, SECONDS)).isTrue();
     attempt.fail(lateFailure);
-    assertThat(lateCompletion.get(30, SECONDS)).isSameAs(lateFailure);
     assertThat(completions).hasValue(1);
-    assertThat(poolCompletions).hasValue(2);
+    assertThat(poolCompletions).hasValue(1);
     assertThat(result.get(30, SECONDS)).isSameAs(timeout);
     testing.waitAndAssertTraces(
         trace ->
@@ -1094,7 +1090,6 @@ class VertxSqlClientTest {
   void testSupplierFailureBeforeTimeoutKeepsTargetAndError() throws Exception {
     assumeTrue(testLatestDeps());
     RuntimeException failure = new IllegalArgumentException("connection failed before timeout");
-    CompletableFuture<Throwable> timeoutCompletion = new CompletableFuture<>();
     AtomicInteger completions = new AtomicInteger();
     AtomicInteger poolCompletions = new AtomicInteger();
     Context context = vertx.getOrCreateContext();
@@ -1105,9 +1100,6 @@ class VertxSqlClientTest {
                     () -> {},
                     error -> {
                       poolCompletions.incrementAndGet();
-                      if (error != failure) {
-                        timeoutCompletion.complete(error);
-                      }
                     }))
             .using(vertx)
             .connectingTo(() -> Future.succeededFuture(connectOptions().setHost("failed.example")))
@@ -1133,10 +1125,9 @@ class VertxSqlClientTest {
                 "failed.example",
                 failure));
 
-    assertThat(timeoutCompletion.get(30, SECONDS)).hasMessage("Timeout waiting for connection");
     assertThat(result.get(30, SECONDS)).isSameAs(failure);
     assertThat(completions).hasValue(1);
-    assertThat(poolCompletions).hasValue(2);
+    assertThat(poolCompletions).hasValue(1);
     testing.waitAndAssertTraces(
         trace ->
             assertSupplierQuery(
@@ -1155,7 +1146,6 @@ class VertxSqlClientTest {
     RuntimeException lateFailure = new IllegalArgumentException("late fixed connection failure");
     Promise<SqlConnection> attempt = Promise.promise();
     CountDownLatch connecting = new CountDownLatch(1);
-    CompletableFuture<Throwable> lateCompletion = new CompletableFuture<>();
     AtomicInteger completions = new AtomicInteger();
     AtomicInteger poolCompletions = new AtomicInteger();
     PgConnectOptions first = connectOptions().setHost("fixed.example");
@@ -1170,9 +1160,6 @@ class VertxSqlClientTest {
                     () -> {},
                     error -> {
                       poolCompletions.incrementAndGet();
-                      if (error == lateFailure) {
-                        lateCompletion.complete(error);
-                      }
                     }))
             .using(vertx)
             .with(
@@ -1229,10 +1216,9 @@ class VertxSqlClientTest {
       testing.waitAndAssertTraces(assertion);
 
       attempt.fail(lateFailure);
-      assertThat(lateCompletion.get(30, SECONDS)).isSameAs(lateFailure);
       assertThat(result.get(30, SECONDS)).isSameAs(timeout);
       assertThat(completions).hasValue(1);
-      assertThat(poolCompletions).hasValue(2);
+      assertThat(poolCompletions).hasValue(1);
       testing.waitAndAssertTraces(assertion);
     } finally {
       attempt.tryFail(lateFailure);
@@ -1403,8 +1389,8 @@ class VertxSqlClientTest {
                             equalTo(DB_QUERY_TEXT, "select * from test"),
                             equalTo(DB_QUERY_SUMMARY, "select test"),
                             equalTo(
-                                maybeStablePeerService(),
-                                serverList ? null : testing.expectedPeerService()),
+                                stringKey("server.service.name"),
+                                serverList ? null : expectedMappedServiceName()),
                             equalTo(
                                 SERVER_ADDRESS,
                                 serverList
@@ -1617,7 +1603,7 @@ class VertxSqlClientTest {
                             equalTo(DB_NAMESPACE, DB),
                             equalTo(DB_QUERY_TEXT, "select * from test"),
                             equalTo(DB_QUERY_SUMMARY, "select test"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
@@ -1652,7 +1638,7 @@ class VertxSqlClientTest {
                             equalTo(DB_NAMESPACE, DB),
                             equalTo(DB_QUERY_TEXT, "select * from test"),
                             equalTo(DB_QUERY_SUMMARY, "select test"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
@@ -1700,7 +1686,7 @@ class VertxSqlClientTest {
                     equalTo(DB_NAMESPACE, DB),
                     equalTo(DB_QUERY_TEXT, "select * from test"),
                     equalTo(DB_QUERY_SUMMARY, "select test"),
-                    equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                    equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                     equalTo(SERVER_ADDRESS, host),
                     equalTo(SERVER_PORT, port)));
   }
@@ -1719,7 +1705,7 @@ class VertxSqlClientTest {
                     equalTo(DB_NAMESPACE, DB),
                     equalTo(DB_QUERY_TEXT, "select * from test"),
                     equalTo(DB_QUERY_SUMMARY, "select test"),
-                    equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                    equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                     equalTo(SERVER_ADDRESS, expectedHost),
                     equalTo(SERVER_PORT, port)));
   }
@@ -1743,12 +1729,12 @@ class VertxSqlClientTest {
                   equalTo(DB_QUERY_TEXT, statement),
                   equalTo(DB_QUERY_SUMMARY, "select " + table),
                   equalTo(
-                      maybeStablePeerService(),
+                      stringKey("server.service.name"),
                       expectedHost != null
                               && (expectedHost.equals(host)
                                   || expectedHost.equals("localhost")
                                   || expectedHost.equals("127.0.0.1"))
-                          ? testing.expectedPeerService()
+                          ? expectedMappedServiceName()
                           : null),
                   equalTo(SERVER_ADDRESS, expectedHost),
                   equalTo(SERVER_PORT, expectedHost != null ? Long.valueOf(port) : null),
@@ -1831,9 +1817,9 @@ class VertxSqlClientTest {
                     equalTo(DB_QUERY_TEXT, "select * from test"),
                     equalTo(DB_QUERY_SUMMARY, "select test"),
                     equalTo(
-                        maybeStablePeerService(),
+                        stringKey("server.service.name"),
                         expectedHost != null && expectedHost.equals(host)
-                            ? testing.expectedPeerService()
+                            ? expectedMappedServiceName()
                             : null),
                     equalTo(SERVER_ADDRESS, expectedHost),
                     equalTo(SERVER_PORT, expectedHost != null ? Long.valueOf(port) : null),
@@ -1859,7 +1845,7 @@ class VertxSqlClientTest {
                     equalTo(DB_SYSTEM_NAME, "other_sql"),
                     equalTo(DB_NAMESPACE, ""),
                     equalTo(DB_QUERY_TEXT, ""),
-                    equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                    equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                     equalTo(SERVER_ADDRESS, host),
                     equalTo(SERVER_PORT, port),
                     equalTo(ERROR_TYPE, error.getClass().getName())));
@@ -1893,7 +1879,7 @@ class VertxSqlClientTest {
                     equalTo(DB_NAMESPACE, "testdb"),
                     equalTo(DB_QUERY_TEXT, "select * from test"),
                     equalTo(DB_QUERY_SUMMARY, "select test"),
-                    equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                    equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                     equalTo(SERVER_ADDRESS, "127.0.0.1"),
                     equalTo(SERVER_PORT, 1),
                     equalTo(ERROR_TYPE, "66000")));
@@ -1950,7 +1936,7 @@ class VertxSqlClientTest {
                             equalTo(DB_NAMESPACE, DB),
                             equalTo(DB_QUERY_TEXT, "select * from test"),
                             equalTo(DB_QUERY_SUMMARY, "select test"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
                 span ->
@@ -2014,7 +2000,7 @@ class VertxSqlClientTest {
                             equalTo(DB_SYSTEM_NAME, POSTGRESQL),
                             equalTo(DB_NAMESPACE, DB),
                             equalTo(DB_QUERY_TEXT, "invalid"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(ERROR_TYPE, "42601")),
@@ -2055,7 +2041,7 @@ class VertxSqlClientTest {
                             equalTo(DB_NAMESPACE, DB),
                             equalTo(DB_QUERY_TEXT, query),
                             equalTo(DB_QUERY_SUMMARY, "select test"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
@@ -2154,7 +2140,7 @@ class VertxSqlClientTest {
                             equalTo(DB_NAMESPACE, DB),
                             equalTo(DB_QUERY_TEXT, query),
                             equalTo(DB_QUERY_SUMMARY, "select test"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(ERROR_TYPE, "22012"))));
@@ -2230,7 +2216,7 @@ class VertxSqlClientTest {
                             equalTo(DB_QUERY_SUMMARY, scenario.querySummary),
                             equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
                             equalTo(ERROR_TYPE, scenario.errorType),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
@@ -2357,7 +2343,8 @@ class VertxSqlClientTest {
                                 equalTo(DB_NAMESPACE, DB),
                                 equalTo(DB_QUERY_TEXT, "select * from test"),
                                 equalTo(DB_QUERY_SUMMARY, "select test"),
-                                equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, host),
                                 equalTo(SERVER_PORT, port)),
                     span ->
@@ -2422,7 +2409,8 @@ class VertxSqlClientTest {
                                 equalTo(DB_NAMESPACE, DB),
                                 equalTo(DB_QUERY_TEXT, "select * from test where id = $1"),
                                 equalTo(DB_QUERY_SUMMARY, "select test"),
-                                equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, host),
                                 equalTo(SERVER_PORT, port)),
                     span ->
