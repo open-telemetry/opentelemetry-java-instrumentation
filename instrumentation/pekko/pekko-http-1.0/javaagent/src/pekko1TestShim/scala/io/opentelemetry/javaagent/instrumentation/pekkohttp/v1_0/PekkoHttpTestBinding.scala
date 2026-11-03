@@ -20,6 +20,9 @@ import scala.concurrent.Future
 // system property is set
 object PekkoHttpTestBinding {
 
+  // a request that fails http/2 request parsing tears down the connection in pekko-http 1.x
+  val answersHttp2ParsingErrors: Boolean = false
+
   private val useNewServerAt = java.lang.Boolean.getBoolean("testNewServerAt")
 
   def bindRoute(route: Route, host: String, port: Int)(implicit

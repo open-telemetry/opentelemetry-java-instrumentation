@@ -30,6 +30,7 @@ import io.opentelemetry.testing.internal.armeria.common.{
   RequestHeaders
 }
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
@@ -162,10 +163,12 @@ class PekkoHttpServerInstrumentationTestHttp2
     )
   }
 
-  // pekko-http answers a request that fails http/2 request parsing with 400 itself, on the same
+  // pekko-http 2.x answers a request that fails http/2 request parsing with 400 itself, on the same
   // connection, without passing it to the handler, a request that follows on that connection is
   // traced as usual
   @Test def testHttp2ParsingError(): Unit = {
+    assumeTrue(PekkoHttpTestBinding.answersHttp2ParsingErrors)
+
     // more headers than the default pekko.http.server.parsing.max-header-count of 64
     val headers = RequestHeaders
       .builder(

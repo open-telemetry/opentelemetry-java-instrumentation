@@ -18,6 +18,10 @@ import scala.concurrent.Future
 // that they compile against both lines, this pekko-http 2.x variant binds with newServerAt
 object PekkoHttpTestBinding {
 
+  // pekko-http 2.x answers a request that fails http/2 request parsing with 400 and keeps the
+  // connection open
+  val answersHttp2ParsingErrors: Boolean = true
+
   def bindRoute(route: Route, host: String, port: Int)(implicit
       system: ActorSystem
   ): Future[ServerBinding] =
