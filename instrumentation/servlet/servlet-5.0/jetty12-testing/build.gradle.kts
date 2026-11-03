@@ -20,12 +20,10 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
-testing {
-  suites {
-    executions("test") {
-      register("RequestParameterCapture") {
-        telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.included", "test-parameter")
-      }
+testing.suites {
+  executions("test") {
+    register("RequestParameterCapture") {
+      telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.included", "test-parameter")
     }
   }
 }

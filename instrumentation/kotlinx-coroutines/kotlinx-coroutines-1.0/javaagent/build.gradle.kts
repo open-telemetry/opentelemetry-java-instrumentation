@@ -81,35 +81,33 @@ kotlin {
   }
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("version13Test") {
-      executions {
-        configureDefault {
-          jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
-        }
-      }
-      dependencies {
-        implementation("io.opentelemetry:opentelemetry-extension-kotlin")
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-        implementation(
-          "org.jetbrains.kotlinx:kotlinx-coroutines-core:${baseVersion("1.3.0").orLatest()}",
-        )
-        implementation(
-          "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:${baseVersion("1.3.0").orLatest()}",
-        )
-        implementation(project(":instrumentation:reactor:reactor-3.1:library"))
-        implementation(project(":instrumentation-annotations"))
-      }
-    }
-
-    executions("test") {
+testing.suites {
+  register<JvmTestSuite>("version13Test") {
+    executions {
       configureDefault {
         jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
       }
-      register("Disabled") {
-        filter { includeTestsMatching("*DefaultEnablementTest") }
-      }
+    }
+    dependencies {
+      implementation("io.opentelemetry:opentelemetry-extension-kotlin")
+      implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+      implementation(
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:${baseVersion("1.3.0").orLatest()}",
+      )
+      implementation(
+        "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:${baseVersion("1.3.0").orLatest()}",
+      )
+      implementation(project(":instrumentation:reactor:reactor-3.1:library"))
+      implementation(project(":instrumentation-annotations"))
+    }
+  }
+
+  executions("test") {
+    configureDefault {
+      jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
+    }
+    register("Disabled") {
+      filter { includeTestsMatching("*DefaultEnablementTest") }
     }
   }
 }

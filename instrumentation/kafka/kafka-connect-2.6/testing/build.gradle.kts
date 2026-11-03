@@ -31,21 +31,19 @@ dependencies {
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
 }
 
-testing {
-  suites {
-    executions("test") {
-      configureEach {
-        dependsOn(agentShadowJar)
-        systemProperty("io.opentelemetry.smoketest.agent.shadowJar.path", agentShadowJar.get().archiveFile.get().toString())
+testing.suites {
+  executions("test") {
+    configureEach {
+      dependsOn(agentShadowJar)
+      systemProperty("io.opentelemetry.smoketest.agent.shadowJar.path", agentShadowJar.get().archiveFile.get().toString())
+    }
+
+    register("ReceiveTelemetry") {
+      filter {
+        includeTestsMatching("io.opentelemetry.instrumentation.kafkaconnect.v2_6.MongoKafkaConnectSinkTaskTest.testSingleMessage")
       }
 
-      register("ReceiveTelemetry") {
-        filter {
-          includeTestsMatching("io.opentelemetry.instrumentation.kafkaconnect.v2_6.MongoKafkaConnectSinkTaskTest.testSingleMessage")
-        }
-
-        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-      }
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
     }
   }
 }

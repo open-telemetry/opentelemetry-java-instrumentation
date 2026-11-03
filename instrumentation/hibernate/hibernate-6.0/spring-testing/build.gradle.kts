@@ -27,17 +27,15 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
-testing {
-  suites {
-    executions("test") {
-      configureEach {
-        jvmArgs("-javaagent:" + springAgent.singleFile.absolutePath)
-        jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
-      }
+testing.suites {
+  executions("test") {
+    configureEach {
+      jvmArgs("-javaagent:" + springAgent.singleFile.absolutePath)
+      jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
+    }
 
-      register("Experimental") {
-        jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-      }
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
     }
   }
 }

@@ -24,39 +24,37 @@ dependencies {
   testLibrary("org.apache.rocketmq:rocketmq-client-java:5.0.2")
 }
 
-testing {
-  suites {
-    executions("test") {
-      configureEach {
-        if (otelProps.denyUnsafe) {
-          enabled = false
-        }
+testing.suites {
+  executions("test") {
+    configureEach {
+      if (otelProps.denyUnsafe) {
+        enabled = false
       }
+    }
 
-      configureDefault {
-        filter {
-          excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
-        }
-        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    configureDefault {
+      filter {
+        excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
       }
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    }
 
-      register("ReceiveSpanDisabled") {
-        filter {
-          includeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
-        }
-        include("**/RocketMqClientSuppressReceiveSpanTest.*")
+    register("ReceiveSpanDisabled") {
+      filter {
+        includeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
       }
+      include("**/RocketMqClientSuppressReceiveSpanTest.*")
+    }
 
-      // A SimpleConsumer pull has no process span, so it gets a receive span even when receive
-      // telemetry is disabled by default.
-      register("SimpleConsumerReceiveTelemetryDisabled") {
-        filter {
-          includeTestsMatching(
-            "RocketMqSimpleConsumerTest.shouldInstrumentReceiveWhenReceiveTelemetryDisabled",
-          )
-        }
-        include("**/RocketMqSimpleConsumerTest.*")
+    // A SimpleConsumer pull has no process span, so it gets a receive span even when receive
+    // telemetry is disabled by default.
+    register("SimpleConsumerReceiveTelemetryDisabled") {
+      filter {
+        includeTestsMatching(
+          "RocketMqSimpleConsumerTest.shouldInstrumentReceiveWhenReceiveTelemetryDisabled",
+        )
       }
+      include("**/RocketMqSimpleConsumerTest.*")
     }
   }
 }

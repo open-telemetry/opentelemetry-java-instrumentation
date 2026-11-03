@@ -33,44 +33,42 @@ dependencies {
   }
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":javaagent-extension-api"))
-        implementation("org.springframework.amqp:spring-rabbit:${baseVersion("2.1.7.RELEASE").orLatest()}")
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":javaagent-extension-api"))
+      implementation("org.springframework.amqp:spring-rabbit:${baseVersion("2.1.7.RELEASE").orLatest()}")
+    }
+  }
+
+  register<JvmTestSuite>("version11Test") {
+    dependencies {
+      implementation("io.opentelemetry:opentelemetry-sdk-testing")
+      implementation("org.testcontainers:testcontainers")
+      implementation("org.springframework.amqp:spring-rabbit:1.1.0.RELEASE")
+    }
+  }
+
+  register<JvmTestSuite>("version20Test") {
+    dependencies {
+      implementation("io.opentelemetry:opentelemetry-sdk-testing")
+      implementation("org.testcontainers:testcontainers")
+      implementation("org.springframework.amqp:spring-rabbit:2.0.1.RELEASE")
+    }
+  }
+
+  executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
     }
 
-    register<JvmTestSuite>("version11Test") {
-      dependencies {
-        implementation("io.opentelemetry:opentelemetry-sdk-testing")
-        implementation("org.testcontainers:testcontainers")
-        implementation("org.springframework.amqp:spring-rabbit:1.1.0.RELEASE")
+    register("SpringDisabled") {
+      filter {
+        includeTestsMatching("*SpringRabbitRegistrationTest")
+        includeTestsMatching("*SpringRabbitTemplateTest")
       }
-    }
-
-    register<JvmTestSuite>("version20Test") {
-      dependencies {
-        implementation("io.opentelemetry:opentelemetry-sdk-testing")
-        implementation("org.testcontainers:testcontainers")
-        implementation("org.springframework.amqp:spring-rabbit:2.0.1.RELEASE")
-      }
-    }
-
-    executions("test") {
-      configureEach {
-        systemProperty("testLatestDeps", otelProps.testLatestDeps)
-      }
-
-      register("SpringDisabled") {
-        filter {
-          includeTestsMatching("*SpringRabbitRegistrationTest")
-          includeTestsMatching("*SpringRabbitTemplateTest")
-        }
-        telemetryConfig("otel.instrumentation.spring-rabbit.enabled", "false")
-      }
+      telemetryConfig("otel.instrumentation.spring-rabbit.enabled", "false")
     }
   }
 }

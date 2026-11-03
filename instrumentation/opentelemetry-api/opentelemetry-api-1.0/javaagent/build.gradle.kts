@@ -43,40 +43,38 @@ dependencies {
   testImplementation(project(":instrumentation-annotations"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation("io.opentelemetry:opentelemetry-api")
-        implementation(project(":javaagent-bootstrap"))
-        implementation(project(":opentelemetry-api-shaded-for-instrumenting")) {
-          targetConfiguration = "shadow"
-        }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation("io.opentelemetry:opentelemetry-api")
+      implementation(project(":javaagent-bootstrap"))
+      implementation(project(":opentelemetry-api-shaded-for-instrumenting")) {
+        targetConfiguration = "shadow"
       }
     }
+  }
 
-    executions("test") {
-      register("CommonDefaultDisabled") {
-        filter {
-          includeTestsMatching("*DefaultEnablementTest")
-        }
-        jvmArgs(
-          "-Dotel.instrumentation.common.default-enabled=false",
-          "-Dotel.instrumentation.opentelemetry-instrumentation-annotations.enabled=true"
-        )
+  executions("test") {
+    register("CommonDefaultDisabled") {
+      filter {
+        includeTestsMatching("*DefaultEnablementTest")
       }
+      jvmArgs(
+        "-Dotel.instrumentation.common.default-enabled=false",
+        "-Dotel.instrumentation.opentelemetry-instrumentation-annotations.enabled=true"
+      )
+    }
 
-      register("Disabled") {
-        filter {
-          includeTestsMatching("*DefaultEnablementTest")
-        }
-        jvmArgs(
-          "-Dotel.instrumentation.common.default-enabled=false",
-          "-Dotel.instrumentation.opentelemetry-api.enabled=false",
-          "-Dotel.instrumentation.opentelemetry-instrumentation-annotations.enabled=true"
-        )
+    register("Disabled") {
+      filter {
+        includeTestsMatching("*DefaultEnablementTest")
       }
+      jvmArgs(
+        "-Dotel.instrumentation.common.default-enabled=false",
+        "-Dotel.instrumentation.opentelemetry-api.enabled=false",
+        "-Dotel.instrumentation.opentelemetry-instrumentation-annotations.enabled=true"
+      )
     }
   }
 }

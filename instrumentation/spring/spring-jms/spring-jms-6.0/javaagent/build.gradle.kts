@@ -41,46 +41,44 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":javaagent-bootstrap"))
-        implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
-        implementation(project(":instrumentation:jms:jms-3.0:javaagent"))
-        implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
-        implementation(project(":javaagent-extension-api"))
-        implementation("jakarta.jms:jakarta.jms-api:3.0.0")
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":javaagent-bootstrap"))
+      implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
+      implementation(project(":instrumentation:jms:jms-3.0:javaagent"))
+      implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
+      implementation(project(":javaagent-extension-api"))
+      implementation("jakarta.jms:jakarta.jms-api:3.0.0")
+    }
+  }
+
+  executions("test") {
+    configureDefault {
+      filter {
+        excludeTestsMatching("SpringListenerSuppressReceiveSpansTest")
       }
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
     }
 
-    executions("test") {
-      configureDefault {
-        filter {
-          excludeTestsMatching("SpringListenerSuppressReceiveSpansTest")
-        }
-        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    register("ReceiveSpansDisabled") {
+      filter {
+        includeTestsMatching("SpringListenerSuppressReceiveSpansTest")
       }
+      include("**/SpringListenerSuppressReceiveSpansTest.*")
+    }
 
-      register("ReceiveSpansDisabled") {
-        filter {
-          includeTestsMatching("SpringListenerSuppressReceiveSpansTest")
-        }
-        include("**/SpringListenerSuppressReceiveSpansTest.*")
+    register("JmsDisabled") {
+      filter {
+        includeTestsMatching("*.testSpringJmsListenerWithJmsDisabled")
       }
+      telemetryConfig("otel.instrumentation.jms.enabled", "false")
+      // receive telemetry is enabled here because the jms instrumentation that would create the
+      // receive operation is disabled, so the process operation owns the messaging telemetry
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
 
-      register("JmsDisabled") {
-        filter {
-          includeTestsMatching("*.testSpringJmsListenerWithJmsDisabled")
-        }
-        telemetryConfig("otel.instrumentation.jms.enabled", "false")
-        // receive telemetry is enabled here because the jms instrumentation that would create the
-        // receive operation is disabled, so the process operation owns the messaging telemetry
-        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-
-        systemProperty("testJmsDisabled", "true")
-      }
+      systemProperty("testJmsDisabled", "true")
     }
   }
 }
