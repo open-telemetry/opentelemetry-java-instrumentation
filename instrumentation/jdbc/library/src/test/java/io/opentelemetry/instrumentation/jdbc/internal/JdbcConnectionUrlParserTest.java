@@ -23,6 +23,12 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.Db2UrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.InformixDirectUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.InformixSqliUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.JdbcUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.MysqlUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.OceanbaseUrlParser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -136,6 +142,12 @@ class JdbcConnectionUrlParserTest {
         "jdbc:unknown://address=(host=valid.host)(port=1234),"
             + "address=(host=evil host)(port=1234)/db",
         "jdbc:h2:tcp://h1:8082,h2:8083/db",
+        "jdbc:db2://h1:50000,unexpected=value/db",
+        "jdbc:jtds:sybase://h1:5000,unexpected=value/db",
+        "jdbc:derby://h1:1527,unexpected=value/db",
+        "jdbc:sqlserver://h1:1433,unexpected=value/db",
+        "jdbc:datadirect:sqlserver://h1:1433,unexpected=value/db",
+        "jdbc:hsqldb:hsql://h1:9001,unexpected=value/db",
         "jdbc:sqlserver://;failoverPartner=h2",
         "jdbc:sqlserver://h1;failoverPartner=unexpected=value",
         "jdbc:oracle:thin:@//h1,unexpected=value/service",
@@ -2007,8 +2019,8 @@ class JdbcConnectionUrlParserTest {
       })
   void laterAtAndCommasDoNotChangeAuthorityOrTargetCount(String suffix) {
     assertThat(extractAuthority("postgresql://h1,h2" + suffix)).isEqualTo("h1,h2");
-    assertThat(hasMultipleTargets("postgresql://h1,h2" + suffix)).isTrue();
-    assertThat(hasMultipleTargets("postgresql://h1" + suffix)).isFalse();
+    assertThat(hasMultipleTargets(extractAuthority("postgresql://h1,h2" + suffix))).isTrue();
+    assertThat(hasMultipleTargets(extractAuthority("postgresql://h1" + suffix))).isFalse();
     assertThat(parse("jdbc:postgresql://h1,h2" + suffix, null).getConfiguredServerTarget())
         .isEqualTo(DbServerTarget.create("h1,h2", null));
     assertThat(parse("jdbc:postgresql://h1" + suffix, null).getConfiguredServerTarget())
@@ -2058,6 +2070,7 @@ class JdbcConnectionUrlParserTest {
   @ValueSource(
       strings = {
         "sqlserver://h1",
+        "microsoft:sqlserver://h1",
         "jtds:sqlserver://h1/db",
         "jtds:sybase://h1",
         "derby://h1/db",
@@ -2072,22 +2085,29 @@ class JdbcConnectionUrlParserTest {
       })
   void semicolonParametersDoNotChangeTargetCount(String connection) {
     String url = "jdbc:" + connection + ";property=a,b";
-    assertThat(hasMultipleTargets(url)).isFalse();
     assertThat(parse(url, null).getConfiguredServerTarget())
         .isEqualTo(DbServerTarget.create("h1", null));
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "jdbc:db2://h1:50000;user=a,b",
-        "jdbc:as400://h1:50000;user=a,b",
-        "jdbc:informix-sqli://h1;user=a,b",
-        "jdbc:informix-direct://db;user=a,b",
-        "jdbc:oceanbase:oracle://h1;user=a,b"
-      })
-  void otherSemicolonParameterSchemesDoNotCountPropertiesAsTargets(String url) {
-    assertThat(hasMultipleTargets(url)).isFalse();
+  @MethodSource("parserAuthorityBoundaries")
+  void parserExtractsAuthorityUsingItsPropertyBoundaries(
+      JdbcUrlParser parser, String url, String authority) {
+    assertThat(parser.extractAuthority(url)).isEqualTo(authority);
+  }
+
+  private static Stream<Arguments> parserAuthorityBoundaries() {
+    return Stream.of(
+        arguments(Db2UrlParser.INSTANCE, "db2://h1:50000;user=a,b", "h1:50000"),
+        arguments(Db2UrlParser.INSTANCE, "as400://h1:50000;user=a,b", "h1:50000"),
+        arguments(InformixSqliUrlParser.INSTANCE, "informix-sqli://h1;user=a,b", "h1"),
+        arguments(InformixDirectUrlParser.INSTANCE, "informix-direct://db;user=a,b", "db"),
+        arguments(OceanbaseUrlParser.INSTANCE, "oceanbase:oracle://h1;user=a,b", "h1"),
+        arguments(OceanbaseUrlParser.INSTANCE, "oceanbase://h1;user=a,b", "h1;user=a,b"),
+        arguments(
+            MysqlUrlParser.INSTANCE,
+            "mariadb:failover://user:pw;extra@h1,h2/db",
+            "user:pw;extra@h1,h2"));
   }
 
   @Test
@@ -2095,7 +2115,7 @@ class JdbcConnectionUrlParserTest {
     String userInfo = "user:pw;extra@";
     String url = "jdbc:mariadb:failover://" + userInfo + "h1,unexpected=value/db";
 
-    assertThat(hasMultipleTargets(url)).isTrue();
+    assertThat(hasMultipleTargets(MysqlUrlParser.INSTANCE.extractAuthority(url))).isTrue();
     assertThat(parse(url, null).getConfiguredServerTarget()).isNull();
   }
 

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
+import javax.annotation.Nullable;
+
 /**
  * Parser for H2 Database JDBC URLs.
  *
@@ -33,6 +35,12 @@ public final class H2UrlParser implements JdbcUrlParser {
   public static final H2UrlParser INSTANCE = new H2UrlParser();
 
   private H2UrlParser() {}
+
+  @Override
+  @Nullable
+  public String extractAuthority(String jdbcUrl) {
+    return UrlParsingUtils.extractSemicolonAuthority(jdbcUrl);
+  }
 
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {

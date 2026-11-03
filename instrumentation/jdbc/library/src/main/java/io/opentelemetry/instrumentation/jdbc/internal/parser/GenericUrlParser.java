@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.hasMultipleTargets;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerTargetGroup;
 import static java.util.logging.Level.FINE;
@@ -51,7 +50,7 @@ public final class GenericUrlParser implements JdbcUrlParser {
       ctx.system(OTHER_SQL);
     }
 
-    applyHostGroup(jdbcUrl, ctx, defaultPort);
+    applyHostGroup(extractAuthority(jdbcUrl), ctx, defaultPort);
 
     URI uri;
     try {
@@ -96,13 +95,13 @@ public final class GenericUrlParser implements JdbcUrlParser {
     ctx.applyCommonParams(jdbcUrl, "?", "&");
   }
 
-  static void applyHostGroup(String jdbcUrl, ParseContext ctx, @Nullable Integer defaultPort) {
-    String authority = extractAuthority(jdbcUrl);
+  static void applyHostGroup(
+      @Nullable String authority, ParseContext ctx, @Nullable Integer defaultPort) {
     if (authority == null) {
       return;
     }
     DbServerTarget target = parseServerTargetGroup(authority, defaultPort);
-    if (target != null || hasMultipleTargets(jdbcUrl)) {
+    if (target != null || hasMultipleTargets(authority)) {
       ctx.resolveConfiguredServerTarget(target);
     }
   }

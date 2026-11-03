@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
+import javax.annotation.Nullable;
+
 /**
  * Parser for IBM DB2 and AS400 JDBC URLs.
  *
@@ -29,6 +31,12 @@ public final class Db2UrlParser implements JdbcUrlParser {
   public static final Db2UrlParser INSTANCE = new Db2UrlParser();
 
   private Db2UrlParser() {}
+
+  @Override
+  @Nullable
+  public String extractAuthority(String jdbcUrl) {
+    return UrlParsingUtils.extractSemicolonAuthority(jdbcUrl);
+  }
 
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {

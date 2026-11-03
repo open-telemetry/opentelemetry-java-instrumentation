@@ -138,7 +138,9 @@ public final class JdbcConnectionUrlParser {
     String type = jdbcUrl.substring(0, typeLoc);
     JdbcUrlParser parser = typeParsers.get(type);
     ParseContext ctx = ParseContext.of(type, props);
-    if (hasMultipleTargets(jdbcUrl)) {
+    String authority =
+        (parser == null ? GenericUrlParser.INSTANCE : parser).extractAuthority(jdbcUrl);
+    if (authority != null && hasMultipleTargets(authority)) {
       ctx.disableSingleServerFallback();
     }
 

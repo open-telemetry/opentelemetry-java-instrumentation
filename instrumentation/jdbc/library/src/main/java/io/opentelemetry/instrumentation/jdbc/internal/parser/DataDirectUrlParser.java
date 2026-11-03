@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Parser for DataDirect and TIBCO Software JDBC URLs.
@@ -59,6 +60,12 @@ public final class DataDirectUrlParser implements JdbcUrlParser {
   public static final DataDirectUrlParser INSTANCE = new DataDirectUrlParser();
 
   private DataDirectUrlParser() {}
+
+  @Override
+  @Nullable
+  public String extractAuthority(String jdbcUrl) {
+    return UrlParsingUtils.extractSemicolonAuthority(jdbcUrl);
+  }
 
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {

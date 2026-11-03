@@ -76,7 +76,7 @@ public final class MysqlUrlParser implements JdbcUrlParser {
 
     if (subtype != null) {
       // Has subprotocol (e.g., mysql:aurora://...)
-      GenericUrlParser.applyHostGroup(jdbcUrl, ctx, DEFAULT_PORT);
+      GenericUrlParser.applyHostGroup(extractAuthority(jdbcUrl), ctx, DEFAULT_PORT);
       parseMariaSubProtocol(jdbcUrl.substring(protoLoc + 3), ctx);
     } else if (protoLoc > 0) {
       // Standard URL format - delegate to GenericUrlParser

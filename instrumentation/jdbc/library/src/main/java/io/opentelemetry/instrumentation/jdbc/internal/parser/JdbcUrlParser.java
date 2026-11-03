@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
+import javax.annotation.Nullable;
+
 /**
  * Interface for JDBC URL parsers.
  *
@@ -16,6 +18,12 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
  * at any time.
  */
 public interface JdbcUrlParser {
+
+  /** Extract the authority using this parser's connection-property boundaries. */
+  @Nullable
+  default String extractAuthority(String jdbcUrl) {
+    return UrlParsingUtils.extractAuthority(jdbcUrl);
+  }
 
   /**
    * Parse the JDBC URL and populate the context with extracted information.

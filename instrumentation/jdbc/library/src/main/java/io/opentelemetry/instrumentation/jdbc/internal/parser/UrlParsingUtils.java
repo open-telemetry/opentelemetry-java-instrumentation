@@ -238,6 +238,17 @@ public final class UrlParsingUtils {
     return end < 0 ? url.substring(start) : url.substring(start, end);
   }
 
+  /** Extract the authority from a JDBC URL with semicolon-delimited connection properties. */
+  @Nullable
+  public static String extractSemicolonAuthority(String url) {
+    String authority = extractAuthority(url);
+    if (authority == null) {
+      return null;
+    }
+    int semicolon = authority.indexOf(';');
+    return semicolon < 0 ? authority : authority.substring(0, semicolon);
+  }
+
   private static String stripUserInfo(String authority) {
     // address=(...) credentials use key/value syntax, where '@' belongs to the value.
     if (!isUrlShapedAuthority(authority)) {
@@ -251,47 +262,9 @@ public final class UrlParsingUtils {
     return authority.indexOf('(') < 0;
   }
 
-  /** Returns whether a JDBC URL contains more than one configured target. */
-  public static boolean hasMultipleTargets(String jdbcUrl) {
-    int protocol = jdbcUrl.indexOf("://");
-    if (protocol < 0) {
-      return false;
-    }
-
-    String authority = extractAuthority(jdbcUrl);
-    if (authority == null) {
-      return false;
-    }
-    if (usesSemicolonParameters(jdbcUrl.substring(0, protocol))) {
-      int semicolon = authority.indexOf(';');
-      if (semicolon >= 0) {
-        authority = authority.substring(0, semicolon);
-      }
-    }
+  /** Returns whether an extracted authority contains more than one configured target. */
+  public static boolean hasMultipleTargets(String authority) {
     return splitHostList(stripUserInfo(authority)).size() > 1;
-  }
-
-  private static boolean usesSemicolonParameters(String scheme) {
-    if (scheme.startsWith("jdbc:")) {
-      scheme = scheme.substring("jdbc:".length());
-    }
-    return scheme.equals("sqlserver")
-        || scheme.equals("microsoft:sqlserver")
-        || scheme.startsWith("jtds:")
-        || scheme.equals("derby")
-        || scheme.equals("db2")
-        || scheme.equals("as400")
-        || scheme.equals("h2:tcp")
-        || scheme.equals("h2:ssl")
-        || scheme.equals("hsqldb:hsql")
-        || scheme.equals("hsqldb:hsqls")
-        || scheme.equals("hsqldb:http")
-        || scheme.equals("hsqldb:https")
-        || scheme.equals("informix-sqli")
-        || scheme.equals("informix-direct")
-        || scheme.equals("oceanbase:oracle")
-        || scheme.startsWith("datadirect:")
-        || scheme.startsWith("tibcosoftware:");
   }
 
   // IPv6 brackets and address=(...) blocks may contain commas.

@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.splitQuery;
 
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Parser for Apache Derby JDBC URLs.
@@ -38,6 +39,12 @@ public final class DerbyUrlParser implements JdbcUrlParser {
   public static final DerbyUrlParser INSTANCE = new DerbyUrlParser();
 
   private DerbyUrlParser() {}
+
+  @Override
+  @Nullable
+  public String extractAuthority(String jdbcUrl) {
+    return UrlParsingUtils.extractSemicolonAuthority(jdbcUrl);
+  }
 
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {

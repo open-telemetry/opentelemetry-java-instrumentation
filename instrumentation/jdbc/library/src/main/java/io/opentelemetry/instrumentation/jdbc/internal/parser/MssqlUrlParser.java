@@ -42,6 +42,12 @@ public final class MssqlUrlParser implements JdbcUrlParser {
   private MssqlUrlParser() {}
 
   @Override
+  @Nullable
+  public String extractAuthority(String jdbcUrl) {
+    return UrlParsingUtils.extractSemicolonAuthority(jdbcUrl);
+  }
+
+  @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(MICROSOFT_SQL_SERVER);
     ctx.defaultHost(DEFAULT_HOST);
