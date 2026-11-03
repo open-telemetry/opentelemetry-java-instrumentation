@@ -33,17 +33,16 @@ Do not stop until all in-scope files are reviewed and fixed where possible.
 ## Guidance
 
 Read `docs/contributing/style-guide.md`, `.github/copilot-instructions.md`,
-and the matching `.github/instructions/*.instructions.md` files. Read a
-relevant `knowledge/*.md` article only when its details are needed to change
-code or resolve an edge case. Read `knowledge/metadata-yaml-format.md` when
-changing `metadata.yaml` or a non-obvious declarative mapping.
+and the matching `.github/instructions/*.instructions.md` files. Those topic
+files contain the rules, exceptions, implementation explanations, and examples.
+For metadata edits or non-obvious declarative mappings, use
+`.github/instructions/instrumentation-metadata.instructions.md`.
 
-## Review rules and reference
+## Applying repository rules
 
-Use the applicable native instruction files for repository rules. They govern
-review comments, not which issues the cleanup agent may fix: fix in-scope
-CI-detectable problems too. Use topic articles for implementation details and
-examples only when needed, not as another checklist.
+The repository rules guide implementation and review alike. Restrictions in
+`When reviewing` govern review comments, not which issues the cleanup agent may
+fix: fix in-scope CI-detectable problems too.
 
 ## Scope
 
@@ -86,8 +85,8 @@ examples only when needed, not as another checklist.
 
 For an instrumentation module, compare its configuration reads with
 `metadata.yaml`, including dependent common-module reads. If editing metadata,
-consult `knowledge/metadata-yaml-format.md` for its schema and validation
-procedure. Do not run that procedure on unchanged metadata solely because
+follow the metadata instructions' schema and validation procedure.
+Do not run that procedure on unchanged metadata solely because
 the module is in scope.
 
 For each file in scope:
@@ -111,12 +110,9 @@ Auto-fix boundaries:
 - Before changing a shared/common module, or a `:testing`, `:library`, or `:bootstrap` module,
   find sibling callers of the affected type or member. Keep the fix within the module unless a
   directly required caller change falls under the scope exception above.
-- Apply safe, deterministic fixes supported by the native instructions. When an edit depends on
-  implementation detail rather than the review decision, consult the relevant knowledge article:
-  `gradle-conventions.md` for sibling `testInstrumentation` dependencies,
-  `javaagent-module-patterns.md` for landmark version comments and method matchers,
-  `testing-general-patterns.md` for resource cleanup and assertion mechanics, and
-  `java-nullability-contracts.md` for upstream nullable-carrier contracts and overloads.
+- Apply safe, deterministic fixes supported by the applicable instructions. Keep each rule's
+  conditions and exceptions, including sibling-instrumentation dependencies, landmark version
+  comments, method matching, resource lifecycles, and nullable-carrier contracts.
 - Add a new deprecation suppression only after observing the diagnostic or verifying that the
   referenced symbol is deprecated and the suppression is required. Preserve accurate comments
   when moving or normalizing an existing suppression.

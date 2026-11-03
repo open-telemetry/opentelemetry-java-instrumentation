@@ -2,11 +2,9 @@
 applyTo: "**/*.java"
 ---
 
-# Java review conventions
+# Java conventions
 
-Apply only to changed Java code. Do not comment on formatting, compilation,
-Checkstyle, ErrorProne, or NullAway failures already covered by CI. Confirm
-the stated exception before reporting a repository convention.
+Apply these rules to Java code, using the stated exceptions for advice, tests, and public APIs.
 
 - **Visibility**: use the narrowest access that works. Add `// visible for
   testing` if a production member has broader visibility solely for direct
@@ -42,19 +40,11 @@ the stated exception before reporting a repository convention.
   `String` or boxed primitive, is redundant, except when an `Integer`
   passed for `AttributeKey<Long>` selects the `int` overload and would
   unbox null. Retain a guard protecting a dereference or derived computation.
-- **Reflection**: cache reflective method lookups that may repeat on a
-  production path. For a fixed declaring class or stable interface,
-  resolve once; use `ClassValue` only when lookup metadata actually varies
-  by concrete runtime class. Do not keep application-loader classes or
-  members in a global bootstrap cache. Test and one-time initialization
-  lookups do not require caching. `Method.invoke` wraps target exceptions
-  while `MethodHandle.invoke` does not; preserve failure handling when
-  changing invocation.
 - **Regular expressions**: precompile literal Java regexes when a
   production call may repeatedly compile them. `String.split` has a fast
-  path for simple separators such as `","` and `"\\."`; do not ask for
-  a `Pattern` there, in test code, or for one-time initialization.
-- **Lambda allocation**: do not ask to hoist a non-capturing lambda or
+  path for simple separators such as `","` and `"\\."`; no `Pattern` is needed
+  there, in test code, or for one-time initialization.
+- **Lambda allocation**: do not hoist a non-capturing lambda or
   method reference into a field to avoid allocation. HotSpot caches it at
   the `invokedynamic` call site.
 - **Byte buffers**: `Value<ByteBuffer>.getValue()` returns a fresh read-only
@@ -90,3 +80,45 @@ the stated exception before reporting a repository convention.
   keeping simple ternaries where they improve readability. A ternary inside a
   separate method-call argument does not count as direct nesting. In tests,
   nested ternaries may remain inline in attribute-assertion expected values.
+
+## Nullable carriers and attribute overloads
+
+The upstream propagation interfaces have these carrier contracts:
+
+| Interface | Method | Nullable parameter |
+| --- | --- | --- |
+| `TextMapGetter<CarrierT>` | `get(CarrierT, String)` | `carrier` |
+| `TextMapGetter<CarrierT>` | `getAll(CarrierT, String)` | `carrier` |
+| `TextMapGetter<CarrierT>` | `keys(CarrierT)` | none |
+| `TextMapSetter<CarrierT>` | `set(CarrierT, String, String)` | `carrier` |
+
+A getter that delegates directly to another `TextMapGetter` can pass the nullable carrier
+through without a second guard:
+
+```java
+@Override
+@Nullable
+public String get(@Nullable C carrier, String key) {
+  return delegate.get(carrier, key);
+}
+```
+
+For attribute setters, Java overload selection determines whether null reaches the setter.
+An `Integer` passed for `AttributeKey<Long>` selects the primitive `int` overload and unboxes
+before the setter runs, so keep its guard:
+
+```java
+Integer statusCode = response.getStatusCode();
+if (statusCode != null) {
+  attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode);
+}
+```
+
+A boxed value matching the key uses the nullable generic overload:
+
+```java
+span.setAttribute(META_ENABLED, metadata.getEnabled());
+```
+
+Here `META_ENABLED` is an `AttributeKey<Boolean>`. A guard around
+`view.getClass().getName()` protects a dereference, not just the setter.

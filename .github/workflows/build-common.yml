@@ -166,6 +166,10 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Test PR review bundle preparation
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
+        run: python3 -m unittest discover -s .github/scripts/pr-review -p 'test_*.py'
+
       # this is needed because we don't auto-update dependencies in instrumentation/**
       # and so we want to enforce that all "real" dependencies are dependency managed
       - name: Extra dependency management enforcement
