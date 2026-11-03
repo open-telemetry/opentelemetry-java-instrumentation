@@ -64,52 +64,49 @@ dependencies {
   latestDepTestLibrary("com.couchbase.client:java-client:2.5.+") // see test suite below
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("version25Test") {
-      dependencies {
-        implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
-        implementation("com.couchbase.client:java-client:${baseVersion("2.5.0").orLatest("2.5.+")}")
-        implementation(
-          "org.springframework.data:spring-data-couchbase:${baseVersion("2.0.0.RELEASE").orLatest("2.+")}"
-        )
-      }
-    }
-    register<JvmTestSuite>("version26Test") {
-      dependencies {
-        implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
-        implementation("com.couchbase.client:java-client:${baseVersion("2.6.0").orLatest("2.+")}")
-        implementation(
-          "org.springframework.data:spring-data-couchbase:${baseVersion("3.1.0.RELEASE").orLatest("3.1.+")}"
-        )
-        implementation("com.couchbase.client:encryption:${baseVersion("1.0.0").orLatest("1.+")}")
-      }
+testing.suites {
+  register<JvmTestSuite>("version25Test") {
+    dependencies {
+      implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
+      implementation("com.couchbase.client:java-client:${baseVersion("2.5.0").orLatest("2.5.+")}")
+      implementation(
+        "org.springframework.data:spring-data-couchbase:${baseVersion("2.0.0.RELEASE").orLatest("2.+")}"
+      )
     }
   }
-}
-
-testing.suites.withType<JvmTestSuite>().configureEach {
-  executions {
-    configureEach {
-      // required on jdk17
-      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-      jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
-      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-      if (otelProps.denyUnsafe) {
-        enabled = false
-      }
+  register<JvmTestSuite>("version26Test") {
+    dependencies {
+      implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
+      implementation("com.couchbase.client:java-client:${baseVersion("2.6.0").orLatest("2.+")}")
+      implementation(
+        "org.springframework.data:spring-data-couchbase:${baseVersion("3.1.0.RELEASE").orLatest("3.1.+")}"
+      )
+      implementation("com.couchbase.client:encryption:${baseVersion("1.0.0").orLatest("1.+")}")
     }
-
-    register("Experimental") {
-      telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
-    }
-    if (name == "version25Test") {
-      registerTask("testQuerySanitizationDisabled") {
-        filter {
-          includeTestsMatching("CouchbaseQuerySanitizationTest")
+  }
+  withType<JvmTestSuite>().configureEach {
+    executions {
+      configureEach {
+        // required on jdk17
+        jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+        jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
+        jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+        if (otelProps.denyUnsafe) {
+          enabled = false
         }
-        jvmArgs("-Dotel.instrumentation.couchbase.query-sanitization.enabled=false")
-        systemProperty("testQuerySanitizationEnabled", "false")
+      }
+
+      register("Experimental") {
+        telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
+      }
+      if (name == "version25Test") {
+        registerTask("testQuerySanitizationDisabled") {
+          filter {
+            includeTestsMatching("CouchbaseQuerySanitizationTest")
+          }
+          jvmArgs("-Dotel.instrumentation.couchbase.query-sanitization.enabled=false")
+          systemProperty("testQuerySanitizationEnabled", "false")
+        }
       }
     }
   }

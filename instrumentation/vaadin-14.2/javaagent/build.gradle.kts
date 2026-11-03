@@ -49,35 +49,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:tomcat:tomcat-10.0:javaagent"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("vaadin142Test") {
-      dependencies {
-        implementation(project(":instrumentation:vaadin-14.2:testing"))
-        implementation("com.vaadin:vaadin-spring-boot-starter:14.2.0")
-      }
-    }
-
-    register<JvmTestSuite>("vaadin14LatestTest") {
-      dependencies {
-        implementation(project(":instrumentation:vaadin-14.2:testing"))
-        // 14.12 requires license
-        implementation("com.vaadin:vaadin-spring-boot-starter:14.11.+")
-      }
-    }
-
-    register<JvmTestSuite>("vaadinLatestTest") {
-      dependencies {
-        implementation(project(":instrumentation:vaadin-14.2:testing"))
-        // tests fail with 24.4.1
-        implementation("com.vaadin:vaadin-spring-boot-starter:24.3.13")
-        implementation("org.testcontainers:testcontainers-selenium")
-        implementation("org.seleniumhq.selenium:selenium-java:4.8.3")
-      }
-    }
-  }
-}
-
 // Vaadin's frontend tooling installs node and pnpm into the shared ~/.vaadin directory. Running two
 // test suites at once lets their npm installs clobber each other, which leaves ~/.vaadin corrupted
 // and fails every subsequent attempt with ENOTEMPTY, so only let one suite run at a time.
@@ -88,23 +59,61 @@ val vaadinBuildService =
     maxParallelUsages.set(1)
   }
 
-tasks {
-  withType<Test>().configureEach {
-    if (name.startsWith("vaadinLatestTest")) {
-      usesService(vaadinBuildService)
-    }
-  }
-}
-
 val controllerTelemetrySuites =
   if (otelProps.testLatestDeps) {
     arrayOf("vaadin14LatestTest", "vaadinLatestTest")
   } else {
     arrayOf("vaadin142Test")
   }
-testing.suites.executions(*controllerTelemetrySuites) {
-  register("ControllerTelemetry") {
-    telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+
+testing.suites {
+  register<JvmTestSuite>("vaadin142Test") {
+    dependencies {
+      implementation(project(":instrumentation:vaadin-14.2:testing"))
+      implementation("com.vaadin:vaadin-spring-boot-starter:14.2.0")
+    }
+    if (!otelProps.testLatestDeps) {
+      executions {
+        register("ControllerTelemetry") {
+          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+        }
+      }
+    }
+  }
+
+  register<JvmTestSuite>("vaadin14LatestTest") {
+    dependencies {
+      implementation(project(":instrumentation:vaadin-14.2:testing"))
+      // 14.12 requires license
+      implementation("com.vaadin:vaadin-spring-boot-starter:14.11.+")
+    }
+    if (otelProps.testLatestDeps) {
+      executions {
+        register("ControllerTelemetry") {
+          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+        }
+      }
+    }
+  }
+
+  register<JvmTestSuite>("vaadinLatestTest") {
+    dependencies {
+      implementation(project(":instrumentation:vaadin-14.2:testing"))
+      // tests fail with 24.4.1
+      implementation("com.vaadin:vaadin-spring-boot-starter:24.3.13")
+      implementation("org.testcontainers:testcontainers-selenium")
+      implementation("org.seleniumhq.selenium:selenium-java:4.8.3")
+    }
+    executions {
+      configureEach {
+        usesService(vaadinBuildService)
+      }
+      if (otelProps.testLatestDeps) {
+        register("ControllerTelemetry") {
+          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+        }
+      }
+    }
   }
 }
 

@@ -58,14 +58,17 @@ fun shadedRuntimeClasspath(name: String, version: String) = configurations.creat
   }
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
-    mapOf("Shaded" to "4.4.0", "ShadedLatest" to "4.17.0").forEach { (suffix, version) ->
-      val shadedClasspath = shadedRuntimeClasspath("test${suffix}RuntimeClasspath", version)
-      register(suffix) {
-        classpath = files(sources.output, shadedClasspath)
-        if (otelProps.denyUnsafe) {
-          systemProperty("com.datastax.oss.driver.shaded.netty.noUnsafe", "true")
+testing.suites {
+  named<JvmTestSuite>("test") {
+    val testOutput = sources.output
+    executions {
+      mapOf("Shaded" to "4.4.0", "ShadedLatest" to "4.17.0").forEach { (suffix, version) ->
+        val shadedClasspath = shadedRuntimeClasspath("test${suffix}RuntimeClasspath", version)
+        register(suffix) {
+          classpath = files(testOutput, shadedClasspath)
+          if (otelProps.denyUnsafe) {
+            systemProperty("com.datastax.oss.driver.shaded.netty.noUnsafe", "true")
+          }
         }
       }
     }
