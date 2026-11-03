@@ -48,6 +48,10 @@ The remaining sections apply to test code and shared testing modules.
   required.
 - Use AssertJ (`assertThat(...)`) for assertions in new test code. Do not
   use JUnit `Assert.*` or Hamcrest `assertThat`.
+- In Java tests that statically import
+  `io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat`, do not also import
+  `org.assertj.core.api.Assertions.assertThat`. `OpenTelemetryAssertions` extends `Assertions`,
+  so its import covers ordinary assertions as well as telemetry assertions.
 - Do not add AssertJ `.as(...)` descriptions or `.withFailMessage(...)` in
   tests. Direct assertions whose failure output already shows the unexpected
   values are preferred.

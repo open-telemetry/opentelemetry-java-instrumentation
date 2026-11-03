@@ -1,23 +1,24 @@
-# Style Guide
+# Style guide
 
 This project follows the
 [Google Java Style Guide](https://google.github.io/styleguide/javaguide.html).
 
-## Code Formatting
+## Repository rules
 
-### Auto-formatting
+Repository-specific rules live in the [repository instructions](../../.github/copilot-instructions.md)
+and [topic instructions](../../.github/instructions/).
 
-One of the CI checks will fail if source code is not formatted according to Google Java Style.
+## Formatting
 
-Run the following command to reformat all files:
+Format source files with Spotless:
 
 ```bash
 ./gradlew spotlessApply
 ```
 
-In addition to Google Java Style formatting, spotless applies
+Spotless also applies
 [custom static importing rules](../../conventions/src/main/kotlin/io/opentelemetry/instrumentation/gradle/StaticImportFormatter.kt)
-(e.g. rewriting `Objects.requireNonNull` to a static import).
+(for example, rewriting `Objects.requireNonNull` to a static import).
 
 Markdown files are formatted and linted separately through
 [flint](https://github.com/grafana/flint), run via [mise](https://mise.jdx.dev/):
@@ -26,221 +27,22 @@ Markdown files are formatted and linted separately through
 mise run lint:fix
 ```
 
-flint also checks that links in markdown files resolve.
+Flint also checks that links in Markdown files resolve.
 
-#### Pre-commit hook
+## Pre-commit hook
 
-To completely delegate code style formatting to the machine,
-there is a pre-commit hook setup to verify formatting before committing.
-It can be activated with this command:
+Enable the repository's pre-commit hook with:
 
 ```bash
 git config core.hooksPath .githooks
 ```
 
-### Additional checks
+## Additional checks
 
-The build uses checkstyle to verify some parts of the Google Java Style Guide that cannot be handled
-by auto-formatting.
+Checkstyle verifies parts of the Google Java Style Guide that auto-formatting cannot handle.
 
 To run these checks locally:
 
 ```bash
 ./gradlew checkstyleMain checkstyleTest
 ```
-
-## Java Language Conventions
-
-### Visibility modifiers
-
-Follow the principle of minimal necessary visibility. Use the most restrictive access modifier that
-still allows the code to function correctly.
-
-Static fields should be `private`, except for constant-like static fields with an
-uppercase (`SCREAMING_SNAKE_CASE`) name.
-
-### Public API
-
-Public API consists of Java types that published artifacts intentionally expose for use by external
-code. A `public` modifier alone does not make a class public API. Determine API status from the
-artifact's published contract and intended use, not source path or visibility alone.
-
-### Internal packages
-
-Classes in `.internal` packages are not considered public API and may change without notice. These
-packages contain implementation details that should not be used by external consumers.
-
-Use `.internal` packages for implementation classes that need to be public within the module but
-should not be used externally
-
-### Class organization
-
-Prefer this order:
-
-- Static fields (final before non-final)
-- Static initializer
-- Instance fields (final before non-final)
-- Constructors
-- Methods
-- Nested classes
-
-**Method ordering**: Place calling methods above the methods they call. For example, place private
-methods below the non-private methods that use them.
-
-**Exception — static field initialization**: When a `static final` field is initialized by a
-private static method or a `static {}` block, it is acceptable to place the method or block
-immediately after the field to keep initialization logic co-located, even when this contradicts
-the general method ordering above.
-
-**Static factory entry points**: When a class exposes public static factory methods as its primary
-creation API (for example `create*(...)` or `builder(...)`), place those methods below fields and
-immediately above constructors. Treat static factory methods and constructors as a single
-construction section.
-
-**Static utility classes**: Place the private constructor (used to prevent instantiation) after all
-methods.
-
-### `final` keyword usage
-
-**Classes**: Declare public API classes `final` where possible.
-
-**Methods**: Declare `final` only in non-final public API classes.
-
-**Fields**: Declare `final` where possible.
-
-**Parameters and local variables**: Never declare `final`.
-
-### Null comparisons
-
-Prefer `value == null` and `value != null` over left-hand null comparisons such as
-`null == value` and `null != value`.
-
-This applies throughout the codebase, including Java, Kotlin, and Scala sources.
-
-### Uppercase field names
-
-Use uppercase (`SCREAMING_SNAKE_CASE`) for constant-like fields whose value is treated as a stable
-identifier, immutable descriptor, or immutable value constant.
-
-Examples that may remain uppercase include:
-
-- literal strings, numbers, and booleans that behave like module constants
-- immutable value objects that are treated as fixed constants after initialization, such as
-  `Duration` timeouts, intervals, or deadlines
-- canonical singleton or sentinel fields named `INSTANCE`, `EMPTY`, or `NOOP`
-
-Semantic key and handle types such as `AttributeKey`, `ContextKey`, `VirtualField`, `MethodHandle`,
-and `Pattern` identify a fixed, well-known slot or pattern rather than a mutable collaborator, so
-`static final` fields of these types are good candidates for uppercase names.
-
-`VirtualField` handles are a specific case where this is required: a `static final VirtualField`
-field **must** use an uppercase name, regardless of visibility (`private` or `public`) and
-regardless of the fact that `VirtualField.find(...)` creates the handle at runtime rather than at
-compile time. The runtime-created origin does not make it a mutable collaborator — it still
-identifies one fixed, well-known storage slot for the lifetime of the class.
-
-Private `static final` arrays of constant or immutable values should also use uppercase names when
-the array is not exposed outside the class and is not mutated after initialization. Even though Java
-arrays are technically mutable, treat this private, unexposed usage as constant-like for naming
-purposes.
-
-Do not use uppercase solely because a field is `static final`.
-
-Use lower camel case for runtime-created collaborator objects even when they are `static final`,
-for example loggers, instrumenters, helpers, sanitizers, mappers, caches, and similar service
-objects.
-
-When deciding between uppercase and lower camel case, distinguish immutable value constants from
-collaborators. A `private static final Duration FLUSH_TIMEOUT = ...;` field may remain uppercase
-when it is used as a fixed timeout constant, even if its value is computed from configuration at
-startup. In contrast, runtime-created service objects such as instrumenters, tracers, loggers, or
-helpers should use lower camel case.
-
-### `@Nullable` annotation usage
-
-**Note: This section is aspirational and may not reflect the current codebase.**
-
-Annotate all parameters and fields that can be `null` with `@Nullable`
-(specifically `javax.annotation.Nullable`, which is included by the
-`otel.java-conventions` Gradle plugin as a `compileOnly` dependency).
-
-`@NonNull` is unnecessary as it is the default.
-
-**Test code**: Do not add `@Nullable` annotations in test code.
-
-**Defensive programming**: Public APIs should still check for `null` parameters even if not
-annotated with `@Nullable`. Internal APIs do not need these checks.
-
-To help enforce `@Nullable` annotation usage, the `otel.nullaway-conventions` Gradle plugin
-should be used in all modules to perform basic nullable usage validation:
-
-```kotlin
-plugins {
-  id("otel.nullaway-conventions")
-}
-```
-
-### `Optional` usage
-
-Following the reasoning from
-[Writing a Java library with better experience (slide 12)](https://speakerdeck.com/trustin/writing-a-java-library-with-better-experience?slide=12),
-`java.util.Optional` usage is kept to a minimum.
-
-**Guidelines**:
-
-- `Optional` shouldn't appear in public API signatures
-- Avoid `Optional` on the hot path (instrumentation code), unless the instrumented library uses it
-
-### Conditional expressions
-
-Avoid directly nested ternaries, even when parenthesized. Use named intermediate values, `if`/`else`,
-or early returns, keeping simple ternaries where they improve readability.
-
-A ternary inside a separate method-call argument does not count as direct nesting. In tests, nested
-ternaries may remain inline in attribute-assertion expected values.
-
-## Semantic convention constants
-
-**Library instrumentation**: Production code may import stable semantic convention constants when
-both key name and type match. Copy incubating constants locally rather than adding an incubating
-semconv dependency to the published artifact. For example:
-
-```java
-// copied from MessagingIncubatingAttributes
-private static final AttributeKey<String> MESSAGING_SYSTEM_NAME =
-    AttributeKey.stringKey("messaging.system.name");
-```
-
-**Javaagent instrumentation**: Use the semconv constants from the semconv artifact directly. The
-javaagent bundles its own dependencies, so there is no risk of version conflicts for end users.
-
-**Tests**: Use the semconv constants from the semconv artifact directly. Test dependencies do not
-affect end users.
-
-## Tooling conventions
-
-### AssertJ
-
-Prefer AssertJ assertions over JUnit assertions (assertEquals, assertTrue, etc.) for better
-error messages.
-
-In test files that use `io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat`,
-do not also statically import `org.assertj.core.api.Assertions.assertThat` — `OpenTelemetryAssertions`
-extends `Assertions`, so all AssertJ `assertThat` overloads are already in scope via inheritance.
-
-### JUnit
-
-Test classes and test methods should generally be package-protected (no explicit visibility
-modifier) rather than `public`. This follows the principle of minimal necessary visibility and is
-sufficient for JUnit to discover and execute tests.
-
-## Performance
-
-Avoid allocations on the hot path (instrumentation code) whenever possible. This includes `Iterator`
-allocations from collections; note that `for (SomeType t : plainJavaArray)` does not allocate an
-iterator object.
-
-Non-allocating Stream API usage on the hot path is acceptable but may not fit the surrounding code
-style; this is a judgment call. Some Stream APIs make efficient allocation difficult (e.g.,
-`collect` with pre-sized sink data structures involves convoluted `Supplier` code, or lambdas passed
-to `forEach` may be capturing/allocating lambdas).

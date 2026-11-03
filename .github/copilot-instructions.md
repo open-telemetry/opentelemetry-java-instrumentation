@@ -12,7 +12,8 @@ exceptions, rationale, and useful examples in the same topic file, not in a seco
   hypothetical failures.
 - Verify library and framework assumptions against the supported dependency versions and concrete
   implementations. Check comments and copied code against the behavior they describe.
-- For a public Java API change, identify the *publishing artifact*.
+- For a public Java API change, identify the *publishing artifact* and determine API status
+  from its published contract and intended external use, not source path or visibility alone.
   Symbols explicitly documented as internal, unsupported, and subject to change are not supported
   public APIs merely because their artifact is published; implementation-only changes to them need
   no public-API deprecation cycle or CHANGELOG entry. This does not exempt `.internal` packages or

@@ -74,6 +74,16 @@ tests may import stable and incubating constants directly. Library production co
 matching stable constants. Copy incubating constants locally without adding an incubating dependency
 to the published artifact.
 
+The javaagent bundles its own dependencies, and test dependencies do not affect library consumers.
+
+For example, library production code copies an incubating key locally:
+
+```java
+// copied from MessagingIncubatingAttributes
+private static final AttributeKey<String> MESSAGING_SYSTEM_NAME =
+    AttributeKey.stringKey("messaging.system.name");
+```
+
 ## Schema URLs
 
 Select the schema URL from the semantic convention defining the emitted span, metric, or log.
