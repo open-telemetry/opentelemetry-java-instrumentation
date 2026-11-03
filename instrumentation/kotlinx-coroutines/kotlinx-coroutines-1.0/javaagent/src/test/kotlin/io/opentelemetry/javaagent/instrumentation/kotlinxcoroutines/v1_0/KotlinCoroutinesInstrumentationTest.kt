@@ -441,6 +441,30 @@ class KotlinCoroutinesInstrumentationTest {
     delay(10)
   }
 
+  @Test
+  fun `test WithSpan annotation on top-level function`() {
+    runBlocking {
+      topLevelAnnotated(1, 2, "test", "unannotated")
+    }
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          {
+            it.hasName("TopLevelFunctionsKt.topLevelAnnotated")
+              .hasNoParent()
+              .hasAttributesSatisfyingExactly(
+                equalTo(CODE_FUNCTION_NAME, "io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.TopLevelFunctionsKt.topLevelAnnotated"),
+                equalTo(AttributeKey.longKey("intValue"), 1),
+                equalTo(AttributeKey.longKey("longValue"), 2),
+                equalTo(AttributeKey.stringKey("stringValue"), "test")
+              )
+          }
+        )
+      }
+    )
+  }
+
   // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/12837
   @Test
   fun `WithSpan restores effective context after unannotated suspension`() {
