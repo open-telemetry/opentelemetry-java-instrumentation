@@ -111,7 +111,8 @@ configurations:
       attributes are captured unless an included pattern, an excluded pattern, or the deprecated
       otel.instrumentation.logback-appender.experimental.capture-mdc-attributes setting is
       configured; configuring only excluded patterns captures all MDC attributes that do not match
-      them. Captured MDC attributes may contain sensitive information.
+      them. When the logback-mdc instrumentation is enabled, the trace ID, span ID, and trace flags
+      keys are not captured. Captured MDC attributes may contain sensitive information.
     type: list
     default: ''
     examples:
@@ -149,3 +150,6 @@ configurations:
     examples:
       - "custom-mdc-key"
       - "key1,key2,key3"
+  - ref: common.logging.trace-id-key
+  - ref: common.logging.span-id-key
+  - ref: common.logging.trace-flags-key
