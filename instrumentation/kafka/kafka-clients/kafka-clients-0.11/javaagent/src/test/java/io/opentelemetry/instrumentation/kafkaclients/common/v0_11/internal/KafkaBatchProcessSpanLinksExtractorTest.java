@@ -207,6 +207,7 @@ class KafkaBatchProcessSpanLinksExtractorTest {
     return new ConsumerRecord<>(topic, partition, offset, key, "value");
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static Attributes linkAttributes(
       @Nullable String destination, @Nullable String partition, long offset, String key) {
     AttributesBuilder attributes = Attributes.builder();
