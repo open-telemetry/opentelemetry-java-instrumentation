@@ -41,23 +41,15 @@ does not establish conformance.
 
 ## Error origin and operation ownership
 
-For span status and applicable span or metric error attributes, distinguish the operation's own
-response classification from application callback failure. Callbacks can start independent client
-operations. A nested operation's server-error response does not become the enclosing operation's
-response merely because its exception escapes the callback. Keep protocol error codes and
-response-derived classifications with the operation that received the response. Do not preserve or
-relay nested server-error confirmation just to assign its protocol code to an outer callback
-exception.
+When attributing span or metric errors, keep a nested operation's server-error response and
+protocol code with that operation. Handle escaping callback exceptions under the outer client's
+failure and span-lifecycle policy, separately from its own response classification. Do not relay
+nested server-error confirmation just to classify the callback exception.
 
-Handle an escaping callback exception under the outer client's applicable callback-failure and
-span-lifecycle policy, separately from classification of its own response. Do not ignore such
-exceptions or assume every outer span stays successful. A caught nested exception alone does not
-fail the outer operation.
-
-For example, Redis `PING` receives `PONG` before an application response builder issues an independent
-`GET` that receives `WRONGTYPE`. `WRONGTYPE` belongs to `GET`, not to `PING`'s server response. If the
-builder catches it, the nested failure alone does not make `PING` fail. If it escapes, the outer
-call may fail during callback processing, but that does not turn `PONG` into a server-error reply.
+For example, Redis `PING` receives `PONG`, then an application response builder issues an independent
+`GET` that receives `WRONGTYPE`. If the builder catches the exception, that failure alone does not
+fail `PING`. If it escapes, the outer call may fail during callback processing. Either way,
+`WRONGTYPE` belongs to `GET`, not to `PING`'s successful server response.
 
 ## Requirement levels
 
