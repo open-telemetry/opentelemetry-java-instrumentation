@@ -60,6 +60,10 @@ testing {
     }
 
     executions("test") {
+      configureEach {
+        systemProperty("testLatestDeps", otelProps.testLatestDeps)
+      }
+
       register("SpringDisabled") {
         filter {
           includeTestsMatching("*SpringRabbitRegistrationTest")
@@ -73,8 +77,6 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-
     // add byte buddy agent for mockito
     configurations.testRuntimeClasspath.get().find { it.name.contains("byte-buddy-agent") }?.apply {
       jvmArgs("-javaagent:$absolutePath")

@@ -25,15 +25,15 @@ dependencies {
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+") // see servlet-5.0 module
 }
 
-tasks.withType<Test>().configureEach {
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-}
-
 testing {
   suites {
     executions("test") {
+      configureEach {
+        // required on jdk17
+        jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+        jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+      }
+
       register("RequestParameterCapture") {
         telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.included", "test-*")
         telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.excluded", "test-secret")

@@ -31,14 +31,14 @@ dependencies {
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
 }
 
-tasks.withType<Test>().configureEach {
-  dependsOn(agentShadowJar)
-  systemProperty("io.opentelemetry.smoketest.agent.shadowJar.path", agentShadowJar.get().archiveFile.get().toString())
-}
-
 testing {
   suites {
     executions("test") {
+      configureEach {
+        dependsOn(agentShadowJar)
+        systemProperty("io.opentelemetry.smoketest.agent.shadowJar.path", agentShadowJar.get().archiveFile.get().toString())
+      }
+
       register("ReceiveTelemetry") {
         filter {
           includeTestsMatching("io.opentelemetry.instrumentation.kafkaconnect.v2_6.MongoKafkaConnectSinkTaskTest.testSingleMessage")

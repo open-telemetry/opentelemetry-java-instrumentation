@@ -84,8 +84,8 @@ kotlin {
 testing {
   suites {
     register<JvmTestSuite>("version13Test") {
-      targets.configureEach {
-        testTask.configure {
+      executions {
+        configureDefault {
           jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
         }
       }

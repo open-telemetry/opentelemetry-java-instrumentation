@@ -27,6 +27,12 @@ dependencies {
 testing {
   suites {
     executions("test") {
+      configureEach {
+        if (otelProps.denyUnsafe) {
+          enabled = false
+        }
+      }
+
       configureDefault {
         filter {
           excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
@@ -51,14 +57,6 @@ testing {
         }
         include("**/RocketMqSimpleConsumerTest.*")
       }
-    }
-  }
-}
-
-tasks {
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
     }
   }
 }
