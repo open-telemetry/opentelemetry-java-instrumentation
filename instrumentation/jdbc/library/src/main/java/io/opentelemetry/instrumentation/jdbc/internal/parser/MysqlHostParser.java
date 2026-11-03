@@ -225,6 +225,7 @@ final class MysqlHostParser {
   }
 
   @Nullable
+  @SuppressWarnings("PreferCharsetOverload") // URLDecoder.decode accepts Charset since 10
   private static String decodeProperty(String value) {
     try {
       return URLDecoder.decode(value, "UTF-8");
