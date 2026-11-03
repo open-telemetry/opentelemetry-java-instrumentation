@@ -22,6 +22,7 @@ import io.opentelemetry.context.Context
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.control.NonFatal
 
 object PekkoTypedActors {
   val tracer: Tracer = GlobalOpenTelemetry.getTracer("test")
@@ -209,7 +210,9 @@ object TypedUnstasher {
               PekkoTypedActors.tracedChild("after unstash")
               next
             } catch {
-              case _: IllegalStateException =>
+              // pekko rethrows the exception of an unstashed handler wrapped in its internal
+              // UnstashException
+              case NonFatal(_) =>
                 PekkoTypedActors.tracedChild("after failed unstash")
                 unlocked()
             }
