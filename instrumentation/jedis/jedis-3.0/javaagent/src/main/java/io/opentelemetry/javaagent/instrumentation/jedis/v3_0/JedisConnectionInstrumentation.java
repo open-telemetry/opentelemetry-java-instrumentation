@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisSingletons.instrumenter;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
@@ -42,9 +42,9 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
     transformer.applyAdviceToMethod(
         named("sendCommand")
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("redis.clients.jedis.commands.ProtocolCommand")))
-            .and(takesArgument(1, is(byte[][].class))),
+            .and(
+                takesArguments(
+                    named("redis.clients.jedis.commands.ProtocolCommand"), is(byte[][].class))),
         getClass().getName() + "$SendCommandAdvice");
   }
 
