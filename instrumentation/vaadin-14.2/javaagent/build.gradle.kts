@@ -59,6 +59,12 @@ val vaadinBuildService =
     maxParallelUsages.set(1)
   }
 
+tasks.withType<Test>().configureEach {
+  if (name.startsWith("vaadinLatestTest")) {
+    usesService(vaadinBuildService)
+  }
+}
+
 val controllerTelemetrySuites =
   if (otelProps.testLatestDeps) {
     arrayOf("vaadin14LatestTest", "vaadinLatestTest")
@@ -104,11 +110,8 @@ testing.suites {
       implementation("org.testcontainers:testcontainers-selenium")
       implementation("org.seleniumhq.selenium:selenium-java:4.8.3")
     }
-    executions {
-      configureEach {
-        usesService(vaadinBuildService)
-      }
-      if (otelProps.testLatestDeps) {
+    if (otelProps.testLatestDeps) {
+      executions {
         register("ControllerTelemetry") {
           telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
         }
