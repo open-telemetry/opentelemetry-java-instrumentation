@@ -94,10 +94,9 @@ The gradle plugin defines two tasks:
 Repository CI uses `-PmuzzleSlices=8` to run eight slices,
 `:instrumentation:muzzle1` through `:instrumentation:muzzle8`.
 Local builds default to four slices; use `-PmuzzleSlices=8` to select the CI layout.
-Each slice discovers library versions and executes checks only for its assigned instrumentation
-projects. Multiple slices or individual module `muzzle` tasks can be requested together in one
-command. The two halves of each eight-slice pair, such as `muzzle2` and `muzzle6`, cover the
-projects assigned to the corresponding four-slice task.
+Each slice executes checks for its assigned instrumentation projects. The two halves of each
+eight-slice pair, such as `muzzle2` and `muzzle6`, cover the projects assigned to the corresponding
+four-slice task.
 
 The muzzle plugin needs to be configured in the module's `.gradle` file.
 Example:
