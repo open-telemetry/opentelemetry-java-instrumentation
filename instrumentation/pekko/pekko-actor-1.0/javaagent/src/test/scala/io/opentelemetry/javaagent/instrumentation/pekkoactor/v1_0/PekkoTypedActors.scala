@@ -116,6 +116,32 @@ class PekkoTypedActors {
     }
   }
 
+  def unstashAndContinue(fail: Boolean): Unit = {
+    implicit val actorSystem: ActorSystem[SpawnProtocol.Command] = system
+    val unstasher = spawn(TypedUnstasher(), "")
+    val parentSpan = tracer.spanBuilder("parent").startSpan()
+    val parentScope =
+      Context.current().`with`(parentSpan).makeCurrent()
+    try {
+      unstasher ! (if (fail) TypedUnstasher.Fail else TypedUnstasher.Greet)
+    } finally {
+      parentScope.close()
+      parentSpan.end()
+    }
+    val unlockSpan = tracer.spanBuilder("unlock").startSpan()
+    val unlockScope =
+      Context.current().`with`(unlockSpan).makeCurrent()
+    try {
+      Await.result(
+        unstasher.ask[Done](replyTo => TypedUnstasher.Unlock(replyTo)),
+        10.seconds
+      )
+    } finally {
+      unlockScope.close()
+      unlockSpan.end()
+    }
+  }
+
   def spawnChildAndTell(): Unit = {
     val parentSpan = tracer.spanBuilder("parent").startSpan()
     val parentScope =
@@ -156,6 +182,53 @@ object TypedStasher {
       case Greet(who) =>
         PekkoTypedActors.tracedChild(s"Hello, $who")
         Behaviors.same
+      case Unlock(replyTo) =>
+        replyTo ! Done
+        Behaviors.same
+    }
+}
+
+object TypedUnstasher {
+  sealed trait Command
+
+  case object Greet extends Command
+
+  case object Fail extends Command
+
+  case class Unlock(replyTo: ActorRef[Done]) extends Command
+
+  // stashes messages until it is unlocked, then traces what the unlock message does after
+  // unstashing returns, or after the handler of an unstashed message throws
+  def apply(): Behavior[Command] =
+    Behaviors.withStash(100) { buffer =>
+      Behaviors.receiveMessage {
+        case Unlock(replyTo) =>
+          val next =
+            try {
+              val next = buffer.unstashAll(unlocked())
+              PekkoTypedActors.tracedChild("after unstash")
+              next
+            } catch {
+              case _: IllegalStateException =>
+                PekkoTypedActors.tracedChild("after failed unstash")
+                unlocked()
+            }
+          replyTo ! Done
+          next
+        case other =>
+          buffer.stash(other)
+          Behaviors.same
+      }
+    }
+
+  private def unlocked(): Behavior[Command] =
+    Behaviors.receiveMessage {
+      case Greet =>
+        PekkoTypedActors.tracedChild("Hello")
+        Behaviors.same
+      case Fail =>
+        PekkoTypedActors.tracedChild("Failing")
+        throw new IllegalStateException("unstashed handler failed")
       case Unlock(replyTo) =>
         replyTo ! Done
         Behaviors.same

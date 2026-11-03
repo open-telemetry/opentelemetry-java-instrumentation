@@ -90,6 +90,38 @@ class PekkoTypedActorTest {
     )
   }
 
+  // the context of the stashed message must not outlive unstashing, the unlock message continues
+  // in its own context after unstashAll returns and after an unstashed handler throws
+  @ParameterizedTest
+  @ValueSource(booleans = Array(false, true))
+  def unstashRestoresContext(fail: Boolean): Unit = {
+    val tester = new PekkoTypedActors
+    tester.unstashAndContinue(fail)
+
+    val (stashedChild, unlockChild) =
+      if (fail) ("Failing", "after failed unstash")
+      else ("Hello", "after unstash")
+    testing.waitAndAssertSortedTraces(
+      TelemetryDataUtil.orderByRootSpanName("parent", "unlock"),
+      traceAssertion(stashedChild),
+      new Consumer[TraceAssert] {
+        override def accept(trace: TraceAssert): Unit =
+          trace.hasSpansSatisfyingExactly(
+            new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit = {
+                span.hasName("unlock").hasNoParent()
+              }
+            },
+            new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit = {
+                span.hasName(unlockChild).hasParent(trace.getSpan(0))
+              }
+            }
+          )
+      }
+    )
+  }
+
   private def assertTraces(count: Int, childName: String): Unit = {
     val assertions = (1 to count)
       .map(_ => traceAssertion(childName))
