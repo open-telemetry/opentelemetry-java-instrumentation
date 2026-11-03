@@ -18,8 +18,7 @@ public final class InjectionState {
     this(wrapper, () -> true);
   }
 
-  public InjectionState(
-      SnippetInjectingResponseWrapper wrapper, BooleanSupplier currentRequest) {
+  public InjectionState(SnippetInjectingResponseWrapper wrapper, BooleanSupplier currentRequest) {
     this.wrapper = wrapper;
     this.currentRequest = currentRequest;
   }
