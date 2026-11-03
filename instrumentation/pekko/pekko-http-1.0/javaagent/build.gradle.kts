@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -69,36 +71,43 @@ dependencies {
   latestDepTestLibrary("org.apache.pekko:pekko-stream_2.13:latest.release")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("pekko11Test") {
-      dependencies {
-        implementation("org.apache.pekko:pekko-http_2.13:1.1.0")
-        implementation("org.apache.pekko:pekko-stream_2.13:1.1.0")
-      }
+testing.suites {
+  register<JvmTestSuite>("pekko11Test") {
+    dependencies {
+      implementation("org.apache.pekko:pekko-http_2.13:1.1.0")
+      implementation("org.apache.pekko:pekko-stream_2.13:1.1.0")
     }
+    executions {
+      register("NoSpanSuppression") {
+        jvmArgs("-Dotel.instrumentation.common.span-suppression-strategy=none")
 
-    // the agent matches methods of pekko classes by name, some of them are private and scala
-    // mangles their names, run the tests against the scala 3 artifacts to catch a name that only
-    // holds for scala 2
-    register<JvmTestSuite>("scala3Test") {
-      dependencies {
-        implementation("org.scala-lang:scala3-library_3:3.3.6")
-        implementation("org.apache.pekko:pekko-http_3:${baseVersion("1.0.0").orLatest()}")
-        implementation("org.apache.pekko:pekko-stream_3:${baseVersion("1.0.1").orLatest()}")
-      }
-    }
-
-    register<JvmTestSuite>("tapirTest") {
-      dependencies {
-        val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.12"
-        implementation("org.apache.pekko:pekko-http_$scalaVersion:${baseVersion("1.0.0").orLatest()}")
-        implementation("org.apache.pekko:pekko-stream_$scalaVersion:${baseVersion("1.0.1").orLatest()}")
-        implementation("com.softwaremill.sttp.tapir:tapir-pekko-http-server_$scalaVersion:${baseVersion("1.7.0").orLatest()}")
-        if (otelProps.testLatestDeps) {
-          implementation("org.apache.pekko:pekko-slf4j_2.13:latest.release")
-          implementation("org.apache.pekko:pekko-actor_2.13:latest.release")
+        filter {
+          includeTestsMatching("*PekkoHttpServerInstrumentationTestAsync.successfulGetRequest")
         }
+      }
+    }
+  }
+
+  // the agent matches methods of pekko classes by name, some of them are private and scala
+  // mangles their names, run the tests against the scala 3 artifacts to catch a name that only
+  // holds for scala 2
+  register<JvmTestSuite>("scala3Test") {
+    dependencies {
+      implementation("org.scala-lang:scala3-library_3:3.3.6")
+      implementation("org.apache.pekko:pekko-http_3:${baseVersion("1.0.0").orLatest()}")
+      implementation("org.apache.pekko:pekko-stream_3:${baseVersion("1.0.1").orLatest()}")
+    }
+  }
+
+  register<JvmTestSuite>("tapirTest") {
+    dependencies {
+      val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.12"
+      implementation("org.apache.pekko:pekko-http_$scalaVersion:${baseVersion("1.0.0").orLatest()}")
+      implementation("org.apache.pekko:pekko-stream_$scalaVersion:${baseVersion("1.0.1").orLatest()}")
+      implementation("com.softwaremill.sttp.tapir:tapir-pekko-http-server_$scalaVersion:${baseVersion("1.7.0").orLatest()}")
+      if (otelProps.testLatestDeps) {
+        implementation("org.apache.pekko:pekko-slf4j_2.13:latest.release")
+        implementation("org.apache.pekko:pekko-actor_2.13:latest.release")
       }
     }
   }
@@ -137,19 +146,8 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val pekko11NoSpanSuppressionTest = register<Test>("pekko11NoSpanSuppressionTest") {
-    testClassesDirs = sourceSets["pekko11Test"].output.classesDirs
-    classpath = sourceSets["pekko11Test"].runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.common.span-suppression-strategy=none")
-
-    filter {
-      includeTestsMatching("*PekkoHttpServerInstrumentationTestAsync.successfulGetRequest")
-    }
-  }
-
   check {
-    dependsOn(testing.suites, pekko11NoSpanSuppressionTest)
+    dependsOn(testing.suites)
   }
 
   if (otelProps.denyUnsafe) {
