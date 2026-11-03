@@ -1,8 +1,11 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
 }
 
 val mrJarVersions = listOf(17)
+val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
 
 dependencies {
   implementation(project(":instrumentation-api"))
@@ -10,19 +13,6 @@ dependencies {
 
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("io.github.netmikey.logunit:logunit-jul")
-}
-
-sourceSets {
-  create("testJava17") {
-    java {
-      setSrcDirs(listOf("src/testJava17/java"))
-    }
-  }
-  create("testJava21") {
-    java {
-      setSrcDirs(listOf("src/testJava21/java"))
-    }
-  }
 }
 
 for (version in mrJarVersions) {
@@ -57,7 +47,64 @@ for (version in mrJarVersions) {
   }
 }
 
-// Configure testJava17 dependencies after java17 sourceset is created
+testing.suites {
+  register<JvmTestSuite>("testJava17") {
+    executions {
+      configureEach {
+        dependsOn("compileTestJava17Java")
+        systemProperty("metadataConfig", "Java17")
+        if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+          enabled = false
+        }
+      }
+
+      configureDefault {
+        filter {
+          excludeTestsMatching("*G1GcMemoryMetricTest")
+          excludeTestsMatching("*SerialGcMemoryMetricTest")
+          excludeTestsMatching("*PsGcMemoryMetricTest")
+        }
+      }
+
+      register("G1") {
+        filter {
+          includeTestsMatching("*G1GcMemoryMetricTest*")
+        }
+        include("**/*G1GcMemoryMetricTest.*")
+        jvmArgs("-XX:+UseG1GC")
+      }
+
+      register("PS") {
+        filter {
+          includeTestsMatching("*PsGcMemoryMetricTest*")
+        }
+        include("**/*PsGcMemoryMetricTest.*")
+        jvmArgs("-XX:+UseParallelGC")
+      }
+
+      register("Serial") {
+        filter {
+          includeTestsMatching("*SerialGcMemoryMetricTest*")
+        }
+        include("**/*SerialGcMemoryMetricTest.*")
+        jvmArgs("-XX:+UseSerialGC")
+      }
+    }
+  }
+
+  register<JvmTestSuite>("testJava21") {
+    executions {
+      configureEach {
+        dependsOn("compileTestJava21Java")
+        systemProperty("metadataConfig", "Java21")
+        if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_21)) {
+          enabled = false
+        }
+      }
+    }
+  }
+}
+
 configurations {
   named("testJava17Implementation") {
     extendsFrom(configurations["testImplementation"])
@@ -120,90 +167,7 @@ tasks {
     )
   }
 
-  // GC-specific tests that require Java 17+
-  val testG1 = register<Test>("testG1") {
-    dependsOn("compileTestJava17Java")
-    testClassesDirs = sourceSets["testJava17"].output.classesDirs
-    classpath = sourceSets["testJava17"].runtimeClasspath
-    filter {
-      includeTestsMatching("*G1GcMemoryMetricTest*")
-    }
-    include("**/*G1GcMemoryMetricTest.*")
-    jvmArgs("-XX:+UseG1GC")
-    systemProperty("metadataConfig", "Java17")
-  }
-
-  val testPS = register<Test>("testPS") {
-    dependsOn("compileTestJava17Java")
-    testClassesDirs = sourceSets["testJava17"].output.classesDirs
-    classpath = sourceSets["testJava17"].runtimeClasspath
-    filter {
-      includeTestsMatching("*PsGcMemoryMetricTest*")
-    }
-    include("**/*PsGcMemoryMetricTest.*")
-    jvmArgs("-XX:+UseParallelGC")
-    systemProperty("metadataConfig", "Java17")
-  }
-
-  val testSerial = register<Test>("testSerial") {
-    dependsOn("compileTestJava17Java")
-    testClassesDirs = sourceSets["testJava17"].output.classesDirs
-    classpath = sourceSets["testJava17"].runtimeClasspath
-    filter {
-      includeTestsMatching("*SerialGcMemoryMetricTest*")
-    }
-    include("**/*SerialGcMemoryMetricTest.*")
-    jvmArgs("-XX:+UseSerialGC")
-    systemProperty("metadataConfig", "Java17")
-  }
-
-  // Run other Java 17 tests (not GC-specific)
-  val testJava17 = register<Test>("testJava17") {
-    dependsOn("compileTestJava17Java")
-    testClassesDirs = sourceSets["testJava17"].output.classesDirs
-    classpath = sourceSets["testJava17"].runtimeClasspath
-    filter {
-      excludeTestsMatching("*G1GcMemoryMetricTest")
-      excludeTestsMatching("*SerialGcMemoryMetricTest")
-      excludeTestsMatching("*PsGcMemoryMetricTest")
-    }
-    systemProperty("metadataConfig", "Java17")
-  }
-
-  test {
-    // Java 8 tests only
-  }
-
-  // Run Java 21+ tests (virtual threads)
-  val testJava21 = register<Test>("testJava21") {
-    dependsOn("compileTestJava21Java")
-    testClassesDirs = sourceSets["testJava21"].output.classesDirs
-    classpath = sourceSets["testJava21"].runtimeClasspath
-    systemProperty("metadataConfig", "Java21")
-  }
-
-  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
-  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
-    named("testG1", Test::class).configure {
-      enabled = false
-    }
-    named("testPS", Test::class).configure {
-      enabled = false
-    }
-    named("testSerial", Test::class).configure {
-      enabled = false
-    }
-    named("testJava17", Test::class).configure {
-      enabled = false
-    }
-  }
-  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_21)) {
-    named("testJava21", Test::class).configure {
-      enabled = false
-    }
-  }
-
   check {
-    dependsOn(testJava17, testJava21, testG1, testPS, testSerial)
+    dependsOn(testing.suites)
   }
 }

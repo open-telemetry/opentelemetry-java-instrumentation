@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.executions
 import java.time.Duration
 
 plugins {
@@ -47,37 +48,8 @@ dependencies {
 }
 
 tasks {
-  val containerTestPackage =
-    "io.opentelemetry.instrumentation.jmx.rules.containers"
-
-  val containerTestClasses = fileTree("src/test/java") {
-    include("${containerTestPackage.replace('.', '/')}/*Test.java")
-  }.files
-    .map { "$containerTestPackage.${it.nameWithoutExtension}" }
-    .sorted()
-
-  require(containerTestClasses.isNotEmpty()) {
-    "No JMX container test classes found"
-  }
-
-  test {
-    filter {
-      containerTestClasses.forEach { excludeTestsMatching(it) }
-    }
-  }
-
-  val containerTests = containerTestClasses.map { testClass ->
-    register<Test>("test${testClass.substringAfterLast('.').removeSuffix("Test")}") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      filter {
-        includeTestsMatching(testClass)
-      }
-    }
-  }
-
   check {
-    dependsOn(containerTests)
+    dependsOn(testing.suites)
   }
 
   withType<Test>().configureEach {
@@ -112,6 +84,35 @@ tasks {
         "-Dio.opentelemetry.registry.path=$registryDir",
         "-Dio.opentelemetry.cameltestapp.path=${camelTestAppJarPath.get()}",
       )
+    }
+  }
+}
+
+val containerTestPackage =
+  "io.opentelemetry.instrumentation.jmx.rules.containers"
+
+val containerTestClasses = fileTree("src/test/java") {
+  include("${containerTestPackage.replace('.', '/')}/*Test.java")
+}.files
+  .map { "$containerTestPackage.${it.nameWithoutExtension}" }
+  .sorted()
+
+require(containerTestClasses.isNotEmpty()) {
+  "No JMX container test classes found"
+}
+
+testing.suites {
+  executions("test") {
+    configureDefault {
+      filter {
+        containerTestClasses.forEach { excludeTestsMatching(it) }
+      }
+    }
+
+    containerTestClasses.forEach { testClass ->
+      register(testClass.substringAfterLast('.').removeSuffix("Test")) {
+        filter.includeTestsMatching(testClass)
+      }
     }
   }
 }
