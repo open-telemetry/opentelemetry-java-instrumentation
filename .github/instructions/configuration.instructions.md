@@ -37,7 +37,7 @@ Instrumentation code uses the declarative API for both flat properties and nativ
   remain valid when required by an SDK SPI or bridge contract.
 - Read module settings under `java.<module>`, shared instrumentation settings under `java.common`,
   and general settings under `general`. HTTP header capture is general configuration.
-- A declarative `ComponentProvider.getName()` matches its YAML node and uses snake_case.
+- Make a declarative `ComponentProvider.getName()` match its YAML node and use snake_case.
 - Structured lists, YAML-only settings, and mode-specific initialization paths need declarative-mode
   coverage. Equivalent flat/YAML behavior using shared logic does not need duplicate module tests.
 
@@ -99,7 +99,7 @@ mdc_attributes:
 
 The setting's baseline determines what absence means:
 
-| Baseline | Absent or empty selector | Omitted `included` with nonempty `excluded` |
+| Baseline | Absent or empty selector | Omitted `included` with non-empty `excluded` |
 | --- | --- | --- |
 | None by default | Select nothing | Select everything except excluded values |
 | All by default | Keep everything | Keep everything except excluded values |

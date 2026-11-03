@@ -19,7 +19,7 @@ The remaining sections apply to test code and shared testing modules.
 - Tests that exercise javaagent helper classes directly, without requiring installed-agent behavior,
   belong in a `JvmTestSuite` named `unitTests` under `src/unitTests/java`. Prefer direct same-package
   access over `AgentClassLoaderAccess` or reflection used solely to bypass integration-test
-  classloader isolation. Reflection or classloader access remains appropriate when that behavior
+  class-loader isolation. Reflection or class-loader access remains appropriate when that behavior
   is itself under test.
 - Test supported behavior. Do not add tests that only prove
   removed settings are ignored, or preview variants that repeat the same behavior.
@@ -216,6 +216,6 @@ It also applies only to lambdas written **directly inline** as the
 `satisfies(AttributeKey, lambda)` argument, where the attribute key already
 documents what is being asserted. Lambdas passed to a custom helper such as
 `assertExceptionLog(typeAssertion, messageAssertion)` keep descriptive parameter names,
-even when the parameter is the same `AbstractStringAssert` type. There a
-descriptive name documents which attribute each lambda asserts, and renaming
-multiple parameters to `val` loses that context.
+even when the parameter is the same `AbstractStringAssert` type. In those helpers, descriptive
+parameter names identify the attribute each lambda asserts; renaming multiple parameters to `val`
+loses that context.

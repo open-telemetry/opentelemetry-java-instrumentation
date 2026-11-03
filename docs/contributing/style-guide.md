@@ -201,10 +201,9 @@ ternaries may remain inline in attribute-assertion expected values.
 
 ## Semantic convention constants
 
-**Library instrumentation**: Copy semantic convention constants directly into library
-instrumentation classes rather than depending on the semconv artifact. Library instrumentation is
-used by end users, and this avoids exposing a dependency on the semconv artifact (which may change
-across versions). For example:
+**Library instrumentation**: Production code may import stable semantic convention constants when
+both key name and type match. Copy incubating constants locally rather than adding an incubating
+semconv dependency to the published artifact. For example:
 
 ```java
 // copied from MessagingIncubatingAttributes

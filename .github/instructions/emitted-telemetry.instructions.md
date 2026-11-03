@@ -48,8 +48,8 @@ Uppercase BCP 14 keywords have their defined force; lowercase words use their or
 Treat feasible, unexplained departures from `SHOULD` or `RECOMMENDED` as departures from guidance,
 not `MUST` violations. Accept concrete constraints such as performance, security, privacy,
 unavailable source data, and compatibility when their consequences are accounted for.
-"Not a MUST" alone is not justification. Both choices under `MAY` or `OPTIONAL` are valid unless
-another requirement constrains them.
+Use a concrete constraint to justify a departure from `SHOULD` or `RECOMMENDED`. Both choices under
+`MAY` or `OPTIONAL` are valid unless another requirement constrains them.
 
 Reserve claims of specification noncompliance for unmet `MUST`, `MUST NOT`, or `REQUIRED`.
 Describe a mismatch in a declared convention shape without such a keyword as a departure from that
@@ -71,8 +71,8 @@ or redaction rules where the domain has its own.
 
 Reuse semconv constants only when both key name and type match. Javaagent production code and
 tests may import stable and incubating constants directly. Library production code may import
-matching stable constants, but copies incubating constants locally without adding an incubating
-dependency to its published artifact.
+matching stable constants. Copy incubating constants locally without adding an incubating dependency
+to the published artifact.
 
 ## Schema URLs
 

@@ -74,8 +74,8 @@ to shared infrastructure and other projects using the same conventions.
   telemetry. Missing labels merge optional telemetry into `when: default`.
 - For javaagent, plain-library, and library-autoconfigure tests, baseline fixtures may capture
   synthetic HTTP and messaging headers through test-exporter configuration, a library builder, or
-  production properties the integration actually reads. Do not require empty overrides,
-  capture-only flags or variants, or `metadataConfig` conditions solely for this fixture setup.
+  production properties the integration actually reads. This fixture setup does not require empty
+  overrides, capture-only flags or variants, or `metadataConfig` conditions.
   Follow the [canonical collection guidance](../../instrumentation-docs/readme.md#telemetry-collection)
   for synthetic capture and profile labels. Test meaningful opt-in telemetry in named variants wired
   into `check`; preserve normal suite coverage.
@@ -90,8 +90,9 @@ Prefer disjoint ranges for mutually exclusive compatibility implementations. Add
 higher-subrange behavior whose baseline remains compatible can stay in the same javaagent project,
 with separate `InstrumentationModule` classes and Muzzle passes. A different test matrix, helper
 project, Scala variant, or optional feature alone does not require another javaagent project.
-Incompatible toolchains/plugins and version-specific generated or shaded compile classpaths can.
-Keep newer optional compile-time types in `compileOnly` when appropriate.
+Incompatible toolchains/plugins and version-specific generated or shaded compile classpaths can
+require a separate javaagent project. Keep newer optional compile-time types in `compileOnly` when
+appropriate.
 
 For version siblings, compare the component prefix before the trailing version, not just the parent
 directory. `netty-3.8` and `netty-4.1` are siblings; `akka-actor-2.3` and `akka-http-10.0` are not.

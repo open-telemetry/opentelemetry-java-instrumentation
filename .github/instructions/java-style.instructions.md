@@ -10,18 +10,18 @@ Apply these rules to Java code, using the stated exceptions for advice, tests, a
   testing` if a production member has broader visibility solely for direct
   test access. Keep advice classes and their static entry points public for
   invokedynamic method-handle dispatch. Ordinary helpers may use narrower access when
-  their callers and classloader boundaries permit it. A single public class
+  their callers and class-loader boundaries permit it. A single public class
   in a module may be needed for Javadoc.
 - **Public API**: make public API classes `final` where possible; name
   public getters `get*` or `is*` for booleans. Javaagent singleton accessors
   directly returning stored fields are an exception to getter naming. Public
   implementation classes that are not API belong in an `.internal` package.
-- **Fields**: use `SCREAMING_SNAKE_CASE` for immutable value constants and
-  semantic keys/handles, not just because a field is `static final`. A
-  `static final VirtualField` *must* be uppercase regardless of visibility
-  or runtime initialization; this is not mandatory for `MethodHandle` or
-  `Pattern`. Loggers, instrumenters, helpers, and caches stay lower camel
-  case. Collections exposed outside a class must be unmodifiable;
+- **Fields**: use `SCREAMING_SNAKE_CASE` for immutable value constants, not just
+  because a field is `static final`. Semantic keys and handles, including
+  `MethodHandle` and `Pattern`, are candidates for uppercase names, not an
+  unconditional requirement. A `static final VirtualField` *must* be uppercase
+  regardless of visibility or runtime initialization. Loggers, instrumenters,
+  helpers, and caches stay lower camel case. Collections exposed outside a class must be unmodifiable;
   `Arrays.asList` is fixed-size but not unmodifiable. Do not add a wrapper
   to a private non-escaping collection.
 - **Catch parameters**: in catch clauses only, name a used exception `e`,

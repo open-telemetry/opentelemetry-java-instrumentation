@@ -5,9 +5,9 @@ applyTo: "instrumentation/**/metadata.yaml,instrumentation-docs/src/main/resourc
 # Instrumentation metadata
 
 Compare configuration entries with the module's actual readers, including dependent common modules.
-Names, types, defaults, and supported settings match the code. Remove an unused setting only after
-confirming it has no readers. General module enablement is represented by `disabled_by_default`,
-not an ordinary configuration entry.
+Keep names, types, defaults, and supported settings aligned with the code. Remove an unused setting
+only after confirming it has no readers. General module enablement is represented by
+`disabled_by_default`, not an ordinary configuration entry.
 
 ## Entry shape
 
@@ -46,7 +46,7 @@ back to. The override has no `default`.
 
 ## Structured and scalar declarative forms
 
-`type` continues to describe the flat form even when YAML is a list of objects. Set
+`type` describes the flat form even when YAML is a list of objects. Set
 `declarative_type: structured_list` and provide an object schema whose `required` keys are drawn
 from `properties`. Properties have a type and optional description, default, and example.
 The generated example uses each property's `example`, then `default`, then a name placeholder.

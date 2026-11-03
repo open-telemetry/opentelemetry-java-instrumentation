@@ -73,7 +73,7 @@ initializing it, for example with `Class.forName(name, false, helperClassLoader)
 nullable method in a `static final` field.
 
 When the lookup depends on the runtime class, use `ClassValue` instead of a static map keyed by
-`Class<?>`. Static maps can keep application classloaders alive. Cache missing methods too when
+`Class<?>`. Static maps can keep application class loaders alive. Cache missing methods too when
 supported library versions may not provide the method.
 
 Do not apply this rule to test code or a lookup that is provably executed only once during
@@ -97,7 +97,7 @@ that application. A bootstrap or otherwise shared helper must not cache one appl
 | Code receives reflection objects or inspects member metadata | `Method`, `Constructor`, or `Field` |
 | The caller deliberately handles `InvocationTargetException` | `Method` or `Constructor` |
 
-Do not choose or recommend `MethodHandle` solely for an assumed performance
+Do not choose `MethodHandle` solely for an assumed performance
 advantage. Use the design criteria above instead.
 
 Mixed use of reflection objects and method handles does not itself require

@@ -78,7 +78,7 @@ not require changing the other. Preserve existing controls and ordering when mai
   accessible `java.base` types available at the minimum supported Java version. Keep `named(...)`
   for instrumented-library types, inaccessible JDK types, and types unavailable at that minimum.
   Compiling against a type or having a `java.*` package name does not prove agent-loader safety.
-- For a complete, nonempty signature of exact parameter types, prefer Byte Buddy's
+- For a complete, non-empty signature of exact parameter types, prefer Byte Buddy's
   `takesArguments(Class<?>...)` when every parameter is a primitive or a public `java.base` type
   that is safely accessible and available at the module's minimum supported Java version. If any
   parameter is a library type or otherwise unsafe or unavailable, use
@@ -182,5 +182,5 @@ while the remaining depth is positive; do not leave unmatched increments on supp
   Callers static-import that accessor. This does not apply to methods that compute values,
   take arguments, or perform work; do not static-import verb-named helper methods on this
   basis. Keep collaborator fields private and lower camel case. Uppercase constant-like fields
-  may be exposed directly. Static `VirtualField` handles are uppercase regardless of visibility;
+  may be exposed directly. A `static final VirtualField` handle is uppercase regardless of visibility;
   other semantic keys and handles are candidates, not an unconditional uppercase requirement.

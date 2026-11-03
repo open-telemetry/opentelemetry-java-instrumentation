@@ -98,7 +98,7 @@ this is a coding assumption, not a guarantee about arbitrary `ContextStorage` im
 
 ## AdviceScope state
 
-A dedicated `AdviceScope` may clearly own acquisition and closure through `start()` and `end()`.
+A dedicated `AdviceScope` may own acquisition and closure through `start()` and `end()`.
 Use those names for new ordinary factories/completion methods rather than one-off `create()` names.
 There are two justified shapes.
 
@@ -114,12 +114,6 @@ public static class AdviceScope {
   private final Context context;
   private final Scope scope;
 
-  private AdviceScope(Request request, Context context) {
-    this.request = request;
-    this.context = context;
-    this.scope = context.makeCurrent();
-  }
-
   @Nullable
   public static AdviceScope start(Request request) {
     Context parent = Context.current();
@@ -127,6 +121,12 @@ public static class AdviceScope {
       return null;
     }
     return new AdviceScope(request, instrumenter().start(parent, request));
+  }
+
+  private AdviceScope(Request request, Context context) {
+    this.request = request;
+    this.context = context;
+    this.scope = context.makeCurrent();
   }
 
   public void end(@Nullable Throwable throwable) {

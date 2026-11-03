@@ -4,7 +4,7 @@ applyTo: "instrumentation/**/*,instrumentation-api/**/*,instrumentation-api-incu
 
 # Messaging processing ownership
 
-Use when a client and a framework can observe the same messaging processing work.
+Apply these rules when a client and a framework can observe the same messaging processing work.
 
 When two layers see the *same work*, only one should produce its Process span and record its
 parent, error, duration, and completion. The unit of work is a callback or observable traversal,

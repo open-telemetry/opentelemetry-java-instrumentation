@@ -23,12 +23,12 @@ Primary responsibilities:
 
 Do not stop until all in-scope files are reviewed and fixed where possible.
 
-## Required Inputs
+## Required inputs
 
 - Module directory (workspace-relative path), e.g.
   `instrumentation/apache-httpclient/apache-httpclient-4.0/javaagent`.
   This is the single target of the cleanup. Every file under this directory is
-  in scope; no other paths are reviewed.
+  in scope, subject to the skip list and the out-of-module exception in Scope.
 
 ## Guidance
 
@@ -58,7 +58,7 @@ fix: fix in-scope CI-detectable problems too.
   in-module fixes. Do not use this allowance to perform unrelated cleanup
   outside the module.
 
-## Cleanup Workflow
+## Cleanup workflow
 
 ### Phase 1: Validate the module
 
@@ -81,7 +81,7 @@ fix: fix in-scope CI-detectable problems too.
      Skip any file whose path contains `compile-stub/`, `shaded-stub-for-instrumenting/`,
      or `library-instrumentation-shaded/`.
 
-### Phase 3: Review and Fix
+### Phase 3: Review and fix
 
 For an instrumentation module, compare its configuration reads with
 `metadata.yaml`, including dependent common-module reads. If editing metadata,
@@ -198,17 +198,18 @@ Execute these steps strictly in order — do not reorder:
    first command has fully completed and its final exit status is known.
 
    The first run exercises the default test suites (`test`, `testExperimental`, and any other
-   custom test tasks wired into `check`). The second run activates `latestDepTest`, which
-   replaces `library` and `testLibrary` dependency versions with `latest.release`.
+   custom test tasks wired into `check`). The second run enables latest-dependency resolution for
+   `library` and `testLibrary`, subject to repository pins and `latestDepTestLibrary` overrides.
+   It also runs `latestDepTest` when that task exists.
    This is mandatory, not optional — fixes that break tests must be caught and corrected
    before committing. If a test fails:
    1. Diagnose the root cause. Determine whether the failure is caused by one of the
       cleanup fixes applied in Phase 3.
    2. If the failure is caused by a cleanup fix and a correct alternative fix is obvious,
       apply it and re-run. Repeat at most **three times** per failing fix.
-   3. If the failure cannot be resolved after three attempts — or if the only correct
-      resolution is to revert the cleanup fix — **revert that specific change**
-      (`git checkout -- <file>` for the affected lines) and record the item as
+   3. If the failure cannot be resolved after three attempts, or if the only correct
+      resolution is to revert the cleanup fix, **undo only that cleanup fix**,
+      preserving pre-existing changes and unrelated fixes, and record the item as
       `Needs Manual Fix` in the final output with a note explaining the test failure.
    4. After reverting, re-run the affected `:check` tasks to confirm the revert restored
       a green build. If tests still fail on code you did not change, that is a
@@ -223,7 +224,7 @@ Execute these steps strictly in order — do not reorder:
    or it is named `library`, `bootstrap`, or `testing-common`. Changes to visibility,
    method signatures, or class structure in a shared module can break compilation or tests
    in dependent sibling modules — including failures that compile cleanly but throw
-   `IllegalAccessError` at runtime inside ByteBuddy advice.
+   `IllegalAccessError` at runtime inside Byte Buddy advice.
 
    To find siblings, list the parent directory of the shared module and look for
    `library/`, `javaagent/`, and any version-variant directories that contain `library/`
@@ -259,9 +260,9 @@ Execute these steps strictly in order — do not reorder:
       instrumentation actually passes on versions outside the declared range).
    2. If the failure is caused by a cleanup fix and a correct alternative fix is obvious,
       apply it and re-run. Repeat at most **three times** per failing fix.
-   3. If the failure cannot be resolved after three attempts — or if the only correct
-      resolution is to revert the cleanup fix — **revert that specific change**
-      (`git checkout -- <file>` for the affected lines) and record the item as
+   3. If the failure cannot be resolved after three attempts, or if the only correct
+      resolution is to revert the cleanup fix, **undo only that cleanup fix**,
+      preserving pre-existing changes and unrelated fixes, and record the item as
       `Needs Manual Fix` in the final output with a note explaining the muzzle failure.
    4. After reverting, re-run the `:muzzle` task to confirm the revert restored a green
       build. Never commit code that fails muzzle validation.
@@ -278,14 +279,15 @@ Execute these steps strictly in order — do not reorder:
    Do not move on to Phase 5 until `spotlessApply` has fully completed and you have
    observed its final exit status.
 
-### Phase 5: Finalize and Report
+### Phase 5: Finalize and report
 
 Do not begin Phase 5 until Phase 4 is fully closed out.
 
-1. **Verify substantive changes remain.** Run `git diff --ignore-all-space --ignore-blank-lines`
-   and confirm non-empty output. If the only remaining diffs are whitespace changes — or if
-   all cleanup fixes were reverted during validation — **stop here**: reset the working tree
-   (`git checkout -- .`), do not commit or push. If any reverted items were recorded as
+1. **Verify substantive cleanup changes remain.** Inspect the cleanup diff with
+   `git diff --ignore-all-space --ignore-blank-lines` and confirm non-empty output.
+   If only whitespace cleanup remains, or all cleanup fixes were reverted during validation,
+   **stop here**: undo only the cleanup edits, preserving pre-existing changes. Do not commit or
+   push. If any reverted items were recorded as
    `Needs Manual Fix`, emit the final output with those items. Otherwise report
    "No issues found." and exit.
 2. Leave all changes uncommitted. Do not run `git commit`, do not pass

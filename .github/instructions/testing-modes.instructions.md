@@ -67,8 +67,8 @@ or a more specific name when several flags coexist.
 
 Plain-library fixtures configure builder options through the library API, not a javaagent
 property that production library code never reads. Use an explicitly test-only switch to select
-the fixture's builder option. Library-autoconfigure and other integrations that actually read
-production properties continue using them.
+the fixture's builder option. Use production properties in library-autoconfigure and other
+integrations that actually read them.
 
 For example, suite-owned executions bind the variant to its source suite and wire it into `check`:
 
