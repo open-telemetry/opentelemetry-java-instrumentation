@@ -53,7 +53,7 @@ public class AwsLambdaSqsMetricsAssertions {
             metrics.satisfiesExactly(
                 metric ->
                     assertThat(metric)
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasUnit("s")
                         .hasDescription("Duration of processing operation.")
                         .hasHistogramSatisfying(
@@ -110,7 +110,7 @@ public class AwsLambdaSqsMetricsAssertions {
             metrics.satisfiesExactly(
                 metric ->
                     assertThat(metric)
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasUnit("{message}")
                         .hasDescription(
                             "Number of messages that were delivered to the application.")

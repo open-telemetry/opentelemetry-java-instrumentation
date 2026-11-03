@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.R2dbcTelemetry;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.R2dbcTelemetryBuilder;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.internal.Experimental;
@@ -24,7 +24,7 @@ public class R2dbcSingletons {
             .setQuerySanitizationEnabled(
                 DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "r2dbc"))
             .addAttributesExtractor(
-                ServicePeerAttributesExtractor.create(
+                ServerServiceAttributesExtractor.create(
                     new R2dbcSqlAttributesGetter(), GlobalOpenTelemetry.get()));
     Experimental.setSqlCommenterEnabled(
         builder, DbConfig.isSqlCommenterEnabled(GlobalOpenTelemetry.get(), "r2dbc"));

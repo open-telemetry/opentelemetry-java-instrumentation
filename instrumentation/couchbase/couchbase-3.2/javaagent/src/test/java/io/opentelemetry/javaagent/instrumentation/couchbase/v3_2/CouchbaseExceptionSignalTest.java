@@ -129,7 +129,7 @@ class CouchbaseExceptionSignalTest {
                   .hasSpanContext(couchbaseSpan.getSpanContext())
                   .hasInstrumentationScope(
                       InstrumentationScopeInfo.builder("io.opentelemetry.couchbase-3.2")
-                          .setSchemaUrl(SchemaUrls.V1_44_0)
+                          .setSchemaUrl(SchemaUrls.V1_45_0)
                           .build()));
     } else {
       assertThat(testing.logRecords()).isEmpty();

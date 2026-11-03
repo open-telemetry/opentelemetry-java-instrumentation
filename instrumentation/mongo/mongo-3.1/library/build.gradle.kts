@@ -1,6 +1,7 @@
 plugins {
   id("otel.library-instrumentation")
   id("otel.nullaway-conventions")
+  id("otel.testcontainers-testing")
 }
 
 dependencies {
@@ -13,10 +14,4 @@ dependencies {
 
   testImplementation(project(":instrumentation:mongo:mongo-3.1:testing"))
   testImplementation("com.github.jnr:jnr-unixsocket:0.18")
-}
-
-tasks {
-  test {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
 }

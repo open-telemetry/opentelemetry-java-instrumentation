@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Map;
 
@@ -26,6 +27,22 @@ public interface HttpClientTypeAdapter<REQUEST> {
    */
   int sendRequest(REQUEST request, String method, URI uri, Map<String, String> headers)
       throws Exception;
+
+  /**
+   * Makes a request through an HTTP proxy and returns the response status code.
+   *
+   * <p>The URI identifies the destination and uses an IP literal. The proxy address is resolved.
+   * Implementations configure the proxy on the client or request without changing the destination.
+   */
+  default int sendRequestWithProxy(
+      REQUEST request,
+      String method,
+      URI uri,
+      Map<String, String> headers,
+      InetSocketAddress proxyAddress)
+      throws Exception {
+    throw new UnsupportedOperationException();
+  }
 
   default void sendRequestWithCallback(
       REQUEST request,
