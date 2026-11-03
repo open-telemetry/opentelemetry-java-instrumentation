@@ -450,6 +450,11 @@ class KotlinCoroutinesInstrumentationTest {
       topLevelAnnotated(1, 2, "test", "unannotated")
     }
 
+    if (v3Preview()) {
+      assertThat(testing.spans()).isEmpty()
+      return
+    }
+
     testing.waitAndAssertTraces(
       { trace ->
         trace.hasSpansSatisfyingExactly(
