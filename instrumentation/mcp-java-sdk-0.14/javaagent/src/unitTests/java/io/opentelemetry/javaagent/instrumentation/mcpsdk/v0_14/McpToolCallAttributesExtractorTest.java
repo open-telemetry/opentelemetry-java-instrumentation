@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.mcp.v0_14;
+package io.opentelemetry.javaagent.instrumentation.mcpsdk.v0_14;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;

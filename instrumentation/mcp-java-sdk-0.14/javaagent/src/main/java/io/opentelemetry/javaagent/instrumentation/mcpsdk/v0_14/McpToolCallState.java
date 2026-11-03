@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.mcp.v0_14;
+package io.opentelemetry.javaagent.instrumentation.mcpsdk.v0_14;
 
-import static io.opentelemetry.javaagent.instrumentation.mcp.v0_14.McpSingletons.currentState;
-import static io.opentelemetry.javaagent.instrumentation.mcp.v0_14.McpSingletons.propagators;
+import static io.opentelemetry.javaagent.instrumentation.mcpsdk.v0_14.McpSingletons.currentState;
+import static io.opentelemetry.javaagent.instrumentation.mcpsdk.v0_14.McpSingletons.propagators;
 import static java.util.logging.Level.FINE;
 
 import io.modelcontextprotocol.json.TypeRef;
