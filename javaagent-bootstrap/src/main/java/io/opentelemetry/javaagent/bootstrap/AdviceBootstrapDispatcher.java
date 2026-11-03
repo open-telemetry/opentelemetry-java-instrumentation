@@ -21,13 +21,13 @@ import javax.annotation.Nullable;
  * Contains the bootstrap method for initializing invokedynamic callsites which are added via agent
  * instrumentation.
  */
-public class IndyBootstrapDispatcher {
+public class AdviceBootstrapDispatcher {
 
-  private static final Logger logger = Logger.getLogger(IndyBootstrapDispatcher.class.getName());
+  private static final Logger logger = Logger.getLogger(AdviceBootstrapDispatcher.class.getName());
 
   private static volatile MethodHandle bootstrap;
 
-  private IndyBootstrapDispatcher() {}
+  private AdviceBootstrapDispatcher() {}
 
   /**
    * Initialized the invokedynamic bootstrapping method to which this class will delegate.
