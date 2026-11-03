@@ -1,6 +1,10 @@
-# [Messaging] Processing ownership
+---
+applyTo: "instrumentation/**/*,instrumentation-api/**/*,instrumentation-api-incubator/**/*"
+---
 
-Use when a client and a framework can observe the same messaging processing work.
+# Messaging processing ownership
+
+Apply these rules when a client and a framework can observe the same messaging processing work.
 
 When two layers see the *same work*, only one should produce its Process span and record its
 parent, error, duration, and completion. The unit of work is a callback or observable traversal,
@@ -60,9 +64,9 @@ thread scope when the callback returns. At the completion you can observe, recor
 duration and end the operation. Restore previous thread state on exit, including failure. Do not
 look up the parent from the context current on the completion thread.
 
-Ordinary paired advice can use [AdviceScope](javaagent-advice-patterns.md#advicescope-patterns).
+Ordinary paired advice can use `AdviceScope`.
 When suppressing lower-level processing with `ScopedThreadSuppression`, release it only if
-this invocation acquired it; see [thread-state guidance](javaagent-thread-local-state.md).
+this invocation acquired it.
 
 Raw Kafka and SQS traversal is best effort. Instrument the supported iterator or callback
 boundary, not arbitrary list access. An abandoned iterator has no reliable completion event.

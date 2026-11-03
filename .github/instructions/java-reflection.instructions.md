@@ -1,13 +1,16 @@
+---
+applyTo: "**/*.java,**/*.kt,**/*.scala,**/*.groovy"
+---
+
 # Java reflection and method handles
 
-Consult this article when changing reflection-based compatibility code. It
-explains how declaring types, class loaders, access, and exception wrapping
-affect the choice of lookup and cache.
+Apply these rules to reflection-based compatibility code. Choose lookup and cache scope from the
+declaring type, supported signatures, class loaders, access, and failure behavior.
 
 ## Prefer direct access
 
 Prefer a direct Java call when supported library versions expose a compatible member and ordinary
-Java access works. This gives the compiler and muzzle a clear view of the dependency. Use reflection
+Java access works. This gives the compiler and Muzzle a clear view of the dependency. Use reflection
 only when compatibility, access, or runtime discovery requires it.
 
 Before treating a lookup as runtime-class-dependent, identify the member's actual declaring type.
@@ -70,15 +73,15 @@ initializing it, for example with `Class.forName(name, false, helperClassLoader)
 nullable method in a `static final` field.
 
 When the lookup depends on the runtime class, use `ClassValue` instead of a static map keyed by
-`Class<?>`. Static maps can keep application classloaders alive. Cache missing methods too when
+`Class<?>`. Static maps can keep application class loaders alive. Cache missing methods too when
 supported library versions may not provide the method.
 
 Do not apply this rule to test code or a lookup that is provably executed only once during
 initialization.
 
-An injected helper's static cache is scoped to its defining application class loader. A bootstrap
-or shared helper must not cache one application's `Class`, `Method`, or `MethodHandle` globally.
-Keep that cache in the injected helper, or pass a loader-scoped accessor to shared code.
+Keep an application-specific static cache in a helper whose defining class loader is isolated for
+that application. A bootstrap or otherwise shared helper must not cache one application's `Class`,
+`Method`, or `MethodHandle` globally. Pass a loader-scoped accessor to shared code when needed.
 
 ## Choose the mechanism for the job
 
@@ -94,7 +97,7 @@ Keep that cache in the injected helper, or pass a loader-scoped accessor to shar
 | Code receives reflection objects or inspects member metadata | `Method`, `Constructor`, or `Field` |
 | The caller deliberately handles `InvocationTargetException` | `Method` or `Constructor` |
 
-Do not choose or recommend `MethodHandle` solely for an assumed performance
+Do not choose `MethodHandle` solely for an assumed performance
 advantage. Use the design criteria above instead.
 
 Mixed use of reflection objects and method handles does not itself require
@@ -136,5 +139,5 @@ required access.
 that matches the caller's catching, unwrapping, logging, and fallback behavior.
 
 Lookup and invocation failures in javaagent advice or helpers called by advice must not escape into
-application code. Follow the suppression and logging rules in
-[javaagent instructions](../../instructions/javaagent.instructions.md).
+application code. Executable advice with fallible bodies suppresses unexpected failures; helpers
+log them where they occur unless they are expected optional probes.
