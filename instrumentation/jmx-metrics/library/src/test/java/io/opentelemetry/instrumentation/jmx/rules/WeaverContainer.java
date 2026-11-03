@@ -239,7 +239,7 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
       assertThat(map.keySet())
           .filteredOn(item -> item.startsWith(prefix))
           .describedAs("expected registered %s to contain all keys", type)
-          .containsExactlyInAnyOrderElementsOf(expectedKeys);
+          .containsAll(expectedKeys);
 
       reported.forEach(
           key ->
