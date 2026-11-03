@@ -20,6 +20,8 @@ import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRo
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
 import io.opentelemetry.sdk.trace.data.StatusData
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE
 import io.vertx.core.Vertx
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.CompletableDeferred
@@ -439,6 +441,37 @@ class KotlinCoroutinesInstrumentationTest {
     @SpanAttribute("stringValue") s: String
   ) {
     delay(10)
+  }
+
+  @Test
+  @SuppressWarnings("deprecation")
+  fun `test WithSpan annotation on top-level function`() {
+    runBlocking {
+      topLevelAnnotated(1, 2, "test", "unannotated")
+    }
+
+    if (v3Preview()) {
+      assertThat(testing.spans()).isEmpty()
+      return
+    }
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          {
+            it.hasName("TopLevelFunctionsKt.topLevelAnnotated")
+              .hasNoParent()
+              .hasAttributesSatisfyingExactly(
+                equalTo(CODE_FUNCTION, "topLevelAnnotated"),
+                equalTo(CODE_NAMESPACE, "io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.TopLevelFunctionsKt"),
+                equalTo(AttributeKey.longKey("intValue"), 1),
+                equalTo(AttributeKey.longKey("longValue"), 2),
+                equalTo(AttributeKey.stringKey("stringValue"), "test")
+              )
+          }
+        )
+      }
+    )
   }
 
   // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/12837
