@@ -27,10 +27,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -532,6 +538,139 @@ class Jedis40ClientTest {
 
     testing.waitForTraces(Boolean.getBoolean("testJedis51OrLater") ? 1 : 2);
     testing.clearData();
+  }
+
+  @ParameterizedTest
+  @CsvSource({"true, true", "true, false", "false, true", "false, false"})
+  void commandBuilderNestedFailureOwnsItsCompletion(
+      boolean directConnection, boolean catchFailure) {
+    jedis.lpush("builder-wrong-type", "value");
+    Jedis nestedClient = new Jedis(host, port);
+    cleanup.deferCleanup(nestedClient::disconnect);
+    nestedClient.ping();
+    testing.waitForTraces(2);
+    testing.clearData();
+
+    Connection connection = jedis.getConnection();
+    UnifiedJedis client = new UnifiedJedis(connection) {};
+    List<JedisDataException> nestedErrors = new ArrayList<>();
+    ContextKey<String> callerKey = ContextKey.named("builder-caller");
+    Context caller = Context.current().with(callerKey, "value");
+    try (Scope ignored = caller.makeCurrent()) {
+      testing.runWithSpan(
+          "parent",
+          () -> {
+            SpanContext parentSpan = Span.current().getSpanContext();
+            CommandObject<String> command =
+                new CommandObject<>(
+                    new CommandArguments(Protocol.Command.PING),
+                    new Builder<String>() {
+                      @Override
+                      public String build(Object response) {
+                        assertThat(BuilderFactory.STRING.build(response)).isEqualTo("PONG");
+                        assertThat(Span.current().getSpanContext()).isEqualTo(parentSpan);
+                        assertThat(Context.current().get(callerKey)).isEqualTo("value");
+                        try {
+                          nestedClient.get("builder-wrong-type");
+                        } catch (JedisDataException e) {
+                          nestedErrors.add(e);
+                          if (!catchFailure) {
+                            throw e;
+                          }
+                        }
+                        assertThat(Span.current().getSpanContext()).isEqualTo(parentSpan);
+                        assertThat(Context.current().get(callerKey)).isEqualTo("value");
+                        return BuilderFactory.STRING.build(response);
+                      }
+                    });
+            Throwable error =
+                catchThrowable(
+                    () ->
+                        assertThat(
+                                directConnection
+                                    ? connection.executeCommand(command)
+                                    : client.executeCommand(command))
+                            .isEqualTo("PONG"));
+            assertThat(nestedErrors).hasSize(1);
+            assertThat(nestedErrors.get(0)).hasMessageStartingWith("WRONGTYPE");
+            assertThat(error).isSameAs(catchFailure ? null : nestedErrors.get(0));
+            assertThat(Span.current().getSpanContext()).isEqualTo(parentSpan);
+            assertThat(Context.current().get(callerKey)).isEqualTo("value");
+          });
+      assertThat(Span.current().getSpanContext())
+          .isEqualTo(Span.fromContext(caller).getSpanContext());
+      assertThat(Context.current().get(callerKey)).isEqualTo("value");
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span ->
+                    span.hasName("PING " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(catchFailure ? StatusData.unset() : StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "PING"),
+                            equalTo(DB_OPERATION_NAME, "PING"),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(
+                                ERROR_TYPE,
+                                catchFailure ? null : JedisDataException.class.getName())),
+                span ->
+                    span.hasName("GET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "GET builder-wrong-type"),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(ERROR_TYPE, "WRONGTYPE"))));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jedis-4.0",
+        "db.client.operation.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric -> {
+                  assertThat(metric.getHistogramData().getPoints()).hasSize(2);
+                  assertThat(metric.getHistogramData().getPoints())
+                      .filteredOn(
+                          point -> "GET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                      .singleElement()
+                      .satisfies(
+                          point -> {
+                            assertThat(point.getCount()).isEqualTo(1);
+                            assertThat(point.getAttributes().get(ERROR_TYPE))
+                                .isEqualTo("WRONGTYPE");
+                          });
+                  assertThat(metric.getHistogramData().getPoints())
+                      .filteredOn(
+                          point -> "PING".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                      .singleElement()
+                      .satisfies(
+                          point -> {
+                            assertThat(point.getCount()).isEqualTo(1);
+                            assertThat(point.getAttributes().get(ERROR_TYPE))
+                                .isEqualTo(
+                                    catchFailure ? null : JedisDataException.class.getName());
+                          });
+                }));
+
+    testing.clearData();
+    assertThatThrownBy(() -> jedis.get("builder-wrong-type")).hasMessageStartingWith("WRONGTYPE");
+    assertErrorType("WRONGTYPE");
   }
 
   @Test

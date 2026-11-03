@@ -32,6 +32,14 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
 
   private JedisRequestContext() {}
 
+  public static ScopedThreadValue<JedisRequestContext<?>> currentRequestContext() {
+    return currentRequestContext;
+  }
+
+  public boolean isOrdinaryCommand() {
+    return !captureServerErrors && !connectionInitialization;
+  }
+
   @Nullable
   public static <T> JedisRequestContext<T> attach() {
     JedisRequestContext<?> requestContext = currentRequestContext.get();
@@ -40,7 +48,8 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
       currentRequestContext.set(newContext);
       return newContext;
     }
-    // An independent command inside a batch must not put a handled error in the batch.
+    // Commands started by application code own their completion independently of the enclosing
+    // batch.
     if (requestContext.captureServerErrors) {
       JedisRequestContext<T> nestedContext = new JedisRequestContext<>();
       nestedContext.previousContext = currentRequestContext.set(nestedContext);
