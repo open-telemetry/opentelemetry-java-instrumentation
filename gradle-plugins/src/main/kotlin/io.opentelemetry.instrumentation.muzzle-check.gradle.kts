@@ -253,9 +253,15 @@ if (hasRelevantTask) {
         val muzzleTaskName = if (projectPath.isEmpty()) "muzzle" else "$projectPath:muzzle"
         val assertionTaskPrefix =
           if (projectPath.isEmpty()) "muzzle-Assert" else "$projectPath:muzzle-Assert"
+        val assertionTaskSeparator = resolvedTaskName.lastIndexOf(":muzzle-Assert")
+        val assertionProjectIsUnresolved =
+          assertionTaskSeparator >= 0 &&
+            rootProject.findProject(":${resolvedTaskName.substring(0, assertionTaskSeparator)}") ==
+              null
         resolvedTaskName == muzzleTaskName ||
           resolvedTaskName.startsWith("muzzle-Assert") ||
-          resolvedTaskName.startsWith(assertionTaskPrefix)
+          resolvedTaskName.startsWith(assertionTaskPrefix) ||
+          assertionProjectIsUnresolved
       }
     }
     if (!selected) {

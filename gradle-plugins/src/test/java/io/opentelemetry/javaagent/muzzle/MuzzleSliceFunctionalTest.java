@@ -179,6 +179,35 @@ class MuzzleSliceFunctionalTest {
   }
 
   @Test
+  void abbreviatedAssertionProjectPathsResolve() throws IOException {
+    startRepository();
+    BuildResult absolute =
+        slicedRunner(
+                slicedFixture("abbreviated-absolute", 4),
+                ":inst:c:muzzle-AssertPass-fixture-module-c-1.0")
+            .build();
+    assertThat(assertionPaths(absolute))
+        .containsExactly(":instrumentation:c:muzzle-AssertPass-fixture-module-c-1.0");
+
+    Path relativeProject = slicedFixture("abbreviated-relative", 4);
+    Path settings = relativeProject.resolve("settings.gradle");
+    Files.writeString(
+        settings,
+        Files.readString(settings)
+            .replace(
+                "'instrumentation:c'",
+                "'instrumentation:child-c'")
+            + "\nproject(':instrumentation:child-c').projectDir = file('instrumentation/c')\n");
+    BuildResult relative =
+        slicedRunner(
+                relativeProject.resolve("instrumentation"),
+                "ch:muzzle-AssertPass-fixture-module-c-1.0")
+            .build();
+    assertThat(assertionPaths(relative))
+        .containsExactly(":instrumentation:child-c:muzzle-AssertPass-fixture-module-c-1.0");
+  }
+
+  @Test
   void unsupportedSliceCountIsRejected() throws IOException {
     startRepository();
     Path project = slicedFixture("invalid", 4);
