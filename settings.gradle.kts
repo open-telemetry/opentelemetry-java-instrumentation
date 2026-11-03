@@ -1,6 +1,6 @@
 pluginManagement {
   plugins {
-    id("com.github.jk1.dependency-license-report") version "3.1.4"
+    id("com.github.jk1.dependency-license-report") version "3.1.5"
     id("com.google.cloud.tools.jib") version "3.5.4"
     id("com.gradle.plugin-publish") version "2.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
