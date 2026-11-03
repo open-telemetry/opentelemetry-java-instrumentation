@@ -482,7 +482,9 @@ instrumentation/development:
         # included pattern, an excluded pattern, or the deprecated
         # otel.instrumentation.logback-appender.experimental.capture-mdc-attributes setting is
         # configured; configuring only excluded patterns captures all MDC attributes that do not
-        # match them. Captured MDC attributes may contain sensitive information.
+        # match them. In the Java agent, when the logback-mdc instrumentation is enabled, the trace
+        # ID, span ID, and trace flags keys are not captured, because the log record already carries
+        # the trace context. Captured MDC attributes may contain sensitive information.
         excluded: []
 
         # Comma-separated list of case-sensitive glob patterns for MDC keys to capture as log
@@ -491,9 +493,9 @@ instrumentation/development:
         # MDC attributes are captured unless an included pattern, an excluded pattern, or the
         # deprecated otel.instrumentation.logback-appender.experimental.capture-mdc-attributes
         # setting is configured; configuring only excluded patterns captures all MDC attributes that
-        # do not match them. When the logback-mdc instrumentation is enabled, the trace ID, span ID,
-        # and trace flags keys are not captured. Captured MDC attributes may contain sensitive
-        # information.
+        # do not match them. In the Java agent, when the logback-mdc instrumentation is enabled, the
+        # trace ID, span ID, and trace flags keys are not captured, because the log record already
+        # carries the trace context. Captured MDC attributes may contain sensitive information.
         included: []
     logback_mdc:
       # Enables adding baggage entries to the Logback MDC, prefixed with "baggage.".
