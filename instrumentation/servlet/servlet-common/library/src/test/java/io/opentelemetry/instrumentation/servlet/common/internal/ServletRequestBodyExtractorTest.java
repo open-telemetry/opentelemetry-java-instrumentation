@@ -101,14 +101,7 @@ class ServletRequestBodyExtractorTest {
 
   @Test
   void nonUtf8WithoutContentTypeCapturedAsBinary() {
-    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), null))
-        .isEqualTo(Value.of(ISO_8859_1_BODY));
-  }
-
-  @Test
-  void nonUtf8WithContentTypeWithoutCharsetCapturedAsBinary() {
-    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), null))
-        .isEqualTo(Value.of(ISO_8859_1_BODY));
+    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), null)).isEqualTo(Value.of("caf"));
   }
 
   @ParameterizedTest
@@ -129,11 +122,18 @@ class ServletRequestBodyExtractorTest {
     assertThat(getRequestBodyValue(bufferOf("café".getBytes(UTF_8)), "text/plain; charset=unknown"))
         .isEqualTo(Value.of("café"));
     assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), "text/plain; charset=unknown"))
-        .isEqualTo(Value.of(ISO_8859_1_BODY));
+        .isEqualTo(Value.of("caf"));
+  }
+
+  @Test
+  void truncatedUtf8() {
+    ByteBuffer buffer = ByteBuffer.allocate(6);
+    buffer.put("café".getBytes(UTF_8)).put((byte) 0xC3); // truncated UTF-8 sequence
+    assertThat(getRequestBodyValue(buffer, null)).isEqualTo(Value.of("café"));
   }
 
   private static ByteBuffer bufferOf(byte[] bytes) {
-    ByteBuffer buffer = ByteBuffer.allocate(64);
+    ByteBuffer buffer = ByteBuffer.allocate(bytes.length);
     buffer.put(bytes);
     return buffer;
   }

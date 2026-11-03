@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -78,6 +79,7 @@ class ServletBodyCaptureTest {
   }
 
   @Test
+  @Disabled // not relevant with the current 'parse as utf8' current approach.
   void capturesRequestBody_binary() throws Exception {
     // not valid UTF-8, hexadecimal 0001fffe: it can only be captured as bytes
     byte[] body = {0x00, 0x01, (byte) 0xff, (byte) 0xfe};

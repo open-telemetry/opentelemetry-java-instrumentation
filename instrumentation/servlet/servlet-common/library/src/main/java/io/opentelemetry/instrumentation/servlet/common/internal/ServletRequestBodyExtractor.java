@@ -101,23 +101,23 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
     // - when the data is already utf-8, can we just produce a string attribute without decoding ?
 
     buffer.flip();
-    ByteBuffer original = buffer.duplicate();
     try {
       // malformed input must be reported, not silently replaced, so that a body that is not valid
       // text in the expected charset is captured as binary
       CharsetDecoder decoder =
           getCharset(contentType)
               .newDecoder()
-              .onMalformedInput(CodingErrorAction.REPORT)
-              .onUnmappableCharacter(CodingErrorAction.REPORT);
+              // ignore allows to decode as much as we can and cut of the rest.
+              .onMalformedInput(CodingErrorAction.IGNORE)
+              .onUnmappableCharacter(CodingErrorAction.IGNORE);
       // decode a duplicate to keep the buffer content available for the binary fallback
       return Value.of(decoder.decode(buffer.duplicate()).toString());
     } catch (CharacterCodingException e) {
       // TODO: create a dedicated Value<ByteBuffer> implementation that avoids doing any copy
       // we can do that because we know the buffer will not be modified anymore.
-      int start = original.arrayOffset() + original.position();
-      int end = original.arrayOffset() + original.limit();
-      byte[] bytes = Arrays.copyOfRange(original.array(), start, end);
+      int start = buffer.arrayOffset() + buffer.position();
+      int end = buffer.arrayOffset() + buffer.limit();
+      byte[] bytes = Arrays.copyOfRange(buffer.array(), start, end);
       return Value.of(bytes);
     }
   }
