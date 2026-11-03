@@ -10,15 +10,11 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceBootstrap;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForceDynamicallyTypedAssignReturnedFactory;
-import java.io.IOException;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.dynamic.ClassFileLocator;
-import net.bytebuddy.dynamic.ClassFileLocator.Resolution;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public final class TypeTransformerImpl implements TypeTransformer {
@@ -53,19 +49,8 @@ public final class TypeTransformerImpl implements TypeTransformer {
                 .advice(methodMatcher, adviceClassName)
                 // default strategy used by AgentBuilder.Transformer.ForAdvice
                 .with(AgentBuilder.PoolStrategy.Default.FAST)
-                .include(getAdviceLocator(instrumentationModule.getClass().getClassLoader()))
+                .include(instrumentationModule.getClass().getClassLoader())
                 .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler()));
-  }
-
-  private static ClassFileLocator getAdviceLocator(ClassLoader classLoader) {
-    ClassFileLocator classFileLocator = ClassFileLocator.ForClassLoader.of(classLoader);
-    return new AdviceLocator(
-        classFileLocator,
-        (slashClassName, bytes) -> {
-          // Reject VirtualField.find calls in non-inlined advice, where they are not rewritten.
-          AdviceVirtualFieldUsageChecker.check(bytes);
-          return bytes;
-        });
   }
 
   @Override
@@ -75,50 +60,5 @@ public final class TypeTransformerImpl implements TypeTransformer {
 
   public AgentBuilder.Identified.Extendable getAgentBuilder() {
     return agentBuilder;
-  }
-
-  private static class AdviceLocator implements ClassFileLocator {
-    private final ClassFileLocator delegate;
-    private final BiFunction<String, byte[], byte[]> transform;
-
-    AdviceLocator(ClassFileLocator delegate, BiFunction<String, byte[], byte[]> transform) {
-      this.delegate = delegate;
-      this.transform = transform;
-    }
-
-    @Override
-    public Resolution locate(String name) throws IOException {
-      Resolution resolution = delegate.locate(name);
-      return new AdviceTransformingResolution(name, resolution, transform);
-    }
-
-    @Override
-    public void close() throws IOException {
-      delegate.close();
-    }
-  }
-
-  private static class AdviceTransformingResolution implements Resolution {
-    private final String name;
-    private final Resolution delegate;
-    private final BiFunction<String, byte[], byte[]> transform;
-
-    AdviceTransformingResolution(
-        String name, Resolution delegate, BiFunction<String, byte[], byte[]> transform) {
-      this.name = name;
-      this.delegate = delegate;
-      this.transform = transform;
-    }
-
-    @Override
-    public boolean isResolved() {
-      return delegate.isResolved();
-    }
-
-    @Override
-    public byte[] resolve() {
-      byte[] bytes = delegate.resolve();
-      return transform.apply(name, bytes);
-    }
   }
 }
