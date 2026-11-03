@@ -276,7 +276,7 @@ val apacheHttpClientSuiteTask = registerOsgiSuite("apacheHttpClient") {
   implementation("commons-logging:commons-logging") {
     version { strictly("1.2") }
   }
-  runtimeOnly("org.apache.felix:org.apache.felix.configadmin:1.9.26")
+  runtimeOnly("org.apache.felix:org.apache.felix.configadmin:1.10.0")
 }
 
 // Suite: logbackAppender - a representative library instrumentation bundle, resolving against
