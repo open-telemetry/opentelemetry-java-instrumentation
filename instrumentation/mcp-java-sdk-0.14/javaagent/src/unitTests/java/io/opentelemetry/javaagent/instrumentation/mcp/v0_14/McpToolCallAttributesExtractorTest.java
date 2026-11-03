@@ -52,6 +52,7 @@ class McpToolCallAttributesExtractorTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void extractsJsonRpcErrorCode() {
     McpToolCallRequest request = new McpToolCallRequest("lookup", null);
     AttributesBuilder attributes = Attributes.builder();
@@ -66,6 +67,7 @@ class McpToolCallAttributesExtractorTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void handlesJsonRpcErrorWithoutCode() {
     McpToolCallRequest request = new McpToolCallRequest("lookup", null);
     AttributesBuilder attributes = Attributes.builder();

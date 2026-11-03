@@ -24,6 +24,7 @@ import io.modelcontextprotocol.spec.McpClientSession;
 import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.ProtocolVersions;
+import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -194,6 +195,96 @@ class McpClientSessionInstrumentationTest {
           assertThat(propagatedSpanContext.getTraceId()).isEqualTo(trace.getSpan(0).getTraceId());
           assertThat(propagatedSpanContext.getSpanId()).isEqualTo(trace.getSpan(0).getSpanId());
         });
+  }
+
+  @Test
+  void isolatesMetadataAcrossSubscriptions() {
+    TestMcpClientTransport transport =
+        new TestMcpClientTransport(TestMcpClientTransport.ToolResponse.SUCCESS);
+    McpClientSession session = newSession(transport);
+    McpSchema.CallToolRequest original =
+        new McpSchema.CallToolRequest("lookup", Map.of(), Map.of("tenant", "application"));
+    Mono<McpSchema.CallToolResult> publisher =
+        session.sendRequest(McpSchema.METHOD_TOOLS_CALL, original, CALL_TOOL_RESULT_TYPE);
+
+    Context firstContext =
+        Baggage.builder().put("tenant", "first").build().storeInContext(Context.root());
+    assertThat(ContextPropagationOperator.runWithContext(publisher, firstContext).block())
+        .isNotNull();
+    McpSchema.CallToolRequest first =
+        (McpSchema.CallToolRequest) transport.getToolRequest().params();
+    assertThat(first.meta()).containsEntry("baggage", "tenant=first");
+    String firstTraceparent = (String) first.meta().get("traceparent");
+
+    Context secondContext =
+        Baggage.builder().put("tenant", "second").build().storeInContext(Context.root());
+    assertThat(ContextPropagationOperator.runWithContext(publisher, secondContext).block())
+        .isNotNull();
+    McpSchema.CallToolRequest second =
+        (McpSchema.CallToolRequest) transport.getToolRequest().params();
+    assertThat(second.meta()).containsEntry("baggage", "tenant=second");
+
+    assertThat(ContextPropagationOperator.runWithContext(publisher, Context.root()).block())
+        .isNotNull();
+    McpSchema.CallToolRequest third =
+        (McpSchema.CallToolRequest) transport.getToolRequest().params();
+    assertThat(third.meta()).containsEntry("tenant", "application").doesNotContainKey("baggage");
+    assertThat(first.meta())
+        .containsEntry("baggage", "tenant=first")
+        .containsEntry("traceparent", firstTraceparent);
+    assertThat(second.meta()).containsEntry("baggage", "tenant=second");
+    assertThat(third.meta().get("traceparent"))
+        .isNotEqualTo(firstTraceparent)
+        .isNotEqualTo(second.meta().get("traceparent"));
+    assertThat(original.meta()).containsExactlyEntriesOf(Map.of("tenant", "application"));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("tools/call lookup").hasKind(CLIENT).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("tools/call lookup").hasKind(CLIENT).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("tools/call lookup").hasKind(CLIENT).hasNoParent()));
+  }
+
+  @Test
+  void isolatesMetadataForOverlappingSubscriptions() {
+    TestMcpClientTransport transport =
+        new TestMcpClientTransport(TestMcpClientTransport.ToolResponse.NONE);
+    McpClientSession session = newSession(transport);
+    Mono<McpSchema.CallToolResult> publisher =
+        session.sendRequest(
+            McpSchema.METHOD_TOOLS_CALL,
+            new McpSchema.CallToolRequest("overlap", Map.of(), null),
+            CALL_TOOL_RESULT_TYPE);
+    Context firstContext =
+        Baggage.builder().put("tenant", "first").build().storeInContext(Context.root());
+    Disposable firstSubscription =
+        ContextPropagationOperator.runWithContext(publisher, firstContext).subscribe();
+    McpSchema.CallToolRequest first =
+        (McpSchema.CallToolRequest) transport.getToolRequest().params();
+    Disposable secondSubscription =
+        ContextPropagationOperator.runWithContext(publisher, Context.root()).subscribe();
+    try {
+      McpSchema.CallToolRequest second =
+          (McpSchema.CallToolRequest) transport.getToolRequest().params();
+      assertThat(first.meta()).containsEntry("baggage", "tenant=first");
+      assertThat(second.meta()).doesNotContainKey("baggage");
+      assertThat(second).isNotSameAs(first);
+    } finally {
+      firstSubscription.dispose();
+      secondSubscription.dispose();
+    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("tools/call overlap").hasKind(CLIENT).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("tools/call overlap").hasKind(CLIENT).hasNoParent()));
   }
 
   @Test

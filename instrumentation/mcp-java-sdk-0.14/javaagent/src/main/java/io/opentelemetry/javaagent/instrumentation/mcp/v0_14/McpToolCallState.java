@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.mcp.v0_14;
 
+import static io.opentelemetry.javaagent.instrumentation.mcp.v0_14.McpSingletons.currentState;
 import static io.opentelemetry.javaagent.instrumentation.mcp.v0_14.McpSingletons.propagators;
 import static java.util.logging.Level.FINE;
 
+import io.modelcontextprotocol.json.TypeRef;
 import io.modelcontextprotocol.spec.McpClientSession;
 import io.modelcontextprotocol.spec.McpSchema;
 import io.opentelemetry.context.Context;
@@ -32,6 +34,13 @@ public final class McpToolCallState {
     try {
       if (!McpSchema.METHOD_TOOLS_CALL.equals(method)
           || !(requestParameters instanceof McpSchema.CallToolRequest callToolRequest)) {
+        return null;
+      }
+
+      McpToolCallState current = currentState().get();
+      if (current != null
+          && current.session == session
+          && current.requestParameters == requestParameters) {
         return null;
       }
 
@@ -66,8 +75,24 @@ public final class McpToolCallState {
     this.requestId = requestId;
   }
 
-  public Object getRequestParameters() {
-    return requestParameters;
+  McpToolCallState copy() {
+    Map<String, Object> meta = new HashMap<>(propagationMeta);
+    return new McpToolCallState(
+        session,
+        toolName,
+        new McpSchema.CallToolRequest(
+            requestParameters.name(), requestParameters.arguments(), meta),
+        meta);
+  }
+
+  Mono<?> sendRequest(TypeRef<?> responseType) {
+    // Bypass the deferred wrapper while the SDK creates this subscription's request and ID.
+    McpToolCallState previous = currentState().set(this);
+    try {
+      return session.sendRequest(McpSchema.METHOD_TOOLS_CALL, requestParameters, responseType);
+    } finally {
+      currentState().restore(previous);
+    }
   }
 
   McpToolCallRequest createRequest() {
@@ -85,8 +110,7 @@ public final class McpToolCallState {
         .inject(context, propagationMeta, (carrier, key, value) -> carrier.put(key, value));
   }
 
-  @Nullable
-  public Mono<?> finish(@Nullable Mono<?> publisher) {
-    return publisher == null ? null : McpToolCallMono.wrap(publisher, this);
+  public Mono<?> wrap(TypeRef<?> responseType) {
+    return McpToolCallMono.wrap(this, responseType);
   }
 }

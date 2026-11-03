@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.mcp.v0_14;
 import static io.opentelemetry.javaagent.instrumentation.mcp.v0_14.McpSingletons.instrumenter;
 import static java.util.logging.Level.FINE;
 
+import io.modelcontextprotocol.json.TypeRef;
 import io.modelcontextprotocol.spec.McpSchema;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
@@ -20,20 +21,22 @@ final class McpToolCallMono {
   private static final ReactorAsyncOperationEndStrategy endStrategy =
       ReactorAsyncOperationEndStrategy.create();
 
-  static Mono<?> wrap(Mono<?> publisher, McpToolCallState state) {
+  static Mono<?> wrap(McpToolCallState state, TypeRef<?> responseType) {
     return Mono.deferContextual(
         reactorContext -> {
+          McpToolCallState subscriptionState = state.copy();
+          Mono<?> publisher = subscriptionState.sendRequest(responseType);
           try {
             Context parentContext =
                 ContextPropagationOperator.getOpenTelemetryContextFromContextView(
                     reactorContext, Context.current());
-            McpToolCallRequest request = state.createRequest();
+            McpToolCallRequest request = subscriptionState.createRequest();
             if (!instrumenter().shouldStart(parentContext, request)) {
               return publisher;
             }
 
             Context context = instrumenter().start(parentContext, request);
-            state.inject(context);
+            subscriptionState.inject(context);
             return (Mono<?>)
                 endStrategy.end(
                     instrumenter(), context, request, publisher, McpSchema.CallToolResult.class);

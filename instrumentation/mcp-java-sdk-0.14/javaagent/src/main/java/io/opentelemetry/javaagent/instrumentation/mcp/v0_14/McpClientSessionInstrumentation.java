@@ -11,13 +11,13 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
+import io.modelcontextprotocol.json.TypeRef;
 import io.modelcontextprotocol.spec.McpClientSession;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
-import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Mono;
@@ -45,34 +45,30 @@ class McpClientSessionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SendRequestAdvice {
 
-    @AssignReturned.ToArguments(@ToArgument(value = 1, index = 0))
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Object[] onEnter(
+    @Advice.OnMethodEnter(
+        skipOn = Advice.OnNonDefaultValue.class,
+        suppress = Throwable.class,
+        inline = false)
+    @Nullable
+    public static Mono<?> onEnter(
         @Advice.This McpClientSession session,
         @Advice.Argument(0) String method,
-        @Advice.Argument(1) @Nullable Object requestParameters) {
+        @Advice.Argument(1) @Nullable Object requestParameters,
+        @Advice.Argument(2) TypeRef<?> responseType) {
       McpToolCallState state = McpToolCallState.prepare(session, method, requestParameters);
-      Object parameters = state == null ? requestParameters : state.getRequestParameters();
-      McpToolCallState previous = state == null ? null : currentState().set(state);
-      return new Object[] {parameters, state, previous};
+      return state == null ? null : state.wrap(responseType);
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Nullable
     public static Mono<?> onExit(
         @Advice.This McpClientSession session,
         @Advice.Argument(0) String method,
         @Advice.Return @Nullable Mono<?> publisher,
-        @Advice.Enter @Nullable Object[] enterResult) {
-      Mono<?> result = publisher;
-      if (enterResult != null) {
-        McpToolCallState state = (McpToolCallState) enterResult[1];
-        if (state != null) {
-          currentState().restore((McpToolCallState) enterResult[2]);
-          result = state.finish(publisher);
-        }
-      }
-      return McpProtocolVersionState.capture(session, method, result);
+        @Advice.Enter @Nullable Mono<?> deferredPublisher) {
+      return McpProtocolVersionState.capture(
+          session, method, deferredPublisher == null ? publisher : deferredPublisher);
     }
   }
 
