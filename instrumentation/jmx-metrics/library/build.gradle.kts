@@ -51,41 +51,6 @@ tasks {
   check {
     dependsOn(testing.suites)
   }
-
-  withType<Test>().configureEach {
-    // the base agent only contains the agent machinery and the internal instrumentations that it
-    // requires, the JMX instrumentation is added on top of it. Using the full agent would capture
-    // telemetry from the target systems that is unrelated to JMX metrics.
-    inputs.files(baseAgent)
-      .withPropertyName("javaagent")
-      .withNormalizer(ClasspathNormalizer::class)
-    inputs.files(jmxAgent)
-      .withPropertyName("jmxInstrumentation")
-      .withNormalizer(ClasspathNormalizer::class)
-    inputs.files(testWebApp)
-      .withPropertyName("testWebApp")
-      .withNormalizer(ClasspathNormalizer::class)
-    inputs.files(camelTestApp)
-      .withPropertyName("camelTestApp")
-      .withNormalizer(ClasspathNormalizer::class)
-
-    val agentJarPath = baseAgent.elements.map { it.single().asFile.absolutePath }
-    val jmxInstrumentationJarPath = jmxAgent.elements.map { it.single().asFile.absolutePath }
-    val testAppWarPath = testWebApp.elements.map { it.single().asFile.absolutePath }
-    val camelTestAppJarPath = camelTestApp.elements.map { it.single().asFile.absolutePath }
-    val registryDir = layout.projectDirectory.dir("../model").asFile.absolutePath
-    inputs.dir(registryDir).withPathSensitivity(PathSensitivity.RELATIVE)
-
-    jvmArgumentProviders += CommandLineArgumentProvider {
-      listOf(
-        "-Dio.opentelemetry.javaagent.path=${agentJarPath.get()}",
-        "-Dio.opentelemetry.javaagent.jmx.path=${jmxInstrumentationJarPath.get()}",
-        "-Dio.opentelemetry.testapp.path=${testAppWarPath.get()}",
-        "-Dio.opentelemetry.registry.path=$registryDir",
-        "-Dio.opentelemetry.cameltestapp.path=${camelTestAppJarPath.get()}",
-      )
-    }
-  }
 }
 
 val containerTestPackage =
@@ -103,6 +68,41 @@ require(containerTestClasses.isNotEmpty()) {
 
 testing.suites {
   executions("test") {
+    configureEach {
+      // the base agent only contains the agent machinery and the internal instrumentations that it
+      // requires, the JMX instrumentation is added on top of it. Using the full agent would capture
+      // telemetry from the target systems that is unrelated to JMX metrics.
+      inputs.files(baseAgent)
+        .withPropertyName("javaagent")
+        .withNormalizer(ClasspathNormalizer::class)
+      inputs.files(jmxAgent)
+        .withPropertyName("jmxInstrumentation")
+        .withNormalizer(ClasspathNormalizer::class)
+      inputs.files(testWebApp)
+        .withPropertyName("testWebApp")
+        .withNormalizer(ClasspathNormalizer::class)
+      inputs.files(camelTestApp)
+        .withPropertyName("camelTestApp")
+        .withNormalizer(ClasspathNormalizer::class)
+
+      val agentJarPath = baseAgent.elements.map { it.single().asFile.absolutePath }
+      val jmxInstrumentationJarPath = jmxAgent.elements.map { it.single().asFile.absolutePath }
+      val testAppWarPath = testWebApp.elements.map { it.single().asFile.absolutePath }
+      val camelTestAppJarPath = camelTestApp.elements.map { it.single().asFile.absolutePath }
+      val registryDir = layout.projectDirectory.dir("../model").asFile.absolutePath
+      inputs.dir(registryDir).withPathSensitivity(PathSensitivity.RELATIVE)
+
+      jvmArgumentProviders += CommandLineArgumentProvider {
+        listOf(
+          "-Dio.opentelemetry.javaagent.path=${agentJarPath.get()}",
+          "-Dio.opentelemetry.javaagent.jmx.path=${jmxInstrumentationJarPath.get()}",
+          "-Dio.opentelemetry.testapp.path=${testAppWarPath.get()}",
+          "-Dio.opentelemetry.registry.path=$registryDir",
+          "-Dio.opentelemetry.cameltestapp.path=${camelTestAppJarPath.get()}",
+        )
+      }
+    }
+
     configureDefault {
       filter {
         containerTestClasses.forEach { excludeTestsMatching(it) }

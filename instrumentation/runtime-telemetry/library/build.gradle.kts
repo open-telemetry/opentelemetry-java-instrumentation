@@ -49,9 +49,26 @@ for (version in mrJarVersions) {
 
 testing.suites {
   register<JvmTestSuite>("testJava17") {
+    dependencies {
+      implementation(sourceSets.test.get().output)
+      implementation(sourceSets["java17"].output)
+      implementation(sourceSets.main.get().output)
+    }
+
+    project.configurations.named(sources.implementationConfigurationName) {
+      extendsFrom(configurations["testImplementation"])
+    }
+    project.configurations.named(sources.runtimeOnlyConfigurationName) {
+      extendsFrom(configurations["testRuntimeOnly"])
+    }
+    project.tasks.named<JavaCompile>(sources.compileJavaTaskName) {
+      sourceCompatibility = "17"
+      targetCompatibility = "17"
+      options.release.set(17)
+    }
+
     executions {
       configureEach {
-        dependsOn("compileTestJava17Java")
         systemProperty("metadataConfig", "Java17")
         if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
           enabled = false
@@ -93,9 +110,27 @@ testing.suites {
   }
 
   register<JvmTestSuite>("testJava21") {
+    dependencies {
+      implementation(sourceSets.test.get().output)
+      implementation(sourceSets["java17"].output)
+      implementation(sourceSets["testJava17"].output)
+      implementation(sourceSets.main.get().output)
+    }
+
+    project.configurations.named(sources.implementationConfigurationName) {
+      extendsFrom(configurations["testImplementation"])
+    }
+    project.configurations.named(sources.runtimeOnlyConfigurationName) {
+      extendsFrom(configurations["testRuntimeOnly"])
+    }
+    project.tasks.named<JavaCompile>(sources.compileJavaTaskName) {
+      sourceCompatibility = "21"
+      targetCompatibility = "21"
+      options.release.set(21)
+    }
+
     executions {
       configureEach {
-        dependsOn("compileTestJava21Java")
         systemProperty("metadataConfig", "Java21")
         if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_21)) {
           enabled = false
@@ -105,49 +140,7 @@ testing.suites {
   }
 }
 
-configurations {
-  named("testJava17Implementation") {
-    extendsFrom(configurations["testImplementation"])
-  }
-  named("testJava17RuntimeOnly") {
-    extendsFrom(configurations["testRuntimeOnly"])
-  }
-  named("testJava21Implementation") {
-    extendsFrom(configurations["testImplementation"])
-  }
-  named("testJava21RuntimeOnly") {
-    extendsFrom(configurations["testRuntimeOnly"])
-  }
-}
-
-dependencies {
-  add("testJava17Implementation", sourceSets.test.get().output)
-  add("testJava17Implementation", sourceSets["java17"].output)
-  add("testJava17Implementation", sourceSets.main.get().output)
-
-  add("testJava21Implementation", sourceSets.test.get().output)
-  add("testJava21Implementation", sourceSets["java17"].output)
-  add("testJava21Implementation", sourceSets["testJava17"].output)
-  add("testJava21Implementation", sourceSets.main.get().output)
-}
-
 tasks {
-  // Configure testJava17 compilation for Java 17
-  named<JavaCompile>("compileTestJava17Java") {
-    dependsOn("compileJava17Java")
-    sourceCompatibility = "17"
-    targetCompatibility = "17"
-    options.release.set(17)
-  }
-
-  // Configure testJava21 compilation for Java 21
-  named<JavaCompile>("compileTestJava21Java") {
-    dependsOn("compileJava17Java", "compileTestJava17Java")
-    sourceCompatibility = "21"
-    targetCompatibility = "21"
-    options.release.set(21)
-  }
-
   withType(Jar::class) {
     val sourcePathProvider = if (name == "jar") {
       { ss: SourceSet? -> ss?.output }
