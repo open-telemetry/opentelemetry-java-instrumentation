@@ -152,6 +152,33 @@ class MuzzleSliceFunctionalTest {
   }
 
   @Test
+  void externalPluginSupportsModuleAndQualifiedAssertionRequests() throws IOException {
+    startRepository();
+    Path project = externalPluginFixture("external", "module-c");
+    String assertion = ":instrumentation:muzzle-AssertPass-fixture-module-c-1.0";
+
+    BuildResult module = slicedRunner(project, ":instrumentation:muzzle").build();
+    assertThat(assertionPaths(module)).containsExactly(assertion);
+
+    BuildResult direct = slicedRunner(project, assertion).build();
+    assertThat(assertionPaths(direct)).containsExactly(assertion);
+  }
+
+  @Test
+  void relativeAssertionRequestResolvesFromInstrumentationDirectory() throws IOException {
+    startRepository();
+    Path project = slicedFixture("relative", 4);
+    BuildResult result =
+        slicedRunner(
+                project.resolve("instrumentation"),
+                "c:muzzle-AssertPass-fixture-module-c-1.0")
+            .build();
+
+    assertThat(assertionPaths(result))
+        .containsExactly(":instrumentation:c:muzzle-AssertPass-fixture-module-c-1.0");
+  }
+
+  @Test
   void unsupportedSliceCountIsRejected() throws IOException {
     startRepository();
     Path project = slicedFixture("invalid", 4);
@@ -205,6 +232,15 @@ class MuzzleSliceFunctionalTest {
           }
         }
         """);
+    return project;
+  }
+
+  private Path externalPluginFixture(String name, String module) throws IOException {
+    Path project = temp.resolve(name);
+    fixture(name + "/instrumentation", module);
+    Files.writeString(
+        project.resolve("settings.gradle"),
+        "rootProject.name = 'external-fixture'\ninclude 'instrumentation'");
     return project;
   }
 

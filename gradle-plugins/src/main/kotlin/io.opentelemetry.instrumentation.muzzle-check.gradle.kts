@@ -233,20 +233,29 @@ val hasRelevantTask = gradle.startParameter.taskNames.any {
 
 if (hasRelevantTask) {
   gradle.projectsEvaluated {
+    val defaultProjectPath = rootProject.allprojects
+      .firstOrNull { it.projectDir == gradle.startParameter.currentDir }
+      ?.path?.removePrefix(":").orEmpty()
     val selected = gradle.startParameter.taskNames.any {
       val taskName = it.removePrefix(":")
-      if (taskName.startsWith("instrumentation:muzzle")) {
+      val resolvedTaskName =
+        if (it.startsWith(":") || ':' !in taskName || defaultProjectPath.isEmpty()) {
+          taskName
+        } else {
+          "$defaultProjectPath:$taskName"
+        }
+      if (resolvedTaskName.matches(Regex("instrumentation:muzzle\\d+"))) {
         val slice = rootProject.findProject(":instrumentation")
-          ?.tasks?.findByName(taskName.substringAfter(":"))
+          ?.tasks?.findByName(resolvedTaskName.substringAfter(":"))
         slice != null && muzzle.get() in slice.taskDependencies.getDependencies(slice)
       } else {
         val projectPath = project.path.removePrefix(":")
         val muzzleTaskName = if (projectPath.isEmpty()) "muzzle" else "$projectPath:muzzle"
         val assertionTaskPrefix =
           if (projectPath.isEmpty()) "muzzle-Assert" else "$projectPath:muzzle-Assert"
-        taskName == muzzleTaskName ||
-          taskName.startsWith("muzzle-Assert") ||
-          taskName.startsWith(assertionTaskPrefix)
+        resolvedTaskName == muzzleTaskName ||
+          resolvedTaskName.startsWith("muzzle-Assert") ||
+          resolvedTaskName.startsWith(assertionTaskPrefix)
       }
     }
     if (!selected) {
