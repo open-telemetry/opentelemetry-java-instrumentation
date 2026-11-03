@@ -24,20 +24,36 @@ dependencies {
 
 val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
 
-testing {
-  suites {
-    // version22Test reuses the same test source against `latest.release` in latest-deps mode
-    // (currently 26.x), and against 22.0.0 otherwise, to exercise the upper end of the v20+
-    // builder API line.
-    register<JvmTestSuite>("version22Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/version20Test/java"))
+testing.suites {
+  // version22Test reuses the same test source against `latest.release` in latest-deps mode
+  // (currently 26.x), and against 22.0.0 otherwise, to exercise the upper end of the v20+
+  // builder API line.
+  register<JvmTestSuite>("version22Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/version20Test/java"))
+      }
+    }
+    dependencies {
+      implementation("io.kubernetes:client-java-api:${baseVersion("22.0.0").orLatest()}")
+    }
+    executions {
+      configureEach {
+        // client-java-api 22.0.0+ requires Java 11+
+        if (testJavaVersion.isJava8) {
+          enabled = false
         }
       }
-      dependencies {
-        implementation("io.kubernetes:client-java-api:${baseVersion("22.0.0").orLatest()}")
+
+      register("Experimental") {
+        telemetryConfig("otel.instrumentation.kubernetes-client.experimental-span-attributes", "true")
       }
+    }
+  }
+
+  executions("test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.kubernetes-client.experimental-span-attributes", "true")
     }
   }
 }
@@ -45,25 +61,5 @@ testing {
 tasks {
   check {
     dependsOn(testing.suites)
-    dependsOn("version22Test")
-  }
-}
-
-testing.suites.executions("test") {
-  register("Experimental") {
-    telemetryConfig("otel.instrumentation.kubernetes-client.experimental-span-attributes", "true")
-  }
-}
-
-testing.suites.executions("version22Test") {
-  configureEach {
-    // client-java-api 22.0.0+ requires Java 11+
-    if (testJavaVersion.isJava8) {
-      enabled = false
-    }
-  }
-
-  register("Experimental") {
-    telemetryConfig("otel.instrumentation.kubernetes-client.experimental-span-attributes", "true")
   }
 }

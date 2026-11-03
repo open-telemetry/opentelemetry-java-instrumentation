@@ -20,36 +20,34 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-codegen:3.+") // see vertx-kafka-client-4-testing module
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("testNoReceiveTelemetry") {
-      dependencies {
-        implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
+testing.suites {
+  register<JvmTestSuite>("testNoReceiveTelemetry") {
+    dependencies {
+      implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
 
-        val version = baseVersion("3.6.0").orLatest("3.+")
-        implementation("io.vertx:vertx-kafka-client:$version")
-        implementation("io.vertx:vertx-codegen:$version")
+      val version = baseVersion("3.6.0").orLatest("3.+")
+      implementation("io.vertx:vertx-kafka-client:$version")
+      implementation("io.vertx:vertx-codegen:$version")
+    }
+
+    executions {
+      register("Experimental") {
+        telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
       }
     }
   }
-}
 
-testing.suites.executions("test") {
-  configureEach {
-    telemetryConfig(
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
-      "true",
-    )
-  }
+  executions("test") {
+    configureEach {
+      telemetryConfig(
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+        "true",
+      )
+    }
 
-  register("Experimental") {
-    telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
-  }
-}
-
-testing.suites.executions("testNoReceiveTelemetry") {
-  register("Experimental") {
-    telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
+    }
   }
 }
 

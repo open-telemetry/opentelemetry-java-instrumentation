@@ -24,38 +24,36 @@ dependencies {
   testImplementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("redisson324Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
+testing.suites {
+  register<JvmTestSuite>("redisson324Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
+    }
 
-      dependencies {
-        implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
-        // Redisson 3.24.3 routes configuration through ServiceManager.
-        implementation("org.redisson:redisson:3.24.3")
-      }
+    dependencies {
+      implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
+      // Redisson 3.24.3 routes configuration through ServiceManager.
+      implementation("org.redisson:redisson:3.24.3")
+    }
 
-      targets.all {
-        testTask.configure {
-          filter {
-            includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
-            includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
-          }
+    targets.all {
+      testTask.configure {
+        filter {
+          includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
+          includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
         }
       }
     }
-  }
-}
 
-testing.suites.executions("redisson324Test") {
-  register("ServerTarget") {
-    filter {
-      includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
-      includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
+    executions {
+      register("ServerTarget") {
+        filter {
+          includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
+          includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
+        }
+      }
     }
   }
 }

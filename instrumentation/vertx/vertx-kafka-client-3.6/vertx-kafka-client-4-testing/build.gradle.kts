@@ -19,49 +19,43 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // see vertx-kafka-client-5-testing module
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("testNoReceiveTelemetry") {
-      dependencies {
-        implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
+testing.suites {
+  register<JvmTestSuite>("testNoReceiveTelemetry") {
+    dependencies {
+      implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
 
-        val version = baseVersion("4.0.0").orLatest("4.+")
-        implementation("io.vertx:vertx-kafka-client:$version")
-        implementation("io.vertx:vertx-codegen:$version")
+      val version = baseVersion("4.0.0").orLatest("4.+")
+      implementation("io.vertx:vertx-kafka-client:$version")
+      implementation("io.vertx:vertx-codegen:$version")
+    }
+
+    executions {
+      configureEach {
+        jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
       }
+
+      configureDefault {
+        jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
+      }
+
+      register("Experimental") {
+        jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+      }
+    }
+  }
+
+  executions("test") {
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+    }
+
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
     }
   }
 }
 
-testing.suites.executions("test") {
-  configureEach {
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-  }
-
-  register("Experimental") {
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-  }
-}
-
-testing.suites.executions("testNoReceiveTelemetry") {
-  configureEach {
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
-  }
-
-  configureDefault {
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-  }
-
-  register("Experimental") {
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-  }
-}
-
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
   check {
     dependsOn(testing.suites)
   }

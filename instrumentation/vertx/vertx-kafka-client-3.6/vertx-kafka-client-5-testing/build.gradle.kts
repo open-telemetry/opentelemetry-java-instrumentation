@@ -20,41 +20,39 @@ dependencies {
   testInstrumentation(project(":instrumentation:vertx:vertx-kafka-client-3.6:javaagent"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("testNoReceiveTelemetry") {
-      dependencies {
-        implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
+testing.suites {
+  register<JvmTestSuite>("testNoReceiveTelemetry") {
+    dependencies {
+      implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
 
-        val version = baseVersion("5.0.0").orLatest()
-        implementation("io.vertx:vertx-kafka-client:$version")
-        implementation("io.vertx:vertx-codegen:$version")
+      val version = baseVersion("5.0.0").orLatest()
+      implementation("io.vertx:vertx-kafka-client:$version")
+      implementation("io.vertx:vertx-codegen:$version")
+    }
+
+    executions {
+      configureEach {
+        jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
+      }
+
+      configureDefault {
+        jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
+      }
+
+      register("Experimental") {
+        jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
       }
     }
   }
-}
 
-testing.suites.executions("test") {
-  configureEach {
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-  }
+  executions("test") {
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+    }
 
-  register("Experimental") {
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-  }
-}
-
-testing.suites.executions("testNoReceiveTelemetry") {
-  configureEach {
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
-  }
-
-  configureDefault {
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-  }
-
-  register("Experimental") {
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+    }
   }
 }
 
