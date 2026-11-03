@@ -244,7 +244,9 @@ if (hasRelevantTask) {
         val muzzleTaskName = if (projectPath.isEmpty()) "muzzle" else "$projectPath:muzzle"
         val assertionTaskPrefix =
           if (projectPath.isEmpty()) "muzzle-Assert" else "$projectPath:muzzle-Assert"
-        taskName == muzzleTaskName || taskName.startsWith(assertionTaskPrefix)
+        taskName == muzzleTaskName ||
+          taskName.startsWith("muzzle-Assert") ||
+          taskName.startsWith(assertionTaskPrefix)
       }
     }
     if (!selected) {

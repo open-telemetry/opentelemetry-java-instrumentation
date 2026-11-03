@@ -119,7 +119,7 @@ class MuzzleSliceFunctionalTest {
     assertThat(requests)
         .anySatisfy(path -> assertThat(path).contains("/library/maven-metadata.xml"))
         .anySatisfy(path -> assertThat(path).contains("/module-c/maven-metadata.xml"))
-        .noneSatisfy(path -> assertThat(path).contains("/module-b/", "/module-d/"));
+        .allSatisfy(path -> assertThat(path).doesNotContain("/module-b/", "/module-d/"));
 
     requests.clear();
     Path direct = slicedFixture("direct", 4);
@@ -129,12 +129,26 @@ class MuzzleSliceFunctionalTest {
         .containsExactly(":instrumentation:c:muzzle-AssertPass-fixture-module-c-1.0");
     assertThat(requests)
         .anySatisfy(path -> assertThat(path).contains("/module-c/maven-metadata.xml"))
-        .noneSatisfy(path -> assertThat(path).contains("/library/", "/module-b/", "/module-d/"));
+        .allSatisfy(
+            path -> assertThat(path).doesNotContain("/library/", "/module-b/", "/module-d/"));
 
     requests.clear();
     BuildResult help = slicedRunner(slicedFixture("non-muzzle", 4), "help").build();
     assertThat(help.getOutput()).contains("BUILD SUCCESSFUL");
     assertThat(requests).isEmpty();
+  }
+
+  @Test
+  void unqualifiedAssertionRequestDiscoversTaskFromFixtureRoot() throws IOException {
+    startRepository();
+    BuildResult result =
+        slicedRunner(
+                slicedFixture("unqualified", 4),
+                "muzzle-AssertPass-fixture-module-c-1.0")
+            .build();
+
+    assertThat(assertionPaths(result))
+        .containsExactly(":instrumentation:c:muzzle-AssertPass-fixture-module-c-1.0");
   }
 
   @Test
