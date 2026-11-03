@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -17,4 +19,29 @@ if (otelProps.testLatestDeps) {
 
 tasks.test {
   jvmArgs("-Dotel.instrumentation.graphql.data-fetcher.enabled=true")
+}
+
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("ExceptionLogs") {
+          jvmArgs(
+            "-Dotel.instrumentation.graphql.data-fetcher.enabled=true",
+            "-Dotel.semconv.exception.signal.preview=logs",
+          )
+          systemProperty(
+            "metadataConfig",
+            "otel.instrumentation.graphql.data-fetcher.enabled=true,otel.instrumentation.graphql.operation-name-in-span-name.enabled=true,otel.semconv.exception.signal.preview=logs",
+          )
+          filter {
+            includeTestsMatching("*.GraphqlTest.parseError")
+            includeTestsMatching("*.GraphqlTest.validationError")
+            includeTestsMatching("*.GraphqlTest.dataFetcherException")
+            includeTestsMatching("*.GraphqlTest.dataFetcherError")
+          }
+        }
+      }
+    }
+  }
 }

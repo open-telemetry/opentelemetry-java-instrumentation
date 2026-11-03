@@ -10,6 +10,9 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServ
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
+import net.spy.memcached.internal.OperationFuture;
+import net.spy.memcached.ops.OperationStatus;
+import net.spy.memcached.ops.StatusCode;
 
 class SpymemcachedAttributesGetter
     implements DbClientAttributesGetter<SpymemcachedRequest, Object> {
@@ -26,14 +29,44 @@ class SpymemcachedAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getDbQueryText(SpymemcachedRequest spymemcachedRequest) {
-    return null;
+    return spymemcachedRequest.getQueryText();
   }
 
   @Override
   public String getDbOperationName(SpymemcachedRequest spymemcachedRequest) {
     return spymemcachedRequest.getStableOperationName();
+  }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
+    if (error != null || !(response instanceof OperationFuture)) {
+      return null;
+    }
+    OperationFuture<?> future = (OperationFuture<?>) response;
+    if (future.isCancelled()) {
+      return null;
+    }
+    OperationStatus status = future.getStatus();
+    if (status == null || status.isSuccess()) {
+      return null;
+    }
+    StatusCode code = status.getStatusCode();
+    if (code == null) {
+      return null;
+    }
+    switch (code) {
+      case SUCCESS:
+      case ERR_NOT_FOUND:
+      case ERR_EXISTS:
+      case ERR_NOT_STORED:
+      case CANCELLED:
+        return null;
+      default:
+        return code.name();
+    }
   }
 
   @Override

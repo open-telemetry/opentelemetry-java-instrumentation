@@ -1,6 +1,10 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -42,37 +46,48 @@ dependencies {
   latestDepTestLibrary("com.couchbase.client:java-client:+")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation:couchbase:couchbase-common-3.1:javaagent"))
-        implementation("com.couchbase.client:java-client:3.4.3")
-        implementation("org.objenesis:objenesis")
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:couchbase:couchbase-common-3.1:javaagent"))
+      implementation("com.couchbase.client:java-client:3.4.3")
+      implementation("org.objenesis:objenesis")
+    }
+  }
+
+  // SDK 3.4.3 covers the ProtostellarRequest constructor taking Core as its first argument.
+  register<JvmTestSuite>("version343Test") {
+    dependencies {
+      implementation("com.couchbase.client:java-client:3.4.3")
+    }
+  }
+
+  // SDK 3.4.4 covers the eight-argument ProtostellarRequest constructor taking CoreProtostellar.
+  register<JvmTestSuite>("version344Test") {
+    dependencies {
+      implementation("com.couchbase.client:java-client:3.4.4")
+    }
+  }
+
+  // RequestSpan.recordException is available in SDK 3.3.4+.
+  register<JvmTestSuite>("version334Test") {
+    dependencies {
+      implementation("com.couchbase.client:java-client:${baseVersion("3.3.4").orLatest()}")
+      implementation("org.testcontainers:testcontainers-couchbase")
+    }
+  }
+
+  executions("test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
     }
 
-    register<JvmTestSuite>("version343Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/version343Test/java"))
-        }
+    register("ExceptionSignalLogs") {
+      filter {
+        includeTestsMatching("*CouchbaseExceptionSignalTest")
       }
-      dependencies {
-        implementation("com.couchbase.client:java-client:3.4.3")
-      }
-    }
-
-    register<JvmTestSuite>("version344Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/version344Test/java"))
-        }
-      }
-      dependencies {
-        implementation("com.couchbase.client:java-client:3.4.4")
-      }
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
   }
 }
@@ -80,28 +95,12 @@ testing {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs(
-      "-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true",
-    )
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.couchbase.emit-experimental-telemetry=true",
-    )
+    if (otelProps.denyUnsafe) {
+      enabled = false
+    }
   }
 
   check {
-    dependsOn(testing.suites, testExperimental)
-  }
-
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
-    }
+    dependsOn(testing.suites)
   }
 }

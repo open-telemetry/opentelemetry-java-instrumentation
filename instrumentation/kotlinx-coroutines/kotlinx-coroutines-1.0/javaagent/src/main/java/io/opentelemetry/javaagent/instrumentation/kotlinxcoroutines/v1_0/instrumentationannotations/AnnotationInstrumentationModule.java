@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -20,18 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AnnotationInstrumentationModule extends InstrumentationModule {
 
   public AnnotationInstrumentationModule() {
-    super(
-        AgentCommonConfig.get().isV3Preview()
-            ? "kotlinx-coroutines-annotations"
-            : "kotlinx-coroutines",
-        // Default-off coroutine annotations need independent selectors in v3 preview.
-        AgentCommonConfig.get().isV3Preview()
-            ? new String[] {}
-            : new String[] {
-              "kotlinx-coroutines-1.0",
-              "kotlinx-coroutines-opentelemetry-instrumentation-annotations",
-              "opentelemetry-instrumentation-annotations"
-            });
+    super("kotlinx-coroutines-annotations");
   }
 
   @Override
@@ -42,7 +30,7 @@ public class AnnotationInstrumentationModule extends InstrumentationModule {
 
   @Override
   public boolean defaultEnabled() {
-    return super.defaultEnabled() && !AgentCommonConfig.get().isV3Preview();
+    return false;
   }
 
   @Override

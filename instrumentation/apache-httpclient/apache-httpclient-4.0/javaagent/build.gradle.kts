@@ -30,16 +30,3 @@ dependencies {
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent"))
 }
-
-tasks {
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-  }
-
-  check {
-    dependsOn(testPreviewSemconv)
-  }
-}

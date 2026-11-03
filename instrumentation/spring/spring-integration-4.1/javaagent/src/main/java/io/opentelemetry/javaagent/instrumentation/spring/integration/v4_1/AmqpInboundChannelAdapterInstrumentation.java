@@ -42,8 +42,7 @@ class AmqpInboundChannelAdapterInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("onMessage")
             .and(takesArguments(2))
-            .and(takesArgument(0, named("org.springframework.amqp.core.Message")))
-            .and(takesArgument(1, named("com.rabbitmq.client.Channel"))),
+            .and(takesArgument(0, named("org.springframework.amqp.core.Message"))),
         getClass().getName() + "$OnMessageAdvice");
     transformer.applyAdviceToMethod(none(), getClass().getName() + "$MuzzleAdvice");
   }

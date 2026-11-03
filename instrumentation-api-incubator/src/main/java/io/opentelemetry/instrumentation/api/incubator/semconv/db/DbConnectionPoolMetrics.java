@@ -18,8 +18,8 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.api.metrics.ObservableMeasurement;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
-import io.opentelemetry.semconv.SchemaUrls;
 
 /**
  * A helper class that models the <a
@@ -50,7 +50,7 @@ public final class DbConnectionPoolMetrics {
     if (version != null) {
       meterBuilder.setInstrumentationVersion(version);
     }
-    meterBuilder.setSchemaUrl(SchemaUrls.V1_44_0);
+    meterBuilder.setSchemaUrl(DbSchemaUrls.SCHEMA_URL);
     AttributesBuilder attributes = Attributes.builder();
     attributes.putAll(databaseAttributes);
     attributes.put(POOL_NAME, poolName);
@@ -74,7 +74,7 @@ public final class DbConnectionPoolMetrics {
         .upDownCounterBuilder("db.client.connection.count")
         .setUnit("{connection}")
         .setDescription(
-            "The number of connections that are currently in state described by the state attribute.")
+            "The number of connections that are currently in state described by the `state` attribute.")
         .buildObserver();
   }
 

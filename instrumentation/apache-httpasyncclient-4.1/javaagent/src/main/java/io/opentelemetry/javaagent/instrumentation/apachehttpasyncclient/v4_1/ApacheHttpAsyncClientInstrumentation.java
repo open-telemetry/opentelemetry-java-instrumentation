@@ -5,13 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1.ApacheHttpAsyncClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -52,9 +50,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("execute")
-            .and(takesArguments(4))
             .and(takesArgument(0, named("org.apache.http.nio.protocol.HttpAsyncRequestProducer")))
-            .and(takesArgument(1, named("org.apache.http.nio.protocol.HttpAsyncResponseConsumer")))
             .and(takesArgument(2, named("org.apache.http.protocol.HttpContext")))
             .and(takesArgument(3, named("org.apache.http.concurrent.FutureCallback"))),
         getClass().getName() + "$ClientAdvice");
@@ -73,7 +69,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) HttpContext httpContext,
         @Advice.Argument(3) FutureCallback<?> futureCallback) {
 
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
 
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);

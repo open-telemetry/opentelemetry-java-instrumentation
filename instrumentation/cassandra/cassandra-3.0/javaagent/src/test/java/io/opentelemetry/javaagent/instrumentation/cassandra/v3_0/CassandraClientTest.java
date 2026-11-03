@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
@@ -36,8 +37,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import com.datastax.driver.core.BatchStatement;
 import com.datastax.driver.core.Cluster;
@@ -736,39 +735,6 @@ class CassandraClientTest {
                             equalTo(ERROR_TYPE, SyntaxError.class.getName()))));
   }
 
-  @Test
-  void failureWithoutCoordinatorUsesConfiguredTarget() {
-    Cluster configuredCluster =
-        Cluster.builder().addContactPoint("LOCALHOST").withPort(4242).build();
-    cleanup.deferCleanup(configuredCluster);
-    Session delegate = mock(Session.class);
-    when(delegate.getCluster()).thenReturn(configuredCluster);
-    RuntimeException failure = new RuntimeException("failed before execution");
-    when(delegate.execute("invalid")).thenThrow(failure);
-    Session session = new TracingSession(delegate);
-
-    assertThatThrownBy(() -> session.execute("invalid")).isSameAs(failure);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("LOCALHOST:4242")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(failure)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, "LOCALHOST"),
-                            equalTo(SERVER_PORT, 4242L),
-                            equalTo(DB_SYSTEM_NAME, CASSANDRA),
-                            equalTo(DB_QUERY_TEXT, "invalid"),
-                            equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
-                            equalTo(CASSANDRA_QUERY_IDEMPOTENT, false),
-                            equalTo(CASSANDRA_PAGE_SIZE, 5000),
-                            equalTo(ERROR_TYPE, RuntimeException.class.getName()))));
-  }
-
   private static Stream<Arguments> failureScenarios() {
     return Stream.of(
         argumentSet("sync", (Consumer<Session>) session -> session.execute("invalid")),
@@ -786,7 +752,7 @@ class CassandraClientTest {
                 .spanName("BATCH")
                 .querySummary("BATCH")
                 .batchSize(0)
-                .idempotent(true)
+                .idempotent(testLatestDeps())
                 .build()),
         argumentSet(
             "single",

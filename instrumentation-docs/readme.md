@@ -19,12 +19,13 @@ attributes, optional metrics, and semantic convention selection.
 | Document supported non-default telemetry | Yes                | Relevant non-default `key=value` settings |
 | Unit tests or regression-only variants   | No                 | Unset                                     |
 
-For javaagent tests, keep baseline suites on instrumentation defaults, apart from the HTTP and
-messaging header-capture settings injected by the shared test exporter suppliers below. Do not
-require empty overrides, separate capture variants, or `metadataConfig` conditions solely for this
-inherited setup. Module-specific capture overrides and other non-default telemetry settings remain
-subject to the normal profile rules. Test opt-in telemetry in named variants wired into `check`.
-Preserve normal suite coverage; filtered metadata-collection tests are not a substitute.
+For javaagent, plain-library, and library-autoconfigure tests, baseline fixtures may capture
+synthetic HTTP and messaging headers. The capture may come from shared test exporter configuration,
+a library builder, or production properties that the integration actually reads. Do not require
+empty overrides, capture-only flags or variants, or `metadataConfig` conditions solely for this
+fixture setup. Other non-default telemetry settings remain subject to the normal profile rules. Test
+opt-in telemetry in named variants wired into `check`. Preserve normal suite coverage; filtered
+metadata-collection tests are not a substitute.
 
 | Property | Synthetic selector |
 | -------- | ------------------ |
@@ -34,19 +35,36 @@ Preserve normal suite coverage; filtered metadata-collection tests are not a sub
 | `otel.instrumentation.http.server.capture-response-headers` | `X-Test-Response` |
 | `otel.instrumentation.common.messaging.headers.included` | `Test-Message-Header`, `Test-Message-Int-Header`, `Test_Message_Header`, `Test_Message_Int_Header` |
 
-These synthetic selectors are test-only, not production defaults. Their attributes may appear in raw
-`.telemetry` files under `when: default`, but the analyzer excludes them from generated telemetry
-inventories.
+These synthetic selectors are fixture values, not production defaults. Their attributes may appear
+in raw `.telemetry` files under `when: default`, but the analyzer excludes them from generated
+telemetry inventories.
+
+For example, a plain-library fixture can configure synthetic messaging-header capture in its baseline
+builder:
+
+```java
+AwsSdkTelemetry.builder(testing.getOpenTelemetry())
+    .setHeaders(IncludeExclude.builder().setIncluded("Test-Message-*").build())
+    .build();
+```
+
+A variant enabling experimental attributes still labels only that meaningful opt-in:
+`AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)`. It does not label the synthetic
+header selector or its test-only flag.
 
 `metadataConfig` labels output; it does not configure instrumentation or enable collection.
 An absent or empty label records telemetry under `when: default`. Default means instrumentation
-defaults, not the task name or settings on `test`; the shared synthetic header capture above is the
-exception for baseline javaagent suites. The generator merges telemetry with the same label.
+defaults, not the task name or settings on `test`; synthetic header capture is excluded from the
+label for every fixture type. The generator merges telemetry with the same label.
 Include only non-default user-facing settings needed to describe this instrumentation's signals,
 span kinds, attributes, metrics, or events, including inherited, fixture, and library-builder settings,
-except for that shared capture. Split or filter collected tasks that would mix profiles under one label.
-Use comma-separated flat `key=value` conditions without `-D`, with consistent spelling and ordering
-for the same mode. Apply settings separately through JVM properties or library APIs.
+except for synthetic header capture. For settings applied through JVM properties, use flat
+`key=value` conditions without `-D`. For programmatically configured library profiles, use the actual
+builder calls as labels (for example,
+`AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)`) instead of javaagent properties
+that do not configure the library builder. Separate multiple conditions or builder calls with commas,
+using consistent spelling and ordering for the same mode. Split or filter collected tasks that would
+mix profiles under one label. Apply settings separately through JVM properties or library APIs.
 Label non-default metric selectors, not Java source-set names; document runtime prerequisites separately.
 
 Omit test setup, such as ports, timeouts, JVM access flags, and unrelated instrumentation settings.
@@ -63,20 +81,26 @@ names. A full-suite `testReceiveSpansDisabled` may document default telemetry; a
 regression task does not. Keep regression tasks in `check`, but omit them from the collection script.
 Keep `metadataConfig` labels on the tasks that document non-default telemetry.
 
-For a module collecting its default profile and an RPC preview profile:
+When a feature supports distinct telemetry emission modes, collect its DEFAULT profile and
+each supported non-default profile in separate test JVMs. The following schematic example adds
+a PREVIEW profile without changing the default test JVM. Substitute the feature's actual supported
+property and value for `<feature-mode-property>` and `<preview-mode-value>`, and choose a task name
+appropriate to the module; `examplePreviewTest` is illustrative, not a task available in every module.
+Use additional variants for combined emission only when the feature supports it. Keep variants
+scoped to suites exercising the feature and preserve the source suite's JVM settings.
 
 ```kotlin
 tasks {
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
+  val examplePreviewTest = register<Test>("examplePreviewTest") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.semconv-stability.preview=rpc")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
+    systemProperty("<feature-mode-property>", "<preview-mode-value>")
+    systemProperty("metadataConfig", "<feature-mode-property>=<preview-mode-value>")
   }
 
   check {
-    dependsOn(testPreviewSemconv)
+    dependsOn(examplePreviewTest)
   }
 }
 ```
@@ -85,17 +109,35 @@ Generate `.telemetry` files with the selected tasks, then run the analyzer. Runn
 does not execute a separately registered variant:
 
 ```bash
-./gradlew :instrumentation:<module>:javaagent:test :instrumentation:<module>:javaagent:testPreviewSemconv -PcollectMetadata=true
+./gradlew :instrumentation:<module>:javaagent:test :instrumentation:<module>:javaagent:<additional-mode-task> -PcollectMetadata=true
 ./gradlew :instrumentation-docs:runAnalysis
 ```
 
-Replace `<module>` with the instrumentation's Gradle project path.
+Replace `<module>` with the instrumentation's Gradle project path and `<additional-mode-task>`
+with the actual registered task for the supported additional mode.
 
-Or use the helper script that runs the tasks registered for metadata collection:
+Or use the same collector as daily CI to run all tasks registered for metadata collection:
 
 ```bash
 ./instrumentation-docs/collect.sh
 ```
+
+The collector clears stale `.telemetry` directories only in selected modules, once before
+collection, and preserves profiles across all passes. Latest-dependency tasks run separately with
+`-PtestLatestDeps=true`. Set `DEBUG_LOGGING=true` for full Gradle output.
+
+On ARM (`arm64` or `aarch64`), the suites in `COLIMA_INSTRUMENTATIONS` require x86_64 containers.
+Install Colima and start a dedicated profile before collecting:
+
+```bash
+colima start --profile otel-metadata --arch x86_64 --memory 4 --activate=false
+./instrumentation-docs/collect.sh
+```
+
+The other suites use your normal Docker environment. Only the x86-only pass uses the
+`otel-metadata` Docker socket. The collector does not start or stop Colima profiles; when finished,
+you can stop this profile with `colima stop --profile otel-metadata`. On x86_64, Colima is not used.
+Missing prerequisites and failed collection tasks cause the collector to exit unsuccessfully.
 
 ## Instrumentation Hierarchy
 
@@ -123,16 +165,12 @@ currently both use the prefix before the first hyphen in that name, regardless o
 | `spring-webmvc-3.1` | `spring`  | `spring` |
 
 Namespace and group are documentation groupings, not javaagent enablement selectors.
-The names registered by a javaagent `InstrumentationModule` determine its selectors. In v3 preview,
-the primary normally matches the full module-directory name, followed by a versionless secondary:
+The names registered by a javaagent `InstrumentationModule` determine its selectors. Use the full
+module-directory name as the primary, followed by a versionless secondary:
 
 ```java
 public SpringWebMvcInstrumentationModule() {
-  super(
-      AgentCommonConfig.get().isV3Preview() ? "spring-webmvc-3.1" : "spring-webmvc",
-      AgentCommonConfig.get().isV3Preview()
-          ? new String[] {"spring-webmvc"}
-          : new String[] {"spring-webmvc-3.1"});
+  super("spring-webmvc-3.1", new String[] {"spring-webmvc"});
 }
 ```
 
@@ -355,7 +393,7 @@ additional_telemetry:                             # Manually document telemetry 
 ### Shared configuration definitions
 
 Many instrumentations expose the same configuration options (for example `http.known-methods` or
-`common.peer-service-mapping`). Instead of hand-copying an identical block into every `metadata.yaml`,
+`common.server-service-mapping`). Instead of hand-copying an identical block into every `metadata.yaml`,
 these are defined once in
 [`src/main/resources/shared-config-definitions.yaml`](src/main/resources/shared-config-definitions.yaml)
 under a stable id, and each module references them:
@@ -363,7 +401,7 @@ under a stable id, and each module references them:
 ```yaml
 configurations:
   - ref: http.known-methods
-  - ref: common.peer-service-mapping
+  - ref: common.server-service-mapping
 ```
 
 At metadata-parse time (`SharedConfigurationRegistry`) each `ref` is expanded into the full

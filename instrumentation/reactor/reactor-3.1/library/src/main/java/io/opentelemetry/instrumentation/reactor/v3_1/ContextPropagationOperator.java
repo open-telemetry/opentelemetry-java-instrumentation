@@ -361,10 +361,12 @@ public final class ContextPropagationOperator {
     }
   }
 
-  static class ScalarPropagatingFlux extends Flux<Object> implements Scannable {
+  static class ScalarPropagatingFlux extends Mono<Object> implements Scannable {
 
     static <T> Flux<T> create(Flux<T> source) {
-      return new ScalarPropagatingFlux(source).flatMap(unused -> source);
+      // flatMapMany passes downstream demand to the source unchanged, while Flux.flatMap would
+      // prefetch from it
+      return new ScalarPropagatingFlux(source).flatMapMany(unused -> source);
     }
 
     private final Flux<?> source;

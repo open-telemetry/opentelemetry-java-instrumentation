@@ -1,77 +1,57 @@
-# OpenTelemetry Java Instrumentation code review
+# OpenTelemetry Java Instrumentation rules
 
-Review the pull request's changed behavior, not just the edited syntax. Trace relevant callers,
-configuration, lifecycle, and tests before drawing a conclusion. Report a concrete defect or an
-explicit repository convention violated on a changed line; include the failure mode and an
-actionable fix. If the evidence or an exception is unclear, do not comment. Use category tags
-such as `[General]`, `[Javaagent]`, `[Config]`, `[Testing]`, and `[Naming]`.
-
-Do not report pre-existing issues, speculative risks, or failures CI will surface directly:
-compilation, Spotless formatting, Checkstyle, ErrorProne, NullAway, or failing tests. Missing
-coverage for behavior CI does not exercise can still matter. Do not ask the author to run a
-formatter. Path-specific `.github/instructions/*.instructions.md` files contain the
-applicable repository review rules; use their stated conditions and exceptions. The longer
-`.github/agents/knowledge/` articles are optional reference, not a required loading step.
+These rules and the applicable `.github/instructions/*.instructions.md` files guide both
+implementation and code review. Apply a rule only when its stated conditions hold. Keep its
+exceptions, rationale, and useful examples in the same topic file, not in a second guidance catalog.
 
 ## Correctness and compatibility
 
-- Check changes for lifecycle leaks, reentrancy, concurrency under supported library usage,
-  unsafe error handling, changed telemetry, incorrect comments, and copy/paste mistakes.
-  Identify a supported failure path rather than requesting defenses against hypothetical ones.
-- For a changed public Java API, identify the *publishing artifact* before claiming a break.
-  Javaagent modules bundled into the agent are not published Java APIs. In stable artifacts
-  (`otel.stable=true` in that module's `gradle.properties`), deprecate before removal and keep
-  deprecated symbols until the next major version. Published alpha artifacts may remove
-  deprecated symbols in a later minor release. Do not mistake a 3.0 behavior migration for an
-  alpha API that should be removed immediately. A replacement must be at least as stable as
-  the old API; deprecated methods delegate to their replacements, not vice versa. Include
-  replacement and removal timing in `@deprecated` Javadoc and a deprecation CHANGELOG entry.
-  Document a breaking change to a published alpha API under the appropriate CHANGELOG heading.
+- Preserve lifecycle ownership, reentrancy, concurrency, error handling, and telemetry under
+  supported library usage. Trace relevant callers, configuration, initialization, registration,
+  and tests rather than reasoning only from edited syntax. Do not add defenses for unsupported
+  hypothetical failures.
+- Verify library and framework assumptions against the supported dependency versions and concrete
+  implementations. Check comments and copied code against the behavior they describe.
+- For a public Java API change, identify the *publishing artifact* and determine API status
+  from its published contract and intended external use, not source path or visibility alone.
+  Symbols explicitly documented as internal, unsupported, and subject to change are not supported
+  public APIs merely because their artifact is published; implementation-only changes to them need
+  no public-API deprecation cycle or CHANGELOG entry. This does not exempt `.internal` packages or
+  `Experimental` helpers generally. Javaagent modules bundled into the agent are not published
+  Java APIs. In stable artifacts (`otel.stable=true` in that module's `gradle.properties`),
+  deprecate before removal and keep deprecated symbols until the next major version. Published
+  alpha artifacts may remove deprecated symbols in a later minor release. Determine stability from
+  the publishing module, not a class name or a memorized artifact list. Do not mistake a 3.0
+  behavior migration for an alpha API that should be removed immediately. A replacement must be
+  at least as stable as the old API; deprecated methods delegate to their replacements, not vice
+  versa. Include the replacement and removal timing in `@deprecated` Javadoc. Use plain
+  `@Deprecated` for Java-8-compatible APIs, without `since` or `forRemoval`.
+- A deprecation scheduled for a major-version behavior change keeps that timing even in an alpha
+  artifact. Examples include semconv migrations, interface overrides following an upstream removal,
+  and the flat `ConfigProperties` bridge.
 - User-facing configuration names and outgoing telemetry identities also have compatibility
   contracts. When a module is renamed, inspect both its `otel.instrumentation.<name>.enabled`
-  alias and emitted `otel.scope.name`, including v3-preview behavior and scope-version lookup.
-  Preserving one does not preserve the other. Do not require a deprecation cycle for
-  implementation-only javaagent symbols.
+  alias and emitted `otel.scope.name`, including scope-version lookup.
+  Preserving one does not preserve the other. Keep version lookup aligned with the name passed to
+  `Instrumenter.builder(...)`. Assess telemetry changes under `VERSIONING.md`, including the
+  changes that the adopted semantic conventions permit; not every telemetry edit is breaking.
 - For any instrumentation module changed, compare new or changed configuration reads, types, and
-  defaults with its `metadata.yaml`, including settings read in a dependent common module. If
-  metadata did not change, comment only where the change introduced a demonstrable mismatch. Do
-  not request an entry for the general module enable/disable property. Check explicit metadata
-  edits under the metadata-specific instructions.
+  defaults with its `metadata.yaml`, including settings read in a dependent common module. The general
+  module enable/disable property is not a metadata configuration entry.
 
-## Configuration
+For example, an alpha API deprecation delegates to its replacement:
 
-Apply these checks when changed code defines, maps, or reads user-facing configuration, regardless
-of where its implementation lives.
+```java
+/**
+ * @deprecated Use {@link #newMethod()} instead. May be removed in the next minor release.
+ */
+@Deprecated
+public ReturnType oldMethod() {
+  return newMethod();
+}
+```
 
-- When adding or changing an `otel.instrumentation.*` setting, check both its flat property
-  and declarative YAML name. New flat-property segments use kebab-case; new declarative YAML
-  keys use snake_case. For a new feature, check intended config stability on both forms:
-  experimental flat names need an `experimental` marker and the corresponding `/development`
-  YAML form; preview flat names need a `preview` marker and an unstable YAML form
-  (`/development` or `preview` in the YAML key). Stable feature names need neither marker.
-  An alpha implementation artifact does not make its user-facing settings experimental. Do
-  not rename an already-published declarative name merely to match these naming rules or
-  mechanical conversion; determine whether the bridge needs a `SPECIAL_MAPPINGS` entry instead.
-- Stable flat property names remain stable even when read by alpha implementation code.
-  On rename, retain the old name until the next major version: read the replacement first,
-  fall back to the old name only outside v3-preview, and log a `WARN` once at startup *when
-  the old value is applied*, naming the old and replacement flat properties (or declarative
-  paths if there is no flat form). Add the deprecation to the CHANGELOG. Experimental/preview
-  names may be removed after a subsequent minor release and do not need the v3-preview guard.
-  Instrumentation enablement aliases have distinct warning semantics; do not apply ordinary
-  replacement-first warning logic to them.
-- Read module settings from `java.<module>` and general settings from `general`; HTTP
-  header capture is general configuration. For a declarative `ComponentProvider`, its
-  `getName()` must match the YAML node. If the replacement config value already determines
-  an ordinary property's result, merely carrying the deprecated name must not cause a
-  warning; deduplicate warnings when reads may repeat.
-- In javaagent instrumentation, ordinary instrumentation settings are read through
-  `DeclarativeConfigUtil`, with a default for unavailable YAML. A nullable read is intentional
-  when probing for a replacement or deprecated name before choosing a default. Flat
-  `ConfigProperties` reads are reserved for enablement bootstrapping in
-  `AgentDistributionConfig`. Outside javaagent instrumentation, direct reads remain valid when
-  required by an SDK SPI or bridge contract. Structured YAML-only settings need declarative-mode
-  coverage.
+For a stable API, the Javadoc states removal in the next major version instead.
 
 ## Documentation
 
@@ -79,13 +59,13 @@ of where its implementation lives.
   Include declarative configuration only when it has different behavior, requires a distinct
   migration, or supports configuration unavailable through flat properties.
 - Add hand-written changelog entries only for deprecations or breaking changes, as specified in
-  CONTRIBUTING.md; normal changes rely on the generated changelog. Keep entries short and focused on
-  the user-visible change. Include migration guidance only when the required action is not obvious
-  from the change description; omit generic advice to handle the new behavior.
-  Describe the released behavior directly, without
+  CONTRIBUTING.md; normal changes rely on the generated changelog. Use the appropriate stable or
+  non-stable breaking-change heading and the corresponding PR label. Keep entries short, naming a
+  deprecated interface and its replacement without repeating removal timing or obvious migration
+  steps. Describe the released behavior directly, without
   referring to preview flags used to stage the change. Omit statements about behavior that is
   unchanged unless they are necessary to clarify the change's scope.
-- Add or request README and usage documentation for a concrete reader need: setup,
+- Add README and usage documentation for a concrete reader need: setup,
   configuration, API usage, or a non-obvious user-visible limitation or privacy constraint.
   A code change alone does not require a README addition. Do not add prose merely to inventory
   automatically emitted attributes or schema URLs, narrate internal build or instrumentation
@@ -101,3 +81,16 @@ of where its implementation lives.
   READMEs and usage documentation should describe current supported behavior without migration
   sections or historical comparisons. PR descriptions may include migration guidance, old/new
   examples, and removed properties or APIs.
+
+## When reviewing
+
+- Review changed behavior, tracing the relevant callers, configuration, lifecycle, and tests.
+  Report a concrete defect or an explicit repository convention violated on a changed line.
+  Include the supported failure mode or the violated convention and an actionable fix.
+  If the evidence or an exception is unclear, do not comment.
+- Do not report pre-existing issues, speculative risks, or failures CI surfaces directly:
+  compilation, Spotless formatting, Checkstyle, ErrorProne, NullAway, or failing tests.
+  Missing coverage for behavior CI does not exercise can still matter. Do not ask the author
+  to run a formatter.
+- For unchanged metadata, report only demonstrable mismatches introduced by the change.
+- Use category tags such as `[General]`, `[Javaagent]`, `[Config]`, `[Testing]`, and `[Naming]`.

@@ -37,7 +37,7 @@ class FuturePoolInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static Function0<?> onApplyEnter(@Advice.Argument(0) Function0<?> f) {
       return TwitterUtilCoreHelpers.wrap(Context.current(), f);

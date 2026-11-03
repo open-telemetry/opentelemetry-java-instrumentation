@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -46,48 +48,19 @@ dependencies {
   implementation(project(":instrumentation:netty:netty-common-4.0:library"))
 }
 
-tasks {
-  withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
-    jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
-    jvmArgs("-Dio.opentelemetry.context.enableStrictContext=true")
+tasks.named<Test>("test") {
+  telemetryConfig("otel.instrumentation.http.client.emit-experimental-telemetry", "true")
+  telemetryConfig("otel.instrumentation.http.server.emit-experimental-telemetry", "true")
+  jvmArgs("-Dio.opentelemetry.context.enableStrictContext=true")
 
-    // force the netty event loop into constrained territory
-    systemProperty("io.netty.eventLoopThreads", "2")
-    // ensure concurrent tests are competing for netty workers
-    systemProperty("com.twitter.finagle.netty4.numWorkers", "2")
-    // ensure concurrent tests are competing for offload pool workers
-    systemProperty("com.twitter.finagle.offload.numWorkers", "2")
-  }
-
-  test {
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
-        "otel.instrumentation.http.server.emit-experimental-telemetry=true"
-    )
-  }
-
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.http.client.emit-experimental-telemetry=true," +
-        "otel.instrumentation.http.server.emit-experimental-telemetry=true," +
-        "otel.semconv-stability.preview=service.peer"
-    )
-  }
-
-  check {
-    dependsOn(testPreviewSemconv)
-  }
+  // force the netty event loop into constrained territory
+  systemProperty("io.netty.eventLoopThreads", "2")
+  // ensure concurrent tests are competing for netty workers
+  systemProperty("com.twitter.finagle.netty4.numWorkers", "2")
+  // ensure concurrent tests are competing for offload pool workers
+  systemProperty("com.twitter.finagle.offload.numWorkers", "2")
 
   if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
-    }
+    enabled = false
   }
 }

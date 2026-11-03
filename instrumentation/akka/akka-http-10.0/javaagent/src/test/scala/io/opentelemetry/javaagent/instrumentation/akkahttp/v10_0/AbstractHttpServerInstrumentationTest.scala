@@ -49,7 +49,7 @@ abstract class AbstractHttpServerInstrumentationTest
           t != ServerEndpoint.EXCEPTION
       }
     )
-    // instrumentation does not create a span at all
+    // Akka rejects unknown methods before creating a request, so the method is unavailable.
     options.disableTestNonStandardHttpMethod
   }
 

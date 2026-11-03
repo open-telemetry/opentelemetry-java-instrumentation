@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTestUtil.EXPERIMENTAL_ATTRIBUTES;
+
 import com.amazonaws.services.stepfunctions.AWSStepFunctionsClientBuilder;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AbstractStepFunctionsClientTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -18,6 +20,11 @@ class StepFunctionsClientTest extends AbstractStepFunctionsClientTest {
   @Override
   protected InstrumentationExtension testing() {
     return testing;
+  }
+
+  @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return EXPERIMENTAL_ATTRIBUTES;
   }
 
   @Override

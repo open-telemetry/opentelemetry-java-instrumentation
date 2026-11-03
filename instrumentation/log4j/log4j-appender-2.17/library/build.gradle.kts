@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -16,21 +18,20 @@ dependencies {
   }
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  val testAsyncLogger = register<Test>("testAsyncLogger") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs(
-      "-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector",
-      "-Dlog4j2.ContextDataInjector=io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderContextDataInjector",
-    )
-  }
-
-  check {
-    dependsOn(testAsyncLogger)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        configureEach {
+          systemProperty("testLatestDeps", otelProps.testLatestDeps)
+        }
+        register("AsyncLogger") {
+          jvmArgs(
+            "-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector",
+            "-Dlog4j2.ContextDataInjector=io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderContextDataInjector",
+          )
+        }
+      }
+    }
   }
 }

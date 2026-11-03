@@ -29,6 +29,15 @@ final class EmbeddingAttributesGetter
     return GenAiAttributes.GenAiProviderNameIncubatingValues.OPENAI;
   }
 
+  @Nullable
+  @Override
+  public String getErrorType(
+      EmbeddingCreateParams request,
+      @Nullable CreateEmbeddingResponse response,
+      @Nullable Throwable error) {
+    return OpenAiErrorType.getErrorType(error);
+  }
+
   @Override
   public String getRequestModel(EmbeddingCreateParams request) {
     return request.model().asString();

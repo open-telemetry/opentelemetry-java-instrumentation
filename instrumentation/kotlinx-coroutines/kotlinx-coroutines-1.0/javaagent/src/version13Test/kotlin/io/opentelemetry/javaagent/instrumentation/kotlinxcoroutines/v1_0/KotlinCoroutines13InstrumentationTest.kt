@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0
 
 import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import kotlinx.coroutines.CoroutineDispatcher
@@ -14,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
@@ -25,15 +27,26 @@ import kotlinx.coroutines.reactor.flux
 import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import java.util.stream.Stream
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
+import kotlin.coroutines.intrinsics.intercepted
+import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
+import kotlin.coroutines.resume
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExperimentalCoroutinesApi
@@ -180,6 +193,51 @@ class KotlinCoroutines13InstrumentationTest {
         )
       },
     )
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = [false, true])
+  @Disabled("Tail-call @WithSpan continuations can resume application code on the wrong thread, breaking dispatcher confinement and thread-bound state such as Spring transactions: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/20744")
+  fun `callback suspension preserves dispatcher`(annotated: Boolean) {
+    val continuationReady = CompletableFuture<Continuation<Unit>>()
+    val threads = runBlocking {
+      val result = async(singleThread.asCoroutineDispatcher()) {
+        val callerThread = Thread.currentThread()
+        if (annotated) {
+          annotatedCallback(continuationReady)
+        } else {
+          callback(continuationReady)
+        }
+        callerThread to Thread.currentThread()
+      }
+
+      val continuation = continuationReady.get(10, TimeUnit.SECONDS)
+      // Drain the caller executor so the callback cannot complete before suspension.
+      singleThread.submit {}.get(10, TimeUnit.SECONDS)
+      threadPool.submit { continuation.resume(Unit) }.get(10, TimeUnit.SECONDS)
+      withTimeout(TimeUnit.SECONDS.toMillis(10)) {
+        result.await()
+      }
+    }
+
+    if (annotated) {
+      testing.waitAndAssertTraces(
+        { trace ->
+          trace.hasSpansSatisfyingExactly(
+            { it.hasName("callback") },
+          )
+        },
+      )
+    }
+    assertThat(threads.second).isSameAs(threads.first)
+  }
+
+  @WithSpan("callback")
+  private suspend fun annotatedCallback(continuationReady: CompletableFuture<Continuation<Unit>>) = callback(continuationReady)
+
+  private suspend fun callback(continuationReady: CompletableFuture<Continuation<Unit>>) = suspendCoroutineUninterceptedOrReturn<Unit> {
+    continuationReady.complete(it.intercepted())
+    COROUTINE_SUSPENDED
   }
 
   private fun tracedChild(opName: String) {

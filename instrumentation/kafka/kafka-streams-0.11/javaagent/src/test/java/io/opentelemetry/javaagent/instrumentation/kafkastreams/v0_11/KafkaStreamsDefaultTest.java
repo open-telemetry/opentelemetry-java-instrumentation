@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetrics;
+import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
@@ -19,14 +20,11 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -35,6 +33,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.time.Duration;
@@ -43,6 +42,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -56,6 +56,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
+
+  private static final boolean RECEIVE_TELEMETRY =
+      Boolean.getBoolean(
+          "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
 
   @DisplayName("test kafka produce and consume with streams in-between")
   @Test
@@ -107,9 +111,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
     AtomicReference<SpanData> producerPendingRef = new AtomicReference<>();
     AtomicReference<SpanData> producerProcessedRef = new AtomicReference<>();
 
-    testing.waitAndAssertSortedTraces(
-        TelemetryDataUtil.orderByRootSpanName(
-            "send " + STREAM_PENDING, "poll " + STREAM_PENDING, "poll " + STREAM_PROCESSED),
+    waitAndAssertTraces(
         trace -> {
           trace.hasSpansSatisfyingExactly(
               // kafka-clients PRODUCER
@@ -117,7 +119,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 List<AttributeAssertion> producerPendingAssertions =
                     new ArrayList<>(producerAttributes(STREAM_PENDING, true));
                 producerPendingAssertions.add(
-                    satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
+                    satisfies(stringKey("kafka.cluster.id"), val -> val.isNotEmpty()));
                 span.hasName("send " + STREAM_PENDING)
                     .hasKind(SpanKind.PRODUCER)
                     .hasNoParent()
@@ -133,10 +135,10 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 assertions.add(
                     satisfies(
                         MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
-                assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
+                assertions.add(equalTo(stringKey("kafka.message.key"), "10"));
                 assertions.add(equalTo(stringKey("asdf"), "testing"));
-                assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, 0));
-                assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
+                assertions.add(equalTo(longKey("kafka.offset"), 0));
+                assertions.add(satisfies(stringKey("kafka.cluster.id"), val -> val.isNotEmpty()));
                 if (EXPERIMENTAL_ATTRIBUTES) {
                   assertions.add(
                       satisfies(
@@ -157,7 +159,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 List<AttributeAssertion> producerProcessedAssertions =
                     new ArrayList<>(producerAttributes(STREAM_PROCESSED, false));
                 producerProcessedAssertions.add(
-                    satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
+                    satisfies(stringKey("kafka.cluster.id"), val -> val.isNotEmpty()));
                 span.hasName("send " + STREAM_PROCESSED)
                     .hasKind(SpanKind.PRODUCER)
                     .hasParent(trace.getSpan(1))
@@ -175,10 +177,10 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 assertions.add(
                     satisfies(
                         MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
-                assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"));
+                assertions.add(equalTo(stringKey("kafka.message.key"), "10"));
                 assertions.add(equalTo(longKey("testing"), 123));
-                assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, 0));
-                assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
+                assertions.add(equalTo(longKey("kafka.offset"), 0));
+                assertions.add(satisfies(stringKey("kafka.cluster.id"), val -> val.isNotEmpty()));
                 if (EXPERIMENTAL_ATTRIBUTES) {
                   assertions.add(
                       satisfies(
@@ -202,7 +204,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
               new ArrayList<>(
                   messagingAttributes(STREAM_PENDING, "poll", "receive", "consumer", false));
           assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
-          assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
+          assertions.add(satisfies(stringKey("kafka.cluster.id"), val -> val.isNotEmpty()));
           assertions.add(
               satisfies(MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
           if (testLatestDeps()) {
@@ -222,7 +224,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
               new ArrayList<>(
                   messagingAttributes(STREAM_PROCESSED, "poll", "receive", "consumer", true));
           assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
-          assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, val -> val.isNotEmpty()));
+          assertions.add(satisfies(stringKey("kafka.cluster.id"), val -> val.isNotEmpty()));
           assertions.add(
               satisfies(MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
           if (testLatestDeps()) {
@@ -237,24 +239,50 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                       .hasLinks(receiveRecordLink(producerProcessedRef.get(), "10"))
                       .hasAttributesSatisfyingExactly(assertions));
         });
-    assertProcessMetrics(
-        testing,
-        "io.opentelemetry.kafka-streams-0.11",
-        STREAM_PENDING,
-        testLatestDeps() ? "test-application" : null,
-        "0",
-        1,
-        null);
-    assertReceiveMetrics(
-        testing,
-        "io.opentelemetry.kafka-clients-0.11",
-        STREAM_PENDING,
-        testLatestDeps() ? "test-application" : null,
-        "0",
-        1,
-        1,
-        null);
-    assertTotalConsumedMessages(testing, "io.opentelemetry.kafka-clients-0.11", 2);
+    if (RECEIVE_TELEMETRY) {
+      assertProcessMetrics(
+          testing,
+          "io.opentelemetry.kafka-streams-0.11",
+          STREAM_PENDING,
+          testLatestDeps() ? "test-application" : null,
+          "0",
+          1,
+          null);
+      assertReceiveMetrics(
+          testing,
+          "io.opentelemetry.kafka-clients-0.11",
+          STREAM_PENDING,
+          testLatestDeps() ? "test-application" : null,
+          "0",
+          1,
+          1,
+          null);
+    } else {
+      assertProcessMetricsWithConsumedMessages(
+          testing,
+          "io.opentelemetry.kafka-streams-0.11",
+          STREAM_PENDING,
+          testLatestDeps() ? "test-application" : null,
+          "0",
+          1,
+          1,
+          null);
+      assertTotalConsumedMessages(testing, "io.opentelemetry.kafka-streams-0.11", 1);
+    }
+    assertTotalConsumedMessages(
+        testing, "io.opentelemetry.kafka-clients-0.11", RECEIVE_TELEMETRY ? 2 : 1);
+  }
+
+  private static void waitAndAssertTraces(
+      Consumer<TraceAssert> producerTrace,
+      Consumer<TraceAssert> pendingReceiveTrace,
+      Consumer<TraceAssert> processedReceiveTrace) {
+    testing.waitAndAssertSortedTraces(
+        TelemetryDataUtil.orderByRootSpanName(
+            "send " + STREAM_PENDING, "poll " + STREAM_PENDING, "poll " + STREAM_PROCESSED),
+        RECEIVE_TELEMETRY
+            ? asList(producerTrace, pendingReceiveTrace, processedReceiveTrace)
+            : singletonList(producerTrace));
   }
 
   private static List<AttributeAssertion> producerAttributes(String topic, boolean includeKey) {
@@ -262,12 +290,12 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
         new ArrayList<>(messagingAttributes(topic, "send", "send", "producer", includeKey));
     assertions.add(
         satisfies(MESSAGING_DESTINATION_PARTITION_ID, val -> val.isInstanceOf(String.class)));
-    assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, includeKey ? "10" : null));
+    assertions.add(equalTo(stringKey("kafka.message.key"), includeKey ? "10" : null));
     assertions.add(
         equalTo(
-            stringKey("messaging.kafka.bootstrap.servers"),
+            stringKey("kafka.bootstrap.servers"),
             EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null));
-    assertions.add(equalTo(MESSAGING_KAFKA_OFFSET, 0));
+    assertions.add(equalTo(longKey("kafka.offset"), 0));
     return assertions;
   }
 
@@ -279,7 +307,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
       boolean startsWith) {
     return new ArrayList<>(
         asList(
-            equalTo(MESSAGING_SYSTEM, KAFKA),
+            equalTo(stringKey("messaging.system.name"), KAFKA),
             equalTo(MESSAGING_DESTINATION_NAME, topic),
             equalTo(MESSAGING_OPERATION_NAME, operationName),
             equalTo(MESSAGING_OPERATION_TYPE, operationType),
@@ -301,8 +329,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
     return LinkData.create(
         asRemote(producerSpan.getSpanContext()),
         Attributes.builder()
-            .put(MESSAGING_KAFKA_OFFSET, 0)
-            .put(MESSAGING_KAFKA_MESSAGE_KEY, messageKey)
+            .put(longKey("kafka.offset"), 0)
+            .put(stringKey("kafka.message.key"), messageKey)
             .build());
   }
 }

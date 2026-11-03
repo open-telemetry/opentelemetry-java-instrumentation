@@ -46,8 +46,8 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(nameStartsWith("handle"))
-            .and(takesArgument(0, named("jakarta.servlet.http.HttpServletRequest")))
-            .and(takesArguments(3)),
+            .and(takesArguments(3))
+            .and(takesArgument(0, named("jakarta.servlet.http.HttpServletRequest"))),
         getClass().getName() + "$ControllerAdvice");
   }
 

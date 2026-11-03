@@ -8,9 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.gwt.v2_0;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcExceptionEventExtractors.setRpcServerExceptionEventExtractor;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.internal.RpcSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -29,12 +32,15 @@ public class GwtSingletons {
 
   static {
     GwtRpcAttributesGetter rpcAttributesGetter = new GwtRpcAttributesGetter();
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     InstrumenterBuilder<Method, Void> builder =
         Instrumenter.<Method, Void>builder(
-                GlobalOpenTelemetry.get(),
+                openTelemetry,
                 INSTRUMENTATION_NAME,
                 RpcSpanNameExtractor.create(rpcAttributesGetter))
-            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter));
+            .setSchemaUrl(RpcSchemaUrls.SCHEMA_URL)
+            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
+            .addOperationMetrics(RpcServerMetrics.get());
     setRpcServerExceptionEventExtractor(builder);
 
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysServer());

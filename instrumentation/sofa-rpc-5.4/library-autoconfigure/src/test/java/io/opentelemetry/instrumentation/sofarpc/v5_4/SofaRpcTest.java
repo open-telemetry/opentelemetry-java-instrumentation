@@ -20,11 +20,6 @@ class SofaRpcTest extends AbstractSofaRpcTest {
   }
 
   @Override
-  protected boolean hasPeerService() {
-    return false;
-  }
-
-  @Override
   protected String genericMethodName() {
     return "$invoke";
   }

@@ -35,7 +35,7 @@ class TransportClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This TransportClient client) {
       ElasticsearchTransportServerTargets.initializeUpdateState(client);
     }

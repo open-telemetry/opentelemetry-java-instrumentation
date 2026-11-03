@@ -20,9 +20,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageEntry;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -76,7 +76,7 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
         spanContextData.putAll(contextData);
       }
 
-      SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
+      SpanContext spanContext = Span.fromContext(context).getSpanContext();
 
       if (spanContext.isValid()) {
         spanContextData.put(TRACE_ID_KEY, spanContext.getTraceId());
@@ -86,7 +86,7 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
       spanContextData.putAll(ConfiguredResourceAttributesHolder.getResourceAttributes());
 
       if (ADD_BAGGAGE) {
-        Baggage baggage = Java8BytecodeBridge.baggageFromContext(context);
+        Baggage baggage = Baggage.fromContext(context);
 
         // using a lambda here does not play nicely with instrumentation bytecode process
         // (Java 6 related errors are observed) so relying on for loop instead

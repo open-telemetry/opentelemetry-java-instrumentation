@@ -5,14 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
 import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -54,10 +52,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("execute")
-            .and(takesArguments(5))
             .and(takesArgument(0, named("org.apache.hc.core5.http.nio.AsyncRequestProducer")))
-            .and(takesArgument(1, named("org.apache.hc.core5.http.nio.AsyncResponseConsumer")))
-            .and(takesArgument(2, named("org.apache.hc.core5.http.nio.HandlerFactory")))
             .and(takesArgument(3, named("org.apache.hc.core5.http.protocol.HttpContext")))
             .and(takesArgument(4, named("org.apache.hc.core5.concurrent.FutureCallback"))),
         getClass().getName() + "$ClientAdvice");
@@ -78,7 +73,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(4) @Nullable FutureCallback<?> futureCallback) {
       HttpContext httpContext = originalHttpContext;
 
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       if (httpContext == null) {
         httpContext = new BasicHttpContext();
       }

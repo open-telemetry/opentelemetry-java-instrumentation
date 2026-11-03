@@ -49,8 +49,8 @@ class SqsTracingTest extends AbstractSqsTracingTest {
   public AmazonSQSAsyncClientBuilder configureClient(AmazonSQSAsyncClientBuilder client) {
     return client.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true)
-            .setMessagingReceiveTelemetryEnabled(true)
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
+            .setMessagingReceiveTelemetryEnabled(receiveTelemetryEnabled())
             .setHeaders(
                 IncludeExclude.builder()
                     .setIncluded("Test-Message-*")
@@ -94,7 +94,7 @@ class SqsTracingTest extends AbstractSqsTracingTest {
   void testDisableSqsMessageCreateSpans() {
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true);
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes());
     telemetryBuilder.setBatchSendMessageCreationSpansEnabled(false);
     AmazonSQSAsync client =
         newClientBuilder()
@@ -154,7 +154,7 @@ class SqsTracingTest extends AbstractSqsTracingTest {
     assumeTrue(supportsMessageSystemAttributes());
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true);
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes());
     telemetryBuilder.setBatchSendMessageCreationSpansEnabled(false);
     AmazonSQSAsync client =
         newClientBuilder()

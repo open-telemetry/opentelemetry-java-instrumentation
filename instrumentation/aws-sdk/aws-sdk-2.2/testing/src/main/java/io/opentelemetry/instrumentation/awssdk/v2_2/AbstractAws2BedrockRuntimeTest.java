@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_BEDROCK_GUARDRAIL_ID;
@@ -39,6 +40,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.recording.RecordingExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -149,6 +151,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("chat amazon.titan-text-lite-v1")
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -164,8 +167,9 @@ public abstract class AbstractAws2BedrockRuntimeTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -190,6 +194,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasUnit("s")
                     .hasDescription("GenAI operation duration.")
                     .hasHistogramSatisfying(
@@ -212,6 +217,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasBody(
                         isCaptureMessageContentEnabled()
                             ? Value.of(KeyValue.of("content", Value.of("Say this is a test")))
@@ -221,6 +227,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                         equalTo(EVENT_NAME, "gen_ai.choice"))
                     .hasSpanContext(spanCtx)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasBody(
                         mapValue(
                             KeyValue.of("finish_reason", Value.of("end_turn")),
@@ -287,7 +294,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -418,7 +425,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -576,7 +583,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -887,7 +894,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -1065,7 +1072,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -1311,7 +1318,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -1540,7 +1547,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -1689,7 +1696,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -1846,7 +1853,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -2015,7 +2022,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -2158,7 +2165,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -2559,7 +2566,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -2755,7 +2762,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -2941,7 +2948,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -3254,7 +3261,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -3484,7 +3491,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -3729,7 +3736,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -3893,7 +3900,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -4212,7 +4219,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -4417,7 +4424,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
-                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasDescription("Number of input and output tokens used.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(

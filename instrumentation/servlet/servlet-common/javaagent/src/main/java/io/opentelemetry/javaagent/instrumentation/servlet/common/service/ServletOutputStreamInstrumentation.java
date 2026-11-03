@@ -48,17 +48,15 @@ public class ServletOutputStreamInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("write")
-            .and(takesArguments(3))
             .and(takesArgument(0, byte[].class))
             .and(takesArgument(1, int.class))
             .and(takesArgument(2, int.class))
             .and(isPublic()),
         writeBytesAndOffsetAdviceClassName);
     transformer.applyAdviceToMethod(
-        named("write").and(takesArguments(1)).and(takesArgument(0, byte[].class)).and(isPublic()),
+        named("write").and(takesArguments(byte[].class)).and(isPublic()),
         writeBytesAdviceClassName);
     transformer.applyAdviceToMethod(
-        named("write").and(takesArguments(1)).and(takesArgument(0, int.class)).and(isPublic()),
-        writeIntAdviceClassName);
+        named("write").and(takesArguments(int.class)).and(isPublic()), writeIntAdviceClassName);
   }
 }

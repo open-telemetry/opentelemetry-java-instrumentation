@@ -12,7 +12,6 @@ import com.couchbase.client.core.env.CoreEnvironment;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.semconv.SchemaUrls;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -34,12 +33,7 @@ class CouchbaseEnvironmentInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This CoreEnvironment.Builder<?> builder) {
-      builder.requestTracer(
-          CouchbaseRequestTracer.create(
-              GlobalOpenTelemetry.get()
-                  .tracerBuilder("io.opentelemetry.couchbase-3.0")
-                  .setSchemaUrl(SchemaUrls.V1_44_0)
-                  .build()));
+      builder.requestTracer(CouchbaseRequestTracer.create(GlobalOpenTelemetry.get()));
     }
   }
 }

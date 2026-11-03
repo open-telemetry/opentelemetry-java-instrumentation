@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.instrumenter;
@@ -47,7 +46,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
         named("write").and(takesArgument(0, named("io.lettuce.core.protocol.RedisCommand"))),
         getClass().getName() + "$WriteAdvice");
     transformer.applyAdviceToMethod(
-        named("setAutoFlushCommands").and(takesArguments(1)).and(takesArgument(0, boolean.class)),
+        named("setAutoFlushCommands").and(takesArgument(0, boolean.class)),
         getClass().getName() + "$SetAutoFlushAdvice");
     transformer.applyAdviceToMethod(
         named("flushCommands").and(takesArguments(0)), getClass().getName() + "$FlushAdvice");
@@ -81,7 +80,7 @@ class LettuceEndpointInstrumentation implements TypeInstrumentation {
       // parent context captured when the AsyncCommand was constructed during dispatch
       Context parentContext = CONTEXT.get(asyncCommand);
       if (parentContext == null) {
-        parentContext = currentContext();
+        parentContext = Context.current();
       }
       if (!instrumenter().shouldStart(parentContext, command)) {
         return;

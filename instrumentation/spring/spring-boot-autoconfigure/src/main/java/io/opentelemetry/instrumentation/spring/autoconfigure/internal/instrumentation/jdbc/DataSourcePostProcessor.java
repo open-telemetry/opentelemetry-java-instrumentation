@@ -73,7 +73,7 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
                   config.get("datasource/development").getBoolean("enabled", false));
       Experimental.setSqlCommenterEnabled(
           builder, config.get("sqlcommenter/development").getBoolean("enabled", false));
-      DataSource otelDataSource = builder.build().wrap(dataSource);
+      DataSource otelDataSource = builder.build().instrument(dataSource);
 
       // wrap instrumented data source into a proxy that unwraps to the original data source
       // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13512
@@ -93,7 +93,7 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
   // org.springframework.aop.support.AopUtils.isAopProxy(). This proxy can be unwrapped with
   // ((Advised) dataSource).getTargetSource().getTarget() and it unwraps to the original data
   // source.
-  @SuppressWarnings("checkstyle:TypeName")
+  @SuppressWarnings({"checkstyle:TypeName", "IdentifierName"})
   private static class DataSource$$Wrapper extends AdvisedSupport
       implements SpringProxy, DataSource {
     private final DataSource delegate;

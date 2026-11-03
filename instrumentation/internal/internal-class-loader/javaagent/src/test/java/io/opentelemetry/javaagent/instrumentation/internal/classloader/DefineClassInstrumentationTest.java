@@ -5,20 +5,26 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
+import io.opentelemetry.javaagent.bootstrap.DefineClassHelper.Handler.DefineClassContext;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.security.ProtectionDomain;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
+import org.mockito.verification.VerificationMode;
 
 class DefineClassInstrumentationTest {
 
@@ -42,14 +48,19 @@ class DefineClassInstrumentationTest {
         String name, byte[] b, int off, int len, ProtectionDomain protectionDomain) {
       return defineClass(name, b, off, len, protectionDomain);
     }
+
+    Class<?> doDefineClass(String name, ByteBuffer b, ProtectionDomain protectionDomain) {
+      return defineClass(name, b, protectionDomain);
+    }
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {3, 4, 5})
+  @ValueSource(strings = {"byteArray3", "byteArray4", "byteArray5", "byteBuffer3"})
   @SuppressWarnings("DirectInvocationOnMock")
-  void ensureDefineClassInstrumented(int argCount) throws IOException {
+  void ensureDefineClassInstrumented(String signature) throws IOException {
     String className = Dummy.class.getName();
     String resource = className.replace('.', '/') + ".class";
+    String expectedClassName = signature.equals("byteArray3") ? null : className;
     ByteArrayOutputStream byteCodeStream = new ByteArrayOutputStream();
     try (InputStream classfile = getClass().getResourceAsStream("/" + resource)) {
       IOUtils.copy(classfile, byteCodeStream, 1024);
@@ -63,22 +74,31 @@ class DefineClassInstrumentationTest {
     mockHandler.beforeDefineClass(cl, className, bytecode, 0, bytecode.length);
     Mockito.reset(mockHandler);
 
+    DefineClassContext context = mock(DefineClassContext.class);
+    when(mockHandler.beforeDefineClass(cl, expectedClassName, bytecode, 0, bytecode.length))
+        .thenReturn(context);
+    mockHandler.beforeDefineClass(cl, expectedClassName, bytecode, 0, bytecode.length);
+    Mockito.clearInvocations(mockHandler);
+
     DefineClassHelper.Handler originalHandler =
         DefineClassHelper.internalSetHandlerForTests(mockHandler);
-    String expectedClassName;
+    Class<?> definedClass;
     try {
-      switch (argCount) {
-        case 3:
-          expectedClassName = null;
-          cl.doDefineClass(bytecode, 0, bytecode.length);
+      switch (signature) {
+        case "byteArray3":
+          definedClass = cl.doDefineClass(bytecode, 0, bytecode.length);
           break;
-        case 4:
-          expectedClassName = className;
-          cl.doDefineClass(className, bytecode, 0, bytecode.length);
+        case "byteArray4":
+          definedClass = cl.doDefineClass(className, bytecode, 0, bytecode.length);
           break;
-        case 5:
-          expectedClassName = className;
-          cl.doDefineClass(className, bytecode, 0, bytecode.length, null);
+        case "byteArray5":
+          definedClass = cl.doDefineClass(className, bytecode, 0, bytecode.length, null);
+          break;
+        case "byteBuffer3":
+          ByteBuffer buffer = ByteBuffer.allocate(bytecode.length);
+          buffer.put(bytecode);
+          buffer.flip();
+          definedClass = cl.doDefineClass(className, buffer, null);
           break;
         default:
           throw new IllegalStateException();
@@ -87,9 +107,13 @@ class DefineClassInstrumentationTest {
       DefineClassHelper.internalSetHandlerForTests(originalHandler);
     }
 
-    verify(mockHandler)
+    assertThat(definedClass.getName()).isEqualTo(className);
+    assertThat(definedClass.getClassLoader()).isSameAs(cl);
+    // defineClass that accepts ByteBuffer delegates to the one that accepts byte array
+    VerificationMode verificationMode = times(signature.equals("byteBuffer3") ? 2 : 1);
+    verify(mockHandler, verificationMode)
         .beforeDefineClass(
             same(cl), eq(expectedClassName), eq(bytecode), eq(0), eq(bytecode.length));
-    verify(mockHandler).afterDefineClass(eq(null));
+    verify(mockHandler, verificationMode).afterDefineClass(same(context));
   }
 }

@@ -24,7 +24,7 @@ class StepFunctionsClientTest extends AbstractStepFunctionsClientTest {
       AWSStepFunctionsClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true)
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
             .build()
             .createRequestHandler());
   }

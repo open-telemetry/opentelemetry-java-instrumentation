@@ -34,6 +34,7 @@ final class McpToolCallAttributesExtractor
   }
 
   @Override
+  @SuppressWarnings("deprecation") // using deprecated semconv
   public void onEnd(
       AttributesBuilder attributes,
       Context context,

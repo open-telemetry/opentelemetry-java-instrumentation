@@ -29,27 +29,14 @@ if (!otelProps.testLatestDeps) {
   }
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    // async-http-client 3.0 requires java 11
-    // We are not using minJavaVersionSupported for latestDepTest because that way the instrumentation
-    // gets compiled with java 11 when running latestDepTest. This causes play-mvc-2.4 latest dep tests
-    // to fail because they require java 8 and instrumentation compiled with java 11 won't apply.
-    if (otelProps.testLatestDeps && testJavaVersion.isJava8) {
-      enabled = false
-    }
-  }
-
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-  }
-
-  check {
-    dependsOn(testPreviewSemconv)
+tasks.named<Test>("test") {
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
+  // async-http-client 3.0 requires java 11
+  // We are not using minJavaVersionSupported for latestDepTest because that way the instrumentation
+  // gets compiled with java 11 when running latestDepTest. This causes play-mvc-2.4 latest dep tests
+  // to fail because they require java 8 and instrumentation compiled with java 11 won't apply.
+  if (otelProps.testLatestDeps && testJavaVersion.isJava8) {
+    enabled = false
   }
 }
 

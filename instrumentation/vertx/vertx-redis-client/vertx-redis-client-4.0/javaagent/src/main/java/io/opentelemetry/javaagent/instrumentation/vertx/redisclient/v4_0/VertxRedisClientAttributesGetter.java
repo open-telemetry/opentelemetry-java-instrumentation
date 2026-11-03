@@ -73,4 +73,11 @@ final class VertxRedisClientAttributesGetter
   public Integer getNetworkPeerPort(VertxRedisClientRequest request, @Nullable Void unused) {
     return request.getPeerPort();
   }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      VertxRedisClientRequest request, @Nullable Void response, @Nullable Throwable error) {
+    return VertxRedisClientError.getErrorType(error);
+  }
 }

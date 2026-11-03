@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8.Roc
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
@@ -83,13 +84,17 @@ public final class RocketMqBatchSendHelper {
       @Override
       public void onSuccess(SendResult sendResult) {
         state.end(null);
-        delegate.onSuccess(sendResult);
+        try (Scope ignored = state.parentContext.makeCurrent()) {
+          delegate.onSuccess(sendResult);
+        }
       }
 
       @Override
       public void onException(Throwable e) {
         state.end(e);
-        delegate.onException(e);
+        try (Scope ignored = state.parentContext.makeCurrent()) {
+          delegate.onException(e);
+        }
       }
     };
   }

@@ -5,15 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_0;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.AbstractElasticsearchTransportClientTest;
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportServerTarget;
-import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportServerTargets;
 import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -145,34 +142,6 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
   }
 
   @Test
-  void sharedDefaultPortIsOmitted() {
-    TransportClient addressListClient = connectedClient();
-    ElasticsearchTransportServerTargets.update(
-        addressListClient,
-        asList(
-            new ElasticsearchTransportServerTarget.Endpoint(getAddress(), 9300),
-            new ElasticsearchTransportServerTarget.Endpoint(DOWN_HOST, 9300)));
-
-    clusterHealth(addressListClient);
-
-    assertConfiguredTarget(configuredAddressListWithSharedPort(), null);
-  }
-
-  @Test
-  void sharedNonDefaultPortIsIncludedWithEachAddress() {
-    TransportClient addressListClient = connectedClient();
-    ElasticsearchTransportServerTargets.update(
-        addressListClient,
-        asList(
-            new ElasticsearchTransportServerTarget.Endpoint(getAddress(), 9400),
-            new ElasticsearchTransportServerTarget.Endpoint(DOWN_HOST, 9400)));
-
-    clusterHealth(addressListClient);
-
-    assertConfiguredTarget(configuredAddressListWithSharedNonDefaultPort(), null);
-  }
-
-  @Test
   void concurrentAddressChangesPublishFinalSnapshot() {
     TransportClient addressListClient = connectedClient();
     ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -240,8 +209,12 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
 
   private void assertConfiguredTarget(String addressList, Long sharedPort) {
     String serverAddress = addressList == null ? getAddress() : addressList;
-    Long serverPort =
-        addressList == null ? (getPort() == 9300 ? null : Long.valueOf(getPort())) : sharedPort;
+    Long serverPort;
+    if (addressList == null) {
+      serverPort = getPort() == 9300 ? null : Long.valueOf(getPort());
+    } else {
+      serverPort = sharedPort;
+    }
     String stableSpanName =
         "cluster:monitor/health " + serverAddress + (serverPort == null ? "" : ":" + serverPort);
     testing.waitAndAssertTraces(
@@ -256,14 +229,6 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
 
   private String configuredAddressListWithMixedPorts() {
     return getAddress() + ":" + getPort() + "," + DOWN_HOST + ":" + addressThatIsDown.getPort();
-  }
-
-  private String configuredAddressListWithSharedPort() {
-    return getAddress() + "," + DOWN_HOST;
-  }
-
-  private String configuredAddressListWithSharedNonDefaultPort() {
-    return getAddress() + ":9400," + DOWN_HOST + ":9400";
   }
 
   private static TransportClient connectedClient() {

@@ -9,7 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.CompletableFuture;
@@ -38,7 +38,7 @@ class NettyResponseFutureInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletableFuture<?> onExit(@Advice.Return CompletableFuture<?> result) {
-      return CompletableFutureWrapper.wrap(result, Java8BytecodeBridge.currentContext());
+      return CompletableFutureWrapper.wrap(result, Context.current());
     }
   }
 }

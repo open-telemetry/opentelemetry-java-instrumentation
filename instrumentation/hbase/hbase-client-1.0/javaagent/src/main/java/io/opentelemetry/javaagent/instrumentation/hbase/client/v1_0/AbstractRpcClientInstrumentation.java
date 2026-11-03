@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_0;
 
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientUtil.createRequest;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientUtil.createRequest;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v1_0.HbaseSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,8 +17,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseRequest;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseServerTarget;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseRequest;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseServerTarget;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -57,7 +57,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This AbstractRpcClient client, @Advice.Argument(0) Configuration configuration) {
       HbaseServerTarget.store(client, configuration);
@@ -111,7 +111,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CallBlockingMethodAdvice {
     @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This AbstractRpcClient client,
         @Advice.Argument(0) Object md,
@@ -119,7 +119,7 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
       return AdviceScope.start(md, param, HbaseServerTarget.get(client));
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {

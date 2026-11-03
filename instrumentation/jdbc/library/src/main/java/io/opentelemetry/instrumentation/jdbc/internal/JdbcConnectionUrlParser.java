@@ -121,13 +121,11 @@ public final class JdbcConnectionUrlParser {
       return DEFAULT;
     }
 
-    // Make this easier and ignore case.
-    connectionUrl = connectionUrl.toLowerCase(Locale.ROOT);
-
-    String jdbcUrl = stripJdbcPrefix(connectionUrl);
-    if (jdbcUrl == null) {
+    String originalJdbcUrl = stripJdbcPrefix(connectionUrl);
+    if (originalJdbcUrl == null) {
       return DEFAULT;
     }
+    String jdbcUrl = originalJdbcUrl.toLowerCase(Locale.ROOT);
 
     int typeLoc = jdbcUrl.indexOf(':');
     if (typeLoc < 1) {
@@ -138,7 +136,7 @@ public final class JdbcConnectionUrlParser {
     String type = jdbcUrl.substring(0, typeLoc);
     JdbcUrlParser parser = typeParsers.get(type);
     ParseContext ctx = ParseContext.of(type, props);
-    if (hasMultipleTargets(jdbcUrl)) {
+    if (parser != MysqlUrlParser.INSTANCE && hasMultipleTargets(jdbcUrl)) {
       ctx.disableSingleServerFallback();
     }
 
@@ -146,6 +144,8 @@ public final class JdbcConnectionUrlParser {
       if (parser == null) {
         ctx.applyDataSourceProperties();
         GenericUrlParser.INSTANCE.parse(jdbcUrl, ctx);
+      } else if (parser == MysqlUrlParser.INSTANCE) {
+        parser.parse(originalJdbcUrl, ctx);
       } else {
         parser.parse(jdbcUrl, ctx);
       }
@@ -158,22 +158,26 @@ public final class JdbcConnectionUrlParser {
   }
 
   private static String stripJdbcPrefix(String connectionUrl) {
-    if (connectionUrl.startsWith("jdbc:tracing:")) {
+    if (connectionUrl.regionMatches(true, 0, "jdbc:tracing:", 0, "jdbc:tracing:".length())) {
       // see https://github.com/opentracing-contrib/java-jdbc
       return connectionUrl.substring("jdbc:tracing:".length());
-    } else if (connectionUrl.startsWith("jdbc:aws-dsql:")) {
+    } else if (connectionUrl.regionMatches(
+        true, 0, "jdbc:aws-dsql:", 0, "jdbc:aws-dsql:".length())) {
       // Amazon Aurora DSQL uses jdbc:aws-dsql: prefix, see
       // https://docs.aws.amazon.com/aurora-dsql/latest/userguide/SECTION_program-with-jdbc-connector.html
       return connectionUrl.substring("jdbc:aws-dsql:".length());
-    } else if (connectionUrl.startsWith("jdbc:aws-wrapper:")) {
+    } else if (connectionUrl.regionMatches(
+        true, 0, "jdbc:aws-wrapper:", 0, "jdbc:aws-wrapper:".length())) {
       // Amazon Aurora uses jdbc:aws-wrapper: prefix, see
       // https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Connecting.html#Aurora.Connecting.JDBCDriverPostgreSQL
       return connectionUrl.substring("jdbc:aws-wrapper:".length());
-    } else if (connectionUrl.startsWith("jdbc:")) {
+    } else if (connectionUrl.regionMatches(true, 0, "jdbc:", 0, "jdbc:".length())) {
       return connectionUrl.substring("jdbc:".length());
-    } else if (connectionUrl.startsWith("jdbc-secretsmanager:tracing:")) {
+    } else if (connectionUrl.regionMatches(
+        true, 0, "jdbc-secretsmanager:tracing:", 0, "jdbc-secretsmanager:tracing:".length())) {
       return connectionUrl.substring("jdbc-secretsmanager:tracing:".length());
-    } else if (connectionUrl.startsWith("jdbc-secretsmanager:")) {
+    } else if (connectionUrl.regionMatches(
+        true, 0, "jdbc-secretsmanager:", 0, "jdbc-secretsmanager:".length())) {
       return connectionUrl.substring("jdbc-secretsmanager:".length());
     }
     return null;

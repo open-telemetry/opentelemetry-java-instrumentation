@@ -11,8 +11,8 @@ import static io.opentelemetry.javaagent.instrumentation.wicket.v8_0.WicketServe
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -43,14 +43,11 @@ class RequestHandlerExecutorInstrumentation implements TypeInstrumentation {
     public static void onEnter(@Advice.Argument(0) IRequestHandler handler) {
       if (handler instanceof IPageClassRequestHandler) {
         HttpServerRoute.update(
-            Java8BytecodeBridge.currentContext(),
-            CONTROLLER,
-            serverSpanName(),
-            (IPageClassRequestHandler) handler);
+            Context.current(), CONTROLLER, serverSpanName(), (IPageClassRequestHandler) handler);
       }
       if (handler instanceof ResourceReferenceRequestHandler) {
         HttpServerRoute.update(
-            Java8BytecodeBridge.currentContext(),
+            Context.current(),
             CONTROLLER,
             serverSpanNameResource(),
             (ResourceReferenceRequestHandler) handler);

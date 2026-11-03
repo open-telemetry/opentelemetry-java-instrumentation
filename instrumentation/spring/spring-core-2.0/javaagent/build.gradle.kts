@@ -16,10 +16,25 @@ dependencies {
   bootstrap(project(":instrumentation:executors:bootstrap"))
 
   library("org.springframework:spring-core:2.0")
+}
 
-  // 3.0 introduces submit() methods
-  // 4.0 introduces submitListenable() methods
-  testLibrary("org.springframework:spring-core:4.0.0.RELEASE")
+// 3.0 introduces submit() methods
+// 4.0 introduces submitListenable() methods
+testing {
+  suites {
+    register<JvmTestSuite>("version4Test") {
+      dependencies {
+        implementation(sourceSets.test.get().output)
+        implementation("org.springframework:spring-core:${baseVersion("4.0.0.RELEASE").orLatest()}")
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
 }
 
 // spring 6 requires java 17

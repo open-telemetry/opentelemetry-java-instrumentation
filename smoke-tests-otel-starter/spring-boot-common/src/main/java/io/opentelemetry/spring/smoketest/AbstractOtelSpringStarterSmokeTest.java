@@ -232,10 +232,8 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
     List<String> runtimeMetrics =
         new ArrayList<>(asList("jvm.thread.count", "jvm.memory.used", "jvm.memory.init"));
 
-    double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
-    // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13503
-    // Also not available on Windows (getSystemLoadAverage returns -1)
-    if (javaVersion < 23 && !OS.WINDOWS.isCurrentOs()) {
+    // Not available on Windows (getSystemLoadAverage returns -1)
+    if (!OS.WINDOWS.isCurrentOs()) {
       runtimeMetrics.add("jvm.system.cpu.load_1m");
     }
 

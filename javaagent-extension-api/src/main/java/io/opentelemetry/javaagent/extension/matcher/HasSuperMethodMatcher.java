@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.extension.matcher;
 
 import static io.opentelemetry.javaagent.extension.matcher.SafeHasSuperTypeMatcher.safeGetSuperClass;
-import static net.bytebuddy.matcher.ElementMatchers.hasSignature;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -33,20 +32,19 @@ class HasSuperMethodMatcher<T extends MethodDescription>
 
   @Override
   public boolean matches(MethodDescription target) {
-    if (target.isConstructor()) {
+    if (target.isConstructor() || target.isBridge()) {
       return false;
     }
-    Junction<MethodDescription> signatureMatcher = hasSignature(target.asSignatureToken());
     TypeDefinition declaringType = target.getDeclaringType();
     Set<TypeDefinition> checkedInterfaces = new HashSet<>(8);
 
     while (declaringType != null) {
       for (MethodDescription methodDescription : declaringType.getDeclaredMethods()) {
-        if (signatureMatcher.matches(methodDescription) && matcher.matches(methodDescription)) {
+        if (hasMatchingSignature(target, methodDescription) && matcher.matches(methodDescription)) {
           return true;
         }
       }
-      if (matchesInterface(declaringType.getInterfaces(), signatureMatcher, checkedInterfaces)) {
+      if (matchesInterface(declaringType.getInterfaces(), target, checkedInterfaces)) {
         return true;
       }
       declaringType = safeGetSuperClass(declaringType);
@@ -56,21 +54,44 @@ class HasSuperMethodMatcher<T extends MethodDescription>
 
   private boolean matchesInterface(
       TypeList.Generic interfaces,
-      Junction<MethodDescription> signatureMatcher,
+      MethodDescription target,
       Set<TypeDefinition> checkedInterfaces) {
     for (TypeDefinition type : interfaces) {
       if (checkedInterfaces.add(type)) {
         for (MethodDescription methodDescription : type.getDeclaredMethods()) {
-          if (signatureMatcher.matches(methodDescription) && matcher.matches(methodDescription)) {
+          if (hasMatchingSignature(target, methodDescription)
+              && matcher.matches(methodDescription)) {
             return true;
           }
         }
-        if (matchesInterface(type.getInterfaces(), signatureMatcher, checkedInterfaces)) {
+        if (matchesInterface(type.getInterfaces(), target, checkedInterfaces)) {
           return true;
         }
       }
     }
     return false;
+  }
+
+  private static boolean hasMatchingSignature(
+      MethodDescription target, MethodDescription candidate) {
+    MethodDescription.SignatureToken targetToken = target.asSignatureToken();
+    MethodDescription.SignatureToken candidateToken = candidate.asSignatureToken();
+    if (!targetToken.getName().equals(candidateToken.getName())
+        || !targetToken.getParameterTypes().equals(candidateToken.getParameterTypes())) {
+      return false;
+    }
+
+    if (targetToken.getReturnType().equals(candidateToken.getReturnType())) {
+      return true;
+    }
+
+    // Allow covariant return types: target is the overriding method, so its return type
+    // may be a subtype of candidate's return type. This requires an accessible instance
+    // method that can be overridden.
+    return !target.isStatic()
+        && !candidate.isStatic()
+        && candidate.isVisibleTo(target.getDeclaringType().asErasure())
+        && target.getReturnType().asErasure().isAssignableTo(candidate.getReturnType().asErasure());
   }
 
   @Override

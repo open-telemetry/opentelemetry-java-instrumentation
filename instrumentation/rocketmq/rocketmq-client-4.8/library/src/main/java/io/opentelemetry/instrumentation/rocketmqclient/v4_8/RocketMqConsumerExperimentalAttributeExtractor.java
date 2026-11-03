@@ -18,26 +18,26 @@ final class RocketMqConsumerExperimentalAttributeExtractor
     implements AttributesExtractor<RocketMqConsumerRequest, ConsumeMessageContext> {
 
   // copied from MessagingIncubatingAttributes
-  private static final AttributeKey<String> MESSAGING_ROCKETMQ_MESSAGE_TAG =
-      AttributeKey.stringKey("messaging.rocketmq.message.tag");
+  private static final AttributeKey<String> ROCKETMQ_MESSAGE_TAG =
+      AttributeKey.stringKey("rocketmq.message.tag");
 
-  private static final AttributeKey<Long> MESSAGING_ROCKETMQ_QUEUE_ID =
-      AttributeKey.longKey("messaging.rocketmq.queue_id");
-  private static final AttributeKey<Long> MESSAGING_ROCKETMQ_QUEUE_OFFSET =
-      AttributeKey.longKey("messaging.rocketmq.queue_offset");
-  private static final AttributeKey<String> MESSAGING_ROCKETMQ_BROKER_ADDRESS =
-      AttributeKey.stringKey("messaging.rocketmq.broker_address");
+  private static final AttributeKey<Long> ROCKETMQ_QUEUE_ID =
+      AttributeKey.longKey("rocketmq.queue_id");
+  private static final AttributeKey<Long> ROCKETMQ_QUEUE_OFFSET =
+      AttributeKey.longKey("rocketmq.queue_offset");
+  private static final AttributeKey<String> ROCKETMQ_BROKER_ADDRESS =
+      AttributeKey.stringKey("rocketmq.broker_address");
 
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, RocketMqConsumerRequest request) {
     MessageExt msg = request.getMessage();
-    attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TAG, msg.getTags());
-    attributes.put(MESSAGING_ROCKETMQ_QUEUE_ID, msg.getQueueId());
-    attributes.put(MESSAGING_ROCKETMQ_QUEUE_OFFSET, msg.getQueueOffset());
+    attributes.put(ROCKETMQ_MESSAGE_TAG, msg.getTags());
+    attributes.put(ROCKETMQ_QUEUE_ID, msg.getQueueId());
+    attributes.put(ROCKETMQ_QUEUE_OFFSET, msg.getQueueOffset());
     SocketAddress storeHost = msg.getStoreHost();
     if (storeHost != null) {
-      attributes.put(MESSAGING_ROCKETMQ_BROKER_ADDRESS, getBrokerHost(storeHost));
+      attributes.put(ROCKETMQ_BROKER_ADDRESS, getBrokerHost(storeHost));
     }
   }
 

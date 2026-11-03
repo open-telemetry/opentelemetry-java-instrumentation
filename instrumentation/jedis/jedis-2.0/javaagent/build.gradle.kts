@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -30,7 +31,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
+  implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
 
   testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-4.0:javaagent"))
@@ -59,25 +60,7 @@ testing {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
-  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .matching { it.name != "unitTests" }
-    .map { suite ->
-      register<Test>("${suite.name}PreviewSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-        if (suite.name != "version23Test") {
-          systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-        }
-      }
-    }
-
   check {
-    dependsOn(testing.suites, previewSemconvSuites)
+    dependsOn(testing.suites)
   }
 }

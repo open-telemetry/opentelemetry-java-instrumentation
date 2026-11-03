@@ -8,14 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network;
 import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.CouchbaseNetworkVirtualFields.COUCHBASE_REQUEST_INFO;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
 import com.couchbase.client.deps.io.netty.channel.ChannelHandlerContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
-import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -32,12 +30,10 @@ class Couchbase26NetworkInstrumentation implements TypeInstrumentation {
     // encode(ChannelHandlerContext ctx, REQUEST msg, List<Object> out)
     transformer.applyAdviceToMethod(
         named("encode")
-            .and(takesArguments(3))
             .and(
                 takesArgument(
                     0, named("com.couchbase.client.deps.io.netty.channel.ChannelHandlerContext")))
-            .and(takesArgument(1, named("com.couchbase.client.core.message.CouchbaseRequest")))
-            .and(takesArgument(2, List.class)),
+            .and(takesArgument(1, named("com.couchbase.client.core.message.CouchbaseRequest"))),
         getClass().getName() + "$CouchbaseNetworkAdvice");
   }
 

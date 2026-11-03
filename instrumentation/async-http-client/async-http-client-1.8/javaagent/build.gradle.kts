@@ -24,25 +24,12 @@ dependencies {
   latestDepTestLibrary("com.ning:async-http-client:1.8.+") // see async-http-client-1.9 module
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+tasks.named<Test>("test") {
+  // required on jdk17
+  jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-  }
-
-  check {
-    dependsOn(testPreviewSemconv)
-  }
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
 }
 
 // async-http-client 1.8.x does not work with Netty versions newer than this due to referencing an

@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -28,15 +30,14 @@ dependencies {
   latestDepTestLibrary("io.reactivex.rxjava3:rxjava:3.1.0") // see rxjava-3.1.1 module
 }
 
-tasks {
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.rxjava.experimental-span-attributes=true")
-  }
-
-  check {
-    dependsOn(testExperimental)
+testing {
+  suites {
+    named<JvmTestSuite>("test") {
+      executions {
+        register("Experimental") {
+          jvmArgs("-Dotel.instrumentation.rxjava.experimental-span-attributes=true")
+        }
+      }
+    }
   }
 }

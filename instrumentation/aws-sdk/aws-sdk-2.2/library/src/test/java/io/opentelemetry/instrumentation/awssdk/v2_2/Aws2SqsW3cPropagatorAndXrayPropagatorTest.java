@@ -102,7 +102,7 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
   void testDisabledCreateSpansPreserveCustomBatchCreationContexts() {
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true)
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
             .setUseConfiguredPropagatorForMessaging(true)
             .setUseXrayPropagator(false);
     telemetryBuilder.setBatchSendMessageCreationSpansEnabled(false);
@@ -131,7 +131,7 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
                 SendMessageBatchRequestEntry.builder().id("i2").messageBody("e2").build())
             .build();
 
-    try (SqsClient client = disabledTelemetry.wrap(builder.build())) {
+    try (SqsClient client = disabledTelemetry.instrument(builder.build())) {
       client.createQueue(createQueueRequest);
       client.sendMessageBatch(batchRequest);
 

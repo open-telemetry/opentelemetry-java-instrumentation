@@ -36,8 +36,9 @@ class MetricRegistrar implements AutoCloseable {
 
   private static final Logger logger = Logger.getLogger(MetricRegistrar.class.getName());
 
-  private final Meter meter;
-  private final Meter unstableMeter;
+  private final OpenTelemetry openTelemetry;
+  private final String instrumentationScope;
+  @Nullable private final String version;
   private final Collection<AutoCloseable> instruments = ConcurrentHashMap.newKeySet();
   private final IncludeExclude metrics;
   private final IncludeExclude unstableMetrics;
@@ -50,16 +51,9 @@ class MetricRegistrar implements AutoCloseable {
       IncludeExclude unstableMetrics) {
     this.metrics = metrics;
     this.unstableMetrics = unstableMetrics;
-    MeterBuilder meterBuilder = openTelemetry.getMeterProvider().meterBuilder(instrumentationScope);
-    String version = EmbeddedInstrumentationProperties.findVersion(versionLookupName);
-    if (version != null) {
-      meterBuilder.setInstrumentationVersion(version);
-    }
-    Meter delegate = meterBuilder.build();
-    meter = new FilteringMeter(delegate, metrics);
-    unstableMeter =
-        new FilteringMeter(
-            delegate, name -> metrics.matches(name) && unstableMetrics.matches(name));
+    this.openTelemetry = openTelemetry;
+    this.instrumentationScope = instrumentationScope;
+    this.version = EmbeddedInstrumentationProperties.findVersion(versionLookupName);
   }
 
   /**
@@ -76,7 +70,8 @@ class MetricRegistrar implements AutoCloseable {
       Collection<ObjectName> objectNames,
       MetricExtractor extractor,
       AttributeInfo attributeInfo,
-      boolean unstable) {
+      boolean unstable,
+      @Nullable String schemaUrl) {
     // For the first enrollment of the extractor we have to build the corresponding Instrument
     DetectionStatus status = new DetectionStatus(connection, objectNames);
     boolean firstEnrollment = extractor.setStatus(status);
@@ -109,7 +104,7 @@ class MetricRegistrar implements AutoCloseable {
       recordDoubleValue = true;
     }
 
-    Meter selectedMeter = unstable ? unstableMeter : meter;
+    Meter selectedMeter = getMeter(unstable, schemaUrl);
     switch (instrumentType) {
       // CHECKSTYLE:OFF
       case COUNTER:
@@ -244,7 +239,8 @@ class MetricRegistrar implements AutoCloseable {
       MBeanServerConnection connection,
       Collection<ObjectName> objectNames,
       MetricHandlerHolder holder,
-      boolean unstable) {
+      boolean unstable,
+      @Nullable String schemaUrl) {
     ExperimentalJmxMetricHandler handler = holder.getHandler();
     // we print a warning for missing handlers in the constructor of BeanFinder
     if (handler == null) {
@@ -260,7 +256,7 @@ class MetricRegistrar implements AutoCloseable {
 
     register(
         handler.create(
-            unstable ? unstableMeter : meter,
+            getMeter(unstable, schemaUrl),
             () -> {
               DetectionStatus detectionStatus = holder.getStatus();
               return new ExperimentalJmxMetricHandler.Detector() {
@@ -275,6 +271,19 @@ class MetricRegistrar implements AutoCloseable {
                 }
               };
             }));
+  }
+
+  private Meter getMeter(boolean unstable, @Nullable String schemaUrl) {
+    MeterBuilder builder = openTelemetry.getMeterProvider().meterBuilder(instrumentationScope);
+    if (version != null) {
+      builder.setInstrumentationVersion(version);
+    }
+    if (schemaUrl != null) {
+      builder.setSchemaUrl(schemaUrl);
+    }
+    return new FilteringMeter(
+        builder.build(),
+        name -> metrics.matches(name) && (!unstable || unstableMetrics.matches(name)));
   }
 
   private void register(AutoCloseable instrument) {

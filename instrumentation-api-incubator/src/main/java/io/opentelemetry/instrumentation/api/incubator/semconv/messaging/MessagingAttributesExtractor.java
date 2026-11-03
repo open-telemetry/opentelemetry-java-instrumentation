@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.messagingSchemaUrl;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -16,7 +15,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
@@ -36,7 +34,7 @@ import javax.annotation.Nullable;
  * attribute extraction from request/response objects.
  */
 public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
-    implements AttributesExtractor<REQUEST, RESPONSE>, SchemaUrlProvider, SpanKeyProvider {
+    implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<Long> MESSAGING_BATCH_MESSAGE_COUNT =
@@ -63,8 +61,8 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       AttributeKey.stringKey("messaging.operation.name");
   private static final AttributeKey<String> MESSAGING_OPERATION_TYPE =
       AttributeKey.stringKey("messaging.operation.type");
-  private static final AttributeKey<String> MESSAGING_SYSTEM =
-      AttributeKey.stringKey("messaging.system");
+  private static final AttributeKey<String> MESSAGING_SYSTEM_NAME =
+      AttributeKey.stringKey("messaging.system.name");
 
   /**
    * Creates the messaging attributes extractor for the given operation type.
@@ -140,7 +138,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    attributes.put(MESSAGING_SYSTEM, getter.getSystem(request));
+    attributes.put(MESSAGING_SYSTEM_NAME, getter.getSystem(request));
     boolean isTemporaryDestination = getter.isTemporaryDestination(request);
     if (isTemporaryDestination) {
       attributes.put(MESSAGING_DESTINATION_TEMPORARY, true);
@@ -169,11 +167,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
     attributes.put(MESSAGING_MESSAGE_ID, getter.getMessageId(request, response));
     attributes.put(MESSAGING_BATCH_MESSAGE_COUNT, getter.getBatchMessageCount(request, response));
-    String errorType = getter.getErrorType(request, response, error);
-    if (errorType == null && error != null) {
-      errorType = error.getClass().getName();
-    }
-    attributes.put(ERROR_TYPE, errorType);
+    attributes.put(ERROR_TYPE, getter.getErrorType(request, response, error));
 
     for (String name : headerNames(request)) {
       List<String> values = getter.getMessageHeader(request, name);
@@ -219,10 +213,5 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
         return SpanKey.CONSUMER_SETTLE;
     }
     throw new IllegalStateException("Can't possibly happen");
-  }
-
-  @Override
-  public String internalGetSchemaUrl() {
-    return messagingSchemaUrl();
   }
 }
