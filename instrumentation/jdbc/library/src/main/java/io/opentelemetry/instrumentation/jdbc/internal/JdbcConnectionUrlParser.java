@@ -138,6 +138,9 @@ public final class JdbcConnectionUrlParser {
     String type = jdbcUrl.substring(0, typeLoc);
     JdbcUrlParser parser = typeParsers.get(type);
     ParseContext ctx = ParseContext.of(type, props);
+    // For unknown drivers, semicolons may separate properties or occur inside credentials.
+    // Without the driver's grammar, we may mistake part of a password for a host, port, or
+    // database name and emit it in telemetry. Use only separately supplied DataSource properties.
     if (parser == null && jdbcUrl.indexOf(';') >= 0) {
       ctx.system("other_sql");
       ctx.applyDataSourceProperties();
