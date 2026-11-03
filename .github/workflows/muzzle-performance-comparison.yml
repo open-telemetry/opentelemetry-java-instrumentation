@@ -1,0 +1,235 @@
+name: Muzzle CI benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      baseline-ref:
+        description: Baseline revision containing the benchmark hooks
+        required: true
+        type: string
+      candidate-ref:
+        description: Candidate revision, defaults to the selected workflow revision
+        type: string
+      partitions:
+        description: Sorted JSON array of Muzzle slices
+        type: string
+        default: '[1,2,3,4]'
+      rounds:
+        description: Paired rounds, each including an identical-baseline control
+        type: string
+        default: '5'
+      source-run:
+        description: Earlier benchmark run supplying the same immutable cache snapshot
+        type: string
+      operations-profile:
+        description: Record Gradle operations for every sample, with profiling overhead on all sides
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: muzzle-ci-benchmark-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify-tooling:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify the benchmark runner
+        run: python3 -m unittest discover -s benchmark-muzzle -v
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-read-only: true
+
+      - name: Verify workload hooks and production behavior
+        run: |
+          ./gradlew --no-daemon --no-scan -p gradle-plugins test \
+            --tests '*MuzzleBenchmarkSupportTest' --tests '*MuzzleBenchmarkFunctionalTest'
+
+  prepare:
+    needs: verify-tooling
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    outputs:
+      rounds: ${{ steps.plan.outputs.rounds }}
+      partitions: ${{ steps.plan.outputs.partitions }}
+      snapshot-sha256: ${{ steps.snapshot.outputs.sha256 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate inputs
+        id: plan
+        env:
+          ROUNDS: ${{ inputs.rounds }}
+          PARTITIONS: ${{ inputs.partitions }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          rounds = int(os.environ["ROUNDS"])
+          partitions = json.loads(os.environ["PARTITIONS"])
+          if not 1 <= rounds <= 10:
+              raise ValueError("rounds must be between 1 and 10")
+          if (not isinstance(partitions, list) or not partitions
+              or any(type(p) is not int or p not in range(1, 5) for p in partitions)
+              or partitions != sorted(set(partitions))):
+              raise ValueError("partitions must be sorted, unique integers from 1 to 4")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write("rounds=" + json.dumps(list(range(1, rounds + 1))) + "\n")
+              out.write("partitions=" + json.dumps(partitions) + "\n")
+          PY
+
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        if: inputs.source-run == ''
+        with:
+          cache-read-only: true
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        if: inputs.source-run != ''
+        with:
+          name: muzzle-ci-cache-snapshot
+          path: ${{ runner.temp }}
+          run-id: ${{ inputs.source-run }}
+          github-token: ${{ github.token }}
+
+      - name: Freeze the restored Gradle cache before any builds
+        id: snapshot
+        env:
+          SOURCE_RUN: ${{ inputs.source-run }}
+        run: |
+          if [[ -n "$SOURCE_RUN" ]]; then
+            sha256=$(python3 - <<'PY'
+          import os, sys
+          from pathlib import Path
+          sys.path.insert(0, "benchmark-muzzle")
+          import ci_benchmark as ci
+          snapshot = Path(os.environ["RUNNER_TEMP"]) / "gradle-snapshot.tar.gz"
+          ci.check_snapshot_size(snapshot, ci.MAX_SNAPSHOT_BYTES)
+          print(ci.benchmark.digest(snapshot))
+          PY
+            )
+          else
+            sha256=$(python3 benchmark-muzzle/ci_benchmark.py snapshot \
+              --gradle-home "$HOME/.gradle" \
+              --output "$RUNNER_TEMP/gradle-snapshot.tar.gz")
+          fi
+          echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: inputs.source-run == ''
+        with:
+          name: muzzle-ci-cache-snapshot
+          path: ${{ runner.temp }}/gradle-snapshot.tar.gz
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 7
+
+  benchmark:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        round: ${{ fromJSON(needs.prepare.outputs.rounds) }}
+        partition: ${{ fromJSON(needs.prepare.outputs.partitions) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: muzzle-ci-cache-snapshot
+          path: ${{ runner.temp }}/muzzle-ci-snapshot
+          run-id: ${{ inputs.source-run || github.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Run isolated live-metadata comparison
+        env:
+          BASELINE: ${{ inputs.baseline-ref }}
+          CANDIDATE: ${{ inputs.candidate-ref || github.sha }}
+          PARTITION: ${{ matrix.partition }}
+          ROUND: ${{ matrix.round }}
+          SNAPSHOT_SHA256: ${{ needs.prepare.outputs.snapshot-sha256 }}
+          OPERATIONS_PROFILE: ${{ inputs.operations-profile }}
+        run: |
+          extra=()
+          if [[ "$OPERATIONS_PROFILE" == "true" ]]; then
+            extra+=(--operations-profile)
+          fi
+          python3 benchmark-muzzle/ci_benchmark.py run \
+            --baseline "$BASELINE" --candidate "$CANDIDATE" \
+            --partition "$PARTITION" --round "$ROUND" \
+            --work-dir "$RUNNER_TEMP/muzzle-ci" \
+            --cache-snapshot "$RUNNER_TEMP/muzzle-ci-snapshot/gradle-snapshot.tar.gz" \
+            --snapshot-sha256 "$SNAPSHOT_SHA256" "${extra[@]}"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: muzzle-ci-${{ matrix.round }}-${{ matrix.partition }}
+          path: ${{ runner.temp }}/muzzle-ci/reports
+          if-no-files-found: error
+          retention-days: 30
+
+  report:
+    if: always() && needs.prepare.result == 'success'
+    needs:
+      - prepare
+      - benchmark
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: muzzle-ci-[0-9]*-*
+          path: ${{ runner.temp }}/muzzle-ci-results
+
+      - name: Verify workloads and report paired slowest-slice changes
+        env:
+          ROUNDS: ${{ inputs.rounds }}
+          PARTITIONS: ${{ needs.prepare.outputs.partitions }}
+        run: |
+          mapfile -t partitions < <(python3 -c 'import json, os; print(*json.loads(os.environ["PARTITIONS"]), sep="\n")')
+          python3 benchmark-muzzle/ci_benchmark.py report \
+            --inputs "$RUNNER_TEMP/muzzle-ci-results" \
+            --output "$RUNNER_TEMP/muzzle-ci-summary" \
+            --rounds "$ROUNDS" --partitions "${partitions[@]}"
+          cat "$RUNNER_TEMP/muzzle-ci-summary/summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: muzzle-ci-summary
+          path: ${{ runner.temp }}/muzzle-ci-summary
+          if-no-files-found: warn
+          retention-days: 30
