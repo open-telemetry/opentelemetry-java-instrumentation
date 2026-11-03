@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.java-conventions")
@@ -29,31 +31,19 @@ dependencies {
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
 }
 
-tasks.withType<Test>().configureEach {
-  dependsOn(agentShadowJar)
-  systemProperty("io.opentelemetry.smoketest.agent.shadowJar.path", agentShadowJar.get().archiveFile.get().toString())
-}
+testing.suites {
+  executions("test") {
+    configureEach {
+      dependsOn(agentShadowJar)
+      systemProperty("io.opentelemetry.smoketest.agent.shadowJar.path", agentShadowJar.get().archiveFile.get().toString())
+    }
 
-tasks {
-
-  val testReceiveTelemetry =
-    register<Test>("testReceiveTelemetry") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
+    register("ReceiveTelemetry") {
       filter {
         includeTestsMatching("io.opentelemetry.instrumentation.kafkaconnect.v2_6.MongoKafkaConnectSinkTaskTest.testSingleMessage")
       }
 
-      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true"
-      )
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
     }
-
-  check {
-    dependsOn(
-      testReceiveTelemetry
-    )
   }
 }
