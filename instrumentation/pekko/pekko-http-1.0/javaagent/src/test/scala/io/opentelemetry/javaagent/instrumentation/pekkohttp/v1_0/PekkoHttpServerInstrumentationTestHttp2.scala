@@ -26,12 +26,14 @@ import io.opentelemetry.testing.internal.armeria.client.{
 }
 import io.opentelemetry.testing.internal.armeria.common.{
   AggregatedHttpRequest,
-  HttpMethod
+  HttpMethod,
+  RequestHeaders
 }
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 
+import java.util.Collections
 import java.util.function.Consumer
 import scala.util.Try
 
@@ -156,6 +158,84 @@ class PekkoHttpServerInstrumentationTestHttp2
           ()
         }
       }
+    )
+  }
+
+  // pekko-http answers a request that fails http/2 request parsing with 400 itself, on the same
+  // connection, without passing it to the handler, a request that follows on that connection is
+  // traced as usual
+  @Test def testHttp2ParsingError(): Unit = {
+    // more headers than the default pekko.http.server.parsing.max-header-count of 64
+    val headers = RequestHeaders
+      .builder(
+        HttpMethod.GET,
+        "/" + ServerEndpoint.SUCCESS.rawPath()
+      )
+    (1 to 100).foreach(i => headers.add(s"x-header-$i", "value"))
+    val badResponse = client
+      .execute(AggregatedHttpRequest.of(headers.build()))
+      .aggregate
+      .join
+    assertThat(badResponse.status.code).isEqualTo(400)
+
+    val response = client
+      .execute(
+        AggregatedHttpRequest.of(
+          HttpMethod.GET,
+          resolveAddress(ServerEndpoint.SUCCESS, protocolPrefix)
+        )
+      )
+      .aggregate
+      .join
+    assertThat(response.status.code).isEqualTo(ServerEndpoint.SUCCESS.getStatus)
+
+    testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+      override def accept(trace: TraceAssert): Unit = {
+        trace.hasSpansSatisfyingExactly(
+          serverSpan("2"),
+          controllerSpan(trace)
+        )
+        ()
+      }
+    })
+  }
+
+  // concurrent requests on one http/2 connection whose responses the application completes on its
+  // own executor, with the context of the request current, each request is traced on its own,
+  // without inheriting the context of another request of the connection
+  @Test def testResponsesCompletedOnSeparateExecutor(): Unit = {
+    val count = 20
+    val responses = (1 to count).map(_ =>
+      client
+        .execute(
+          AggregatedHttpRequest.of(
+            HttpMethod.GET,
+            resolveAddress(
+              PekkoHttpTestHttp2WebServer.SEPARATE_EXECUTOR,
+              protocolPrefix
+            )
+          )
+        )
+        .aggregate
+    )
+    responses.foreach(response =>
+      assertThat(response.join.status.code)
+        .isEqualTo(PekkoHttpTestHttp2WebServer.SEPARATE_EXECUTOR.getStatus)
+    )
+
+    testing.waitAndAssertTraces(
+      Collections.nCopies(
+        count,
+        new Consumer[TraceAssert] {
+          override def accept(trace: TraceAssert): Unit = {
+            trace.hasSpansSatisfyingExactly(
+              serverSpan("2"),
+              controllerSpan(trace)
+            )
+            ()
+          }
+        }
+      )
     )
   }
 
