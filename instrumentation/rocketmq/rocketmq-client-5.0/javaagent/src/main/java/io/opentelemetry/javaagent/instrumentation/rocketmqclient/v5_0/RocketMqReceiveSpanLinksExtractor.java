@@ -24,7 +24,6 @@ import java.util.HashSet;
 import java.util.Objects;
 import org.apache.rocketmq.client.apis.message.MessageView;
 
-@SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
 class RocketMqReceiveSpanLinksExtractor implements SpanLinksExtractor<RocketMqReceiveRequest> {
 
   private final TextMapPropagator propagator;
@@ -34,6 +33,7 @@ class RocketMqReceiveSpanLinksExtractor implements SpanLinksExtractor<RocketMqRe
     this.propagator = propagator;
   }
 
+  @SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
   @Override
   public void extract(
       SpanLinksBuilder spanLinks, Context parentContext, RocketMqReceiveRequest request) {

@@ -17,7 +17,6 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 import org.apache.kafka.connect.sink.SinkRecord;
 
-@SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
 final class KafkaConnectBatchRecordAttributes {
 
   private boolean initialized;
@@ -47,6 +46,7 @@ final class KafkaConnectBatchRecordAttributes {
     }
   }
 
+  @SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
   Attributes getLinkAttributes(SinkRecord record) {
     AttributesBuilder attributes = Attributes.builder();
     String partition = partitionId(record);
