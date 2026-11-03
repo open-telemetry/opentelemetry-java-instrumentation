@@ -131,7 +131,7 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
       this.seenRegistryAttributes = seenRegistryAttributes;
     }
 
-    static WeaverValidationResult fromJson(JsonNode json) {
+    private static WeaverValidationResult fromJson(JsonNode json) {
       List<WeaverValidationAdvice> advices = new ArrayList<>();
 
       Consumer<JsonNode> parseValidationAdvice =
