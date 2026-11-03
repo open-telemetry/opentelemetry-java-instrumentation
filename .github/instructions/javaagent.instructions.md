@@ -78,15 +78,17 @@ not require changing the other. Preserve existing controls and ordering when mai
   accessible `java.base` types available at the minimum supported Java version. Keep `named(...)`
   for instrumented-library types, inaccessible JDK types, and types unavailable at that minimum.
   Compiling against a type or having a `java.*` package name does not prove agent-loader safety.
-- For a complete, nonempty signature, use `AgentElementMatchers.takesArguments(...)` with one
-  matcher per parameter, in order. Use `is(Type.class)` for primitives and public, safely accessible
-  `java.base` types available at the module's minimum supported Java version; use
-  `named("fully.qualified.Type")` for instrumented-library types and types that are unsafe to load.
+- For a complete, nonempty signature, prefer Byte Buddy's class-based `takesArguments(Type.class...)`
+  when every parameter is a primitive or a public, safely accessible `java.base` type available at
+  the module's minimum supported Java version. Otherwise use `AgentElementMatchers.takesArguments(...)`
+  with one matcher per parameter, in order; use `is(Type.class)` for safe types and
+  `named("fully.qualified.Type")` for instrumented-library types or types that are unsafe to load.
   Mix these matchers when a signature contains both kinds, and preserve array dimensions with the
-  corresponding class literal or readable name. Do not infer safety from a `java.*` package prefix
-  or the current build JDK. When both this helper and Byte Buddy's count-based
-  `takesArguments(int)` are needed, explicitly import both `takesArguments` methods and avoid a bare
-  `takesArguments()` call. For a zero-parameter signature, use `takesArguments(0)`.
+  corresponding class literal or readable name. Keep the helper for richer parameter predicates.
+  Do not infer safety from a `java.*` package prefix or the current build JDK. When both this helper
+  and Byte Buddy's count-based `takesArguments(int)` are needed, explicitly import both
+  `takesArguments` methods and avoid a bare `takesArguments()` call. For a zero-parameter signature,
+  use `takesArguments(0)`.
 - Keep positional `takesArgument(...)` matchers for intentionally partial signatures or predicates
   that cannot be expressed as exact type names, such as subtype checks or parameter-type
   alternatives across supported versions. Do not add otherwise unnecessary parameter checks

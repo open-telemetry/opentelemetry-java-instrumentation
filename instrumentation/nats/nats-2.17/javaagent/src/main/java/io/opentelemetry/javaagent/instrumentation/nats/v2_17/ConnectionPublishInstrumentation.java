@@ -12,6 +12,7 @@ import static io.opentelemetry.javaagent.instrumentation.nats.v2_17.NatsSingleto
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.nats.client.Connection;
 import io.nats.client.Message;
@@ -40,7 +41,7 @@ class ConnectionPublishInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic().and(named("publish")).and(takesArguments(is(String.class), is(byte[].class))),
+        isPublic().and(named("publish")).and(takesArguments(String.class, byte[].class)),
         getClass().getName() + "$PublishBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
@@ -52,7 +53,7 @@ class ConnectionPublishInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("publish"))
-            .and(takesArguments(is(String.class), is(String.class), is(byte[].class))),
+            .and(takesArguments(String.class, String.class, byte[].class)),
         getClass().getName() + "$PublishReplyToBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()

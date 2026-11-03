@@ -86,7 +86,8 @@ public final class AgentElementMatchers {
    * <p>Each matcher is applied to the erased type of the corresponding parameter. Use {@code
    * is(Type.class)} for types safely accessible from the agent class loader and {@code
    * named("fully.qualified.Type")} for types that should not be loaded. Passing no matchers matches
-   * only methods with no parameters.
+   * only methods with no parameters. Prefer Byte Buddy's class-based {@code takesArguments} matcher
+   * when every parameter type can be safely referenced by class literal.
    *
    * @param matchers the exact ordered parameter type matchers.
    * @return a matcher for methods with the specified parameter types.

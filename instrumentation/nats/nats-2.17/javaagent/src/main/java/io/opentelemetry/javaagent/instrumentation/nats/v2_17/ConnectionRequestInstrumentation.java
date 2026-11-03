@@ -46,7 +46,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("request"))
-            .and(takesArguments(is(String.class), is(byte[].class), is(Duration.class)))
+            .and(takesArguments(String.class, byte[].class, Duration.class))
             .and(returns(named("io.nats.client.Message"))),
         getClass().getName() + "$RequestBodyAdvice");
     transformer.applyAdviceToMethod(
@@ -67,7 +67,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("request"))
-            .and(takesArguments(is(String.class), is(byte[].class)))
+            .and(takesArguments(String.class, byte[].class))
             .and(returns(CompletableFuture.class)),
         getClass().getName() + "$RequestFutureBodyAdvice");
     transformer.applyAdviceToMethod(
@@ -87,7 +87,7 @@ class ConnectionRequestInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("requestWithTimeout"))
-            .and(takesArguments(is(String.class), is(byte[].class), is(Duration.class)))
+            .and(takesArguments(String.class, byte[].class, Duration.class))
             .and(returns(CompletableFuture.class)),
         getClass().getName() + "$RequestTimeoutFutureBodyAdvice");
     transformer.applyAdviceToMethod(

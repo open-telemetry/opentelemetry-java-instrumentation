@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v0_9;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
-import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -43,23 +42,21 @@ class HttpClientInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(namedOneOf("doOnRequest", "doAfterRequest"))
-            .and(takesArguments(is(BiConsumer.class))),
+            .and(takesArguments(BiConsumer.class)),
         getClass().getName() + "$OnRequestAdvice");
     transformer.applyAdviceToMethod(
-        isPublic().and(named("doOnRequestError")).and(takesArguments(is(BiConsumer.class))),
+        isPublic().and(named("doOnRequestError")).and(takesArguments(BiConsumer.class)),
         getClass().getName() + "$OnRequestErrorAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(namedOneOf("doOnResponse", "doAfterResponse"))
-            .and(takesArguments(is(BiConsumer.class))),
+            .and(takesArguments(BiConsumer.class)),
         getClass().getName() + "$OnResponseAdvice");
     transformer.applyAdviceToMethod(
-        isPublic().and(named("doOnResponseError")).and(takesArguments(is(BiConsumer.class))),
+        isPublic().and(named("doOnResponseError")).and(takesArguments(BiConsumer.class)),
         getClass().getName() + "$OnResponseErrorAdvice");
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("doOnError"))
-            .and(takesArguments(is(BiConsumer.class), is(BiConsumer.class))),
+        isPublic().and(named("doOnError")).and(takesArguments(BiConsumer.class, BiConsumer.class)),
         getClass().getName() + "$OnErrorAdvice");
   }
 
