@@ -18,6 +18,9 @@ on:
       report-run:
         type: string
         default: ''
+      discovery-mode:
+        type: string
+        default: slice-aware
 
 permissions:
   contents: read
@@ -38,10 +41,13 @@ jobs:
         env:
           ROUNDS: ${{ inputs.rounds }}
           PARTITIONS: ${{ inputs.partitions }}
+          DISCOVERY_MODE: ${{ inputs.discovery-mode }}
         run: |
           python3 -m unittest discover -s benchmark-muzzle -q
           python3 - <<'PY'
           import json, os
+          if os.environ["DISCOVERY_MODE"] not in ("slice-aware", "eager"):
+              raise ValueError("Invalid discovery mode")
           rounds = int(os.environ["ROUNDS"])
           partitions = json.loads(os.environ["PARTITIONS"])
           if not 1 <= rounds <= 10:
@@ -86,12 +92,13 @@ jobs:
           REVISION: ${{ inputs.revision }}
           PARTITION: ${{ matrix.partition }}
           ROUND: ${{ matrix.round }}
+          DISCOVERY_MODE: ${{ inputs.discovery-mode }}
         run: |
           python3 benchmark-muzzle/slice_count_benchmark.py run \
             --revision "$REVISION" --partition "$PARTITION" --round "$ROUND" \
             --cache-snapshot "$RUNNER_TEMP/initial/gradle-snapshot.tar.gz" \
             --snapshot-sha256 "$(sha256sum "$RUNNER_TEMP/initial/gradle-snapshot.tar.gz" | cut -d' ' -f1)" \
-            --work-dir "$RUNNER_TEMP/muzzle-slices"
+            --work-dir "$RUNNER_TEMP/muzzle-slices" --discovery-mode "$DISCOVERY_MODE"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:

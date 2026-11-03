@@ -172,6 +172,18 @@ class MuzzleCacheFunctionalTest {
     publishLibrary("module-c");
     publishLibrary("module-d");
     Path project = slicedFixture();
+    Path build = project.resolve("build.gradle");
+    Files.writeString(
+        build,
+        Files.readString(build)
+            + """
+
+            gradle.projectsEvaluated {
+              assert file('instrumentation/b/build/muzzleRepo').isDirectory()
+              assert file('instrumentation/c/build/muzzleRepo').isDirectory()
+              assert file('instrumentation/d/build/muzzleRepo').isDirectory()
+            }
+            """);
     BuildResult eager =
         slicedRunner(project, "instrumentation:muzzle1", "-PmuzzleBenchmarkDiscoverAll=true")
             .build();

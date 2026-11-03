@@ -21,13 +21,14 @@ class SliceCountBenchmarkTest(unittest.TestCase):
         )
         self.assertIn("run: ./gradlew ${{ matrix.task }} -PmuzzleSlices=8", workflow)
 
-    def fixture(self, root, number, partition, durations):
+    def fixture(self, root, number, partition, durations, *, eager=False):
         directory = root / f"muzzle-slices-{number}-{partition}"
         directory.mkdir()
         ci.write_json(directory / "identity.json", {
             "revision": "source", "partition": partition, "round": number,
             "cache_snapshot_sha256": "snapshot", "experiment": "slice-count",
             "plan": slices.plan(number, partition),
+            "discovery_mode": "eager" if eager else "slice-aware",
         })
         tasks = [f":instrumentation:{name}{partition}:muzzle-AssertPass-fixture-library-1.0" for name in ("a", "b")]
         for command in slices.plan(number, partition):
@@ -42,6 +43,7 @@ class SliceCountBenchmarkTest(unittest.TestCase):
                 "partition": command["partition"], "round": number,
                 "muzzle_slices": command["slices"], "cache_snapshot_sha256": "snapshot",
                 "workload": {"seed": 1729, "versions_limit": 10},
+                **({"discovery_mode": "eager"} if eager else {}),
             })
             log = fixtures.build_log(selected[0]).replace(
                 f"> Task {selected[0]}\n",
@@ -50,6 +52,8 @@ class SliceCountBenchmarkTest(unittest.TestCase):
                 + "".join(f"> Task {task}\n" for task in selected),
             )
             (output / "console.log").write_text(log)
+            if eager:
+                (output / "console.log").write_text(log + "MUZZLE_BENCHMARK_DISCOVER_ALL true\n")
             for task in selected:
                 fixtures.write_record(output / "assertions", fixtures.RECORD.replace(fixtures.ASSERTION, task))
             profile = output / "profile/profile-fixture.html"
@@ -59,7 +63,7 @@ class SliceCountBenchmarkTest(unittest.TestCase):
                 "".join(f"<tr><td>{task}</td><td>0.5s</td><td></td></tr>" for task in selected),
             ))
             projects = {}
-            for task in selected:
+            for task in (tasks if eager else selected):
                 project = task.split(":muzzle-Assert")[0]
                 metadata = output / "metadata" / project.removeprefix(":").replace(":", "/") / "build/muzzleRepo/maven-metadata-fixture.xml"
                 metadata.parent.mkdir(parents=True)
@@ -75,13 +79,43 @@ class SliceCountBenchmarkTest(unittest.TestCase):
                     "metadata_documents": len(projects),
                     "metadata_sha256": benchmark.inventory(output / "metadata"),
                 },
+                **({"discover_all": True} if eager else {}),
             }
             ci.write_json(report / "samples.json", {"complete": True, "samples": [sample]})
             ci.write_json(output / "command.json", [
                 f":instrumentation:muzzle{command['partition']}", f"-PmuzzleSlices={command['slices']}",
-            ])
+            ] + (["-PmuzzleBenchmarkDiscoverAll=true"] if eager else []))
         ci.write_json(directory / "complete.json", {"complete": True})
         return directory
+
+    def test_eager_layout_comparison_requires_all_commands_to_discover_all_projects(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            folder = self.fixture(root, 1, 2, {
+                "baseline": 100, "control": 110, "candidate-a": 50, "candidate-b": 60,
+            }, eager=True)
+            identity, shared, manifests, samples, cache = slices.validate_group(folder)
+            self.assertEqual(shared["discovery_mode"], "eager")
+            self.assertTrue(all(sample["discovery"]["metadata_documents"] == 2 for sample in samples.values()))
+            self.assertEqual(len(manifests["baseline"]), 2)
+            self.assertEqual(len(manifests["candidate-a"]), 1)
+            args = SimpleNamespace(inputs=root, output=root / "summary", rounds=1, partitions=[2])
+            slices.aggregate(args)
+            result = json.loads((args.output / "results.json").read_text())
+            self.assertEqual(result["maximum_slice_paired"]["candidate"]["delta_ms"]["median"], -40)
+            self.assertIn("Eager discovery on both sides", (args.output / "summary.md").read_text())
+            command = folder / "candidate-b/candidate/command.json"
+            original = json.loads(command.read_text())
+            ci.write_json(command, [value for value in original if "muzzleBenchmarkDiscoverAll" not in value])
+            with self.assertRaisesRegex(ValueError, "confirm eager discovery"):
+                slices.validate_group(folder)
+            ci.write_json(command, original)
+            path = folder / "candidate-b/samples.json"
+            raw = json.loads(path.read_text())
+            raw["samples"][0]["discovery"]["projects"].pop(next(iter(samples["baseline"]["discovery"]["projects"])))
+            ci.write_json(path, raw)
+            with self.assertRaises(ValueError):
+                slices.validate_group(folder)
 
     def test_primary_estimator_compares_four_vs_eight_command_maxima(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -31,6 +31,7 @@ def plan(round_number, partition):
 
 
 def measure(args):
+    discovery_mode = getattr(args, "discovery_mode", "slice-aware")
     source = args.repository.resolve()
     root = args.work_dir.resolve()
     if root.exists() or root.is_relative_to(source) or source.is_relative_to(root):
@@ -46,6 +47,7 @@ def measure(args):
         "revision": revision, "partition": args.partition, "round": args.round,
         "cache_snapshot_sha256": args.snapshot_sha256, "experiment": "slice-count",
         "plan": plan(args.round, args.partition),
+        "discovery_mode": discovery_mode,
     })
     try:
         for command in plan(args.round, args.partition):
@@ -55,6 +57,7 @@ def measure(args):
                 baseline=revision, candidate=revision, partition=command["partition"],
                 round=args.round, cache_snapshot=args.cache_snapshot,
                 snapshot_sha256=args.snapshot_sha256, muzzle_slices=command["slices"],
+                force_eager_discovery=discovery_mode == "eager",
             ))
             try:
                 runner.execute(command["label"])
@@ -73,6 +76,9 @@ def validate_group(directory):
     identity = json.loads((directory / "identity.json").read_text(encoding="utf-8"))
     if identity["experiment"] != "slice-count":
         raise ValueError("The group is not a slice-count experiment")
+    discovery_mode = identity.get("discovery_mode", "slice-aware")
+    if discovery_mode not in ("eager", "slice-aware"):
+        raise ValueError("Unknown version discovery mode")
     expected_plan = plan(identity["round"], identity["partition"])
     benchmark.require_equal(expected_plan, identity["plan"], "Slice-count command plan")
     shared = None
@@ -104,6 +110,18 @@ def validate_group(directory):
         actual = benchmark.manifests(output / "assertions")
         log = (output / "console.log").read_text(encoding="utf-8")
         invocation = json.loads((output / "command.json").read_text(encoding="utf-8"))
+        eager_flag = "-PmuzzleBenchmarkDiscoverAll=true"
+        if discovery_mode == "eager":
+            if (
+                child.get("discovery_mode") != "eager" or sample.get("discover_all") is not True
+                or eager_flag not in invocation or "MUZZLE_BENCHMARK_DISCOVER_ALL true\n" not in log
+            ):
+                raise ValueError("The command did not confirm eager discovery")
+        elif (
+            child.get("discovery_mode") == "eager" or sample.get("discover_all") is True
+            or eager_flag in invocation
+        ):
+            raise ValueError("Unexpected eager discovery in a slice-aware comparison")
         if (
             f"-PmuzzleSlices={command['slices']}" not in invocation
             or f":instrumentation:muzzle{command['partition']}" not in invocation
@@ -140,9 +158,13 @@ def validate_group(directory):
         "Combined eight-slice task coverage",
     )
     benchmark.require_equal(discoveries["baseline"], discoveries["control"], "Four-slice discovery control")
-    if discoveries["candidate-a"].keys() & discoveries["candidate-b"].keys():
-        raise ValueError("Eight-slice discovery projects overlap")
-    benchmark.require_equal(discoveries["baseline"], discoveries["candidate-a"] | discoveries["candidate-b"], "Combined discovery coverage")
+    if discovery_mode == "eager":
+        for role in ("candidate-a", "candidate-b"):
+            benchmark.require_equal(discoveries["baseline"], discoveries[role], "Eager discovery coverage in every command")
+    else:
+        if discoveries["candidate-a"].keys() & discoveries["candidate-b"].keys():
+            raise ValueError("Eight-slice discovery projects overlap")
+        benchmark.require_equal(discoveries["baseline"], discoveries["candidate-a"] | discoveries["candidate-b"], "Combined discovery coverage")
     variations = []
     affected_ms = dict.fromkeys(ROLES, 0)
     unprofiled = []
@@ -241,6 +263,13 @@ def aggregate(args):
         "Every command has a fresh checkout, independent Gradle home, live version metadata, "
         "read-only remote cache and executed assertions. The union of the eight slices must "
         "match the four-slice compatibility workload exactly, including classpath order and hashes.", "",
+        (
+            "**Eager discovery on both sides.** Every four- and eight-slice command discovers "
+            "versions in all Muzzle projects using the original afterEvaluate lifecycle. "
+            "This comparison does not use slice-aware discovery."
+            if conditions.get("discovery_mode") == "eager" else
+            "**Slice-aware discovery on both sides.** Each command discovers only its assigned projects."
+        ), "",
         "Each round/group measures a four-slice baseline, identical control and the corresponding "
         "two eight-slice commands on one runner, reversing order in even rounds. "
         "The primary estimator takes the maximum of four baseline or eight candidate commands "
@@ -302,6 +331,7 @@ def main():
     run.add_argument("--cache-snapshot", type=Path, required=True)
     run.add_argument("--snapshot-sha256", required=True)
     run.add_argument("--work-dir", type=Path, required=True)
+    run.add_argument("--discovery-mode", choices=("slice-aware", "eager"), default="slice-aware")
     report = commands.add_parser("report")
     report.add_argument("--inputs", type=Path, required=True)
     report.add_argument("--output", type=Path, required=True)

@@ -354,6 +354,10 @@ class Comparison:
             self.identity["experiment"] = "slice-discovery"
         if getattr(args, "muzzle_slices", None) is not None:
             self.identity["muzzle_slices"] = args.muzzle_slices
+        if getattr(args, "force_eager_discovery", False):
+            if getattr(args, "compare_slice_discovery", False):
+                raise ValueError("Forced eager discovery cannot be combined with a discovery-mode comparison")
+            self.identity["discovery_mode"] = "eager"
         write_json(self.reports / "identity.json", self.identity)
         self.persist()
 
@@ -379,9 +383,12 @@ class Comparison:
             getattr(self.args, "candidate_http_connection_ttl_ms", None) if label == "candidate" else None
         )
         sample["disk_free_before_checkout"] = shutil.disk_usage(sample_root).free
-        sample["discover_all"] = (
-            label != "candidate" if getattr(self.args, "compare_slice_discovery", False) else None
-        )
+        if getattr(self.args, "force_eager_discovery", False):
+            sample["discover_all"] = True
+        elif getattr(self.args, "compare_slice_discovery", False):
+            sample["discover_all"] = label != "candidate"
+        else:
+            sample["discover_all"] = None
         self.samples.append(sample)
         self.persist()
         started = time.perf_counter()

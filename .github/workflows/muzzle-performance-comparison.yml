@@ -48,6 +48,7 @@ on:
           - network-profile
           - slice-discovery
           - eight-slices
+          - eight-slices-eager
           - eight-slices-live-ci
         default: standard
 
@@ -67,7 +68,7 @@ jobs:
       cache-read-only: true
 
   eight-slices:
-    if: inputs.candidate-mode == 'eight-slices' && !inputs.profile-only && !inputs.dependency-cache
+    if: (inputs.candidate-mode == 'eight-slices' || inputs.candidate-mode == 'eight-slices-eager') && !inputs.profile-only && !inputs.dependency-cache
     uses: ./.github/workflows/muzzle-slice-count.yml
     with:
       revision: ${{ inputs.baseline-ref }}
@@ -75,6 +76,7 @@ jobs:
       partitions: ${{ inputs.partitions }}
       rounds: ${{ inputs.rounds }}
       report-run: ${{ inputs.report-run }}
+      discovery-mode: ${{ inputs.candidate-mode == 'eight-slices-eager' && 'eager' || 'slice-aware' }}
 
   disk-preparation:
     if: inputs.candidate-mode == 'disk-preparation' && !inputs.profile-only && !inputs.dependency-cache
@@ -103,7 +105,7 @@ jobs:
       report-run: ${{ inputs.report-run }}
 
   prepare:
-    if: ${{ !inputs.dependency-cache && !inputs.profile-only && inputs.candidate-mode != 'disk-preparation' && inputs.candidate-mode != 'eight-slices' && inputs.candidate-mode != 'eight-slices-live-ci' }}
+    if: ${{ !inputs.dependency-cache && !inputs.profile-only && inputs.candidate-mode != 'disk-preparation' && inputs.candidate-mode != 'eight-slices' && inputs.candidate-mode != 'eight-slices-eager' && inputs.candidate-mode != 'eight-slices-live-ci' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     outputs:

@@ -250,6 +250,16 @@ global performance claim.
 Add `report-run=SLICE_COUNT_RUN` to regenerate its report without repeating
 the four workload commands.
 
+Use `candidate-mode=eight-slices-eager` for the separate four-versus-eight
+comparison without slice-aware discovery. Every baseline, control and
+eight-slice command sets `muzzleBenchmarkDiscoverAll=true`, which performs
+discovery in the original per-project `afterEvaluate` lifecycle. This
+restores eager discovery timing as well as its scope. The report requires
+the same discovery-project and metadata-path set in every command rather
+than disjoint metadata sets for the two halves. Full assertion coverage,
+isolated snapshots, paired ordering and cache-variation reporting stay
+unchanged. This mode does not modify the implementation PR.
+
 `candidate-mode=eight-slices-live-ci` instead invokes the actual reusable
 Muzzle workflow from the selected branch. This is a targeted integration
 check of all eight production jobs with their normal random sampling,

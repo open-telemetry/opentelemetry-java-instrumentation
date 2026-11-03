@@ -232,6 +232,26 @@ class CiBenchmarkTest(unittest.TestCase):
             self.assertIn(":instrumentation:muzzle5", command)
             self.assertIn("-PmuzzleSlices=8", command)
 
+    def test_forced_eager_discovery_applies_to_baseline_control_and_candidate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            runner = self.runner(Path(directory))
+            runner.args.force_eager_discovery = True
+            observed = []
+
+            def execute(command, **kwargs):
+                result = self.fake_build(command, **kwargs)
+                log = kwargs.get("log")
+                if log is not None:
+                    self.assertIn("-PmuzzleBenchmarkDiscoverAll=true", command)
+                    observed.append(log.parent.name)
+                    log.write_text(log.read_text() + "MUZZLE_BENCHMARK_DISCOVER_ALL true\n")
+                return result
+
+            with patch.object(benchmark, "run", side_effect=execute):
+                runner.measure()
+            self.assertEqual(observed, ["baseline", "control", "candidate"])
+            self.assertTrue(all(sample["discover_all"] is True for sample in runner.samples))
+
     def test_only_candidate_disables_configuration_cache_and_preserves_task_cache(self):
         with tempfile.TemporaryDirectory() as directory:
             runner = self.runner(Path(directory))

@@ -250,9 +250,15 @@ val hasRelevantTask = gradle.startParameter.taskNames.any {
     taskName.contains(":muzzle-Assert")
 }
 
-if (hasRelevantTask) {
+if (hasRelevantTask && muzzleBenchmarkDiscoverAll) {
+  val system = newRepositorySystem()
+  val session = newRepositorySystemSession(system)
+  afterEvaluate {
+    configureMuzzleChecks(system, session)
+  }
+} else if (hasRelevantTask) {
   gradle.projectsEvaluated {
-    val selected = muzzleBenchmarkDiscoverAll || gradle.startParameter.taskNames.any {
+    val selected = gradle.startParameter.taskNames.any {
       val taskName = it.removePrefix(":")
       if (taskName.startsWith("instrumentation:muzzle")) {
         val slice = rootProject.findProject(":instrumentation")
@@ -272,24 +278,27 @@ if (hasRelevantTask) {
 
     val system = newRepositorySystem()
     val session = newRepositorySystemSession(system)
-    var runAfter = muzzle
+    configureMuzzleChecks(system, session)
+  }
+}
 
-    val projectRepositories = getProjectRepositories(project)
+fun configureMuzzleChecks(system: RepositorySystem, session: RepositorySystemSession) {
+  var runAfter = muzzle
+  val projectRepositories = getProjectRepositories(project)
 
-    for (muzzleDirective in muzzleConfig.directives.get()) {
-      logger.info("configured $muzzleDirective")
+  for (muzzleDirective in muzzleConfig.directives.get()) {
+    logger.info("configured $muzzleDirective")
 
-      if (muzzleDirective.coreJdk.get()) {
-        runAfter = addMuzzleTask(muzzleDirective, null, runAfter)
-      } else {
-        for (singleVersion in muzzleDirectiveToArtifacts(muzzleDirective, system, session, projectRepositories)) {
-          runAfter = addMuzzleTask(muzzleDirective, singleVersion, runAfter)
-        }
-        if (muzzleDirective.assertInverse.get()) {
-          for (inverseDirective in inverseOf(muzzleDirective, system, session, projectRepositories)) {
-            for (singleVersion in muzzleDirectiveToArtifacts(inverseDirective, system, session, projectRepositories)) {
-              runAfter = addMuzzleTask(inverseDirective, singleVersion, runAfter)
-            }
+    if (muzzleDirective.coreJdk.get()) {
+      runAfter = addMuzzleTask(muzzleDirective, null, runAfter)
+    } else {
+      for (singleVersion in muzzleDirectiveToArtifacts(muzzleDirective, system, session, projectRepositories)) {
+        runAfter = addMuzzleTask(muzzleDirective, singleVersion, runAfter)
+      }
+      if (muzzleDirective.assertInverse.get()) {
+        for (inverseDirective in inverseOf(muzzleDirective, system, session, projectRepositories)) {
+          for (singleVersion in muzzleDirectiveToArtifacts(inverseDirective, system, session, projectRepositories)) {
+            runAfter = addMuzzleTask(inverseDirective, singleVersion, runAfter)
           }
         }
       }
