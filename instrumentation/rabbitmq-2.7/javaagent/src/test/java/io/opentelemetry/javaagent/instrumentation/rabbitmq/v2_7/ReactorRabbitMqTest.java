@@ -30,6 +30,7 @@ import reactor.rabbitmq.SenderOptions;
     matches = "true",
     disabledReason =
         "reactor-rabbitmq 1.5.6 (and earlier) still calls `void useNio()` which was removed in 5.27.0")
+@SuppressWarnings("deprecation") // using deprecated semconv
 class ReactorRabbitMqTest extends AbstractRabbitMqTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

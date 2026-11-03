@@ -22,6 +22,7 @@ import io.opentelemetry.sdk.metrics.data.MetricData;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class RabbitMqMetricsAssertions {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.rabbitmq-2.7";

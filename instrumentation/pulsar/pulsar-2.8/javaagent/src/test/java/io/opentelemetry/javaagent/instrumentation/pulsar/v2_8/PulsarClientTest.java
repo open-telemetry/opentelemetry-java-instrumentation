@@ -44,6 +44,7 @@ import org.junit.jupiter.api.Test;
 
 class PulsarClientTest extends AbstractPulsarClientTest {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopic() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopic";
