@@ -78,7 +78,7 @@ testing.suites {
       implementation("org.apache.pekko:pekko-stream_2.13:1.1.0")
     }
     executions {
-      registerTask("pekko11NoSpanSuppressionTest") {
+      register("NoSpanSuppression") {
         jvmArgs("-Dotel.instrumentation.common.span-suppression-strategy=none")
 
         filter {

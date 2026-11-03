@@ -8,10 +8,8 @@ package io.opentelemetry.instrumentation.gradle
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.gradle.api.DomainObjectCollection
-import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Project
 import org.gradle.api.plugins.jvm.JvmTestSuite
-import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.testing.Test
 import org.gradle.testfixtures.ProjectBuilder
@@ -53,59 +51,6 @@ class TestSuiteExecutionsTest {
     assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
       .contains("test", "testExperimental", "integrationTest", "integrationTestPreviewSemconv")
     assertThat(project.tasks.names).doesNotContain("testPreviewSemconv", "integrationTestExperimental")
-  }
-
-  @JunitTest
-  fun `explicit task names reuse suite configuration lazily`() {
-    val integration = suites().register("integrationTest", JvmTestSuite::class.java).get()
-    val sources = project.extensions.getByType(SourceSetContainer::class.java).names.toSet()
-    val compileTasks = project.tasks.withType(JavaCompile::class.java).names.toSet()
-    var configuredTasks = 0
-    var providerReads = 0
-    var defaultConfigurationCount = 0
-    project.tasks.withType(Test::class.java).configureEach {
-      configuredTasks++
-      jvmArgumentProviders.add(CommandLineArgumentProvider {
-        providerReads++
-        listOf("-javaagent:agent.jar")
-      })
-    }
-
-    integration.executions {
-      configureEach {
-        systemProperty("shared", "true")
-        systemProperty("order", "common")
-      }
-      configureDefault {
-        defaultConfigurationCount++
-        systemProperty("default.only", "true")
-      }
-      registerTask("testBefore106ExperimentalAttributes") {
-        systemProperty("order", "variant")
-        systemProperty("variant.only", "true")
-      }
-    }
-
-    assertThat(configuredTasks).isZero()
-    assertThat(providerReads).isZero()
-    assertThat(project.extensions.getByType(SourceSetContainer::class.java).names).isEqualTo(sources)
-    assertThat(project.tasks.withType(JavaCompile::class.java).names).isEqualTo(compileTasks)
-
-    val variant = test("testBefore106ExperimentalAttributes")
-    assertThat(configuredTasks).isEqualTo(1)
-    assertThat(providerReads).isZero()
-    assertBinding(variant, integration)
-    assertThat(variant.systemProperties)
-      .containsEntry("shared", "true")
-      .containsEntry("order", "variant")
-      .containsEntry("variant.only", "true")
-      .doesNotContainKey("default.only")
-    assertThat(defaultConfigurationCount).isZero()
-    assertThat(variant.allJvmArgs).containsOnlyOnce("-javaagent:agent.jar")
-    assertThat(providerReads).isEqualTo(1)
-    assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
-      .contains("integrationTest", "testBefore106ExperimentalAttributes")
-    assertThat(project.tasks.names).doesNotContain("integrationTestBefore106ExperimentalAttributes")
   }
 
   @JunitTest
@@ -382,7 +327,7 @@ class TestSuiteExecutionsTest {
   }
 
   @JunitTest
-  fun `reject duplicate blocks and empty or duplicate variants`() {
+  fun `reject duplicate blocks and empty or duplicate suffixes`() {
     suite("test").executions {}
     assertThatThrownBy { suite("test").executions {} }
       .isInstanceOf(IllegalStateException::class.java)
@@ -393,34 +338,11 @@ class TestSuiteExecutionsTest {
       }
     }.isInstanceOf(IllegalArgumentException::class.java)
     assertThatThrownBy {
-      suites().register("emptyTaskName", JvmTestSuite::class.java).get().executions {
-        registerTask("  ") {}
-      }
-    }.isInstanceOf(IllegalArgumentException::class.java)
-    assertThatThrownBy {
       suites().register("duplicate", JvmTestSuite::class.java).get().executions {
         register("Variant") {}
         register("Variant") {}
       }
     }.isInstanceOf(IllegalArgumentException::class.java)
-    assertThatThrownBy {
-      suites().register("duplicateTaskName", JvmTestSuite::class.java).get().executions {
-        registerTask("legacyExecution") {}
-        registerTask("legacyExecution") {}
-      }
-    }.isInstanceOf(IllegalArgumentException::class.java)
-    assertThatThrownBy {
-      suites().register("colliding", JvmTestSuite::class.java).get().executions {
-        register("Legacy") {}
-        registerTask("collidingLegacy") {}
-      }
-    }.isInstanceOf(IllegalArgumentException::class.java)
-    project.tasks.register("existingTask", Test::class.java)
-    assertThatThrownBy {
-      suites().register("existingTaskSuite", JvmTestSuite::class.java).get().executions {
-        registerTask("existingTask") {}
-      }
-    }.isInstanceOf(InvalidUserDataException::class.java)
   }
 
   private fun suites() = project.extensions.getByType(TestingExtension::class.java).suites

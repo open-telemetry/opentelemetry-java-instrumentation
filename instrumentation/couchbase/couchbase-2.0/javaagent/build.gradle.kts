@@ -100,7 +100,7 @@ testing.suites {
         telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
       }
       if (name == "version25Test") {
-        registerTask("testQuerySanitizationDisabled") {
+        register("QuerySanitizationDisabled") {
           filter {
             includeTestsMatching("CouchbaseQuerySanitizationTest")
           }

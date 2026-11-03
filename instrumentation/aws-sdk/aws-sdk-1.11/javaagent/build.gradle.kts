@@ -78,7 +78,7 @@ testing.suites {
   // in 1.11.106 than 1.11.84.
   // We test older version in separate test set to test newer version and latest deps in the 'default'
   // test dir. Otherwise we get strange warnings in Idea.
-  register<JvmTestSuite>("test_before_1_11_106") {
+  register<JvmTestSuite>("version1_11_0Test") {
     dependencies {
       implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
@@ -94,7 +94,7 @@ testing.suites {
     }
     if (!otelProps.testLatestDeps) {
       executions {
-        registerTask("testBefore106ExperimentalAttributes") {
+        register("ExperimentalAttributes") {
           systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
         }
       }
