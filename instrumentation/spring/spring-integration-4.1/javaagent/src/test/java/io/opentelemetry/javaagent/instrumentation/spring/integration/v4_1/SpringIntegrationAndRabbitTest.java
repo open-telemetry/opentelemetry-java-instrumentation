@@ -220,6 +220,7 @@ class SpringIntegrationAndRabbitTest {
         });
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static AttributeAssertion deliveryTag() {
     return satisfies(
         MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG,

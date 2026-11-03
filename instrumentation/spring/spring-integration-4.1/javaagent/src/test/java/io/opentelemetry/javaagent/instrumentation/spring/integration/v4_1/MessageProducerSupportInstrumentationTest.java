@@ -323,6 +323,7 @@ class MessageProducerSupportInstrumentationTest {
     return channel;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static Instrumenter<Message, Void> newUnrelatedProcessInstrumenter() {
     return Instrumenter.<Message, Void>builder(
             GlobalOpenTelemetry.get(), "test-lower-messaging-process", unused -> "lower process")
@@ -334,6 +335,7 @@ class MessageProducerSupportInstrumentationTest {
         .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void assertUnrelatedProcessMetrics() {
     testing.waitAndAssertMetrics(
         "test-lower-messaging-process",
