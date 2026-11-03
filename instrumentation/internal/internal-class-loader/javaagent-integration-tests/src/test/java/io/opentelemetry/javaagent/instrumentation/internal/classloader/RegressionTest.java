@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 import org.junit.jupiter.api.Test;
 
@@ -19,6 +19,7 @@ class RegressionTest {
   // application code
   @Test
   void noDuplicateClassDefinition() throws ClassNotFoundException {
-    assertThat(Class.forName("org.apache.commons.lang3.function.FailableCallable")).isNotNull();
+    assertThatNoException()
+        .isThrownBy(() -> Class.forName("org.apache.commons.lang3.function.FailableCallable"));
   }
 }
