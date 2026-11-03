@@ -56,6 +56,7 @@ final class SpringIntegrationTestHelper {
     assertProcessMetrics(testing, destinationName, failed, 1);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   static void assertProcessMetrics(
       InstrumentationExtension testing,
       String destinationName,
@@ -111,6 +112,7 @@ final class SpringIntegrationTestHelper {
                                                 errorType)))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   static void assertSendMetrics(InstrumentationExtension testing, String destinationName) {
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
