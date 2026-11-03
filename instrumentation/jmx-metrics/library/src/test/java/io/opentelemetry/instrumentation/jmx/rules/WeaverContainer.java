@@ -118,8 +118,7 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
     private final Map<String, Integer> seenRegistryMetrics;
     private final Map<String, Integer> seenRegistryAttributes;
 
-    // visible for testing
-    WeaverValidationResult(
+    private WeaverValidationResult(
         List<WeaverValidationAdvice> advices,
         Set<String> seenNonRegistryMetrics,
         Set<String> seenNonRegistryAttributes,
