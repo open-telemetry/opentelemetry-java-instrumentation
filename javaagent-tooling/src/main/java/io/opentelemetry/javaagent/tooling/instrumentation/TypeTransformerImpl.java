@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.tooling.instrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceBootstrap;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForceDynamicallyTypedAssignReturnedFactory;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyBootstrap;
 import java.io.IOException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -37,8 +37,8 @@ public final class TypeTransformerImpl implements TypeTransformer {
                 new ForceDynamicallyTypedAssignReturnedFactory(
                     new Advice.AssignReturned.Factory().withSuppressed(Throwable.class)))
             .bootstrap(
-                IndyBootstrap.getIndyBootstrapMethod(),
-                IndyBootstrap.getAdviceBootstrapArguments(instrumentationModule),
+                AdviceBootstrap.getBootstrapMethod(),
+                AdviceBootstrap.createBootstrapArgumentResolverFactory(instrumentationModule),
                 TypeDescription.Generic.Visitor.Generalizing.INSTANCE);
   }
 
@@ -62,9 +62,7 @@ public final class TypeTransformerImpl implements TypeTransformer {
     return new AdviceLocator(
         classFileLocator,
         (slashClassName, bytes) -> {
-          // verify that advice does not call VirtualField.find
-          // NOTE: this check is here to help converting the advice for the indy instrumentation,
-          // it can be removed once the conversion is completed
+          // Reject VirtualField.find calls in non-inlined advice, where they are not rewritten.
           AdviceVirtualFieldUsageChecker.check(bytes);
           return bytes;
         });

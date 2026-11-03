@@ -7,11 +7,15 @@ package io.opentelemetry.instrumentation.gradle
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.gradle.api.DomainObjectCollection
+import org.gradle.api.Project
 import org.gradle.api.plugins.jvm.JvmTestSuite
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.testing.Test
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testing.base.TestingExtension
+import org.gradle.testing.base.TestSuite
+import org.gradle.testing.base.TestSuiteTarget
 import org.gradle.process.CommandLineArgumentProvider
 import org.junit.jupiter.api.Test as JunitTest
 
@@ -47,6 +51,56 @@ class TestSuiteExecutionsTest {
     assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
       .contains("test", "testExperimental", "integrationTest", "integrationTestPreviewSemconv")
     assertThat(project.tasks.names).doesNotContain("testPreviewSemconv", "integrationTestExperimental")
+  }
+
+  @JunitTest
+  fun `collection selector configures only the explicitly named suites`() {
+    val integration = suites().register("integrationTest", JvmTestSuite::class.java).get()
+    val untouched = suites().register("untouched", JvmTestSuite::class.java).get()
+
+    suites().executions("test", integration.name) {
+      configureEach {
+        systemProperty("selected", "true")
+      }
+      register("Variant") {}
+    }
+
+    assertThat(test("test").systemProperties).containsEntry("selected", "true")
+    assertThat(test("testVariant").systemProperties).containsEntry("selected", "true")
+    assertThat(test("integrationTest").systemProperties).containsEntry("selected", "true")
+    assertThat(test("integrationTestVariant").systemProperties).containsEntry("selected", "true")
+    assertThat(test(untouched.name).systemProperties).doesNotContainKey("selected")
+    assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
+      .contains("testVariant", "integrationTestVariant")
+      .doesNotContain("untouchedVariant")
+  }
+
+  @JunitTest
+  fun `collection selector lazily configures suites registered later`() {
+    suites().executions {
+      configureEach {
+        systemProperty("selected", "true")
+      }
+      register("Variant") {}
+    }
+
+    suites().register("lateTest", JvmTestSuite::class.java)
+
+    assertThat(test("test").systemProperties).containsEntry("selected", "true")
+    assertThat(test("lateTest").systemProperties).containsEntry("selected", "true")
+    assertThat(test("lateTestVariant").systemProperties).containsEntry("selected", "true")
+    assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
+      .contains("lateTest", "lateTestVariant")
+  }
+
+  @JunitTest
+  fun `collection selector rejects missing and non JVM suites`() {
+    assertThatThrownBy { suites().executions("missing") {} }
+      .hasMessageContaining("missing")
+
+    suites().add(NonJvmTestSuite(project, "nonJvm"))
+    assertThatThrownBy { suites().executions("nonJvm") {} }
+      .hasMessageContaining("Test suite 'nonJvm' is not a JVM test suite")
   }
 
   @JunitTest
@@ -301,5 +355,12 @@ class TestSuiteExecutionsTest {
     assertThat(task.testClassesDirs.files).isEqualTo(suite.sources.output.classesDirs.files)
     // Inspect the file collection graph without resolving the suite's external test dependencies.
     assertThat(task.classpath).isSameAs(suite.sources.runtimeClasspath)
+  }
+
+  private class NonJvmTestSuite(private val project: Project, private val suiteName: String) : TestSuite {
+    override fun getName() = suiteName
+
+    override fun getTargets(): DomainObjectCollection<out TestSuiteTarget> =
+      project.objects.domainObjectSet(TestSuiteTarget::class.java)
   }
 }
