@@ -81,20 +81,22 @@ public final class AgentElementMatchers {
   }
 
   /**
-   * Matches a method with exactly the provided ordered parameter type names.
+   * Matches a method with exactly the provided ordered parameter type matchers.
    *
-   * <p>Parameter type names are compared after erasure. Primitive types use their Java names, such
-   * as {@code int}, and array types use readable Java names, such as {@code byte[]}, {@code
-   * java.lang.Object[]}, and {@code byte[][]}. For example, {@code takesArguments("byte[]",
-   * "java.lang.Object[]", "byte[][]")} matches those ordered parameter types. Passing no names
-   * matches only methods with no parameters.
+   * <p>Each matcher is applied to the erased type of the corresponding parameter. Use {@code
+   * is(Type.class)} for types safely accessible from the agent class loader and {@code
+   * named("fully.qualified.Type")} for types that should not be loaded. Passing no matchers matches
+   * only methods with no parameters. Prefer Byte Buddy's class-based {@code takesArguments} matcher
+   * when every parameter type can be safely referenced by class literal.
    *
-   * @param names the exact ordered parameter type names to match.
+   * @param matchers the exact ordered parameter type matchers.
    * @return a matcher for methods with the specified parameter types.
    */
+  @SafeVarargs
+  @SuppressWarnings("varargs")
   public static <T extends MethodDescription> ElementMatcher.Junction<T> takesArguments(
-      String... names) {
-    return new TakesArgumentsMatcher<>(names);
+      ElementMatcher<? super TypeDescription>... matchers) {
+    return new TakesArgumentsMatcher<>(matchers);
   }
 
   /**
