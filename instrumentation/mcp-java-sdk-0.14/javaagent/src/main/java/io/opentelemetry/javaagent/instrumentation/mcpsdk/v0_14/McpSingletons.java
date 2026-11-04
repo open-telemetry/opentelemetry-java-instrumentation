@@ -12,11 +12,9 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 
 final class McpSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.mcp-java-sdk-0.14";
-  private static final ScopedThreadValue<McpToolCallState> currentState = new ScopedThreadValue<>();
 
   private static final Instrumenter<McpToolCallRequest, McpSchema.CallToolResult> instrumenter =
       Instrumenter.<McpToolCallRequest, McpSchema.CallToolResult>builder(
@@ -44,10 +42,6 @@ final class McpSingletons {
 
   static ContextPropagators propagators() {
     return propagators;
-  }
-
-  public static ScopedThreadValue<McpToolCallState> currentState() {
-    return currentState;
   }
 
   private McpSingletons() {}

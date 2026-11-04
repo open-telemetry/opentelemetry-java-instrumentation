@@ -7,17 +7,22 @@ package io.opentelemetry.javaagent.instrumentation.mcpsdk.v0_14;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.semconv.incubating.McpIncubatingAttributes.MCP_PROTOCOL_VERSION;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.modelcontextprotocol.client.McpAsyncClient;
 import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.McpSyncClient;
 import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.ProtocolVersions;
+import io.opentelemetry.api.baggage.Baggage;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import reactor.core.Disposable;
 
 class McpClientEndToEndTest {
   @RegisterExtension
@@ -77,5 +82,40 @@ class McpClientEndToEndTest {
                     span.hasName("tools/call sync-tool")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void createsIndependentRequestsForOverlappingToolCallSubscriptions() {
+    TestMcpClientTransport transport =
+        new TestMcpClientTransport(TestMcpClientTransport.ToolResponse.NONE);
+    McpAsyncClient client = McpClient.async(transport).build();
+    client.initialize().block();
+    var publisher = client.callTool(new McpSchema.CallToolRequest("overlap", Map.of(), null));
+    Context firstContext =
+        Baggage.builder().put("tenant", "first").build().storeInContext(Context.root());
+    Disposable first =
+        ContextPropagationOperator.runWithContext(publisher, firstContext).subscribe();
+    McpSchema.JSONRPCRequest firstRequest = transport.getToolRequest();
+    Disposable second =
+        ContextPropagationOperator.runWithContext(publisher, Context.root()).subscribe();
+    try {
+      McpSchema.JSONRPCRequest secondRequest = transport.getToolRequest();
+      assertThat(secondRequest.id()).isNotEqualTo(firstRequest.id());
+      assertThat(((McpSchema.CallToolRequest) firstRequest.params()).meta())
+          .containsEntry("baggage", "tenant=first");
+      assertThat(((McpSchema.CallToolRequest) secondRequest.params()).meta())
+          .doesNotContainKey("baggage");
+    } finally {
+      first.dispose();
+      second.dispose();
+      client.close();
+    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("tools/call overlap").hasKind(CLIENT).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("tools/call overlap").hasKind(CLIENT).hasNoParent()));
   }
 }

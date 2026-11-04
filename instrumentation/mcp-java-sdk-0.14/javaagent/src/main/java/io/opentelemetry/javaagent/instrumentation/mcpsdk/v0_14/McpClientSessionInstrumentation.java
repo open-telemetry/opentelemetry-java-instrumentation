@@ -5,14 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.mcpsdk.v0_14;
 
-import static io.opentelemetry.javaagent.instrumentation.mcpsdk.v0_14.McpSingletons.currentState;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
-import io.modelcontextprotocol.json.TypeRef;
 import io.modelcontextprotocol.spec.McpClientSession;
+import io.modelcontextprotocol.spec.McpSchema;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -37,27 +35,10 @@ class McpClientSessionInstrumentation implements TypeInstrumentation {
             .and(takesArgument(2, named("io.modelcontextprotocol.json.TypeRef")))
             .and(returns(named("reactor.core.publisher.Mono"))),
         getClass().getName() + "$SendRequestAdvice");
-    transformer.applyAdviceToMethod(
-        named("generateRequestId").and(takesNoArguments()).and(returns(String.class)),
-        getClass().getName() + "$GenerateRequestIdAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class SendRequestAdvice {
-
-    @Advice.OnMethodEnter(
-        skipOn = Advice.OnNonDefaultValue.class,
-        suppress = Throwable.class,
-        inline = false)
-    @Nullable
-    public static Mono<?> onEnter(
-        @Advice.This McpClientSession session,
-        @Advice.Argument(0) String method,
-        @Advice.Argument(1) @Nullable Object requestParameters,
-        @Advice.Argument(2) TypeRef<?> responseType) {
-      McpToolCallState state = McpToolCallState.prepare(session, method, requestParameters);
-      return state == null ? null : state.wrap(responseType);
-    }
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
@@ -65,22 +46,14 @@ class McpClientSessionInstrumentation implements TypeInstrumentation {
     public static Mono<?> onExit(
         @Advice.This McpClientSession session,
         @Advice.Argument(0) String method,
-        @Advice.Return @Nullable Mono<?> publisher,
-        @Advice.Enter @Nullable Mono<?> deferredPublisher) {
-      return McpProtocolVersionState.capture(
-          session, method, deferredPublisher == null ? publisher : deferredPublisher);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class GenerateRequestIdAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Return String requestId) {
-      McpToolCallState state = currentState().get();
-      if (state != null) {
-        state.captureRequestId(requestId);
+        @Advice.Argument(1) @Nullable Object requestParameters,
+        @Advice.Return @Nullable Mono<?> publisher) {
+      if (publisher != null
+          && McpSchema.METHOD_TOOLS_CALL.equals(method)
+          && requestParameters instanceof McpSchema.CallToolRequest callToolRequest) {
+        return McpToolCallMono.wrap(session, callToolRequest, publisher);
       }
+      return McpProtocolVersionState.capture(session, method, publisher);
     }
   }
 }

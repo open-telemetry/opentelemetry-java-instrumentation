@@ -34,11 +34,13 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 class McpClientSessionInstrumentationTest {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.mcp-java-sdk-0.14";
@@ -215,6 +217,7 @@ class McpClientSessionInstrumentationTest {
         (McpSchema.CallToolRequest) transport.getToolRequest().params();
     assertThat(first.meta()).containsEntry("baggage", "tenant=first");
     String firstTraceparent = (String) first.meta().get("traceparent");
+    Object requestId = transport.getToolRequest().id();
 
     Context secondContext =
         Baggage.builder().put("tenant", "second").build().storeInContext(Context.root());
@@ -223,6 +226,7 @@ class McpClientSessionInstrumentationTest {
     McpSchema.CallToolRequest second =
         (McpSchema.CallToolRequest) transport.getToolRequest().params();
     assertThat(second.meta()).containsEntry("baggage", "tenant=second");
+    assertThat(transport.getToolRequest().id()).isEqualTo(requestId);
 
     assertThat(ContextPropagationOperator.runWithContext(publisher, Context.root()).block())
         .isNotNull();
@@ -248,6 +252,92 @@ class McpClientSessionInstrumentationTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("tools/call lookup").hasKind(CLIENT).hasNoParent()));
+  }
+
+  @Test
+  void preservesSessionOverrideAndRequestTransformations() {
+    TestMcpClientTransport transport =
+        new TestMcpClientTransport(TestMcpClientTransport.ToolResponse.SUCCESS);
+    AtomicInteger invocations = new AtomicInteger();
+    AtomicInteger responses = new AtomicInteger();
+    McpClientSession session =
+        new McpClientSession(
+            Duration.ofSeconds(1), transport, Map.of(), Map.of(), Function.identity()) {
+          @Override
+          public <T> Mono<T> sendRequest(
+              String method, Object parameters, TypeRef<T> responseType) {
+            invocations.incrementAndGet();
+            McpSchema.CallToolRequest request = (McpSchema.CallToolRequest) parameters;
+            return super.sendRequest(
+                    method,
+                    new McpSchema.CallToolRequest(
+                        request.name(), request.arguments(), Map.of("tenant", "transformed")),
+                    responseType)
+                .doOnNext(unused -> responses.incrementAndGet());
+          }
+        };
+    Mono<McpSchema.CallToolResult> publisher =
+        session.sendRequest(
+            McpSchema.METHOD_TOOLS_CALL,
+            new McpSchema.CallToolRequest("override", Map.of(), null),
+            CALL_TOOL_RESULT_TYPE);
+
+    assertThat(invocations.get()).isEqualTo(1);
+    assertThat(publisher.block()).isNotNull();
+    assertThat(publisher.block()).isNotNull();
+    assertThat(invocations.get()).isEqualTo(1);
+    assertThat(responses.get()).isEqualTo(2);
+    McpSchema.CallToolRequest sent =
+        (McpSchema.CallToolRequest) transport.getToolRequest().params();
+    assertThat(sent.meta()).containsEntry("tenant", "transformed").containsKey("traceparent");
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("tools/call override").hasKind(CLIENT).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("tools/call override").hasKind(CLIENT).hasNoParent()));
+  }
+
+  @Test
+  void injectsSubscriptionContextOnWorkerThread() {
+    TestMcpClientTransport transport =
+        new TestMcpClientTransport(TestMcpClientTransport.ToolResponse.SUCCESS);
+    McpClientSession session = newSession(transport);
+    Mono<McpSchema.CallToolResult> publisher =
+        session.sendRequest(
+            McpSchema.METHOD_TOOLS_CALL,
+            new McpSchema.CallToolRequest("worker", Map.of(), null),
+            CALL_TOOL_RESULT_TYPE);
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          Context context =
+              Baggage.builder().put("tenant", "worker").build().storeInContext(Context.current());
+          assertThat(
+                  ContextPropagationOperator.runWithContext(publisher, context)
+                      .subscribeOn(Schedulers.boundedElastic())
+                      .block())
+              .isNotNull();
+        });
+    McpSchema.CallToolRequest sent =
+        (McpSchema.CallToolRequest) transport.getToolRequest().params();
+    assertThat(sent.meta()).containsEntry("baggage", "tenant=worker");
+    testing.waitAndAssertTraces(
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasNoParent(),
+              span ->
+                  span.hasName("tools/call worker").hasKind(CLIENT).hasParent(trace.getSpan(0)));
+          assertThat(sent.meta().get("traceparent"))
+              .isEqualTo(
+                  "00-"
+                      + trace.getSpan(1).getTraceId()
+                      + "-"
+                      + trace.getSpan(1).getSpanId()
+                      + "-"
+                      + trace.getSpan(1).getSpanContext().getTraceFlags().asHex());
+        });
   }
 
   @Test
@@ -377,6 +467,7 @@ class McpClientSessionInstrumentationTest {
                         new McpSchema.CallToolRequest("slow-tool", Map.of(), null),
                         CALL_TOOL_RESULT_TYPE)
                     .subscribe());
+    assertThat(testing.spans()).hasSize(1);
     subscription.dispose();
 
     testing.waitAndAssertTraces(
