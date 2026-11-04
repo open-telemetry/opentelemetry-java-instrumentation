@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsMetricsAssertions.assertMetrics;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
@@ -106,7 +106,8 @@ class AwsLambdaSqsMessageHandlerTest {
                 span ->
                     span.hasName("my_function")
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333")),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("faas.invocation_id"), "1-22-333")),
                 span ->
                     span.hasName(
                             emitStableMessagingSemconv() ? "process queue1" : "aws:sqs process")

@@ -255,6 +255,7 @@ public abstract class KafkaClientBaseTest {
 
   // the offset and the message key stay on the link even when the batch carries a single record,
   // because they are only recommended on spans that describe an operation on a single message
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static LinkData receiveRecordLink(SpanData producerSpan) {
     if (!emitStableMessagingSemconv()) {
       return LinkData.create(producerSpan.getSpanContext());

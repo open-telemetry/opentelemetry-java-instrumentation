@@ -33,6 +33,7 @@ class RocketMqReceiveSpanLinksExtractor implements SpanLinksExtractor<RocketMqRe
     this.propagator = propagator;
   }
 
+  @SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
   @Override
   public void extract(
       SpanLinksBuilder spanLinks, Context parentContext, RocketMqReceiveRequest request) {

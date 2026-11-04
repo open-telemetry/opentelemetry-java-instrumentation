@@ -18,6 +18,7 @@ import org.springframework.amqp.core.Message;
 class SpringRabbitExtraAttributesExtractor
     implements AttributesExtractor<SpringRabbitRequest, Void> {
 
+  @SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, SpringRabbitRequest request) {

@@ -46,6 +46,7 @@ final class KafkaConnectBatchRecordAttributes {
     }
   }
 
+  @SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
   Attributes getLinkAttributes(SinkRecord record) {
     AttributesBuilder attributes = Attributes.builder();
     String partition = partitionId(record);

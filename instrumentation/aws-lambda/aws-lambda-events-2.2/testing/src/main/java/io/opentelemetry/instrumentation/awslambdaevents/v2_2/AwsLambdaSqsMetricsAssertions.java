@@ -19,6 +19,7 @@ import io.opentelemetry.sdk.metrics.data.MetricData;
 
 public class AwsLambdaSqsMetricsAssertions {
 
+  @SuppressWarnings("deprecation") // asserting the legacy messaging.system metric attribute
   public static void assertMetrics(
       InstrumentationExtension testing,
       String instrumentationName,

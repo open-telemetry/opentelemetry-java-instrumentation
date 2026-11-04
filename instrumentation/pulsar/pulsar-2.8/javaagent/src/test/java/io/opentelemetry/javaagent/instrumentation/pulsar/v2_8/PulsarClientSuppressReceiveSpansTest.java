@@ -47,6 +47,7 @@ import org.junit.jupiter.api.Test;
 
 class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testFailedListenerCountsConsumedMessage() throws Exception {
     String topic = "persistent://public/default/testFailedListenerCountsConsumedMessage";
@@ -98,6 +99,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testConsumeNonPartitionedTopic() throws Exception {
     String topic = "persistent://public/default/testConsumeNonPartitionedTopic";

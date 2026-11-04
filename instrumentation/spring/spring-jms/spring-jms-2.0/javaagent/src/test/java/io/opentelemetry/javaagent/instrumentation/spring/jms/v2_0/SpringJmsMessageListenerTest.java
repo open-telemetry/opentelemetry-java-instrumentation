@@ -143,6 +143,7 @@ class SpringJmsMessageListenerTest {
                                 })));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static Attributes metricAttributes(String destination) {
     return Attributes.of(
         MESSAGING_OPERATION_NAME,

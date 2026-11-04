@@ -165,6 +165,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
    * ServletAdditionalAttributesExtractor} as an attribute extractor. When SERVER span is not
    * created by servlet instrumentation we call this method on exit from the last servlet or filter.
    */
+  @SuppressWarnings("deprecation") // retaining enduser.id in legacy mode
   private void captureEnduserId(Span serverSpan, REQUEST request) {
     if (!AgentCommonConfig.get().getUserConfig().isNameEnabled()) {
       return;

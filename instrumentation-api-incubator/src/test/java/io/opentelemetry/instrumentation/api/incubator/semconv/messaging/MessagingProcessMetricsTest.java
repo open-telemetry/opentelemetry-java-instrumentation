@@ -101,6 +101,7 @@ class MessagingProcessMetricsTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void outerOperationPreventsDuplicateNestedProcessDuration() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
     SdkMeterProvider meterProvider =

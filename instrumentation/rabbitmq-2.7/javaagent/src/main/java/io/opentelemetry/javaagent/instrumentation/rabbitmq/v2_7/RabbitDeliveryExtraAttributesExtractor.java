@@ -18,6 +18,7 @@ import javax.annotation.Nullable;
 class RabbitDeliveryExtraAttributesExtractor implements AttributesExtractor<DeliveryRequest, Void> {
 
   @Override
+  @SuppressWarnings("deprecation") // retaining legacy messaging attributes
   public void onStart(
       AttributesBuilder attributes, Context parentContext, DeliveryRequest request) {
     Envelope envelope = request.getEnvelope();

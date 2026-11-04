@@ -119,6 +119,7 @@ public class RabbitSingletons {
     return builder;
   }
 
+  @SuppressWarnings("deprecation") // retaining messaging.system in legacy mode
   private static Instrumenter<ChannelAndMethod, Void> createChannelInstrumenter() {
     return channelInstrumenterBuilder(ChannelAndMethod::getMethod, false)
         .addAttributesExtractor(AttributesExtractor.constant(MESSAGING_SYSTEM, "rabbitmq"))

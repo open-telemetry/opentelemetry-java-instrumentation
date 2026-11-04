@@ -39,6 +39,7 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractJmsTest {
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void receivingMessageInSpringListenerGeneratesSpans() {
     AnnotationConfigApplicationContext context =
         new AnnotationConfigApplicationContext(AnnotatedListenerConfig.class);

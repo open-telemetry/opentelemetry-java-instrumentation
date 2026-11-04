@@ -231,6 +231,7 @@ class SpringListenerTest extends AbstractJmsTest {
   @ParameterizedTest
   @ValueSource(classes = {AnnotatedListenerConfig.class, ManualListenerConfig.class})
   @EnabledIfSystemProperty(named = "testJmsDisabled", matches = "true")
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void receivingMessageInSpringListenerGeneratesSpansWithJmsDisabled(
       Class<? extends AbstractConfig> config) {
     AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(config);

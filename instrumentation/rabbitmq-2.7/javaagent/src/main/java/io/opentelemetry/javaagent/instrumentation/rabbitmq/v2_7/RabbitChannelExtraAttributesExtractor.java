@@ -15,6 +15,7 @@ import javax.annotation.Nullable;
 class RabbitChannelExtraAttributesExtractor implements AttributesExtractor<ChannelAndMethod, Void> {
 
   @Override
+  @SuppressWarnings("deprecation") // retaining legacy messaging attributes
   public void onStart(
       AttributesBuilder attributes, Context parentContext, ChannelAndMethod channelAndMethod) {
     String routingKey = channelAndMethod.getRoutingKey();

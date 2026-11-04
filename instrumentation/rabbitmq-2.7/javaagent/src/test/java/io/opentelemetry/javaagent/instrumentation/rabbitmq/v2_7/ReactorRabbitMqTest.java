@@ -35,6 +35,7 @@ class ReactorRabbitMqTest extends AbstractRabbitMqTest {
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void testShouldNotFailDeclaringExchange() {
     Sender sender =
         RabbitFlux.createSender(new SenderOptions().connectionFactory(connectionFactory));

@@ -234,6 +234,7 @@ public abstract class AbstractSystemMetricsTest {
             });
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void assertDiskPoints(Collection<LongPointData> points) {
     assertThat(points)
         .allSatisfy(

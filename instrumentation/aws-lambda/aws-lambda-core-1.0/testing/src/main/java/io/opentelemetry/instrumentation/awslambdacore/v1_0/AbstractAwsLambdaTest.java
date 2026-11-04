@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.when;
 
@@ -71,7 +71,7 @@ public abstract class AbstractAwsLambdaTest {
                         span.hasName("my_function")
                             .hasKind(SpanKind.SERVER)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+                                equalTo(stringKey("faas.invocation_id"), "1-22-333"))));
   }
 
   @Test
@@ -89,7 +89,7 @@ public abstract class AbstractAwsLambdaTest {
                             .hasStatus(StatusData.error())
                             .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+                                equalTo(stringKey("faas.invocation_id"), "1-22-333"))));
 
     if (emitExceptionAsLogs()) {
       testing()
@@ -125,6 +125,6 @@ public abstract class AbstractAwsLambdaTest {
                             .hasNoParent()
                             .hasLinks()
                             .hasAttributesSatisfyingExactly(
-                                equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+                                equalTo(stringKey("faas.invocation_id"), "1-22-333"))));
   }
 }

@@ -139,6 +139,7 @@ class KafkaConnectBatchRecordAttributesTest {
     return records.stream().map(attributes::getLinkAttributes).collect(toList());
   }
 
+  @SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
   private static Attributes expectedLinkAttributes(
       String destination, String partition, Long offset, String key) {
     return Attributes.builder()

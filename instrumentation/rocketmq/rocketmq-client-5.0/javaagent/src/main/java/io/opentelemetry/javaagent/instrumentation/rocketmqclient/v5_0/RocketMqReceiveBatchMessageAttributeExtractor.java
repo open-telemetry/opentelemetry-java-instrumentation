@@ -20,6 +20,7 @@ import org.apache.rocketmq.client.apis.message.MessageView;
 class RocketMqReceiveBatchMessageAttributeExtractor
     implements AttributesExtractor<RocketMqReceiveRequest, List<MessageView>> {
 
+  @SuppressWarnings("deprecation") // intentionally retain legacy messaging attributes
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, RocketMqReceiveRequest request) {

@@ -16,6 +16,7 @@ class RabbitChannelSettleAttributesExtractor
     implements AttributesExtractor<ChannelAndMethod, Void> {
 
   @Override
+  @SuppressWarnings("deprecation") // retaining legacy messaging attributes
   public void onStart(
       AttributesBuilder attributes, Context parentContext, ChannelAndMethod channelAndMethod) {
     attributes.put(MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, channelAndMethod.getDeliveryTag());

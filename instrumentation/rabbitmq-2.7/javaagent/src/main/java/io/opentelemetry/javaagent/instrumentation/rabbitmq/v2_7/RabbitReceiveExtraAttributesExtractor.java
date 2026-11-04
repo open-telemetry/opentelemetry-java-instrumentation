@@ -23,6 +23,7 @@ class RabbitReceiveExtraAttributesExtractor
       AttributesBuilder attributes, Context parentContext, ReceiveRequest request) {}
 
   @Override
+  @SuppressWarnings("deprecation") // retaining legacy messaging attributes
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
