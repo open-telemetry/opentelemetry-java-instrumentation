@@ -194,6 +194,121 @@ class MuzzleBenchmarkFunctionalTest {
     }
   }
 
+  @Test
+  void assignedSlicePreservesPositiveAndInverseAssertions() throws IOException {
+    startRepository();
+    Path secondJar = temp.resolve("repository/fixture/library/2.0/library-2.0.jar");
+    Files.createDirectories(secondJar.getParent());
+    Files.copy(temp.resolve("repository/fixture/library/1.0/library-1.0.jar"), secondJar);
+    Files.writeString(
+        secondJar.resolveSibling("library-2.0.pom"),
+        """
+        <project><modelVersion>4.0.0</modelVersion><groupId>fixture</groupId>
+        <artifactId>library</artifactId><version>2.0</version></project>
+        """);
+    Files.writeString(
+        secondJar.getParent().getParent().resolve("maven-metadata.xml"),
+        """
+        <metadata><groupId>fixture</groupId><artifactId>library</artifactId>
+        <versioning><versions><version>1.0</version><version>2.0</version></versions></versioning>
+        </metadata>
+        """);
+    for (boolean benchmark : asList(false, true)) {
+      Path project = slicedFixture("inverse-" + benchmark, true);
+      Path build = project.resolve("instrumentation/a/build.gradle");
+      Files.writeString(
+          build,
+          Files.readString(build)
+              .replace("versions.set('[1.0]')", "versions.set('[1.0]')\nassertInverse.set(true)"));
+      GradleRunner runner = runner(project, benchmark);
+      List<String> arguments = new ArrayList<>(runner.getArguments());
+      arguments.set(0, ":instrumentation:muzzle1");
+      BuildResult result = runner.withArguments(arguments).build();
+      assertThat(result.getTasks())
+          .filteredOn(task -> task.getPath().contains(":muzzle-Assert"))
+          .extracting(BuildTask::getPath)
+          .containsExactly(
+              ":instrumentation:a:muzzle-AssertPass-fixture-library-1.0",
+              ":instrumentation:a:muzzle-AssertFail-fixture-library-2.0");
+    }
+  }
+
+  @Test
+  void assignedSlicesDiscoverOnlySelectedProjectsAndReuseConfigurationCache() throws IOException {
+    startRepository();
+    for (String child : asList("b", "c", "d")) {
+      publishLibrary("module-" + child);
+    }
+    for (boolean benchmark : asList(false, true)) {
+      for (int slice : asList(1, 3)) {
+        Path project = slicedFixture("assigned-" + benchmark + "-" + slice, true);
+        requests.clear();
+        GradleRunner runner = runner(project, benchmark);
+        List<String> arguments = new ArrayList<>(runner.getArguments());
+        arguments.set(0, (slice == 1 ? ":" : "") + "instrumentation:muzzle" + slice);
+        runner.withArguments(arguments);
+        for (int run = 0; run < 3; run++) {
+          BuildResult result = runner.build();
+          assertThat(result.getTasks())
+              .filteredOn(task -> task.getPath().contains(":muzzle-Assert"))
+              .extracting(BuildTask::getPath)
+              .containsExactly(
+                  slice == 1
+                      ? ":instrumentation:a:muzzle-AssertPass-fixture-library-1.0"
+                      : ":instrumentation:c:muzzle-AssertPass-fixture-module-c-1.0");
+          if (run == 2) {
+            assertThat(result.getOutput()).contains("Reusing configuration cache");
+          }
+        }
+        assertThat(requests)
+            .anySatisfy(
+                path ->
+                    assertThat(path)
+                        .contains(
+                            slice == 1
+                                ? "/library/maven-metadata.xml"
+                                : "/module-c/maven-metadata.xml"));
+        for (String child : asList("a", "b", "c", "d")) {
+          if (!child.equals(slice == 1 ? "a" : "c")) {
+            assertThat(project.resolve("instrumentation/" + child + "/build/muzzleRepo"))
+                .doesNotExist();
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  void assignedSlicesKeepEagerDiscoveryForMixedAndDirectAssertionSelectors() throws IOException {
+    startRepository();
+    for (String child : asList("b", "c", "d")) {
+      publishLibrary("module-" + child);
+    }
+    for (boolean benchmark : asList(false, true)) {
+      for (boolean mixed : asList(false, true)) {
+        Path project = slicedFixture("fallback-" + benchmark + "-" + mixed, true);
+        requests.clear();
+        GradleRunner runner = runner(project, benchmark);
+        List<String> arguments = new ArrayList<>(runner.getArguments());
+        arguments.set(
+            0, mixed ? ":instrumentation:muzzle1" : "muzzle-AssertPass-fixture-module-c-1.0");
+        if (mixed) {
+          arguments.add(":instrumentation:c:muzzle-AssertPass-fixture-module-c-1.0");
+        }
+        BuildResult result = runner.withArguments(arguments).build();
+        assertThat(result.getTasks())
+            .filteredOn(task -> task.getPath().contains(":muzzle-Assert"))
+            .extracting(BuildTask::getPath)
+            .contains(":instrumentation:c:muzzle-AssertPass-fixture-module-c-1.0")
+            .hasSize(mixed ? 2 : 1);
+        for (String module : asList("library", "module-b", "module-c", "module-d")) {
+          assertThat(requests)
+              .anySatisfy(path -> assertThat(path).contains("/" + module + "/maven-metadata.xml"));
+        }
+      }
+    }
+  }
+
   private void useOpenRange(Path project) throws IOException {
     Path build = project.resolve("build.gradle");
     Files.writeString(
@@ -201,6 +316,10 @@ class MuzzleBenchmarkFunctionalTest {
   }
 
   private Path slicedFixture(String name) throws IOException {
+    return slicedFixture(name, false);
+  }
+
+  private Path slicedFixture(String name, boolean assignSlices) throws IOException {
     Path project = temp.resolve(name);
     fixture(name + "/instrumentation/a", true, "library");
     for (String child : asList("b", "c", "d")) {
@@ -217,20 +336,28 @@ class MuzzleBenchmarkFunctionalTest {
         """
         plugins { id 'io.opentelemetry.instrumentation.muzzle-check' apply false }
         project(':instrumentation') {
-          def slices = (1..4).collect { tasks.register("muzzle${it}") }
+          def slices = (1..%d).collect { tasks.register("muzzle${it}") }
           def counter = 0
           subprojects { child ->
             child.plugins.withId('io.opentelemetry.instrumentation.muzzle-check') {
-              slices[counter++ % 4].configure { dependsOn(child.tasks.named('muzzle')) }
+              def sliceIndex = counter++ %% slices.size()
+              %s
+              slices[sliceIndex].configure { dependsOn(child.tasks.named('muzzle')) }
             }
           }
         }
         gradle.projectsEvaluated {
-          ['a', 'b', 'c', 'd'].each {
-            assert file("instrumentation/${it}/build/muzzleRepo").isDirectory()
+          if (!%s) {
+            ['a', 'b', 'c', 'd'].each {
+              assert file("instrumentation/${it}/build/muzzleRepo").isDirectory()
+            }
           }
         }
-        """);
+        """
+            .formatted(
+                assignSlices ? 8 : 4,
+                assignSlices ? "child.ext.otelMuzzleSlice = sliceIndex + 1" : "",
+                assignSlices));
     return project;
   }
 

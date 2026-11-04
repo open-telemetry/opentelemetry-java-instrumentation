@@ -3,24 +3,25 @@
 `trask-muzzle-optimization-benchmark` combines the clean benchmark hooks from
 `trask-muzzle-benchmark` commit `624673f0f4b2c712ae44e81e20c86f6508c032df` with the eight-slice
 layout from PR #21160 commit `0c24c31971fe540d05c2fde6ea62652f7da68397`, on main commit
-`2141aea09049e522f06a836efaff2d21a4c5b30a`. It adds no optimization beyond that baseline.
+`2141aea09049e522f06a836efaff2d21a4c5b30a`. Baseline commit
+`c71cd397be6400fea8f78a47a22215ba01c3a766` contains no optimization beyond that layout.
 
-Normal Muzzle runs keep main's eager version discovery, random sampling, compatibility assertions,
-eight-slice task layout, cache policy, disk cleanup, and network settings. Only benchmark runs opt into
-seeded sampling and workload recording.
+The candidate restricts version discovery to the assigned projects for a single exact
+`:instrumentation:muzzle1` through `:instrumentation:muzzle8` invocation. Other selectors and external
+builds without repository slice assignments retain their discovery behavior. Random sampling,
+compatibility assertions, eight slices, cache policy, disk cleanup, and network settings remain
+unchanged. Only benchmark runs opt into seeded sampling and workload recording.
 
 ## Start a comparison
 
-Create the candidate from this baseline. Do not compare against plain main, which lacks the recording
-hooks. Use commit SHAs so a branch moving during the run cannot change the compared code.
+Compare the pinned unoptimized baseline with the candidate on this research branch. Do not compare
+against plain main, which lacks the recording hooks. Use commit SHAs so a branch moving during the
+run cannot change the compared code.
 
 ```bash
 git fetch origin trask-muzzle-optimization-benchmark
-git switch -c trask-muzzle-candidate origin/trask-muzzle-optimization-benchmark
-baseline=$(git rev-parse HEAD)
-# Implement the optimization, commit it, and push this candidate branch.
-git push -u origin trask-muzzle-candidate
-candidate=$(git rev-parse HEAD)
+baseline=c71cd397be6400fea8f78a47a22215ba01c3a766
+candidate=$(git rev-parse origin/trask-muzzle-optimization-benchmark)
 gh workflow run muzzle-performance-comparison.yml \
   --repo open-telemetry/opentelemetry-java-instrumentation \
   --ref trask-muzzle-optimization-benchmark \
