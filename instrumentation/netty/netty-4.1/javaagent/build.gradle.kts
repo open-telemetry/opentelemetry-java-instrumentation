@@ -45,33 +45,25 @@ dependencies {
   testCompileOnly("io.netty:netty-transport-native-kqueue:4.1.11.Final:osx-x86_64")
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("ConnectionSpan") {
-          filter {
-            includeTestsMatching("Netty41ConnectionSpanTest")
-            includeTestsMatching("Netty41ClientSslTest")
-          }
-          include("**/Netty41ConnectionSpanTest.*", "**/Netty41ClientSslTest.*")
-          telemetryConfig("otel.instrumentation.netty.connection-telemetry.enabled", "true")
-          telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
-        }
+testing.suites {
+  executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+    configureDefault {
+      filter {
+        excludeTestsMatching("Netty41ConnectionSpanTest")
+        excludeTestsMatching("Netty41ClientSslTest")
       }
     }
-  }
-}
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("Netty41ConnectionSpanTest")
-      excludeTestsMatching("Netty41ClientSslTest")
+    register("ConnectionSpan") {
+      filter {
+        includeTestsMatching("Netty41ConnectionSpanTest")
+        includeTestsMatching("Netty41ClientSslTest")
+      }
+      include("**/Netty41ConnectionSpanTest.*", "**/Netty41ClientSslTest.*")
+      telemetryConfig("otel.instrumentation.netty.connection-telemetry.enabled", "true")
+      telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
     }
   }
 }

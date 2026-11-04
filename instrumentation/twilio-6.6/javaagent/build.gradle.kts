@@ -24,8 +24,8 @@ dependencies {
   latestDepTestLibrary("com.twilio.sdk:twilio:7.+") // documented limitation
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       if (name != "testDisabled") {
         jvmArgs("-Dotel.instrumentation.twilio.enabled=true")

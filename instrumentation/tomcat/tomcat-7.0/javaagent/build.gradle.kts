@@ -36,8 +36,8 @@ dependencies {
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+") // see tomcat-10.0 module
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       // required on jdk17
       jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")

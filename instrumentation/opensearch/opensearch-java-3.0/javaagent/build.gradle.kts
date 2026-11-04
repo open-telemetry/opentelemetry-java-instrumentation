@@ -46,8 +46,8 @@ dependencies {
   testImplementation("software.amazon.awssdk:regions:2.26.0")
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureDefault {
       filter {
         excludeTestsMatching("OpenSearchQuerySanitizationDisabledTest")

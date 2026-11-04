@@ -72,27 +72,10 @@ dependencies {
 }
 
 testing.suites {
-  named<JvmTestSuite>("test") {
-    executions {
-      register("NewServerAt") {
-        systemProperty("testNewServerAt", true)
-      }
-    }
-  }
-
   register<JvmTestSuite>("pekko11Test") {
     dependencies {
       implementation("org.apache.pekko:pekko-http_2.13:1.1.0")
       implementation("org.apache.pekko:pekko-stream_2.13:1.1.0")
-    }
-    executions {
-      register("NoSpanSuppression") {
-        jvmArgs("-Dotel.instrumentation.common.span-suppression-strategy=none")
-
-        filter {
-          includeTestsMatching("*PekkoHttpServerInstrumentationTestAsync.successfulGetRequest")
-        }
-      }
     }
   }
 
@@ -133,6 +116,22 @@ testing.suites {
       if (otelProps.testLatestDeps) {
         implementation("org.apache.pekko:pekko-slf4j_2.13:latest.release")
         implementation("org.apache.pekko:pekko-actor_2.13:latest.release")
+      }
+    }
+  }
+
+  executions("test") {
+    register("NewServerAt") {
+      systemProperty("testNewServerAt", true)
+    }
+  }
+
+  executions("pekko11Test") {
+    register("NoSpanSuppression") {
+      jvmArgs("-Dotel.instrumentation.common.span-suppression-strategy=none")
+
+      filter {
+        includeTestsMatching("*PekkoHttpServerInstrumentationTestAsync.successfulGetRequest")
       }
     }
   }
@@ -198,8 +197,6 @@ tasks {
     // required on jdk17
     jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   check {
