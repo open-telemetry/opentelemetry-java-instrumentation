@@ -23,9 +23,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.concurrent.Callable
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
+import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
+import kotlin.coroutines.resume
 
 // Behavior that depends on the coroutine caller frame chain, compared with and without the
 // annotation.
@@ -98,6 +102,57 @@ class TailCallWithSpanCallerFrameTest {
       call()
     }
     tag.get()
+  }
+
+  @Test
+  fun `thread context element of an inner withContext does not leak to the outer code after an unintercepted resume`() {
+    val inner = tracer.spanBuilder("inner").startSpan()
+    try {
+      val expected = tagAfterUninterceptedResume(inner) { unannotatedUnintercepted(it) }
+      assertThat(expected).isNull()
+      assertThat(tagAfterUninterceptedResume(inner) { annotatedUnintercepted(it) }).isEqualTo(expected)
+    } finally {
+      inner.end()
+    }
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          { it.hasName("inner").hasNoParent() },
+          { it.hasName("unintercepted").hasParent(trace.getSpan(0)) },
+        )
+      },
+    )
+  }
+
+  private fun tagAfterUninterceptedResume(inner: Span, call: suspend (Executor) -> Int): String? {
+    val executor = Executors.newSingleThreadExecutor()
+    try {
+      return CompletableFuture.supplyAsync {
+        runBlocking {
+          withContext(Dispatchers.Unconfined) {
+            withContext(TagElement("inner") + inner.storeInContext(Context.root()).asContextElement()) {
+              call(executor)
+            }
+            tag.get()
+          }
+        }
+      }.get(10, TimeUnit.SECONDS)
+    } finally {
+      executor.shutdown()
+    }
+  }
+
+  @WithSpan("unintercepted")
+  private suspend fun annotatedUnintercepted(executor: Executor) = unannotatedUnintercepted(executor)
+
+  // resumed without interception, so no runtime frame applies the callee's context
+  private suspend fun unannotatedUnintercepted(executor: Executor): Int {
+    val value = suspendCoroutineUninterceptedOrReturn { continuation ->
+      executor.execute { continuation.resume(1) }
+      COROUTINE_SUSPENDED
+    }
+    return value + 1
   }
 
   @Test

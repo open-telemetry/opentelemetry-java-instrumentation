@@ -252,11 +252,11 @@ public class AnnotationInstrumentationHelper {
       Throwable error = KotlinResultUtilKt.exceptionOrNull(result);
       instrumenter().end(spanContext, (MethodRequest) request, null, error);
 
-      // Resuming the caller here switches the thread context in the middle of a task the runtime
-      // started with another context. Under an undispatched withContext the runtime may restore
-      // that task's context later, out of order with the switch, so let the caller's interceptor
-      // resume it with its own context instead.
-      if (Context.current() != parentContext && UndispatchedMarker.mayBeIn(delegate.getContext())) {
+      // When the runtime resumed the callee with its context, resuming the caller here switches the
+      // thread context in the middle of that task. Under an undispatched withContext the runtime
+      // may restore the task's context later, out of order with the switch, so let the caller's
+      // interceptor resume it with its own context instead.
+      if (Context.current() == spanContext && UndispatchedMarker.mayBeIn(delegate.getContext())) {
         Continuation<T> intercepted = IntrinsicsKt.intercepted(delegate);
         if (intercepted != delegate) {
           if (!dispatchedAnyway(result)) {
