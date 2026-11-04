@@ -36,8 +36,8 @@ import java.util.function.Function;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscription;
 import reactor.core.CoreSubscriber;
-import reactor.core.Fuseable;
 import reactor.core.Scannable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
@@ -72,6 +72,8 @@ public final class ContextPropagationOperator {
           return "otel-trace-context";
         }
       };
+
+  private static final Object NO_SUBSCRIPTION_CONTEXT_CAPTURE_KEY = new Object();
 
   private static final Object lock = new Object();
 
@@ -129,14 +131,31 @@ public final class ContextPropagationOperator {
 
   /**
    * Stores Trace {@link io.opentelemetry.context.Context} in Reactor {@link
-   * reactor.util.context.Context}.
+   * reactor.util.context.Context}. The stored context is authoritative during signals, including
+   * {@link Context#root()}, and replaces any {@link #withoutSubscriptionContextCapture} state.
    *
    * @param context Reactor's context to store trace context in.
    * @param traceContext Trace context to be stored.
    */
   public static reactor.util.context.Context storeOpenTelemetryContext(
       reactor.util.context.Context context, Context traceContext) {
-    return context.put(TRACE_CONTEXT_KEY, traceContext);
+    return context.delete(NO_SUBSCRIPTION_CONTEXT_CAPTURE_KEY).put(TRACE_CONTEXT_KEY, traceContext);
+  }
+
+  /**
+   * Removes any stored OpenTelemetry context and disables implicit capture of the context active at
+   * subscription time. Unlike storing {@link Context#root()}, this leaves the context active during
+   * signals unchanged.
+   *
+   * <p>A subsequent call to {@link #storeOpenTelemetryContext} replaces this behavior.
+   */
+  public static reactor.util.context.Context withoutSubscriptionContextCapture(
+      reactor.util.context.Context context) {
+    return context.delete(TRACE_CONTEXT_KEY).put(NO_SUBSCRIPTION_CONTEXT_CAPTURE_KEY, true);
+  }
+
+  static boolean isSubscriptionContextCaptureDisabled(reactor.util.context.Context context) {
+    return context.hasKey(NO_SUBSCRIPTION_CONTEXT_CAPTURE_KEY);
   }
 
   /**
@@ -232,8 +251,7 @@ public final class ContextPropagationOperator {
 
   private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift(
       ReactorAsyncOperationEndStrategy asyncOperationEndStrategy) {
-    return Operators.lift(
-        ContextPropagationOperator::shouldInstrument, new Lifter<>(asyncOperationEndStrategy));
+    return Operators.lift(new Lifter<>(asyncOperationEndStrategy));
   }
 
   /** Forces Mono to run in traceContext scope. */
@@ -278,6 +296,38 @@ public final class ContextPropagationOperator {
     }
   }
 
+  /**
+   * Runs the source subscription, upstream Reactor context lookup, and request and cancellation
+   * calls in {@code operationContext}, and callbacks to the immediate downstream subscriber in
+   * {@code applicationContext}, including when either context is {@link Context#root()}.
+   *
+   * <p>The source sees {@code operationContext} in its Reactor context, preserving all unrelated
+   * entries. Downstream tracing subscribers retain their own context policy, so this boundary does
+   * not associate an application context with values across fan-in operators. It works without
+   * registering propagation hooks; it does not propagate context across arbitrary asynchronous work
+   * inside the source.
+   */
+  public static <T> Mono<T> runWithContext(
+      Mono<T> source, Context operationContext, Context applicationContext) {
+    return new ContextBoundaryMono<>(source, operationContext, applicationContext);
+  }
+
+  /**
+   * Runs the source subscription, upstream Reactor context lookup, and request and cancellation
+   * calls in {@code operationContext}, and callbacks to the immediate downstream subscriber in
+   * {@code applicationContext}, including when either context is {@link Context#root()}.
+   *
+   * <p>The source sees {@code operationContext} in its Reactor context, preserving all unrelated
+   * entries. Downstream tracing subscribers retain their own context policy, so this boundary does
+   * not associate an application context with values across fan-in operators. It works without
+   * registering propagation hooks; it does not propagate context across arbitrary asynchronous work
+   * inside the source.
+   */
+  public static <T> Flux<T> runWithContext(
+      Flux<T> source, Context operationContext, Context applicationContext) {
+    return new ContextBoundaryFlux<>(source, operationContext, applicationContext);
+  }
+
   @SuppressWarnings({"TypeParameterUnusedInFormals", "unchecked"}) // fine
   private static <T extends Throwable> T sneakyThrow(Throwable t) throws T {
     throw (T) t;
@@ -298,9 +348,125 @@ public final class ContextPropagationOperator {
     }
   }
 
-  private static boolean shouldInstrument(Scannable publisher) {
-    // skip if Flux/Mono #just, #empty, #error
-    return !(publisher instanceof Fuseable.ScalarCallable);
+  private static final class ContextBoundaryMono<T> extends Mono<T> implements Scannable {
+    private final Mono<T> source;
+    private final Context operationContext;
+    private final Context applicationContext;
+
+    private ContextBoundaryMono(
+        Mono<T> source, Context operationContext, Context applicationContext) {
+      this.source = source;
+      this.operationContext = operationContext;
+      this.applicationContext = applicationContext;
+    }
+
+    @Override
+    public void subscribe(CoreSubscriber<? super T> actual) {
+      try (Scope ignored = operationContext.makeCurrent()) {
+        source.subscribe(
+            new ContextBoundarySubscriber<>(actual, operationContext, applicationContext));
+      }
+    }
+
+    @Override
+    @Nullable
+    @SuppressWarnings("rawtypes") // Reactor's Scannable contract exposes a raw Attr.
+    public Object scanUnsafe(Attr attr) {
+      return attr == Attr.PARENT ? source : null;
+    }
+  }
+
+  private static final class ContextBoundaryFlux<T> extends Flux<T> implements Scannable {
+    private final Flux<T> source;
+    private final Context operationContext;
+    private final Context applicationContext;
+
+    private ContextBoundaryFlux(
+        Flux<T> source, Context operationContext, Context applicationContext) {
+      this.source = source;
+      this.operationContext = operationContext;
+      this.applicationContext = applicationContext;
+    }
+
+    @Override
+    public void subscribe(CoreSubscriber<? super T> actual) {
+      try (Scope ignored = operationContext.makeCurrent()) {
+        source.subscribe(
+            new ContextBoundarySubscriber<>(actual, operationContext, applicationContext));
+      }
+    }
+
+    @Override
+    @Nullable
+    @SuppressWarnings("rawtypes") // Reactor's Scannable contract exposes a raw Attr.
+    public Object scanUnsafe(Attr attr) {
+      return attr == Attr.PARENT ? source : null;
+    }
+  }
+
+  private static final class ContextBoundarySubscriber<T>
+      implements CoreSubscriber<T>, Subscription {
+    private final CoreSubscriber<? super T> actual;
+    private final Context operationContext;
+    private final Context applicationContext;
+    private Subscription subscription;
+
+    private ContextBoundarySubscriber(
+        CoreSubscriber<? super T> actual, Context operationContext, Context applicationContext) {
+      this.actual = actual;
+      this.operationContext = operationContext;
+      this.applicationContext = applicationContext;
+    }
+
+    @Override
+    public reactor.util.context.Context currentContext() {
+      try (Scope ignored = operationContext.makeCurrent()) {
+        return storeOpenTelemetryContext(actual.currentContext(), operationContext);
+      }
+    }
+
+    @Override
+    public void onSubscribe(Subscription subscription) {
+      this.subscription = subscription;
+      try (Scope ignored = applicationContext.makeCurrent()) {
+        actual.onSubscribe(this);
+      }
+    }
+
+    @Override
+    public void onNext(T value) {
+      try (Scope ignored = applicationContext.makeCurrent()) {
+        actual.onNext(value);
+      }
+    }
+
+    @Override
+    public void onError(Throwable error) {
+      try (Scope ignored = applicationContext.makeCurrent()) {
+        actual.onError(error);
+      }
+    }
+
+    @Override
+    public void onComplete() {
+      try (Scope ignored = applicationContext.makeCurrent()) {
+        actual.onComplete();
+      }
+    }
+
+    @Override
+    public void request(long count) {
+      try (Scope ignored = operationContext.makeCurrent()) {
+        subscription.request(count);
+      }
+    }
+
+    @Override
+    public void cancel() {
+      try (Scope ignored = operationContext.makeCurrent()) {
+        subscription.cancel();
+      }
+    }
   }
 
   private static class Lifter<T>
