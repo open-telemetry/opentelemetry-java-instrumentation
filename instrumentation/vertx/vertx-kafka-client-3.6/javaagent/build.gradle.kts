@@ -37,7 +37,7 @@ testing.suites {
     }
 
     executions {
-      configureDefault {
+      configureEach {
         jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
       }
     }

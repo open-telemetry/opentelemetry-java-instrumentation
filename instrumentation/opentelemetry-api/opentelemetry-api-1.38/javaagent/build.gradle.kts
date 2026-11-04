@@ -42,7 +42,7 @@ testing.suites {
     }
 
     executions {
-      configureDefault {
+      configureEach {
         jvmArgs("-Dtesting.exporter.enabled=false")
       }
     }
