@@ -171,6 +171,35 @@ testing.suites {
     }
   }
 
+  register<JvmTestSuite>("logbackMdcLoggingKeysTest") {
+    dependencies {
+      if (otelProps.testLatestDeps) {
+        implementation("ch.qos.logback:logback-classic:latest.release")
+      } else {
+        implementation("ch.qos.logback:logback-classic") {
+          version {
+            strictly("1.0.0")
+          }
+        }
+        implementation("org.slf4j:slf4j-api") {
+          version {
+            strictly("1.7.36")
+          }
+        }
+      }
+    }
+
+    executions {
+      configureDefault {
+        jvmArgs("-Dotel.instrumentation.logback-mdc.add-baggage=true")
+        jvmArgs("-Dotel.instrumentation.common.logging.trace-id-key=trace_id_test")
+        jvmArgs("-Dotel.instrumentation.common.logging.span-id-key=span_id_test")
+        jvmArgs("-Dotel.instrumentation.common.logging.trace-flags-key=trace_flags_test")
+        jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=*")
+      }
+    }
+  }
+
   register<JvmTestSuite>("logstashMarkerTest") {
     dependencies {
       implementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
