@@ -32,12 +32,6 @@ dependencies {
   testImplementation("net.bytebuddy:byte-buddy")
 }
 
-tasks {
-  compileTestJava {
-    options.compilerArgs.add("-parameters")
-  }
-}
-
 testing.suites {
   executions("test") {
     configureDefault {

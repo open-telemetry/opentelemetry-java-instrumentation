@@ -50,8 +50,13 @@ testing.suites {
       implementation(project(":instrumentation:reactor:reactor-3.1:library"))
       implementation(project(":javaagent-bootstrap"))
       implementation(project(":javaagent-extension-api"))
-      implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
       implementation("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
+    }
+
+    executions {
+      configureDefault {
+        jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+      }
     }
   }
 
@@ -69,7 +74,6 @@ testing.suites {
       implementation(project(":instrumentation:reactor:reactor-3.1:library"))
       implementation(project(":javaagent-bootstrap"))
       implementation(project(":javaagent-extension-api"))
-      implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
       implementation("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
     }
   }
@@ -93,12 +97,6 @@ testing.suites {
       if (otelProps.testLatestDeps) {
         implementation("io.projectreactor:reactor-core:3.4.+")
       }
-    }
-  }
-
-  executions("unitTests") {
-    configureDefault {
-      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     }
   }
 

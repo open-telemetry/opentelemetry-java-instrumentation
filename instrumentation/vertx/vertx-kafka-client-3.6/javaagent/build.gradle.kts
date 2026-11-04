@@ -32,7 +32,6 @@ testing {
         implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
         implementation(project(":javaagent-bootstrap"))
         implementation(project(":javaagent-extension-api"))
-        implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
         implementation("io.vertx:vertx-kafka-client:3.6.0")
       }
 

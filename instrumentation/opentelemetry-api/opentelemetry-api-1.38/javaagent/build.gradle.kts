@@ -27,26 +27,22 @@ configurations.configureEach {
   }
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("incubatorTest") {
-      dependencies {
-        implementation("io.opentelemetry:opentelemetry-api-incubator:1.38.0-alpha")
-      }
+testing.suites {
+  register<JvmTestSuite>("incubatorTest") {
+    dependencies {
+      implementation("io.opentelemetry:opentelemetry-api-incubator:1.38.0-alpha")
     }
   }
 
-  suites {
-    register<JvmTestSuite>("noopTest") {
-      dependencies {
-        implementation("io.opentelemetry:opentelemetry-api-incubator:1.38.0-alpha")
-      }
+  register<JvmTestSuite>("noopTest") {
+    dependencies {
+      implementation("io.opentelemetry:opentelemetry-api-incubator:1.38.0-alpha")
+    }
 
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dtesting.exporter.enabled=false")
-          }
+    targets {
+      all {
+        testTask.configure {
+          jvmArgs("-Dtesting.exporter.enabled=false")
         }
       }
     }
