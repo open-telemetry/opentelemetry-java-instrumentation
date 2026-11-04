@@ -52,12 +52,6 @@ testing.suites {
       implementation(project(":javaagent-extension-api"))
       implementation("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
     }
-
-    executions {
-      configureDefault {
-        jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-      }
-    }
   }
 
   register<JvmTestSuite>("receiveTelemetryDisabledUnitTests") {
@@ -97,6 +91,12 @@ testing.suites {
       if (otelProps.testLatestDeps) {
         implementation("io.projectreactor:reactor-core:3.4.+")
       }
+    }
+  }
+
+  executions("unitTests") {
+    configureDefault {
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     }
   }
 
