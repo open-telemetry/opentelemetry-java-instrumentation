@@ -41,8 +41,8 @@ dependencies {
   testLibrary("org.jboss.resteasy:resteasy-servlet-initializer:6.0.0.Final")
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
       if (otelProps.denyUnsafe) {

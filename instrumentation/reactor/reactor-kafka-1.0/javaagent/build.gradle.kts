@@ -50,7 +50,6 @@ testing.suites {
       implementation(project(":instrumentation:reactor:reactor-3.1:library"))
       implementation(project(":javaagent-bootstrap"))
       implementation(project(":javaagent-extension-api"))
-      implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
       implementation("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
     }
   }
@@ -69,7 +68,6 @@ testing.suites {
       implementation(project(":instrumentation:reactor:reactor-3.1:library"))
       implementation(project(":javaagent-bootstrap"))
       implementation(project(":javaagent-extension-api"))
-      implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
       implementation("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
     }
   }
@@ -97,7 +95,7 @@ testing.suites {
   }
 
   executions("unitTests") {
-    configureDefault {
+    configureEach {
       jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     }
   }

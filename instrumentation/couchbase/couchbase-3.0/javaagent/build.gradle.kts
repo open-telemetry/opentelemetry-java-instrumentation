@@ -30,8 +30,8 @@ dependencies {
   latestDepTestLibrary("com.couchbase.client:java-client:3.0.10") // no longer applicable
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       if (otelProps.denyUnsafe) {
         enabled = false

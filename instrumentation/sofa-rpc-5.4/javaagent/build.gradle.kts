@@ -39,7 +39,6 @@ testing.suites {
 
   executions {
     configureEach {
-      systemProperty("testLatestDeps", otelProps.testLatestDeps)
       jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
       // required on jdk17
       jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")

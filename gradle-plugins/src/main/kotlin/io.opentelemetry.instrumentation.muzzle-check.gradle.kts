@@ -5,7 +5,6 @@
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import io.opentelemetry.javaagent.muzzle.AcceptableVersions
-import io.opentelemetry.javaagent.muzzle.MuzzleBenchmarkSupport
 import io.opentelemetry.javaagent.muzzle.MuzzleDirective
 import io.opentelemetry.javaagent.muzzle.MuzzleExtension
 import io.opentelemetry.javaagent.muzzle.matcher.MuzzleGradlePluginUtil
@@ -27,7 +26,6 @@ import org.eclipse.aether.version.Version
 import java.io.File
 import java.net.URL
 import java.net.URLClassLoader
-import java.nio.file.Files
 import java.util.stream.StreamSupport
 
 plugins {
@@ -37,12 +35,6 @@ plugins {
 
 // Select a random set of versions to test
 val RANGE_COUNT_LIMIT = Integer.getInteger("otel.javaagent.muzzle.versions.limit", 10)
-
-val muzzleBenchmarkSeed = providers.gradleProperty("muzzleBenchmarkSeed").orNull?.toLong()
-val muzzleBenchmarkReportDirectory = providers.gradleProperty("muzzleBenchmarkReportDirectory").orNull?.let(::File)
-check(muzzleBenchmarkReportDirectory == null || muzzleBenchmarkSeed != null) {
-  "Muzzle benchmark reporting requires muzzleBenchmarkSeed"
-}
 
 // Read pinned latest-dep versions to cap muzzle's open-ended version ranges,
 // preventing failures when new library versions are released to Maven Central.
@@ -405,7 +397,6 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
     val excludedNames = muzzleDirective.excludedInstrumentationNames.get()
     val excludedModules = muzzleDirective.excludedInstrumentationModules.get()
     val shouldAssertPass = muzzleDirective.assertPass.get()
-    val benchmarkReportDirectory = muzzleBenchmarkReportDirectory
 
     dependsOn(configurations.named("runtimeClasspath"))
     dependsOn(shadowModule)
@@ -413,9 +404,6 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
     dependsOn(shadowMuzzleBootstrap)
 
     doLast {
-      if (benchmarkReportDirectory != null) {
-        Files.deleteIfExists(MuzzleBenchmarkSupport.reportFile(benchmarkReportDirectory, path).toPath())
-      }
       // Create instrumentation classloader
       val instrumentationUrls = arrayOf(
         muzzleShadowJarFile.get().asFile.toURI().toURL(),
@@ -444,9 +432,6 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
             throw e
           }
         }
-      }
-      if (benchmarkReportDirectory != null) {
-        MuzzleBenchmarkSupport.record(benchmarkReportDirectory, path, shouldAssertPass, excludedNames, excludedModules, artifacts)
       }
     }
   }
@@ -486,9 +471,6 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
     artifact = allVersionsArtifact
   }
   val allRangeResult = system.resolveVersionRange(session, allRangeRequest)
-  if (muzzleBenchmarkSeed != null) {
-    MuzzleBenchmarkSupport.requireVersionMetadata(system, session, allRangeResult, upperBound?.toString() == "0.0")
-  }
 
   val rangeRequest = VersionRangeRequest().apply {
     repositories = repos
@@ -520,22 +502,14 @@ fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, sessio
 fun filterVersions(range: VersionRangeResult, skipVersions: Set<String>, upperBound: Version?) = sequence {
   val predicate = AcceptableVersions(skipVersions)
   fun accept(version: Version?): Boolean = version != null && predicate.test(version) && (upperBound == null || version <= upperBound)
-  val seed = muzzleBenchmarkSeed
-  val versions = if (seed == null) range.versions else range.versions.filter(::accept).sorted()
-  val lowest = if (seed == null) range.lowestVersion else versions.firstOrNull()
-  val highest = if (seed == null) range.highestVersion else versions.lastOrNull()
-  if (accept(lowest)) {
-    yield(lowest.toString())
+  if (accept(range.lowestVersion)) {
+    yield(range.lowestVersion.toString())
   }
-  if (accept(highest)) {
-    yield(highest.toString())
+  if (accept(range.highestVersion)) {
+    yield(range.highestVersion.toString())
   }
 
-  val copy: List<Version> = if (seed == null) {
-    range.versions.shuffled()
-  } else {
-    versions.shuffled(MuzzleBenchmarkSupport.randomFor("$path:${range.request.artifact}", seed))
-  }
+  val copy: List<Version> = range.versions.shuffled()
   for (version in copy) {
     if (accept(version)) {
       yield(version.toString())
@@ -560,10 +534,6 @@ fun muzzleDirectiveToArtifacts(muzzleDirective: MuzzleDirective, system: Reposit
     artifact = directiveArtifact
   }
   val rangeResult = system.resolveVersionRange(session, rangeRequest)
-
-  if (muzzleBenchmarkSeed != null) {
-    MuzzleBenchmarkSupport.requireVersionMetadata(system, session, rangeResult, upperBound?.toString() == "0.0")
-  }
 
   val allVersionArtifacts = filterVersions(rangeResult, muzzleDirective.normalizedSkipVersions, upperBound)
     .map {

@@ -241,6 +241,15 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
           .describedAs("expected registered %s to contain all keys", type)
           .containsAll(expectedKeys);
 
+      map.forEach(
+          (key, count) -> {
+            if (key.startsWith(prefix) && !expectedKeys.contains(key)) {
+              assertThat(count)
+                  .describedAs("expected registered %s to have zero count for key %s", type, key)
+                  .isZero();
+            }
+          });
+
       reported.forEach(
           key ->
               assertThat(map.get(key))
