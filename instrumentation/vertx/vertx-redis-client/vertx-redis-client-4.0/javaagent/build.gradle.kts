@@ -36,16 +36,6 @@ dependencies {
 
 testing {
   suites {
-    withType<JvmTestSuite>().configureEach {
-      if (!name.endsWith("unitTests", true)) {
-        sources {
-          java {
-            srcDir("src/testShared/java")
-          }
-        }
-      }
-    }
-
     register<JvmTestSuite>("unitTests") {
       dependencies {
         implementation(project())
@@ -57,6 +47,7 @@ testing {
     register<JvmTestSuite>("test403") {
       sources {
         java {
+          srcDir("src/testShared/java")
           srcDir("src/testCompatibility/java")
         }
       }
@@ -70,6 +61,7 @@ testing {
     register<JvmTestSuite>("test445") {
       sources {
         java {
+          srcDir("src/testShared/java")
           srcDir("src/testCompatibility/java")
         }
       }
@@ -78,6 +70,14 @@ testing {
         implementation("io.vertx:vertx-redis-client:4.4.5")
         implementation("io.vertx:vertx-codegen:4.4.5")
         implementation("org.testcontainers:testcontainers")
+      }
+    }
+
+    named<JvmTestSuite>("test") {
+      sources {
+        java {
+          srcDir("src/testShared/java")
+        }
       }
     }
   }

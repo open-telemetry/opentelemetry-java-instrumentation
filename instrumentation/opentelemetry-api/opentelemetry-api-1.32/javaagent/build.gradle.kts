@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -36,13 +38,10 @@ testing {
       dependencies {
         implementation("io.opentelemetry:opentelemetry-extension-incubator:1.32.0-alpha")
       }
-
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dtesting.exporter.enabled=false")
-          }
-        }
+    }
+    executions("noopTest") {
+      configureEach {
+        jvmArgs("-Dtesting.exporter.enabled=false")
       }
     }
   }

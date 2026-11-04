@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -35,14 +37,16 @@ testing {
         implementation("io.modelcontextprotocol.sdk:mcp-core:0.14.1")
       }
     }
+
+    executions("test") {
+      configureDefault {
+        systemProperty("collectMetadata", otelProps.collectMetadata)
+      }
+    }
   }
 }
 
 tasks {
-  test {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
   check {
     dependsOn(testing.suites)
   }
