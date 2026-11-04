@@ -12,6 +12,7 @@ import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.metrics.InstrumentType;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.metrics.export.AggregationTemporalitySelector;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -28,23 +29,24 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
 
   private static final Logger logger = Logger.getLogger(OtlpInMemoryMetricExporter.class.getName());
 
+  private static final AggregationTemporalitySelector temporalitySelector =
+      initTemporalitySelector();
+
   private final Queue<byte[]> collectedRequests = new ConcurrentLinkedQueue<>();
 
-  private static final AggregationTemporality aggregationTemporality = initAggregationTemporality();
-
-  private static AggregationTemporality initAggregationTemporality() {
+  private static AggregationTemporalitySelector initTemporalitySelector() {
     // this configuration setting is for external users
     // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7902
     String temporalityProperty = System.getProperty("otel.javaagent.testing.exporter.temporality");
-    AggregationTemporality aggregationTemporality;
     if (temporalityProperty == null) {
-      aggregationTemporality = AggregationTemporality.DELTA;
-    } else {
-      aggregationTemporality =
-          AggregationTemporality.valueOf(temporalityProperty.toUpperCase(Locale.ROOT));
+      logger.log(CONFIG, "Setting aggregation temporality selector to deltaPreferred");
+      return AggregationTemporalitySelector.deltaPreferred();
     }
-    logger.log(CONFIG, "Setting aggregation temporality to {0}", aggregationTemporality.toString());
-    return aggregationTemporality;
+
+    AggregationTemporality aggregationTemporality =
+        AggregationTemporality.valueOf(temporalityProperty.toUpperCase(Locale.ROOT));
+    logger.log(CONFIG, "Setting aggregation temporality to {0}", aggregationTemporality);
+    return instrumentType -> aggregationTemporality;
   }
 
   List<byte[]> getCollectedExportRequests() {
@@ -57,7 +59,7 @@ class OtlpInMemoryMetricExporter implements MetricExporter {
 
   @Override
   public AggregationTemporality getAggregationTemporality(InstrumentType instrumentType) {
-    return aggregationTemporality;
+    return temporalitySelector.getAggregationTemporality(instrumentType);
   }
 
   @Override
