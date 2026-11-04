@@ -34,10 +34,10 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -293,7 +293,7 @@ public abstract class AbstractThriftTest {
   protected SpanDataAssert assertClientSpan(
       SpanDataAssert span, String method, int port, boolean hasError) {
     span.hasName(CustomService.class.getName() + "/" + method)
-        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfyingExactly(
             equalTo(RPC_METHOD, CustomService.class.getName() + "/" + method),
@@ -317,7 +317,7 @@ public abstract class AbstractThriftTest {
       SpanDataAssert span, String className, String method, int port, String errorType) {
     className = getServerServiceName(className);
     return span.hasName(className + "/" + method)
-        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
         .hasKind(SpanKind.SERVER)
         .hasAttributesSatisfyingExactly(
             equalTo(RPC_METHOD, className + "/" + method),
@@ -338,7 +338,7 @@ public abstract class AbstractThriftTest {
       SpanDataAssert span, String className, String method, String errorType) {
     className = getServerServiceName(className);
     return span.hasName(className + "/" + method)
-        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
         .hasKind(SpanKind.SERVER)
         .hasAttributesSatisfyingExactly(
             equalTo(RPC_METHOD, className + "/" + method),
@@ -357,7 +357,7 @@ public abstract class AbstractThriftTest {
             metric ->
                 metric
                     .hasName("rpc.server.call.duration")
-                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->
@@ -365,8 +365,9 @@ public abstract class AbstractThriftTest {
                                 point ->
                                     point
                                         .hasBucketBoundaries(
-                                            0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0,
-                                            5.0, 10.0, 50.0, 100.0)
+                                            0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01,
+                                            0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0,
+                                            60.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
                                             equalTo(
@@ -379,7 +380,7 @@ public abstract class AbstractThriftTest {
             metric ->
                 metric
                     .hasName("rpc.client.call.duration")
-                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->
@@ -387,8 +388,9 @@ public abstract class AbstractThriftTest {
                                 point ->
                                     point
                                         .hasBucketBoundaries(
-                                            0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0,
-                                            5.0, 10.0, 50.0, 100.0)
+                                            0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01,
+                                            0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0,
+                                            60.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
                                             equalTo(SERVER_ADDRESS, "localhost"),
@@ -510,7 +512,7 @@ public abstract class AbstractThriftTest {
             metric ->
                 metric
                     .hasName("rpc.server.call.duration")
-                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->
@@ -518,8 +520,9 @@ public abstract class AbstractThriftTest {
                                 point ->
                                     point
                                         .hasBucketBoundaries(
-                                            0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0,
-                                            5.0, 10.0, 50.0, 100.0)
+                                            0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01,
+                                            0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0,
+                                            60.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
                                             equalTo(
@@ -533,7 +536,7 @@ public abstract class AbstractThriftTest {
             metric ->
                 metric
                     .hasName("rpc.client.call.duration")
-                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->
@@ -541,8 +544,9 @@ public abstract class AbstractThriftTest {
                                 point ->
                                     point
                                         .hasBucketBoundaries(
-                                            0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0,
-                                            5.0, 10.0, 50.0, 100.0)
+                                            0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01,
+                                            0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0,
+                                            60.0)
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
                                             equalTo(SERVER_ADDRESS, "localhost"),

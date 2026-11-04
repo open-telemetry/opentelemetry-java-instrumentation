@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes
 
+- Default RPC duration histogram boundaries now follow semantic conventions 1.45.0.
+- OSHI disk and network packet metrics now use `system.device.name` instead of `system.device`;
+  memory metrics use `system.memory.state="available"` instead of `"free"`.
 - Apache HttpClient 4.3 library instrumentation no longer automatically emits
   `network.peer.address` or `network.peer.port` inferred from the route target.
   Use `server.address` and `server.port` for logical destination grouping.
