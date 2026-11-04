@@ -201,6 +201,7 @@ public abstract class AbstractMongoClientTest<T> {
       expectedMetricKeys.add(NETWORK_PEER_PORT);
     }
     if (errorCode != null) {
+      expectedMetricKeys.add(DB_RESPONSE_STATUS_CODE);
       expectedMetricKeys.add(ERROR_TYPE);
     }
     assertDurationMetric(

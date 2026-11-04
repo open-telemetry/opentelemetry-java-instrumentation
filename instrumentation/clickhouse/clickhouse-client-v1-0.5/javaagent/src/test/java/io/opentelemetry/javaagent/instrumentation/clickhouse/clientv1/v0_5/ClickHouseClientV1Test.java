@@ -418,6 +418,7 @@ class ClickHouseClientV1Test {
         DB_SYSTEM_NAME,
         DB_QUERY_SUMMARY,
         DB_NAMESPACE,
+        DB_RESPONSE_STATUS_CODE,
         ERROR_TYPE,
         NETWORK_PEER_ADDRESS,
         NETWORK_PEER_PORT,
@@ -431,7 +432,10 @@ class ClickHouseClientV1Test {
                 .hasHistogramSatisfying(
                     histogram ->
                         histogram.hasPointsSatisfying(
-                            point -> point.hasAttribute(ERROR_TYPE, "60"))));
+                            point ->
+                                point
+                                    .hasAttribute(DB_RESPONSE_STATUS_CODE, "60")
+                                    .hasAttribute(ERROR_TYPE, "60"))));
   }
 
   @Test

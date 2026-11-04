@@ -456,6 +456,7 @@ class VertxRedisClientErrorTest {
                                         equalTo(SERVER_PORT, server.port),
                                         equalTo(NETWORK_PEER_ADDRESS, HOST),
                                         equalTo(NETWORK_PEER_PORT, server.port),
+                                        equalTo(DB_RESPONSE_STATUS_CODE, responseStatusCode),
                                         equalTo(ERROR_TYPE, errorType)))));
     assertThat(server.failure.get()).isNull();
   }

@@ -154,7 +154,11 @@ class DynamoDbErrorsTest {
           missingItem
               ? new AttributeKey<?>[] {DB_SYSTEM_NAME, DB_COLLECTION_NAME, DB_OPERATION_NAME}
               : new AttributeKey<?>[] {
-                DB_SYSTEM_NAME, DB_COLLECTION_NAME, DB_OPERATION_NAME, ERROR_TYPE
+                DB_SYSTEM_NAME,
+                DB_COLLECTION_NAME,
+                DB_OPERATION_NAME,
+                DB_RESPONSE_STATUS_CODE,
+                ERROR_TYPE
               });
       testing.waitAndAssertMetrics(
           "io.opentelemetry.aws-sdk-2.2",
@@ -175,6 +179,7 @@ class DynamoDbErrorsTest {
                                                 .put(DB_SYSTEM_NAME, "aws.dynamodb")
                                                 .put(DB_COLLECTION_NAME, "items")
                                                 .put(DB_OPERATION_NAME, "GetItem")
+                                                .put(DB_RESPONSE_STATUS_CODE, errorCode)
                                                 .put(ERROR_TYPE, errorCode)
                                                 .build()
                                                 .asMap());
