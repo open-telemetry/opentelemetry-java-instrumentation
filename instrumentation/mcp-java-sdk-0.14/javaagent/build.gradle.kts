@@ -28,20 +28,18 @@ dependencies {
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation-api"))
-        implementation("io.modelcontextprotocol.sdk:mcp-core:0.14.1")
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation-api"))
+      implementation("io.modelcontextprotocol.sdk:mcp-core:0.14.1")
     }
+  }
 
-    executions("test") {
-      configureDefault {
-        systemProperty("collectMetadata", otelProps.collectMetadata)
-      }
+  executions("test") {
+    configureDefault {
+      systemProperty("collectMetadata", otelProps.collectMetadata)
     }
   }
 }

@@ -19,19 +19,17 @@ dependencies {
   testImplementation(project(":instrumentation:thrift-0.13:testing"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation:thrift-0.13:testing"))
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:thrift-0.13:testing"))
     }
+  }
 
-    executions("test") {
-      configureDefault {
-        systemProperty("testLatestDeps", otelProps.testLatestDeps)
-      }
+  executions("test") {
+    configureDefault {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
     }
   }
 }

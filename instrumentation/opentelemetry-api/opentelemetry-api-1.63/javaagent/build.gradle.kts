@@ -28,17 +28,15 @@ configurations.configureEach {
   }
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("incubatorTest") {
-      dependencies {
-        implementation("io.opentelemetry:opentelemetry-api-incubator:1.63.0-alpha")
-      }
+testing.suites {
+  register<JvmTestSuite>("incubatorTest") {
+    dependencies {
+      implementation("io.opentelemetry:opentelemetry-api-incubator:1.63.0-alpha")
     }
-    executions("test") {
-      configureDefault {
-        jvmArgs("-Dotel.instrumentation.opentelemetry-api-incubator.enabled=false")
-      }
+  }
+  executions("test") {
+    configureDefault {
+      jvmArgs("-Dotel.instrumentation.opentelemetry-api-incubator.enabled=false")
     }
   }
 }
