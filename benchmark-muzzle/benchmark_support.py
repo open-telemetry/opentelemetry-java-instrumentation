@@ -86,9 +86,11 @@ def task_outcomes(text):
         r"^> Task (\S+)(?: (UP-TO-DATE|FROM-CACHE|NO-SOURCE|SKIPPED|FAILED))?\s*$",
         text, re.MULTILINE,
     ):
-        if task in tasks:
+        observed = outcome or "EXECUTED"
+        # Gradle repeats ordinary task headers when delayed compiler diagnostics arrive.
+        if task in tasks and (":muzzle-Assert" in task or tasks[task] != observed):
             raise ValueError(f"Repeated Gradle task outcome: {task}")
-        tasks[task] = outcome or "EXECUTED"
+        tasks[task] = observed
     if not tasks:
         raise ValueError("No Gradle task outcomes in build log")
     return tasks

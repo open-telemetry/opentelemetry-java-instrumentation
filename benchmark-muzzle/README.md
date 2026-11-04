@@ -76,6 +76,9 @@ execute, never restore from a task cache. The report rechecks the records, conso
 captured metadata, and Gradle profiles. Failed or incomplete jobs and changed workloads invalidate
 the comparison; the runner neither retries samples nor drops outliers.
 
+Gradle can repeat ordinary task headers when compiler diagnostics arrive. Identical ordinary
+headers count once; conflicting outcomes and repeated assertion headers still fail verification.
+
 Cross-job reporting also requires identical recorded runner images. A hosted-runner image rollout
 can invalidate the aggregate report. Individual same-runner profiles can still support diagnosis,
 but do not drop mismatched jobs or combine replacement samples into a valid comparison.

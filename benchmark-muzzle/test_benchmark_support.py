@@ -50,9 +50,21 @@ class BenchmarkSupportTest(unittest.TestCase):
             ":byteBuddyJava": "UP-TO-DATE",
             ":example:muzzle-AssertPass-library-1.0": "EXECUTED",
         })
-        for log in ("BUILD SUCCESSFUL", "> Task :compileJava\n> Task :compileJava\n"):
+        for log in (
+            "BUILD SUCCESSFUL",
+            "> Task :compileJava\n> Task :compileJava FROM-CACHE\n",
+            "> Task :example:muzzle-AssertPass-library\n> Task :example:muzzle-AssertPass-library\n",
+        ):
             with self.assertRaises(ValueError):
                 benchmark.task_outcomes(log)
+
+    def test_repeated_compiler_headers_do_not_count_as_extra_executions(self):
+        self.assertEqual(benchmark.task_outcomes(
+            "> Task :compileKotlin\n"
+            "> Task :compileJava NO-SOURCE\n"
+            "> Task :compileKotlin\n"
+            "w: Language version 2.0 is deprecated.\n"
+        ), {":compileKotlin": "EXECUTED", ":compileJava": "NO-SOURCE"})
 
     def test_inventory_detects_changed_metadata(self):
         with tempfile.TemporaryDirectory() as directory:
