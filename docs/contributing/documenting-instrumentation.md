@@ -191,6 +191,8 @@ List of possible options:
 - [FAAS_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md)
 - [GENAI_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-spans.md)
 - [GENAI_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-metrics.md#generative-ai-client-metrics)
+- [MCP_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/mcp.md#client)
+- [MCP_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/mcp.md#metric-mcpclientoperationduration)
 
 ### Features (optional)
 
