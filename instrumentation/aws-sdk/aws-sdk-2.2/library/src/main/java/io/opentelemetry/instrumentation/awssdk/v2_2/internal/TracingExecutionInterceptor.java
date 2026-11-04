@@ -25,8 +25,10 @@ import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +45,7 @@ import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.SdkHttpResponse;
+import software.amazon.awssdk.utils.IoUtils;
 
 /**
  * AWS request execution interceptor.
@@ -394,9 +397,9 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       Context.ModifyHttpResponse context, ExecutionAttributes executionAttributes) {
     Optional<InputStream> responseBody = context.responseBody();
     if (recordIndividualHttpError) {
-      String errorMsg = extractHttpErrorAsEvent(context, executionAttributes);
-      if (errorMsg != null) {
-        return Optional.of(new ByteArrayInputStream(errorMsg.getBytes(Charset.defaultCharset())));
+      byte[] errorBody = recordHttpErrorAsEvent(context, executionAttributes);
+      if (errorBody != null) {
+        return Optional.of(new ByteArrayInputStream(errorBody));
       }
     }
     return responseBody;
@@ -454,7 +457,9 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
   }
 
-  private static String extractHttpErrorAsEvent(
+  // returns the consumed response body so that the SDK can still read it unchanged
+  @Nullable
+  private static byte[] recordHttpErrorAsEvent(
       Context.AfterTransmission context, ExecutionAttributes executionAttributes) {
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
     if (otelContext != null) {
@@ -466,16 +471,23 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
         // we want to record the error message from http response
         Optional<InputStream> responseBody = context.responseBody();
         if (responseBody.isPresent()) {
+          byte[] errorBody;
+          try {
+            errorBody = IoUtils.toByteArray(responseBody.get());
+          } catch (IOException e) {
+            throw new UncheckedIOException(e);
+          }
           String errorMsg =
               new BufferedReader(
-                      new InputStreamReader(responseBody.get(), Charset.defaultCharset()))
+                      new InputStreamReader(
+                          new ByteArrayInputStream(errorBody), Charset.defaultCharset()))
                   .lines()
                   .collect(joining("\n"));
           Attributes attributes =
               Attributes.of(
                   HTTP_RESPONSE_STATUS_CODE, Long.valueOf(errorCode), HTTP_ERROR_MSG, errorMsg);
           span.addEvent(HTTP_FAILURE_EVENT, attributes);
-          return errorMsg;
+          return errorBody;
         }
       }
     }
