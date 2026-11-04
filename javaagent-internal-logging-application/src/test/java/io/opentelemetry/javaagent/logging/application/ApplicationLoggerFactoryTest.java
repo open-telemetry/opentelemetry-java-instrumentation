@@ -92,7 +92,7 @@ class ApplicationLoggerFactoryTest {
     underTest.install(applicationLoggerBridge);
 
     // the logger created after install is no longer an in-memory one, it logs through the
-    // application logging system - wrapped, see TransformSafeApplicationLoggerFactory
+    // application logging system - wrapped, see TransformSafeLoggerFactory
     InternalLogger afterInstall = underTest.create("logger");
     assertThat(afterInstall).isNotInstanceOf(ApplicationLogger.class);
 
