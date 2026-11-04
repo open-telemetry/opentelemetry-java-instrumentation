@@ -176,6 +176,7 @@ class ServicePeerResolverTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void assertNamespace(@Nullable String expected, Attributes attrs) {
     if (emitStableServicePeerSemconv()) {
       if (expected != null) {
