@@ -38,12 +38,12 @@ class ResponsesTest extends AbstractResponsesTest {
 
   @Override
   protected OpenAIClient wrap(OpenAIClient client) {
-    return telemetry.wrap(client);
+    return telemetry.instrument(client);
   }
 
   @Override
   protected OpenAIClientAsync wrap(OpenAIClientAsync client) {
-    return telemetry.wrap(client);
+    return telemetry.instrument(client);
   }
 
   @Override
