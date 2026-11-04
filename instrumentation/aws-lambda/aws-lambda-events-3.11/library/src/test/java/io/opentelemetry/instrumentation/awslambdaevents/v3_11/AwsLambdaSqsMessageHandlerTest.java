@@ -109,7 +109,7 @@ class AwsLambdaSqsMessageHandlerTest {
                             equalTo(stringKey("faas.invocation.id"), "1-22-333")),
                 span ->
                     span.hasName("process queue1")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasKind(SpanKind.CONSUMER)
                         .hasStatus(StatusData.unset())
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
@@ -136,7 +136,7 @@ class AwsLambdaSqsMessageHandlerTest {
                                 Attributes.of(MESSAGING_MESSAGE_ID, "message2"))),
                 span ->
                     span.hasName("process queue1")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasKind(SpanKind.CONSUMER)
                         .hasStatus(StatusData.unset())
                         .hasParentSpanId(trace.getSpan(1).getSpanId())
@@ -155,7 +155,7 @@ class AwsLambdaSqsMessageHandlerTest {
                                     TraceState.getDefault()))),
                 span ->
                     span.hasName("process queue1")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasKind(SpanKind.CONSUMER)
                         .hasStatus(StatusData.error())
                         .hasParentSpanId(trace.getSpan(1).getSpanId())

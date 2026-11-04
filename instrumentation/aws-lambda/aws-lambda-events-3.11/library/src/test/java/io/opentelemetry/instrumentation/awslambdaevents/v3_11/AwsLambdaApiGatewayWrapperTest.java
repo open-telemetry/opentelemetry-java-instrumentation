@@ -113,7 +113,7 @@ class AwsLambdaApiGatewayWrapperTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("GET /hello/{param}")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasKind(SpanKind.SERVER)
                         .hasStatus(statusCode >= 500 ? StatusData.error() : StatusData.unset())
                         .hasEventsSatisfyingExactly()
@@ -166,7 +166,7 @@ class AwsLambdaApiGatewayWrapperTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("my_function")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasKind(SpanKind.SERVER)
                         .hasStatus(StatusData.unset())
                         .hasEventsSatisfyingExactly()

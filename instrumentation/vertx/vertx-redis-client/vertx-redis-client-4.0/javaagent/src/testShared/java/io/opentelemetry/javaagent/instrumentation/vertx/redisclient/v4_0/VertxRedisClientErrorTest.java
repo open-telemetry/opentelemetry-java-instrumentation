@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -234,7 +235,8 @@ class VertxRedisClientErrorTest {
   @Test
   void collidingBinaryMapKeysDoNotHideNestedServerError()
       throws ExecutionException, IOException, InterruptedException, TimeoutException {
-    assumeTrue(testLatestDeps());
+    String vertxVersion = Vertx.class.getPackage().getImplementationVersion();
+    assumeTrue(testLatestDeps() && vertxVersion != null && vertxVersion.startsWith("5."));
     RedisConnection connection = connectRaw(resp3MapWithCollidingBinaryKeys());
 
     Response response =
@@ -426,7 +428,7 @@ class VertxRedisClientErrorTest {
                             equalTo(SERVER_PORT, server.port),
                             equalTo(NETWORK_PEER_ADDRESS, HOST),
                             equalTo(NETWORK_PEER_PORT, server.port),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(ERROR_TYPE, errorType))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,

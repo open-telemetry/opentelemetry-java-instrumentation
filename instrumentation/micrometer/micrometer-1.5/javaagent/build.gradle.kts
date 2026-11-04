@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -34,10 +36,22 @@ testing {
   }
 }
 
-tasks {
-  val testJvmMetricsOwnership = register<Test>("testJvmMetricsOwnership") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+testing.suites.executions("test") {
+  configureEach {
+    jvmArgs("-Dotel.instrumentation.micrometer.enabled=true")
+  }
+
+  configureDefault {
+    filter {
+      excludeTestsMatching("*TimerMillisecondsTest")
+      excludeTestsMatching("*PrometheusModeTest")
+      excludeTestsMatching("*HistogramGaugesTest")
+      excludeTestsMatching("*JvmMetricsOwnershipEnabledTest")
+      excludeTestsMatching("*JvmMetricsOwnershipJfrTest")
+    }
+  }
+
+  register("JvmMetricsOwnership") {
     filter {
       includeTestsMatching("*JvmMetricsOwnershipEnabledTest")
     }
@@ -49,9 +63,7 @@ tasks {
     )
   }
 
-  val testJvmMetricsOwnershipJfr = register<Test>("testJvmMetricsOwnershipJfr") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  register("JvmMetricsOwnershipJfr") {
     filter {
       includeTestsMatching("*JvmMetricsOwnershipJfrTest")
     }
@@ -63,9 +75,7 @@ tasks {
     enabled = (otelProps.testJavaVersion ?: JavaVersion.current()).isCompatibleWith(JavaVersion.VERSION_17)
   }
 
-  val testPrometheusMode = register<Test>("testPrometheusMode") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  register("PrometheusMode") {
     filter {
       includeTestsMatching("*PrometheusModeTest")
     }
@@ -73,9 +83,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.micrometer.prometheus-mode.enabled=true")
   }
 
-  val testBaseTimeUnit = register<Test>("testBaseTimeUnit") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  register("BaseTimeUnit") {
     filter {
       includeTestsMatching("*TimerMillisecondsTest")
     }
@@ -83,38 +91,17 @@ tasks {
     jvmArgs("-Dotel.instrumentation.micrometer.base-time-unit=milliseconds")
   }
 
-  val testHistogramGauges = register<Test>("testHistogramGauges") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  register("HistogramGauges") {
     filter {
       includeTestsMatching("*HistogramGaugesTest")
     }
     include("**/*HistogramGaugesTest.*")
     jvmArgs("-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true")
   }
+}
 
-  test {
-    filter {
-      excludeTestsMatching("*TimerMillisecondsTest")
-      excludeTestsMatching("*PrometheusModeTest")
-      excludeTestsMatching("*HistogramGaugesTest")
-      excludeTestsMatching("*JvmMetricsOwnershipEnabledTest")
-      excludeTestsMatching("*JvmMetricsOwnershipJfrTest")
-    }
-  }
-
+tasks {
   check {
-    dependsOn(
-      testing.suites,
-      testJvmMetricsOwnership,
-      testJvmMetricsOwnershipJfr,
-      testBaseTimeUnit,
-      testPrometheusMode,
-      testHistogramGauges,
-    )
-  }
-
-  withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.micrometer.enabled=true")
+    dependsOn(testing.suites)
   }
 }

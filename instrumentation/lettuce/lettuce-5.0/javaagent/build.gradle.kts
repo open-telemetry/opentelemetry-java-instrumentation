@@ -1,5 +1,9 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -24,153 +28,80 @@ dependencies {
   latestDepTestLibrary("io.lettuce:lettuce-core:5.0.+") // see test suite below
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation-api-incubator"))
-        implementation(project(":javaagent-extension-api"))
-        implementation("io.lettuce:lettuce-core:5.0.0.RELEASE")
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation-api-incubator"))
+      implementation(project(":javaagent-extension-api"))
+      implementation("io.lettuce:lettuce-core:5.0.0.RELEASE")
+    }
+  }
+
+  register<JvmTestSuite>("lettuce51Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
     }
 
-    register<JvmTestSuite>("testPreviewSemconvUnitTests") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/unitTests/java"))
-        }
-      }
+    dependencies {
+      val lettuceVersion = baseVersion("5.1.0.RELEASE").orLatest("5.+")
+      implementation("io.lettuce:lettuce-core:$lettuceVersion")
+      implementation("org.testcontainers:testcontainers")
+    }
+  }
 
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation-api-incubator"))
-        implementation(project(":javaagent-extension-api"))
-        implementation("io.lettuce:lettuce-core:5.0.0.RELEASE")
-      }
-
-      targets.all {
-        testTask.configure {
-          jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-        }
+  register<JvmTestSuite>("lettuce60Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
     }
 
-    register<JvmTestSuite>("lettuce51Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
-      }
+    dependencies {
+      val lettuceVersion = baseVersion("6.0.0.RELEASE").orLatest("6.4.+")
+      implementation("io.lettuce:lettuce-core:$lettuceVersion")
+      implementation("org.testcontainers:testcontainers")
+    }
+  }
 
-      dependencies {
-        val lettuceVersion = baseVersion("5.1.0.RELEASE").orLatest("5.+")
-        implementation("io.lettuce:lettuce-core:$lettuceVersion")
-        implementation("org.testcontainers:testcontainers")
+  register<JvmTestSuite>("lettuce65Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java", "src/testLettuce65/java"))
       }
     }
 
-    register<JvmTestSuite>("lettuce60Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
-      }
+    dependencies {
+      val lettuceVersion = baseVersion("6.5.0.RELEASE").orLatest()
+      implementation("io.lettuce:lettuce-core:$lettuceVersion")
+      implementation("org.testcontainers:testcontainers")
+    }
+  }
 
-      dependencies {
-        val lettuceVersion = baseVersion("6.0.0.RELEASE").orLatest("6.4.+")
-        implementation("io.lettuce:lettuce-core:$lettuceVersion")
-        implementation("org.testcontainers:testcontainers")
-      }
+  executions("test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.lettuce.experimental-span-attributes", "true")
     }
 
-    register<JvmTestSuite>("lettuce65Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java", "src/testLettuce65/java"))
-        }
-      }
+    register("ConnectionTelemetryEnabled") {
+      telemetryConfig("otel.instrumentation.lettuce.connection-telemetry.enabled", "true")
+    }
+  }
 
-      dependencies {
-        val lettuceVersion = baseVersion("6.5.0.RELEASE").orLatest()
-        implementation("io.lettuce:lettuce-core:$lettuceVersion")
-        implementation("org.testcontainers:testcontainers")
+  executions("lettuce51Test") {
+    configureDefault {
+      if (otelProps.denyUnsafe) {
+        // Lettuce 5.1.0 pulls in Reactor 3.2.0, whose RingBuffer accesses sun.misc.Unsafe directly.
+        enabled = false
       }
     }
   }
 }
 
 tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
-  if (otelProps.denyUnsafe) {
-    // Lettuce 5.1.0 pulls in Reactor 3.2.0, whose RingBuffer accesses sun.misc.Unsafe directly.
-    named("lettuce51Test", Test::class) {
-      enabled = false
-    }
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.lettuce.experimental-span-attributes=true")
-  }
-
-  val testConnectionTelemetryEnabled = register<Test>("testConnectionTelemetryEnabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.lettuce.connection-telemetry.enabled=true")
-  }
-
-  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .filter { !it.name.endsWith("unitTests", true) }
-    .map { suite ->
-      register<Test>("${suite.name}PreviewSemconv") {
-        val sourceTask = named<Test>(suite.name).get()
-        setJvmArgs(sourceTask.jvmArgs)
-        setSystemProperties(sourceTask.systemProperties)
-
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        val previewSemconvConfig = "otel.semconv-stability.preview=service.peer"
-        jvmArgs("-D$previewSemconvConfig")
-        systemProperty(
-          "metadataConfig",
-          listOfNotNull(sourceTask.systemProperties["metadataConfig"], previewSemconvConfig)
-            .joinToString(","),
-        )
-        isEnabled = sourceTask.enabled
-      }
-    }
-
-  val testConnectionTelemetryEnabledPreviewSemconv =
-    register<Test>("testConnectionTelemetryEnabledPreviewSemconv") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      jvmArgs(
-        "-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true",
-        "-Dotel.semconv-stability.preview=service.peer"
-      )
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.preview=service.peer"
-      )
-    }
-
   check {
-    dependsOn(
-      testing.suites,
-      testConnectionTelemetryEnabled,
-      testConnectionTelemetryEnabledPreviewSemconv,
-      previewSemconvSuites,
-      testExperimental,
-    )
+    dependsOn(testing.suites)
   }
 }
