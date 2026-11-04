@@ -60,8 +60,8 @@ dependencies {
   latestDepTestLibrary("org.springframework.data:spring-data-elasticsearch:3.0.+") // see elasticsearch-transport-6.0 module
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       if (otelProps.denyUnsafe) {
         enabled = false

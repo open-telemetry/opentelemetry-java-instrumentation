@@ -55,8 +55,8 @@ dependencies {
   latestDepTestLibrary("org.apache.cxf:cxf-rt-ws-policy:3.+") // documented limitation
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
     }

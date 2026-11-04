@@ -38,8 +38,8 @@ tasks {
   }
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureDefault {
       jvmArgs("-Dotel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods=io.opentelemetry.test.annotation.TracedWithSpan[ignored]")
     }

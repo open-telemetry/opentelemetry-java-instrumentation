@@ -71,8 +71,8 @@ dependencies {
   latestDepTestLibrary("io.undertow:undertow-servlet:2.2.24.Final") // see jaxrs-2.0-resteasy-3.1 module
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
     }

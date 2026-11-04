@@ -20,8 +20,8 @@ dependencies {
   library("tech.powerjob:powerjob-official-processors:1.1.0")
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       // required on jdk17
       jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
