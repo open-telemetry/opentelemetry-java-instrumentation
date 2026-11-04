@@ -154,14 +154,6 @@ Both exclusion forms also apply to inverse checks.
 
 The source code of the gradle plugin is located in the `buildSrc` directory.
 
-### Repository CI slices
-
-Repository CI invokes `:instrumentation:muzzle1` through `:instrumentation:muzzle8` separately.
-A single exact slice selector discovers versions only for projects assigned to that slice.
-Each project's compatibility checks and random version sampling are unchanged.
-Mixed task invocations and direct assertion selectors retain their existing discovery behavior,
-as do external builds without the repository's slice assignments.
-
 ### Covering all versions and `assertInverse`
 
 Ideally when using the muzzle gradle plugin we should aim to cover all versions of the instrumented
