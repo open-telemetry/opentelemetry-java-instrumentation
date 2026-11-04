@@ -24,8 +24,8 @@ dependencies {
   library("io.reactivex:rxjava:1.0.8")
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       if (otelProps.denyUnsafe) {
         enabled = false

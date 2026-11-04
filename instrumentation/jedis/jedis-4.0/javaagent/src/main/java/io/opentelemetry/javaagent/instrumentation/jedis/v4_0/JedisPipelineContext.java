@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jedis.v4_0.JedisSingletons.transactionFramingSuppression;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
@@ -18,7 +19,6 @@ public final class JedisPipelineContext {
   // Pipeline and Transaction have no common supertype across the supported jedis range (Queable was
   // removed in 5.0), so captured requests are keyed on each concrete type separately.
   private static final ThreadLocal<Object> currentBatch = new ThreadLocal<>();
-  private static final ThreadLocal<Boolean> inTransactionFraming = new ThreadLocal<>();
   private static final VirtualField<Pipeline, List<JedisRequest>> PIPELINE_REQUESTS =
       VirtualField.find(Pipeline.class, List.class);
   private static final VirtualField<Transaction, List<JedisRequest>> TRANSACTION_REQUESTS =
@@ -37,16 +37,8 @@ public final class JedisPipelineContext {
     currentBatch.remove();
   }
 
-  public static void enterTransactionFraming() {
-    inTransactionFraming.set(Boolean.TRUE);
-  }
-
-  public static void exitTransactionFraming() {
-    inTransactionFraming.remove();
-  }
-
   public static boolean inTransactionFraming() {
-    return Boolean.TRUE.equals(inTransactionFraming.get());
+    return transactionFramingSuppression().isActive();
   }
 
   public static boolean capture(JedisRequest request) {
