@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsMetricsAssertions.assertMetrics;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
@@ -27,6 +28,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.lang.reflect.Constructor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -81,6 +83,7 @@ class AwsLambdaSqsEventWrapperTest {
                 span ->
                     span.hasName("my_function")
                         .hasKind(SpanKind.SERVER)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CLOUD_RESOURCE_ID,
@@ -96,6 +99,7 @@ class AwsLambdaSqsEventWrapperTest {
                 span ->
                     span.hasName("process otel")
                         .hasKind(SpanKind.CONSUMER)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("messaging.system.name"), "aws.sqs"),
                             equalTo(MESSAGING_DESTINATION_NAME, "otel"),

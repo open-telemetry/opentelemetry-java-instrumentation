@@ -9436,6 +9436,8 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
+      - name: server.port
+        type: LONG
 - name: elasticsearch-transport-6.0
   display_name: Elasticsearch Transport Client
   description: |
@@ -9473,6 +9475,8 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033
@@ -12023,6 +12027,7 @@ libraries:
     - kafka.consumer.fetch_throttle_time_max-a716c191
     - kafka.consumer.fetch_total-9d09818d
     - kafka.consumer.heartbeat_rate-8cb2af4e
+    - kafka.consumer.heartbeat_response_time_max-15ed35ff
     - kafka.consumer.heartbeat_total-ffc8a49f
     - kafka.consumer.incoming_byte_rate-aa366cac
     - kafka.consumer.incoming_byte_total-40c552cf

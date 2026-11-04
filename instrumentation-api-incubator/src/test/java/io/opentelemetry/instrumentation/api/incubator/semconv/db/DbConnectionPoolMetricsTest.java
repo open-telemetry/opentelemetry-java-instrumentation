@@ -56,7 +56,7 @@ class DbConnectionPoolMetricsTest {
 
     assertThat(metricReader.collectAllMetrics())
         .singleElement()
-        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0));
+        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0));
   }
 
   @Test
@@ -87,7 +87,7 @@ class DbConnectionPoolMetricsTest {
                     .hasUnit("{connection}")
                     .hasDescription(
                         "The number of connections that are currently in state described by the `state` attribute.")
-                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasLongSumSatisfying(
                         sum ->
                             sum.isNotMonotonic()
@@ -104,7 +104,7 @@ class DbConnectionPoolMetricsTest {
                 assertThat(metric)
                     .hasName("db.client.connection.timeouts")
                     .hasUnit("{timeout}")
-                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasLongSumSatisfying(
                         sum ->
                             sum.hasPointsSatisfying(
@@ -118,7 +118,7 @@ class DbConnectionPoolMetricsTest {
                 assertThat(metric)
                     .hasName("db.client.connection.create_time")
                     .hasUnit("s")
-                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(

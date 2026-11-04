@@ -36,13 +36,13 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.1"
-val errorProneVersion = "2.50.0"
-val byteBuddyVersion = "1.18.15"
+val errorProneVersion = "2.52.0"
+val byteBuddyVersion = "1.18.17"
 val asmVersion = "9.11.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.20"
-val semConvVersion = "1.44.0"
+val semConvVersion = "1.45.0"
 val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
 val CORE_DEPENDENCIES = listOf(
@@ -117,13 +117,7 @@ val DEPENDENCIES = listOf(
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.10",
   "org.elasticmq:elasticmq-rest-sqs_2.13:1.7.1",
-  "io.github.netmikey.logunit:logunit-jul:2.0.0",
-
-  // OSGi runtime verification (see :smoke-tests-osgi). Versions track opentelemetry-java's osgi tests.
-  "org.apache.felix:org.apache.felix.framework:7.0.5",
-  "org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.8",
-  "org.osgi:osgi.core:8.0.0",
-  "org.osgi:org.osgi.test.junit5:1.3.0"
+  "io.github.netmikey.logunit:logunit-jul:2.0.0"
 )
 
 javaPlatform {

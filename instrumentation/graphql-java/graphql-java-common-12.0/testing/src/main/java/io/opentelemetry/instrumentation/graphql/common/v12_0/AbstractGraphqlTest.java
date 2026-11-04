@@ -198,7 +198,7 @@ public abstract class AbstractGraphqlTest {
                       span.hasName("query findBookById")
                           .hasKind(SpanKind.INTERNAL)
                           .hasNoParent()
-                          .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                          .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                           .hasAttributesSatisfyingExactly(
                               equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
                               equalTo(GRAPHQL_OPERATION_TYPE, "query"),
