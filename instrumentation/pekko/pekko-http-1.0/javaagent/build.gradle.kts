@@ -83,13 +83,14 @@ testing.suites {
       implementation("org.apache.pekko:pekko-http_2.13:1.1.0")
       implementation("org.apache.pekko:pekko-stream_2.13:1.1.0")
     }
-    executions {
-      register("NoSpanSuppression") {
-        jvmArgs("-Dotel.instrumentation.common.span-suppression-strategy=none")
+  }
 
-        filter {
-          includeTestsMatching("*PekkoHttpServerInstrumentationTestAsync.successfulGetRequest")
-        }
+  executions("pekko11Test") {
+    register("NoSpanSuppression") {
+      jvmArgs("-Dotel.instrumentation.common.span-suppression-strategy=none")
+
+      filter {
+        includeTestsMatching("*PekkoHttpServerInstrumentationTestAsync.successfulGetRequest")
       }
     }
   }

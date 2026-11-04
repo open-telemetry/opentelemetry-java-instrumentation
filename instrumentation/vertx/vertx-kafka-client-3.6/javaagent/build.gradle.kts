@@ -35,11 +35,11 @@ testing.suites {
       implementation(project(":javaagent-extension-api"))
       implementation("io.vertx:vertx-kafka-client:3.6.0")
     }
+  }
 
-    executions {
-      configureEach {
-        jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-      }
+  executions("unitTests") {
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     }
   }
 }

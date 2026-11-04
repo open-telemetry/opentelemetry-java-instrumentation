@@ -40,11 +40,11 @@ testing.suites {
     dependencies {
       implementation("io.opentelemetry:opentelemetry-api-incubator:1.38.0-alpha")
     }
+  }
 
-    executions {
-      configureEach {
-        jvmArgs("-Dtesting.exporter.enabled=false")
-      }
+  executions("noopTest") {
+    configureEach {
+      jvmArgs("-Dtesting.exporter.enabled=false")
     }
   }
 }
