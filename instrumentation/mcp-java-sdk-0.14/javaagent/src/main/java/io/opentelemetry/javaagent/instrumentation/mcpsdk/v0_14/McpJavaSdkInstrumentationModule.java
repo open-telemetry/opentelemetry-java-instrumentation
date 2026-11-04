@@ -21,6 +21,9 @@ public class McpJavaSdkInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new McpClientSessionInstrumentation(), new McpTransportInstrumentation());
+    return asList(
+        new McpClientSessionInstrumentation(),
+        new McpTransportInstrumentation(),
+        new McpHttpTransportBuilderInstrumentation());
   }
 }

@@ -15,6 +15,7 @@ import io.opentelemetry.context.ContextKey;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 public final class McpToolCallState {
   private static final ContextKey<McpToolCallState> STATE_KEY = ContextKey.named("mcp-tool-call");
@@ -22,9 +23,14 @@ public final class McpToolCallState {
 
   private final McpSchema.CallToolRequest requestParameters;
   private final McpToolCallRequest request;
+  private final Context callerContext;
 
-  McpToolCallState(McpClientSession session, McpSchema.CallToolRequest requestParameters) {
+  McpToolCallState(
+      McpClientSession session,
+      McpSchema.CallToolRequest requestParameters,
+      Context callerContext) {
     this.requestParameters = requestParameters;
+    this.callerContext = callerContext;
     request =
         new McpToolCallRequest(requestParameters.name(), McpProtocolVersionState.get(session));
   }
@@ -35,6 +41,12 @@ public final class McpToolCallState {
 
   Context storeInContext(Context context) {
     return context.with(STATE_KEY, this);
+  }
+
+  @Nullable
+  static Context getCallerContext(Context context) {
+    McpToolCallState state = context.get(STATE_KEY);
+    return state == null ? null : state.callerContext;
   }
 
   public static McpSchema.JSONRPCMessage inject(McpSchema.JSONRPCMessage message) {

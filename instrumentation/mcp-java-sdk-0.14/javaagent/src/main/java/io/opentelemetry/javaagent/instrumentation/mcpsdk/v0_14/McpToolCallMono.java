@@ -29,7 +29,8 @@ final class McpToolCallMono {
             Context parentContext =
                 ContextPropagationOperator.getOpenTelemetryContextFromContextView(
                     reactorContext, Context.current());
-            McpToolCallState state = new McpToolCallState(session, requestParameters);
+            McpToolCallState state =
+                new McpToolCallState(session, requestParameters, parentContext);
             McpToolCallRequest request = state.getRequest();
             if (!instrumenter().shouldStart(parentContext, request)) {
               return publisher;

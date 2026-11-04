@@ -22,6 +22,7 @@ dependencies {
 
   library("io.modelcontextprotocol.sdk:mcp-core:0.14.1")
   testLibrary("io.modelcontextprotocol.sdk:mcp-json-jackson2:0.14.1")
+  testInstrumentation(project(":instrumentation:java-http-client:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 }
 
