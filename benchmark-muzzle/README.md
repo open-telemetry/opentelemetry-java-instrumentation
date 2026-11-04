@@ -75,6 +75,10 @@ execute, never restore from a task cache. The report rechecks the records, conso
 captured metadata, and Gradle profiles. Failed or incomplete jobs and changed workloads invalidate
 the comparison; the runner neither retries samples nor drops outliers.
 
+Cross-job reporting also requires identical recorded runner images. A hosted-runner image rollout
+can invalidate the aggregate report. Individual same-runner profiles can still support diagnosis,
+but do not drop mismatched jobs or combine replacement samples into a valid comparison.
+
 Gradle's local task cache and remote reads remain enabled. Init hooks disable remote pushes in every
 build, including included builds. The runner refuses `DEVELOCITY_ACCESS_KEY`. All
 `setup-gradle` steps are read-only, and the workflow creates no persistent cache entries or
@@ -103,8 +107,9 @@ immutable. The report retains differing cache-hit counts instead of claiming equ
 
 Each `muzzle-ci-ROUND-SLICE` artifact retains commands, logs, assertion records, metadata hashes,
 Gradle HTML profiles, task outcomes, disk usage, and setup timings. Time to the main task graph
-includes JVM startup and included-build work as well as project configuration. Summed assertion
-task durations are not parallel wall time.
+includes JVM startup and included-build work as well as project configuration. The profile's
+configuration and task-execution totals add overlapping durations and can exceed command time.
+Neither those totals nor summed assertion task durations are wall-time measurements.
 
 Add `-f operations-profile=true` for diagnostic comparisons. Every sample then uses the same
 `operations.init.gradle` listener and records `operations.jsonl` plus its summary in `samples.json`.
