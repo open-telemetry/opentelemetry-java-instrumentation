@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.tooling.logging;
 
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import io.opentelemetry.javaagent.tooling.internal.AgentCircularityLock;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -27,7 +27,7 @@ final class TransformSafeLogger implements InternalLogger {
   private static final Thread loggerThread;
 
   static {
-    logMessageQueue = new LinkedBlockingDeque<>();
+    logMessageQueue = new ArrayBlockingQueue<>(1024);
     loggerThread = new Thread(new LogMessageQueueReader(logMessageQueue));
     loggerThread.setName("otel-javaagent-transform-safe-logger");
     loggerThread.setDaemon(true);
@@ -95,15 +95,20 @@ final class TransformSafeLogger implements InternalLogger {
       this.queue = queue;
     }
 
+    @SuppressWarnings("SystemOut")
     @Override
     public void run() {
-      try {
-        while (true) {
+      while (true) {
+        try {
           LogMessage logMessage = queue.take();
           logMessage.logger.get().log(logMessage.level, logMessage.message, logMessage.error);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          return;
+        } catch (Throwable throwable) {
+          System.out.println("Failed to log message");
+          throwable.printStackTrace();
         }
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
       }
     }
   }
