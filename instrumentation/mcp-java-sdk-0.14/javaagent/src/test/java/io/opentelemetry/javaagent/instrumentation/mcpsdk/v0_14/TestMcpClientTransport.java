@@ -105,6 +105,13 @@ final class TestMcpClientTransport implements McpClientTransport {
     return toolRequestContext.get();
   }
 
+  Mono<Void> respondToToolRequest() {
+    return respond(
+        successResponse(
+            toolRequest.get().id(),
+            McpSchema.CallToolResult.builder().addTextContent("secret").build()));
+  }
+
   enum ToolResponse {
     SUCCESS,
     TOOL_ERROR,
