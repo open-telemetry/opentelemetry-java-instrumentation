@@ -72,11 +72,9 @@ dependencies {
 }
 
 testing.suites {
-  named<JvmTestSuite>("test") {
-    executions {
-      register("NewServerAt") {
-        systemProperty("testNewServerAt", true)
-      }
+  executions("test") {
+    register("NewServerAt") {
+      systemProperty("testNewServerAt", true)
     }
   }
 

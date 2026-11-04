@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -39,11 +41,9 @@ testing.suites {
       implementation("io.opentelemetry:opentelemetry-api-incubator:1.38.0-alpha")
     }
 
-    targets {
-      all {
-        testTask.configure {
-          jvmArgs("-Dtesting.exporter.enabled=false")
-        }
+    executions {
+      configureDefault {
+        jvmArgs("-Dtesting.exporter.enabled=false")
       }
     }
   }
