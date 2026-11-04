@@ -22,3 +22,4 @@ spring-ai-1.0:javaagent	2026-10-16T07:39:47Z	agent artifact missing cleanup.patc
 jedis-common:javaagent	2026-10-20T07:42:32Z	agent artifact missing cleanup.patch/cleanup.noop
 spark-2.4:javaagent	2026-10-23T05:38:43Z	agent artifact missing cleanup.patch/cleanup.noop
 spring-rabbit-1.1:javaagent	2026-10-23T05:42:48Z	agent artifact missing cleanup.patch/cleanup.noop
+mcp-java-sdk-0.14:javaagent	2026-11-04T07:33:12Z	agent artifact missing cleanup.patch/cleanup.noop
