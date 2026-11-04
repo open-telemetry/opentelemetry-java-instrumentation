@@ -22,6 +22,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.concurrent.Callable
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
@@ -160,6 +161,37 @@ class TailCallWithSpanCallerFrameTest {
       }
       return dispatcher.runOnThread { tag.get() to Span.current().spanContext }
     }
+  }
+
+  @Test
+  fun `caller on a dispatcher that can not dispatch resumes after tail delegated WithSpan`() {
+    assertThat(resultOnUnconfinedWrapper { unannotatedDelayFrame() }).isEqualTo(1)
+    assertThat(resultOnUnconfinedWrapper { annotatedDelayFrame() }).isEqualTo(1)
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          { it.hasName("delay-frame").hasNoParent() },
+        )
+      },
+    )
+  }
+
+  private fun resultOnUnconfinedWrapper(call: suspend () -> Int): Int = CompletableFuture.supplyAsync {
+    runBlocking {
+      withContext(UnconfinedWrapper) {
+        withContext(TagElement("inner")) {
+          call()
+        }
+      }
+    }
+  }.get(10, TimeUnit.SECONDS)
+
+  // Like UnconfinedTestDispatcher, never needs a dispatch and rejects one.
+  private object UnconfinedWrapper : CoroutineDispatcher() {
+    override fun isDispatchNeeded(context: CoroutineContext): Boolean = false
+
+    override fun dispatch(context: CoroutineContext, block: Runnable) = Dispatchers.Unconfined.dispatch(context, block)
   }
 
   @WithSpan("delay-frame")

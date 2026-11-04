@@ -259,7 +259,9 @@ public class AnnotationInstrumentationHelper {
       if (Context.current() != parentContext && UndispatchedMarker.mayBeIn(delegate.getContext())) {
         Continuation<T> intercepted = IntrinsicsKt.intercepted(delegate);
         if (intercepted != delegate) {
-          dispatched(intercepted).resumeWith(result);
+          if (!dispatchedAnyway(result)) {
+            intercepted.resumeWith(result);
+          }
           return;
         }
       }
@@ -273,24 +275,29 @@ public class AnnotationInstrumentationHelper {
     }
 
     // A dispatcher that needs no dispatch would resume the caller inline, still inside this task,
-    // where the same out of order restore happens, so make it dispatch anyway. Unconfined can not
-    // dispatch, but it already queues the resumption until this task completes.
-    private Continuation<T> dispatched(Continuation<T> intercepted) {
+    // where the same out of order restore happens, so make it dispatch anyway. A dispatcher that
+    // can not dispatch, such as Unconfined, which queues the resumption until this task completes,
+    // resumes the caller as it otherwise would.
+    private boolean dispatchedAnyway(Object result) {
       CoroutineContext callerContext = delegate.getContext();
       ContinuationInterceptor interceptor = callerContext.get(ContinuationInterceptor.Key);
-      if (interceptor instanceof CoroutineDispatcher
-          && interceptor != Dispatchers.getUnconfined()) {
-        CoroutineDispatcher dispatcher = (CoroutineDispatcher) interceptor;
-        if (!dispatcher.isDispatchNeeded(callerContext)) {
-          return new AlwaysDispatch(dispatcher).interceptContinuation(delegate);
-        }
+      if (!(interceptor instanceof CoroutineDispatcher)
+          || interceptor == Dispatchers.getUnconfined()) {
+        return false;
       }
-      return intercepted;
+      CoroutineDispatcher dispatcher = (CoroutineDispatcher) interceptor;
+      if (dispatcher.isDispatchNeeded(callerContext)) {
+        return false;
+      }
+      AlwaysDispatch alwaysDispatch = new AlwaysDispatch(dispatcher);
+      alwaysDispatch.interceptContinuation(delegate).resumeWith(result);
+      return !alwaysDispatch.rejected;
     }
   }
 
   private static final class AlwaysDispatch extends CoroutineDispatcher {
     private final CoroutineDispatcher dispatcher;
+    private boolean rejected;
 
     AlwaysDispatch(CoroutineDispatcher dispatcher) {
       this.dispatcher = dispatcher;
@@ -303,7 +310,12 @@ public class AnnotationInstrumentationHelper {
 
     @Override
     public void dispatch(@NotNull CoroutineContext context, @NotNull Runnable block) {
-      dispatcher.dispatch(context, block);
+      try {
+        dispatcher.dispatch(context, block);
+      } catch (RuntimeException e) {
+        // a dispatcher that only runs unconfined, such as UnconfinedTestDispatcher
+        rejected = true;
+      }
     }
   }
 
