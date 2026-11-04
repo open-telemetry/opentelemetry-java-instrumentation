@@ -24,6 +24,8 @@ import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.intrinsics.IntrinsicsKt;
 import kotlin.coroutines.jvm.internal.ContinuationImpl;
 import kotlin.coroutines.jvm.internal.CoroutineStackFrame;
+import kotlinx.coroutines.CoroutineDispatcher;
+import kotlinx.coroutines.Dispatchers;
 import kotlinx.coroutines.ThreadContextElement;
 import org.jetbrains.annotations.NotNull;
 
@@ -257,7 +259,7 @@ public class AnnotationInstrumentationHelper {
       if (Context.current() != parentContext && UndispatchedMarker.mayBeIn(delegate.getContext())) {
         Continuation<T> intercepted = IntrinsicsKt.intercepted(delegate);
         if (intercepted != delegate) {
-          intercepted.resumeWith(result);
+          dispatched(intercepted).resumeWith(result);
           return;
         }
       }
@@ -268,6 +270,40 @@ public class AnnotationInstrumentationHelper {
       } finally {
         delegateContextElement.restoreThreadContext(delegate.getContext(), scope);
       }
+    }
+
+    // A dispatcher that needs no dispatch would resume the caller inline, still inside this task,
+    // where the same out of order restore happens, so make it dispatch anyway. Unconfined can not
+    // dispatch, but it already queues the resumption until this task completes.
+    private Continuation<T> dispatched(Continuation<T> intercepted) {
+      CoroutineContext callerContext = delegate.getContext();
+      ContinuationInterceptor interceptor = callerContext.get(ContinuationInterceptor.Key);
+      if (interceptor instanceof CoroutineDispatcher
+          && interceptor != Dispatchers.getUnconfined()) {
+        CoroutineDispatcher dispatcher = (CoroutineDispatcher) interceptor;
+        if (!dispatcher.isDispatchNeeded(callerContext)) {
+          return new AlwaysDispatch(dispatcher).interceptContinuation(delegate);
+        }
+      }
+      return intercepted;
+    }
+  }
+
+  private static final class AlwaysDispatch extends CoroutineDispatcher {
+    private final CoroutineDispatcher dispatcher;
+
+    AlwaysDispatch(CoroutineDispatcher dispatcher) {
+      this.dispatcher = dispatcher;
+    }
+
+    @Override
+    public boolean isDispatchNeeded(@NotNull CoroutineContext context) {
+      return true;
+    }
+
+    @Override
+    public void dispatch(@NotNull CoroutineContext context, @NotNull Runnable block) {
+      dispatcher.dispatch(context, block);
     }
   }
 

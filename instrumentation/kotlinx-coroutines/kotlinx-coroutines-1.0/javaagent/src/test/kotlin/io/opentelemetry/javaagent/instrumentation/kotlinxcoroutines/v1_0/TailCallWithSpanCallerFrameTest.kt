@@ -12,6 +12,7 @@ import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.sdk.trace.data.StatusData
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ThreadContextElement
 import kotlinx.coroutines.delay
@@ -20,6 +21,9 @@ import kotlinx.coroutines.withContext
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
 
 // Behavior that depends on the coroutine caller frame chain, compared with and without the
@@ -121,6 +125,66 @@ class TailCallWithSpanCallerFrameTest {
       call()
     }
     Span.current().spanContext
+  }
+
+  @Test
+  fun `inner withContext on an immediate dispatcher leaves its thread clean`() {
+    val inner = tracer.spanBuilder("inner").startSpan()
+    try {
+      val expected = threadStateAfterInnerWithContext(inner) { unannotatedDelayFrame() }
+      assertThat(expected).isEqualTo(null to SpanContext.getInvalid())
+      assertThat(threadStateAfterInnerWithContext(inner) { annotatedDelayFrame() }).isEqualTo(expected)
+    } finally {
+      inner.end()
+    }
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          { it.hasName("inner").hasNoParent() },
+          { it.hasName("delay-frame").hasParent(trace.getSpan(0)) },
+        )
+      },
+    )
+  }
+
+  // The thread local state the dispatcher thread is left with once the coroutine completes.
+  private fun threadStateAfterInnerWithContext(inner: Span, call: suspend () -> Int): Pair<String?, SpanContext> {
+    ImmediateDispatcher().use { dispatcher ->
+      runBlocking {
+        withContext(dispatcher) {
+          withContext(TagElement("inner") + inner.storeInContext(Context.root()).asContextElement()) {
+            call()
+          }
+        }
+      }
+      return dispatcher.runOnThread { tag.get() to Span.current().spanContext }
+    }
+  }
+
+  @WithSpan("delay-frame")
+  private suspend fun annotatedDelayFrame() = unannotatedDelayFrame()
+
+  // not a tail call, so the callee has a frame of its own that the dispatcher resumes
+  private suspend fun unannotatedDelayFrame(): Int {
+    delay(10)
+    return 1
+  }
+
+  // Like Dispatchers.Main.immediate, runs the coroutine inline when already on its thread.
+  private class ImmediateDispatcher :
+    CoroutineDispatcher(),
+    AutoCloseable {
+    @Volatile private var thread: Thread? = null
+    private val executor = Executors.newSingleThreadExecutor { runnable -> Thread(runnable).also { thread = it } }
+
+    override fun isDispatchNeeded(context: CoroutineContext): Boolean = Thread.currentThread() !== thread
+
+    override fun dispatch(context: CoroutineContext, block: Runnable) = executor.execute(block)
+
+    fun <T> runOnThread(block: () -> T): T = executor.submit(Callable(block)).get(10, TimeUnit.SECONDS)
+
+    override fun close() = executor.shutdown()
   }
 
   @WithSpan("delay")
