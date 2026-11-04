@@ -12,7 +12,6 @@ import static net.bytebuddy.dynamic.loading.ClassLoadingStrategy.BOOTSTRAP_LOADE
 
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
-import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.javaagent.tooling.muzzle.Mismatch;
@@ -36,7 +35,6 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
 
   private static final Logger muzzleLogger = Logger.getLogger(MuzzleMatcher.class.getName());
 
-  private final TransformSafeLogger instrumentationLogger;
   private final InstrumentationModule instrumentationModule;
   private final UnaryOperator<ClassLoader> classLoaderTransformer;
   private final Level muzzleLogLevel;
@@ -44,10 +42,8 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
   private final Cache<ClassLoader, Boolean> matchCache = Cache.weak();
 
   MuzzleMatcher(
-      TransformSafeLogger instrumentationLogger,
       InstrumentationModule instrumentationModule,
       UnaryOperator<ClassLoader> classLoaderTransformer) {
-    this.instrumentationLogger = instrumentationLogger;
     this.instrumentationModule = instrumentationModule;
     this.classLoaderTransformer = classLoaderTransformer;
     this.muzzleLogLevel = EarlyInitAgentConfig.get().isDebug() ? WARNING : FINE;
@@ -88,8 +84,8 @@ class MuzzleMatcher implements AgentBuilder.RawMatcher {
         }
       }
     } else {
-      if (instrumentationLogger.isLoggable(FINE)) {
-        instrumentationLogger.log(
+      if (muzzleLogger.isLoggable(FINE)) {
+        muzzleLogger.log(
             FINE,
             "Applying instrumentation: {0} [class {1}] on {2}",
             new Object[] {

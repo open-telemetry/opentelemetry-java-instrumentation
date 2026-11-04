@@ -97,16 +97,17 @@ public class ApplicationLoggingChecker {
 
     assertThat(lockHeldDuringTrigger.get()).isTrue();
     assertThat(callbackFailure.get()).isNull();
-    assertThat(applicationCalls.get()).isZero();
-    assertThat(loggedOn.get()).isNull();
-    assertThat(probeDiscovered.get()).isFalse();
+    assertThat(applicationCalls.get()).isEqualTo(3);
+    assertThat(loggedOn.get() != null ? loggedOn.get().getName() : null)
+        .isEqualTo("otel-javaagent-transform-safe-logger");
+    assertThat(probeDiscovered.get()).isTrue();
     assertThat(isHeld.invoke(lock)).isEqualTo(false);
 
+    applicationCalls.set(0);
     logVersions.invoke(null);
 
     assertThat(applicationCalls.get()).isEqualTo(3);
     assertThat(loggedOn.get()).isSameAs(Thread.currentThread());
-    assertThat(probeDiscovered.get()).isTrue();
   }
 
   @SuppressWarnings("UnusedNestedClass")

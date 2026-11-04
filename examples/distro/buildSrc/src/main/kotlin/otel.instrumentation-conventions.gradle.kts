@@ -47,8 +47,6 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.javaagent.debug=true")
   jvmArgs("-Dotel.javaagent.testing.additional-library-ignores.enabled=false")
   jvmArgs("-Dotel.javaagent.testing.fail-on-context-leak=true")
-  // prevent sporadic gradle deadlocks, see SafeLogger for more details
-  jvmArgs("-Dotel.javaagent.testing.transform-safe-logging.enabled=true")
 
   jvmArgumentProviders.add(JavaagentProvider(agentJar, initializerJar))
 

@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import io.opentelemetry.javaagent.bootstrap.logging.ApplicationLoggerBridge;
 import io.opentelemetry.javaagent.tooling.internal.AgentCircularityLock;
+import io.opentelemetry.javaagent.tooling.logging.TransformSafeLoggerFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -65,9 +66,9 @@ class ApplicationLoggerFactoryTest {
     verify(logStore, times(3)).currentSize();
     // the agent must not call into the application logging system while a class file
     // transformation is in progress, so install() wraps the bridge before handing it to the
-    // log store - see TransformSafeApplicationLoggerFactory
-    verify(logStore).flush(isA(TransformSafeApplicationLoggerFactory.class));
-    verify(logStore).setApplicationLoggerFactory(isA(TransformSafeApplicationLoggerFactory.class));
+    // log store - see TransformSafeLoggerFactory
+    verify(logStore).flush(isA(TransformSafeLoggerFactory.class));
+    verify(logStore).setApplicationLoggerFactory(isA(TransformSafeLoggerFactory.class));
     verify(logStore).freeMemory();
 
     underTest.install(applicationLoggerBridge);

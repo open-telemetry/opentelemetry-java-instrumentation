@@ -62,6 +62,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.LogManager;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -460,8 +461,7 @@ public class AgentInstaller {
 
   static class TransformLoggingListener extends AgentBuilder.Listener.Adapter {
 
-    private static final TransformSafeLogger logger =
-        TransformSafeLogger.getLogger(TransformLoggingListener.class);
+    private static final Logger logger = Logger.getLogger(TransformLoggingListener.class.getName());
 
     @Override
     public void onError(
@@ -472,11 +472,11 @@ public class AgentInstaller {
         Throwable throwable) {
 
       if (logger.isLoggable(FINE)) {
-        logger.log(
-            FINE,
-            "Failed to handle {0} for transformation on class loader {1}",
-            new Object[] {typeName, classLoader},
-            throwable);
+        LogRecord record =
+            new LogRecord(FINE, "Failed to handle {0} for transformation on class loader {1}");
+        record.setParameters(new Object[] {typeName, classLoader});
+        record.setThrown(throwable);
+        logger.log(record);
       }
     }
 

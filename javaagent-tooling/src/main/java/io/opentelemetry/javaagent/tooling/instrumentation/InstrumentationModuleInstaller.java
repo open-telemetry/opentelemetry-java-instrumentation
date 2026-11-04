@@ -20,7 +20,6 @@ import io.opentelemetry.javaagent.tooling.HelperClassDefinition;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.InjectionMode;
 import io.opentelemetry.javaagent.tooling.ModuleOpener;
-import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
@@ -39,6 +38,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import java.util.logging.Logger;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.type.TypeDescription;
@@ -48,8 +48,8 @@ import net.bytebuddy.utility.JavaModule;
 
 public final class InstrumentationModuleInstaller {
 
-  private static final TransformSafeLogger logger =
-      TransformSafeLogger.getLogger(InstrumentationModule.class);
+  private static final Logger logger =
+      Logger.getLogger(InstrumentationModuleInstaller.class.getName());
 
   // Added here instead of AgentInstaller's ignores because it's relatively
   // expensive. https://github.com/DataDog/dd-trace-java/pull/1045
@@ -151,7 +151,6 @@ public final class InstrumentationModuleInstaller {
 
     MuzzleMatcher muzzleMatcher =
         new MuzzleMatcher(
-            logger,
             instrumentationModule,
             cl ->
                 // With isolated helpers, muzzle searches application and agent class loaders.
@@ -226,7 +225,7 @@ public final class InstrumentationModuleInstaller {
     }
 
     MuzzleMatcher muzzleMatcher =
-        new MuzzleMatcher(logger, instrumentationModule, UnaryOperator.identity());
+        new MuzzleMatcher(instrumentationModule, UnaryOperator.identity());
     AgentBuilder.Transformer helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),
