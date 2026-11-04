@@ -35,6 +35,7 @@ import com.openai.errors.SseException;
 import com.openai.models.chat.completions.ChatCompletionChunk;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.embeddings.EmbeddingCreateParams;
+import com.openai.models.responses.ResponseCreateParams;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -65,7 +66,8 @@ class ServiceErrorTest {
   private enum Operation {
     CHAT("chat", "/chat/completions"),
     CHAT_STREAM("chat", "/chat/completions"),
-    EMBEDDINGS("embeddings", "/embeddings");
+    EMBEDDINGS("embeddings", "/embeddings"),
+    RESPONSES("chat", "/responses");
 
     final String name;
     final String path;
@@ -128,7 +130,13 @@ class ServiceErrorTest {
         Arguments.of(Operation.EMBEDDINGS, false, "42", BadRequestException.class.getName()),
         Arguments.of(
             Operation.EMBEDDINGS, true, "\"provider_specific_code\"", "provider_specific_code"),
-        Arguments.of(Operation.EMBEDDINGS, true, "42", BadRequestException.class.getName()));
+        Arguments.of(Operation.EMBEDDINGS, true, "42", BadRequestException.class.getName()),
+        Arguments.of(
+            Operation.RESPONSES, false, "\"provider_specific_code\"", "provider_specific_code"),
+        Arguments.of(Operation.RESPONSES, false, "42", BadRequestException.class.getName()),
+        Arguments.of(
+            Operation.RESPONSES, true, "\"provider_specific_code\"", "provider_specific_code"),
+        Arguments.of(Operation.RESPONSES, true, "42", BadRequestException.class.getName()));
   }
 
   private static void assertServiceError(
@@ -190,6 +198,8 @@ class ServiceErrorTest {
             .input("hello")
             .encodingFormat(EmbeddingCreateParams.EncodingFormat.BASE64)
             .build();
+    ResponseCreateParams responses =
+        ResponseCreateParams.builder().model(MODEL).input("hello").build();
     if (async) {
       OpenAIClientAsync client =
           telemetry.instrument(
@@ -205,6 +215,9 @@ class ServiceErrorTest {
           break;
         case EMBEDDINGS:
           client.embeddings().create(embeddings).join();
+          break;
+        case RESPONSES:
+          client.responses().create(responses).join();
           break;
         case CHAT_STREAM:
           AsyncStreamResponse<ChatCompletionChunk> stream =
@@ -229,6 +242,9 @@ class ServiceErrorTest {
           break;
         case EMBEDDINGS:
           client.embeddings().create(embeddings);
+          break;
+        case RESPONSES:
+          client.responses().create(responses);
           break;
         case CHAT_STREAM:
           try (StreamResponse<ChatCompletionChunk> stream =
