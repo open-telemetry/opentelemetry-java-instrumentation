@@ -32,11 +32,12 @@ final class McpContextMono<T> extends Mono<T> {
     }
   }
 
-  private static final class ContextSubscriber<T> implements CoreSubscriber<T> {
+  private static final class ContextSubscriber<T> implements CoreSubscriber<T>, Subscription {
     private final CoreSubscriber<? super T> actual;
     private final Context subscriptionContext;
     private final Context callbackContext;
     private final reactor.util.context.Context reactorContext;
+    private Subscription upstream;
 
     private ContextSubscriber(
         CoreSubscriber<? super T> actual, Context subscriptionContext, Context callbackContext) {
@@ -54,9 +55,10 @@ final class McpContextMono<T> extends Mono<T> {
     }
 
     @Override
-    public void onSubscribe(Subscription subscription) {
+    public void onSubscribe(Subscription upstream) {
+      this.upstream = upstream;
       try (Scope ignored = callbackContext.makeCurrent()) {
-        actual.onSubscribe(new ContextSubscription(subscription, subscriptionContext));
+        actual.onSubscribe(this);
       }
     }
 
@@ -80,28 +82,18 @@ final class McpContextMono<T> extends Mono<T> {
         actual.onComplete();
       }
     }
-  }
-
-  private static final class ContextSubscription implements Subscription {
-    private final Subscription subscription;
-    private final Context context;
-
-    private ContextSubscription(Subscription subscription, Context context) {
-      this.subscription = subscription;
-      this.context = context;
-    }
 
     @Override
     public void request(long n) {
-      try (Scope ignored = context.makeCurrent()) {
-        subscription.request(n);
+      try (Scope ignored = subscriptionContext.makeCurrent()) {
+        upstream.request(n);
       }
     }
 
     @Override
     public void cancel() {
-      try (Scope ignored = context.makeCurrent()) {
-        subscription.cancel();
+      try (Scope ignored = subscriptionContext.makeCurrent()) {
+        upstream.cancel();
       }
     }
   }
