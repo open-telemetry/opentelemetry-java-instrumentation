@@ -31,6 +31,6 @@ class NatsDispatcherTest extends AbstractNatsDispatcherTest {
                     .setExcluded("*-Excluded-Header")
                     .build())
             .build()
-            .wrap(connection);
+            .instrument(connection);
   }
 }

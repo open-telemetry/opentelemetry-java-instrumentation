@@ -94,6 +94,7 @@ public final class SofaRpcTelemetryBuilder {
         Instrumenter.<SofaRpcRequest, SofaResponse>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .setSchemaUrl(RpcSchemaUrls.SCHEMA_URL)
+            .setSpanStatusExtractor(new SofaRpcSpanStatusExtractor())
             .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
             .addAttributesExtractors(additionalExtractors)
@@ -105,6 +106,7 @@ public final class SofaRpcTelemetryBuilder {
         Instrumenter.<SofaRpcRequest, SofaResponse>builder(
                 openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
             .setSchemaUrl(RpcSchemaUrls.SCHEMA_URL)
+            .setSpanStatusExtractor(new SofaRpcSpanStatusExtractor())
             .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
             .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))

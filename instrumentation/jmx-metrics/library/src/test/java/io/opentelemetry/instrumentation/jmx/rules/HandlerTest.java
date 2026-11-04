@@ -109,7 +109,7 @@ class HandlerTest {
                 .satisfies(
                     data ->
                         assertThat(data.getInstrumentationScopeInfo().getSchemaUrl())
-                            .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
+                            .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
                 .hasLongSumSatisfying(
                     sum ->
                         sum.isNotMonotonic()

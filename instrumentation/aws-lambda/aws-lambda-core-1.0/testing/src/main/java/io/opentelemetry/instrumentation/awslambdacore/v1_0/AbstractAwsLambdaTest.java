@@ -71,7 +71,7 @@ public abstract class AbstractAwsLambdaTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("my_function")
-                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                             .hasKind(SpanKind.SERVER)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
@@ -88,7 +88,7 @@ public abstract class AbstractAwsLambdaTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("my_function")
-                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                             .hasKind(SpanKind.SERVER)
                             .hasStatus(StatusData.error())
                             .hasException(emitExceptionAsSpanEvents() ? thrown : null)
@@ -100,7 +100,7 @@ public abstract class AbstractAwsLambdaTest {
           .waitAndAssertLogRecords(
               logRecord ->
                   logRecord
-                      .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                      .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                       .hasSeverity(Severity.ERROR)
                       .hasEventName("faas.invocation.exception")
                       .hasException(thrown)

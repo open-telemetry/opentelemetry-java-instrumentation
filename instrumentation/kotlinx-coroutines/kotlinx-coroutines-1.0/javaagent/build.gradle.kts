@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.executions
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -95,43 +96,43 @@ kotlin {
   }
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("version13Test") {
-      dependencies {
-        implementation("io.opentelemetry:opentelemetry-extension-kotlin")
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-        implementation(
-          "org.jetbrains.kotlinx:kotlinx-coroutines-core:${baseVersion("1.4.3").orLatest()}",
-        )
-        implementation(
-          "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:${baseVersion("1.4.3").orLatest()}",
-        )
-        implementation(project(":instrumentation:reactor:reactor-3.1:library"))
-        implementation(project(":instrumentation-annotations"))
+testing.suites {
+  register<JvmTestSuite>("version13Test") {
+    executions {
+      configureDefault {
+        jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
       }
+    }
+    dependencies {
+      implementation("io.opentelemetry:opentelemetry-extension-kotlin")
+      implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+      implementation(
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:${baseVersion("1.4.3").orLatest()}",
+      )
+      implementation(
+        "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:${baseVersion("1.4.3").orLatest()}",
+      )
+      implementation(project(":instrumentation:reactor:reactor-3.1:library"))
+      implementation(project(":instrumentation-annotations"))
+    }
+  }
+
+  executions("test") {
+    configureDefault {
+      jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
+    }
+    register("Disabled") {
+      filter { includeTestsMatching("*DefaultEnablementTest") }
     }
   }
 }
 
 tasks {
-  withType<Test>().configureEach {
-    if (name != "testDisabled") {
-      jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
-    }
-  }
-
   named("byteBuddyKotlin") {
     enabled = false
   }
 
-  val testDisabled = register<Test>("testDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter { includeTestsMatching("*DefaultEnablementTest") }
-  }
-
   check {
-    dependsOn(testing.suites, testDisabled)
+    dependsOn(testing.suites)
   }
 }

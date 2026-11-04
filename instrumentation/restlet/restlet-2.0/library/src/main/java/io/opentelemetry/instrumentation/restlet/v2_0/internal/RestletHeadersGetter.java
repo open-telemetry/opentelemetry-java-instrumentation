@@ -12,8 +12,10 @@ import static java.util.Collections.emptySet;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nullable;
 import org.restlet.Message;
 import org.restlet.Request;
@@ -25,10 +27,17 @@ final class RestletHeadersGetter implements TextMapGetter<Request> {
 
   @Nullable
   private static MethodHandle findGetAttributes() {
+    MethodHandles.Lookup lookup = MethodHandles.lookup();
     try {
-      return MethodHandles.lookup().unreflect(Message.class.getMethod("getAttributes"));
+      return lookup.findVirtual(Message.class, "getAttributes", MethodType.methodType(Map.class));
     } catch (NoSuchMethodException | IllegalAccessException ignored) {
-      return null;
+      // changed the return type to ConcurrentMap in version 2.1
+      try {
+        return lookup.findVirtual(
+            Message.class, "getAttributes", MethodType.methodType(ConcurrentMap.class));
+      } catch (NoSuchMethodException | IllegalAccessException ignore) {
+        return null;
+      }
     }
   }
 

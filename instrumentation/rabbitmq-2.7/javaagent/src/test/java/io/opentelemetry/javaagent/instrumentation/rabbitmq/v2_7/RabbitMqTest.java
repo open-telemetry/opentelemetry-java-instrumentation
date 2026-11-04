@@ -208,7 +208,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                       exchangeName,
                       trace.getSpan(0));
                   producerSpan.set(trace.getSpan(4));
-                  span.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0));
+                  span.satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0));
                 }),
         trace ->
             trace.hasSpansSatisfyingExactly(

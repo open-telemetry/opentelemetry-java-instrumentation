@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.log4j.appender.v2_17;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
@@ -44,24 +44,26 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
         isProtected()
             .or(isPublic())
             .and(named("log"))
-            .and(takesArguments(6))
-            .and(takesArgument(0, named("org.apache.logging.log4j.Level")))
-            .and(takesArgument(1, named("org.apache.logging.log4j.Marker")))
-            .and(takesArgument(2, String.class))
-            .and(takesArgument(3, StackTraceElement.class))
-            .and(takesArgument(4, named("org.apache.logging.log4j.message.Message")))
-            .and(takesArgument(5, Throwable.class)),
+            .and(
+                takesArguments(
+                    named("org.apache.logging.log4j.Level"),
+                    named("org.apache.logging.log4j.Marker"),
+                    is(String.class),
+                    is(StackTraceElement.class),
+                    named("org.apache.logging.log4j.message.Message"),
+                    is(Throwable.class))),
         getClass().getName() + "$LogAdvice");
     transformer.applyAdviceToMethod(
         isProtected()
             .or(isPublic())
             .and(named("logMessage"))
-            .and(takesArguments(5))
-            .and(takesArgument(0, String.class))
-            .and(takesArgument(1, named("org.apache.logging.log4j.Level")))
-            .and(takesArgument(2, named("org.apache.logging.log4j.Marker")))
-            .and(takesArgument(3, named("org.apache.logging.log4j.message.Message")))
-            .and(takesArgument(4, Throwable.class)),
+            .and(
+                takesArguments(
+                    is(String.class),
+                    named("org.apache.logging.log4j.Level"),
+                    named("org.apache.logging.log4j.Marker"),
+                    named("org.apache.logging.log4j.message.Message"),
+                    is(Throwable.class))),
         getClass().getName() + "$LogMessageAdvice");
   }
 

@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -21,42 +24,30 @@ dependencies {
   library("io.reactivex:rxjava:1.0.8")
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // Disable so failure testing below doesn't inadvertently change the behavior.
-    jvmArgs("-Dhystrix.command.default.circuitBreaker.enabled=false")
+testing.suites.named<JvmTestSuite>("test") {
+  executions {
+    configureEach {
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
 
-    if (name != "testDisabled") {
-      jvmArgs("-Dotel.instrumentation.hystrix.enabled=true")
+      // Disable so failure testing below doesn't inadvertently change the behavior.
+      jvmArgs("-Dhystrix.command.default.circuitBreaker.enabled=false")
+
+      if (name != "testDisabled") {
+        jvmArgs("-Dotel.instrumentation.hystrix.enabled=true")
+      }
+
+      // Uncomment for debugging:
+      // jvmArgs("-Dhystrix.command.default.execution.timeout.enabled=false")
     }
-
-    // Uncomment for debugging:
-    // jvmArgs("-Dhystrix.command.default.execution.timeout.enabled=false")
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.hystrix.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.hystrix.experimental-span-attributes=true")
-  }
-
-  val testDisabled = register<Test>("testDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*DefaultEnablementTest")
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.hystrix.experimental-span-attributes", "true")
     }
-  }
-
-  check {
-    dependsOn(testDisabled, testExperimental)
-  }
-
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
+    register("Disabled") {
+      filter {
+        includeTestsMatching("*DefaultEnablementTest")
+      }
     }
   }
 }

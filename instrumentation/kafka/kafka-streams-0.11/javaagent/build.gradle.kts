@@ -1,5 +1,9 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -43,61 +47,49 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
-    }
-    include("**/KafkaStreamsSuppressReceiveSpansTest.*")
-  }
-
-  val testReceiveTelemetry = register<Test>("testReceiveTelemetry") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-    )
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true," +
-        "otel.instrumentation.kafka.experimental-span-attributes=true",
-    )
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
-    }
   }
 
   check {
     dependsOn(testing.suites)
-    dependsOn(testReceiveSpansDisabled)
-    dependsOn(testReceiveTelemetry)
-    dependsOn(testExperimental)
+  }
+}
+
+testing.suites {
+  executions("test") {
+    configureDefault {
+      filter {
+        excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
+      }
+    }
+
+    register("ReceiveSpansDisabled") {
+      filter {
+        includeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
+      }
+      include("**/KafkaStreamsSuppressReceiveSpansTest.*")
+    }
+
+    register("ReceiveTelemetry") {
+      filter {
+        excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
+      }
+      telemetryConfig(
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+        "true",
+      )
+    }
+
+    register("Experimental") {
+      filter {
+        excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
+      }
+      telemetryConfig(
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+        "true",
+      )
+      telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
+    }
   }
 }
 

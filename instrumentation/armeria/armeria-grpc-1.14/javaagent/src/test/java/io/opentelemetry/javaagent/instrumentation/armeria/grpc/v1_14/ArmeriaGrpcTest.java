@@ -8,12 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_TYPE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -97,7 +97,7 @@ class ArmeriaGrpcTest {
                         .satisfies(
                             spanData ->
                                 assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                    .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
+                                    .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM_NAME, "grpc"),
@@ -123,7 +123,7 @@ class ArmeriaGrpcTest {
                         .satisfies(
                             spanData ->
                                 assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                    .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
+                                    .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM_NAME, "grpc"),
@@ -169,7 +169,7 @@ class ArmeriaGrpcTest {
                         .satisfies(
                             spanData ->
                                 assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                    .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
+                                    .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
                         .hasAttributesSatisfyingExactly(
                             equalTo(RPC_SYSTEM_NAME, "grpc"),
                             equalTo(RPC_METHOD, "example.Greeter/SayHello"),

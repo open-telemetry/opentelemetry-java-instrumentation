@@ -28,13 +28,38 @@ class SpringWebHttpAttributesGetter
 
     MethodHandle getStatusCode = null;
     MethodHandle statusCodeValue = null;
+    Class<?> httpStatusCodeClass = null;
+
     try {
-      getStatusCode = lookup.unreflect(ClientHttpResponse.class.getMethod("getStatusCode"));
-      statusCodeValue =
-          lookup.findVirtual(
-              getStatusCode.type().returnType(), "value", MethodType.methodType(int.class));
-    } catch (NoSuchMethodException | IllegalAccessException ignored) {
-      // ignored
+      httpStatusCodeClass =
+          Class.forName(
+              "org.springframework.http.HttpStatusCode",
+              false,
+              ClientHttpResponse.class.getClassLoader());
+    } catch (ClassNotFoundException ignored) {
+      try {
+        httpStatusCodeClass =
+            Class.forName(
+                "org.springframework.http.HttpStatus",
+                false,
+                ClientHttpResponse.class.getClassLoader());
+      } catch (ClassNotFoundException ignore) {
+        // ignored
+      }
+    }
+
+    if (httpStatusCodeClass != null) {
+      try {
+        getStatusCode =
+            lookup.findVirtual(
+                ClientHttpResponse.class,
+                "getStatusCode",
+                MethodType.methodType(httpStatusCodeClass));
+        statusCodeValue =
+            lookup.findVirtual(httpStatusCodeClass, "value", MethodType.methodType(int.class));
+      } catch (NoSuchMethodException | IllegalAccessException ignored) {
+        // ignored
+      }
     }
 
     GET_STATUS_CODE = getStatusCode;

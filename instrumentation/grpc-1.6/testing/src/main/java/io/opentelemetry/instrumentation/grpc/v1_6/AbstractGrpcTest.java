@@ -20,13 +20,13 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD_ORIGINAL;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessageIncubatingAttributes.MESSAGE_TYPE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD_ORIGINAL;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -98,11 +98,11 @@ public abstract class AbstractGrpcTest {
     0.25, 0.3, 0.4, 0.5, 0.65, 0.8, 1, 2, 5, 10, 20, 50, 100
   };
 
-  protected static final String CLIENT_REQUEST_METADATA_KEY = "some-client-key";
+  protected static final String CLIENT_REQUEST_HEADER_KEY = "some-client-key";
 
-  protected static final String SERVER_REQUEST_METADATA_KEY = "some-server-key";
+  protected static final String SERVER_REQUEST_HEADER_KEY = "some-server-key";
 
-  private static final String EXCLUDED_REQUEST_METADATA_KEY = "some-excluded-key";
+  private static final String EXCLUDED_REQUEST_HEADER_KEY = "some-excluded-key";
 
   protected abstract ServerBuilder<?> configureServer(ServerBuilder<?> server);
 
@@ -165,7 +165,7 @@ public abstract class AbstractGrpcTest {
                                 spanData ->
                                     assertThat(
                                             spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                        .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
+                                        .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
                             .hasParent(trace.getSpan(0))
                             .hasAttribute(SERVER_ADDRESS, "localhost")
                             .hasAttribute(SERVER_PORT, (long) server.getPort()),
@@ -176,7 +176,7 @@ public abstract class AbstractGrpcTest {
                                 spanData ->
                                     assertThat(
                                             spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                        .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
+                                        .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
                             .hasParent(trace.getSpan(1))));
   }
 
@@ -222,7 +222,7 @@ public abstract class AbstractGrpcTest {
                                 spanData ->
                                     assertThat(
                                             spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                        .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
+                                        .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraClientAttributes(
@@ -256,7 +256,7 @@ public abstract class AbstractGrpcTest {
                                 spanData ->
                                     assertThat(
                                             spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                        .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
+                                        .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 experimentalSatisfies(
@@ -817,7 +817,7 @@ public abstract class AbstractGrpcTest {
                                 spanData ->
                                     assertThat(
                                             spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                        .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
+                                        .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
@@ -841,7 +841,7 @@ public abstract class AbstractGrpcTest {
                                 spanData ->
                                     assertThat(
                                             spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                        .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
+                                        .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
@@ -860,7 +860,7 @@ public abstract class AbstractGrpcTest {
                     .satisfies(
                         metricData ->
                             assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
-                                .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
+                                .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
                     .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->
@@ -1566,9 +1566,9 @@ public abstract class AbstractGrpcTest {
   }
 
   @Test
-  void setCapturedRequestMetadata() throws Exception {
-    String serverMetadataValue = "server-value";
-    String clientMetadataValue = "client-value";
+  void setCapturedRequestHeaders() throws Exception {
+    String serverHeaderValue = "server-value";
+    String clientHeaderValue = "client-value";
 
     BindableService greeter =
         new GreeterGrpc.GreeterImplBase() {
@@ -1590,13 +1590,13 @@ public abstract class AbstractGrpcTest {
 
     Metadata extraMetadata = new Metadata();
     extraMetadata.put(
-        Metadata.Key.of(SERVER_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
-        serverMetadataValue);
+        Metadata.Key.of(SERVER_REQUEST_HEADER_KEY, Metadata.ASCII_STRING_MARSHALLER),
+        serverHeaderValue);
     extraMetadata.put(
-        Metadata.Key.of(CLIENT_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
-        clientMetadataValue);
+        Metadata.Key.of(CLIENT_REQUEST_HEADER_KEY, Metadata.ASCII_STRING_MARSHALLER),
+        clientHeaderValue);
     extraMetadata.put(
-        Metadata.Key.of(EXCLUDED_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
+        Metadata.Key.of(EXCLUDED_REQUEST_HEADER_KEY, Metadata.ASCII_STRING_MARSHALLER),
         "excluded-value");
 
     GreeterGrpc.GreeterBlockingStub client =
@@ -1623,11 +1623,11 @@ public abstract class AbstractGrpcTest {
                             .hasAttributesSatisfying(
                                 equalTo(
                                     stringArrayKey(
-                                        "rpc.request.metadata." + CLIENT_REQUEST_METADATA_KEY),
-                                    singletonList(clientMetadataValue)),
+                                        "rpc.request.header." + CLIENT_REQUEST_HEADER_KEY),
+                                    singletonList(clientHeaderValue)),
                                 equalTo(
                                     stringArrayKey(
-                                        "rpc.request.metadata." + EXCLUDED_REQUEST_METADATA_KEY),
+                                        "rpc.request.header." + EXCLUDED_REQUEST_HEADER_KEY),
                                     null)),
                     span ->
                         span.hasName("example.Greeter/SayHello")
@@ -1636,11 +1636,11 @@ public abstract class AbstractGrpcTest {
                             .hasAttributesSatisfying(
                                 equalTo(
                                     stringArrayKey(
-                                        "rpc.request.metadata." + SERVER_REQUEST_METADATA_KEY),
-                                    singletonList(serverMetadataValue)),
+                                        "rpc.request.header." + SERVER_REQUEST_HEADER_KEY),
+                                    singletonList(serverHeaderValue)),
                                 equalTo(
                                     stringArrayKey(
-                                        "rpc.request.metadata." + EXCLUDED_REQUEST_METADATA_KEY),
+                                        "rpc.request.header." + EXCLUDED_REQUEST_HEADER_KEY),
                                     null))));
   }
 
@@ -1696,7 +1696,7 @@ public abstract class AbstractGrpcTest {
                     .satisfies(
                         metricData ->
                             assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
-                                .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
+                                .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
                     .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->
@@ -1721,7 +1721,7 @@ public abstract class AbstractGrpcTest {
                     .satisfies(
                         metricData ->
                             assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
-                                .isEqualTo("https://opentelemetry.io/schemas/1.44.0"))
+                                .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
                     .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->

@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
-import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.createLiteralRequestAttributeKeys;
-import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.lowercase;
-import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcMetadataUtil.requestAttributeKey;
+import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcRequestHeadersUtil.createLiteralRequestHeaderAttributeKeys;
+import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcRequestHeadersUtil.lowercase;
+import static io.opentelemetry.instrumentation.grpc.v1_6.CapturedGrpcRequestHeadersUtil.requestHeaderAttributeKey;
 import static java.util.Collections.emptyMap;
 
 import io.grpc.Metadata;
@@ -28,24 +28,24 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
   private static final AttributeKey<String> RPC_STATUS_CODE =
       AttributeKey.stringKey("rpc.status_code");
   private final GrpcRpcAttributesGetter getter;
-  @Nullable private final IncludeExclude requestMetadata;
+  @Nullable private final IncludeExclude requestHeaders;
 
   // Only literal included names are stored here. We intentionally do not cache wildcard or
   // exclude-only matches, even in a bounded cache: peer-controlled names could churn its entries,
   // making allocation behavior depend on prior traffic. Creating those attribute keys on demand
   // provides a fixed per-capture cost with no peer-controlled retained state, while literal
   // configured keys remain allocation-free.
-  private final Map<String, AttributeKey<List<String>>> literalRequestAttributeKeys;
+  private final Map<String, AttributeKey<List<String>>> literalRequestHeaderAttributeKeys;
 
-  GrpcAttributesExtractor(
-      GrpcRpcAttributesGetter getter, @Nullable IncludeExclude requestMetadata) {
+  GrpcAttributesExtractor(GrpcRpcAttributesGetter getter, @Nullable IncludeExclude requestHeaders) {
     this.getter = getter;
-    if (requestMetadata == null || requestMetadata.isEmpty()) {
-      this.requestMetadata = null;
-      literalRequestAttributeKeys = emptyMap();
+    if (requestHeaders == null || requestHeaders.isEmpty()) {
+      this.requestHeaders = null;
+      literalRequestHeaderAttributeKeys = emptyMap();
     } else {
-      this.requestMetadata = lowercase(requestMetadata);
-      literalRequestAttributeKeys = createLiteralRequestAttributeKeys(this.requestMetadata);
+      this.requestHeaders = lowercase(requestHeaders);
+      literalRequestHeaderAttributeKeys =
+          createLiteralRequestHeaderAttributeKeys(this.requestHeaders);
     }
   }
 
@@ -64,7 +64,7 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
     if (status != null) {
       attributes.put(RPC_STATUS_CODE, status.getCode().name());
     }
-    if (requestMetadata == null || request.getMetadata() == null) {
+    if (requestHeaders == null || request.getMetadata() == null) {
       return;
     }
     for (String key : request.getMetadata().keys()) {
@@ -77,12 +77,13 @@ final class GrpcAttributesExtractor implements AttributesExtractor<GrpcRequest, 
       // case-insensitive as documented and an excluded key cannot be captured because a transport
       // surfaced its name with different casing
       String metadataKey = key.toLowerCase(Locale.ROOT);
-      if (!requestMetadata.matches(metadataKey)) {
+      if (!requestHeaders.matches(metadataKey)) {
         continue;
       }
       List<String> value = getter.metadataValue(request, metadataKey);
       if (!value.isEmpty()) {
-        attributes.put(requestAttributeKey(metadataKey, literalRequestAttributeKeys), value);
+        attributes.put(
+            requestHeaderAttributeKey(metadataKey, literalRequestHeaderAttributeKeys), value);
       }
     }
   }
