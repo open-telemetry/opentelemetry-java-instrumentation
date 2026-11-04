@@ -54,7 +54,8 @@ class RedissonConnectionPoolMetricsTest extends AbstractRedissonConnectionPoolMe
       AtomicInteger permits = (AtomicInteger) counter;
       permits.decrementAndGet();
       try {
-        assertUsageMetric(regularPool, 0, 1, subscriptionPool, 0, 0);
+        assertUsageMetric(
+            regularPool, REGULAR_MIN_IDLE, 1, subscriptionPool, SUBSCRIPTION_MIN_IDLE, 0);
       } finally {
         permits.incrementAndGet();
       }
@@ -64,7 +65,8 @@ class RedissonConnectionPoolMetricsTest extends AbstractRedissonConnectionPoolMe
     AsyncSemaphore semaphore = (AsyncSemaphore) counter;
     acquire(semaphore);
     try {
-      assertUsageMetric(regularPool, 0, 1, subscriptionPool, 0, 0);
+      assertUsageMetric(
+          regularPool, REGULAR_MIN_IDLE, 1, subscriptionPool, SUBSCRIPTION_MIN_IDLE, 0);
     } finally {
       semaphore.release();
     }

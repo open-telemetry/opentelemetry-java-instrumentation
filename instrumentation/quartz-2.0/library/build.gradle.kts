@@ -1,5 +1,4 @@
 import io.opentelemetry.instrumentation.gradle.executions
-import org.gradle.api.plugins.jvm.JvmTestSuite
 
 plugins {
   id("otel.library-instrumentation")
@@ -12,8 +11,8 @@ dependencies {
   testImplementation(project(":instrumentation:quartz-2.0:testing"))
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     register("Experimental") {
       systemProperty("test.captureExperimentalSpanAttributes", "true")
       systemProperty(

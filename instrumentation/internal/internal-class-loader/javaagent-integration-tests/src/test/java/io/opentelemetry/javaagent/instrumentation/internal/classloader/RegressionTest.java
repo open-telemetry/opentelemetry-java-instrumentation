@@ -18,7 +18,7 @@ class RegressionTest {
   // this test verifies that the duplicate class definition LinkageError is not thrown into
   // application code
   @Test
-  void noDuplicateClassDefinition() throws ClassNotFoundException {
+  void noDuplicateClassDefinition() {
     assertThatNoException()
         .isThrownBy(() -> Class.forName("org.apache.commons.lang3.function.FailableCallable"));
   }
