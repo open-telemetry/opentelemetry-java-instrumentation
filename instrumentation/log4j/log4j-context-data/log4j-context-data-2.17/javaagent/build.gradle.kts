@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -22,60 +24,61 @@ dependencies {
   testImplementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
 }
 
-testing {
-  suites {
-    // Very different codepaths when threadlocals are enabled or not so we check both.
-    // Regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2403
-    register<JvmTestSuite>("testDisableThreadLocals") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
-      }
-      dependencies {
-        implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
-      }
-
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dlog4j2.enable.threadlocals=false")
-            jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
-          }
-        }
+testing.suites {
+  // Very different codepaths when threadlocals are enabled or not so we check both.
+  // Regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2403
+  register<JvmTestSuite>("testDisableThreadLocals") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
     }
-
-    register<JvmTestSuite>("testAddBaggage") {
-      dependencies {
-        implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
-      }
-
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.instrumentation.log4j-context-data.add-baggage=true")
-            jvmArgs("-Dlog4j2.enable.threadlocals=true")
-          }
-        }
-      }
+    dependencies {
+      implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
     }
+  }
 
-    register<JvmTestSuite>("testLoggingKeys") {
-      dependencies {
-        implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
-      }
+  register<JvmTestSuite>("testAddBaggage") {
+    dependencies {
+      implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
+    }
+  }
 
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.instrumentation.common.logging.trace-id-key=trace_id_test")
-            jvmArgs("-Dotel.instrumentation.common.logging.span-id-key=span_id_test")
-            jvmArgs("-Dotel.instrumentation.common.logging.trace-flags-key=trace_flags_test")
-            jvmArgs("-Dlog4j2.enable.threadlocals=true")
-          }
-        }
-      }
+  register<JvmTestSuite>("testLoggingKeys") {
+    dependencies {
+      implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
+    }
+  }
+
+  executions("test") {
+    configureEach {
+      // Threadlocals are always false if is.webapp is true, so we make sure to override it because as of
+      // now testing-common includes jetty / servlet.
+      jvmArgs("-Dlog4j2.enable.threadlocals=true")
+      jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
+    }
+  }
+
+  executions("testDisableThreadLocals") {
+    configureEach {
+      jvmArgs("-Dlog4j2.enable.threadlocals=false")
+      jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
+    }
+  }
+
+  executions("testAddBaggage") {
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.log4j-context-data.add-baggage=true")
+      jvmArgs("-Dlog4j2.enable.threadlocals=true")
+    }
+  }
+
+  executions("testLoggingKeys") {
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.common.logging.trace-id-key=trace_id_test")
+      jvmArgs("-Dotel.instrumentation.common.logging.span-id-key=span_id_test")
+      jvmArgs("-Dotel.instrumentation.common.logging.trace-flags-key=trace_flags_test")
+      jvmArgs("-Dlog4j2.enable.threadlocals=true")
     }
   }
 }
@@ -83,13 +86,6 @@ testing {
 tasks {
   withType<Test>().configureEach {
     jvmArgs("-Dlog4j2.is.webapp=false")
-  }
-
-  // Threadlocals are always false if is.webapp is true, so we make sure to override it because as of
-  // now testing-common includes jetty / servlet.
-  test {
-    jvmArgs("-Dlog4j2.enable.threadlocals=true")
-    jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
   }
 
   named("check") {
