@@ -121,18 +121,14 @@ testing.suites {
 
   register<JvmTestSuite>("logbackMdcTest") {
     dependencies {
-      if (otelProps.testLatestDeps) {
-        implementation("ch.qos.logback:logback-classic:latest.release")
-      } else {
-        implementation("ch.qos.logback:logback-classic") {
-          version {
-            strictly("1.0.0")
-          }
+      implementation("ch.qos.logback:logback-classic") {
+        version {
+          strictly(baseVersion("1.0.0").orLatest())
         }
-        implementation("org.slf4j:slf4j-api") {
-          version {
-            strictly("1.7.36")
-          }
+      }
+      implementation("org.slf4j:slf4j-api") {
+        version {
+          strictly(baseVersion("1.7.36").orLatest())
         }
       }
     }
