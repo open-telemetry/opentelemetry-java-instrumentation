@@ -10,6 +10,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
@@ -25,7 +26,10 @@ import jakarta.jms.JMSConsumer;
 import jakarta.jms.JMSException;
 import jakarta.jms.JMSProducer;
 import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
 import jakarta.jms.Queue;
+import jakarta.jms.Session;
+import jakarta.jms.Topic;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -51,6 +55,8 @@ class Jms3SimplifiedApiTest {
 
   private static final String QUEUE_NAME = "stubQueue";
   private static final String MESSAGE_ID = "ID:stub-message";
+  private static final String TOPIC_NAME = "stubTopic";
+  private static final String SUBSCRIPTION_NAME = "stub-subscription";
 
   @SuppressWarnings("DirectInvocationOnMock")
   @Test
@@ -103,6 +109,50 @@ class Jms3SimplifiedApiTest {
                             equalTo(MESSAGING_OPERATION_NAME, "receive"),
                             equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(MESSAGING_MESSAGE_ID, MESSAGE_ID))));
+  }
+
+  // mirrors how providers implement JMSContext.createDurableConsumer and friends: the JMSConsumer
+  // is created over a MessageConsumer obtained from the classic Session method, and delegates its
+  // receive methods to it
+  @SuppressWarnings("DirectInvocationOnMock")
+  @ParameterizedTest
+  @MethodSource("receivers")
+  void receiveCapturesSubscriptionNameOfDelegateConsumer(Function<JMSConsumer, Message> receiver)
+      throws JMSException {
+    Topic topic = mock(Topic.class);
+    when(topic.getTopicName()).thenReturn(TOPIC_NAME);
+    Message message = message(topic);
+
+    MessageConsumer delegate = mock(MessageConsumer.class);
+    when(delegate.receive()).thenReturn(message);
+    when(delegate.receive(100)).thenReturn(message);
+    when(delegate.receiveNoWait()).thenReturn(message);
+    Session session = mock(Session.class);
+    when(session.createDurableConsumer(topic, SUBSCRIPTION_NAME)).thenReturn(delegate);
+    MessageConsumer created = session.createDurableConsumer(topic, SUBSCRIPTION_NAME);
+
+    JMSConsumer consumer = mock(JMSConsumer.class);
+    when(consumer.receive()).thenAnswer(invocation -> created.receive());
+    when(consumer.receive(100)).thenAnswer(invocation -> created.receive(100));
+    when(consumer.receiveNoWait()).thenAnswer(invocation -> created.receiveNoWait());
+
+    testing.runWithSpan("consumer parent", () -> receiver.apply(consumer));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("consumer parent").hasNoParent(),
+                span ->
+                    span.hasName("receive " + TOPIC_NAME)
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, TOPIC_NAME),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                            equalTo(MESSAGING_MESSAGE_ID, MESSAGE_ID),
+                            equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, SUBSCRIPTION_NAME))));
   }
 
   @ParameterizedTest
