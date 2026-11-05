@@ -1,5 +1,8 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -21,38 +24,36 @@ dependencies {
   testImplementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("redisson324Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
-      }
-
-      dependencies {
-        implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
-        // Redisson 3.24.3 routes configuration through ServiceManager.
-        implementation("org.redisson:redisson:3.24.3")
-      }
-
-      targets.all {
-        testTask.configure {
-          filter {
-            includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
-            includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
-            includeTestsMatching("*RedissonClientTest.configuredDatabaseIndexOnAtomicBatch")
-          }
-        }
+testing.suites {
+  register<JvmTestSuite>("redisson324Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
     }
+
+    dependencies {
+      implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
+      // Redisson 3.24.3 routes configuration through ServiceManager.
+      implementation("org.redisson:redisson:3.24.3")
+    }
+  }
+
+  executions("redisson324Test") {
+    configureEach {
+      filter {
+        includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
+        includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
+        includeTestsMatching("*RedissonClientTest.configuredDatabaseIndexOnAtomicBatch")
+      }
+    }
+    register("ServerTarget") {}
   }
 }
 
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
   check {

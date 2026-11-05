@@ -24,6 +24,10 @@ public class EndOperationListener<T> implements BiConsumer<T, Throwable> {
 
   @Override
   public void accept(@Nullable T unused, @Nullable Throwable error) {
-    instrumenter.end(context, request, null, error);
+    try {
+      instrumenter.end(context, request, null, error);
+    } finally {
+      RedissonErrorCapture.clearServerError(error);
+    }
   }
 }

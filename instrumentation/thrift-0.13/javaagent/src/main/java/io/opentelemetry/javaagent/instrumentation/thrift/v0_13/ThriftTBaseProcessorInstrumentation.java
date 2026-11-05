@@ -45,10 +45,11 @@ class ThriftTBaseProcessorInstrumentation implements TypeInstrumentation {
     })
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] methodEnter(
+        @Advice.This Object processor,
         @Advice.Argument(0) TProtocol inProtocol,
         @Advice.Argument(1) TProtocol outProtocol,
         @Advice.FieldValue("iface") Object iface) {
-      String serviceName = iface.getClass().getName();
+      String serviceName = ThriftSingletons.getServerServiceName(processor, iface);
 
       ServerInProtocolDecorator serverInProtocolDecorator =
           new ServerInProtocolDecorator(inProtocol, serviceName, serverInstrumenter());

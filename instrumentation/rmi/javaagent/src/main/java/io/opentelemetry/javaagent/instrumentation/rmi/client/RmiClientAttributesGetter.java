@@ -11,18 +11,12 @@ import java.lang.reflect.Method;
 final class RmiClientAttributesGetter implements RpcAttributesGetter<Method, Void> {
 
   @Override
-  public String getSystem(Method method) {
+  public String getRpcSystemName(Method method) {
     return "java_rmi";
   }
 
   @Override
-  public String getService(Method method) {
-    return method.getDeclaringClass().getName();
-  }
-
-  @Deprecated
-  @Override
-  public String getMethod(Method method) {
-    return method.getName();
+  public String getRpcMethod(Method method) {
+    return method.getDeclaringClass().getName() + "/" + method.getName();
   }
 }

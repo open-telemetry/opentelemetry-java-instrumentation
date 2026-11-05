@@ -16,9 +16,7 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
@@ -36,7 +34,7 @@ import javax.annotation.Nullable;
  * attribute extraction from request/response objects.
  */
 public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
-    implements AttributesExtractor<REQUEST, RESPONSE>, SchemaUrlProvider, SpanKeyProvider {
+    implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
   private static final AttributeKeyTemplate<String> DB_QUERY_PARAMETER =
       AttributeKeyTemplate.stringKeyTemplate("db.query.parameter");
@@ -139,10 +137,5 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public SpanKey internalGetSpanKey() {
     return SpanKey.DB_CLIENT;
-  }
-
-  @Override
-  public String internalGetSchemaUrl() {
-    return DbSchemaUrls.SCHEMA_URL;
   }
 }

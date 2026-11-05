@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -12,8 +13,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_NAMESPACE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -325,7 +324,7 @@ class RocketMqProducerWrapperTest {
   void delegatesLifecycleAndSingleMessageSends() throws Exception {
     DefaultMQProducer producer = mock(DefaultMQProducer.class);
     when(producer.getDefaultMQProducerImpl()).thenReturn(implementation);
-    MQProducer wrapped = RocketMqTelemetry.create(testing.getOpenTelemetry()).wrap(producer);
+    MQProducer wrapped = RocketMqTelemetry.create(testing.getOpenTelemetry()).instrument(producer);
     Message message = messages(1).get(0);
     wrapped.start();
     wrapped.send(message);
@@ -449,7 +448,7 @@ class RocketMqProducerWrapperTest {
               }
               return answer.answer(invocation);
             });
-    return RocketMqTelemetry.create(testing.getOpenTelemetry()).wrap(producer);
+    return RocketMqTelemetry.create(testing.getOpenTelemetry()).instrument(producer);
   }
 
   private static List<Message> messages(int count) {
@@ -489,9 +488,8 @@ class RocketMqProducerWrapperTest {
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                            equalTo(stringKey("messaging.system.name"), "rocketmq"),
                             equalTo(MESSAGING_DESTINATION_NAME, "topic"),
-                            equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, count),

@@ -10,13 +10,11 @@ import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSin
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -37,10 +35,7 @@ class LettuceObservableCommandInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf("complete", "cancel")
             .and(takesArguments(0))
-            .or(
-                named("completeExceptionally")
-                    .and(takesArguments(1))
-                    .and(takesArgument(0, Throwable.class))),
+            .or(named("completeExceptionally").and(takesArguments(Throwable.class))),
         getClass().getName() + "$TerminalAdvice");
   }
 
@@ -49,7 +44,7 @@ class LettuceObservableCommandInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This RedisCommand<?, ?, ?> observableCommand) {
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       if (context.get(COMMAND_CONTEXT_KEY) != null) {
         LettuceSingletons.applyCommandPeer(observableCommand, context);
         CONTEXT.set(observableCommand, context);

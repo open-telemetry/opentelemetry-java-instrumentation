@@ -100,8 +100,6 @@ public final class FilterAwareProxyFactory implements ProxyFactory {
 
     @Override
     public Publisher<Long> getRowsUpdated() {
-      // The Publisher signature is erased; forward SPI 0.9 Integer and SPI 1.0 Long counts
-      // unchanged.
       return delegate.getRowsUpdated();
     }
 

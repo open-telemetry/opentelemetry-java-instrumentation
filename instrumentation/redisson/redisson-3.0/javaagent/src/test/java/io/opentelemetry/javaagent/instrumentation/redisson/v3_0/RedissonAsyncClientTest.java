@@ -6,5 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_0;
 
 import io.opentelemetry.javaagent.instrumentation.redisson.AbstractRedissonAsyncClientTest;
+import org.redisson.api.RBatch;
+import org.redisson.api.RedissonClient;
 
-class RedissonAsyncClientTest extends AbstractRedissonAsyncClientTest {}
+class RedissonAsyncClientTest extends AbstractRedissonAsyncClientTest {
+  @Override
+  protected RBatch createBatch(RedissonClient redisson) {
+    return redisson.createBatch();
+  }
+}

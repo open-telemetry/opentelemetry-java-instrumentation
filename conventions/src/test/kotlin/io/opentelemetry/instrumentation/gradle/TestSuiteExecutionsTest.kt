@@ -7,11 +7,15 @@ package io.opentelemetry.instrumentation.gradle
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.gradle.api.DomainObjectCollection
+import org.gradle.api.Project
 import org.gradle.api.plugins.jvm.JvmTestSuite
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.testing.Test
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testing.base.TestingExtension
+import org.gradle.testing.base.TestSuite
+import org.gradle.testing.base.TestSuiteTarget
 import org.gradle.process.CommandLineArgumentProvider
 import org.junit.jupiter.api.Test as JunitTest
 
@@ -50,6 +54,56 @@ class TestSuiteExecutionsTest {
   }
 
   @JunitTest
+  fun `collection selector configures only the explicitly named suites`() {
+    val integration = suites().register("integrationTest", JvmTestSuite::class.java).get()
+    val untouched = suites().register("untouched", JvmTestSuite::class.java).get()
+
+    suites().executions("test", integration.name) {
+      configureEach {
+        systemProperty("selected", "true")
+      }
+      register("Variant") {}
+    }
+
+    assertThat(test("test").systemProperties).containsEntry("selected", "true")
+    assertThat(test("testVariant").systemProperties).containsEntry("selected", "true")
+    assertThat(test("integrationTest").systemProperties).containsEntry("selected", "true")
+    assertThat(test("integrationTestVariant").systemProperties).containsEntry("selected", "true")
+    assertThat(test(untouched.name).systemProperties).doesNotContainKey("selected")
+    assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
+      .contains("testVariant", "integrationTestVariant")
+      .doesNotContain("untouchedVariant")
+  }
+
+  @JunitTest
+  fun `collection selector lazily configures suites registered later`() {
+    suites().executions {
+      configureEach {
+        systemProperty("selected", "true")
+      }
+      register("Variant") {}
+    }
+
+    suites().register("lateTest", JvmTestSuite::class.java)
+
+    assertThat(test("test").systemProperties).containsEntry("selected", "true")
+    assertThat(test("lateTest").systemProperties).containsEntry("selected", "true")
+    assertThat(test("lateTestVariant").systemProperties).containsEntry("selected", "true")
+    assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
+      .contains("lateTest", "lateTestVariant")
+  }
+
+  @JunitTest
+  fun `collection selector rejects missing and non JVM suites`() {
+    assertThatThrownBy { suites().executions("missing") {} }
+      .hasMessageContaining("missing")
+
+    suites().add(NonJvmTestSuite(project, "nonJvm"))
+    assertThatThrownBy { suites().executions("nonJvm") {} }
+      .hasMessageContaining("Test suite 'nonJvm' is not a JVM test suite")
+  }
+
+  @JunitTest
   fun `common configuration precedes variants regardless of declaration order`() {
     for (commonFirst in listOf(true, false)) {
       val suite = suites().register("suite$commonFirst", JvmTestSuite::class.java).get()
@@ -84,6 +138,75 @@ class TestSuiteExecutionsTest {
       assertThat(variant.filter.includePatterns).containsExactly("example.*")
       assertThat(variant.enabled).isFalse()
     }
+  }
+
+  @JunitTest
+  fun `default configuration follows common configuration and stays off variants`() {
+    for (defaultFirst in listOf(true, false)) {
+      val suiteName = if (defaultFirst) "defaultFirst" else "commonFirst"
+      val testSuite = suites().register(suiteName, JvmTestSuite::class.java).get()
+      testSuite.executions {
+        if (defaultFirst) {
+          configureDefault {
+            systemProperty("setting", "default")
+            systemProperty("default.only", "true")
+            jvmArgs("-XX:+UseSerialGC")
+            filter.excludeTestsMatching("baseline.*")
+          }
+        }
+        configureEach {
+          systemProperty("setting", "common")
+          jvmArgs("-Xss2m")
+        }
+        if (!defaultFirst) {
+          configureDefault {
+            systemProperty("setting", "default")
+            systemProperty("default.only", "true")
+            jvmArgs("-XX:+UseSerialGC")
+            filter.excludeTestsMatching("baseline.*")
+          }
+        }
+        register("Variant") {}
+      }
+
+      val default = test(testSuite.name)
+      val variant = test(testSuite.name + "Variant")
+      assertThat(default.systemProperties)
+        .containsEntry("setting", "default")
+        .containsEntry("default.only", "true")
+      assertThat(default.jvmArgs).containsExactly("-Xss2m", "-XX:+UseSerialGC")
+      assertThat(default.filter.excludePatterns).containsExactly("baseline.*")
+      assertThat(variant.systemProperties)
+        .containsEntry("setting", "common")
+        .doesNotContainKey("default.only")
+      assertThat(variant.jvmArgs).containsExactly("-Xss2m")
+      assertThat(variant.filter.excludePatterns).isEmpty()
+      assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
+        .contains(testSuite.name, testSuite.name + "Variant")
+        .doesNotContain(testSuite.name + "Baseline")
+    }
+  }
+
+  @JunitTest
+  fun `default configuration is isolated to its named suite`() {
+    suite("test").executions {
+      configureDefault {
+        systemProperty("suite.default", "test")
+      }
+      register("Variant") {}
+    }
+    val integrationSuite = suites().register("integrationTest", JvmTestSuite::class.java).get()
+    integrationSuite.executions {
+      configureDefault {
+        systemProperty("suite.default", "integration")
+      }
+      register("Variant") {}
+    }
+
+    assertThat(test("test").systemProperties).containsEntry("suite.default", "test")
+    assertThat(test("testVariant").systemProperties).doesNotContainKey("suite.default")
+    assertThat(test("integrationTest").systemProperties).containsEntry("suite.default", "integration")
+    assertThat(test("integrationTestVariant").systemProperties).doesNotContainKey("suite.default")
   }
 
   @JunitTest
@@ -175,9 +298,32 @@ class TestSuiteExecutionsTest {
       configureEach {
         systemProperty("common", "true")
       }
+      configureDefault {
+        systemProperty("default", "true")
+      }
     }
     assertThat(default.systemProperties).containsEntry("common", "true")
+    assertThat(default.systemProperties).containsEntry("default", "true")
     assertThat(test("testVariant").systemProperties).containsEntry("common", "true")
+    assertThat(test("testVariant").systemProperties).doesNotContainKey("default")
+  }
+
+  @JunitTest
+  fun `default configuration remains lazy until its task is realized`() {
+    var configurationCount = 0
+    suite("test").executions {
+      configureDefault {
+        configurationCount++
+        systemProperty("default", "true")
+      }
+      register("Variant") {}
+    }
+
+    assertThat(configurationCount).isZero()
+    assertThat(test("testVariant").systemProperties).doesNotContainKey("default")
+    assertThat(configurationCount).isZero()
+    assertThat(test("test").systemProperties).containsEntry("default", "true")
+    assertThat(configurationCount).isEqualTo(1)
   }
 
   @JunitTest
@@ -209,5 +355,12 @@ class TestSuiteExecutionsTest {
     assertThat(task.testClassesDirs.files).isEqualTo(suite.sources.output.classesDirs.files)
     // Inspect the file collection graph without resolving the suite's external test dependencies.
     assertThat(task.classpath).isSameAs(suite.sources.runtimeClasspath)
+  }
+
+  private class NonJvmTestSuite(private val project: Project, private val suiteName: String) : TestSuite {
+    override fun getName() = suiteName
+
+    override fun getTargets(): DomainObjectCollection<out TestSuiteTarget> =
+      project.objects.domainObjectSet(TestSuiteTarget::class.java)
   }
 }

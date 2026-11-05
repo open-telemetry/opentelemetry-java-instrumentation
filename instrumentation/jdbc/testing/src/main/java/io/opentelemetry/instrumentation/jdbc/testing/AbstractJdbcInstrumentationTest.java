@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.jdbc.testing;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -32,8 +33,6 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -42,7 +41,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.jdbc.TestConnection;
 import io.opentelemetry.instrumentation.jdbc.TestDriver;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -57,6 +55,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -89,6 +88,10 @@ public abstract class AbstractJdbcInstrumentationTest {
 
   protected abstract InstrumentationExtension testing();
 
+  protected boolean hasSqliteConnectionInitializationSpans() {
+    return false;
+  }
+
   protected Connection wrap(Connection connection) throws SQLException {
     return connection;
   }
@@ -99,24 +102,28 @@ public abstract class AbstractJdbcInstrumentationTest {
 
   private static final String DATABASE_NAME = "jdbcUnitTest";
   private static final String DATABASE_NAME_LOWER = DATABASE_NAME.toLowerCase(Locale.ROOT);
-  private static final Map<String, String> JDBC_URLS =
-      ImmutableMap.of(
-          "h2", "jdbc:h2:mem:" + DATABASE_NAME,
-          "derby", "jdbc:derby:memory:" + DATABASE_NAME,
-          "hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME,
-          "sqlite", "jdbc:sqlite:file:" + DATABASE_NAME + "?mode=memory");
-  private static final Map<String, String> JDBC_DRIVER_CLASS_NAMES =
-      ImmutableMap.of(
-          "h2", "org.h2.Driver",
-          "derby", "org.apache.derby.jdbc.EmbeddedDriver",
-          "hsqldb", "org.hsqldb.jdbc.JDBCDriver",
-          "sqlite", "org.sqlite.JDBC");
-  private static final Map<String, String> jdbcUserNames = Maps.newHashMap();
+  private static final Map<String, String> JDBC_URLS;
+  private static final Map<String, String> JDBC_DRIVER_CLASS_NAMES;
+  private static final Map<String, String> jdbcUserNames = new HashMap<>();
   private static final Properties connectionProps = new Properties();
   // JDBC Connection pool name (i.e. HikariCP) -> Map<databaseName, Datasource>
-  private static final Map<String, Map<String, DataSource>> cpDatasources = Maps.newHashMap();
+  private static final Map<String, Map<String, DataSource>> cpDatasources = new HashMap<>();
 
   static {
+    Map<String, String> jdbcUrls = new HashMap<>();
+    jdbcUrls.put("h2", "jdbc:h2:mem:" + DATABASE_NAME);
+    jdbcUrls.put("derby", "jdbc:derby:memory:" + DATABASE_NAME);
+    jdbcUrls.put("hsqldb", "jdbc:hsqldb:mem:" + DATABASE_NAME);
+    jdbcUrls.put("sqlite", "jdbc:sqlite:file:" + DATABASE_NAME + "?mode=memory");
+    JDBC_URLS = Collections.unmodifiableMap(jdbcUrls);
+
+    Map<String, String> jdbcDriverClassNames = new HashMap<>();
+    jdbcDriverClassNames.put("h2", "org.h2.Driver");
+    jdbcDriverClassNames.put("derby", "org.apache.derby.jdbc.EmbeddedDriver");
+    jdbcDriverClassNames.put("hsqldb", "org.hsqldb.jdbc.JDBCDriver");
+    jdbcDriverClassNames.put("sqlite", "org.sqlite.JDBC");
+    JDBC_DRIVER_CLASS_NAMES = Collections.unmodifiableMap(jdbcDriverClassNames);
+
     jdbcUserNames.put("derby", "APP");
     jdbcUserNames.put("h2", null);
     jdbcUserNames.put("hsqldb", "SA");
@@ -1356,8 +1363,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                       equalTo(DB_NAMESPACE, "jdbcunittest"),
                                       equalTo(DB_CONNECTION_STRING, null))));
               // sqlite-jdbc executes extra statements during connection init
-              if (ds instanceof SQLiteDataSource
-                  && testing() instanceof AgentInstrumentationExtension) {
+              if (ds instanceof SQLiteDataSource && hasSqliteConnectionInitializationSpans()) {
                 assertions.add(
                     span ->
                         span.hasName("jdbcunittest")
@@ -1403,7 +1409,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(DB_SYSTEM_NAME, OTHER_SQL),
                                 equalTo(DB_QUERY_TEXT, "testing ?"),
-                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1490,7 +1497,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     table != null ? operation + " " + table : operation),
-                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1605,7 +1613,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(DB_SYSTEM_NAME, OTHER_SQL),
                                 equalTo(DB_QUERY_TEXT, "SELECT * FROM table"),
                                 equalTo(DB_QUERY_SUMMARY, "SELECT table"),
-                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 

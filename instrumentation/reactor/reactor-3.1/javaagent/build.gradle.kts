@@ -55,22 +55,20 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("testInitialization") {
-      dependencies {
-        implementation(project(":instrumentation:reactor:reactor-3.1:library"))
-        implementation(project(":instrumentation-annotations"))
-        val version = baseVersion("3.1.0.RELEASE").orLatest()
-        implementation("io.projectreactor:reactor-test:$version")
-      }
+testing.suites {
+  register<JvmTestSuite>("testInitialization") {
+    dependencies {
+      implementation(project(":instrumentation:reactor:reactor-3.1:library"))
+      implementation(project(":instrumentation-annotations"))
+      val version = baseVersion("3.1.0.RELEASE").orLatest()
+      implementation("io.projectreactor:reactor-test:$version")
     }
-    register<JvmTestSuite>("version34Test") {
-      dependencies {
-        implementation(project(":instrumentation:reactor:reactor-3.1:library"))
-        val version = baseVersion("3.4.0").orLatest()
-        implementation("io.projectreactor:reactor-core:$version")
-      }
+  }
+  register<JvmTestSuite>("version34Test") {
+    dependencies {
+      implementation(project(":instrumentation:reactor:reactor-3.1:library"))
+      val version = baseVersion("3.4.0").orLatest()
+      implementation("io.projectreactor:reactor-core:$version")
     }
   }
 }

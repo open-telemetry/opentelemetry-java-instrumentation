@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -24,59 +25,53 @@ dependencies {
   latestDepTestLibrary("org.redisson:redisson:3.17.+") // see redisson-metrics-3.18 module
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("redisson251Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
-      }
-
-      dependencies {
-        compileOnly(project())
-        implementation(project(":instrumentation:redisson:redisson-metrics-common-2.3:testing"))
-        implementation("org.redisson:redisson:2.5.1")
+testing.suites {
+  register<JvmTestSuite>("redisson251Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
     }
 
-    register<JvmTestSuite>("redisson311Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
-      }
+    dependencies {
+      compileOnly(project())
+      implementation(project(":instrumentation:redisson:redisson-metrics-common-2.3:testing"))
+      implementation("org.redisson:redisson:2.5.1")
+    }
+  }
 
-      dependencies {
-        compileOnly(project())
-        implementation(project(":instrumentation:redisson:redisson-metrics-common-2.3:testing"))
-
-        val version = baseVersion("3.11.0").orLatest("3.11.+")
-        implementation("org.redisson:redisson:$version")
+  register<JvmTestSuite>("redisson311Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
     }
 
-    register<JvmTestSuite>("redisson315Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
-      }
+    dependencies {
+      compileOnly(project())
+      implementation(project(":instrumentation:redisson:redisson-metrics-common-2.3:testing"))
 
-      dependencies {
-        compileOnly(project())
-        implementation(project(":instrumentation:redisson:redisson-metrics-common-2.3:testing"))
-        implementation("org.redisson:redisson:3.15.6")
+      val version = baseVersion("3.11.0").orLatest("3.11.+")
+      implementation("org.redisson:redisson:$version")
+    }
+  }
+
+  register<JvmTestSuite>("redisson315Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
+    }
+
+    dependencies {
+      compileOnly(project())
+      implementation(project(":instrumentation:redisson:redisson-metrics-common-2.3:testing"))
+      implementation("org.redisson:redisson:3.15.6")
     }
   }
 }
 
 tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
   check {
     dependsOn(testing.suites)
   }

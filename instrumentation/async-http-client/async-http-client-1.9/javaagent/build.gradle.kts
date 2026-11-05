@@ -1,6 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
-
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -28,21 +25,10 @@ dependencies {
   testInstrumentation(project(":instrumentation:async-http-client:async-http-client-2.0:javaagent"))
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          // required on jdk17
-          jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
-          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+tasks.named<Test>("test") {
+  // required on jdk17
+  jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-          systemProperty("testLatestDeps", otelProps.testLatestDeps)
-        }
-        register("PreviewSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "service.peer")
-        }
-      }
-    }
-  }
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
 }

@@ -1,5 +1,9 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-testing")
+  id("otel.testcontainers-testing")
 }
 
 dependencies {
@@ -16,58 +20,43 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-codegen:3.+") // see vertx-kafka-client-4-testing module
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("testNoReceiveTelemetry") {
-      dependencies {
-        implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
+testing.suites {
+  register<JvmTestSuite>("testNoReceiveTelemetry") {
+    dependencies {
+      implementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
 
-        val version = baseVersion("3.6.0").orLatest("3.+")
-        implementation("io.vertx:vertx-kafka-client:$version")
-        implementation("io.vertx:vertx-codegen:$version")
+      val version = baseVersion("3.6.0").orLatest("3.+")
+      implementation("io.vertx:vertx-kafka-client:$version")
+      implementation("io.vertx:vertx-codegen:$version")
+    }
+
+    executions {
+      register("Experimental") {
+        telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
       }
+    }
+  }
+
+  executions("test") {
+    configureEach {
+      telemetryConfig(
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+        "true",
+      )
+    }
+
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
     }
   }
 }
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  test {
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-    )
-  }
-
-  val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}Experimental") {
-        val sourceTask = named<Test>(suite.name).get()
-        setJvmArgs(sourceTask.jvmArgs)
-        setSystemProperties(sourceTask.systemProperties)
-
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        val experimentalConfig = "otel.instrumentation.kafka.experimental-span-attributes=true"
-        jvmArgs("-D$experimentalConfig")
-        systemProperty(
-          "metadataConfig",
-          listOfNotNull(sourceTask.systemProperties["metadataConfig"], experimentalConfig).joinToString(","),
-        )
-        isEnabled = sourceTask.enabled
-      }
-    }
-
   check {
-    dependsOn(
-      testing.suites,
-      experimentalSuites,
-    )
+    dependsOn(testing.suites)
   }
 }

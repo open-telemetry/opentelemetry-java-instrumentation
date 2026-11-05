@@ -41,7 +41,7 @@ import java.util.Locale;
  * any time.
  */
 public class OpenTelemetryInstrumentationHelper {
-  private static final String SCHEMA_URL = SchemaUrls.V1_44_0;
+  private static final String SCHEMA_URL = SchemaUrls.V1_45_0;
 
   private static final NodeVisitor sanitizingVisitor = new SanitizingVisitor();
   private static final AstTransformer astTransformer = new AstTransformer();

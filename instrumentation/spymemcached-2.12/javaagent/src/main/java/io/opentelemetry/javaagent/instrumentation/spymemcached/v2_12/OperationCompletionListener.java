@@ -11,7 +11,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
-import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.internal.OperationFuture;
 
 public class OperationCompletionListener extends CompletionListener<OperationFuture<?>>
@@ -19,8 +18,7 @@ public class OperationCompletionListener extends CompletionListener<OperationFut
 
   @Nullable
   public static OperationCompletionListener create(
-      Context parentContext, MemcachedConnection connection, String methodName) {
-    SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName);
+      Context parentContext, SpymemcachedRequest request) {
     if (!instrumenter().shouldStart(parentContext, request)) {
       return null;
     }

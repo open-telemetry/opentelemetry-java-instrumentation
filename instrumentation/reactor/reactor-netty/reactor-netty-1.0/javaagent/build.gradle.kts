@@ -45,36 +45,22 @@ dependencies {
   testImplementation(project(":instrumentation-annotations"))
 }
 
-tasks {
-  test {
-    filter {
-      excludeTestsMatching("ReactorNettyConnectionSpanTest")
-      excludeTestsMatching("ReactorNettyClientSslTest")
-    }
-  }
-}
-
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("ConnectionSpan") {
-          filter {
-            includeTestsMatching("ReactorNettyConnectionSpanTest")
-            includeTestsMatching("ReactorNettyClientSslTest")
-          }
-          include("**/ReactorNettyConnectionSpanTest.*", "**/ReactorNettyClientSslTest.*")
-          telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
-          telemetryConfig("otel.instrumentation.reactor-netty.connection-telemetry.enabled", "true")
-        }
-        register("PreviewSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "service.peer")
-          filter {
-            excludeTestsMatching("ReactorNettyConnectionSpanTest")
-            excludeTestsMatching("ReactorNettyClientSslTest")
-          }
-        }
+testing.suites {
+  executions("test") {
+    configureDefault {
+      filter {
+        excludeTestsMatching("ReactorNettyConnectionSpanTest")
+        excludeTestsMatching("ReactorNettyClientSslTest")
       }
+    }
+    register("ConnectionSpan") {
+      filter {
+        includeTestsMatching("ReactorNettyConnectionSpanTest")
+        includeTestsMatching("ReactorNettyClientSslTest")
+      }
+      include("**/ReactorNettyConnectionSpanTest.*", "**/ReactorNettyClientSslTest.*")
+      telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
+      telemetryConfig("otel.instrumentation.reactor-netty.connection-telemetry.enabled", "true")
     }
   }
 }

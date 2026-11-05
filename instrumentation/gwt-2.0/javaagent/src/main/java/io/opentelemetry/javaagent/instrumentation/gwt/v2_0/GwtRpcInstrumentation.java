@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
@@ -101,8 +100,7 @@ class GwtRpcInstrumentation implements TypeInstrumentation {
       if (throwable == null) {
         return;
       }
-      AtomicReference<Throwable> failure =
-          Java8BytecodeBridge.currentContext().get(RPC_FAILURE_KEY);
+      AtomicReference<Throwable> failure = Context.current().get(RPC_FAILURE_KEY);
       if (failure == null) {
         // not inside rpc invocation
         return;

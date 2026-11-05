@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -29,7 +30,6 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  testLibrary("com.datastax.cassandra:cassandra-driver-core:3.2.0")
   testInstrumentation(project(":instrumentation:guava-10.0:javaagent"))
 
   latestDepTestLibrary("com.datastax.cassandra:cassandra-driver-core:3.+") // see cassandra-4.0 module
@@ -43,7 +43,7 @@ configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.g
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   if (otelProps.denyUnsafe) {

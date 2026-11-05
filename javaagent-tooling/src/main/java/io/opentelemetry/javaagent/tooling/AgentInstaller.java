@@ -46,6 +46,7 @@ import io.opentelemetry.javaagent.tooling.ignore.IgnoreAllow;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredClassLoadersMatcher;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
+import io.opentelemetry.javaagent.tooling.internal.AgentCircularityLock;
 import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import io.opentelemetry.javaagent.tooling.util.Trie;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -251,7 +252,7 @@ public class AgentInstaller {
     // system property
     String originalNexusDisabled = System.setProperty("net.bytebuddy.nexus.disabled", "true");
     try {
-      return new AgentBuilder.Default(byteBuddy);
+      return new AgentBuilder.Default(byteBuddy).with(AgentCircularityLock.INSTANCE);
     } finally {
       // restore the original value for the nexus disabled property
       if (originalNexusDisabled != null) {
