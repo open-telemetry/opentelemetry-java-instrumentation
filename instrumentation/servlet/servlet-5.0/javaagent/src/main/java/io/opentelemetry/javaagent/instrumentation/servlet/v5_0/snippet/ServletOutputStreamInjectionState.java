@@ -17,8 +17,12 @@ public class ServletOutputStreamInjectionState {
 
   public static void initializeInjectionStateIfNeeded(
       ServletOutputStream servletOutputStream, Servlet5SnippetInjectingResponseWrapper wrapper) {
-    VIRTUAL_FIELD.set(
-        servletOutputStream, new InjectionStateReference(wrapper.getStreamInjectionState()));
+    InjectionState state = wrapper.getStreamInjectionState();
+    InjectionStateReference reference = VIRTUAL_FIELD.get(servletOutputStream);
+    if (reference != null && reference.get() == state) {
+      return;
+    }
+    VIRTUAL_FIELD.set(servletOutputStream, new InjectionStateReference(state));
   }
 
   @Nullable

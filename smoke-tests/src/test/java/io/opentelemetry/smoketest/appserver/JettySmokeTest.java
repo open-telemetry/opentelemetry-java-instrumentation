@@ -8,6 +8,7 @@ package io.opentelemetry.smoketest.appserver;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.smoketest.ResourceMapping;
 import io.opentelemetry.smoketest.SmokeTestOptions;
 import io.opentelemetry.smoketest.TargetWaitStrategy;
 import java.net.Socket;
@@ -66,6 +67,20 @@ abstract class JettySmokeTest extends AppServerTest {
     testing.waitForTraces(2);
   }
 
+  @Test
+  void acquiredStreamRemainsActiveAfterAsyncDispatch() {
+    var response = client().get("/app/async-stream-snippet/start").aggregate().join();
+    String body = response.contentUtf8();
+
+    assertThat(response.status().isSuccess()).isTrue();
+    assertThat(body)
+        .isEqualTo(
+            "<html><head><script>console.log(hi)</script><title>Async stream injection</title>"
+                + "</head><body>done</body></html>");
+    assertThat(body).containsOnlyOnce("<script>console.log(hi)</script>");
+    testing.waitForTraces(1);
+  }
+
   private static void assertContentLength(ClassicHttpResponse response, byte[] body) {
     var contentLength = response.getFirstHeader("Content-Length");
     if (contentLength != null) {
@@ -75,7 +90,13 @@ abstract class JettySmokeTest extends AppServerTest {
 
   @Override
   protected void configure(SmokeTestOptions<AppServerImage> options) {
-    configureOptions(options);
+    AppServer appServer = getClass().getAnnotation(AppServer.class);
+    String servletWar =
+        appServer.version().startsWith("9.") || appServer.version().startsWith("10.")
+            ? "servlet-3.0.war"
+            : "servlet-5.0.war";
+    configureOptions(options)
+        .extraResources(ResourceMapping.of(servletWar, "/base/webapps/app.war"));
   }
 
   static SmokeTestOptions<AppServerImage> configureOptions(

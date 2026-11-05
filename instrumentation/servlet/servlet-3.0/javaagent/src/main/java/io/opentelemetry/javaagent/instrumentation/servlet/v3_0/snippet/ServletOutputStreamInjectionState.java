@@ -17,8 +17,12 @@ public class ServletOutputStreamInjectionState {
 
   public static void initializeInjectionStateIfNeeded(
       ServletOutputStream servletOutputStream, Servlet3SnippetInjectingResponseWrapper wrapper) {
-    INJECTION_STATE.set(
-        servletOutputStream, new InjectionStateReference(wrapper.getStreamInjectionState()));
+    InjectionState state = wrapper.getStreamInjectionState();
+    InjectionStateReference reference = INJECTION_STATE.get(servletOutputStream);
+    if (reference != null && reference.get() == state) {
+      return;
+    }
+    INJECTION_STATE.set(servletOutputStream, new InjectionStateReference(state));
   }
 
   @Nullable

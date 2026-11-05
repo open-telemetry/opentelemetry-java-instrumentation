@@ -183,7 +183,9 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
   public ServletOutputStream getOutputStream() throws IOException {
     ServletOutputStream output = super.getOutputStream();
     if (request != null) {
-      request.setAttribute(STREAM_STATE_ATTRIBUTE, streamInjectionState);
+      if (request.getAttribute(STREAM_STATE_ATTRIBUTE) != streamInjectionState) {
+        request.setAttribute(STREAM_STATE_ATTRIBUTE, streamInjectionState);
+      }
     }
     initializeInjectionStateIfNeeded(output, this);
     return output;
