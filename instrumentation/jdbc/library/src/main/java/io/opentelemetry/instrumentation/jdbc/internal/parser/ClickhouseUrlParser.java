@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
+import javax.annotation.Nullable;
+
 /**
  * Parser for ClickHouse JDBC URLs.
  *
@@ -26,6 +28,12 @@ public final class ClickhouseUrlParser implements JdbcUrlParser {
   public static final ClickhouseUrlParser INSTANCE = new ClickhouseUrlParser();
 
   private ClickhouseUrlParser() {}
+
+  @Override
+  @Nullable
+  public String extractAuthority(String jdbcUrl) {
+    return UrlParsingUtils.extractAuthority(jdbcUrl);
+  }
 
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {

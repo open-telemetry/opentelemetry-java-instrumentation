@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 
 import java.util.Map;
 import java.util.Properties;
+import javax.annotation.Nullable;
 
 /**
  * Parses PostgreSQL JDBC connection strings.
@@ -39,6 +40,12 @@ public final class PostgresqlUrlParser implements JdbcUrlParser {
   public static final PostgresqlUrlParser INSTANCE = new PostgresqlUrlParser();
 
   private PostgresqlUrlParser() {}
+
+  @Override
+  @Nullable
+  public String extractAuthority(String jdbcUrl) {
+    return UrlParsingUtils.extractAuthority(jdbcUrl);
+  }
 
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {

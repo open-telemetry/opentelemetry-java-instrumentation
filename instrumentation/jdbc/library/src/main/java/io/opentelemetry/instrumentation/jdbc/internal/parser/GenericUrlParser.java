@@ -41,6 +41,12 @@ public final class GenericUrlParser implements JdbcUrlParser {
   private GenericUrlParser() {}
 
   @Override
+  @Nullable
+  public String extractAuthority(String jdbcUrl) {
+    return UrlParsingUtils.extractAuthority(jdbcUrl);
+  }
+
+  @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
     parse(jdbcUrl, ctx, null);
   }

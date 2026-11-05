@@ -23,12 +23,20 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.ClickhouseUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.Db2UrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.GenericUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.InformixDirectUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.InformixSqliUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.JdbcUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.LindormUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.MysqlUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.OceanbaseUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.OracleUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.PolardbUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.PostgresqlUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.SapUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.SqliteUrlParser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -2185,6 +2193,16 @@ class JdbcConnectionUrlParserTest {
 
   private static Stream<Arguments> parserAuthorityBoundaries() {
     return Stream.of(
+        arguments(GenericUrlParser.INSTANCE, "other://h1,h2/db", "h1,h2"),
+        arguments(ClickhouseUrlParser.INSTANCE, "clickhouse:http://h1,h2/db", "h1,h2"),
+        arguments(LindormUrlParser.INSTANCE, "lindorm:table:url=http://h1,h2/db", "h1,h2"),
+        arguments(MysqlUrlParser.INSTANCE, "mysql://h1,h2/db", "h1,h2"),
+        arguments(
+            OracleUrlParser.INSTANCE, "oracle:thin:@ldap://h1:389/cn=oraclecontext", "h1:389"),
+        arguments(PolardbUrlParser.INSTANCE, "polardb://h1,h2/db", "h1,h2"),
+        arguments(PostgresqlUrlParser.INSTANCE, "postgresql://h1,h2/db", "h1,h2"),
+        arguments(SapUrlParser.INSTANCE, "sap://h1,h2/db", "h1,h2"),
+        arguments(SqliteUrlParser.INSTANCE, "sqlite:file:db", null),
         arguments(Db2UrlParser.INSTANCE, "db2://h1:50000;user=a,b", "h1:50000"),
         arguments(Db2UrlParser.INSTANCE, "as400://h1:50000;user=a,b", "h1:50000"),
         arguments(InformixSqliUrlParser.INSTANCE, "informix-sqli://h1;user=a,b", "h1"),

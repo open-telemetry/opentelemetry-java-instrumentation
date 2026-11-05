@@ -59,6 +59,12 @@ public final class OracleUrlParser implements JdbcUrlParser {
   private OracleUrlParser() {}
 
   @Override
+  @Nullable
+  public String extractAuthority(String jdbcUrl) {
+    return UrlParsingUtils.extractAuthority(jdbcUrl);
+  }
+
+  @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(ORACLE_DB);
     ctx.defaultPort(DEFAULT_PORT);

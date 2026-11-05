@@ -21,9 +21,7 @@ public interface JdbcUrlParser {
 
   /** Extract the authority using this parser's connection-property boundaries. */
   @Nullable
-  default String extractAuthority(String jdbcUrl) {
-    return UrlParsingUtils.extractAuthority(jdbcUrl);
-  }
+  String extractAuthority(String jdbcUrl);
 
   /**
    * Parse the JDBC URL and populate the context with extracted information.
