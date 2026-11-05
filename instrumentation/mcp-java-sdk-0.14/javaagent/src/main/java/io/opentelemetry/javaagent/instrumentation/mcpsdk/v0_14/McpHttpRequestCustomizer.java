@@ -11,6 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.net.URI;
 import java.net.http.HttpRequest;
+import java.util.List;
 import javax.annotation.Nullable;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
@@ -27,6 +28,12 @@ final class McpHttpRequestCustomizer implements McpAsyncHttpClientRequestCustomi
       return customizer;
     }
     return new McpHttpRequestCustomizer(customizer);
+  }
+
+  static void wrap(List<McpAsyncHttpClientRequestCustomizer> customizers) {
+    for (int i = 0; i < customizers.size(); i++) {
+      customizers.set(i, wrap(customizers.get(i)));
+    }
   }
 
   private McpHttpRequestCustomizer(McpAsyncHttpClientRequestCustomizer delegate) {

@@ -12,9 +12,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.modelcontextprotocol.client.transport.customizer.McpAsyncHttpClientRequestCustomizer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -28,8 +30,20 @@ class McpHttpTransportBuilderInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    // before 2.1.0
     transformer.applyAdviceToMethod(
-        named("build").and(takesArguments(0)), getClass().getName() + "$BuildAdvice");
+        named("build").and(takesArguments(0)).and(hasDeclaredField("httpRequestCustomizer")),
+        getClass().getName() + "$BuildAdvice");
+    // since 2.1.0
+    transformer.applyAdviceToMethod(
+        named("build").and(takesArguments(0)).and(hasDeclaredField("httpRequestCustomizers")),
+        getClass().getName() + "$BuildListAdvice");
+  }
+
+  private static ElementMatcher<MethodDescription> hasDeclaredField(String fieldName) {
+    return target ->
+        target.getDeclaringType().getDeclaredFields().stream()
+            .anyMatch(field -> fieldName.equals(field.getName()));
   }
 
   @SuppressWarnings("unused")
@@ -41,6 +55,16 @@ class McpHttpTransportBuilderInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("httpRequestCustomizer") @Nullable
             McpAsyncHttpClientRequestCustomizer customizer) {
       return McpHttpRequestCustomizer.wrap(customizer);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class BuildListAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(
+        @Advice.FieldValue("httpRequestCustomizers")
+            List<McpAsyncHttpClientRequestCustomizer> customizers) {
+      McpHttpRequestCustomizer.wrap(customizers);
     }
   }
 }
