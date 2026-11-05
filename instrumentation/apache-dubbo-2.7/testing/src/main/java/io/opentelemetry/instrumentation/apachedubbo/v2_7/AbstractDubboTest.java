@@ -665,7 +665,7 @@ public abstract class AbstractDubboTest {
             metric ->
                 metric
                     .hasName(metricName)
-                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasUnit("s")
                     .hasHistogramSatisfying(
                         histogram ->
