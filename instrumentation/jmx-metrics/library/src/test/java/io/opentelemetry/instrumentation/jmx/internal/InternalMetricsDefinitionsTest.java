@@ -44,6 +44,7 @@ class InternalMetricsDefinitionsTest {
             "hadoop",
             "jetty",
             "jvm",
+            "trino",
             "tomcat",
             "wildfly");
 

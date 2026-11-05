@@ -3,19 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.rules;
+package io.opentelemetry.instrumentation.jmx.rules.containers;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
+import io.opentelemetry.instrumentation.jmx.rules.MetricsVerifier;
+import io.opentelemetry.instrumentation.jmx.rules.TargetSystemTest;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.Container.ExecResult;
 import org.testcontainers.containers.GenericContainer;
@@ -37,9 +40,7 @@ class TrinoTest extends TargetSystemTest {
 
   @Test
   void testTrinoMetrics() throws Exception {
-    List<String> yamlFiles = singletonList("experimental-trino.yaml");
-
-    yamlFiles.forEach(this::validateYamlSyntax);
+    Set<String> yamlFiles = getAllRulesForSystem("trino");
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
