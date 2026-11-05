@@ -38,7 +38,7 @@ public final class OceanbaseUrlParser implements JdbcUrlParser {
   @Nullable
   public String extractAuthority(String jdbcUrl) {
     return extractSubtype(jdbcUrl) == null
-        ? JdbcUrlParser.super.extractAuthority(jdbcUrl)
+        ? UrlParsingUtils.extractAuthority(jdbcUrl)
         : UrlParsingUtils.extractSemicolonAuthority(jdbcUrl);
   }
 
