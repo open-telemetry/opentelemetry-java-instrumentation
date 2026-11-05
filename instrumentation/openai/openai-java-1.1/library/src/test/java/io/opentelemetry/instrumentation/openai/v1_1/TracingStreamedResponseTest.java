@@ -14,20 +14,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 class TracingStreamedResponseTest {
-
-  private static final class FailingListener implements ChunkListener<String> {
-    @Override
-    public void onChunk(String chunk) {}
-
-    @Override
-    public void endSpan(@Nullable Throwable error) {
-      throw new IllegalStateException("ending the span failed");
-    }
-  }
 
   @Test
   void closesDelegateWhenEndingSpanFails() {
@@ -108,7 +97,7 @@ class TracingStreamedResponseTest {
           public void onChunk(String chunk) {}
 
           @Override
-          public void endSpan(@Nullable Throwable error) {
+          public void endSpan(Throwable error) {
             ended.set(true);
           }
         };
@@ -117,5 +106,15 @@ class TracingStreamedResponseTest {
 
     assertThat(ended).isTrue();
     assertThat(closed).isTrue();
+  }
+
+  private static final class FailingListener implements ChunkListener<String> {
+    @Override
+    public void onChunk(String chunk) {}
+
+    @Override
+    public void endSpan(Throwable error) {
+      throw new IllegalStateException("ending the span failed");
+    }
   }
 }

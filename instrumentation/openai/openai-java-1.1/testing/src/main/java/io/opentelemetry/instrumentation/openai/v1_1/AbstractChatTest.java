@@ -38,6 +38,7 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -90,7 +91,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -1172,7 +1172,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                   closed.countDown();
                 }
               });
-          assertThat(closed.await(30, TimeUnit.SECONDS)).isTrue();
+          assertThat(closed.await(30, SECONDS)).isTrue();
           thrown = closeError.get();
           break;
         }
