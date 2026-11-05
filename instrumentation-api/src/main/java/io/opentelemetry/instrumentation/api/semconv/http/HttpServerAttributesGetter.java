@@ -50,4 +50,18 @@ public interface HttpServerAttributesGetter<REQUEST, RESPONSE>
   default String getHttpRoute(REQUEST request) {
     return null;
   }
+
+  /**
+   * Returns the {@code error.type} value for the HTTP server operation, or {@code null} when no
+   * error type applies.
+   *
+   * <p>The default implementation uses {@link HttpErrorType#forServer(HttpServerAttributesGetter,
+   * Object, Object, Throwable)}.
+   */
+  @Nullable
+  @Override
+  default String getErrorType(
+      REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
+    return HttpErrorType.forServer(this, request, response, error);
+  }
 }

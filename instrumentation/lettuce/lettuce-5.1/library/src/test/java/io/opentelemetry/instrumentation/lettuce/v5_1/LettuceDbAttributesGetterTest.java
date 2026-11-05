@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.lettuce.core.RedisCommandTimeoutException;
+import io.lettuce.core.RedisNoScriptException;
 import org.junit.jupiter.api.Test;
 
 class LettuceDbAttributesGetterTest {
@@ -24,27 +25,39 @@ class LettuceDbAttributesGetterTest {
   }
 
   @Test
-  void fallsBackForMessageOnlyFailure() {
-    LettuceResponse response = LettuceResponse.fromErrorMessage("Connection closed");
-
-    assertThat(getter.getErrorType(null, response, null)).isEqualTo("_OTHER");
-  }
-
-  @Test
-  void preservesExceptionFallback() {
-    LettuceResponse response = LettuceResponse.fromErrorMessage("Connection closed");
-
-    assertThat(
-            getter.getErrorType(
-                null, response, new RedisCommandTimeoutException("Connection closed")))
+  void ignoresClientErrorWithoutResponse() {
+    assertThat(getter.getErrorType(null, null, new RedisCommandTimeoutException("timed out")))
         .isNull();
   }
 
   @Test
-  void ignoresSuccessfulResponse() {
-    LettuceResponse response = LettuceResponse.fromErrorMessage(null);
+  void delegatesExceptionFallbackWhenReplyHasNoPrefix() {
+    LettuceResponse response = LettuceResponse.fromErrorMessage("   ");
 
-    assertThat(getter.getErrorType(null, response, null)).isNull();
+    assertThat(getter.getErrorType(null, response, null)).isEqualTo("_OTHER");
+    assertThat(getter.getErrorType(null, response, new RedisNoScriptException("missing script")))
+        .isNull();
+  }
+
+  @Test
+  void doesNotInventExceptionClassForUnknownFailure() {
+    assertThat(getter.getErrorType(null, LettuceResponse.unknownFailure(), null))
+        .isEqualTo("_OTHER");
+  }
+
+  @Test
+  void omitsErrorTypeOnSuccess() {
+    assertThat(getter.getErrorType(null, LettuceResponse.fromErrorMessage(null), null)).isNull();
+  }
+
+  @Test
+  void preservesExceptionFallback() {
+    assertThat(
+            getter.getErrorType(
+                null,
+                LettuceResponse.unknownFailure(),
+                new RedisCommandTimeoutException("Connection closed")))
+        .isNull();
   }
 
   @Test

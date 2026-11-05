@@ -19,7 +19,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -155,7 +154,7 @@ class JmsCamelTest {
                 .hasKind(SpanKind.CLIENT)
                 .hasNoParent()
                 .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_SYSTEM, "jms"),
+                    equalTo(stringKey("messaging.system.name"), "jms"),
                     satisfies(MESSAGING_DESTINATION_NAME, val -> val.isNotEmpty()),
                     equalTo(MESSAGING_DESTINATION_TEMPORARY, true),
                     equalTo(MESSAGING_OPERATION_NAME, "receive"),
@@ -173,7 +172,7 @@ class JmsCamelTest {
                 .hasNoParent()
                 .hasTotalRecordedLinks(1)
                 .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_SYSTEM, "jms"),
+                    equalTo(stringKey("messaging.system.name"), "jms"),
                     equalTo(MESSAGING_DESTINATION_NAME, "faultQueue"),
                     equalTo(MESSAGING_OPERATION_NAME, "receive"),
                     equalTo(MESSAGING_OPERATION_TYPE, "receive"),
@@ -189,7 +188,7 @@ class JmsCamelTest {
                 .hasKind(SpanKind.PRODUCER)
                 .hasNoParent()
                 .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_SYSTEM, "jms"),
+                    equalTo(stringKey("messaging.system.name"), "jms"),
                     satisfies(MESSAGING_DESTINATION_NAME, val -> val.isNotEmpty()),
                     equalTo(MESSAGING_DESTINATION_TEMPORARY, true),
                     equalTo(MESSAGING_OPERATION_NAME, "send"),
@@ -208,7 +207,7 @@ class JmsCamelTest {
                 .hasParent(trace.getSpan(0))
                 .hasStatus(StatusData.error())
                 .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_SYSTEM, "jms"),
+                    equalTo(stringKey("messaging.system.name"), "jms"),
                     equalTo(MESSAGING_DESTINATION_NAME, "faultQueue"),
                     equalTo(MESSAGING_OPERATION_NAME, "send"),
                     equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -223,7 +222,7 @@ class JmsCamelTest {
                 .hasParent(trace.getSpan(1))
                 .hasStatus(StatusData.error())
                 .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_SYSTEM, "jms"),
+                    equalTo(stringKey("messaging.system.name"), "jms"),
                     equalTo(MESSAGING_DESTINATION_NAME, "faultQueue"),
                     equalTo(MESSAGING_OPERATION_NAME, "process"),
                     equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -242,7 +241,7 @@ class JmsCamelTest {
                 .hasNoParent()
                 .hasTotalRecordedLinks(1)
                 .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_SYSTEM, "jms"),
+                    equalTo(stringKey("messaging.system.name"), "jms"),
                     equalTo(MESSAGING_DESTINATION_NAME, "testQueue"),
                     equalTo(MESSAGING_OPERATION_NAME, "receive"),
                     equalTo(MESSAGING_OPERATION_TYPE, "receive"),
@@ -258,7 +257,7 @@ class JmsCamelTest {
                 .hasKind(SpanKind.PRODUCER)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_SYSTEM, "jms"),
+                    equalTo(stringKey("messaging.system.name"), "jms"),
                     equalTo(MESSAGING_DESTINATION_NAME, "testQueue"),
                     equalTo(MESSAGING_OPERATION_NAME, "send"),
                     equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -271,7 +270,7 @@ class JmsCamelTest {
               .hasKind(SpanKind.CONSUMER)
               .hasParent(trace.getSpan(1))
               .hasAttributesSatisfyingExactly(
-                  equalTo(MESSAGING_SYSTEM, "jms"),
+                  equalTo(stringKey("messaging.system.name"), "jms"),
                   equalTo(MESSAGING_DESTINATION_NAME, "testQueue"),
                   equalTo(MESSAGING_OPERATION_NAME, "process"),
                   equalTo(MESSAGING_OPERATION_TYPE, "process"),

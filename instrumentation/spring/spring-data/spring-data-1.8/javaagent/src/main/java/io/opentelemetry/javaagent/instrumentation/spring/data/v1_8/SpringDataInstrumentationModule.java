@@ -74,13 +74,6 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
     public static final RepositoryProxyPostProcessor INSTANCE =
         new InterceptingRepositoryProxyPostProcessor();
 
-    // DQH - TODO: Support older versions?
-    // The signature of postProcess changed to add RepositoryInformation in
-    // spring-data-commons 1.9.0
-    // public void postProcess(final ProxyFactory factory) {
-    //   factory.addAdvice(0, RepositoryInterceptor.INSTANCE);
-    // }
-
     @Override
     public void postProcess(ProxyFactory factory, RepositoryInformation repositoryInformation) {
       factory.addAdvice(

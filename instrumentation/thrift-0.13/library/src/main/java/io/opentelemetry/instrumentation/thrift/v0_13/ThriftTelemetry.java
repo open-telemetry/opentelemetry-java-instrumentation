@@ -56,8 +56,15 @@ public final class ThriftTelemetry {
     this.propagators = propagators;
   }
 
-  /** Returns a {@link TProcessor} that instruments Thrift server requests. */
-  public TProcessor wrapServerProcessor(TProcessor delegate, String serviceName) {
+  /**
+   * Returns a {@link TProcessor} that instruments Thrift server requests.
+   *
+   * <p>{@code rpcMethodPrefix} is combined with the method name as {@code prefix/method} for server
+   * span names and the {@code rpc.method} attribute on server spans and duration metrics. Use the
+   * generated service class name, such as {@code CustomService.class.getName()}, to match client
+   * telemetry.
+   */
+  public TProcessor instrument(TProcessor delegate, String rpcMethodPrefix) {
     if (delegate instanceof TBaseAsyncProcessor) {
       TBaseAsyncProcessor<?> asyncProcessor = (TBaseAsyncProcessor<?>) delegate;
       Map<String, AsyncProcessFunction<?, ?, ?, ?>> processMap =
@@ -66,39 +73,21 @@ public final class ThriftTelemetry {
       for (Map.Entry<String, AsyncProcessFunction<?, ?, ?, ?>> entry : copy.entrySet()) {
         processMap.put(entry.getKey(), AsyncMethodCallbackUtil.wrap(entry.getValue()));
       }
-      return new ServerAsyncProcessorDecorator(asyncProcessor, serviceName);
+      return new ServerAsyncProcessorDecorator(asyncProcessor, rpcMethodPrefix);
     }
-    return new ServerProcessorDecorator(delegate, serviceName, serverInstrumenter);
-  }
-
-  /**
-   * Returns a {@link TProtocolFactory} that instruments incoming protocol for Thrift server
-   * requests.
-   */
-  public TProtocolFactory wrapServerInProtocolFactory(TProtocolFactory delegate) {
-    return new ServerInProtocolDecorator.Factory(delegate, serverInstrumenter);
-  }
-
-  /**
-   * Returns a {@link TProtocolFactory} that instruments outgoing protocol for Thrift server
-   * requests.
-   */
-  public TProtocolFactory wrapServerOutProtocolFactory(TProtocolFactory delegate) {
-    return new ServerOutProtocolDecorator.Factory(delegate);
+    return new ServerProcessorDecorator(delegate, rpcMethodPrefix, serverInstrumenter);
   }
 
   /** Returns a {@link TProtocol} that instruments Thrift client requests. */
-  public TProtocol wrapClientProtocol(TProtocol delegate) {
+  public TProtocol instrument(TProtocol delegate) {
     return new ClientProtocolDecorator(delegate, propagators);
   }
 
-  /** Returns a {@link TProtocolFactory} that instruments Thrift client requests. */
-  public TProtocolFactory wrapClientProtocolFactory(TProtocolFactory delegate) {
-    return new ClientProtocolDecorator.Factory(delegate, propagators);
-  }
-
-  /** Wraps the provided {@link TServiceClient}, enabling telemetry for it. */
-  public <T> T wrapClient(TServiceClient client, Class<T> clientInterface) {
+  /**
+   * Returns a client implementing the supplied interface with telemetry for requests made through
+   * the provided {@link TServiceClient}.
+   */
+  public <T> T instrument(TServiceClient client, Class<T> clientInterface) {
     if (!clientInterface.isInterface()) {
       throw new IllegalArgumentException(
           "Supplied class must be an interface, but was " + clientInterface.getName());
@@ -140,8 +129,11 @@ public final class ThriftTelemetry {
             }));
   }
 
-  /** Wraps the provided {@link TAsyncClient}, enabling telemetry for it. */
-  public <T> T wrapAsyncClient(TAsyncClient client, Class<T> clientInterface) {
+  /**
+   * Returns a client implementing the supplied interface with telemetry for requests made through
+   * the provided {@link TAsyncClient}.
+   */
+  public <T> T instrument(TAsyncClient client, Class<T> clientInterface) {
     if (!clientInterface.isInterface()) {
       throw new IllegalArgumentException(
           "Supplied class must be an interface, but was " + clientInterface.getName());
@@ -190,5 +182,26 @@ public final class ThriftTelemetry {
                 }
               }
             }));
+  }
+
+  /**
+   * Returns a {@link TProtocolFactory} that instruments incoming protocol for Thrift server
+   * requests.
+   */
+  public TProtocolFactory instrumentServerInProtocolFactory(TProtocolFactory delegate) {
+    return new ServerInProtocolDecorator.Factory(delegate, serverInstrumenter);
+  }
+
+  /**
+   * Returns a {@link TProtocolFactory} that instruments outgoing protocol for Thrift server
+   * requests.
+   */
+  public TProtocolFactory instrumentServerOutProtocolFactory(TProtocolFactory delegate) {
+    return new ServerOutProtocolDecorator.Factory(delegate);
+  }
+
+  /** Returns a {@link TProtocolFactory} that instruments Thrift client requests. */
+  public TProtocolFactory instrumentClientProtocolFactory(TProtocolFactory delegate) {
+    return new ClientProtocolDecorator.Factory(delegate, propagators);
   }
 }

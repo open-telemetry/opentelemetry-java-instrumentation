@@ -34,6 +34,7 @@ public abstract class CouchbaseRequestInfo {
   @Nullable private String localAddress;
   @Nullable private String operationId;
   @Nullable private volatile Node node;
+  @Nullable private CouchbaseRequestInfo assemblyRequest;
 
   public static CouchbaseRequestInfo create(
       @Nullable String bucket,
@@ -98,8 +99,11 @@ public abstract class CouchbaseRequestInfo {
   }
 
   private CouchbaseRequestInfo copy() {
-    return new AutoValue_CouchbaseRequestInfo(
-        getBucket(), getQueryText(), isSqlQuery(), getOperation(), getServerTarget());
+    CouchbaseRequestInfo copy =
+        new AutoValue_CouchbaseRequestInfo(
+            getBucket(), getQueryText(), isSqlQuery(), getOperation(), getServerTarget());
+    copy.assemblyRequest = this;
+    return copy;
   }
 
   @Nullable
@@ -122,7 +126,9 @@ public abstract class CouchbaseRequestInfo {
 
   @Nullable
   public Node getNode() {
-    return node;
+    Node node = this.node;
+    // SDK 2.0 sends eagerly during observable assembly, before the subscription has its own state.
+    return node != null || assemblyRequest == null ? node : assemblyRequest.node;
   }
 
   public void setNode(@Nullable SocketAddress peerAddress) {

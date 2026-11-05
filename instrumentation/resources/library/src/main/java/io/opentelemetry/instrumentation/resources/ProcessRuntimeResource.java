@@ -50,7 +50,7 @@ public final class ProcessRuntimeResource {
             Attributes.builder().put(PROCESS_RUNTIME_DESCRIPTION, description);
         attributes.put(PROCESS_RUNTIME_NAME, name);
         attributes.put(PROCESS_RUNTIME_VERSION, version);
-        return Resource.create(attributes.build(), SchemaUrls.V1_24_0);
+        return Resource.create(attributes.build(), SchemaUrls.V1_40_0);
       }
       Attributes descriptive = Attributes.of(PROCESS_RUNTIME_DESCRIPTION, description);
       Attributes id = Attributes.of(PROCESS_RUNTIME_NAME, name, PROCESS_RUNTIME_VERSION, version);

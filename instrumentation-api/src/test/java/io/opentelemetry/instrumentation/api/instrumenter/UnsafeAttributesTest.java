@@ -11,9 +11,22 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
 
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import org.junit.jupiter.api.Test;
 
 class UnsafeAttributesTest {
+
+  @Test
+  void remove() {
+    AttributesBuilder attributes = new UnsafeAttributes();
+    attributes.put("animal", "cat").put("lives", 9);
+
+    assertThat(attributes.remove(stringKey("animal"))).isSameAs(attributes);
+    assertThat(attributes.build()).containsOnly(attributeEntry("lives", 9L));
+
+    assertThat(attributes.remove(stringKey("missing"))).isSameAs(attributes);
+    assertThat(attributes.build()).containsOnly(attributeEntry("lives", 9L));
+  }
 
   @Test
   void buildAndUse() {

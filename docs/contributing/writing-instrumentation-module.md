@@ -233,132 +233,34 @@ the `transform()` method.
 
 ## Use advice classes to write instrumentation code
 
-Two types of instrumentation are currently supported:
+In production javaagent modules, explicitly set `inline = false` on every
+`@Advice.OnMethodEnter` and `@Advice.OnMethodExit` method. The only exceptions are
+`instrumentation/internal/internal-class-loader` and
+`instrumentation/internal/internal-lambda`.
 
-- inlined instrumentation, where advice classes method body bytecode is copied into the instrumented class files
-- non-inlined instrumentation, where advice classes are loaded as regular class files.
+Byte Buddy's `inline` attribute defaults to `true`, which copies advice code into the instrumented
+method.
 
-The choice between the two strategies is made by instrumentation author by using the `inline` property of the `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` annotations.
+These exceptions use inlined advice. Static interface calls from it cannot be copied into pre-Java-8
+class files, so call them through a Java-8-compiled helper.
 
-- if `inline` property is not set or set to `true` (default), the advice is inlined into the instrumented class files
-- if `inline` property is explicitly set to `false`, the advice is not inlined
+By default, the agent loads advice into a special `InstrumentationModuleClassLoader`,
+which can see classes from both the instrumented application classloader and the agent classloader.
+Helper placement is a separate choice: helpers can be loaded in that isolated classloader or
+injected into the instrumented classloader. Instrumented classes call advice in the isolated
+classloader via invokedynamic bytecode instructions.
 
-## Inlined instrumentation
-
-With inlined instrumentation, advice classes aren't really classes in that they're raw pieces of code that are pasted directly into
-the instrumented library class files. You should not treat them as ordinary, plain Java classes.
-
-Unfortunately many standard practices do not apply to advice classes:
-
-- If they're inner classes, they MUST be static.
-- They MUST only contain static methods.
-- They MUST NOT contain any state (fields) whatsoever, static constants included. Only the advice
-  methods' content is copied to the instrumented code, constants are not.
-- Inner advice classes defined in an `InstrumentationModule` or a `TypeInstrumentation` MUST NOT use
-  anything from the outer class (loggers, constants, etc).
-- Reusing code by extracting a common method and/or parent class won't work: create additional helper
-  classes to store any reusable code instead.
-- They SHOULD NOT contain any methods other than `@Advice`-annotated method.
-
-Consider the following example:
-
-```java
-@SuppressWarnings("unused")
-public static class MethodAdvice {
-  @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static void onEnter(/* ... */) {
-    // ...
-  }
-
-  @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-  public static void onExit(/* ... */) {
-    // ...
-  }
-}
-```
-
-Include the `suppress = Throwable.class` property in `@Advice`-annotated methods. Exceptions
-thrown by the advice methods get caught and handled by a special `ExceptionHandler` that the
-OpenTelemetry javaagent defines. The handler makes sure to properly log all unexpected
-exceptions.
-
-The `OnMethodEnter` and `OnMethodExit` advice methods often need to share several pieces of
-information. We use local variables prefixed with `otel` to pass context, scope, and other
-data between both methods, like in the following example:
-
-```java
-@Advice.OnMethodEnter(suppress = Throwable.class)
-public static void onEnter(@Advice.Argument(1) Object request,
-                           @Advice.Local("otelContext") Context context,
-                           @Advice.Local("otelScope") Scope scope) {
-  // ...
-}
-```
-
-For telemetry-producing instrumentations, both methods follow this pattern:
-
-```java
-@Advice.OnMethodEnter(suppress = Throwable.class)
-public static void onEnter(@Advice.Argument(1) Object request,
-                           @Advice.Local("otelContext") Context context,
-                           @Advice.Local("otelScope") Scope scope) {
-  Context parentContext = Java8BytecodeBridge.currentContext();
-
-  if (!instrumenter().shouldStart(parentContext, request)) {
-    return;
-  }
-
-  context = instrumenter().start(parentContext, request);
-  scope = context.makeCurrent();
-}
-
-@Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-public static void onExit(@Advice.Argument(1) Object request,
-                          @Advice.Return Object response,
-                          @Advice.Thrown Throwable exception,
-                          @Advice.Local("otelContext") Context context,
-                          @Advice.Local("otelScope") Scope scope) {
-  if (scope == null) {
-    return;
-  }
-  scope.close();
-  instrumenter().end(context, request, response, exception);
-}
-```
-
-Notice that the example above doesn't use `Context.current()`, but a `Java8BytecodeBridge` method
-instead. This is intentional: if you are instrumenting a pre-Java 8 library, inlining Java 8 default
-method calls (or static methods in an interface) into that library results in a `java.lang.VerifyError`
-at runtime, since Java 8 default method invocations aren't legal in Java 7 (and prior) bytecode.
-
-Since the OpenTelemetry API has many common default/static interface methods, like `Span.current()`,
-the `javaagent-extension-api` artifact has a class `Java8BytecodeBridge` which provides static
-methods for accessing these default methods from advice. We suggest avoiding Java 8 language features
-in advice classes at all - sometimes you don't know what bytecode version is used by the instrumented class.
-
-[suppress]: https://opentelemetry.io/docs/zero-code/java/agent/disable/#suppressing-specific-agent-instrumentation
-
-## Non-inlined instrumentation
-
-The most common way to instrument code with ByteBuddy relies on inlining, this strategy will be
-referred as "inlined" strategy as opposed to "non-inlined".
-
-For inlined advices, the advice code is directly copied into the instrumented method.
-In addition, all helper classes are injected into the classloader of the instrumented classes.
-
-For indy, advice classes are not inlined. Instead, they are loaded alongside all helper classes
-into a special `InstrumentationModuleClassloader`, which sees the classes from both the instrumented
-application classloader and the agent classloader.
-The instrumented classes call the advice classes residing in the `InstrumentationModuleClassloader` via
-invokedynamic bytecode instructions.
-
-Using indy instrumentation has these advantages:
+When advice is loaded in isolation, this has several advantages:
 
 - allows instrumentation to have breakpoints set in them and be debugged using standard debugging techniques.
 - provides clean isolation of instrumentation advice from the application and other instrumentations
-- allows advice classes to contain static fields and methods which can be accessed from the advice entry points - in fact generally good development practices are enabled (whereas inlined advices are [restricted in how they can be implemented](#inlined-instrumentation))
+- allows advice classes to contain static fields and methods which can be accessed from the advice entry points
 - advice classes have access to agent code so communicating between advice and agent does not need an api in boot loader
 - advice classes code does not require to be compatible with instrumented class, for example we can call a static interface method in advice when instrumented class is compiled for Java 7 or older.
+
+Advice classes and their static entry points must remain public for invokedynamic method-handle dispatch.
+Ordinary helper methods may be private when their callers and classloader boundaries permit it;
+advice loaded separately may also use lambdas.
 
 ### Shared classes and common classloader
 
@@ -379,14 +281,10 @@ module classloader.
 
 This allows for example to access package-private methods that would not be accessible otherwise.
 
-### Advice local variables
+### Passing state between advice methods
 
-With [inlined advices](#inlined-instrumentation), declaring an advice method argument with `@Advice.Local` allows defining
-a variable that is local to the advice execution for communication between the enter and exit advices.
-
-When advices are not inlined, usage of `@Advice.Local` is not possible. It is however possible to
-return a value from the enter advice and get the value in the exit advice with a parameter annotated
-with `@Advice.Enter`, for example:
+To pass state from enter advice to exit advice, return it from the enter method and receive it with
+`@Advice.Enter`:
 
 ```java
 @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
@@ -401,14 +299,13 @@ public static void onExit(@Advice.Argument(1) Object request,
 }
 ```
 
+Include `suppress = Throwable.class` in advice annotations. Exceptions thrown by advice methods are
+caught and handled by the javaagent's exception handler, which logs unexpected exceptions.
+
 ### Modifying method arguments
 
-With inlined advices, using the `@Advice.Argument` annotation on method parameter with `readOnly = false`
-allows modifying instrumented method arguments.
-
-When using non-inlined advices, reading the argument values is still done with `@Advice.Argument`
-annotated parameters, however modifying the values is done through the advice method return value
-and `@Advice.AssignReturned.ToArguments` annotation:
+Use `@Advice.Argument` to read method arguments. To modify them, return the replacement value from
+advice and use `@Advice.AssignReturned.ToArguments`:
 
 ```java
 @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
@@ -423,12 +320,8 @@ It is possible to modify multiple arguments at once by using an array, see usage
 
 ### Modifying method return value
 
-With inlined advices, using the `@Advice.Return` annotation on method parameter with `readOnly = false`
-allows modifying instrumented method return value on exit advice.
-
-When using non-inlined advices, reading the original return value is still done with the `@Advice.Return`
-annotated parameter, however modifying the value is done through the advice method return value
-and `@Advice.AssignReturned.ToReturned`.
+Use `@Advice.Return` to read the original return value. To modify it, return the replacement value
+from exit advice and use `@Advice.AssignReturned.ToReturned`:
 
 ```java
 @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
@@ -440,12 +333,8 @@ public static Object onExit(@Advice.Return Object returnValue) {
 
 ### Writing to internal class fields
 
-With inlined advices, using the `@Advice.FieldValue(value = "fieldName", readOnly = false)` annotation
-on advice method parameters allows modifying the `fieldName` field of the instrumented class.
-
-When using non-inlined advices, reading the original field value is still done with the `@Advice.FieldValue`
-annotated parameter, however modifying the value is done through the advice method return value
-and `@Advice.AssignReturned.ToFields` annotation.
+Use `@Advice.FieldValue` to read an internal field. To modify it, return the replacement value from
+advice and use `@Advice.AssignReturned.ToFields`:
 
 ```java
 @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
@@ -457,6 +346,11 @@ public static Object onEnter(@Advice.FieldValue("fieldName") Object originalFiel
 
 It is possible to modify multiple fields at once by using an array, see usages of
 `@Advice.AssignReturned.ToFields` for detailed examples.
+
+Only `internal-class-loader` and `internal-lambda` may use inlined advice with `readOnly = false` on
+`@Advice.Argument`, `@Advice.Return`, or `@Advice.FieldValue`.
+
+[suppress]: https://opentelemetry.io/docs/zero-code/java/agent/disable/#suppressing-specific-agent-instrumentation
 
 ## Using virtual fields to associate instrumentation classes to instrumented classes
 

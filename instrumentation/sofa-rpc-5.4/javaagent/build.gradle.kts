@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -17,71 +20,35 @@ dependencies {
   library("com.alipay.sofa:sofa-rpc-all:5.4.0")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("testSofaRpc") {
-      dependencies {
-        implementation(project(":instrumentation:sofa-rpc-5.4:testing"))
-        implementation("com.alipay.sofa:sofa-rpc-all:${baseVersion("5.4.0").orLatest()}")
+testing.suites {
+  register<JvmTestSuite>("testSofaRpc") {
+    dependencies {
+      implementation(project(":instrumentation:sofa-rpc-5.4:testing"))
+      implementation("com.alipay.sofa:sofa-rpc-all:${baseVersion("5.4.0").orLatest()}")
+    }
+
+    configurations.named(sources.runtimeClasspathConfigurationName) {
+      resolutionStrategy {
+        // requires old logback (and therefore also old slf4j)
+        force("ch.qos.logback:logback-classic:1.2.13")
+        force("ch.qos.logback:logback-core:1.2.13")
+        force("org.slf4j:slf4j-api:1.7.21")
       }
     }
   }
-}
 
-tasks.withType<Test>().configureEach {
-  systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-}
+  executions {
+    configureEach {
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
+    }
 
-val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-  tasks.register<Test>("${suite.name}PreviewSemconv") {
-    testClassesDirs = suite.sources.output.classesDirs
-    classpath = suite.sources.runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.preview=rpc,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc,service.peer")
-  }
-}
-
-val bothSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-  tasks.register<Test>("${suite.name}BothSemconv") {
-    testClassesDirs = suite.sources.output.classesDirs
-    classpath = suite.sources.runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup,service.peer")
-  }
-}
-
-val exceptionSignalLogsSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-  tasks.register<Test>("${suite.name}ExceptionSignalLogs") {
-    testClassesDirs = suite.sources.output.classesDirs
-    classpath = suite.sources.runtimeClasspath
-
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
-  }
-}
-
-tasks {
-  check {
-    dependsOn(testing.suites, previewSemconvSuites, bothSemconvSuites, exceptionSignalLogsSuites)
-  }
-}
-
-configurations.named("testSofaRpcRuntimeClasspath") {
-  resolutionStrategy {
-    // requires old logback (and therefore also old slf4j)
-    force("ch.qos.logback:logback-classic:1.2.13")
-    force("ch.qos.logback:logback-core:1.2.13")
-    force("org.slf4j:slf4j-api:1.7.21")
-  }
-}
-
-if (otelProps.denyUnsafe) {
-  tasks.withType<Test>().configureEach {
-    enabled = false
+    register("ExceptionSignalLogs") {
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+    }
   }
 }

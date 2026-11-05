@@ -12,6 +12,8 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisServerErrorContext;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisServerErrorRequest;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.ArrayList;
@@ -24,7 +26,7 @@ import redis.clients.jedis.args.Rawable;
 import redis.clients.jedis.commands.ProtocolCommand;
 
 @AutoValue
-public abstract class JedisRequest {
+public abstract class JedisRequest implements JedisServerErrorRequest {
 
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(
@@ -32,6 +34,8 @@ public abstract class JedisRequest {
   private static final int LIMIT = 32 * 1024;
 
   @Nullable private SocketAddress remoteSocketAddress;
+  @Nullable private Object connection;
+  @Nullable private JedisServerErrorContext serverErrorContext;
 
   public static JedisRequest create(ProtocolCommand command, List<byte[]> args) {
     return create(null, command, args);
@@ -41,12 +45,15 @@ public abstract class JedisRequest {
       @Nullable Object connection, ProtocolCommand command, List<byte[]> args) {
     JedisConnectionInfo connectionInfo = getConnectionInfo(connection);
     String operationName = operationName(command);
-    return new AutoValue_JedisRequest(
-        connectionInfo != null ? connectionInfo.getServerTarget() : null,
-        connectionInfo != null ? connectionInfo.getDatabaseIndex() : null,
-        operationName,
-        sanitizer.sanitize(operationName, args),
-        null);
+    JedisRequest request =
+        new AutoValue_JedisRequest(
+            connectionInfo != null ? connectionInfo.getServerTarget() : null,
+            connectionInfo != null ? connectionInfo.getDatabaseIndex() : null,
+            operationName,
+            sanitizer.sanitize(operationName, args),
+            null);
+    request.connection = connection;
+    return request;
   }
 
   public static JedisRequest create(CommandArguments commandArguments) {
@@ -86,6 +93,7 @@ public abstract class JedisRequest {
             pipelineQueryText(requests),
             requests.size() != 1 ? (long) requests.size() : null);
     request.remoteSocketAddress = first.getRemoteSocketAddress();
+    request.connection = first.connection;
     return request;
   }
 
@@ -108,6 +116,15 @@ public abstract class JedisRequest {
 
   @Nullable
   public abstract Long getBatchSize();
+
+  @Override
+  public void setServerErrorContext(JedisServerErrorContext context) {
+    serverErrorContext = context;
+  }
+
+  public boolean isServerError(@Nullable Throwable error) {
+    return error != null && serverErrorContext != null && serverErrorContext.isServerError(error);
+  }
 
   private static String operationName(ProtocolCommand command) {
     if (command instanceof Protocol.Command) {
@@ -149,6 +166,11 @@ public abstract class JedisRequest {
     if (socket != null) {
       remoteSocketAddress = socket.getRemoteSocketAddress();
     }
+  }
+
+  @Nullable
+  public Object getConnection() {
+    return connection;
   }
 
   @Nullable

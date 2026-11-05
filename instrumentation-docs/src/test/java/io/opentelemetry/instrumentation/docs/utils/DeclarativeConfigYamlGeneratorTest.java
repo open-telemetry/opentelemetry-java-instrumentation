@@ -108,27 +108,35 @@ class DeclarativeConfigYamlGeneratorTest {
 
   @Test
   void documentsStructuredListEntryShape() throws Exception {
-    // The flat form is a `host=service` map, but the declarative form is a list of objects, so the
-    // emitted default must be a list and the entry shape has to be documented in the comment.
+    // The flat form is a `target=service_name` map, but the declarative form is a list of objects,
+    // so the emitted default must be a list and the entry shape has to be documented in the
+    // comment.
     Map<String, DeclarativeSchema.Property> properties = new LinkedHashMap<>();
     properties.put(
-        "peer",
+        "target",
         new DeclarativeSchema.Property(
-            "string", "Host name or IP address to match against.", null, "host"));
+            "string",
+            "Server address or complete configured target to match against.",
+            null,
+            "payments.example.com"));
     properties.put(
         "service_name",
         new DeclarativeSchema.Property(
-            "string", "Peer service name to record.", null, "serviceName"));
+            "string", "Logical server service name to record.", null, "payments"));
+    properties.put(
+        "service_namespace",
+        new DeclarativeSchema.Property(
+            "string", "Logical server service namespace to record.", null, "checkout"));
     ConfigurationOption option =
         new ConfigurationOption(
-            "otel.instrumentation.common.peer-service-mapping",
-            "java.common.service_peer_mapping",
-            "Used to specify a mapping from host names or IP addresses to peer services.",
+            "otel.instrumentation.common.server-service-mapping",
+            "java.common.server_service_mapping",
+            "Maps server addresses or configured targets to logical server service identities.",
             "",
             ConfigurationType.MAP,
             null,
             ConfigurationType.STRUCTURED_LIST,
-            new DeclarativeSchema("object", List.of("peer", "service_name"), properties),
+            new DeclarativeSchema("object", List.of("target"), properties),
             null,
             null);
 
@@ -137,16 +145,20 @@ class DeclarativeConfigYamlGeneratorTest {
 
     assertThat(
             navigate(
-                parsed, "instrumentation/development", "java", "common", "service_peer_mapping"))
+                parsed, "instrumentation/development", "java", "common", "server_service_mapping"))
         .isEqualTo(List.of());
     assertThat(output)
         .contains("# Each list entry is an object with the following properties:")
-        .contains("#   peer (string, required): Host name or IP address to match against.")
-        .contains("#   service_name (string, required): Peer service name to record.")
+        .contains(
+            "#   target (string, required): Server address or complete configured target to match")
+        .contains("#     against.")
+        .contains("#   service_name (string): Logical server service name to record.")
+        .contains("#   service_namespace (string): Logical server service namespace to record.")
         .contains("# Example:")
-        .contains("#   service_peer_mapping:")
-        .contains("#     - peer: host")
-        .contains("#       service_name: serviceName");
+        .contains("#   server_service_mapping:")
+        .contains("#     - target: payments.example.com")
+        .contains("#       service_name: payments")
+        .contains("#       service_namespace: checkout");
   }
 
   @Test

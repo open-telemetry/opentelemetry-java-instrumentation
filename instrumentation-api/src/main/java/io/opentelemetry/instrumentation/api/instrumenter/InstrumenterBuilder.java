@@ -13,6 +13,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.logs.LoggerBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
@@ -34,13 +35,10 @@ import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomi
 import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
-import io.opentelemetry.instrumentation.api.internal.SystemProperty;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.UnaryOperator;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -51,10 +49,6 @@ import javax.annotation.Nullable;
  * appropriate for that library and delegate to this class to create the {@link Instrumenter}.
  */
 public final class InstrumenterBuilder<REQUEST, RESPONSE> {
-
-  private static final Logger logger = Logger.getLogger(InstrumenterBuilder.class.getName());
-  private static final AtomicBoolean spanSuppressionConfigWarningLogged = new AtomicBoolean();
-  private static final AtomicBoolean spanSuppressionPropertyWarningLogged = new AtomicBoolean();
 
   final OpenTelemetry openTelemetry;
   final String instrumentationName;
@@ -337,7 +331,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return tracerBuilder.build();
   }
 
-  io.opentelemetry.api.logs.Logger buildLogger() {
+  Logger buildLogger() {
     LoggerBuilder loggerBuilder = openTelemetry.getLogsBridge().loggerBuilder(instrumentationName);
     if (instrumentationVersion != null) {
       loggerBuilder.setInstrumentationVersion(instrumentationVersion);
@@ -391,29 +385,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
               .getInstrumentationConfig("common");
     }
 
-    String result = commonConfig.getString("span_suppression_strategy");
-    if (result == null) {
-      // Deprecated declarative and flat names remain available until 3.0.
-      result = commonConfig.getString("span_suppression_strategy/development");
-      if (result != null && spanSuppressionConfigWarningLogged.compareAndSet(false, true)) {
-        logger.warning(
-            "The otel.instrumentation.experimental.span-suppression-strategy setting and the"
-                + " equivalent declarative configuration property are deprecated and will be removed"
-                + " in 3.0. Use otel.instrumentation.common.span-suppression-strategy or equivalent"
-                + " declarative configuration instead.");
-      }
-      if (result == null) {
-        result =
-            SystemProperty.getString("otel.instrumentation.experimental.span-suppression-strategy");
-        if (result != null && spanSuppressionPropertyWarningLogged.compareAndSet(false, true)) {
-          logger.warning(
-              "The otel.instrumentation.experimental.span-suppression-strategy setting is"
-                  + " deprecated and will be removed in 3.0. Use the programmatic API or equivalent"
-                  + " declarative instrumentation configuration instead.");
-        }
-      }
-    }
-    return SpanSuppressionStrategy.fromConfig(result);
+    return SpanSuppressionStrategy.fromConfig(commonConfig.getString("span_suppression_strategy"));
   }
 
   private Set<SpanKey> getSpanKeysFromAttributesExtractors() {

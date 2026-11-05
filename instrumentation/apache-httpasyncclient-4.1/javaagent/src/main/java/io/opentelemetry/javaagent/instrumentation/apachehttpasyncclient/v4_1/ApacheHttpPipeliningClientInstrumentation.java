@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1.ApacheHttpAsyncClientSingletons.instrumenter;
@@ -76,7 +75,7 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) @Nullable
             List<? extends HttpAsyncResponseConsumer<?>> responseConsumers,
         @Advice.Argument(4) @Nullable FutureCallback<?> futureCallback) {
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
 
       if (requestProducers == null
           || responseConsumers == null

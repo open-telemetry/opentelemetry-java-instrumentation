@@ -18,7 +18,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -46,7 +45,7 @@ class SnsProducerCamelTest {
 
   @BeforeAll
   static void setUp() throws IOException {
-    server = HttpServer.create(new InetSocketAddress("localhost", PortUtils.findOpenPort()), 0);
+    server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
     server.createContext("/", SnsProducerCamelTest::handleRequest);
     server.start();
 

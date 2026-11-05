@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.rmi.server.ObjID;
@@ -69,8 +68,8 @@ public class RmiClientContextInstrumentation implements TypeInstrumentation {
       if (propagator().isRmiInternalObject(id)) {
         return;
       }
-      Context currentContext = Java8BytecodeBridge.currentContext();
-      Span activeSpan = Java8BytecodeBridge.spanFromContext(currentContext);
+      Context currentContext = Context.current();
+      Span activeSpan = Span.fromContext(currentContext);
       if (!activeSpan.getSpanContext().isValid()) {
         return;
       }

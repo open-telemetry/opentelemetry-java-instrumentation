@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_17;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.ContextPropagatingCompletableFuture;
@@ -45,7 +45,7 @@ class RedisExecutorConnectionFutureInstrumentation implements TypeInstrumentatio
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static CompletableFuture<?> onExit(@Advice.Return CompletableFuture<?> future) {
-      return ContextPropagatingCompletableFuture.wrap(future, currentContext());
+      return ContextPropagatingCompletableFuture.wrap(future, Context.current());
     }
   }
 }

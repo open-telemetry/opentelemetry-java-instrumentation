@@ -163,7 +163,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.139.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.140.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -189,8 +189,8 @@ dependencies {
   }
 }
 
-testing {
-  suites.withType(JvmTestSuite::class).configureEach {
+testing.suites {
+  withType(JvmTestSuite::class).configureEach {
     dependencies {
       implementation("org.junit.jupiter:junit-jupiter-api")
       implementation("org.junit.jupiter:junit-jupiter-params")
@@ -315,18 +315,6 @@ fun isJavaVersionAllowed(version: JavaVersion): Boolean {
     return false
   }
   return true
-}
-
-abstract class TestcontainersBuildService : BuildService<BuildServiceParameters.None>
-
-// To limit number of concurrently running resource intensive tests add
-// tasks {
-//   test {
-//     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-//   }
-// }
-gradle.sharedServices.registerIfAbsent("testcontainersBuildService", TestcontainersBuildService::class.java) {
-  maxParallelUsages.convention(2)
 }
 
 val resourceNames = listOf("Host", "Os", "Process", "ProcessRuntime")

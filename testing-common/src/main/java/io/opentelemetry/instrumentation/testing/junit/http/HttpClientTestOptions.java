@@ -70,6 +70,10 @@ public abstract class HttpClientTestOptions {
 
   public abstract boolean getTestWithClientParent();
 
+  public abstract boolean getTestProxy();
+
+  public abstract boolean getExpectProxyNetworkPeerAttributes();
+
   public abstract boolean getTestRedirects();
 
   public abstract boolean getTestCircularRedirects();
@@ -130,6 +134,8 @@ public abstract class HttpClientTestOptions {
           .setInstrumentationType(HttpClientInstrumentationType.HIGH_LEVEL)
           .setSpanEndsAfterType(SpanEndsAfterType.HEADERS)
           .setTestWithClientParent(true)
+          .setTestProxy(false)
+          .setExpectProxyNetworkPeerAttributes(false)
           .setTestRedirects(true)
           .setTestCircularRedirects(true)
           .setMaxRedirects(2)
@@ -166,6 +172,10 @@ public abstract class HttpClientTestOptions {
     Builder setSpanEndsAfterType(SpanEndsAfterType spanEndsAfterType);
 
     Builder setTestWithClientParent(boolean value);
+
+    Builder setTestProxy(boolean value);
+
+    Builder setExpectProxyNetworkPeerAttributes(boolean value);
 
     Builder setTestRedirects(boolean value);
 

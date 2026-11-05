@@ -29,7 +29,7 @@ class AdviceInspectorTest {
   @Test
   void defaultValue() {
     assertThat(
-            adviceInspector.useIsolatedAdvice(
+            adviceInspector.inferHelperClassIsolation(
                 new InstrumentationModule("test") {
                   @Override
                   public List<TypeInstrumentation> typeInstrumentations() {
@@ -42,7 +42,7 @@ class AdviceInspectorTest {
   @Test
   void hasNonInlineAdvice() {
     assertThat(
-            adviceInspector.useIsolatedAdvice(
+            adviceInspector.inferHelperClassIsolation(
                 new InstrumentationModule("test") {
                   @Override
                   public List<TypeInstrumentation> typeInstrumentations() {
@@ -55,7 +55,7 @@ class AdviceInspectorTest {
   @Test
   void mixedInlineAdviceFirst() {
     assertThat(
-            adviceInspector.useIsolatedAdvice(
+            adviceInspector.inferHelperClassIsolation(
                 new InstrumentationModule("test") {
                   @Override
                   public List<TypeInstrumentation> typeInstrumentations() {

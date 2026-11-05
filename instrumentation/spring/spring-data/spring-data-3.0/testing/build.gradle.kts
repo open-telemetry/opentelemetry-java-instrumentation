@@ -26,14 +26,12 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("reactiveTest") {
-      dependencies {
-        implementation("org.springframework.data:spring-data-r2dbc:3.0.0")
-        implementation("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
-        implementation("com.h2database:h2:1.4.197")
-      }
+testing.suites {
+  register<JvmTestSuite>("reactiveTest") {
+    dependencies {
+      implementation("org.springframework.data:spring-data-r2dbc:3.0.0")
+      implementation("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
+      implementation("com.h2database:h2:1.4.197")
     }
   }
 }
@@ -45,16 +43,7 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 
-  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-    register<Test>("${suite.name}PreviewSemconv") {
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    }
-  }
-
   check {
-    dependsOn(testing.suites, previewSemconvSuites)
+    dependsOn(testing.suites)
   }
 }

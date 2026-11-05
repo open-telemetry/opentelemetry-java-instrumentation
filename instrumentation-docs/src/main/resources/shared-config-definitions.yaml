@@ -20,27 +20,34 @@ configurations:
     type: list
     default: "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"
 
-  common.peer-service-mapping:
-    name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.service_peer_mapping
-    description: "Used to specify a mapping from server addresses or configured targets to peer services. Configured targets containing commas or equals signs can only be mapped with declarative `service_peer_mapping`."
+  common.server-service-mapping:
+    name: otel.instrumentation.common.server-service-mapping
+    declarative_name: java.common.server_service_mapping
+    description: >-
+      Maps server addresses or configured targets to logical server service identities. Flat mappings
+      use `target=service_name`; the target can be a hostname, IP address, or target including a port
+      or path. Flat mappings cannot express service namespaces or targets containing commas or equals
+      signs; use declarative `server_service_mapping` for those cases.
     type: map
     default: ""
     declarative_type: structured_list
     declarative_schema:
       type: object
       required:
-        - peer
-        - service_name
+        - target
       properties:
-        peer:
+        target:
           type: string
-          description: "Server address or configured target to match against."
-          example: host
+          description: "Server address or complete configured target to match against."
+          example: payments.example.com
         service_name:
           type: string
-          description: "Peer service name to record for matching peers."
-          example: serviceName
+          description: "Logical server service name to record for matching targets."
+          example: payments
+        service_namespace:
+          type: string
+          description: "Logical server service namespace to record for matching targets."
+          example: checkout
 
   http.client.capture-request-headers:
     name: otel.instrumentation.http.client.capture-request-headers
@@ -190,12 +197,6 @@ global_configurations:
     declarative_type: string
     default: ""
 
-  semconv-stability.preview:
-    name: otel.semconv-stability.preview
-    declarative_name: java.common.semconv_stability.preview
-    description: "Opt-in to emit preview (not yet stable) semantic conventions for the `rpc` and `service.peer` groups. Use `<group>/dup` to emit both the old and the preview conventions simultaneously. The flat `otel.semconv-stability.preview` property is read only from system properties and environment variables, not from the agent configuration file."
-    type: list
-
   semconv-exception.signal.preview:
     name: otel.semconv.exception.signal.preview
     declarative_name: general.semconv_exception.signal.preview
@@ -208,31 +209,6 @@ global_configurations:
     description: "Strategy for suppressing nested instrumentation spans: `semconv` suppresses a span nested in a span of the same semantic convention type, `span-kind` suppresses a span nested in a span of the same span kind, and `none` disables suppression."
     type: string
     default: semconv
-
-  span-suppression-strategy.deprecated:
-    name: otel.instrumentation.experimental.span-suppression-strategy
-    declarative_name: java.common.span_suppression_strategy/development
-    description: "Deprecated: use `otel.instrumentation.common.span-suppression-strategy` or `java.common.span_suppression_strategy` instead. This setting will be removed in 3.0."
-    type: string
-    deprecated: true
-    replaced_by: otel.instrumentation.common.span-suppression-strategy
-
-  rpc.semconv.version:
-    declarative_name: general.rpc.semconv.version
-    description: "RPC semantic convention version to emit: `0` for the current conventions or `1` together with `experimental: true` for the preview conventions. Takes precedence over the semantic convention opt-in settings; when unset, those settings select the conventions."
-    type: int
-
-  rpc.semconv.experimental:
-    declarative_name: general.rpc.semconv.experimental
-    description: "With `version: 1`, selects the preview RPC semantic conventions. Required, because version 1 of the RPC semantic conventions is not yet stable."
-    type: boolean
-    default: false
-
-  rpc.semconv.dual_emit:
-    declarative_name: general.rpc.semconv.dual_emit
-    description: "With `version: 1` and `experimental: true`, emits both the current and the preview RPC semantic conventions."
-    type: boolean
-    default: false
 
   semconv-stability.opt-in.deprecated-declarative-name:
     declarative_name: general.semconv_stability.opt_in

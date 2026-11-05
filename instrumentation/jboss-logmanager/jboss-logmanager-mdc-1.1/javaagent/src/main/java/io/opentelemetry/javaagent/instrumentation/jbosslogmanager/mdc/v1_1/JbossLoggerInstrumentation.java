@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.mdc.v1_1;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -29,8 +28,7 @@ class JbossLoggerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("logRaw"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("org.jboss.logmanager.ExtLogRecord"))),
+            .and(takesArguments(named("org.jboss.logmanager.ExtLogRecord"))),
         getClass().getName() + "$CallAppendersAdvice");
   }
 
@@ -39,7 +37,7 @@ class JbossLoggerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) ExtLogRecord record) {
-      JbossLogManagerHelper.setSpanContext(record, Java8BytecodeBridge.currentContext());
+      JbossLogManagerHelper.setSpanContext(record, Context.current());
     }
   }
 }

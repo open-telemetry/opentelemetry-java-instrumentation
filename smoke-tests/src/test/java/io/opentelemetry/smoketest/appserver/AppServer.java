@@ -19,5 +19,5 @@ import java.lang.annotation.Target;
 
   String jdk();
 
-  boolean inReducedMatrix() default false;
+  boolean inLimitedMatrix() default false;
 }
