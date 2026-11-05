@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -17,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 
@@ -35,6 +37,7 @@ class RabbitMqMetricsAssertions {
             metrics.satisfiesExactly(
                 metric ->
                     assertThat(metric)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasUnit("{message}")
                         .hasDescription(
                             "Number of messages producer attempted to send to the broker.")
@@ -85,6 +88,7 @@ class RabbitMqMetricsAssertions {
             metrics.satisfiesExactly(
                 metric ->
                     assertThat(metric)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasUnit("s")
                         .hasDescription("Duration of processing operation.")
                         .hasHistogramSatisfying(
@@ -141,6 +145,7 @@ class RabbitMqMetricsAssertions {
             metrics.satisfiesExactly(
                 metric ->
                     assertThat(metric)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasUnit("s")
                         .hasDescription(
                             "Duration of messaging operation initiated by a producer or consumer client.")
@@ -184,6 +189,7 @@ class RabbitMqMetricsAssertions {
             metrics.satisfiesExactly(
                 metric ->
                     assertThat(metric)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasUnit("{message}")
                         .hasDescription(
                             "Number of messages that were delivered to the application.")

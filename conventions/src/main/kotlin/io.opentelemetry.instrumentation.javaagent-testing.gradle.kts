@@ -43,8 +43,8 @@ dependencies {
   compileOnly("com.google.code.findbugs:annotations")
 }
 
-testing {
-  suites.withType(JvmTestSuite::class).configureEach {
+testing.suites {
+  withType(JvmTestSuite::class).configureEach {
     dependencies {
       implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
     }
@@ -97,10 +97,6 @@ class JavaagentTestArgumentsProvider(
       "-Dotel.javaagent.testing.fail-on-context-leak=$failOnContextLeak",
       // prevent sporadic gradle deadlocks, see SafeLogger for more details
       "-Dotel.javaagent.testing.transform-safe-logging.enabled=true",
-      "-Dotel.javaagent.testing.check-virtual-field-usage.enabled=true",
-      // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
-      // in smoke tests instead.
-      "-Dotel.javaagent.add-thread-details=false",
       // suppress repeated logging of "No metric data to export - skipping export."
       // since PeriodicMetricReader is configured with a short interval
       "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.opentelemetry.sdk.metrics.export.PeriodicMetricReader=INFO",

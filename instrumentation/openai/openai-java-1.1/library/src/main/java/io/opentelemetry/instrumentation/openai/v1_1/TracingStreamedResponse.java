@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import com.openai.core.http.StreamResponse;
-import com.openai.models.chat.completions.ChatCompletionChunk;
 import java.util.Comparator;
 import java.util.Spliterator;
 import java.util.function.Consumer;
@@ -14,18 +13,18 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
-final class TracingStreamedResponse implements StreamResponse<ChatCompletionChunk> {
+final class TracingStreamedResponse<T> implements StreamResponse<T> {
 
-  private final StreamResponse<ChatCompletionChunk> delegate;
-  private final StreamListener listener;
+  private final StreamResponse<T> delegate;
+  private final ChunkListener<T> listener;
 
-  TracingStreamedResponse(StreamResponse<ChatCompletionChunk> delegate, StreamListener listener) {
+  TracingStreamedResponse(StreamResponse<T> delegate, ChunkListener<T> listener) {
     this.delegate = delegate;
     this.listener = listener;
   }
 
   @Override
-  public Stream<ChatCompletionChunk> stream() {
+  public Stream<T> stream() {
     return StreamSupport.stream(new TracingSpliterator(delegate.stream().spliterator()), false);
   }
 
@@ -35,22 +34,36 @@ final class TracingStreamedResponse implements StreamResponse<ChatCompletionChun
     delegate.close();
   }
 
-  private class TracingSpliterator implements Spliterator<ChatCompletionChunk> {
+  private class TracingSpliterator implements Spliterator<T> {
 
-    private final Spliterator<ChatCompletionChunk> delegateSpliterator;
+    private final Spliterator<T> delegateSpliterator;
 
-    private TracingSpliterator(Spliterator<ChatCompletionChunk> delegateSpliterator) {
+    private TracingSpliterator(Spliterator<T> delegateSpliterator) {
       this.delegateSpliterator = delegateSpliterator;
     }
 
     @Override
-    public boolean tryAdvance(Consumer<? super ChatCompletionChunk> action) {
-      boolean chunkReceived =
-          delegateSpliterator.tryAdvance(
-              chunk -> {
-                listener.onChunk(chunk);
-                action.accept(chunk);
-              });
+    public boolean tryAdvance(Consumer<? super T> action) {
+      boolean[] inAction = new boolean[1];
+      boolean chunkReceived;
+      try {
+        chunkReceived =
+            delegateSpliterator.tryAdvance(
+                chunk -> {
+                  listener.onChunk(chunk);
+                  inAction[0] = true;
+                  action.accept(chunk);
+                  inAction[0] = false;
+                });
+      } catch (Throwable t) {
+        // Reading or parsing a later chunk failed: record it on the span rather than leaving
+        // close() to end it without an error. A failure thrown by the caller's own action is
+        // not a client error, so it is left to close() as before.
+        if (!inAction[0]) {
+          listener.endSpan(t);
+        }
+        throw t;
+      }
       if (!chunkReceived) {
         listener.endSpan(null);
       }
@@ -59,7 +72,7 @@ final class TracingStreamedResponse implements StreamResponse<ChatCompletionChun
 
     @Override
     @Nullable
-    public Spliterator<ChatCompletionChunk> trySplit() {
+    public Spliterator<T> trySplit() {
       // do not support parallelism to reliably catch the last chunk
       return null;
     }
@@ -80,7 +93,7 @@ final class TracingStreamedResponse implements StreamResponse<ChatCompletionChun
     }
 
     @Override
-    public Comparator<? super ChatCompletionChunk> getComparator() {
+    public Comparator<? super T> getComparator() {
       return delegateSpliterator.getComparator();
     }
   }

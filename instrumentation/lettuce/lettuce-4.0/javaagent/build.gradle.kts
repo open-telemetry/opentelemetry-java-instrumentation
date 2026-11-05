@@ -3,6 +3,7 @@ import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -22,10 +23,9 @@ dependencies {
   latestDepTestLibrary("biz.paluch.redis:lettuce:4.+") // see lettuce-5.0 module
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
-      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
     }
     register("Experimental") {

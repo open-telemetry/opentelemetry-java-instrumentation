@@ -4,6 +4,7 @@ import io.opentelemetry.instrumentation.gradle.telemetryConfig
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -31,10 +32,9 @@ dependencies {
   latestDepTestLibrary("com.couchbase.client:java-client:3.1.+") // see couchbase-3.2 module
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
-      usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
       if (otelProps.denyUnsafe) {
         enabled = false

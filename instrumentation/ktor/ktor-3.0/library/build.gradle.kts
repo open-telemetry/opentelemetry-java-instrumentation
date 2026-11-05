@@ -1,5 +1,4 @@
 import io.opentelemetry.instrumentation.gradle.executions
-import org.gradle.api.plugins.jvm.JvmTestSuite
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
@@ -34,8 +33,8 @@ kotlin {
   }
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     register("Experimental") {
       systemProperty("test.emitExperimentalHttpServerTelemetry", "true")
       systemProperty("metadataConfig", "Experimental.emitExperimentalTelemetry(this)")

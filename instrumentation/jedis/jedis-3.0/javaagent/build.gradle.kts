@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -26,22 +27,25 @@ dependencies {
   latestDepTestLibrary("redis.clients:jedis:3.+") // see jedis-4.0 module
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("jedis36Test") {
-      dependencies {
-        implementation("redis.clients:jedis:3.6.1")
-        implementation("org.testcontainers:testcontainers")
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
+      implementation(project(":instrumentation-api-incubator"))
+      implementation("redis.clients:jedis:3.0.0")
+    }
+  }
+
+  register<JvmTestSuite>("jedis36Test") {
+    dependencies {
+      implementation("redis.clients:jedis:3.6.1")
+      implementation("org.testcontainers:testcontainers")
     }
   }
 }
 
 tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
   check {
     dependsOn(testing.suites)
   }

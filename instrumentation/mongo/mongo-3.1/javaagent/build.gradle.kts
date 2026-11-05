@@ -1,6 +1,7 @@
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -44,21 +45,18 @@ dependencies {
   testInstrumentation(project(":instrumentation:mongo:mongo-4.0:javaagent"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("version37Test") {
-      dependencies {
-        implementation("org.mongodb:mongo-java-driver:${baseVersion("3.7.0").orLatest("3.+")}")
-        implementation(project(":instrumentation:mongo:mongo-3.1:testing"))
-        implementation("com.github.jnr:jnr-unixsocket:0.18")
-      }
+testing.suites {
+  register<JvmTestSuite>("version37Test") {
+    dependencies {
+      implementation("org.mongodb:mongo-java-driver:${baseVersion("3.7.0").orLatest("3.+")}")
+      implementation(project(":instrumentation:mongo:mongo-3.1:testing"))
+      implementation("com.github.jnr:jnr-unixsocket:0.18")
     }
   }
 }
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 

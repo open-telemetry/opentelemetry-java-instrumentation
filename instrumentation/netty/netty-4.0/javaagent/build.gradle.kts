@@ -38,8 +38,8 @@ dependencies {
   latestDepTestLibrary("io.netty:netty-codec-http:4.0.+") // see netty-4.1 module
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureDefault {
       filter {
         excludeTestsMatching("Netty40ConnectionSpanTest")

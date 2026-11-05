@@ -9,14 +9,12 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation-api-incubator"))
-        implementation("org.redisson:redisson:3.0.0")
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation-api-incubator"))
+      implementation("org.redisson:redisson:3.0.0")
     }
   }
 }

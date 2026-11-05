@@ -30,8 +30,8 @@ dependencies {
   testImplementation("javax.ws.rs:javax.ws.rs-api:2.0")
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     register("ControllerTelemetry") {
       telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
     }

@@ -2,6 +2,10 @@
 
 Provides OpenTelemetry instrumentation for the [Apache HttpClient](https://hc.apache.org/httpcomponents-client-ga/), enabling HTTP client spans and metrics.
 
+This instrumentation does not automatically capture `network.peer.address` or `network.peer.port`. The route target does not reliably identify the connected socket peer, particularly when an HTTP proxy is used.
+
+`server.address` and `server.port` identify the logical destination. They can be used for destination-based grouping, but are not substitutes for actual socket peer information.
+
 ## Quickstart
 
 ### Add these dependencies to your project
