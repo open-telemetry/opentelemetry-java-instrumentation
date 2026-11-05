@@ -138,7 +138,7 @@ class MySqlReplicationTest {
   }
 
   @Test
-  void warningIsCapturedWithoutChangingApplicationWarningChain() throws Exception {
+  void applicationWarningChainRemainsUnchanged() throws Exception {
     try (Connection connection = connect(source, "");
         Statement statement = connection.createStatement()) {
       createTable(statement);
@@ -148,8 +148,10 @@ class MySqlReplicationTest {
 
       SQLWarning warning = statement.getWarnings();
       assertWarning(warning);
-      assertWarning(warning.getNextWarning());
-      assertWarningSpan();
+      SQLWarning nextWarning = warning.getNextWarning();
+      assertWarning(nextWarning);
+      assertThat((Throwable) nextWarning.getNextWarning()).isNull();
+      assertSuccessfulSpan();
     }
   }
 
@@ -179,18 +181,6 @@ class MySqlReplicationTest {
   private static void assertWarning(SQLWarning warning) {
     assertThat((Throwable) warning).isNotNull();
     assertThat(warning.getErrorCode()).isEqualTo(1062);
-  }
-
-  private static void assertWarningSpan() {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfying(
-                            equalTo(DB_RESPONSE_STATUS_CODE, "1062"), equalTo(ERROR_TYPE, null))
-                        .hasStatus(StatusData.unset())));
   }
 
   private static void assertSuccessfulSpan() {

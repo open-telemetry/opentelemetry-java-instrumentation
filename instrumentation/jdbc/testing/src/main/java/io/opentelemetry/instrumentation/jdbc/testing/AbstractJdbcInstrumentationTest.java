@@ -477,6 +477,9 @@ public abstract class AbstractJdbcInstrumentationTest {
                         () -> statement.executeQuery("SELECT * FROM table_does_not_exist")));
 
     assertThat(error).isInstanceOf(SQLException.class);
+    SQLException sqlException = (SQLException) error;
+    String expectedResponseStatusCode =
+        sqlException.getSQLState() + "/" + sqlException.getErrorCode();
 
     testing()
         .waitAndAssertTraces(
@@ -487,6 +490,9 @@ public abstract class AbstractJdbcInstrumentationTest {
                         span.hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())
+                            .hasAttributesSatisfying(
+                                equalTo(DB_RESPONSE_STATUS_CODE, expectedResponseStatusCode),
+                                equalTo(ERROR_TYPE, Integer.toString(sqlException.getErrorCode())))
                             .hasException(emitExceptionAsSpanEvents() ? error : null)));
 
     if (emitExceptionAsLogs()) {
@@ -509,8 +515,10 @@ public abstract class AbstractJdbcInstrumentationTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"statement", "prepared", "callable"})
-  void testStatementWarningStatusCode(String statementType) throws SQLException {
-    Connection connectionWithoutWarning = wrap(new TestConnection());
+  void statementWarningsAreNotReadAutomaticallyOrRecorded(String statementType)
+      throws SQLException {
+    TestConnection testConnectionWithoutWarning = new TestConnection();
+    Connection connectionWithoutWarning = wrap(testConnectionWithoutWarning);
     cleanup.deferCleanup(connectionWithoutWarning);
     Statement statementWithoutWarning = createStatement(connectionWithoutWarning, statementType);
     cleanup.deferCleanup(statementWithoutWarning);
@@ -533,9 +541,14 @@ public abstract class AbstractJdbcInstrumentationTest {
                   return executeStatement(statementWithWarning);
                 });
     assertThat(result).isTrue();
-    assertThat((Object) statementWithWarning.getWarnings()).isSameAs(warning);
-    assertThat(statementWithWarning.getWarnings().getNextWarning().getSQLState())
-        .isEqualTo("01001");
+    assertThat(testConnectionWithoutWarning.getStatementWarningReadCount()).isZero();
+    assertThat(testConnection.getStatementWarningReadCount()).isZero();
+    SQLWarning applicationWarning = statementWithWarning.getWarnings();
+    assertThat((Object) applicationWarning).isSameAs(warning);
+    SQLWarning nextWarning = applicationWarning.getNextWarning();
+    assertThat(nextWarning.getSQLState()).isEqualTo("01001");
+    assertThat((Throwable) nextWarning.getNextWarning()).isNull();
+    assertThat(testConnection.getStatementWarningReadCount()).isEqualTo(1);
 
     testing()
         .waitAndAssertTraces(
@@ -551,7 +564,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                         span.hasKind(SpanKind.CLIENT)
                             .hasStatus(StatusData.unset())
                             .hasAttributesSatisfying(
-                                equalTo(DB_RESPONSE_STATUS_CODE, "01001"),
+                                equalTo(DB_RESPONSE_STATUS_CODE, null),
                                 equalTo(ERROR_TYPE, null))));
 
     testing()
@@ -565,54 +578,17 @@ public abstract class AbstractJdbcInstrumentationTest {
                     .satisfies(
                         data -> {
                           assertThat(data.getHistogramData().getPoints())
-                              .hasSize(2)
-                              .anySatisfy(
+                              .hasSize(1)
+                              .allSatisfy(
                                   point ->
                                       assertThat(point.getAttributes().asMap())
                                           .containsOnlyKeys(
                                               DB_SYSTEM_NAME,
                                               DB_NAMESPACE,
                                               DB_QUERY_SUMMARY,
-                                              SERVER_ADDRESS));
-                          assertThat(data.getHistogramData().getPoints())
-                              .anySatisfy(
-                                  point ->
-                                      assertThat(point.getAttributes().asMap())
-                                          .containsOnlyKeys(
-                                              DB_SYSTEM_NAME,
-                                              DB_NAMESPACE,
-                                              DB_QUERY_SUMMARY,
-                                              SERVER_ADDRESS,
-                                              DB_RESPONSE_STATUS_CODE)
-                                          .containsEntry(DB_RESPONSE_STATUS_CODE, "01001")
-                                          .doesNotContainKey(ERROR_TYPE));
+                                              SERVER_ADDRESS)
+                                          .doesNotContainKeys(DB_RESPONSE_STATUS_CODE, ERROR_TYPE));
                         }));
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"statement", "prepared", "callable"})
-  void testStatementWarningReadFailure(String statementType) throws SQLException {
-    TestConnection testConnection = new TestConnection();
-    testConnection.setThrowOnGetWarnings(true);
-    Connection connection = wrap(testConnection);
-    cleanup.deferCleanup(connection);
-    Statement statement = createStatement(connection, statementType);
-    cleanup.deferCleanup(statement);
-
-    boolean result = testing().runWithSpan("parent", () -> executeStatement(statement));
-
-    assertThat(result).isTrue();
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasKind(SpanKind.CLIENT)
-                            .hasStatus(StatusData.unset())
-                            .hasAttributesSatisfying(
-                                equalTo(DB_RESPONSE_STATUS_CODE, null),
-                                equalTo(ERROR_TYPE, null))));
   }
 
   private static Statement createStatement(Connection connection, String statementType)

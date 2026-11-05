@@ -26,23 +26,23 @@ class ClickHouseErrorCodeExtractorTest {
 
   @ParameterizedTest
   @ValueSource(ints = {60, 159, 210, 394, 1002})
-  void keepsServerCodesEvenWhenTheyOverlapClientCodes(int code) {
+  void extractsServerResponseCodesFromMessages(int code) {
     String message = "Code: " + code + ". DB::Exception: test";
     ClickHouseException response = ClickHouseException.of(message, null);
     ClickHouseException wrappedResponse = ClickHouseException.of(new IOException(message), null);
 
-    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(response))
+    assertThat(ClickHouseErrorCodeExtractor.getResponseStatusCode(response))
         .isEqualTo(Integer.toString(code));
-    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(wrappedResponse))
+    assertThat(ClickHouseErrorCodeExtractor.getResponseStatusCode(wrappedResponse))
         .isEqualTo(Integer.toString(code));
   }
 
   @ParameterizedTest
   @MethodSource("clientFailures")
-  void retainsClientCodesWithoutChangingErrorType(
-      ClickHouseException error, String expectedErrorCode) {
-    assertThat(ClickHouseErrorCodeExtractor.getErrorType(error)).isEqualTo(expectedErrorCode);
-    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(error)).isEqualTo(expectedErrorCode);
+  void omitsClientGeneratedResponseCodesWithoutChangingErrorType(
+      ClickHouseException error, String expectedErrorType) {
+    assertThat(ClickHouseErrorCodeExtractor.getErrorType(error)).isEqualTo(expectedErrorType);
+    assertThat(ClickHouseErrorCodeExtractor.getResponseStatusCode(error)).isNull();
   }
 
   private static Stream<Arguments> clientFailures() {
@@ -72,27 +72,24 @@ class ClickHouseErrorCodeExtractorTest {
             ClickHouseException.forCancellation(new InterruptedException("interrupted"), null),
             "236"),
         argumentSet(
-            "cancelled code",
-            new ClickHouseException(394, new CancellationException("cancelled"), null),
-            "394"),
-        argumentSet(
             "unknown client failure",
             ClickHouseException.of(new IOException("connection closed"), null),
             "1002"));
   }
 
   @Test
-  void omitsUnavailableCodes() {
-    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(null)).isNull();
-    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(new IllegalStateException("test")))
+  void omitsUnavailableResponseCodes() {
+    assertThat(ClickHouseErrorCodeExtractor.getResponseStatusCode(null)).isNull();
+    assertThat(
+            ClickHouseErrorCodeExtractor.getResponseStatusCode(new IllegalStateException("test")))
         .isNull();
   }
 
   @Test
-  void keepsZeroStatusWithoutChangingErrorType() {
+  void omitsZeroResponseStatusWithoutChangingErrorType() {
     ClickHouseException error = new ClickHouseException(0, "test", null);
 
-    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(error)).isEqualTo("0");
+    assertThat(ClickHouseErrorCodeExtractor.getResponseStatusCode(error)).isNull();
     assertThat(ClickHouseErrorCodeExtractor.getErrorType(error)).isNull();
   }
 }

@@ -10,17 +10,14 @@ import static io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils.extractDb
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
-import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.Collection;
 import java.util.Map;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -29,8 +26,6 @@ import javax.annotation.Nullable;
  */
 @AutoValue
 public abstract class DbRequest {
-
-  private static final Logger logger = Logger.getLogger(DbRequest.class.getName());
 
   @Nullable
   public static DbRequest create(
@@ -123,8 +118,7 @@ public abstract class DbRequest {
         batchSize,
         operationName,
         preparedStatementParameters,
-        parameterizedQuery,
-        null);
+        parameterizedQuery);
   }
 
   @Nullable
@@ -155,27 +149,4 @@ public abstract class DbRequest {
   public abstract Map<String, String> getPreparedStatementParameters();
 
   public abstract boolean isParameterizedQuery();
-
-  @Nullable
-  public abstract SQLWarning getSqlWarning();
-
-  public DbRequest withSqlWarningFromStatement(Statement statement) {
-    try {
-      SQLWarning sqlWarning = statement.getWarnings();
-      if (sqlWarning == null) {
-        return this;
-      }
-      return new AutoValue_DbRequest(
-          getDbInfo(),
-          getQueryTexts(),
-          getBatchSize(),
-          getOperationName(),
-          getPreparedStatementParameters(),
-          isParameterizedQuery(),
-          sqlWarning);
-    } catch (Throwable t) {
-      logger.log(FINE, "Could not get warnings from a statement", t);
-      return this;
-    }
-  }
 }

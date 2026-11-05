@@ -337,7 +337,7 @@ class ClickHouseClientV1Test {
   }
 
   @Test
-  void testClientConnectionFailureCapturesResponseStatus() {
+  void testClientConnectionFailureOmitsResponseStatus() {
     int unavailablePort = PortUtils.findOpenPort();
     ClickHouseNode unavailableServer =
         ClickHouseNode.of("http://127.0.0.1:" + unavailablePort + "/default?compress=0");
@@ -372,8 +372,19 @@ class ClickHouseClientV1Test {
                             equalTo(NETWORK_PEER_PORT, unavailablePort),
                             equalTo(DB_QUERY_TEXT, "select * from non_existent_table"),
                             equalTo(DB_QUERY_SUMMARY, "select non_existent_table"),
-                            equalTo(ERROR_TYPE, "210"),
-                            equalTo(DB_RESPONSE_STATUS_CODE, "210"))));
+                            equalTo(ERROR_TYPE, "210"))));
+
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.clickhouse-client-v1-0.5",
+        DB_SYSTEM_NAME,
+        DB_QUERY_SUMMARY,
+        DB_NAMESPACE,
+        ERROR_TYPE,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test

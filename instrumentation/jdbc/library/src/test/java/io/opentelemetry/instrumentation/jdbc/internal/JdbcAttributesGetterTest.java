@@ -91,7 +91,7 @@ class JdbcAttributesGetterTest {
 
   @ParameterizedTest
   @ValueSource(ints = {17008, 17009})
-  void capturesOracleClosedCodesWithoutChangingErrorType(int errorCode) {
+  void extractsOracleExceptionCodes(int errorCode) {
     DbRequest request =
         DbRequest.create(DbInfo.builder().dbSystemName(ORACLE_DB).build(), "SELECT 1", false);
     SQLException error = new SQLException("Closed locally", "99999", errorCode);
@@ -104,7 +104,7 @@ class JdbcAttributesGetterTest {
 
   @ParameterizedTest
   @ValueSource(ints = {17008, 17009})
-  void keepsOtherDatabaseCodesThatOverlapOracleLocalCodes(int errorCode) {
+  void formatsOtherSqlStatusesWithVendorCodes(int errorCode) {
     DbRequest request =
         DbRequest.create(DbInfo.builder().dbSystemName(OTHER_SQL).build(), "SELECT 1", false);
     SQLException error = new SQLException("Server failure", "99999", errorCode);
@@ -114,7 +114,7 @@ class JdbcAttributesGetterTest {
   }
 
   @Test
-  void capturesH2ClosedObjectCodeWithoutChangingErrorType() {
+  void extractsH2ExceptionCode() {
     DbRequest request =
         DbRequest.create(DbInfo.builder().dbSystemName(H2DATABASE).build(), "SELECT 1", false);
     SQLException error = new SQLException("The object is already closed", "90007", 90007);
@@ -125,37 +125,13 @@ class JdbcAttributesGetterTest {
   }
 
   @Test
-  void capturesPostgresqlLocalClosedConnectionCodeWithoutChangingErrorType() {
+  void usesPostgresqlSqlStateForClosedConnection() {
     DbRequest request =
         DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);
     SQLException error = new SQLException("This connection has been closed.", "08003");
-    error.setStackTrace(
-        new StackTraceElement[] {
-          new StackTraceElement("org.postgresql.jdbc.PgConnection", "checkClosed", null, -1)
-        });
 
     assertThat(attributesGetter.getErrorType(request, null, error)).isEqualTo("08003");
     assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isEqualTo("08003");
-  }
-
-  @Test
-  void keepsPostgresqlServerConnectionDoesNotExistCode() {
-    DbRequest request =
-        DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);
-    SQLException error = new SQLException("Server connection does not exist", "08003");
-
-    assertThat(attributesGetter.getErrorType(request, null, error)).isEqualTo("08003");
-    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isEqualTo("08003");
-  }
-
-  @Test
-  void keepsH2ClosedObjectCodeForOtherDatabaseSystems() {
-    DbRequest request =
-        DbRequest.create(DbInfo.builder().dbSystemName(OTHER_SQL).build(), "SELECT 1", false);
-    SQLException error = new SQLException("Server failure", "90007", 90007);
-
-    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error))
-        .isEqualTo("90007/90007");
   }
 
   @ParameterizedTest
