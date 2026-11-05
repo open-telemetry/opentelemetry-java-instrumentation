@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.testcontainers-testing")
@@ -41,15 +43,6 @@ testing {
         implementation("org.redisson:redisson:3.6.5")
         implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
       }
-      targets.configureEach {
-        testTask.configure {
-          javaLauncher.set(
-            project.javaToolchains.launcherFor {
-              languageVersion = JavaLanguageVersion.of(8)
-            }
-          )
-        }
-      }
     }
 
     // 3.7.1 is the last version where atomic mode is passed to executeAsync. It requires Java 8
@@ -65,14 +58,13 @@ testing {
         implementation("org.redisson:redisson:3.7.1")
         implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
       }
-      targets.configureEach {
-        testTask.configure {
-          javaLauncher.set(
-            project.javaToolchains.launcherFor {
-              languageVersion = JavaLanguageVersion.of(8)
-            }
-          )
-        }
+    }
+
+    // Reactive and Rx batches supply options at execution time through 3.10.4.
+    register<JvmTestSuite>("testRedisson3104") {
+      dependencies {
+        implementation("org.redisson:redisson:3.10.4")
+        implementation("org.testcontainers:testcontainers")
       }
     }
 
@@ -92,28 +84,45 @@ testing {
         implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
       }
     }
+
+    executions("test") {
+      configureEach {
+        systemProperty("testLatestDeps", otelProps.testLatestDeps)
+      }
+    }
+
+    executions("testRedisson365", "testRedisson371") {
+      configureEach {
+        enabled = otelProps.testJavaVersion == null || otelProps.testJavaVersion!!.isJava8
+        systemProperty("testLatestDeps", true)
+        javaLauncher.set(
+          project.javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of(8)
+          }
+        )
+      }
+    }
+
+    executions("testRedisson3104") {
+      configureEach {
+        enabled = otelProps.testJavaVersion == null || otelProps.testJavaVersion!!.isJava8
+        javaLauncher.set(
+          project.javaToolchains.launcherFor {
+            languageVersion = JavaLanguageVersion.of(8)
+          }
+        )
+      }
+    }
+
+    executions("testRedisson3111") {
+      configureEach {
+        systemProperty("testLatestDeps", true)
+      }
+    }
   }
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  named<Test>("testRedisson365") {
-    enabled = otelProps.testJavaVersion == null || otelProps.testJavaVersion!!.isJava8
-    systemProperty("testLatestDeps", true)
-  }
-
-  named<Test>("testRedisson371") {
-    enabled = otelProps.testJavaVersion == null || otelProps.testJavaVersion!!.isJava8
-    systemProperty("testLatestDeps", true)
-  }
-
-  named<Test>("testRedisson3111") {
-    systemProperty("testLatestDeps", true)
-  }
-
   check {
     dependsOn(testing.suites)
   }
