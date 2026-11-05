@@ -34,7 +34,7 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
                 .build())
         .setCaptureExperimentalSpanAttributes(true)
         .build()
-        .wrap(producer);
+        .instrument(producer);
   }
 
   @Override

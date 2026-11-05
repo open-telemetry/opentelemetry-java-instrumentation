@@ -11,6 +11,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_SUMMARY;
@@ -24,6 +25,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -452,7 +454,9 @@ class InfluxDbClientTest {
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, 1),
                             equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
-                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load")),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"),
+                            equalTo(ERROR_TYPE, "java.net.ConnectException"))
+                        .hasStatus(StatusData.error()),
                 span ->
                     span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
@@ -530,7 +534,9 @@ class InfluxDbClientTest {
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_QUERY_TEXT, "SELECT MEAN(water_level) FROM;"),
-                            equalTo(DB_QUERY_SUMMARY, "SELECT")),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT"),
+                            equalTo(ERROR_TYPE, "org.influxdb.InfluxDBException"))
+                        .hasStatus(StatusData.error()),
                 span ->
                     span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }

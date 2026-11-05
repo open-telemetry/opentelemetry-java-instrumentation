@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcData;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -58,8 +59,13 @@ class DriverInstrumentation implements TypeInstrumentation {
         // Exception was probably thrown.
         return;
       }
-      DbInfo dbInfo = JdbcConnectionUrlParser.parse(url, props);
-      JdbcData.CONNECTION_INFO.set(connection, JdbcData.intern(dbInfo));
+      DbInfo dbInfo = JdbcData.intern(JdbcConnectionUrlParser.parse(url, props));
+      JdbcData.CONNECTION_INFO.set(connection, dbInfo);
+      // DbInfo lookups use the unwrapped connection, so cache the configured target there too.
+      Connection unwrappedConnection = JdbcUtils.unwrapConnection(connection);
+      if (unwrappedConnection != null && unwrappedConnection != connection) {
+        JdbcData.CONNECTION_INFO.set(unwrappedConnection, dbInfo);
+      }
     }
   }
 }

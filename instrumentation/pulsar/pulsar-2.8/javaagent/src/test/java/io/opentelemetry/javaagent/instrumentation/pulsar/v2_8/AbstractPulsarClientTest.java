@@ -22,7 +22,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.HOURS;
@@ -1348,7 +1347,7 @@ abstract class AbstractPulsarClientTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                equalTo(stringKey("messaging.system.name"), "pulsar"),
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
                 equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
@@ -1357,7 +1356,7 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 // messaging.message.body.size requires opt-in
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
-                equalTo(stringKey("messaging.pulsar.message.type"), experimental("normal"))));
+                equalTo(stringKey("pulsar.message.type"), experimental("normal"))));
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
@@ -1386,7 +1385,7 @@ abstract class AbstractPulsarClientTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                equalTo(stringKey("messaging.system.name"), "pulsar"),
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
                 equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
@@ -1411,7 +1410,7 @@ abstract class AbstractPulsarClientTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                equalTo(stringKey("messaging.system.name"), "pulsar"),
                 equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                 equalTo(MESSAGING_OPERATION_TYPE, "process"),

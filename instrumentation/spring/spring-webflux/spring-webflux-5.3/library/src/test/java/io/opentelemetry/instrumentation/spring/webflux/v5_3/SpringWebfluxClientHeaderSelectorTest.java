@@ -82,7 +82,7 @@ class SpringWebfluxClientHeaderSelectorTest {
   private static void sendRequest(SpringWebfluxClientTelemetry telemetry) {
     WebClient client =
         WebClient.builder()
-            .filters(telemetry::addFilter)
+            .filter(telemetry.createFilter())
             .exchangeFunction(
                 request ->
                     Mono.just(

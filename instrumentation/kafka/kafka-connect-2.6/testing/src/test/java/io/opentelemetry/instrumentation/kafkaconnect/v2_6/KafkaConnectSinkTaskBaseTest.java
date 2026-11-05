@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertReceiveMetrics;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
@@ -13,11 +15,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingOperationTypeIncubatingValues.PROCESS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA;
 import static io.restassured.RestAssured.given;
@@ -220,7 +219,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
                 }
                 assertThat(matchingProducers).hasSize(1);
                 SpanData producer = matchingProducers.get(0);
-                assertThat(producer.getAttributes().get(MESSAGING_KAFKA_MESSAGE_KEY))
+                assertThat(producer.getAttributes().get(stringKey("kafka.message.key")))
                     .isEqualTo(expected.getValue());
                 expectedRecordAttributesBySpan.put(
                     spanId(producer.getSpanContext()),
@@ -259,8 +258,8 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
                       .isSubsetOf(
                           MESSAGING_DESTINATION_NAME,
                           MESSAGING_DESTINATION_PARTITION_ID,
-                          MESSAGING_KAFKA_OFFSET,
-                          MESSAGING_KAFKA_MESSAGE_KEY);
+                          longKey("kafka.offset"),
+                          stringKey("kafka.message.key"));
                   actualRecordAttributes.add(effectiveRecordAttributes(process, link));
                 }
               }
@@ -279,9 +278,10 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
         .put(
             MESSAGING_DESTINATION_PARTITION_ID,
             batchAttribute(process, link, MESSAGING_DESTINATION_PARTITION_ID))
-        .put(MESSAGING_KAFKA_OFFSET, batchAttribute(process, link, MESSAGING_KAFKA_OFFSET))
+        .put(longKey("kafka.offset"), batchAttribute(process, link, longKey("kafka.offset")))
         .put(
-            MESSAGING_KAFKA_MESSAGE_KEY, batchAttribute(process, link, MESSAGING_KAFKA_MESSAGE_KEY))
+            stringKey("kafka.message.key"),
+            batchAttribute(process, link, stringKey("kafka.message.key")))
         .build();
   }
 
@@ -301,8 +301,8 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
     return Attributes.builder()
         .put(MESSAGING_DESTINATION_NAME, destination)
         .put(MESSAGING_DESTINATION_PARTITION_ID, "0")
-        .put(MESSAGING_KAFKA_OFFSET, 0)
-        .put(MESSAGING_KAFKA_MESSAGE_KEY, messageKey)
+        .put(longKey("kafka.offset"), 0)
+        .put(stringKey("kafka.message.key"), messageKey)
         .build();
   }
 
@@ -313,8 +313,8 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
     return LinkData.create(
         asRemote(producerSpanContext),
         Attributes.builder()
-            .put(MESSAGING_KAFKA_OFFSET, 0)
-            .put(MESSAGING_KAFKA_MESSAGE_KEY, messageKey)
+            .put(longKey("kafka.offset"), 0)
+            .put(stringKey("kafka.message.key"), messageKey)
             .build());
   }
 
@@ -549,7 +549,7 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
       equalTo(MESSAGING_DESTINATION_PARTITION_ID, "0"),
       equalTo(MESSAGING_OPERATION_NAME, PROCESS),
       equalTo(MESSAGING_OPERATION_TYPE, PROCESS),
-      equalTo(MESSAGING_SYSTEM, KAFKA)
+      equalTo(stringKey("messaging.system.name"), KAFKA)
     };
   }
 
@@ -617,6 +617,6 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
   }
 
   protected Producer<String, String> instrument(Producer<String, String> producer) {
-    return KafkaTelemetry.create(openTelemetry).wrap(producer);
+    return KafkaTelemetry.create(openTelemetry).instrument(producer);
   }
 }

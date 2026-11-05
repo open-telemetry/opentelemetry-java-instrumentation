@@ -4,6 +4,42 @@
 
 ### ⚠️ Breaking changes
 
+- Default RPC duration histogram boundaries now follow semantic conventions 1.45.0.
+- OSHI disk and network packet metrics now use `system.device.name` instead of `system.device`;
+  memory metrics use `system.memory.state="available"` instead of `"free"`.
+- Apache HttpClient 4.3 library instrumentation no longer automatically emits
+  `network.peer.address` or `network.peer.port` inferred from the route target.
+  Use `server.address` and `server.port` for logical destination grouping.
+- Configured service mappings now emit `server.service.name` and `server.service.namespace`, and no longer emit `peer.service`, `service.peer.name`, or `service.peer.namespace`. Rename `otel.instrumentation.common.peer-service-mapping` to `otel.instrumentation.common.server-service-mapping`; in YAML, use `java.common.server_service_mapping` with `target` instead of `peer`.
+- Rename `otel.instrumentation.grpc.{client,server}.request-metadata.{included,excluded}` to
+  `otel.instrumentation.grpc.{client,server}.request-headers.{included,excluded}`.
+- Captured gRPC request attributes now use `rpc.request.header.<key>` instead of
+  `rpc.request.metadata.<key>`.
+- Rename `messaging.system` to `messaging.system.name` (`aws_sqs` becomes `aws.sqs`) and adopt
+  the system-specific attribute renames from
+  [semantic-conventions #4250](https://github.com/open-telemetry/semantic-conventions/pull/4250).
+  Experimental messaging attributes also lose the `messaging.` prefix (for example,
+  `messaging.kafka.bootstrap.servers` becomes `kafka.bootstrap.servers`).
+- AWS Lambda invocation spans now replace alias suffixes in `cloud.resource_id` with the resolved
+  function version when available.
+- AWS Lambda spans now use `faas.invocation.id` instead of `faas.invocation_id` for invocation IDs.
+- Replace `SpringWebfluxClientTelemetry.addFilter(list)` and
+  `addFilterAndRegisterReactorHook(list)` with `createFilter()` and
+  `createFilterAndRegisterReactorHook()`, used with `WebClient.Builder.filter(...)`.
+- RPC telemetry now uses only the conventions with schema version 1.44.0: `rpc.system.name`,
+  fully qualified `rpc.method`, `rpc.status_code`, and `error.type`, with updated span names.
+  RPC duration metrics use `rpc.client.call.duration` and `rpc.server.call.duration` in seconds.
+  RPC opt-in/preview flags and `general.rpc.semconv` settings no longer select legacy or dual emission.
+- GenAI error type getters now return the final value. Returning `null` omits `error.type`; overrides
+  should return `error == null ? null : error.getClass().getName()` for the exception-class fallback.
+- HTTP client and server getters now determine `error.type`; their returned value, including `null`,
+  is used as-is.
+- RPC attribute getters return the final `error.type`; returning `null` omits it even when an
+  exception exists.
+- Messaging `MessagingAttributesGetter.getErrorType()` overrides now provide the final
+  `error.type` value. Return `null` to omit it, or return `error == null ? null :
+  error.getClass().getName()` for exception-class fallback.
+- Require R2DBC SPI 1.0 or later.
 - Rename the Spark Java instrumentation selector from `spark-2.3` to `spark-2.4`.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to
@@ -201,13 +237,6 @@
   `structuredAttributesIncluded` and `structuredAttributesExcluded` in XML, or
   `setStructuredAttributes(IncludeExclude)` programmatically.
   Log4j `MapMessage` keys are emitted as their original log attribute names.
-- RPC and service-peer semantic conventions now require `otel.semconv-stability.preview=rpc`
-  and `otel.semconv-stability.preview=service.peer`, respectively (or `rpc/dup` and
-  `service.peer/dup` for dual emission). The `rpc`, `rpc/dup`, `service.peer`, and `service.peer/dup`
-  values in `otel.semconv-stability.opt-in` no longer select them.
-  For declarative configuration, move these values from `general.stability_opt_in_list` to
-  `java.common.semconv_stability.preview`. Default telemetry and explicit `general.rpc.semconv`
-  configuration are unchanged.
 - Micrometer timers and distribution summaries no longer emit separate `.max` gauge metrics; use the
   maximum from their histogram instead. Custom meter statistic suffixes are appended after the base
   name passes through the naming convention (for example, Prometheus mode changes
@@ -237,8 +266,8 @@
   respectively.
 - Remove `otel.instrumentation.grpc.capture-metadata.client.request` and
   `otel.instrumentation.grpc.capture-metadata.server.request`.
-  Use `otel.instrumentation.grpc.client.request-metadata.included` and
-  `otel.instrumentation.grpc.server.request-metadata.included`.
+  Use `otel.instrumentation.grpc.client.request-headers.included` and
+  `otel.instrumentation.grpc.server.request-headers.included`.
 - Captured messaging header attribute keys now preserve dashes unconditionally; for example,
   `messaging.header.Test_Message_Id` is now `messaging.header.Test-Message-Id`. Replace
   `otel.instrumentation.messaging.experimental.headers.included=Test-Message-*` with
@@ -332,6 +361,29 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Testing exporters now use delta-preferred metric temporality by default; up-down counters are
+  cumulative.
+- Remove the deprecated `ServicePeerAttributesExtractor`,
+  `HttpClientServicePeerAttributesExtractor`, `ServicePeerResolver`, and
+  `expectedPeerService()` APIs; use `ServerServiceAttributesExtractor`,
+  `HttpClientServerServiceAttributesExtractor`, and `ServiceMappingResolver` instead. Replace
+  `expectedPeerService()` with `TestServerServiceMapping.expectedMappedServiceName()` in
+  service-mapping tests.
+- Rename `GrpcTelemetryBuilder.setClientRequestMetadata` and
+  `GrpcTelemetryBuilder.setServerRequestMetadata` to their `RequestHeaders` forms. Remove
+  `setCapturedClientRequestMetadata` and `setCapturedServerRequestMetadata`.
+- Rename public library instrumentation entrypoints from `wrap`/`wrapXxx` to `instrument`
+  overloads, retaining distinct `instrumentXxx` names where required.
+- In `opentelemetry-instrumentation-api-incubator`, custom `RpcAttributesGetter` implementations
+  must implement `getRpcSystemName` and `getRpcMethod`, returning the RPC system name and fully
+  qualified method name such as `my.Service/Method`, respectively. The legacy `getSystem`,
+  `getService`, and `getMethod` methods have been removed.
+- In `opentelemetry-instrumentation-api-incubator`, remove calls to
+  `RpcMetricsContextCustomizers.dualEmitContextCustomizer`. RPC metrics no longer require this
+  context customizer.
+- Replace `GrpcRequest.getLogicalHost()` and `getLogicalPort()` with `getServerAddress()` and
+  `getServerPort()`. Unavailable ports are now `null` instead of `-1`.
+  ([#16161](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/16161))
 - `TracedOnSubscribe.perSubscription(...)` now returns `Observable.OnSubscribe<T>` instead of
   `TracedOnSubscribe<T, REQUEST>`. Recompile consumers.
 - Make the Netty 4.1 library's `NettyRequest` final; use it only as an opaque request view.

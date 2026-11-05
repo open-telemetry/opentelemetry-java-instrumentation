@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.rmi.ThreadLocalContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -70,10 +69,8 @@ public class ServerInstrumentation implements TypeInstrumentation {
           return new AdviceScope(callDepth, null, null, null);
         }
 
-        Class<?> serverClass = rmiExporter.getService().getClass();
         SpringRmiServerRequest request =
             new SpringRmiServerRequest(
-                ClassAndMethod.create(serverClass, remoteInvocation.getMethodName()),
                 rmiExporter.getServiceInterface(),
                 remoteInvocation.getMethodName(),
                 remoteInvocation.getParameterTypes());

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -122,9 +121,7 @@ class TracingFilterTest {
                         .hasKind(SpanKind.SERVER)
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfying(
-                            equalTo(
-                                ERROR_TYPE,
-                                emitPreviewRpcSemconv() ? failure.getClass().getName() : null))));
+                            equalTo(ERROR_TYPE, failure.getClass().getName()))));
   }
 
   private static AsyncRpcResult invokeAsyncProvider(CompletableFuture<AppResponse> future) {

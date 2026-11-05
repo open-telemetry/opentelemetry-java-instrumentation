@@ -19,7 +19,7 @@ final class ExperimentalProducerAttributesExtractor
     implements AttributesExtractor<PulsarRequest, Void> {
 
   private static final AttributeKey<String> MESSAGE_TYPE =
-      AttributeKey.stringKey("messaging.pulsar.message.type");
+      AttributeKey.stringKey("pulsar.message.type");
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, PulsarRequest request) {}

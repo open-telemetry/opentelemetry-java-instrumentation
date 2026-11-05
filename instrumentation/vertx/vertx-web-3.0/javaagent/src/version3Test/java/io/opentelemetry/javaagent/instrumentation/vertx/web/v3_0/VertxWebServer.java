@@ -28,6 +28,7 @@ public class VertxWebServer extends AbstractVertxWebServer {
     router.mountSubRouter("/child", buildRouter());
 
     Router mainRouter = Router.router(vertx);
+    addMultiHandlerRoutes(mainRouter);
     mainRouter.mountSubRouter("/vertx-app", router);
 
     vertx

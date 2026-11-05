@@ -27,4 +27,4 @@ configurations:
       unset, that setting applies.
     type: boolean
   - ref: common.db.query-sanitization.enabled
-  - ref: common.peer-service-mapping
+  - ref: common.server-service-mapping

@@ -25,10 +25,10 @@ import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.pool.TypePool;
 
 /**
- * Inspect advice classes used by the given instrumentation module and determine whether the
- * instrumentation should inject helper classes into the instrumented classloader or load them into
- * separate class loader. The decision is made based on the {@code inline} attribute of {@link
- * Advice.OnMethodEnter} and {@link Advice.OnMethodExit} annotations.
+ * Inspect advice classes used by the given instrumentation module and determine whether it should
+ * use the isolated classloader path. The selection is based on the {@code inline} attribute of
+ * {@link Advice.OnMethodEnter} and {@link Advice.OnMethodExit} annotations. An explicit helper
+ * class strategy can override this selection.
  */
 public class AdviceInspector {
 
@@ -38,17 +38,17 @@ public class AdviceInspector {
     this.classFileLocator = classFileLocator;
   }
 
-  public boolean useIsolatedAdvice(InstrumentationModule instrumentationModule) {
+  public boolean inferHelperClassIsolation(InstrumentationModule instrumentationModule) {
     Boolean result =
-        useIsolatedAdvice(instrumentationModule, adviceClassNames(instrumentationModule));
+        inferHelperClassIsolation(instrumentationModule, adviceClassNames(instrumentationModule));
 
-    // we aren't able to tell whether the instrumentation is ready for indy instrumentation or not,
-    // so we assume that it is not
+    // we aren't able to tell whether the instrumentation is ready to use the isolated classloader
+    // path, so assume not
     return result != null ? result : false;
   }
 
   @Nullable
-  public Boolean useIsolatedAdvice(
+  public Boolean inferHelperClassIsolation(
       InstrumentationModule instrumentationModule, Collection<String> adviceClassNames) {
     AdviceMode mode = inspect(adviceClassNames);
     if (mode == AdviceMode.MIXED) {
@@ -57,23 +57,23 @@ public class AdviceInspector {
     if (mode == AdviceMode.ALL_INLINE) {
       return false;
     }
-    // Having all advice non-inline is treated as a marker that the instrumentation can use indy.
-    // Users can override the selection by explicitly choosing how to load helper classes.
+    // When all advice has inlining disabled, the instrumentation can use the isolated classloader
+    // path.
     if (mode == AdviceMode.ALL_NON_INLINE) {
       return true;
     }
 
-    // no advice annotations were used so the instrumentation is using an AgentBuilder.Transformer
-    // injected class names makes sense only for indy instrumentation
+    // Without advice annotations, helper registrations indicate that this AgentBuilder.Transformer
+    // instrumentation needs isolated helper loading.
     if (!instrumentationModule.injectedClassNames().isEmpty()) {
       return true;
     }
-    // exposed class names makes sense only for indy instrumentation
     if (!instrumentationModule.exposedClassNames().isEmpty()) {
       return true;
     }
 
-    // we aren't able to tell whether the instrumentation is ready for indy instrumentation or not
+    // we aren't able to tell whether the instrumentation is ready to use the isolated classloader
+    // path
     return null;
   }
 
@@ -97,12 +97,11 @@ public class AdviceInspector {
                   .getName()
                   .equals(annotation.getAnnotationType().getName())) {
             AnnotationValue<?, ?> value = annotation.getValue("inline");
-            // While it is possible to use non-inline advice with the non-indy instrumentation, by
-            // adding the advice classes as helper classes, we assume that nobody relies on that.
-            // Having a non-inline advice is treated as a marker that the instrumentation can use
-            // indy.
-            // Similarly inline advice could be used with indy instrumentation, but we assume that
-            // if inline advice is used, then it is not indy ready.
+            // Helper placement is independent of advice inlining; an explicit helper class strategy
+            // can override this inference.
+            // Advice with inline = false indicates that the instrumentation can use the isolated
+            // classloader path. Advice with inline = true could still use isolated helpers, but we
+            // assume that it is not ready to use the isolated classloader path.
             if (value.getState().isDefined() && Boolean.FALSE.equals(value.resolve())) {
               nonInlineCount++;
             } else {

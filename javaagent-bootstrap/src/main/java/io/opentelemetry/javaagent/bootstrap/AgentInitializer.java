@@ -32,6 +32,8 @@ public final class AgentInitializer {
   public static void initialize(
       Instrumentation inst, File javaagentFile, boolean fromPremain, @Nullable String agentArgs)
       throws Exception {
+    InstrumentationHolder.setInstrumentation(inst);
+    JavaagentFileHolder.setJavaagentFile(javaagentFile);
     if (agentClassLoader != null) {
       return;
     }
