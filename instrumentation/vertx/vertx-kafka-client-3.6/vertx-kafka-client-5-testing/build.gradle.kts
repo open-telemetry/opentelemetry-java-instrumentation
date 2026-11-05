@@ -29,19 +29,19 @@ testing.suites {
       implementation("io.vertx:vertx-kafka-client:$version")
       implementation("io.vertx:vertx-codegen:$version")
     }
+  }
 
-    executions {
-      configureEach {
-        jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
-      }
+  executions("testNoReceiveTelemetry") {
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
+    }
 
-      configureDefault {
-        jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-      }
+    configureDefault {
+      jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
+    }
 
-      register("Experimental") {
-        jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-      }
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
     }
   }
 

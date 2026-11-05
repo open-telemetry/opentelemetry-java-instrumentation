@@ -45,19 +45,26 @@ testing.suites {
     dependencies {
       implementation("org.testcontainers:testcontainers")
     }
-    val baseline = name == "test"
-    executions {
-      configureEach {
-        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-      }
-      register("Experimental") {
-        telemetryConfig("otel.instrumentation.rabbitmq.experimental-span-attributes", "true")
-      }
-      if (baseline) {
-        register("ReceiveSpansDisabled") {
-          telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "false")
-        }
-      }
+  }
+
+  executions("test") {
+    configureEach {
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.rabbitmq.experimental-span-attributes", "true")
+    }
+    register("ReceiveSpansDisabled") {
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "false")
+    }
+  }
+
+  executions("reactorTest", "recoveryTest") {
+    configureEach {
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.rabbitmq.experimental-span-attributes", "true")
     }
   }
 }
