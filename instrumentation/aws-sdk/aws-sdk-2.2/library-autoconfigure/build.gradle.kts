@@ -24,15 +24,13 @@ dependencies {
   testLibrary("software.amazon.awssdk:sqs:2.2.0")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("testRdsData") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
-        val version = baseVersion("2.5.54").orLatest()
-        implementation("software.amazon.awssdk:rdsdata:$version")
-      }
+testing.suites {
+  register<JvmTestSuite>("testRdsData") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+      val version = baseVersion("2.5.54").orLatest()
+      implementation("software.amazon.awssdk:rdsdata:$version")
     }
   }
 }
