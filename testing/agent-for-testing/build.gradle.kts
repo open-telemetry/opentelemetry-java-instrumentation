@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.java-conventions")
   id("otel.publish-conventions")
@@ -36,31 +38,28 @@ abstract class ExtractJar : Copy() {
   }
 }
 
-tasks {
-  val extractAgent = register<ExtractJar>("extractAgent") {
-    jarFile.from(agent)
-    into(layout.buildDirectory.dir("extracted-agent"))
-  }
-
-  val testTemporalityDelta =
-    register<Test>("testTemporalityDelta") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
+testing.suites {
+  executions("test") {
+    register("TemporalityDelta") {
       filter {
         includeTestsMatching("io.opentelemetry.javaagent.testing.AgentMetricTemporalityTest")
       }
       systemProperty("otel.javaagent.testing.exporter.temporality", "delta")
     }
-
-  val testTemporalityCumulative =
-    register<Test>("testTemporalityCumulative") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
+    register("TemporalityCumulative") {
       filter {
         includeTestsMatching("io.opentelemetry.javaagent.testing.AgentMetricTemporalityTest")
       }
       systemProperty("otel.javaagent.testing.exporter.temporality", "cumulative")
     }
+  }
+}
+
+tasks {
+  val extractAgent = register<ExtractJar>("extractAgent") {
+    jarFile.from(agent)
+    into(layout.buildDirectory.dir("extracted-agent"))
+  }
 
   jar {
     from(extractAgent.map { it.outputs.files })
@@ -83,10 +82,6 @@ tasks {
 
       jvmArgumentProviders.add(JavaagentProvider(jar.flatMap { it.archiveFile }))
     }
-  }
-
-  check {
-    dependsOn(testTemporalityDelta, testTemporalityCumulative)
   }
 }
 
