@@ -5,22 +5,14 @@
 
 package io.opentelemetry.javaagent.bootstrap.servlet;
 
-import java.util.function.BooleanSupplier;
-
 public final class InjectionState {
   private static final int HEAD_TAG_WRITTEN_FAKE_VALUE = -1;
   private static final int HEAD_TAG_PREFIX_LENGTH = "<head".length();
   private final SnippetInjectingResponseWrapper wrapper;
-  private final BooleanSupplier currentRequest;
   private int headTagBytesSeen = 0;
 
   public InjectionState(SnippetInjectingResponseWrapper wrapper) {
-    this(wrapper, () -> true);
-  }
-
-  public InjectionState(SnippetInjectingResponseWrapper wrapper, BooleanSupplier currentRequest) {
     this.wrapper = wrapper;
-    this.currentRequest = currentRequest;
   }
 
   public int getHeadTagBytesSeen() {
@@ -48,7 +40,7 @@ public final class InjectionState {
   }
 
   public boolean isCurrentRequest() {
-    return currentRequest.getAsBoolean();
+    return wrapper.isCurrentRequest();
   }
 
   /**

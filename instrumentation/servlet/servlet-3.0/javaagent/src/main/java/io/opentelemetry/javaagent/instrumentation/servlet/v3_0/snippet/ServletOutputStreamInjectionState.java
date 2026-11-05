@@ -16,8 +16,7 @@ public class ServletOutputStreamInjectionState {
       VirtualField.find(ServletOutputStream.class, InjectionStateReference.class);
 
   public static void initializeInjectionStateIfNeeded(
-      ServletOutputStream servletOutputStream, Servlet3SnippetInjectingResponseWrapper wrapper) {
-    InjectionState state = wrapper.getStreamInjectionState();
+      ServletOutputStream servletOutputStream, InjectionState state) {
     InjectionStateReference reference = INJECTION_STATE.get(servletOutputStream);
     if (reference != null && reference.get() == state) {
       return;
@@ -32,7 +31,14 @@ public class ServletOutputStreamInjectionState {
       return null;
     }
     InjectionState state = reference.get();
-    if (state == null || !state.isCurrentRequest()) {
+    if (state == null) {
+      INJECTION_STATE.set(servletOutputStream, null);
+      return null;
+    }
+    if (state.isHeadTagWritten()) {
+      return state;
+    }
+    if (!state.isCurrentRequest()) {
       INJECTION_STATE.set(servletOutputStream, null);
       return null;
     }
