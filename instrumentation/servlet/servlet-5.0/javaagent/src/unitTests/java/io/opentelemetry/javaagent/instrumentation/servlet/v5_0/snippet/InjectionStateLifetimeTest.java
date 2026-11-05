@@ -14,9 +14,10 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
+import io.opentelemetry.javaagent.bootstrap.servlet.InjectionStateReference;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.snippet.OutputStreamSnippetInjectionHelper;
-import jakarta.servlet.DispatcherType;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.WriteListener;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,6 +33,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class InjectionStateLifetimeTest {
+  private static final VirtualField<ServletOutputStream, InjectionStateReference> INJECTION_STATE =
+      VirtualField.find(ServletOutputStream.class, InjectionStateReference.class);
   private static final String SNIPPET = "<script>console.log(hi)</script>";
   private static final String HTML = "<head><title>complete</title></head><body>complete</body>";
   private static final String INJECTED =
@@ -64,22 +67,66 @@ class InjectionStateLifetimeTest {
   }
 
   @Test
-  void acquiredStreamRemainsActiveAfterServiceAndDispatch() throws IOException {
+  void recycledStreamDoesNotReusePreviousRequestMatchOrContentLength() throws IOException {
+    Fixture fixture = new Fixture();
+    Servlet5SnippetInjectingResponseWrapper first = fixture.wrap();
+    first.setContentType("text/html");
+    first.setContentLength(5);
+    first.getOutputStream().write("<he".getBytes(UTF_8));
+    InjectionState oldState = ServletOutputStreamInjectionState.getInjectionState(fixture.stream);
+    assertThat(oldState.getHeadTagBytesSeen()).isEqualTo(3);
+
+    fixture.recycle();
+    Servlet5SnippetInjectingResponseWrapper second = fixture.wrap();
+    second.setContentType("text/html");
+    second.setContentLength("ad><head>".length());
+    assertThat(second.getOutputStream()).isSameAs(fixture.stream);
+    fixture.stream.write("ad><head>".getBytes(UTF_8));
+    fixture.stream.flush();
+
+    assertThat(oldState.isCurrentRequest()).isFalse();
+    assertThat(fixture.content()).isEqualTo("ad><head>" + SNIPPET);
+    assertThat(fixture.content()).containsOnlyOnce(SNIPPET);
+    assertThat(fixture.contentLength).isEqualTo("ad><head>".length() + SNIPPET.length());
+  }
+
+  @Test
+  void repeatedStreamAcquisitionKeepsRequestAndStreamState() throws IOException {
     Fixture fixture = new Fixture();
     Servlet5SnippetInjectingResponseWrapper wrapper = fixture.wrap();
-    wrapper.setContentType("text/html");
-    wrapper.getOutputStream();
-    when(fixture.request.getDispatcherType()).thenReturn(DispatcherType.ASYNC);
+    ServletOutputStream stream = wrapper.getOutputStream();
+    InjectionState state = ServletOutputStreamInjectionState.getInjectionState(stream);
+    InjectionStateReference reference = INJECTION_STATE.get(stream);
 
-    fixture.stream.write(HTML.getBytes(UTF_8));
+    assertThat(wrapper.getOutputStream()).isSameAs(stream);
+    assertThat(ServletOutputStreamInjectionState.getInjectionState(stream)).isSameAs(state);
+    assertThat(INJECTION_STATE.get(stream)).isSameAs(reference);
+    assertThat(fixture.requestStreamState()).isSameAs(state);
+    assertThat(fixture.streamStateAttributeUpdates).isEqualTo(1);
+  }
 
-    assertThat(fixture.content()).isEqualTo(INJECTED);
+  @Test
+  void streamAcquisitionReplacesStateForChangedWrapper() throws IOException {
+    Fixture fixture = new Fixture();
+    Servlet5SnippetInjectingResponseWrapper first = fixture.wrap();
+    ServletOutputStream stream = first.getOutputStream();
+    InjectionStateReference firstReference = INJECTION_STATE.get(stream);
+
+    Servlet5SnippetInjectingResponseWrapper second = fixture.wrap();
+    assertThat(second.getOutputStream()).isSameAs(stream);
+    InjectionState secondState = second.getStreamInjectionState();
+
+    assertThat(ServletOutputStreamInjectionState.getInjectionState(stream)).isSameAs(secondState);
+    assertThat(INJECTION_STATE.get(stream)).isNotSameAs(firstReference);
+    assertThat(fixture.requestStreamState()).isSameAs(secondState);
+    assertThat(fixture.streamStateAttributeUpdates).isEqualTo(2);
   }
 
   private static class Fixture {
     final HttpServletRequest request = mock(HttpServletRequest.class);
     final HttpServletResponse response = mock(HttpServletResponse.class);
     final Map<String, Object> attributes = new HashMap<>();
+    int streamStateAttributeUpdates;
     final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     final OutputStreamSnippetInjectionHelper helper =
         new OutputStreamSnippetInjectionHelper(() -> SNIPPET);
@@ -117,7 +164,11 @@ class InjectionStateLifetimeTest {
           .thenAnswer(invocation -> attributes.get(invocation.getArgument(0)));
       doAnswer(
               invocation -> {
-                attributes.put(invocation.getArgument(0), invocation.getArgument(1));
+                String name = invocation.getArgument(0);
+                attributes.put(name, invocation.getArgument(1));
+                if (name.endsWith(".streamState")) {
+                  streamStateAttributeUpdates++;
+                }
                 return null;
               })
           .when(request)
@@ -159,6 +210,11 @@ class InjectionStateLifetimeTest {
       bytes.reset();
       contentType = null;
       contentLength = -1;
+    }
+
+    InjectionState requestStreamState() {
+      return (InjectionState)
+          attributes.get(Servlet5SnippetInjectingResponseWrapper.class.getName() + ".streamState");
     }
 
     String content() {

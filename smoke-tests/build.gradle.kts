@@ -49,6 +49,11 @@ tasks {
   // DeclarativeConfigurationExampleSmokeTest can verify that the agent starts up with it
   processTestResources {
     from(rootProject.file("docs/declarative-configuration-example.yaml"))
+    val servlet3War = project(":smoke-tests:images:servlet:servlet-3.0").tasks.named<War>("war")
+    val servlet5War = project(":smoke-tests:images:servlet:servlet-5.0").tasks.named<War>("war")
+    dependsOn(servlet3War, servlet5War)
+    from(servlet3War) { rename { "servlet-3.0.war" } }
+    from(servlet5War) { rename { "servlet-5.0.war" } }
   }
 
   withType<Test>().configureEach {
