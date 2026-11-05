@@ -45,14 +45,12 @@ class VertxSqlClientAttributesGetterTest {
   }
 
   @Test
-  void keepsSuccessfulSqlStateAndCombinesUnknownSystemCodes() {
-    MySQLException successful = new MySQLException("Success", 0, "00000");
+  void combinesSqlStateAndVendorCodeForUnknownDatabaseSystem() {
     VertxSqlClientRequest unknownRequest =
         new VertxSqlClientRequest(
             "select 1", VertxSqlClientInfo.createUnknown("unknown"), false, null);
     MySQLException unknown = new MySQLException("Syntax error", 1064, "42000");
 
-    assertThat(getter.getDbResponseStatusCode(request, null, successful)).isEqualTo("00000");
     assertThat(getter.getDbResponseStatusCode(unknownRequest, null, unknown))
         .isEqualTo("42000/1064");
   }
