@@ -27,6 +27,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.baggage.Baggage;
@@ -43,6 +44,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.nio.ByteBuffer;
 import java.time.Duration;
@@ -57,6 +59,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
+import net.bytebuddy.implementation.InvocationHandlerAdapter;
 import org.apache.pulsar.PulsarVersion;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.api.BatchMessageContainer;
@@ -77,6 +82,7 @@ import org.apache.pulsar.client.impl.BatchMessageContainerBase;
 import org.apache.pulsar.client.impl.MessageImpl;
 import org.apache.pulsar.client.impl.ProducerBuilderImpl;
 import org.apache.pulsar.client.impl.ProducerImpl;
+import org.apache.pulsar.client.impl.SendCallback;
 import org.apache.pulsar.client.impl.TypedMessageBuilderImpl;
 import org.apache.pulsar.common.naming.TopicName;
 import org.assertj.core.api.AbstractLongAssert;
@@ -296,6 +302,158 @@ abstract class AbstractPulsarClientTest {
                 span -> span.hasName("send " + topic).hasKind(SpanKind.PRODUCER).hasNoParent()));
   }
 
+  @Test
+  void directProducerSendAsyncIsInstrumentedOnSuccessAndFailure() throws Exception {
+    String topic = "persistent://public/default/directProducerSendAsync";
+    ContextKey<String> key = ContextKey.named("pulsar-direct-send-caller");
+    producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
+
+    CountDownLatch successfulSend = new CountDownLatch(1);
+    AtomicReference<Context> successfulCallbackContext = new AtomicReference<>();
+    AtomicReference<Throwable> successfulCallbackError = new AtomicReference<>();
+    AtomicReference<Context> successfulParent = new AtomicReference<>();
+    AtomicReference<Message<?>> successfulMessage = new AtomicReference<>();
+    testing.runWithSpan(
+        "direct-send-success-parent",
+        () -> {
+          Context caller =
+              Baggage.builder()
+                  .put("pulsar-test", "success")
+                  .build()
+                  .storeInContext(Context.current().with(key, "success"));
+          successfulParent.set(caller);
+          try (Scope ignored = caller.makeCurrent()) {
+            sendDirect(
+                "success",
+                successfulCallbackContext,
+                successfulCallbackError,
+                successfulSend,
+                successfulMessage);
+          }
+        });
+    assertThat(successfulSend.await(1, MINUTES)).isTrue();
+    assertThat(successfulCallbackError.get()).isNull();
+    assertThat(successfulCallbackContext.get().get(key)).isEqualTo("success");
+    assertThat(Baggage.fromContext(successfulCallbackContext.get()).getEntryValue("pulsar-test"))
+        .isEqualTo("success");
+    assertThat(successfulMessage.get().getProperty("traceparent"))
+        .startsWith(
+            "00-" + Span.fromContext(successfulParent.get()).getSpanContext().getTraceId() + "-")
+        .matches("00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}");
+    assertThat(successfulMessage.get().getProperty("traceparent").substring(36, 52))
+        .isEqualTo(Span.fromContext(successfulCallbackContext.get()).getSpanContext().getSpanId());
+    assertThat(successfulMessage.get().getProperty("baggage")).isEqualTo("pulsar-test=success");
+
+    producer.close();
+    CountDownLatch failedSend = new CountDownLatch(1);
+    AtomicReference<Context> failedCallbackContext = new AtomicReference<>();
+    AtomicReference<Throwable> failedCallbackError = new AtomicReference<>();
+    AtomicReference<Context> failedParent = new AtomicReference<>();
+    AtomicReference<Message<?>> failedMessage = new AtomicReference<>();
+    testing.runWithSpan(
+        "direct-send-failure-parent",
+        () -> {
+          Context caller =
+              Baggage.builder()
+                  .put("pulsar-test", "failure")
+                  .build()
+                  .storeInContext(Context.current().with(key, "failure"));
+          failedParent.set(caller);
+          try (Scope ignored = caller.makeCurrent()) {
+            sendDirect(
+                "failure", failedCallbackContext, failedCallbackError, failedSend, failedMessage);
+          }
+        });
+    assertThat(failedSend.await(1, MINUTES)).isTrue();
+    assertThat(failedCallbackError.get()).isInstanceOf(PulsarClientException.class);
+    assertThat(failedCallbackContext.get().get(key)).isEqualTo("failure");
+    assertThat(Baggage.fromContext(failedCallbackContext.get()).getEntryValue("pulsar-test"))
+        .isEqualTo("failure");
+    assertThat(failedMessage.get().getProperty("traceparent"))
+        .startsWith(
+            "00-" + Span.fromContext(failedParent.get()).getSpanContext().getTraceId() + "-")
+        .matches("00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}");
+    assertThat(failedMessage.get().getProperty("traceparent").substring(36, 52))
+        .isEqualTo(Span.fromContext(failedCallbackContext.get()).getSpanContext().getSpanId());
+    assertThat(failedMessage.get().getProperty("baggage")).isEqualTo("pulsar-test=failure");
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("direct-send-success-parent"),
+                span ->
+                    span.hasName("send " + topic)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("direct-send-failure-parent"),
+                span ->
+                    span.hasName("send " + topic)
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))));
+    assertThat(Span.fromContext(successfulParent.get()).getSpanContext().isValid()).isTrue();
+    assertThat(Span.fromContext(failedParent.get()).getSpanContext().isValid()).isTrue();
+  }
+
+  private static void sendDirect(
+      String value,
+      AtomicReference<Context> callbackContext,
+      AtomicReference<Throwable> callbackError,
+      CountDownLatch completed,
+      AtomicReference<Message<?>> outgoingMessage) {
+    CompletableFuture<MessageId> future = new CompletableFuture<>();
+    InvocationHandler handler =
+        (proxy, method, args) -> {
+          switch (method.getName()) {
+            case "getFuture":
+              return future;
+            case "getNextSendCallback":
+            case "getNextMessage":
+            case "addCallback":
+              return null;
+            case "sendComplete":
+              Throwable error = (Throwable) args[0];
+              callbackContext.set(Context.current());
+              callbackError.set(error);
+              if (error == null) {
+                future.complete(null);
+              } else {
+                future.completeExceptionally(error);
+              }
+              completed.countDown();
+              return null;
+            default:
+              throw new UnsupportedOperationException(method.getName());
+          }
+        };
+    SendCallback callback;
+    try {
+      callback =
+          SendCallback.class.cast(
+              new ByteBuddy()
+                  .subclass(Object.class)
+                  .name(
+                      AbstractPulsarClientTest.class.getName()
+                          + "$DirectSendCallback"
+                          + System.nanoTime())
+                  .implement(SendCallback.class)
+                  .method(isAbstract())
+                  .intercept(InvocationHandlerAdapter.of(handler))
+                  .make()
+                  .load(SendCallback.class.getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
+                  .getLoaded()
+                  .getDeclaredConstructor()
+                  .newInstance());
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException(e);
+    }
+    Message<?> message =
+        ((TypedMessageBuilderImpl<String>) producer.newMessage().value(value)).getMessage();
+    outgoingMessage.set(message);
+    ((ProducerImpl<String>) producer).sendAsync(message, callback);
+  }
+
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   @SuppressWarnings({"rawtypes", "unchecked"})
@@ -330,7 +488,13 @@ abstract class AbstractPulsarClientTest {
                     interceptorContext.set(Span.current().getSpanContext());
                     interceptorValue.set(Context.current().get(key));
                     interceptorBaggage.set(Baggage.current().getEntryValue("pulsar-test"));
-                    producerTraceparent.set((String) message.getProperties().get("traceparent"));
+                    producerTraceparent.set(
+                        ((MessageImpl<?>) message)
+                            .getMessageBuilder().getPropertiesList().stream()
+                                .filter(property -> property.getKey().equals("traceparent"))
+                                .map(property -> property.getValue())
+                                .findFirst()
+                                .orElse(null));
                     Message<?> copy = message;
                     if (replace) {
                       copy =
@@ -338,7 +502,8 @@ abstract class AbstractPulsarClientTest {
                                   producer
                                       .newMessage()
                                       .value(message.getValue())
-                                      .properties(message.getProperties()))
+                                      .properties(message.getProperties())
+                                      .property("Test-Message-Header", "replacement"))
                               .getMessage();
                     } else {
                       ((MessageImpl<?>) copy).getMessageBuilder().clearProperties();
@@ -352,6 +517,11 @@ abstract class AbstractPulsarClientTest {
                           .addProperty()
                           .setKey("baggage")
                           .setValue("pulsar-test=stale");
+                      ((MessageImpl<?>) copy)
+                          .getMessageBuilder()
+                          .addProperty()
+                          .setKey("Test-Message-Header")
+                          .setValue("mutated");
                     }
                     replacement.set(copy);
                     return copy;
@@ -378,6 +548,7 @@ abstract class AbstractPulsarClientTest {
               .value("message")
               .property("traceparent", "00-0123456789abcdef0123456789abcdef-0123456789abcdef-01")
               .property("baggage", "pulsar-test=stale")
+              .property("Test-Message-Header", "original")
               .sendAsync();
     }
     assertThat(interceptorContext.get()).isEqualTo(Span.fromContext(caller).getSpanContext());
@@ -401,7 +572,7 @@ abstract class AbstractPulsarClientTest {
     consumer =
         client.newConsumer(Schema.STRING).topic(topic).subscriptionName("propagation").subscribe();
     producer.flush();
-    future.get(1, MINUTES);
+    MessageId messageId = future.get(1, MINUTES);
     Message<String> received = consumer.receive(10, SECONDS);
     assertThat(received).isNotNull();
     assertThat(received.getProperty("traceparent")).isEqualTo(producerTraceparent.get());
@@ -411,14 +582,18 @@ abstract class AbstractPulsarClientTest {
     assertThat(acknowledgementContext.get().get(key)).isEqualTo("caller");
     assertThat(Baggage.fromContext(acknowledgementContext.get()).getEntryValue("pulsar-test"))
         .isEqualTo("caller");
+    String finalTopic = topic;
+    String finalHeader = replace ? "replacement" : "mutated";
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("send " + topic)
+                    span.hasName("send " + finalTopic)
                         .hasKind(SpanKind.PRODUCER)
                         .hasSpanId(producerTraceparent.get().substring(36, 52))
-                        .hasNoParent()),
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            sendAttributes(finalTopic, messageId.toString(), true, finalHeader))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasKind(CLIENT).hasName("receive " + topic).hasNoParent()));
@@ -1344,6 +1519,11 @@ abstract class AbstractPulsarClientTest {
 
   static List<AttributeAssertion> sendAttributes(
       String destination, String messageId, boolean testHeaders) {
+    return sendAttributes(destination, messageId, testHeaders, "test");
+  }
+
+  static List<AttributeAssertion> sendAttributes(
+      String destination, String messageId, boolean testHeaders, String headerValue) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -1358,7 +1538,8 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
                 equalTo(stringKey("pulsar.message.type"), experimental("normal"))));
     if (testHeaders) {
-      assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
+      assertions.add(
+          equalTo(headerAttributeKey("Test-Message-Header"), singletonList(headerValue)));
     }
     assertions.add(
         equalTo(MESSAGING_DESTINATION_PARTITION_ID, destinationPartitionId(destination)));

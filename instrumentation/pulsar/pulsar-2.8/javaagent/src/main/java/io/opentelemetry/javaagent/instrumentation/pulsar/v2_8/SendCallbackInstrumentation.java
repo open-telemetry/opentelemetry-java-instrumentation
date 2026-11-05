@@ -68,9 +68,7 @@ class SendCallbackInstrumentation implements TypeInstrumentation {
 
       public void end(@Nullable Throwable error) {
         currentScope.close();
-        if (error != null) {
-          data.end(error);
-        }
+        data.end(error);
       }
     }
 

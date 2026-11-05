@@ -27,22 +27,40 @@ public class SendCallbackData {
       ContextKey.named("opentelemetry-pulsar-send");
   private static final ContextKey<Boolean> CALLBACK_COMPLETION_KEY =
       ContextKey.named("opentelemetry-pulsar-callback-completion");
+  private static final ContextKey<Boolean> SUPPRESSED_SEND_KEY =
+      ContextKey.named("opentelemetry-pulsar-suppressed-send");
 
   private final Context parent;
   public final Context context;
   private final AtomicBoolean ended = new AtomicBoolean();
+  private boolean internalSendAsyncPending;
   @Nullable private CompletableFuture<MessageId> sendFuture;
   @Nullable private WeakReference<SendCallback> callback;
   public PulsarRequest request;
 
   public static SendCallbackData create(Context parent, Context context, PulsarRequest request) {
-    return new SendCallbackData(parent, context, request);
+    return new SendCallbackData(parent, context, request, false);
   }
 
-  private SendCallbackData(Context parent, Context context, PulsarRequest request) {
+  public static SendCallbackData createForInternalSend(
+      Context parent, Context context, PulsarRequest request) {
+    return new SendCallbackData(parent, context, request, true);
+  }
+
+  private SendCallbackData(
+      Context parent, Context context, PulsarRequest request, boolean internalSendAsyncPending) {
     this.parent = parent;
     this.context = context;
     this.request = request;
+    this.internalSendAsyncPending = internalSendAsyncPending;
+  }
+
+  public boolean claimInternalSendAsync() {
+    if (!internalSendAsyncPending) {
+      return false;
+    }
+    internalSendAsyncPending = false;
+    return true;
   }
 
   @Nullable
@@ -80,7 +98,15 @@ public class SendCallbackData {
   }
 
   public static Context withoutOperation(Context context) {
-    return context.with(KEY, null);
+    return context.with(KEY, null).with(SUPPRESSED_SEND_KEY, true);
+  }
+
+  public static Context callerContext(Context context) {
+    return context.with(KEY, null).with(SUPPRESSED_SEND_KEY, null);
+  }
+
+  public static boolean isSendSuppressed() {
+    return Boolean.TRUE.equals(Context.current().get(SUPPRESSED_SEND_KEY));
   }
 
   public void end(@Nullable Throwable error) {

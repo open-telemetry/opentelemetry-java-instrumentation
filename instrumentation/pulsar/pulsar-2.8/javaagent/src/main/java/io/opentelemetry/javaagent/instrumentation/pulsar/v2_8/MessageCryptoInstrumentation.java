@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -19,6 +20,11 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class MessageCryptoInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("org.apache.pulsar.client.api.MessageCrypto");
+  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

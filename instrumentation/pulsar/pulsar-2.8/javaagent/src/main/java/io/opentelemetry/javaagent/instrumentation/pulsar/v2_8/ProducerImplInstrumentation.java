@@ -76,14 +76,14 @@ class ProducerImplInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This ProducerImpl<?> producer, @Advice.Argument(0) Message<?> message) {
-      Context parent = Context.current();
+      Context parent = SendCallbackData.callerContext(Context.current());
       PulsarRequest request = PulsarRequest.create(message, VirtualFieldStore.extract(producer));
       if (!producerInstrumenter().shouldStart(parent, request)) {
         // A reentrant, suppressed send must not attach its callback to the outer operation.
         return new AdviceScope(null, SendCallbackData.withoutOperation(parent).makeCurrent());
       }
       Context context = producerInstrumenter().start(parent, request);
-      SendCallbackData data = SendCallbackData.create(parent, context, request);
+      SendCallbackData data = SendCallbackData.createForInternalSend(parent, context, request);
       return new AdviceScope(data, data.preparationContext().makeCurrent());
     }
 
@@ -122,19 +122,56 @@ class ProducerImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ProducerSendAsyncMethodAdvice {
 
+    public static class DirectSendScope {
+      private final SendCallbackData data;
+      private final Scope scope;
+
+      private DirectSendScope(SendCallbackData data, Scope scope) {
+        this.data = data;
+        this.scope = scope;
+      }
+
+      public void end(@Nullable Throwable error) {
+        scope.close();
+        if (error != null) {
+          data.end(error);
+        }
+      }
+    }
+
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void before(
+    public static DirectSendScope onEnter(
         @Advice.This ProducerImpl<?> producer,
         @Advice.Argument(0) Message<?> message,
         @Advice.Argument(1) SendCallback callback) {
       SendCallbackData data = SendCallbackData.current();
-      if (data != null) {
-        // An interceptor can replace the message after the span was started.
-        if (message != data.request.getMessage()) {
-          data.request = PulsarRequest.create(message, VirtualFieldStore.extract(producer));
+      boolean directSend = data == null || !data.claimInternalSendAsync();
+      if (SendCallbackData.isSendSuppressed()) {
+        return null;
+      }
+      PulsarRequest request = PulsarRequest.create(message, VirtualFieldStore.extract(producer));
+      if (directSend) {
+        Context parent =
+            data == null ? SendCallbackData.callerContext(Context.current()) : data.parentContext();
+        if (!producerInstrumenter().shouldStart(parent, request)) {
+          return null;
         }
-        PulsarSingletons.inject(data.context, data.request);
-        VirtualFieldStore.inject(callback, data);
+        Context context = producerInstrumenter().start(parent, request);
+        data = SendCallbackData.create(parent, context, request);
+      } else {
+        data.request = request;
+      }
+      PulsarSingletons.inject(data.context, data.request);
+      VirtualFieldStore.inject(callback, data);
+      return directSend ? new DirectSendScope(data, data.preparationContext().makeCurrent()) : null;
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Enter @Nullable DirectSendScope scope, @Advice.Thrown @Nullable Throwable error) {
+      if (scope != null) {
+        scope.end(error);
       }
     }
   }
