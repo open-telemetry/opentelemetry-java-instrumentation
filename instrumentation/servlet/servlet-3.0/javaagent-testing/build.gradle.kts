@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-testing")
 }
@@ -22,14 +25,25 @@ dependencies {
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+") // see servlet-5.0 module
 }
 
-tasks {
-  test {
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.included=test-*")
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.request-parameters.excluded=test-secret")
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+testing.suites {
+  executions("test") {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    }
+
+    register("RequestParameterCapture") {
+      telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.included", "test-*")
+      telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.excluded", "test-secret")
+    }
+
+    register("UserNameCapture") {
+      filter {
+        includeTestsMatching("*Servlet3UserNameTest.capturesUserNameFromPrincipal")
+      }
+      telemetryConfig("otel.instrumentation.common.user.name.enabled", "true")
+    }
   }
 }
 

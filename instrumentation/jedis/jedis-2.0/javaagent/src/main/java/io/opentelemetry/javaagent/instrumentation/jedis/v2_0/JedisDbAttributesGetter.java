@@ -6,10 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
+import redis.clients.jedis.exceptions.JedisDataException;
 
-class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
+final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
   @Override
   public String getDbSystemName(JedisRequest request) {
@@ -21,12 +24,6 @@ class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, 
   public String getDbNamespace(JedisRequest request) {
     Long databaseIndex = request.getDatabaseIndex();
     return databaseIndex != null ? String.valueOf(databaseIndex) : null;
-  }
-
-  @Override
-  @Nullable
-  public String getDbName(JedisRequest request) {
-    return null;
   }
 
   @Override
@@ -46,12 +43,43 @@ class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, 
   }
 
   @Override
-  public String getServerAddress(JedisRequest request) {
-    return request.getConnection().getHost();
+  @Nullable
+  public String getErrorType(
+      JedisRequest request, @Nullable Void unused, @Nullable Throwable error) {
+    Throwable originalError = error;
+    // Jedis 2.3's Response.get() wraps protocol errors in another JedisDataException.
+    if (error != null
+        && error.getClass() == JedisDataException.class
+        && !request.isServerError(error)) {
+      error = error.getCause();
+    }
+    if (request.isServerError(error)) {
+      String serverErrorType = JedisServerError.errorType(error);
+      if (serverErrorType != null) {
+        return serverErrorType;
+      }
+    }
+    return originalError != null ? originalError.getClass().getName() : null;
   }
 
   @Override
+  @Nullable
+  public String getServerAddress(JedisRequest request) {
+    RedisServerTarget target = JedisSingletons.connectionTarget(request.getConnection());
+    return target != null ? target.getAddress() : null;
+  }
+
+  @Override
+  @Nullable
   public Integer getServerPort(JedisRequest request) {
-    return request.getConnection().getPort();
+    RedisServerTarget target = JedisSingletons.connectionTarget(request.getConnection());
+    return target != null ? target.getPort() : null;
+  }
+
+  @Override
+  @Nullable
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      JedisRequest request, @Nullable Void unused) {
+    return request.getPeerAddress();
   }
 }

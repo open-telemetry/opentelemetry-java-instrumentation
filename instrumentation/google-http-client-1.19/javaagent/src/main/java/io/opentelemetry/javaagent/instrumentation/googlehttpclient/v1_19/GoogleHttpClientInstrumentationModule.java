@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class GoogleHttpClientInstrumentationModule extends InstrumentationModule {
   public GoogleHttpClientInstrumentationModule() {
-    super("google-http-client", "google-http-client-1.19");
+    super("google-http-client-1.19", "google-http-client");
   }
 
   @Override

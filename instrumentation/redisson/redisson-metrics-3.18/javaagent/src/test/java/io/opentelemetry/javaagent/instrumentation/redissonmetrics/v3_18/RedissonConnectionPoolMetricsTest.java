@@ -29,14 +29,14 @@ class RedissonConnectionPoolMetricsTest extends AbstractRedissonConnectionPoolMe
       Redisson redisson, String regularPool, String subscriptionPool)
       throws ReflectiveOperationException {
     MasterSlaveEntry entry = getMasterSlaveEntry(redisson);
-    ClientConnectionsEntry connectionsEntry =
-        (ClientConnectionsEntry) getMasterConnectionsEntry(entry);
+    ClientConnectionsEntry connectionsEntry = getMasterConnectionsEntry(entry);
     AsyncSemaphore semaphore = getFreeConnectionsCounter(connectionsEntry);
 
     clearMetrics();
     RedisConnection connection = entry.connectionWriteOp(RedisCommands.PING).join();
     try {
-      assertUsageMetric(regularPool, -1, 1, subscriptionPool, 0, 0);
+      assertUsageMetric(
+          regularPool, REGULAR_MIN_IDLE - 1, 1, subscriptionPool, SUBSCRIPTION_MIN_IDLE, 0);
     } finally {
       entry.releaseWrite(connection);
     }

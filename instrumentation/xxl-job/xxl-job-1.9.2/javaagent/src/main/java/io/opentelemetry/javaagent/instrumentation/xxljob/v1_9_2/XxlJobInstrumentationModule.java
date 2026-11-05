@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class XxlJobInstrumentationModule extends InstrumentationModule {
 
   public XxlJobInstrumentationModule() {
-    super("xxl-job", "xxl-job-1.9.2");
+    super("xxl-job-1.9.2", "xxl-job");
   }
 
   @Override

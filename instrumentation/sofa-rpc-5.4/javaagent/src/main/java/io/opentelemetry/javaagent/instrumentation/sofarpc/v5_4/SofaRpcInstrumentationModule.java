@@ -22,7 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class SofaRpcInstrumentationModule extends InstrumentationModule {
   public SofaRpcInstrumentationModule() {
-    super("sofa-rpc", "sofa-rpc-5.4");
+    super("sofa-rpc-5.4", "sofa-rpc");
   }
 
   @Override

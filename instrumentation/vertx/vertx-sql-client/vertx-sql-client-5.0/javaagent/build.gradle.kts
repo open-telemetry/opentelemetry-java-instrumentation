@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -13,6 +14,18 @@ muzzle {
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
+}
+
+sourceSets {
+  test {
+    java.srcDir(
+      if (otelProps.testLatestDeps) {
+        "src/testVersion5_1/java"
+      } else {
+        "src/testVersion5_0/java"
+      },
+    )
+  }
 }
 
 dependencies {
@@ -29,25 +42,29 @@ dependencies {
   testInstrumentation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent"))
 
   testLibrary("io.vertx:vertx-pg-client:$version")
+  testLibrary("io.vertx:vertx-oracle-client:$version")
   testLibrary("io.vertx:vertx-jdbc-client:$version")
   testImplementation("io.agroal:agroal-pool:2.5")
   testImplementation("org.hsqldb:hsqldb:2.3.4")
 }
 
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common-4.0:javaagent"))
+      implementation(project(":javaagent-extension-api"))
+      implementation("io.vertx:vertx-sql-client:5.0.0")
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database,service.peer")
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites)
   }
 }

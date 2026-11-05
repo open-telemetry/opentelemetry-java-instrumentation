@@ -6,12 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 
 /** Container used to carry state between enter and exit advices */
 public class ClickHouseScope {
+  private static final ContextKey<ClickHouseDbRequest> REQUEST_KEY =
+      ContextKey.named("opentelemetry-clickhouse-db-request");
+
   private final ClickHouseDbRequest clickHouseDbRequest;
   private final Context context;
   private final Scope scope;
@@ -37,8 +43,38 @@ public class ClickHouseScope {
       return null;
     }
 
-    Context context = instrumenter.start(parentContext, clickHouseDbRequest);
+    Context context =
+        instrumenter
+            .start(parentContext, clickHouseDbRequest)
+            .with(REQUEST_KEY, clickHouseDbRequest);
     return new ClickHouseScope(clickHouseDbRequest, context, context.makeCurrent(), instrumenter);
+  }
+
+  @Nullable
+  public static ClickHouseDbRequest currentRequest() {
+    return Context.current().get(REQUEST_KEY);
+  }
+
+  public void endOnCompletion(CompletableFuture<?> future) {
+    scope.close();
+    future.whenComplete(
+        (result, throwable) -> instrumenter.end(context, clickHouseDbRequest, null, throwable));
+  }
+
+  public void endOnCompletion(CompletableFuture<?> future, Runnable beforeEnd) {
+    scope.close();
+    future.whenComplete(
+        (result, throwable) -> {
+          try {
+            beforeEnd.run();
+          } finally {
+            instrumenter.end(context, clickHouseDbRequest, null, throwable);
+          }
+        });
+  }
+
+  public void setPeer(@Nullable DbServerTarget peer) {
+    clickHouseDbRequest.setPeer(peer);
   }
 
   public void end(@Nullable Throwable throwable) {

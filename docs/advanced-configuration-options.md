@@ -26,6 +26,22 @@ This option can be used to exclude classes loaded by given class loaders from be
 | ------------------------------------ | ------------------------------------ | ------------------------------------------------------------------------------- |
 | otel.javaagent.exclude-class-loaders | OTEL_JAVAAGENT_EXCLUDE_CLASS_LOADERS | Ignore the specified class loaders, format is "my.package.MyClass,my.package2." |
 
+## Selecting instrumentation modules in declarative configuration
+
+In the declarative `distribution.javaagent.instrumentation.enabled` and `disabled` lists, replace
+hyphens and periods in instrumentation module names with underscores:
+
+```yaml
+distribution:
+  javaagent:
+    instrumentation:
+      enabled:
+        - reactor_3_1
+```
+
+Flat-property selectors retain hyphens and periods, for example
+`otel.instrumentation.reactor-3.1.enabled`.
+
 ## Running application with security manager
 
 This option can be used to let agent run with all privileges without being affected by security policy restricting some operations.

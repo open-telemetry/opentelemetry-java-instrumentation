@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.hikaricp;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.concurrent.CountDownLatch;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
@@ -39,10 +40,8 @@ public abstract class AbstractHikariInstrumentationTest {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.hikaricp-3.0";
   private static final AttributeKey<String> POOL_NAME_KEY =
-      AttributeKey.stringKey(
-          emitStableDatabaseSemconv() ? "db.client.connection.pool.name" : "pool.name");
-  private static final String CONNECTION_USAGE_METRIC_NAME =
-      emitStableDatabaseSemconv() ? "db.client.connection.count" : "db.client.connections.usage";
+      AttributeKey.stringKey("db.client.connection.pool.name");
+  private static final String CONNECTION_USAGE_METRIC_NAME = "db.client.connection.count";
 
   @RegisterExtension
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
@@ -116,19 +115,26 @@ public abstract class AbstractHikariInstrumentationTest {
   }
 
   @Test
-  void shouldReportTimeouts() throws SQLException {
+  void shouldReportTimeouts() throws SQLException, InterruptedException {
     // given
+    CountDownLatch connectionAttemptStarted = new CountDownLatch(1);
+    CountDownLatch releaseConnectionAttempt = new CountDownLatch(1);
     when(dataSourceMock.getConnection())
         .then(
             invocation -> {
-              MILLISECONDS.sleep(2_000);
+              connectionAttemptStarted.countDown();
+              releaseConnectionAttempt.await();
               throw new SQLException("timed out!");
             });
+    // HikariCP waits for connection creation to stop up to the data source login timeout.
+    when(dataSourceMock.getLoginTimeout()).thenReturn(1);
 
     HikariDataSource hikariDataSource = new HikariDataSource();
     hikariDataSource.setPoolName("timingOutPool");
     hikariDataSource.setDataSource(dataSourceMock);
     hikariDataSource.setConnectionTimeout(250 /* millis */);
+    hikariDataSource.setMinimumIdle(0);
+    hikariDataSource.setMaximumPoolSize(1);
     // start the pool without initializing connections
     hikariDataSource.setInitializationFailTimeout(-1);
     configure(hikariDataSource, null);
@@ -136,10 +142,15 @@ public abstract class AbstractHikariInstrumentationTest {
     cleanup.deferCleanup(hikariDataSource);
 
     // when
-    Exception thrown = catchException(hikariDataSource::getConnection);
+    try {
+      Exception thrown = catchException(hikariDataSource::getConnection);
 
-    // then
-    assertThat(thrown).isInstanceOf(SQLException.class);
+      // then
+      assertThat(thrown).isInstanceOf(SQLException.class);
+      assertThat(connectionAttemptStarted.await(10, SECONDS)).isTrue();
+    } finally {
+      releaseConnectionAttempt.countDown();
+    }
 
     DbConnectionPoolMetricsAssertions.create(testing(), INSTRUMENTATION_NAME, "timingOutPool")
         .disableMaxIdleConnections()

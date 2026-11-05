@@ -219,6 +219,9 @@ targets:
       target: ':instrumentation:kubernetes-client-7.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:mcp-java-sdk-0.14:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:methods:javaagent'
     - type: gradle
       path: ./
@@ -267,9 +270,6 @@ targets:
       target: ':instrumentation:r2dbc-1.0:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:rabbitmq-2.7:bootstrap'
-    - type: gradle
-      path: ./
       target: ':instrumentation:rabbitmq-2.7:javaagent'
     - type: gradle
       path: ./
@@ -303,7 +303,7 @@ targets:
       target: ':instrumentation:sofa-rpc-5.4:library-autoconfigure'
     - type: gradle
       path: ./
-      target: ':instrumentation:spark-2.3:javaagent'
+      target: ':instrumentation:spark-2.4:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-boot-autoconfigure'
@@ -343,9 +343,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:akka:akka-actor-2.3:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:akka:akka-actor-forkjoin-2.5:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:akka:akka-http-10.0:javaagent'
@@ -456,22 +453,22 @@ targets:
       target: ':instrumentation:couchbase:couchbase-2.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:couchbase:couchbase-2.6:javaagent'
+      target: ':instrumentation:couchbase:couchbase-3.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:couchbase:couchbase-3.1:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:couchbase:couchbase-3.1.6:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:couchbase:couchbase-3.2:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:couchbase:couchbase-3.4:javaagent'
+      target: ':instrumentation:couchbase:couchbase-common-2.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:couchbase:couchbase-common-2.0:javaagent'
+      target: ':instrumentation:couchbase:couchbase-common-3.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:couchbase:couchbase-common-3.1:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:dropwizard:dropwizard-metrics-4.0:javaagent'
@@ -492,16 +489,10 @@ targets:
       target: ':instrumentation:elasticsearch:elasticsearch-rest-7.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:elasticsearch:elasticsearch-rest-7.0:library'
-    - type: gradle
-      path: ./
       target: ':instrumentation:elasticsearch:elasticsearch-rest-common-5.0:bootstrap'
     - type: gradle
       path: ./
       target: ':instrumentation:elasticsearch:elasticsearch-rest-common-5.0:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:elasticsearch:elasticsearch-rest-common-5.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:elasticsearch:elasticsearch-transport-5.0:javaagent'
@@ -588,7 +579,7 @@ targets:
       target: ':instrumentation:javalin:javalin-7.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jaxrs:jaxrs-1.0:javaagent'
+      target: ':instrumentation:jaxrs:jaxrs-1.0-annotations:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jaxrs:jaxrs-common:bootstrap'
@@ -621,9 +612,6 @@ targets:
       target: ':instrumentation:jboss-logmanager:jboss-logmanager-mdc-1.1:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jedis:jedis-1.4:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:jedis:jedis-2.0:javaagent'
     - type: gradle
       path: ./
@@ -633,7 +621,7 @@ targets:
       target: ':instrumentation:jedis:jedis-4.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jedis:jedis-common-1.4:javaagent'
+      target: ':instrumentation:jedis:jedis-common:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jetty:jetty-11.0:javaagent'
@@ -699,9 +687,6 @@ targets:
       target: ':instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:kotlinx-coroutines:kotlinx-coroutines-flow-1.3:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:ktor:ktor-1.0:library'
     - type: gradle
       path: ./
@@ -724,9 +709,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:lettuce:lettuce-5.0:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:lettuce:lettuce-5.1:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:lettuce:lettuce-5.1:library'
@@ -775,9 +757,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:mongo:mongo-3.1:library'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:mongo:mongo-3.7:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:mongo:mongo-4.0:javaagent'
@@ -912,9 +891,6 @@ targets:
       target: ':instrumentation:ratpack:ratpack-1.4:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:ratpack:ratpack-1.7:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:ratpack:ratpack-1.7:library'
     - type: gradle
       path: ./
@@ -922,9 +898,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:reactor:reactor-3.1:library'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:reactor:reactor-3.4:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:reactor:reactor-kafka-1.0:javaagent'
@@ -939,13 +912,16 @@ targets:
       target: ':instrumentation:redisson:redisson-common-3.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:redisson:redisson-metrics-2.3:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:redisson:redisson-metrics-3.18:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:redisson:redisson-metrics-3.26:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:redisson:redisson-metrics-common-3.18:javaagent'
+      target: ':instrumentation:redisson:redisson-metrics-common-2.3:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:restlet:restlet-1.1:javaagent'
@@ -1020,6 +996,9 @@ targets:
       target: ':instrumentation:servlet:servlet-common-javax:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:spring:spring-ai-1.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:spring:spring-batch-3.0:javaagent'
     - type: gradle
       path: ./
@@ -1050,7 +1029,7 @@ targets:
       target: ':instrumentation:spring:spring-pulsar-1.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:spring:spring-rabbit-1.0:javaagent'
+      target: ':instrumentation:spring:spring-rabbit-1.1:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-rmi-4.0:javaagent'
@@ -1072,9 +1051,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:spring:starters:spring-boot-starter'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:spring:starters:zipkin-spring-boot-starter'
     - type: gradle
       path: ./
       target: ':instrumentation:struts:struts-2.3:javaagent'
@@ -1099,9 +1075,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:vertx:vertx-kafka-client-3.6:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:vertx:vertx-redis-client-4.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:vertx:vertx-rx-java-3.5:javaagent'
@@ -1261,6 +1234,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-common-3.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:vertx:vertx-redis-client:vertx-redis-client-4.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent'

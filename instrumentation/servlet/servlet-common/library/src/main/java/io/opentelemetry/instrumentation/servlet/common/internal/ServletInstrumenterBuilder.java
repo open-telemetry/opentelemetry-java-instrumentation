@@ -34,7 +34,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
   private boolean propagateOperationListenersToOnEnd;
   private boolean captureExperimentalAttributes;
-  private boolean captureEnduserId;
+  private boolean captureUserName;
   @Nullable private IncludeExclude requestParameters;
 
   public static <REQUEST, RESPONSE> ServletInstrumenterBuilder<REQUEST, RESPONSE> create(
@@ -83,9 +83,8 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   @CanIgnoreReturnValue
-  public ServletInstrumenterBuilder<REQUEST, RESPONSE> setCaptureEnduserId(
-      boolean captureEnduserId) {
-    this.captureEnduserId = captureEnduserId;
+  public ServletInstrumenterBuilder<REQUEST, RESPONSE> setCaptureUserName(boolean captureUserName) {
+    this.captureUserName = captureUserName;
     return this;
   }
 
@@ -127,7 +126,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
           builder
               .addAttributesExtractor(
                   new ServletAdditionalAttributesExtractor<>(
-                      accessor, captureExperimentalAttributes, captureEnduserId))
+                      accessor, captureExperimentalAttributes, captureUserName))
               .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor));
         });
 

@@ -1,5 +1,9 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -25,146 +29,65 @@ dependencies {
   testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing"))
 }
 
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testPropagationDisabled = register<Test>("testPropagationDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("KafkaClientPropagationDisabledTest")
+testing.suites {
+  executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
     }
-    include("**/KafkaClientPropagationDisabledTest.*")
-    jvmArgs("-Dotel.instrumentation.kafka.producer-propagation.enabled=false")
-    systemProperty("metadataConfig", "otel.instrumentation.kafka.producer-propagation.enabled=false")
-  }
 
-  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+    configureDefault {
+      filter {
+        excludeTestsMatching("KafkaClientPropagationDisabledTest")
+        excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+      }
+      jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
     }
-    include("**/KafkaClientSuppressReceiveSpansTest.*")
-  }
 
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      excludeTestsMatching("KafkaClientPropagationDisabledTest")
-      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+    register("PropagationDisabled") {
+      filter {
+        includeTestsMatching("KafkaClientPropagationDisabledTest")
+      }
+      include("**/KafkaClientPropagationDisabledTest.*")
+      jvmArgs("-Dotel.instrumentation.kafka.producer-propagation.enabled=false")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
 
-  val testMessagingPreviewReceiveSpansDisabled = register<Test>("testMessagingPreviewReceiveSpansDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+    register("ReceiveSpansDisabled") {
+      filter {
+        includeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+      }
+      include("**/KafkaClientSuppressReceiveSpansTest.*")
     }
-    include("**/KafkaClientSuppressReceiveSpansTest.*")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
 
-  val testMessagingPreviewPropagationDisabled = register<Test>("testMessagingPreviewPropagationDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("KafkaClientPropagationDisabledTest")
+    register("Disabled") {
+      filter {
+        includeTestsMatching("*DefaultEnablementTest")
+      }
     }
-    include("**/KafkaClientPropagationDisabledTest.*")
-    jvmArgs("-Dotel.instrumentation.kafka.producer-propagation.enabled=false")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
 
-  val testMessagingOptIn = register<Test>("testMessagingOptIn") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      excludeTestsMatching("KafkaClientPropagationDisabledTest")
-      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+    register("ReceiveTelemetry") {
+      filter {
+        excludeTestsMatching("KafkaClientPropagationDisabledTest")
+        excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+      }
+      telemetryConfig(
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+        "true",
+      )
+      jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
     }
-    // with the v3 preview off, the legacy opt-in flag selects the new messaging semconv too
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.opt-in=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging")
-  }
 
-  val testV3Preview = register<Test>("testV3Preview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      excludeTestsMatching("KafkaClientPropagationDisabledTest")
-      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+    register("Experimental") {
+      filter {
+        excludeTestsMatching("KafkaClientPropagationDisabledTest")
+        excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+      }
+      telemetryConfig(
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+        "true",
+      )
+      telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
+      jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    // the v3 preview does not support dual emit for messaging, so this degrades to emitting only
-    // the new messaging semconv
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    // kafka metrics are disabled by default with v3-preview enabled
-    jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      excludeTestsMatching("KafkaClientPropagationDisabledTest")
-      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-
-    systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      excludeTestsMatching("KafkaClientPropagationDisabledTest")
-      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("KafkaClientPropagationDisabledTest")
-      excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-  }
-
-  check {
-    dependsOn(
-      testPropagationDisabled,
-      testReceiveSpansDisabled,
-      testMessagingPreview,
-      testMessagingPreviewReceiveSpansDisabled,
-      testMessagingPreviewPropagationDisabled,
-      testMessagingOptIn,
-      testV3Preview,
-      testExperimental,
-      testBothSemconv,
-    )
   }
 }
 

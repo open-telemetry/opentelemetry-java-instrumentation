@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.util.Collection;
 import java.util.function.Function;
@@ -61,12 +62,26 @@ class ClickHouseAttributesGetter implements SqlClientAttributesGetter<ClickHouse
   @Nullable
   @Override
   public String getServerAddress(ClickHouseDbRequest request) {
-    return request.getHost();
+    DbServerTarget serverTarget = request.getServerTarget();
+    return serverTarget == null ? null : serverTarget.getAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(ClickHouseDbRequest request) {
-    return request.getPort();
+    DbServerTarget serverTarget = request.getServerTarget();
+    return serverTarget == null ? null : serverTarget.getPort();
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkPeerAddress(ClickHouseDbRequest request, @Nullable Void response) {
+    return request.getPeerAddress();
+  }
+
+  @Nullable
+  @Override
+  public Integer getNetworkPeerPort(ClickHouseDbRequest request, @Nullable Void response) {
+    return request.getPeerPort();
   }
 }

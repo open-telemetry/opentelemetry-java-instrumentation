@@ -15,19 +15,28 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
+import com.google.common.base.Function;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 public class TracingSession implements Session {
 
   private final Session session;
+  @Nullable private final DbServerTarget serverTarget;
 
   public TracingSession(Session session) {
+    this(session, CassandraServerTarget.get(session.getCluster()));
+  }
+
+  private TracingSession(Session session, @Nullable DbServerTarget serverTarget) {
     this.session = session;
+    this.serverTarget = serverTarget;
   }
 
   @Override
@@ -37,17 +46,21 @@ public class TracingSession implements Session {
 
   @Override
   public Session init() {
-    return new TracingSession(session.init());
+    return new TracingSession(session.init(), serverTarget);
   }
 
   @Override
   public ListenableFuture<Session> initAsync() {
-    return Futures.transform(session.initAsync(), TracingSession::new, Runnable::run);
+    return Futures.transform(
+        session.initAsync(),
+        (Function<Session, Session>)
+            initializedSession -> new TracingSession(initializedSession, serverTarget),
+        Runnable::run);
   }
 
   @Override
   public ResultSet execute(String query) {
-    CassandraRequest request = CassandraRequest.create(session, query);
+    CassandraRequest request = CassandraRequest.create(session, query, serverTarget);
     Context context = instrumenter().start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
@@ -63,7 +76,8 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSet execute(String query, Object... values) {
-    CassandraRequest request = CassandraRequest.create(session, query, values.length > 0);
+    CassandraRequest request =
+        CassandraRequest.create(session, query, values.length > 0, serverTarget);
     Context context = instrumenter().start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
@@ -79,7 +93,8 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSet execute(String query, Map<String, Object> values) {
-    CassandraRequest request = CassandraRequest.create(session, query, !values.isEmpty());
+    CassandraRequest request =
+        CassandraRequest.create(session, query, !values.isEmpty(), serverTarget);
     Context context = instrumenter().start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
@@ -95,7 +110,7 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSet execute(Statement statement) {
-    CassandraRequest request = CassandraRequest.create(session, statement);
+    CassandraRequest request = CassandraRequest.create(session, statement, serverTarget);
     Context context = instrumenter().start(Context.current(), request);
     ResultSet resultSet;
     try (Scope ignored = context.makeCurrent()) {
@@ -111,7 +126,7 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSetFuture executeAsync(String query) {
-    CassandraRequest request = CassandraRequest.create(session, query);
+    CassandraRequest request = CassandraRequest.create(session, query, serverTarget);
     Context context = instrumenter().start(Context.current(), request);
     try (Scope ignored = context.makeCurrent()) {
       ResultSetFuture future = session.executeAsync(query);
@@ -125,7 +140,8 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSetFuture executeAsync(String query, Object... values) {
-    CassandraRequest request = CassandraRequest.create(session, query, values.length > 0);
+    CassandraRequest request =
+        CassandraRequest.create(session, query, values.length > 0, serverTarget);
     Context context = instrumenter().start(Context.current(), request);
     try (Scope ignored = context.makeCurrent()) {
       ResultSetFuture future = session.executeAsync(query, values);
@@ -139,7 +155,8 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSetFuture executeAsync(String query, Map<String, Object> values) {
-    CassandraRequest request = CassandraRequest.create(session, query, !values.isEmpty());
+    CassandraRequest request =
+        CassandraRequest.create(session, query, !values.isEmpty(), serverTarget);
     Context context = instrumenter().start(Context.current(), request);
     try (Scope ignored = context.makeCurrent()) {
       ResultSetFuture future = session.executeAsync(query, values);
@@ -153,7 +170,7 @@ public class TracingSession implements Session {
 
   @Override
   public ResultSetFuture executeAsync(Statement statement) {
-    CassandraRequest request = CassandraRequest.create(session, statement);
+    CassandraRequest request = CassandraRequest.create(session, statement, serverTarget);
     Context context = instrumenter().start(Context.current(), request);
     try (Scope ignored = context.makeCurrent()) {
       ResultSetFuture future = session.executeAsync(statement);

@@ -5,25 +5,38 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import io.lettuce.core.output.CommandOutput;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisErrorPrefix;
 import javax.annotation.Nullable;
 
 final class LettuceResponse {
 
-  @Nullable private final String errorMessage;
-  @Nullable private final Throwable throwable;
+  private final boolean failed;
+  @Nullable private final String redisErrorType;
 
-  LettuceResponse(@Nullable String errorMessage, @Nullable Throwable throwable) {
-    this.errorMessage = errorMessage;
-    this.throwable = throwable;
+  static LettuceResponse fromErrorMessage(@Nullable String errorMessage) {
+    return new LettuceResponse(errorMessage != null, RedisErrorPrefix.extract(errorMessage));
+  }
+
+  static LettuceResponse fromCommandOutput(@Nullable CommandOutput<?, ?, ?> output) {
+    return fromErrorMessage(output != null ? output.getError() : null);
+  }
+
+  static LettuceResponse unknownFailure() {
+    return new LettuceResponse(true, null);
+  }
+
+  private LettuceResponse(boolean failed, @Nullable String redisErrorType) {
+    this.failed = failed;
+    this.redisErrorType = redisErrorType;
+  }
+
+  boolean isFailed() {
+    return failed;
   }
 
   @Nullable
-  String getErrorMessage() {
-    return errorMessage;
-  }
-
-  @Nullable
-  Throwable getThrowable() {
-    return throwable;
+  String getRedisErrorType() {
+    return redisErrorType;
   }
 }

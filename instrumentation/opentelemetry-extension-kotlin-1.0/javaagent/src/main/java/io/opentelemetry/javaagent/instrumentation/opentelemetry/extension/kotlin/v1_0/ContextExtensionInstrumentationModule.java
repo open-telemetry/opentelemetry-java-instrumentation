@@ -16,7 +16,7 @@ import java.util.List;
 public class ContextExtensionInstrumentationModule extends InstrumentationModule {
 
   public ContextExtensionInstrumentationModule() {
-    super("opentelemetry-extension-kotlin", "opentelemetry-extension-kotlin-1.0");
+    super("opentelemetry-extension-kotlin-1.0", "opentelemetry-extension-kotlin");
   }
 
   @Override

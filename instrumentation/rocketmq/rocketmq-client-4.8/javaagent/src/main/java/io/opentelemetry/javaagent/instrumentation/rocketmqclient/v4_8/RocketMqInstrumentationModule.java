@@ -15,11 +15,14 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class RocketMqInstrumentationModule extends InstrumentationModule {
   public RocketMqInstrumentationModule() {
-    super("rocketmq-client", "rocketmq-client-4.8");
+    super("rocketmq-client-4.8", "rocketmq-client");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new RocketMqProducerInstrumentation(), new RocketMqConsumerInstrumentation());
+    return asList(
+        new RocketMqProducerInstrumentation(),
+        new RocketMqMessageBatchInstrumentation(),
+        new RocketMqConsumerInstrumentation());
   }
 }

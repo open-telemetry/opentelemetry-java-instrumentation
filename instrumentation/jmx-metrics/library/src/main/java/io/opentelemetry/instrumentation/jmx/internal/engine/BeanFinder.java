@@ -185,7 +185,13 @@ class BeanFinder {
       }
       if (!validObjectNames.isEmpty()) {
         // Ready to collect metric values
-        registrar.enrollExtractor(connection, validObjectNames, extractor, attributeInfo);
+        registrar.enrollExtractor(
+            connection,
+            validObjectNames,
+            extractor,
+            attributeInfo,
+            conf.isUnstable(metricDef),
+            conf.getSchemaUrl(metricDef));
       }
     }
   }
@@ -193,7 +199,12 @@ class BeanFinder {
   private void resolveHandlers(
       Set<ObjectName> objectNames, MBeanServerConnection connection, MetricDef metricDef) {
     for (MetricHandlerHolder holder : metricDef.getHandlers()) {
-      registrar.enrollHandler(connection, objectNames, holder);
+      registrar.enrollHandler(
+          connection,
+          objectNames,
+          holder,
+          conf.isUnstable(metricDef),
+          conf.getSchemaUrl(metricDef));
     }
   }
 

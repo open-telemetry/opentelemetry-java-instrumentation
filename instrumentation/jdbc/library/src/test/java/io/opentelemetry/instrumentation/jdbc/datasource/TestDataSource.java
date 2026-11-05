@@ -15,14 +15,24 @@ import javax.sql.DataSource;
 
 class TestDataSource implements DataSource {
 
+  private final String url;
+
+  TestDataSource() {
+    this(null);
+  }
+
+  TestDataSource(String url) {
+    this.url = url;
+  }
+
   @Override
   public Connection getConnection() {
-    return new TestConnection();
+    return new TestConnection(url);
   }
 
   @Override
   public Connection getConnection(String username, String password) {
-    return new TestConnection();
+    return new TestConnection(url);
   }
 
   @Override

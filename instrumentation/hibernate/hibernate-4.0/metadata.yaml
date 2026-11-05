@@ -1,5 +1,7 @@
 display_name: Hibernate
-description: This instrumentation enables spans for Hibernate ORM operations.
+description: >
+  This instrumentation enables spans for Hibernate ORM operations. It is disabled by default.
+disabled_by_default: true
 library_link: https://hibernate.org/
 configurations:
   - name: otel.instrumentation.hibernate.experimental-span-attributes
@@ -7,3 +9,11 @@ configurations:
     description: Enables the experimental `hibernate.session_id` span attribute.
     type: boolean
     default: false
+  - name: otel.instrumentation.hibernate.query-sanitization.enabled
+    declarative_name: java.hibernate.query_sanitization.enabled
+    description: >
+      Enables query sanitization for Hibernate queries. Overrides
+      `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when
+      unset, that setting applies.
+    type: boolean
+  - ref: common.db.query-sanitization.enabled

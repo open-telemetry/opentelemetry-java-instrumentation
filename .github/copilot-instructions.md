@@ -1,120 +1,96 @@
-# OpenTelemetry Java Instrumentation
+# OpenTelemetry Java Instrumentation rules
 
-First-pass PR review rules. A deep review with full knowledge files runs
-separately later in the PR lifecycle. **Prefer silence over uncertainty.** Only
-flag substantive issues on changed lines. Skip stylistic preferences not listed
-below. Do not nitpick.
+These rules and the applicable `.github/instructions/*.instructions.md` files guide both
+implementation and code review. Apply a rule only when its stated conditions hold. Keep its
+exceptions, rationale, and useful examples in the same topic file, not in a second guidance catalog.
 
-Do not flag anything CI will catch. This includes compilation errors (missing
-imports, unbalanced braces, type errors, unresolved symbols), Spotless-covered
-formatting (indentation, wrapping, alignment, brace placement, import
-ordering/grouping, whitespace), Checkstyle/ErrorProne/NullAway findings, and
-test failures. Do not ask authors to run the formatter. CI surfaces these
-directly, so review comments on them are noise.
+## Correctness and compatibility
 
-Use category tags like `[Style]`, `[Naming]`, `[Testing]`, `[General]`.
+- Preserve lifecycle ownership, reentrancy, concurrency, error handling, and telemetry under
+  supported library usage. Trace relevant callers, configuration, initialization, registration,
+  and tests rather than reasoning only from edited syntax. Do not add defenses for unsupported
+  hypothetical failures.
+- Verify library and framework assumptions against the supported dependency versions and concrete
+  implementations. Check comments and copied code against the behavior they describe.
+- For a public Java API change, identify the *publishing artifact* and determine API status
+  from its published contract and intended external use, not source path or visibility alone.
+  Symbols explicitly documented as internal, unsupported, and subject to change are not supported
+  public APIs merely because their artifact is published; implementation-only changes to them need
+  no public-API deprecation cycle or CHANGELOG entry. This does not exempt `.internal` packages or
+  `Experimental` helpers generally. Javaagent modules bundled into the agent are not published
+  Java APIs. In stable artifacts (`otel.stable=true` in that module's `gradle.properties`),
+  deprecate before removal and keep deprecated symbols until the next major version. Published
+  alpha artifacts may remove deprecated symbols in a later minor release. Determine stability from
+  the publishing module, not a class name or a memorized artifact list. Do not mistake a 3.0
+  behavior migration for an alpha API that should be removed immediately. A replacement must be
+  at least as stable as the old API; deprecated methods delegate to their replacements, not vice
+  versa. Include the replacement and removal timing in `@deprecated` Javadoc. Use plain
+  `@Deprecated` for Java-8-compatible APIs, without `since` or `forRemoval`.
+- A deprecation scheduled for a major-version behavior change keeps that timing even in an alpha
+  artifact. Examples include semconv migrations, interface overrides following an upstream removal,
+  and the flat `ConfigProperties` bridge.
+- User-facing configuration names and outgoing telemetry identities also have compatibility
+  contracts. When a module is renamed, inspect both its `otel.instrumentation.<name>.enabled`
+  alias and emitted `otel.scope.name`, including scope-version lookup.
+  Preserving one does not preserve the other. Keep version lookup aligned with the name passed to
+  `Instrumenter.builder(...)`. Assess telemetry changes under `VERSIONING.md`, including the
+  changes that the adopted semantic conventions permit; not every telemetry edit is breaking.
+- For any instrumentation module changed, compare new or changed configuration reads, types, and
+  defaults with its `metadata.yaml`, including settings read in a dependent common module. The general
+  module enable/disable property is not a metadata configuration entry.
 
-Java-specific style and test rules live in path-specific files (loaded in
-addition to this one when reviewing Java changes):
-
-- `.github/instructions/java-style.instructions.md`
-- `.github/instructions/java-tests.instructions.md`
-
-## [Style] `@SuppressWarnings` Scoping
-
-Place `@SuppressWarnings` on the single member that needs it. Use class-level
-only when two or more members would need the same suppression.
-
-## [Naming] Catch Variable Names
-
-In **catch clauses only** (not method/lambda parameters or fields):
-
-- Used exception → `e` (or `error` for a specific `*Error` subtype).
-- Used exception in nested catch where outer already uses `e` → `f`.
-- Used `Throwable` → `t`.
-- Intentionally unused → `ignored` (or `ignore` if `ignored` would shadow an
-  outer catch).
-
-## [Naming] Public API Getters
-
-Public API getters use `get*` (or `is*` for booleans).
-
-## [Naming] VirtualField Handle Field Names
-
-A `static final VirtualField` field must use `SCREAMING_SNAKE_CASE`, regardless
-of visibility (`private` or `public`) and regardless of the fact that
-`VirtualField.find(...)` creates the handle at runtime rather than at compile
-time. Flag a camelCase `static final VirtualField` field.
-
-Other semantic key/handle types (`AttributeKey`, `ContextKey`, `MethodHandle`,
-`Pattern`) are good candidates for uppercase names too, but this repository
-does not yet treat that as mandatory — do not flag existing camelCase
-`MethodHandle` or `Pattern` fields on this basis alone.
-
-Runtime collaborator objects (loggers, instrumenters, helpers, caches, and
-similar service objects) keep lower camel case even when `static final` — do
-not flag those.
-
-## [Style] No Redundant Null Guards on Attribute Puts
-
-`AttributesBuilder.put`, `Span.setAttribute`, `SpanBuilder.setAttribute`, and
-`LogRecordBuilder.setAttribute` are no-ops when the value is `null`. Do not wrap
-calls in `if (value != null)` when the value can be passed straight through:
+For example, an alpha API deprecation delegates to its replacement:
 
 ```java
-// BAD
-String v = getSomething();
-if (v != null) {
-  attributes.put(SOME_KEY, v);
-}
-// GOOD
-attributes.put(SOME_KEY, getSomething());
-```
-
-Do **not** flag when the guard protects a dereference or derived computation
-(e.g. `view.getClass().getName()`). When in doubt, stay silent.
-
-## [Javaagent] Prefer VirtualField for Per-Object State
-
-When javaagent or shared bootstrap code introduces a weak-key or identity-keyed
-registry to attach instrumentation state to third-party object instances, prefer
-`VirtualField`. If shared logic cannot name the library type, keep the
-`VirtualField` with the caller that knows the concrete carrier and pass the
-typed handle or a typed accessor into the shared helper; do not replace
-`Cache<Object, State>` with `VirtualField<Object, State>`.
-
-Flag this only when the value is state belonging to that exact carrier and the
-carrier type and lifecycle are clear. Do not apply it to real memoization such
-as `Class`/`ClassLoader` metadata caches, bounded caches, deliberate weak
-callback/delegate links, value-equality interning pools, or non-javaagent
-library code. See
-`.github/agents/knowledge/javaagent-virtual-fields.md` for the full decision
-guide.
-
-## [Javaagent] Singleton Accessor Naming
-
-In `*Singletons`, `*SpanNaming`, and similar holder classes, zero-arg accessor
-methods that **directly return a stored singleton field** must match the field
-name with no `get` prefix:
-
-```java
-private static final Instrumenter<Request, Response> instrumenter = ...;
-
-public static Instrumenter<Request, Response> instrumenter() {
-  return instrumenter;
+/**
+ * @deprecated Use {@link #newMethod()} instead. May be removed in the next minor release.
+ */
+@Deprecated
+public ReturnType oldMethod() {
+  return newMethod();
 }
 ```
 
-- Methods that take arguments or compute a value are not singleton accessors —
-  keep their normal names (including `get*` when appropriate). Do not flag
-  `getAddressAndPort(client)` on this basis.
-- Uppercase constant-like fields (e.g. `VirtualField`, `ContextKey`) may be
-  exposed as `public static final` directly with no accessor.
-- Caller sites should static-import the accessor / constant and call it
-  unqualified.
+For a stable API, the Javadoc states removal in the next major version instead.
 
-## [General] Engineering Correctness
+## Documentation
 
-Flag real defects on changed lines: logic errors, concurrency hazards, resource
-leaks, copy/paste mistakes, incorrect comments, unsafe error handling, dead
-code, security regressions. Skip stylistic preferences not listed above.
+- Document flat properties without repeating equivalent declarative configuration.
+  Include declarative configuration only when it has different behavior, requires a distinct
+  migration, or supports configuration unavailable through flat properties.
+- Add hand-written changelog entries only for deprecations or breaking changes, as specified in
+  CONTRIBUTING.md; normal changes rely on the generated changelog. Use the appropriate stable or
+  non-stable breaking-change heading and the corresponding PR label. Keep entries short, naming a
+  deprecated interface and its replacement without repeating removal timing or obvious migration
+  steps. Describe the released behavior directly, without
+  referring to preview flags used to stage the change. Omit statements about behavior that is
+  unchanged unless they are necessary to clarify the change's scope.
+- Add README and usage documentation for a concrete reader need: setup,
+  configuration, API usage, or a non-obvious user-visible limitation or privacy constraint.
+  A code change alone does not require a README addition. Do not add prose merely to inventory
+  automatically emitted attributes or schema URLs, narrate internal build or instrumentation
+  mechanics, or list capabilities an API does not provide without a relevant usage consequence.
+  Keep required supported-library entries, configuration tables, public API Javadoc, and
+  necessary usage and compatibility guidance.
+- Update the existing settings table, API documentation, or other appropriate reference instead
+  of repeating it in extra paragraphs or multiple module and parent READMEs. Reuse existing
+  metadata and generated catalogs for telemetry inventories when they already cover the detail.
+  Targeted source comments and contributor documentation remain appropriate for non-obvious
+  implementation rationale or development workflows.
+- Keep migration notes in CHANGELOG.md, not READMEs or other documentation.
+  READMEs and usage documentation should describe current supported behavior without migration
+  sections or historical comparisons. PR descriptions may include migration guidance, old/new
+  examples, and removed properties or APIs.
+
+## When reviewing
+
+- Review changed behavior, tracing the relevant callers, configuration, lifecycle, and tests.
+  Report a concrete defect or an explicit repository convention violated on a changed line.
+  Include the supported failure mode or the violated convention and an actionable fix.
+  If the evidence or an exception is unclear, do not comment.
+- Do not report pre-existing issues, speculative risks, or failures CI surfaces directly:
+  compilation, Spotless formatting, Checkstyle, ErrorProne, NullAway, or failing tests.
+  Missing coverage for behavior CI does not exercise can still matter. Do not ask the author
+  to run a formatter.
+- For unchanged metadata, report only demonstrable mismatches introduced by the change.
+- Use category tags such as `[General]`, `[Javaagent]`, `[Config]`, `[Testing]`, and `[Naming]`.

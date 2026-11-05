@@ -9,7 +9,6 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigura
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.SpanProcessorModel;
-import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.SpanProcessorPropertyModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.TracerProviderModel;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,16 +42,14 @@ public abstract class AbstractThreadDetailsCustomizerProvider
     TracerProviderModel tracerProvider = model.getTracerProvider();
     if (tracerProvider == null) {
       tracerProvider = new TracerProviderModel();
-      model.withTracerProvider(tracerProvider);
+      model.setTracerProvider(tracerProvider);
     }
     List<SpanProcessorModel> processors = tracerProvider.getProcessors();
     if (processors == null) {
       processors = new ArrayList<>();
-      tracerProvider.withProcessors(processors);
+      tracerProvider.setProcessors(processors);
     }
     processors.add(
-        new SpanProcessorModel()
-            .withAdditionalProperty(
-                ThreadDetailsComponentProvider.NAME, new SpanProcessorPropertyModel()));
+        new SpanProcessorModel().setExtensionProperty(ThreadDetailsComponentProvider.NAME, null));
   }
 }

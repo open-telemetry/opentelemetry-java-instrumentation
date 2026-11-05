@@ -13,6 +13,6 @@ public class ApacheShenYuSingletons {
   private ApacheShenYuSingletons() {}
 
   public static HttpServerRouteGetter<MetaData> httpRouteGetter() {
-    return (context, metaData) -> metaData.getPath();
+    return (context, metaData) -> metaData == null ? null : metaData.getPath();
   }
 }

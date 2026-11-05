@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -15,10 +16,9 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.semconv.SchemaUrls;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 
@@ -28,10 +28,6 @@ class RabbitMqMetricsAssertions {
 
   static void assertProducerMetrics(
       InstrumentationExtension testing, String destination, String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertClientOperationDuration(testing, "publish", "send", destination, errorType);
     testing.waitAndAssertMetrics(
@@ -41,6 +37,7 @@ class RabbitMqMetricsAssertions {
             metrics.satisfiesExactly(
                 metric ->
                     assertThat(metric)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasUnit("{message}")
                         .hasDescription(
                             "Number of messages producer attempted to send to the broker.")
@@ -52,7 +49,8 @@ class RabbitMqMetricsAssertions {
                                             .hasValue(1)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "publish"),
-                                                equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "rabbitmq"),
                                                 equalTo(ERROR_TYPE, errorType),
                                                 equalTo(MESSAGING_DESTINATION_NAME, destination),
                                                 satisfies(
@@ -61,7 +59,6 @@ class RabbitMqMetricsAssertions {
                                                 satisfies(
                                                     SERVER_PORT,
                                                     AbstractLongAssert::isPositive))))));
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   static void assertReceiveMetrics(
@@ -69,10 +66,6 @@ class RabbitMqMetricsAssertions {
       String destination,
       String errorType,
       long consumedMessages) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertClientOperationDuration(testing, "receive", "receive", destination, errorType);
     if (consumedMessages == 0) {
@@ -80,7 +73,6 @@ class RabbitMqMetricsAssertions {
     } else {
       assertConsumedMessages(testing, "receive", destination, errorType, consumedMessages);
     }
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   static void assertProcessMetrics(
@@ -88,10 +80,6 @@ class RabbitMqMetricsAssertions {
       String destination,
       String errorType,
       long consumedMessages) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
@@ -100,6 +88,7 @@ class RabbitMqMetricsAssertions {
             metrics.satisfiesExactly(
                 metric ->
                     assertThat(metric)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasUnit("s")
                         .hasDescription("Duration of processing operation.")
                         .hasHistogramSatisfying(
@@ -112,7 +101,9 @@ class RabbitMqMetricsAssertions {
                                                 .hasCount(consumedMessages)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"),
+                                                        "rabbitmq"),
                                                     equalTo(ERROR_TYPE, errorType),
                                                     equalTo(
                                                         MESSAGING_DESTINATION_NAME, destination),
@@ -123,19 +114,13 @@ class RabbitMqMetricsAssertions {
                                                         SERVER_PORT,
                                                         AbstractLongAssert::isPositive))))));
     assertConsumedMessages(testing, "process", destination, errorType, consumedMessages);
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   static void assertSettleMetrics(
       InstrumentationExtension testing, String operationName, String errorType) {
-    if (!emitStableMessagingSemconv()) {
-      assertNoMessagingMetrics(testing);
-      return;
-    }
 
     assertClientOperationDuration(testing, operationName, "settle", null, errorType);
     assertNoMetric(testing, "messaging.client.consumed.messages");
-    assertNoDeprecatedMessagingMetrics(testing);
   }
 
   static void assertNoMessagingMetrics(InstrumentationExtension testing) {
@@ -160,6 +145,7 @@ class RabbitMqMetricsAssertions {
             metrics.satisfiesExactly(
                 metric ->
                     assertThat(metric)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasUnit("s")
                         .hasDescription(
                             "Duration of messaging operation initiated by a producer or consumer client.")
@@ -174,7 +160,9 @@ class RabbitMqMetricsAssertions {
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(
                                                         MESSAGING_OPERATION_NAME, operationName),
-                                                    equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"),
+                                                        "rabbitmq"),
                                                     equalTo(ERROR_TYPE, errorType),
                                                     equalTo(
                                                         MESSAGING_DESTINATION_NAME, destination),
@@ -201,6 +189,7 @@ class RabbitMqMetricsAssertions {
             metrics.satisfiesExactly(
                 metric ->
                     assertThat(metric)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasUnit("{message}")
                         .hasDescription(
                             "Number of messages that were delivered to the application.")
@@ -214,7 +203,9 @@ class RabbitMqMetricsAssertions {
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(
                                                         MESSAGING_OPERATION_NAME, operationName),
-                                                    equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"),
+                                                        "rabbitmq"),
                                                     equalTo(ERROR_TYPE, errorType),
                                                     equalTo(
                                                         MESSAGING_DESTINATION_NAME, destination),
@@ -233,17 +224,6 @@ class RabbitMqMetricsAssertions {
                 metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
                     && metric.getName().equals(metricName))
         .isEmpty();
-  }
-
-  private static void assertNoDeprecatedMessagingMetrics(InstrumentationExtension testing) {
-    assertThat(testing.metrics())
-        .filteredOn(
-            metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-        .extracting(MetricData::getName)
-        .doesNotContain(
-            "messaging.publish.duration",
-            "messaging.receive.duration",
-            "messaging.receive.messages");
   }
 
   private RabbitMqMetricsAssertions() {}

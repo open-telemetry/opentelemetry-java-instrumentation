@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 
 import com.datastax.oss.driver.api.core.cql.BatchStatement;
@@ -14,6 +15,7 @@ import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.cql.Statement;
 import com.datastax.oss.driver.api.core.session.Session;
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -22,25 +24,39 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class CassandraRequest {
 
-  static CassandraRequest create(Session session, String queryText) {
-    return create(session, singleton(queryText), false, null, null);
+  static CassandraRequest create(
+      Session session, @Nullable DbServerTarget serverTarget, String queryText) {
+    return create(session, serverTarget, singleton(queryText), false, null, null);
   }
 
-  static CassandraRequest create(Session session, Statement<?> statement) {
+  static CassandraRequest create(
+      Session session, @Nullable DbServerTarget serverTarget, Statement<?> statement) {
     if (statement instanceof BatchStatement) {
-      return create(session, (BatchStatement) statement);
+      return create(session, serverTarget, (BatchStatement) statement);
     }
-    return create(session, singleton(getQuery(statement)), hasQueryValues(statement), null, null);
+    String queryText = getQuery(statement);
+    return create(
+        session,
+        serverTarget,
+        queryText == null ? emptyList() : singleton(queryText),
+        hasQueryValues(statement),
+        null,
+        null);
   }
 
-  private static CassandraRequest create(Session session, BatchStatement batchStatement) {
+  private static CassandraRequest create(
+      Session session, @Nullable DbServerTarget serverTarget, BatchStatement batchStatement) {
     List<String> queryTexts = new ArrayList<>();
     List<Boolean> mixedParameterizedQueries = null;
     boolean allQueriesParameterized = true;
     Boolean firstParameterizedQuery = null;
     int queryIndex = 0;
     for (BatchableStatement<?> batchEntry : batchStatement) {
-      queryTexts.add(getQuery(batchEntry));
+      String queryText = getQuery(batchEntry);
+      if (queryText == null) {
+        continue;
+      }
+      queryTexts.add(queryText);
       boolean parameterizedQuery = hasQueryValues(batchEntry);
       if (!parameterizedQuery) {
         allQueriesParameterized = false;
@@ -65,6 +81,7 @@ public abstract class CassandraRequest {
     }
     return create(
         session,
+        serverTarget,
         queryTexts,
         allQueriesParameterizedResult,
         mixedParameterizedQueries,
@@ -73,14 +90,21 @@ public abstract class CassandraRequest {
 
   private static CassandraRequest create(
       Session session,
+      @Nullable DbServerTarget serverTarget,
       Collection<String> queryTexts,
       boolean allQueriesParameterized,
       @Nullable List<Boolean> mixedParameterizedQueries,
       @Nullable Long batchSize) {
     return new AutoValue_CassandraRequest(
-        session, queryTexts, allQueriesParameterized, mixedParameterizedQueries, batchSize);
+        session,
+        serverTarget,
+        queryTexts,
+        allQueriesParameterized,
+        mixedParameterizedQueries,
+        batchSize);
   }
 
+  @Nullable
   private static String getQuery(Statement<?> statement) {
     String query = null;
     if (statement instanceof SimpleStatement) {
@@ -89,7 +113,7 @@ public abstract class CassandraRequest {
       query = ((BoundStatement) statement).getPreparedStatement().getQuery();
     }
 
-    return query == null ? "" : query;
+    return query;
   }
 
   private static boolean hasQueryValues(Statement<?> statement) {
@@ -105,6 +129,9 @@ public abstract class CassandraRequest {
   }
 
   abstract Session getSession();
+
+  @Nullable
+  abstract DbServerTarget getServerTarget();
 
   abstract Collection<String> getQueryTexts();
 

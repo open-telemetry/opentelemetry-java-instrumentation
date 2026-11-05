@@ -5,7 +5,12 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -33,7 +38,7 @@ class WrapperSendExceptionTest {
     when(producer.send(any(), any())).thenThrow(new KafkaException("send failed"));
 
     KafkaTelemetry telemetry = KafkaTelemetry.builder(testing.getOpenTelemetry()).build();
-    Producer<String, String> wrappedProducer = telemetry.wrap(producer);
+    Producer<String, String> wrappedProducer = telemetry.instrument(producer);
 
     ProducerRecord<String, String> record =
         new ProducerRecord<>("test-topic", "test-key", "test-value");
@@ -47,10 +52,16 @@ class WrapperSendExceptionTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(
-                            emitStableMessagingSemconv() ? "send test-topic" : "test-topic publish")
+                    span.hasName("send test-topic")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())));
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "kafka"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "test-topic"),
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                            equalTo(stringKey("kafka.message.key"), "test-key"),
+                            equalTo(ERROR_TYPE, KafkaException.class.getName()))));
   }
 }

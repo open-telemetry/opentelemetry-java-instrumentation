@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.util.concurrent.CompletionException;
 import javax.annotation.Nullable;
@@ -28,11 +29,6 @@ final class OpenSearchAttributesGetter
   @Override
   @Nullable
   public String getDbQueryText(OpenSearchRequest request) {
-    if (request.getBody() == null) {
-      // fall back to method and endpoint if capturing the query body is disabled or if the body is
-      // not available
-      return request.getMethod() + " " + request.getEndpoint();
-    }
     return request.getBody();
   }
 
@@ -56,5 +52,19 @@ final class OpenSearchAttributesGetter
       }
     }
     return null;
+  }
+
+  @Override
+  @Nullable
+  public String getServerAddress(OpenSearchRequest request) {
+    DbServerTarget target = request.getServerTarget();
+    return target != null ? target.getAddress() : null;
+  }
+
+  @Override
+  @Nullable
+  public Integer getServerPort(OpenSearchRequest request) {
+    DbServerTarget target = request.getServerTarget();
+    return target != null ? target.getPort() : null;
   }
 }

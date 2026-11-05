@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.getDataSourceName;
 import static io.opentelemetry.javaagent.instrumentation.apachedbcp.v2_0.ApacheDbcpSingletons.telemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.apachecommonspool.CommonsPoolMetricsSuppression;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -54,7 +54,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter() {
-      return CommonsPoolMetricsSuppression.suppress(currentContext()).makeCurrent();
+      return CommonsPoolMetricsSuppression.suppress(Context.current()).makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
@@ -70,9 +70,8 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This BasicDataSource dataSource) {
       ObjectName objectName = OpenTelemetryBasicDataSourceUtil.getRegisteredJmxName(dataSource);
-      String dataSourceName =
-          objectName != null ? getDataSourceName(objectName) : getDataSourceName(dataSource);
-      telemetry().registerMetrics(dataSource, dataSourceName);
+      String poolName = objectName == null ? null : getDataSourceName(objectName);
+      ApacheDbcpSingletons.registerMetrics(dataSource, poolName);
     }
   }
 
@@ -93,10 +92,7 @@ class BasicDataSourceInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      String dataSourceName = getDataSourceName(objectName);
-
-      telemetry().unregisterMetrics(dataSource);
-      telemetry().registerMetrics(dataSource, dataSourceName);
+      ApacheDbcpSingletons.registerMetrics(dataSource, getDataSourceName(objectName));
     }
   }
 }

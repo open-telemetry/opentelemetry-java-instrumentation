@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class EclipseOsgiInstrumentationModule extends InstrumentationModule {
   public EclipseOsgiInstrumentationModule() {
-    super("internal-eclipse-osgi", "internal-eclipse-osgi-3.6");
+    super("internal-eclipse-osgi-3.6", "internal-eclipse-osgi");
   }
 
   @Override

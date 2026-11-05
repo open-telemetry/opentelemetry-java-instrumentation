@@ -61,6 +61,7 @@ public class HttpServerTestOptions {
   boolean testPathParam = false;
   boolean testCaptureHttpHeaders = true;
   boolean testCaptureRequestParameters = false;
+  boolean expectCapturedRequestParameters = true;
   boolean testClientAddressFromSocketPeer = true;
   boolean testHttpPipelining = true;
   boolean testHttpBodyPipelining = false;
@@ -200,6 +201,14 @@ public class HttpServerTestOptions {
   public HttpServerTestOptions setTestCaptureRequestParameters(
       boolean testCaptureRequestParameters) {
     this.testCaptureRequestParameters = testCaptureRequestParameters;
+    return this;
+  }
+
+  /** Sets the expected capture result without enabling or disabling the request-parameter test. */
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setExpectCapturedRequestParameters(
+      boolean expectCapturedRequestParameters) {
+    this.expectCapturedRequestParameters = expectCapturedRequestParameters;
     return this;
   }
 

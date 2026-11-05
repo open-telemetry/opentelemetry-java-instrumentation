@@ -5,17 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4.ElasticsearchRest6Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchRestRequest;
-import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.RestResponseListener;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0.ElasticsearchRestRequest;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0.ElasticsearchServerTargets;
+import io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0.RestResponseListener;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -24,6 +24,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.ResponseListener;
+import org.elasticsearch.client.RestClient;
 
 class RestClientInstrumentation implements TypeInstrumentation {
   @Override
@@ -35,9 +36,10 @@ class RestClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("performRequestAsyncNoCatch")
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("org.elasticsearch.client.Request")))
-            .and(takesArgument(1, named("org.elasticsearch.client.ResponseListener"))),
+            .and(
+                takesArguments(
+                    named("org.elasticsearch.client.Request"),
+                    named("org.elasticsearch.client.ResponseListener"))),
         getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 
@@ -84,13 +86,18 @@ class RestClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
+        @Advice.This RestClient restClient,
         @Advice.Argument(0) Request request,
         @Advice.Argument(1) ResponseListener originalResponseListener) {
       ResponseListener responseListener = originalResponseListener;
 
       ElasticsearchRestRequest otelRequest =
           ElasticsearchRestRequest.create(
-              request.getMethod(), request.getEndpoint(), null, request.getEntity());
+              request.getMethod(),
+              request.getEndpoint(),
+              null,
+              request.getEntity(),
+              ElasticsearchServerTargets.get(restClient));
       AdviceScope adviceScope = AdviceScope.start(otelRequest);
       if (adviceScope == null) {
         return new Object[] {null, responseListener};

@@ -1,11 +1,20 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
   pass {
     group.set("com.datastax.oss")
     module.set("java-driver-core")
+    versions.set("[4.4,)")
+    assertInverse.set(true)
+  }
+  pass {
+    group.set("com.datastax.oss")
+    module.set("java-driver-core-shaded")
     versions.set("[4.4,)")
     assertInverse.set(true)
   }
@@ -35,21 +44,30 @@ dependencies {
   testInstrumentation(project(":instrumentation:cassandra:cassandra-4.0:javaagent"))
 }
 
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+// Run these tests with the shaded driver because the response-channel instrumentation
+// must also match and work with the driver's relocated Netty classes.
+fun shadedRuntimeClasspath(name: String, version: String) = configurations.create(name) {
+  isCanBeConsumed = false
+  isCanBeResolved = true
+  extendsFrom(configurations.testRuntimeClasspath.get())
+  resolutionStrategy.dependencySubstitution {
+    substitute(module("com.datastax.oss:java-driver-core"))
+      .using(module("com.datastax.oss:java-driver-core-shaded:$version"))
+    substitute(module("org.apache.cassandra:java-driver-core"))
+      .using(module("com.datastax.oss:java-driver-core-shaded:$version"))
   }
+}
 
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
+testing.suites {
+  executions("test") {
+    mapOf("Shaded" to "4.4.0", "ShadedLatest" to "4.17.0").forEach { (suffix, version) ->
+      val shadedClasspath = shadedRuntimeClasspath("test${suffix}RuntimeClasspath", version)
+      register(suffix) {
+        classpath = files(sourceSets.test.get().output, shadedClasspath)
+        if (otelProps.denyUnsafe) {
+          systemProperty("com.datastax.oss.driver.shaded.netty.noUnsafe", "true")
+        }
+      }
+    }
   }
 }

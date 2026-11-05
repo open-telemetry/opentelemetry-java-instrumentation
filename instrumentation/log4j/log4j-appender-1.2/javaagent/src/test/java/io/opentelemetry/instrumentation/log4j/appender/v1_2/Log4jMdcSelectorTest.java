@@ -24,6 +24,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class Log4jMdcSelectorTest {
 
+  static {
+    Log4jMdcTestHelper.enableMdc();
+  }
+
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -82,9 +86,6 @@ class Log4jMdcSelectorTest {
       case "legacy":
         // the deprecated setting matches keys literally, so "*" does not capture every key
         expectedKeys = singletonList("legacy");
-        break;
-      case "precedence":
-        expectedKeys = singletonList("new");
         break;
       case "exclude-only":
         expectedKeys = asList("exact", "prefix.value", "single1", "single22", "legacy", "new");

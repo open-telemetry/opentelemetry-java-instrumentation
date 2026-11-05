@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class JettyHttpClient12InstrumentationModule extends InstrumentationModule {
   public JettyHttpClient12InstrumentationModule() {
-    super("jetty-httpclient", "jetty-httpclient-12.0");
+    super("jetty-httpclient-12.0", "jetty-httpclient");
   }
 
   @Override

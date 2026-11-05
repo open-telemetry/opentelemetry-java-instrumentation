@@ -7,7 +7,6 @@ CI entry point for the pr-review agentic workflow. Writes:
   <output-dir>/metadata.json
   <output-dir>/diff-scope.json
   <output-dir>/files/<repo-relative-path>     (post-change PR file contents)
-  <output-dir>/knowledge/<name>.md            (review knowledge articles)
   <output-dir>/prompt.md                      (rendered persona prompt)
 
 The findings path written into prompt.md is fixed at
@@ -139,46 +138,16 @@ def pr_head_repo(metadata: dict[str, Any]) -> str:
     return f"{owner}/{repo}"
 
 
-def list_knowledge_paths(base_repo: str, base_ref: str, summary: Summary) -> list[str]:
-    endpoint = f"repos/{base_repo}/contents/.github/agents/knowledge?ref={quote(base_ref, safe='')}"
-    entries = gh_json(["api", endpoint], summary)
-    if not isinstance(entries, list):
-        raise RuntimeError("GitHub contents API did not return the knowledge directory listing")
-    paths: list[str] = []
-    for entry in entries:
-        if not isinstance(entry, dict):
-            continue
-        path = entry.get("path")
-        if entry.get("type") == "file" and isinstance(path, str) and path.endswith(".md"):
-            paths.append(path)
-    return sorted(paths)
-
-
-def write_knowledge_bundle(base_repo: str, base_ref: str, directory: Path, summary: Summary) -> None:
-    progress("Loading review knowledge files")
-    directory.mkdir(parents=True, exist_ok=True)
-    paths = [*list_knowledge_paths(base_repo, base_ref, summary), "docs/contributing/style-guide.md"]
-    with ThreadPoolExecutor(max_workers=8) as pool:
-        contents_by_path = dict(
-            zip(paths, pool.map(lambda p: read_file_excerpt(base_repo, base_ref, p, None), paths))
-        )
-    for path in paths:
-        destination = directory / Path(path).name
-        destination.write_text(contents_by_path[path], encoding="utf-8")
-
-
 def write_review_bundle(
     metadata: dict[str, Any],
     diff_text: str,
     diff_scope: dict[str, dict[str, Any]],
     directory: Path,
     summary: Summary,
-    base_repo: str,
 ) -> None:
     progress(f"Preparing review bundle in {directory}")
     head_repo = pr_head_repo(metadata)
     head_ref = metadata["headRefOid"]
-    base_ref = metadata["baseRefOid"]
     paths_to_fetch = [
         path
         for path, info in diff_scope.items()
@@ -194,7 +163,6 @@ def write_review_bundle(
 
     files_dir = directory / "files"
     files_dir.mkdir(parents=True, exist_ok=True)
-    write_knowledge_bundle(base_repo, base_ref, directory / "knowledge", summary)
 
     for path, contents in file_contents.items():
         destination = files_dir / path
@@ -226,7 +194,6 @@ the per-PR data the persona cannot know.
 - Bundle root: {output_dir}
 - Diff: {output_dir}/pr.diff
 - PR-changed file contents: {output_dir}/files/<repo-relative-path>
-- Review knowledge: {output_dir}/knowledge/ (start with README.md)
 - Base branch (the working tree is detached at this PR's base commit): {base_branch}
 - Findings JSON output path: {findings_path}
 
@@ -254,7 +221,7 @@ def build_bundle(pr: int, output_dir: Path, findings_path: Path, summary: Summar
         diff_scope.setdefault(path, {"changed_lines": [], "hunks": [], "status": "deleted"})
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    write_review_bundle(metadata, diff_text, diff_scope, output_dir, summary, base_repo)
+    write_review_bundle(metadata, diff_text, diff_scope, output_dir, summary)
     prompt = render_prompt(output_dir, findings_path, base_branch, diff_scope)
     prompt_path = output_dir / "prompt.md"
     prompt_path.write_text(prompt, encoding="utf-8")

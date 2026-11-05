@@ -35,7 +35,11 @@ public class TelemetryRetriever implements AutoCloseable {
   private boolean closed;
 
   public TelemetryRetriever(int backendPort, Duration telemetryTimeout) {
-    client = WebClient.of("http://localhost:" + backendPort);
+    client =
+        WebClient.builder("http://localhost:" + backendPort)
+            // by default response size is limited to 10MiB
+            .maxResponseLength(50 * 1024 * 1024)
+            .build();
     this.telemetryTimeout = telemetryTimeout;
   }
 

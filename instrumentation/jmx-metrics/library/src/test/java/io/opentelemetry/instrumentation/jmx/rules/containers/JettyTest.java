@@ -1,0 +1,186 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.jmx.rules.containers;
+
+import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
+import io.opentelemetry.instrumentation.jmx.rules.MetricsVerifier;
+import io.opentelemetry.instrumentation.jmx.rules.TargetSystemTest;
+import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+
+class JettyTest extends TargetSystemTest {
+
+  private static final int JETTY_PORT = 8080;
+
+  @ParameterizedTest(name = "jetty:{arguments}")
+  @ValueSource(ints = {9, 10, 11, 12})
+  void testCollectedMetrics(int jettyMajorVersion) {
+
+    Collection<String> yamlFiles = getAllRulesForSystem("jetty");
+
+    List<String> jvmArgs = new ArrayList<>();
+    jvmArgs.add(javaAgentJvmArgument());
+    jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
+
+    Set<String> jettyModules = new HashSet<>(asList("jmx", "http"));
+    if (jettyMajorVersion >= 12) {
+      jettyModules.add("statistics");
+      // required for session management
+      jettyModules.add("sessions");
+      // required for deployment support in 'webapps' folder
+      jettyModules.add("ee10-deploy");
+    } else {
+      // with older versions deployment and session management are available by default
+      jettyModules.add("stats");
+    }
+    String moduleArg = "--module=" + String.join(",", jettyModules);
+
+    GenericContainer<?> container =
+        new GenericContainer<>("jetty:" + jettyMajorVersion)
+            .withCommand(moduleArg)
+            .withEnv("JAVA_OPTIONS", String.join(" ", jvmArgs))
+            .withStartupTimeout(Duration.ofMinutes(2))
+            .withExposedPorts(JETTY_PORT)
+            .waitingFor(Wait.forListeningPorts(JETTY_PORT));
+
+    copyAgentToTarget(container);
+    copyYamlFilesToTarget(container, yamlFiles);
+    // Deploy example web application for session-related metrics
+    copyTestWebAppToTarget(container, "/var/lib/jetty/webapps/ROOT.war");
+
+    List<String> reportedMetrics =
+        new ArrayList<>(
+            asList(
+                "jetty.thread.limit",
+                "jetty.thread.count",
+                "jetty.thread.queue.size",
+                "jetty.thread.busy.count",
+                "jetty.select.count",
+                "jetty.thread.idle.count"));
+
+    List<String> notReportedMetrics = new ArrayList<>();
+
+    if (jettyMajorVersion >= 12) {
+      reportedMetrics.add("jetty.session.count");
+      notReportedMetrics.add("jetty.session.created.count");
+      notReportedMetrics.add("jetty.session.duration.sum");
+    } else {
+      notReportedMetrics.add("jetty.session.count");
+      reportedMetrics.add("jetty.session.created.count");
+      reportedMetrics.add("jetty.session.duration.sum");
+    }
+
+    startWeaverValidation(
+        "jetty.yaml",
+        result ->
+            result
+                .checkNothingUnregisteredWithPrefix("jetty.")
+                .checkRegisteredMetrics("jetty.", reportedMetrics, notReportedMetrics)
+                .checkRegisteredAttributes("jetty.", singletonList("jetty.context"), emptyList()));
+
+    startTarget(container);
+
+    verifyMetrics(createMetricsVerifier(jettyMajorVersion));
+  }
+
+  private static MetricsVerifier createMetricsVerifier(int jettyMajorVersion) {
+
+    MetricsVerifier verifier =
+        MetricsVerifier.create()
+            .add(
+                "jetty.thread.count",
+                metric ->
+                    metric
+                        .isUpDownCounter()
+                        .hasDescription("The current number of threads.")
+                        .hasUnit("{thread}")
+                        .hasDataPointsWithoutAttributes())
+            .add(
+                "jetty.thread.limit",
+                metric ->
+                    metric
+                        .isUpDownCounter()
+                        .hasDescription("The configured maximum number of threads in the pool.")
+                        .hasUnit("{thread}")
+                        .hasDataPointsWithoutAttributes())
+            .add(
+                "jetty.thread.idle.count",
+                metric ->
+                    metric
+                        .isUpDownCounter()
+                        .hasDescription("The current number of idle threads.")
+                        .hasUnit("{thread}")
+                        .hasDataPointsWithoutAttributes())
+            .add(
+                "jetty.thread.busy.count",
+                metric ->
+                    metric
+                        .isUpDownCounter()
+                        .hasDescription("The current number of busy threads.")
+                        .hasUnit("{thread}")
+                        .hasDataPointsWithoutAttributes())
+            .add(
+                "jetty.thread.queue.size",
+                metric ->
+                    metric
+                        .isUpDownCounter()
+                        .hasDescription("The current job queue size.")
+                        .hasUnit("{job}")
+                        .hasDataPointsWithoutAttributes())
+            .add(
+                "jetty.select.count",
+                metric ->
+                    metric
+                        .isCounter()
+                        .hasDescription("The number of select calls.")
+                        .hasUnit("{operation}")
+                        .hasDataPointsWithoutAttributes());
+
+    AttributeMatcher contextAttribute = attributeWithAnyValue("jetty.context");
+    if (jettyMajorVersion >= 12) {
+      verifier.add(
+          "jetty.session.count",
+          metric ->
+              metric
+                  .isUpDownCounter()
+                  .hasDescription("Current number of active sessions.")
+                  .hasUnit("{session}")
+                  .hasDataPointsWithOneAttribute(contextAttribute));
+    } else {
+      verifier
+          .add(
+              "jetty.session.created.count",
+              metric ->
+                  metric
+                      .isCounter()
+                      .hasDescription("The total number of created sessions.")
+                      .hasUnit("{session}")
+                      .hasDataPointsWithOneAttribute(contextAttribute))
+          .add(
+              "jetty.session.duration.sum",
+              metric ->
+                  metric
+                      .isCounter()
+                      .hasDescription("The cumulated session duration.")
+                      .hasUnit("s")
+                      .hasDataPointsWithOneAttribute(contextAttribute));
+    }
+    return verifier;
+  }
+}

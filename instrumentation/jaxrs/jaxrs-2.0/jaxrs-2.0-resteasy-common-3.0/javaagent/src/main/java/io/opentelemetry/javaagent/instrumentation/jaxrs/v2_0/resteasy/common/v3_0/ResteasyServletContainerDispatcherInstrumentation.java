@@ -9,7 +9,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -37,8 +36,7 @@ public class ResteasyServletContainerDispatcherInstrumentation implements TypeIn
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(
         @Advice.FieldValue("servletMappingPrefix") String servletMappingPrefix) {
-      Context context =
-          JaxrsContextPath.init(Java8BytecodeBridge.currentContext(), servletMappingPrefix);
+      Context context = JaxrsContextPath.init(Context.current(), servletMappingPrefix);
       return context != null ? context.makeCurrent() : null;
     }
 

@@ -9,11 +9,21 @@ import static java.util.Objects.requireNonNull;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraTelemetryUtil;
+import java.net.InetSocketAddress;
+import java.util.Collection;
+import java.util.Set;
 
 /** Entrypoint for instrumenting cassandra sessions. */
 public final class CassandraTelemetry {
+
+  static {
+    CassandraTelemetryUtil.setSessionWrapper(CassandraTelemetry::wrap);
+  }
+
   private final TracingCqlSession tracingCqlSession;
 
   /** Returns a new {@link CassandraTelemetry} configured with the given {@link OpenTelemetry}. */
@@ -34,12 +44,46 @@ public final class CassandraTelemetry {
   }
 
   /**
-   * Construct a new tracing-enabled CqlSession using the provided {@link CqlSession} instance.
+   * Returns an instrumented {@link CqlSession} based on the provided session.
+   *
+   * <p>This overload omits {@code server.address} and {@code server.port} attributes because the
+   * session does not expose the complete original contact points. Use {@link
+   * #instrument(CqlSession, Collection)} when the configured contact points are available.
    *
    * @param session An instance of CqlSession configured as desired.
-   * @return a {@link TracingCqlSession}.
+   * @return an instrumented {@link CqlSession}.
    */
-  public CqlSession wrap(CqlSession session) {
+  public CqlSession instrument(CqlSession session) {
     return tracingCqlSession.wrapSession(requireNonNull(session, "session"));
+  }
+
+  /**
+   * Returns a tracing-enabled {@link CqlSession} using the supplied contact points to derive the
+   * session's logical Cassandra server target.
+   *
+   * <p>Use this overload when the session's configured contact points are available, whether they
+   * were supplied through the session builder, a driver configuration file, or a {@link
+   * com.datastax.oss.driver.api.core.config.DriverConfigLoader}.
+   *
+   * <p>The contact points are captured when the session is instrumented and are used only to derive
+   * database server attributes. They do not change the session's connections or configuration.
+   *
+   * <p>{@code contactPoints} must contain every original contact point from every source, including
+   * the session builder and driver configuration. Do not pass the current coordinator, discovered
+   * cluster nodes, or only a subset of the configured contact points.
+   *
+   * @param session the configured session
+   * @param contactPoints all original contact points from every configuration source
+   * @return an instrumented session
+   * @throws NullPointerException if {@code session} or {@code contactPoints} is {@code null}
+   */
+  public CqlSession instrument(CqlSession session, Collection<InetSocketAddress> contactPoints) {
+    return tracingCqlSession.wrapSession(
+        requireNonNull(session, "session"), requireNonNull(contactPoints, "contactPoints"));
+  }
+
+  CqlSession wrap(CqlSession session, Set<EndPoint> programmaticContactPoints) {
+    return tracingCqlSession.wrapSession(
+        requireNonNull(session, "session"), programmaticContactPoints);
   }
 }

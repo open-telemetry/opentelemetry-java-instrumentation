@@ -1,5 +1,7 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -14,26 +16,9 @@ muzzle {
 dependencies {
   library("org.redisson:redisson:3.18.0")
 
-  implementation(project(":instrumentation:redisson:redisson-metrics-common-3.18:javaagent"))
+  implementation(project(":instrumentation:redisson:redisson-metrics-common-2.3:javaagent"))
+  testInstrumentation(project(":instrumentation:redisson:redisson-metrics-2.3:javaagent"))
   testInstrumentation(project(":instrumentation:redisson:redisson-metrics-3.26:javaagent"))
-  testImplementation(project(":instrumentation:redisson:redisson-metrics-common-3.18:testing"))
+  testImplementation(project(":instrumentation:redisson:redisson-metrics-common-2.3:testing"))
   latestDepTestLibrary("org.redisson:redisson:3.25.+") // see redisson-metrics-3.26 module
-}
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
 }

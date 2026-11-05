@@ -11,6 +11,7 @@ import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_INSTANCE_ID;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_NAME;
 import static io.opentelemetry.semconv.TelemetryAttributes.TELEMETRY_DISTRO_VERSION;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,6 +27,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.web.client.RestTemplate;
 
@@ -47,6 +49,18 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
   private int port;
 
   @Test
+  void debugLogsSpans(CapturedOutput output) {
+    // No console exporter is configured in application.yaml. Bootstrap discovery and conversion
+    // of spring_starter.debug must install it before the SDK is built.
+    openTelemetry
+        .getTracer("debug-smoke-test")
+        .spanBuilder("declarative-debug-span")
+        .startSpan()
+        .end();
+    assertThat(output.getAll()).containsOnlyOnce("declarative-debug-span");
+  }
+
+  @Test
   void configProviderReflectsDeclarativeConfig() {
     // otel.instrumentation/development.java.common.http.client.emit_experimental_telemetry
     // in application.yaml
@@ -58,6 +72,29 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
             .getStructured("http")
             .getStructured("client");
     assertThat(httpClientConfig.getBoolean("emit_experimental_telemetry/development")).isTrue();
+  }
+
+  @Test
+  void ruleBasedSampler() {
+    testing.clearAllExportedData();
+
+    openTelemetry
+        .getTracer("sampler-smoke-test")
+        .spanBuilder("matching span")
+        .setAttribute(URL_PATH, "/actuator/health")
+        .startSpan()
+        .end();
+    assertThat(testing.getExportedSpans()).isEmpty();
+
+    openTelemetry
+        .getTracer("sampler-smoke-test")
+        .spanBuilder("fallback span")
+        .setAttribute(URL_PATH, "/greeting")
+        .startSpan()
+        .end();
+    assertThat(testing.getExportedSpans())
+        .singleElement()
+        .satisfies(span -> assertThat(span.getAttributes().get(URL_PATH)).isEqualTo("/greeting"));
   }
 
   @Test

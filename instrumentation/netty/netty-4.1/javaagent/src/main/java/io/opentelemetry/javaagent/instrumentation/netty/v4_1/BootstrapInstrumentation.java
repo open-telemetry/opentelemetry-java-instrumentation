@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.connectionInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -17,7 +18,6 @@ import io.netty.resolver.AddressResolverGroup;
 import io.netty.resolver.DefaultAddressResolverGroup;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.NettyScope;
@@ -39,9 +39,7 @@ class BootstrapInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArguments(0)), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        named("resolver")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("io.netty.resolver.AddressResolverGroup"))),
+        named("resolver").and(takesArguments(named("io.netty.resolver.AddressResolverGroup"))),
         getClass().getName() + "$SetResolverAdvice");
     transformer.applyAdviceToMethod(
         named("doConnect")
@@ -79,7 +77,7 @@ class BootstrapInstrumentation implements TypeInstrumentation {
     @Nullable
     public static NettyScope startConnect(@Advice.Argument(0) SocketAddress remoteAddress) {
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Context.current();
       NettyConnectionRequest request = NettyConnectionRequest.connect(remoteAddress);
       if (!connectionInstrumenter().shouldStart(parentContext, request)) {
         return null;

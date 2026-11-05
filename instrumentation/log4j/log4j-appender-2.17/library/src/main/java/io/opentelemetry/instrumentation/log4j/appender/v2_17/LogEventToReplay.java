@@ -15,6 +15,7 @@ import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.impl.ThrowableProxy;
 import org.apache.logging.log4j.core.time.Instant;
+import org.apache.logging.log4j.message.MapMessage;
 import org.apache.logging.log4j.message.Message;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
@@ -54,6 +55,8 @@ class LogEventToReplay implements LogEvent {
     } else if (messageOrigin instanceof StringMapMessage) {
       // StringMapMessage objects are not reused by Log4j 2
       this.message = messageOrigin;
+    } else if (messageOrigin instanceof MapMessage) {
+      this.message = new MapMessageCopy<>((MapMessage<?, ?>) messageOrigin);
     } else {
       this.message = new MessageCopy(logEvent.getMessage());
     }
@@ -181,6 +184,39 @@ class LogEventToReplay implements LogEvent {
   @Override
   public long getNanoTime() {
     return 0;
+  }
+
+  private static class MapMessageCopy<V> extends MapMessage<MapMessageCopy<V>, V> {
+
+    private static final long serialVersionUID = 1L;
+    private final MessageCopy message;
+
+    MapMessageCopy(MapMessage<?, V> message) {
+      super(message.getData());
+      this.message = new MessageCopy(message);
+    }
+
+    @Override
+    public String getFormattedMessage() {
+      return message.getFormattedMessage();
+    }
+
+    @Override
+    public String getFormat() {
+      return message.getFormat();
+    }
+
+    @Nullable
+    @Override
+    public Object[] getParameters() {
+      return message.getParameters();
+    }
+
+    @Nullable
+    @Override
+    public Throwable getThrowable() {
+      return message.getThrowable();
+    }
   }
 
   private static class MessageCopy implements Message {

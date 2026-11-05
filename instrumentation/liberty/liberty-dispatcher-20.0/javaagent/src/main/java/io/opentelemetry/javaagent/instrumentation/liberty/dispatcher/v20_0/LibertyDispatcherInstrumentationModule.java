@@ -16,7 +16,7 @@ import java.util.List;
 public class LibertyDispatcherInstrumentationModule extends InstrumentationModule {
 
   public LibertyDispatcherInstrumentationModule() {
-    super("liberty-dispatcher", "liberty-dispatcher-20.0", "liberty");
+    super("liberty-dispatcher-20.0", "liberty");
   }
 
   @Override

@@ -1,0 +1,5 @@
+display_name: Redisson
+description: This instrumentation enables database connection pool metrics for Redisson.
+library_link: https://github.com/redisson/redisson
+semantic_conventions:
+  - DATABASE_POOL_METRICS

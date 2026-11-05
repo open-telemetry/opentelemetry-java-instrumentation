@@ -5,19 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -59,14 +59,16 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName("POST " + httpHost.getHost() + ":" + httpHost.getPort())
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
-                                equalTo(maybeStable(DB_OPERATION), "POST"),
+                                equalTo(DB_SYSTEM_NAME, "opensearch"),
+                                equalTo(DB_OPERATION_NAME, "POST"),
                                 equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}")),
+                                    DB_QUERY_TEXT,
+                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
@@ -82,7 +84,9 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
                                         val.asString()
                                             .startsWith(httpHost + "/" + INDEX_NAME + "/_search")),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(maybeStablePeerService(), "test-peer-service"))));
+                                equalTo(
+                                    stringKey("server.service.name"),
+                                    expectedMappedServiceName()))));
   }
 
   @Test
@@ -133,14 +137,16 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName("POST " + httpHost.getHost() + ":" + httpHost.getPort())
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
-                                equalTo(maybeStable(DB_OPERATION), "POST"),
+                                equalTo(DB_SYSTEM_NAME, "opensearch"),
+                                equalTo(DB_OPERATION_NAME, "POST"),
                                 equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    "{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message2\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message3\":{\"value\":\"?\"}}}}")),
+                                    DB_QUERY_TEXT,
+                                    "{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message2\":{\"value\":\"?\"}}}};{\"index\":[\"?\"]};{\"query\":{\"term\":{\"message3\":{\"value\":\"?\"}}}}"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
@@ -157,7 +163,9 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
                                             .startsWith(
                                                 httpHost + "/" + "_msearch?typed_keys=true")),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(maybeStablePeerService(), "test-peer-service"))));
+                                equalTo(
+                                    stringKey("server.service.name"),
+                                    expectedMappedServiceName()))));
   }
 
   @Test
@@ -216,12 +224,13 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName("POST " + httpHost.getHost() + ":" + httpHost.getPort())
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
-                                equalTo(maybeStable(DB_OPERATION), "POST"),
-                                equalTo(maybeStable(DB_STATEMENT), "POST /test-search-index/_doc")),
+                                equalTo(DB_SYSTEM_NAME, "opensearch"),
+                                equalTo(DB_OPERATION_NAME, "POST"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
@@ -237,7 +246,9 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
                                         val.asString()
                                             .startsWith(httpHost + "/" + INDEX_NAME + "/_doc")),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 201L),
-                                equalTo(maybeStablePeerService(), "test-peer-service"))));
+                                equalTo(
+                                    stringKey("server.service.name"),
+                                    expectedMappedServiceName()))));
   }
 
   private void assertQueryBody(String expected, String urlSuffix) {
@@ -246,12 +257,14 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("POST")
+                        span.hasName("POST " + httpHost.getHost() + ":" + httpHost.getPort())
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
-                                equalTo(maybeStable(DB_OPERATION), "POST"),
-                                equalTo(maybeStable(DB_STATEMENT), expected)),
+                                equalTo(DB_SYSTEM_NAME, "opensearch"),
+                                equalTo(DB_OPERATION_NAME, "POST"),
+                                equalTo(DB_QUERY_TEXT, expected),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
                     span ->
                         span.hasName("POST")
                             .hasKind(SpanKind.CLIENT)
@@ -265,7 +278,9 @@ class OpenSearchCaptureSearchQueryTest extends AbstractOpenSearchQueryTest {
                                     URL_FULL,
                                     val -> val.asString().startsWith(httpHost + urlSuffix)),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(maybeStablePeerService(), "test-peer-service"))));
+                                equalTo(
+                                    stringKey("server.service.name"),
+                                    expectedMappedServiceName()))));
   }
 
   private static SearchRequest searchRequest(String field) {

@@ -83,13 +83,15 @@ public class DubboUnknownServiceHelper {
   private static final VirtualField<RpcInvocation, Boolean> UNKNOWN_SERVICE_SPAN_RECORDED =
       VirtualField.find(RpcInvocation.class, Boolean.class);
 
+  @Nullable private static final Method statusCodeMethod = findStatusCodeMethod();
+
   /**
    * Creates an unknown service span when {@code DubboProtocol.getInvoker()} throws because the
    * requested service is not registered in the exporter map. This handles the Dubbo protocol
    * (binary) case where decode succeeds past {@code PermittedSerializationKeeper} (older Dubbo
    * versions without the check, or generic invocations that pass) but the invoker lookup fails.
-   * Trace context is extracted from invocation attachments, so the resulting span is linked to the
-   * client span (1 trace).
+   * Trace context is extracted from invocation attachments, falling back to the current context
+   * when no parent is propagated.
    *
    * <p>Only {@code RemotingException} with "Not found exported service" triggers span creation;
    * other getInvoker failures are not unknown-service errors and are ignored.
@@ -102,9 +104,7 @@ public class DubboUnknownServiceHelper {
       Instant startTime,
       Instant endTime) {
 
-    if (serverInstrumenter() == null
-        || !isUnknownServiceInvokerFailure(throwable)
-        || isAlreadyRecorded(rpcInvocation)) {
+    if (!isUnknownServiceInvokerFailure(throwable) || isAlreadyRecorded(rpcInvocation)) {
       return;
     }
 
@@ -115,7 +115,7 @@ public class DubboUnknownServiceHelper {
     Context parentContext =
         GlobalOpenTelemetry.getPropagators()
             .getTextMapPropagator()
-            .extract(Context.root(), rpcInvocation.getAttachments(), mapGetter);
+            .extract(Context.current(), rpcInvocation.getAttachments(), mapGetter);
 
     startAndEndSpan(serverInstrumenter(), parentContext, request, throwable, startTime, endTime);
   }
@@ -132,7 +132,8 @@ public class DubboUnknownServiceHelper {
    *
    * <p>Note: trace context is unavailable in this path because in the Dubbo protocol wire format,
    * attachments (which carry traceparent) are serialized after parameter values and haven't been
-   * read when the decode fails. The resulting span will be a root span (disconnected trace).
+   * read when the decode fails. The resulting span uses the current context as its parent, or is a
+   * root span when there is no current span.
    */
   public static void createUnknownServiceSpanFromDecode(
       RpcInvocation rpcInvocation,
@@ -141,9 +142,7 @@ public class DubboUnknownServiceHelper {
       Instant startTime,
       Instant endTime) {
 
-    if (serverInstrumenter() == null
-        || !isUnknownServiceDecodeFailure(throwable)
-        || isAlreadyRecorded(rpcInvocation)) {
+    if (!isUnknownServiceDecodeFailure(throwable) || isAlreadyRecorded(rpcInvocation)) {
       return;
     }
 
@@ -159,13 +158,15 @@ public class DubboUnknownServiceHelper {
         DubboInternalHelper.createForUnknownService(
             rpcInvocation, buildOriginalFullMethodName(rpcInvocation), remoteAddress);
 
-    startAndEndSpan(serverInstrumenter(), Context.root(), request, throwable, startTime, endTime);
+    startAndEndSpan(
+        serverInstrumenter(), Context.current(), request, throwable, startTime, endTime);
   }
 
   /**
    * Creates an unknown service span for the Dubbo Triple protocol (gRPC over HTTP/2). Unlike the
    * Dubbo protocol (binary), Triple transmits trace context as HTTP/2 headers, so the parent
-   * context is always available — resulting in a single trace.
+   * context can be extracted even when service routing fails, falling back to the current context
+   * when no parent is propagated.
    *
    * <p>Only {@code HttpStatusException} with status 404 (the Dubbo Triple not-found outcome)
    * triggers span creation. Other Triple failures (e.g., descriptor/codec construction for
@@ -182,7 +183,7 @@ public class DubboUnknownServiceHelper {
   public static void createUnknownServiceSpanFromTriple(
       Object requestObj, Throwable throwable, Instant startTime, Instant endTime) {
 
-    if (serverInstrumenter() == null || !isTripleNotFoundFailure(throwable)) {
+    if (!isTripleNotFoundFailure(throwable)) {
       return;
     }
 
@@ -213,7 +214,7 @@ public class DubboUnknownServiceHelper {
     Context parentContext =
         GlobalOpenTelemetry.getPropagators()
             .getTextMapPropagator()
-            .extract(Context.root(), requestObj, httpRequestGetter);
+            .extract(Context.current(), requestObj, httpRequestGetter);
 
     startAndEndSpan(serverInstrumenter(), parentContext, request, throwable, startTime, endTime);
   }
@@ -242,22 +243,30 @@ public class DubboUnknownServiceHelper {
     return message != null && message.contains("Not found exported service");
   }
 
-  /**
-   * Returns {@code true} if the throwable is a Dubbo Triple 404 (service not found). The class
-   * check uses the name string because {@code HttpStatusException} is not available at compile time
-   * against Dubbo 2.7.
-   */
+  /** Returns {@code true} if the throwable is a Dubbo Triple 404 (service not found). */
   static boolean isTripleNotFoundFailure(Throwable throwable) {
-    if (!"org.apache.dubbo.remoting.http12.exception.HttpStatusException"
-        .equals(throwable.getClass().getName())) {
+    if (statusCodeMethod == null || throwable.getClass() != statusCodeMethod.getDeclaringClass()) {
       return false;
     }
     try {
-      Method statusMethod = throwable.getClass().getMethod("getStatusCode");
-      Object status = statusMethod.invoke(throwable);
+      Object status = statusCodeMethod.invoke(throwable);
       return status instanceof Integer && (Integer) status == 404;
     } catch (ReflectiveOperationException ignored) {
       return false;
+    }
+  }
+
+  @Nullable
+  private static Method findStatusCodeMethod() {
+    try {
+      Class<?> exceptionClass =
+          Class.forName(
+              "org.apache.dubbo.remoting.http12.exception.HttpStatusException",
+              false,
+              DubboUnknownServiceHelper.class.getClassLoader());
+      return exceptionClass.getMethod("getStatusCode");
+    } catch (ReflectiveOperationException | LinkageError | SecurityException ignored) {
+      return null;
     }
   }
 
@@ -313,10 +322,6 @@ public class DubboUnknownServiceHelper {
       InstrumenterUtil.startAndEnd(
           instrumenter, parentContext, request, null, throwable, startTime, endTime);
     }
-  }
-
-  public static boolean isEnabled() {
-    return serverInstrumenter() != null;
   }
 
   private DubboUnknownServiceHelper() {}

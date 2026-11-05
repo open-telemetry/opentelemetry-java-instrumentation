@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class SpringPulsarInstrumentationModule extends InstrumentationModule {
   public SpringPulsarInstrumentationModule() {
-    super("spring-pulsar", "spring-pulsar-1.0");
+    super("spring-pulsar-1.0", "spring-pulsar");
   }
 
   @Override

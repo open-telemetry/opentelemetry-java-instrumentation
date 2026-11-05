@@ -21,6 +21,7 @@ abstract class MuzzleDirective {
   abstract val additionalDependencies: ListProperty<Any>
   abstract val excludedDependencies: ListProperty<String>
   abstract val excludedInstrumentationNames: SetProperty<String>
+  abstract val excludedInstrumentationModules: SetProperty<String>
   abstract val assertPass: Property<Boolean>
   abstract val assertInverse: Property<Boolean>
   abstract val coreJdk: Property<Boolean>
@@ -32,6 +33,7 @@ abstract class MuzzleDirective {
     additionalDependencies.convention(listOf())
     excludedDependencies.convention(listOf())
     excludedInstrumentationNames.convention(listOf())
+    excludedInstrumentationModules.convention(emptySet())
     assertPass.convention(false)
     assertInverse.convention(false)
     coreJdk.convention(false)
@@ -57,12 +59,21 @@ abstract class MuzzleDirective {
   }
 
   /**
-   * Excludes an instrumentation module from the current muzzle test.
+   * Excludes instrumentation modules with the given public enablement name from the current muzzle test.
    *
-   * @param excludeString An instrumentation module class name to exclude
+   * @param excludeString An instrumentation enablement name to exclude
    */
   fun excludeInstrumentationName(excludeString: String) {
     excludedInstrumentationNames.add(excludeString)
+  }
+
+  /**
+   * Excludes one instrumentation module from the current muzzle test, independently of its public enablement names.
+   *
+   * @param instrumentationModuleClassName The fully qualified instrumentation module class name
+   */
+  fun excludeInstrumentationModule(instrumentationModuleClassName: String) {
+    excludedInstrumentationModules.add(instrumentationModuleClassName)
   }
 
   fun skip(vararg version: String) {

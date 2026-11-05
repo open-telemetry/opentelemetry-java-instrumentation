@@ -1,0 +1,92 @@
+plugins {
+  id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
+}
+
+muzzle {
+  pass {
+    group.set("io.vertx")
+    module.set("vertx-redis-client")
+    versions.set("[4.0.0,)")
+    assertInverse.set(true)
+
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClient445InstrumentationModule")
+  }
+  pass {
+    // instrumentation-docs:ignore - verification only, the directive above is the range we document
+    name.set("Vert.x Redis 4.4.5 target instrumentation")
+    group.set("io.vertx")
+    module.set("vertx-redis-client")
+    versions.set("[4.4.5,)")
+    assertInverse.set(true)
+
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClient40InstrumentationModule")
+  }
+}
+
+dependencies {
+  library("io.vertx:vertx-redis-client:4.0.0")
+  compileOnly("io.vertx:vertx-redis-client:4.4.5") // For RedisConnectOptions added in 4.4.5
+  compileOnly("io.vertx:vertx-codegen:4.4.5")
+
+  testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
+
+  testLibrary("io.vertx:vertx-codegen:4.0.0")
+}
+
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation-api-incubator"))
+      implementation("io.vertx:vertx-redis-client:4.4.4")
+    }
+  }
+
+  register<JvmTestSuite>("test403") {
+    sources {
+      java {
+        srcDir("src/testShared/java")
+        srcDir("src/testCompatibility/java")
+      }
+    }
+
+    dependencies {
+      implementation("io.vertx:vertx-redis-client:4.0.3")
+      implementation("io.vertx:vertx-codegen:4.0.3")
+      implementation("org.testcontainers:testcontainers")
+    }
+  }
+  register<JvmTestSuite>("test445") {
+    sources {
+      java {
+        srcDir("src/testShared/java")
+        srcDir("src/testCompatibility/java")
+      }
+    }
+
+    dependencies {
+      implementation("io.vertx:vertx-redis-client:4.4.5")
+      implementation("io.vertx:vertx-codegen:4.4.5")
+      implementation("org.testcontainers:testcontainers")
+    }
+  }
+
+  named<JvmTestSuite>("test") {
+    sources {
+      java {
+        srcDir("src/testShared/java")
+      }
+    }
+  }
+}
+
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+  }
+
+  check {
+    dependsOn(testing.suites)
+  }
+}

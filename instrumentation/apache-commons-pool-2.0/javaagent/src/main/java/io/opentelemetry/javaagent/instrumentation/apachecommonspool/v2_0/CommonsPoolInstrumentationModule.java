@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class CommonsPoolInstrumentationModule extends InstrumentationModule {
   public CommonsPoolInstrumentationModule() {
-    super("apache-commons-pool", "apache-commons-pool-2.0");
+    super("apache-commons-pool-2.0", "apache-commons-pool");
   }
 
   @Override

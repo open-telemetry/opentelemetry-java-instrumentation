@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.extensionannotations.v1_0;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 import java.lang.reflect.Method;
 
 final class MethodCodeAttributesGetter implements CodeAttributesGetter<Method> {
@@ -16,7 +16,7 @@ final class MethodCodeAttributesGetter implements CodeAttributesGetter<Method> {
   }
 
   @Override
-  public String getMethodName(Method method) {
+  public String getCodeMethodName(Method method) {
     return method.getName();
   }
 }

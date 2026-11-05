@@ -5,21 +5,26 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisSingletons.transactionFramingSuppression;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRequestContext;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisRequestContext;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import redis.clients.jedis.BinaryJedis;
+import redis.clients.jedis.HostAndPort;
 
 class JedisInstrumentation implements TypeInstrumentation {
   @Override
@@ -29,6 +34,9 @@ class JedisInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        isConstructor().and(takesArgument(0, named("redis.clients.jedis.HostAndPort"))),
+        getClass().getName() + "$HostAndPortConstructorAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(isMethod())
@@ -46,11 +54,21 @@ class JedisInstrumentation implements TypeInstrumentation {
                         "disconnect",
                         "getConnection",
                         "isBroken",
-                        "multi",
                         "toString"))),
         getClass().getName() + "$JedisMethodAdvice");
     transformer.applyAdviceToMethod(
         named("multi").and(takesArguments(0)), getClass().getName() + "$MultiAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class HostAndPortConstructorAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This BinaryJedis jedis, @Advice.Argument(0) @Nullable HostAndPort endpoint) {
+      JedisConfiguredTargets.captureConnectionTarget(
+          jedis.getClient(), JedisConfiguredTargets.hostAndPortTarget(endpoint));
+    }
   }
 
   @SuppressWarnings("unused")
@@ -64,9 +82,10 @@ class JedisInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable JedisRequestContext<JedisRequest> requestContext) {
       if (requestContext != null) {
-        requestContext.detachAndEnd();
+        requestContext.detachAndEnd(throwable);
       }
     }
   }
@@ -75,15 +94,17 @@ class JedisInstrumentation implements TypeInstrumentation {
   public static class MultiAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter() {
+    public static boolean onEnter() {
       // The MULTI command frames a transaction that is reported as a single batch span at exec(),
       // so its own command span is suppressed.
-      JedisPipelineContext.enterTransactionFraming();
+      return transactionFramingSuppression().tryAcquire();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit() {
-      JedisPipelineContext.exitTransactionFraming();
+    public static void onExit(@Advice.Enter boolean acquired) {
+      if (acquired) {
+        transactionFramingSuppression().release();
+      }
     }
   }
 }

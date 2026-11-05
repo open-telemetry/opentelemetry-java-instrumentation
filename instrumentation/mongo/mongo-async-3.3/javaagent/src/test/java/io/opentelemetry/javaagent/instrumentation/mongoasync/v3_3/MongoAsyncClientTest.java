@@ -107,6 +107,23 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
   }
 
   @Override
+  protected Document runCommand(String dbName, Document command) throws Exception {
+    CompletableFuture<Document> result = new CompletableFuture<>();
+    client
+        .getDatabase(dbName)
+        .runCommand(
+            command,
+            (response, error) -> {
+              if (error != null) {
+                result.completeExceptionally(error);
+              } else {
+                result.complete(response);
+              }
+            });
+    return result.get(30, SECONDS);
+  }
+
+  @Override
   protected MongoCollection<Document> setupInsert(String dbName, String collectionName)
       throws InterruptedException {
     MongoCollection<Document> collection =

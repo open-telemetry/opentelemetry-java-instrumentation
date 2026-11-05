@@ -51,17 +51,6 @@ class RocketMqProducerAttributeGetter
   }
 
   @Override
-  public Long getMessageBodySize(PublishingMessageImpl message) {
-    return (long) message.getBody().remaining();
-  }
-
-  @Nullable
-  @Override
-  public Long getMessageEnvelopeSize(PublishingMessageImpl message) {
-    return null;
-  }
-
-  @Override
   public String getMessageId(PublishingMessageImpl message, @Nullable SendReceiptImpl sendReceipt) {
     return message.getMessageId().toString();
   }

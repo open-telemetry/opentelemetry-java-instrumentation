@@ -47,6 +47,16 @@ class ProcessResourceTest {
   }
 
   @Test
+  void commandAttributesCanBeExplicitlyDisabled() {
+    Attributes attributes = ProcessResource.create(false).getAttributes();
+
+    assertThat(attributes.get(PROCESS_PID)).isGreaterThan(1);
+    assertThat(attributes.get(PROCESS_EXECUTABLE_PATH)).isNotNull();
+    assertThat(attributes.get(PROCESS_COMMAND_LINE)).isNull();
+    assertThat(attributes.get(PROCESS_COMMAND_ARGS)).isNull();
+  }
+
+  @Test
   @SetSystemProperty(key = "sun.java.command", value = "app.jar -DappSecret=abc\ndef --other=test")
   void commandAttributesEnabled() {
     Resource resource = ProcessResource.create(true);
@@ -84,7 +94,7 @@ class ProcessResourceTest {
 
   private static void assertResource(boolean windows) {
     Resource resource = ProcessResource.create();
-    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
     Attributes attributes = resource.getAttributes();
 
     assertThat(attributes.get(PROCESS_PID)).isGreaterThan(1);

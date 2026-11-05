@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.LoggingConfig;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import java.util.function.Predicate;
@@ -30,21 +31,11 @@ public class LogbackSingletons {
     boolean captureArguments = config.getBoolean("capture_arguments/development", false);
     Predicate<String> mdcAttributes =
         SelectorConfig.resolveLegacyLiteral(config, "logback-appender", "mdc-attributes");
-    Predicate<String> keyValuePairAttributes =
-        SelectorConfig.resolveLegacyBoolean(
-            config, "logback-appender", "key-value-pair-attributes");
     Predicate<String> loggerContextAttributes =
         SelectorConfig.resolveLegacyBoolean(
             config, "logback-appender", "logger-context-attributes");
-    Predicate<String> logstashMarkerAttributes =
-        SelectorConfig.resolveLegacyBoolean(
-            config, "logback-appender", "logstash-marker-attributes");
-    Predicate<String> logstashStructuredArgumentAttributes =
-        SelectorConfig.resolveLegacyBoolean(
-            config,
-            "logback-appender",
-            "logstash-structured-argument-attributes",
-            "logstash-structured-arguments");
+    Predicate<String> structuredAttributes =
+        LoggingConfig.resolveStructuredAttributes(GlobalOpenTelemetry.get());
 
     mapper =
         LoggingEventMapper.builder()
@@ -52,12 +43,10 @@ public class LogbackSingletons {
             .setMdcAttributes(mdcAttributes)
             .setCaptureCodeAttributes(captureCodeAttributes)
             .setCaptureMarkerAttribute(captureMarkerAttribute)
-            .setKeyValuePairAttributes(keyValuePairAttributes)
+            .setStructuredAttributes(structuredAttributes)
             .setLoggerContextAttributes(loggerContextAttributes)
             .setCaptureTemplate(captureTemplate)
             .setCaptureArguments(captureArguments)
-            .setLogstashMarkerAttributes(logstashMarkerAttributes)
-            .setLogstashStructuredArgumentAttributes(logstashStructuredArgumentAttributes)
             .build();
   }
 

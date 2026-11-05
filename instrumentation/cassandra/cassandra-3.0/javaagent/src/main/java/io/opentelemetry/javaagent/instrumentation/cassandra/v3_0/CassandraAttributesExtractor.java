@@ -5,22 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_CONSISTENCY_LEVEL;
 import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_COORDINATOR_DC;
 import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_COORDINATOR_ID;
 import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_PAGE_SIZE;
 import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_QUERY_IDEMPOTENT;
 import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_COORDINATOR_DC;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_COORDINATOR_ID;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_IDEMPOTENCE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_PAGE_SIZE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
 
 import com.datastax.driver.core.ExecutionInfo;
 import com.datastax.driver.core.Host;
@@ -28,10 +18,8 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.lang.reflect.Method;
-import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class CassandraAttributesExtractor
     implements AttributesExtractor<CassandraRequest, CassandraResponse> {
 
@@ -39,20 +27,11 @@ class CassandraAttributesExtractor
   private static final Method GET_SPECULATIVE_EXECUTIONS =
       findMethod(ExecutionInfo.class, "getSpeculativeExecutions");
 
-  @Nullable private static final Method GET_HOST_ID = findMethod(Host.class, "getHostId");
-
   @Override
   public void onStart(AttributesBuilder attributes, Context context, CassandraRequest request) {
-    if (emitStableDatabaseSemconv()) {
-      attributes.put(CASSANDRA_CONSISTENCY_LEVEL, request.getConsistencyLevel());
-      attributes.put(CASSANDRA_PAGE_SIZE, request.getPageSize());
-      attributes.put(CASSANDRA_QUERY_IDEMPOTENT, request.isIdempotent());
-    }
-    if (emitOldDatabaseSemconv()) {
-      attributes.put(DB_CASSANDRA_CONSISTENCY_LEVEL, request.getConsistencyLevel());
-      attributes.put(DB_CASSANDRA_PAGE_SIZE, request.getPageSize());
-      attributes.put(DB_CASSANDRA_IDEMPOTENCE, request.isIdempotent());
-    }
+    attributes.put(CASSANDRA_CONSISTENCY_LEVEL, request.getConsistencyLevel());
+    attributes.put(CASSANDRA_PAGE_SIZE, request.getPageSize());
+    attributes.put(CASSANDRA_QUERY_IDEMPOTENT, request.isIdempotent());
   }
 
   @Override
@@ -66,12 +45,6 @@ class CassandraAttributesExtractor
       return;
     }
 
-    InetSocketAddress coordinatorAddress = response.getCoordinatorAddress();
-    if (coordinatorAddress != null) {
-      attributes.put(SERVER_ADDRESS, coordinatorAddress.getHostString());
-      attributes.put(SERVER_PORT, coordinatorAddress.getPort());
-    }
-
     ExecutionInfo executionInfo = response.getExecutionInfo();
     if (executionInfo == null) {
       return;
@@ -79,29 +52,14 @@ class CassandraAttributesExtractor
 
     Host coordinator = executionInfo.getQueriedHost();
     if (coordinator != null) {
-      if (emitStableDatabaseSemconv()) {
-        attributes.put(CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
-      }
-      if (emitOldDatabaseSemconv()) {
-        attributes.put(DB_CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
-      }
-      String coordinatorId = getCoordinatorId(coordinator);
-      if (emitStableDatabaseSemconv()) {
-        attributes.put(CASSANDRA_COORDINATOR_ID, coordinatorId);
-      }
-      if (emitOldDatabaseSemconv()) {
-        attributes.put(DB_CASSANDRA_COORDINATOR_ID, coordinatorId);
-      }
+      attributes.put(CASSANDRA_COORDINATOR_DC, coordinator.getDatacenter());
+      String coordinatorId = CassandraEndPoints.getHostId(coordinator);
+      attributes.put(CASSANDRA_COORDINATOR_ID, coordinatorId);
     }
 
     Integer speculativeExecutionCount = getSpeculativeExecutionCount(executionInfo);
     if (speculativeExecutionCount != null) {
-      if (emitStableDatabaseSemconv()) {
-        attributes.put(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, speculativeExecutionCount);
-      }
-      if (emitOldDatabaseSemconv()) {
-        attributes.put(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, speculativeExecutionCount);
-      }
+      attributes.put(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, speculativeExecutionCount);
     }
   }
 
@@ -111,16 +69,6 @@ class CassandraAttributesExtractor
       return GET_SPECULATIVE_EXECUTIONS == null
           ? null
           : (Integer) GET_SPECULATIVE_EXECUTIONS.invoke(executionInfo);
-    } catch (ReflectiveOperationException ignored) {
-      return null;
-    }
-  }
-
-  @Nullable
-  private static String getCoordinatorId(Host coordinator) {
-    try {
-      Object hostId = GET_HOST_ID == null ? null : GET_HOST_ID.invoke(coordinator);
-      return hostId == null ? null : hostId.toString();
     } catch (ReflectiveOperationException ignored) {
       return null;
     }

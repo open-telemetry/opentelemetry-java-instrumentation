@@ -29,15 +29,15 @@ class RedissonConnectionPoolMetricsTest extends AbstractRedissonConnectionPoolMe
       Redisson redisson, String regularPool, String subscriptionPool)
       throws ReflectiveOperationException {
     MasterSlaveEntry entry = getMasterSlaveEntry(redisson);
-    ClientConnectionsEntry masterEntry = (ClientConnectionsEntry) getMasterConnectionsEntry(entry);
+    ClientConnectionsEntry masterEntry = getMasterConnectionsEntry(entry);
     ConnectionsHolder<RedisConnection> holder = masterEntry.getConnectionsHolder();
     AsyncSemaphore semaphore = holder.getFreeConnectionsCounter();
 
     clearMetrics();
     RedisConnection connection = entry.connectionWriteOp(RedisCommands.PING).join();
     try {
-      // Delta temporality reports one fewer idle connection and one used connection.
-      assertUsageMetric(regularPool, -1, 1, subscriptionPool, 0, 0);
+      assertUsageMetric(
+          regularPool, REGULAR_MIN_IDLE - 1, 1, subscriptionPool, SUBSCRIPTION_MIN_IDLE, 0);
     } finally {
       entry.releaseWrite(connection);
     }

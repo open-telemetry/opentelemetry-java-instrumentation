@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -18,29 +20,25 @@ dependencies {
   testCompileOnly(project(":javaagent-bootstrap"))
 }
 
-testing {
-  suites {
-    // CompletableFuture behaves differently if ForkJoinPool has no parallelism
-    register<JvmTestSuite>("testNoParallelism") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
+testing.suites {
+  // CompletableFuture behaves differently if ForkJoinPool has no parallelism
+  register<JvmTestSuite>("testNoParallelism") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
+    }
 
-      dependencies {
-        implementation(project(":instrumentation:executors:testing"))
-        compileOnly(project(":instrumentation:executors:bootstrap"))
-        compileOnly(project(":javaagent-bootstrap"))
-      }
+    dependencies {
+      implementation(project(":instrumentation:executors:testing"))
+      compileOnly(project(":instrumentation:executors:bootstrap"))
+      compileOnly(project(":javaagent-bootstrap"))
+    }
+  }
 
-      targets {
-        all {
-          testTask.configure {
-            systemProperty("java.util.concurrent.ForkJoinPool.common.parallelism", 1)
-          }
-        }
-      }
+  executions("testNoParallelism") {
+    configureEach {
+      systemProperty("java.util.concurrent.ForkJoinPool.common.parallelism", 1)
     }
   }
 }

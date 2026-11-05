@@ -40,10 +40,7 @@ class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$ExecuteAdvice");
 
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("executeAsync"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, Executor.class)),
+        isPublic().and(named("executeAsync")).and(takesArgument(0, Executor.class)),
         getClass().getName() + "$ExecuteAsyncAdvice");
   }
 

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_4;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -18,12 +18,15 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CassandraClientInstrumentationModule extends InstrumentationModule {
 
   public CassandraClientInstrumentationModule() {
-    super("cassandra", "cassandra-4.4");
+    super("cassandra-4.4", "cassandra");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new SessionBuilderInstrumentation());
+    return asList(
+        new SessionBuilderInstrumentation(),
+        new InFlightHandlerInstrumentation(),
+        new DefaultExecutionInfoInstrumentation());
   }
 
   @Override

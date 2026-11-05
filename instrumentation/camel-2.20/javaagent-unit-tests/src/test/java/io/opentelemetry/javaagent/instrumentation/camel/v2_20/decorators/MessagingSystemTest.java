@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -35,10 +34,9 @@ class MessagingSystemTest {
             .add(argumentSet("legacy AMQP alias", "ampq", "amqp"))
             .add(argumentSet("CometD secure alias", "cometds", "cometd"))
             .add(argumentSet("Paho MQTT alias", "paho", "mqtt"))
+            .add(argumentSet("AWS SQS component", "aws-sqs", "aws.sqs"))
             .add(argumentSet("simple JMS alias", "sjms", "jms"));
-    if (emitStableMessagingSemconv()) {
-      mappings.add(argumentSet("stable AMQP component", "amqp", "amqp"));
-    }
+    mappings.add(argumentSet("stable AMQP component", "amqp", "amqp"));
     return mappings.build();
   }
 }

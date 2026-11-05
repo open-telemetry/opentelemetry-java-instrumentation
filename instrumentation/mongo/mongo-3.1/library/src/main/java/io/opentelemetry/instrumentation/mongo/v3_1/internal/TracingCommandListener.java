@@ -13,6 +13,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -20,16 +21,26 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class TracingCommandListener implements CommandListener {
 
-  private final Instrumenter<CommandStartedEvent, Void> instrumenter;
+  private final Instrumenter<CommandStartedEvent, CommandSucceededEvent> instrumenter;
   private final Map<Integer, ContextAndRequest> requestMap;
+  @Nullable private final MongoServerTarget configuredTarget;
 
-  public TracingCommandListener(Instrumenter<CommandStartedEvent, Void> instrumenter) {
+  public TracingCommandListener(
+      Instrumenter<CommandStartedEvent, CommandSucceededEvent> instrumenter) {
+    this(instrumenter, null);
+  }
+
+  public TracingCommandListener(
+      Instrumenter<CommandStartedEvent, CommandSucceededEvent> instrumenter,
+      @Nullable MongoServerTarget configuredTarget) {
     this.instrumenter = instrumenter;
     this.requestMap = new ConcurrentHashMap<>();
+    this.configuredTarget = configuredTarget;
   }
 
   @Override
   public void commandStarted(CommandStartedEvent event) {
+    MongoClusterTargets.register(event, configuredTarget);
     Context parentContext = Context.current();
     if (instrumenter.shouldStart(parentContext, event)) {
       Context context = instrumenter.start(parentContext, event);
@@ -41,7 +52,7 @@ public final class TracingCommandListener implements CommandListener {
   public void commandSucceeded(CommandSucceededEvent event) {
     ContextAndRequest contextAndRequest = requestMap.remove(event.getRequestId());
     if (contextAndRequest != null) {
-      instrumenter.end(contextAndRequest.getContext(), contextAndRequest.getRequest(), null, null);
+      instrumenter.end(contextAndRequest.getContext(), contextAndRequest.getRequest(), event, null);
     }
   }
 

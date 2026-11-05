@@ -43,20 +43,7 @@ otelJava {
 
 tasks {
   test {
-    systemProperty("otel.instrumentation.common.enduser.id.enabled", "true")
-    systemProperty("otel.instrumentation.common.enduser.role.enabled", "true")
-    systemProperty("otel.instrumentation.common.enduser.scope.enabled", "true")
-  }
-
-  val testV3Preview = register<Test>("testV3Preview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
     systemProperty("otel.instrumentation.common.user.name.enabled", "true")
     systemProperty("otel.instrumentation.common.user.roles.enabled", "true")
-  }
-
-  check {
-    dependsOn(testV3Preview)
   }
 }

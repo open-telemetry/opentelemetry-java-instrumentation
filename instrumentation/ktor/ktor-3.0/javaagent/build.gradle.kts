@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.executions
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -53,21 +54,10 @@ kotlin {
   }
 }
 
-tasks {
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-  }
-
-  check {
-    dependsOn(testExperimental, testStableSemconv)
+testing.suites {
+  executions("test") {
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
+    }
   }
 }

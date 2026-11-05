@@ -11,18 +11,12 @@ import java.lang.reflect.Method;
 public class ClientAttributesGetter implements RpcAttributesGetter<Method, Void> {
 
   @Override
-  public String getSystem(Method method) {
+  public String getRpcSystemName(Method method) {
     return "spring_rmi";
   }
 
   @Override
-  public String getService(Method method) {
-    return method.getDeclaringClass().getName();
-  }
-
-  @Deprecated
-  @Override
-  public String getMethod(Method method) {
-    return method.getName();
+  public String getRpcMethod(Method method) {
+    return method.getDeclaringClass().getName() + "/" + method.getName();
   }
 }

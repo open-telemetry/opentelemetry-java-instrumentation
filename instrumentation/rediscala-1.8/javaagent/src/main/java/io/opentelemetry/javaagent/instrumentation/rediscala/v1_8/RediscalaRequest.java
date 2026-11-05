@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 
 import static java.util.Arrays.asList;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -33,44 +34,38 @@ class RediscalaRequest {
           "PUBSUB", "SCRIPT", "SLOWLOG", "XGROUP", "XINFO");
 
   private final String operationName;
-  private final String stableOperationName;
   @Nullable private final Long batchSize;
   @Nullable private final ServerEndpoint endpoint;
+  @Nullable private final RedisServerTarget serverTarget;
 
-  static RediscalaRequest create(RedisCommand<?, ?> command, @Nullable ServerEndpoint endpoint) {
-    return new RediscalaRequest(
-        operationName(command, /* stable= */ false),
-        operationName(command, /* stable= */ true),
-        null,
-        endpoint);
+  static RediscalaRequest create(
+      RedisCommand<?, ?> command,
+      @Nullable ServerEndpoint endpoint,
+      @Nullable RedisServerTarget serverTarget) {
+    return new RediscalaRequest(operationName(command), null, endpoint, serverTarget);
   }
 
   static RediscalaRequest createTransaction(
-      Queue<Operation<?, ?>> operations, @Nullable ServerEndpoint endpoint) {
+      Queue<Operation<?, ?>> operations,
+      @Nullable ServerEndpoint endpoint,
+      @Nullable RedisServerTarget serverTarget) {
     return new RediscalaRequest(
-        transactionOperationName(operations, /* stable= */ false),
-        transactionOperationName(operations, /* stable= */ true),
-        batchSize(operations),
-        endpoint);
+        transactionOperationName(operations), batchSize(operations), endpoint, serverTarget);
   }
 
   private RediscalaRequest(
       String operationName,
-      String stableOperationName,
       @Nullable Long batchSize,
-      @Nullable ServerEndpoint endpoint) {
+      @Nullable ServerEndpoint endpoint,
+      @Nullable RedisServerTarget serverTarget) {
     this.operationName = operationName;
-    this.stableOperationName = stableOperationName;
     this.batchSize = batchSize;
     this.endpoint = endpoint;
+    this.serverTarget = serverTarget;
   }
 
   String getOperationName() {
     return operationName;
-  }
-
-  String getStableOperationName() {
-    return stableOperationName;
   }
 
   @Nullable
@@ -79,30 +74,24 @@ class RediscalaRequest {
   }
 
   @Nullable
-  String getHost() {
-    return endpoint != null ? endpoint.getHost() : null;
-  }
-
-  @Nullable
-  Integer getPort() {
-    return endpoint != null ? endpoint.getPort() : null;
-  }
-
-  @Nullable
   Integer getDatabaseIndex() {
     return endpoint != null ? endpoint.getDatabaseIndex() : null;
   }
 
-  private static String transactionOperationName(
-      Queue<Operation<?, ?>> operations, boolean stable) {
+  @Nullable
+  RedisServerTarget getServerTarget() {
+    return serverTarget;
+  }
+
+  private static String transactionOperationName(Queue<Operation<?, ?>> operations) {
     if (operations.isEmpty()) {
       return "MULTI";
     }
 
     Iterator<Operation<?, ?>> iterator = operations.iterator();
-    String operationName = operationName(iterator.next().redisCommand(), stable);
+    String operationName = operationName(iterator.next().redisCommand());
     while (iterator.hasNext()) {
-      if (!operationName.equals(operationName(iterator.next().redisCommand(), stable))) {
+      if (!operationName.equals(operationName(iterator.next().redisCommand()))) {
         return "MULTI";
       }
     }
@@ -115,12 +104,12 @@ class RediscalaRequest {
     return size != 1 ? (long) size : null;
   }
 
-  private static String operationName(RedisCommand<?, ?> command, boolean stable) {
+  private static String operationName(RedisCommand<?, ?> command) {
     String name = command.getClass().getSimpleName().toUpperCase(Locale.ROOT);
-    return stable ? stableOperationName(name) : name;
+    return normalizeOperationName(name);
   }
 
-  private static String stableOperationName(String className) {
+  private static String normalizeOperationName(String className) {
     // commands without arguments are scala objects, whose class name ends with $
     String name =
         className.endsWith("$") ? className.substring(0, className.length() - 1) : className;

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.ratpack.v1_7;
 
-import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest.TEST_HEADERS;
-
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;

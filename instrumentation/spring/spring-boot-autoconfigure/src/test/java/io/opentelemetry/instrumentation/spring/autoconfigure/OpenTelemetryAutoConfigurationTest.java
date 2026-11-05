@@ -133,6 +133,7 @@ class OpenTelemetryAutoConfigurationTest {
                                   "io.opentelemetry.contrib.aws.resource.LambdaResourceProvider",
                                   "io.opentelemetry.contrib.gcp.resource.GCPResourceProvider",
                                   "io.opentelemetry.contrib.cloudfoundry.resources.CloudFoundryResourceProvider",
+                                  "io.opentelemetry.instrumentation.resources.HostIdResourceProvider",
                                   "io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizerTest$Provider");
                         }));
   }
@@ -199,6 +200,13 @@ class OpenTelemetryAutoConfigurationTest {
             context -> {
               assertThat(context).getBean("openTelemetry").isEqualTo(OpenTelemetry.noop());
               assertThat(context).getBean("configProvider").isEqualTo(ConfigProvider.noop());
+              assertThat(context)
+                  .getBean("otelProperties", ConfigProperties.class)
+                  .satisfies(
+                      configProperties -> {
+                        assertThat(configProperties.getString("otel.sdk.disabled")).isNull();
+                        assertThat(configProperties.getList("otel.propagators")).isEmpty();
+                      });
             });
   }
 }

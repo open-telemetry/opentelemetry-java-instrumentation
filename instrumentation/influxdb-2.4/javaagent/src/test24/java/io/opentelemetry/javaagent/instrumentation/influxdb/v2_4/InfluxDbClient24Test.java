@@ -5,16 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_SUMMARY;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.INFLUXDB;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,6 +22,10 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.StatusData;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.BatchPoints;
@@ -67,7 +70,25 @@ class InfluxDbClient24Test {
     String serverUrl = "http://" + host + ":" + port + "/";
     String username = "root";
     String password = "root";
-    influxDb = InfluxDBFactory.connect(serverUrl, username, password);
+    influxDb =
+        InfluxDBFactory.connect(
+            serverUrl,
+            username,
+            password,
+            new OkHttpClient.Builder()
+                .addInterceptor(
+                    chain -> {
+                      Request request = chain.request();
+                      HttpUrl url = request.url();
+                      String encodedQuery = url.encodedQuery();
+                      if (encodedQuery != null && encodedQuery.contains(";")) {
+                        // Retrofit leaves semicolons raw, so InfluxDB's Go form parser truncates q.
+                        url =
+                            url.newBuilder().encodedQuery(encodedQuery.replace(";", "%3B")).build();
+                        request = request.newBuilder().url(url).build();
+                      }
+                      return chain.proceed(request);
+                    }));
     influxDb.createDatabase(DATABASE_NAME);
     cleanup.deferAfterAll(() -> influxDb.deleteDatabase(DATABASE_NAME));
   }
@@ -105,53 +126,45 @@ class InfluxDbClient24Test {
                     span.hasName("CREATE DATABASE " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
-                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_OPERATION), "CREATE DATABASE"))),
+                            equalTo(DB_OPERATION_NAME, "CREATE DATABASE"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv() ? "write " + dbName : "WRITE " + dbName)
+                    span.hasName("write " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
-                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? "write" : "WRITE"))),
+                            equalTo(DB_OPERATION_NAME, "write"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(emitStableDatabaseSemconv() ? "SELECT cpu" : "SELECT " + dbName)
+                    span.hasName("SELECT cpu")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
-                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM cpu GROUP BY *"),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT cpu" : null))),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu GROUP BY *"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("DROP DATABASE " + dbName)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
-                            equalTo(maybeStable(DB_NAME), dbName),
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, dbName),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_OPERATION), "DROP DATABASE"))));
+                            equalTo(DB_OPERATION_NAME, "DROP DATABASE"))));
   }
 
   @Test
@@ -163,24 +176,50 @@ class InfluxDbClient24Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                            emitStableDatabaseSemconv()
-                                ? "SELECT cpu_load"
-                                : "SELECT " + DATABASE_NAME)
+                    span.hasName("SELECT cpu_load")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), INFLUXDB),
-                            equalTo(maybeStable(DB_NAME), DATABASE_NAME),
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
-                                maybeStable(DB_STATEMENT),
-                                "SELECT * FROM cpu_load where test1 = ?"),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? "SELECT cpu_load" : null))));
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load where test1 = ?"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"))));
+  }
+
+  @Test
+  void testStatementErrorResponse() {
+    Query query =
+        new Query(
+            "SHOW DATABASES; SHOW RETENTION POLICIES ON \"nonexistent_database\"", DATABASE_NAME);
+    QueryResult result = influxDb.query(query);
+
+    assertThat(result.getResults()).hasSize(2);
+    assertThat(result.getResults().get(0).getError()).isNull();
+    assertThat(result.getResults().get(1).getError()).isNotEmpty();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.error())
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getAttributes().get(ERROR_TYPE))
+                                    .isEqualTo("_OTHER"))));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.influxdb-2.4",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.satisfies(
+                                    pointData ->
+                                        assertThat(pointData.getAttributes().get(ERROR_TYPE))
+                                            .isEqualTo("_OTHER")))));
   }
 }

@@ -16,7 +16,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class SpringWsInstrumentationModule extends InstrumentationModule {
   public SpringWsInstrumentationModule() {
-    super("spring-ws", "spring-ws-2.0");
+    super("spring-ws-2.0", "spring-ws");
   }
 
   @Override

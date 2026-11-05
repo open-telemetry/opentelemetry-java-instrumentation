@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class PulsarInstrumentationModule extends InstrumentationModule {
   public PulsarInstrumentationModule() {
-    super("pulsar", "pulsar-2.8");
+    super("pulsar-2.8", "pulsar");
   }
 
   @Override

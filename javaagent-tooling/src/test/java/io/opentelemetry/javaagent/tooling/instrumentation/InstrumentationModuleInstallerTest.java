@@ -42,7 +42,6 @@ class InstrumentationModuleInstallerTest {
     when(config.getBoolean("otel.instrumentation.second.enabled")).thenReturn(secondEnabled);
     when(config.getBoolean("otel.instrumentation.common.default-enabled", true))
         .thenReturn(defaultEnabled);
-    when(config.getBoolean("otel.javaagent.experimental.indy", false)).thenReturn(false);
     when(config.getBoolean("otel.javaagent.experimental.force-synchronous-agent-listeners", false))
         .thenReturn(false);
     when(config.getList("otel.javaagent.exclude-classes")).thenReturn(emptyList());

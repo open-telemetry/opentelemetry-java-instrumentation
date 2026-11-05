@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -32,15 +33,13 @@ dependencies {
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.53:javaagent"))
 }
 
-testing {
-  suites {
-    // using a test suite to ensure that classes from library-instrumentation-shaded that were
-    // extracted to the output directory are not available during tests
-    register<JvmTestSuite>("testAzure") {
-      dependencies {
-        val version = baseVersion("1.19.0").orLatest("1.35.0")
-        implementation("com.azure:azure-core:$version")
-      }
+testing.suites {
+  // using a test suite to ensure that classes from library-instrumentation-shaded that were
+  // extracted to the output directory are not available during tests
+  register<JvmTestSuite>("testAzure") {
+    dependencies {
+      val version = baseVersion("1.19.0").orLatest("1.35.0")
+      implementation("com.azure:azure-core:$version")
     }
   }
 }

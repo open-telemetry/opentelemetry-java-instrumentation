@@ -16,7 +16,7 @@ import java.util.List;
 public class OkHttp3InstrumentationModule extends InstrumentationModule {
 
   public OkHttp3InstrumentationModule() {
-    super("okhttp", "okhttp-3.0");
+    super("okhttp-3.0", "okhttp");
   }
 
   @Override

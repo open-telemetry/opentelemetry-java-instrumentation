@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.internal;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 
 import com.amazonaws.AmazonWebServiceRequest;
@@ -26,7 +25,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import java.lang.reflect.Field;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -75,24 +73,20 @@ public final class SqsImpl {
     Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter =
         requestHandler.getConsumerProcessInstrumenter();
 
-    Context receiveContext = null;
     SqsReceiveRequest receiveRequest =
         SqsReceiveRequest.create(request, SqsMessageImpl.wrap(receiveMessageResult.getMessages()));
     if (timer != null && consumerReceiveInstrumenter.shouldStart(parentContext, receiveRequest)) {
-      receiveContext =
-          InstrumenterUtil.startAndEnd(
-              consumerReceiveInstrumenter,
-              parentContext,
-              receiveRequest,
-              response,
-              null,
-              timer.startTime(),
-              timer.now());
+      InstrumenterUtil.startAndEnd(
+          consumerReceiveInstrumenter,
+          parentContext,
+          receiveRequest,
+          response,
+          null,
+          timer.startTime(),
+          timer.now());
     }
 
-    Context processParentContext = emitStableMessagingSemconv() ? parentContext : receiveContext;
-    addTracing(
-        receiveMessageResult, request, response, consumerProcessInstrumenter, processParentContext);
+    addTracing(receiveMessageResult, request, response, consumerProcessInstrumenter, parentContext);
   }
 
   @Nullable private static final Field messagesField = getMessagesField();
@@ -144,7 +138,7 @@ public final class SqsImpl {
       }
       return request;
     }
-    if (rawRequest instanceof SendMessageBatchRequest && emitStableMessagingSemconv()) {
+    if (rawRequest instanceof SendMessageBatchRequest) {
       return injectBatchCreationContexts(
           (SendMessageBatchRequest) rawRequest,
           producerCreateInstrumenter,
@@ -179,16 +173,9 @@ public final class SqsImpl {
         preparedEntries.add(entry.clone());
         continue;
       }
-      Instant timestamp = Instant.now();
-      Context creationContext =
-          InstrumenterUtil.startAndEnd(
-              producerCreateInstrumenter,
-              parentContext,
-              createRequest,
-              null,
-              null,
-              timestamp,
-              timestamp);
+      // These spans provide creation contexts for message propagation and linking.
+      Context creationContext = producerCreateInstrumenter.start(parentContext, createRequest);
+      producerCreateInstrumenter.end(creationContext, createRequest, null, null);
       // A no-op tracer can pass shouldStart() but return a context with an invalid span.
       if (!Span.fromContext(creationContext).getSpanContext().isValid()) {
         preparedEntries.add(entry.clone());

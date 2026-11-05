@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.couchbase;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
-
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.cluster.DefaultBucketSettings;
@@ -16,7 +14,6 @@ import com.couchbase.mock.BucketConfiguration;
 import com.couchbase.mock.CouchbaseMock;
 import com.couchbase.mock.http.query.QueryServer;
 import com.couchbase.mock.httpio.HttpServer;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.LongAssertConsumer;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.StringAssertConsumer;
 import java.lang.reflect.Field;
@@ -29,8 +26,8 @@ import org.slf4j.LoggerFactory;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractCouchbaseTest {
   private static final Logger logger = LoggerFactory.getLogger(AbstractCouchbaseTest.class);
-  private static final boolean EXPERIMENTAL_ATTRIBUTES =
-      Boolean.getBoolean("otel.instrumentation.couchbase.experimental-span-attributes");
+  private static final boolean EXPERIMENTAL_TELEMETRY =
+      Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry");
 
   protected static final String USERNAME = "Administrator";
   protected static final String PASSWORD = "password";
@@ -51,17 +48,18 @@ public abstract class AbstractCouchbaseTest {
           .type(BucketType.MEMCACHED)
           .quota(100)
           .build();
-  private final int port = PortUtils.findOpenPort();
+  private int port;
   private CouchbaseMock mock;
 
   @BeforeAll
   void setUp() throws Exception {
-    mock = new CouchbaseMock("127.0.0.1", port, 1, 1);
+    mock = new CouchbaseMock("127.0.0.1", 0, 1, 1);
     Field httpServerField = CouchbaseMock.class.getDeclaredField("httpServer");
     httpServerField.setAccessible(true);
     HttpServer httpServer = (HttpServer) httpServerField.get(mock);
     httpServer.register("/query", new QueryServer());
     mock.start();
+    port = mock.getHttpPort();
     logger.info("CouchbaseMock listening on localhost:{}", port);
 
     mock.createBucket(convert(bucketCouchbase));
@@ -107,15 +105,31 @@ public abstract class AbstractCouchbaseTest {
   }
 
   /**
-   * Override to return true in subclasses where experimental attributes are enabled (when
-   * otel.instrumentation.couchbase.experimental-span-attributes=true).
+   * Override to return false in subclasses that capture the network peer but not the local socket
+   * address, because core-io before 1.6.0 has no field to read it from (e.g., 2.0-2.5). Defaults to
+   * {@link #includesNetworkAttributes()} since every other subclass that has one also has the
+   * other.
    */
-  protected boolean includesExperimentalAttributes() {
-    return EXPERIMENTAL_ATTRIBUTES;
+  protected boolean includesExperimentalLocalAddressAttribute() {
+    return includesNetworkAttributes();
   }
 
-  protected String networkType() {
-    return includesNetworkAttributes() && emitOldDatabaseSemconv() ? "ipv4" : null;
+  /**
+   * Override to return false in subclasses that capture the network peer but cannot correlate a
+   * request with its operation id, because core-io before 1.6.0 has no method to read it from
+   * (e.g., 2.0-2.5). Defaults to {@link #includesNetworkAttributes()} since every other subclass
+   * that has one also has the other.
+   */
+  protected boolean includesExperimentalOperationIdAttribute() {
+    return includesNetworkAttributes();
+  }
+
+  /**
+   * Override to return true in subclasses where experimental attributes are enabled (when
+   * otel.instrumentation.couchbase.emit-experimental-telemetry=true).
+   */
+  protected boolean includesExperimentalAttributes() {
+    return EXPERIMENTAL_TELEMETRY;
   }
 
   protected String networkPeerAddress() {
@@ -126,15 +140,31 @@ public abstract class AbstractCouchbaseTest {
     return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
   }
 
+  protected String configuredServerAddress() {
+    return "127.0.0.1";
+  }
+
   protected StringAssertConsumer serverAddress() {
-    return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
+    return val -> val.isEqualTo(configuredServerAddress());
   }
 
   protected LongAssertConsumer serverPort() {
-    return includesNetworkAttributes() ? val -> val.isNotNull() : val -> val.isNull();
+    return val -> val.isNull();
   }
 
-  protected StringAssertConsumer experimentalAttribute() {
-    return includesExperimentalAttributes() ? val -> val.isNotNull() : val -> val.isNull();
+  protected String spanName(String operation) {
+    return operation + " " + configuredServerAddress();
+  }
+
+  protected StringAssertConsumer experimentalOperationId() {
+    return includesExperimentalAttributes() && includesExperimentalOperationIdAttribute()
+        ? val -> val.isNotNull()
+        : val -> val.isNull();
+  }
+
+  protected StringAssertConsumer experimentalLocalAddress() {
+    return includesExperimentalAttributes() && includesExperimentalLocalAddressAttribute()
+        ? val -> val.isNotNull()
+        : val -> val.isNull();
   }
 }

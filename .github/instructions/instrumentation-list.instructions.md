@@ -1,5 +1,5 @@
 ---
-applyTo: "docs/instrumentation-list.yaml"
+applyTo: "docs/instrumentation-list.yaml,instrumentation/**/metadata.yaml"
 ---
 
 # Generated instrumentation list

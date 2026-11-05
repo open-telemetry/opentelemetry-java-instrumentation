@@ -57,28 +57,23 @@ class JettyHttpClient9HeaderSelectorTest {
     assertCapturedHeaders();
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
   @Test
   void capturesHeadersConfiguredByName() throws Exception {
     HttpClient client =
         createClient(
             JettyClientTelemetry.builder(testing.getOpenTelemetry())
-                .setCapturedRequestHeaders(singletonList("x-test-request"))
-                .setCapturedResponseHeaders(singletonList("x-test-response")));
+                .setRequestHeaders(IncludeExclude.builder().setIncluded("x-test-request").build())
+                .setResponseHeaders(
+                    IncludeExclude.builder().setIncluded("x-test-response").build()));
 
     sendRequest(client);
 
     assertCapturedHeaders();
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated API
   @Test
-  void deprecatedSettersMatchHeaderNamesLiterally() throws Exception {
-    HttpClient client =
-        createClient(
-            JettyClientTelemetry.builder(testing.getOpenTelemetry())
-                .setCapturedRequestHeaders(singletonList("*"))
-                .setCapturedResponseHeaders(singletonList("*")));
+  void doesNotCaptureHeadersByDefault() throws Exception {
+    HttpClient client = createClient(JettyClientTelemetry.builder(testing.getOpenTelemetry()));
 
     sendRequest(client);
 
@@ -138,8 +133,6 @@ class JettyHttpClient9HeaderSelectorTest {
                                         assertThat(key.getKey())
                                             .doesNotStartWith("http.request.header.")
                                             .doesNotStartWith("http.response.header.")))
-                        // "*" is a legal header name character, so the deprecated exact-name
-                        // setters must not capture every header and expose credentials
                         .satisfies(
                             spanData ->
                                 assertThat(spanData.getAttributes().asMap())

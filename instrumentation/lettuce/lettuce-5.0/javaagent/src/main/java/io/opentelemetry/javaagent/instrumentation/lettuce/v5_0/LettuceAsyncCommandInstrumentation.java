@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -14,7 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -25,8 +26,13 @@ import net.bytebuddy.matcher.ElementMatcher;
 class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("io.lettuce.core.protocol.AsyncCommand");
+  }
+
+  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.lettuce.core.protocol.AsyncCommand");
+    return extendsClass(named("io.lettuce.core.protocol.AsyncCommand"));
   }
 
   @Override
@@ -42,10 +48,11 @@ class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void saveContext(@Advice.This AsyncCommand<?, ?, ?> asyncCommand) {
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       // get the context that submitted this command and attach it, it will be used to run callbacks
       context = context.get(COMMAND_CONTEXT_KEY);
       CONTEXT.set(asyncCommand, context);
+      LettuceCommandPeer.initialize(asyncCommand);
     }
   }
 

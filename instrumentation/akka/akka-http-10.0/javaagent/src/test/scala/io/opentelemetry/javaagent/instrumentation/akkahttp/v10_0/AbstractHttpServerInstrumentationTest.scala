@@ -22,37 +22,42 @@ abstract class AbstractHttpServerInstrumentationTest
   override protected def configure(
       options: HttpServerTestOptions
   ): Unit = {
+    configure(options, hasRoute = false)
+  }
+
+  protected def configure(
+      options: HttpServerTestOptions,
+      hasRoute: Boolean
+  ): Unit = {
     options.setTestCaptureHttpHeaders(false)
-    options.setHttpAttributes(
-      new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
-        override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] = {
-          val set = new util.HashSet[AttributeKey[_]](
-            HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES
-          )
-          set.remove(HttpAttributes.HTTP_ROUTE)
-          set
+    if (!hasRoute) {
+      options.setHttpAttributes(
+        new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
+          override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] = {
+            val set = new util.HashSet[AttributeKey[_]](
+              HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES
+            )
+            set.remove(HttpAttributes.HTTP_ROUTE)
+            set
+          }
         }
-      }
-    )
+      )
+    }
     options.setHasResponseCustomizer(
       new Predicate[ServerEndpoint] {
         override def test(t: ServerEndpoint): Boolean =
           t != ServerEndpoint.EXCEPTION
       }
     )
-    // instrumentation does not create a span at all
+    // Akka rejects unknown methods before creating a request, so the method is unavailable.
     options.disableTestNonStandardHttpMethod
   }
 
   protected def configureRouteServer(options: HttpServerTestOptions): Unit = {
+    configure(options, hasRoute = true)
+
     options.setTestException(false)
     options.setTestPathParam(true)
-    options.setHttpAttributes(
-      new Function[ServerEndpoint, util.Set[AttributeKey[_]]] {
-        override def apply(v1: ServerEndpoint): util.Set[AttributeKey[_]] =
-          HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES
-      }
-    )
     options.setExpectedHttpRoute(
       new BiFunction[ServerEndpoint, String, String] {
         override def apply(

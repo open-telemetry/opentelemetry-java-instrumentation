@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -49,8 +48,8 @@ class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(
         @Advice.This AbstractRedisAsyncCommands<?, ?> commands,
         @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
-      LettuceSingletons.attachAddress(command, commands.getConnection());
-      Context parentContext = currentContext();
+      LettuceConnectionState.copy(commands.getConnection(), command);
+      Context parentContext = Context.current();
       return parentContext.with(COMMAND_CONTEXT_KEY, parentContext).makeCurrent();
     }
 

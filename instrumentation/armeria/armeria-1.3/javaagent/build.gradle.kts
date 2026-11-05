@@ -24,20 +24,18 @@ dependencies {
   testCompileOnly("com.google.errorprone:error_prone_annotations")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("testArmeria19") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java", "src/testArmeria19/java"))
-        }
+testing.suites {
+  register<JvmTestSuite>("testArmeria19") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java", "src/testArmeria19/java"))
       }
-      dependencies {
-        implementation("com.linecorp.armeria:armeria:1.9.2")
-        implementation("com.linecorp.armeria:armeria-junit5:1.9.2")
-        implementation(project(":instrumentation:armeria:armeria-1.3:testing"))
-        compileOnly("com.google.errorprone:error_prone_annotations")
-      }
+    }
+    dependencies {
+      implementation("com.linecorp.armeria:armeria:1.9.2")
+      implementation("com.linecorp.armeria:armeria-junit5:1.9.2")
+      implementation(project(":instrumentation:armeria:armeria-1.3:testing"))
+      compileOnly("com.google.errorprone:error_prone_annotations")
     }
   }
 }
@@ -45,22 +43,10 @@ testing {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.opt-in=service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=service.peer")
-      }
-    }
-
   check {
-    dependsOn(testing.suites, stableSemconvSuites)
+    dependsOn(testing.suites)
   }
 
   if (otelProps.denyUnsafe) {

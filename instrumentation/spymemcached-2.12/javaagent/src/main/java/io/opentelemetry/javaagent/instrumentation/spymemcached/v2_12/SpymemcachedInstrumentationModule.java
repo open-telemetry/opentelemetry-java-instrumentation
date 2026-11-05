@@ -16,11 +16,16 @@ import java.util.List;
 public class SpymemcachedInstrumentationModule extends InstrumentationModule {
 
   public SpymemcachedInstrumentationModule() {
-    super("spymemcached", "spymemcached-2.12");
+    super("spymemcached-2.12", "spymemcached");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new MemcachedClientInstrumentation(), new MemcachedConnectionInstrumentation());
+    return asList(
+        new ConnectionFactoryInstrumentation(),
+        new MemcachedClientInstrumentation(),
+        new MemcachedConnectionInstrumentation(),
+        new MemcachedNodeInstrumentation(),
+        new OptimizedOperationInstrumentation());
   }
 }

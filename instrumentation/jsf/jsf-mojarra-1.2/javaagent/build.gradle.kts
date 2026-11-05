@@ -57,26 +57,24 @@ dependencies {
   testInstrumentation(project(":instrumentation:jsf:jsf-mojarra-3.0:javaagent"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("mojarra12Test") {
-      dependencies {
-        implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
-        implementation("javax.faces:jsf-api:1.2")
-        implementation("com.sun.facelets:jsf-facelets:1.1.14")
+testing.suites {
+  register<JvmTestSuite>("mojarra12Test") {
+    dependencies {
+      implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
+      implementation("javax.faces:jsf-api:1.2")
+      implementation("com.sun.facelets:jsf-facelets:1.1.14")
 
-        val version = baseVersion("1.2_04").orLatest("1.+")
-        implementation("javax.faces:jsf-impl:$version")
-      }
+      val version = baseVersion("1.2_04").orLatest("1.+")
+      implementation("javax.faces:jsf-impl:$version")
     }
+  }
 
-    register<JvmTestSuite>("mojarra2Test") {
-      dependencies {
-        implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
+  register<JvmTestSuite>("mojarra2Test") {
+    dependencies {
+      implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
 
-        val version = baseVersion("2.2.0").orLatest("2.+")
-        implementation("org.glassfish:javax.faces:$version")
-      }
+      val version = baseVersion("2.2.0").orLatest("2.+")
+      implementation("org.glassfish:javax.faces:$version")
     }
   }
 }
@@ -86,8 +84,7 @@ tasks {
     dependsOn(testing.suites)
   }
   withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-    systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
   }
 }

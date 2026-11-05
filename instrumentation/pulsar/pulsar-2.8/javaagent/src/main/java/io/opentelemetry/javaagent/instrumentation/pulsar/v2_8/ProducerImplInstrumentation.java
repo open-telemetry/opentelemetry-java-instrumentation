@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.producerInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -20,7 +19,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pulsar.client.api.Message;
-import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.impl.ProducerImpl;
 import org.apache.pulsar.client.impl.PulsarClientImpl;
 import org.apache.pulsar.client.impl.SendCallback;
@@ -37,12 +35,12 @@ class ProducerImplInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isConstructor()
             .and(isPublic())
-            .and(
-                takesArgument(0, hasSuperType(named("org.apache.pulsar.client.api.PulsarClient")))),
+            .and(takesArgument(0, named("org.apache.pulsar.client.impl.PulsarClientImpl"))),
         getClass().getName() + "$ProducerImplConstructorAdvice");
 
     transformer.applyAdviceToMethod(
         named("sendAsync")
+            .and(takesArgument(0, named("org.apache.pulsar.client.api.Message")))
             .and(takesArgument(1, named("org.apache.pulsar.client.impl.SendCallback"))),
         getClass().getName() + "$ProducerSendAsyncMethodAdvice");
   }
@@ -52,9 +50,9 @@ class ProducerImplInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void intercept(
-        @Advice.This ProducerImpl<?> producer, @Advice.Argument(value = 0) PulsarClient client) {
-      PulsarClientImpl pulsarClient = (PulsarClientImpl) client;
-      String brokerUrl = pulsarClient.getLookup().getServiceUrl();
+        @Advice.This ProducerImpl<?> producer,
+        @Advice.Argument(value = 0) PulsarClientImpl client) {
+      String brokerUrl = client.getLookup().getServiceUrl();
       String topic = producer.getTopic();
       VirtualFieldStore.inject(producer, brokerUrl, topic);
     }

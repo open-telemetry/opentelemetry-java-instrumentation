@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -15,11 +15,14 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class CassandraInstrumentationModule extends InstrumentationModule {
   public CassandraInstrumentationModule() {
-    super("cassandra", "cassandra-3.0");
+    super("cassandra-3.0", "cassandra");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new CassandraManagerInstrumentation());
+    return asList(
+        new CassandraBuilderInstrumentation(),
+        new CassandraClusterInstrumentation(),
+        new CassandraManagerInstrumentation());
   }
 }

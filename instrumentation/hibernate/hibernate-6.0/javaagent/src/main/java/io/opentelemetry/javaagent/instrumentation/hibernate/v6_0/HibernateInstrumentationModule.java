@@ -18,7 +18,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class HibernateInstrumentationModule extends InstrumentationModule {
 
   public HibernateInstrumentationModule() {
-    super("hibernate", "hibernate-6.0");
+    super("hibernate-6.0", "hibernate");
+  }
+
+  @Override
+  public boolean defaultEnabled() {
+    return false;
   }
 
   @Override

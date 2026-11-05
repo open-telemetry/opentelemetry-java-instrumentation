@@ -22,13 +22,13 @@ For SQS an additional step is needed
 ```java
 SqsClientBuilder sqsClientBuilder = SqsClient.builder();
 ...
-SqsClient sqsClient = telemetry.wrap(sqsClientBuilder.build());
+SqsClient sqsClient = telemetry.instrument(sqsClientBuilder.build());
 ```
 
 ```java
 SqsAsyncClientBuilder sqsAsyncClientBuilder = SqsAsyncClient.builder();
 ...
-SqsAsyncClient sqsAsyncClient = telemetry.wrap(sqsAsyncClientBuilder.build());
+SqsAsyncClient sqsAsyncClient = telemetry.instrument(sqsAsyncClientBuilder.build());
 ```
 
 For the Bedrock Runtime async client, an additional step is also needed:
@@ -36,7 +36,7 @@ For the Bedrock Runtime async client, an additional step is also needed:
 ```java
 BedrockRuntimeAsyncClientBuilder bedrockClientBuilder = BedrockRuntimeAsyncClient.builder();
 ...
-BedrockRuntimeAsyncClient bedrockClient = telemetry.wrapBedrockRuntimeClient(bedrockClientBuilder.build());
+BedrockRuntimeAsyncClient bedrockClient = telemetry.instrumentBedrockRuntimeClient(bedrockClientBuilder.build());
 ```
 
 ## Trace propagation
@@ -46,7 +46,7 @@ The AWS SDK v2 instrumentation injects the current context into the outbound HTT
 [AWS Trace Header](https://docs.aws.amazon.com/xray/latest/devguide/xray-concepts.html#xray-concepts-tracingheader)
 format. This is the format recognized by AWS managed services.
 
-For SQS `SendMessageBatch` operations under stable messaging semantic conventions, when X-Ray
+For SQS `SendMessageBatch` operations, when X-Ray
 propagation is enabled, the instrumentation also writes each message creation context to that
 entry's `AWSTraceHeader` message system attribute. This per-message carrier is separate from the
 shared HTTP request header and does not consume one of the ten user message attributes. The X-Ray

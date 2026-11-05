@@ -124,7 +124,7 @@ Display name is mostly used for UI purposes, and has two main uses:
 - Providing a more user-friendly name for the instrumentation than the module name
   (e.g., "Apache CXF JAX-RS 2.x" instead of "jaxrs-2.0-cxf-3.2").
 - Collapsing multiple related modules into a single display name
-  (e.g., "Akka Actors" for both "akka-actor-2.3" and "akka-actor-forkjoin-2.5").
+  (e.g., "Play WS" for both "play-ws-1.0" and "play-ws-2.0").
 
 ### Description (required)
 
@@ -191,6 +191,8 @@ List of possible options:
 - [FAAS_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md)
 - [GENAI_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-spans.md)
 - [GENAI_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-metrics.md#generative-ai-client-metrics)
+- [MCP_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/mcp.md#client)
+- [MCP_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/mcp.md#metric-mcpclientoperationduration)
 
 ### Features (optional)
 
@@ -230,7 +232,36 @@ Each configuration should include:
 - `description`: A brief description of what the configuration does.
 - `type`: The data type of the configuration value. Supported types are: `boolean`, `string`, `list`,
   and `map`. This describes the **flat** (system property) form.
-- `default`: The default value for the configuration.
+- `default`: The value used when the configuration is unset. Leave it out when an unset value falls
+  back to another setting, such as a per-module override of a common setting, and describe the
+  fallback in the `description` instead. The module must then also reference the setting it falls
+  back to (see below).
+- `deprecated` (optional): Set to `true` for a deprecated configuration. It is required exactly when
+  the description starts with "Deprecated".
+- `replaced_by` (optional): For a deprecated configuration, the name of the configuration that
+  replaces it.
+
+Configurations that many modules share are defined once in
+`instrumentation-docs/src/main/resources/shared-config-definitions.yaml` and referenced by id:
+
+```yaml
+configurations:
+  - name: otel.instrumentation.jedis.query-sanitization.enabled
+    declarative_name: java.jedis.query_sanitization.enabled
+    description: >
+      Enables query sanitization for Jedis queries. Overrides
+      `otel.instrumentation.common.db.query-sanitization.enabled` for this instrumentation; when
+      unset, that setting applies.
+    type: boolean
+  - ref: common.db.query-sanitization.enabled
+```
+
+The same file's `global_configurations` section documents settings read on behalf of every
+instrumentation, such as semantic convention selection. Modules don't reference those.
+
+The generated `docs/declarative-configuration-example.yaml` sets each configuration to its default,
+so any entry can be copied on its own. It leaves out deprecated configurations and configurations
+without a `default`, because setting those can change behavior even to the value shown.
 
 If a configuration enables experimental attributes, list them, for example:
 
@@ -253,29 +284,34 @@ structured list and documents the entry shape in the comment above it, using eac
 `example` (falling back to its `default`, then to a `<property-name>` placeholder) for the sample
 entry.
 
-For example, `service_peer_mapping` is a `host=service` map as a flat property but a list of
-`{peer, service_name}` objects in declarative configuration:
+For example, `server_service_mapping` is a `target=service_name` map as a flat property but a list
+of `{target, service_name, service_namespace}` objects in declarative configuration. A flat target
+can be a hostname, IP address, or target including a port or path:
 
 ```yaml
 configurations:
-  - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.service_peer_mapping
-    description: Used to specify a mapping from host names or IP addresses to peer services.
+  - name: otel.instrumentation.common.server-service-mapping
+    declarative_name: java.common.server_service_mapping
+    description: Maps server addresses or configured targets to logical server service identities.
     type: map
     default: ""
     declarative_type: structured_list
     declarative_schema:
       type: object
-      required: [peer, service_name]
+      required: [target]
       properties:
-        peer:
+        target:
           type: string
-          description: Host name or IP address to match against.
-          example: host
+          description: Server address or complete configured target to match against.
+          example: payments.example.com
         service_name:
           type: string
-          description: Peer service name to record for matching peers.
-          example: serviceName
+          description: Logical server service name to record for matching targets.
+          example: payments
+        service_namespace:
+          type: string
+          description: Logical server service namespace to record for matching targets.
+          example: checkout
 ```
 
 A configuration that exists only in declarative configuration (no flat system property) omits `name`
@@ -328,6 +364,11 @@ this field, and it will default to `library`.
 If an instrumentation is disabled by default, set `disabled_by_default: true`. This indicates that
 the instrumentation will not be active unless explicitly enabled by the user. If this field is omitted,
 it defaults to `false`, meaning the instrumentation is enabled by default.
+
+### Collecting telemetry from tests
+
+See the [telemetry collection convention](../../instrumentation-docs/readme.md#telemetry-collection)
+for task selection, configuration labels, and Gradle examples.
 
 ### Manual Telemetry Documentation (optional)
 

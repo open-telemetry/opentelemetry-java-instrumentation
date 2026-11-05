@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class TapestryInstrumentationModule extends InstrumentationModule {
 
   public TapestryInstrumentationModule() {
-    super("tapestry", "tapestry-5.4");
+    super("tapestry-5.4", "tapestry");
   }
 
   @Override

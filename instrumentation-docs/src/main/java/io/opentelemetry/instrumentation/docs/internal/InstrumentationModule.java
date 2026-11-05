@@ -31,6 +31,7 @@ public class InstrumentationModule {
   private InstrumentationScopeInfo scopeInfo;
   private Map<String, List<EmittedMetrics.Metric>> metrics;
   private Map<String, List<EmittedSpans.Span>> spans;
+  private Map<String, List<EmittedEvents.Event>> events;
   private boolean hasStandaloneLibrary;
   private boolean hasJavaAgent;
 
@@ -53,6 +54,7 @@ public class InstrumentationModule {
     this.group = requireNonNullElse(builder.group, builder.instrumentationName);
     this.metrics = requireNonNullElseGet(builder.metrics, HashMap::new);
     this.spans = requireNonNullElseGet(builder.spans, HashMap::new);
+    this.events = requireNonNullElseGet(builder.events, HashMap::new);
     this.hasStandaloneLibrary = builder.hasStandaloneLibrary;
     this.hasJavaAgent = builder.hasJavaAgent;
     this.metadata = builder.metadata;
@@ -118,6 +120,10 @@ public class InstrumentationModule {
     return spans;
   }
 
+  public Map<String, List<EmittedEvents.Event>> getEvents() {
+    return events;
+  }
+
   public void setAgentTargetVersions(Set<String> agentTargetVersions) {
     this.agentTargetVersions = agentTargetVersions;
   }
@@ -150,6 +156,10 @@ public class InstrumentationModule {
     this.spans = spans;
   }
 
+  public void setEvents(Map<String, List<EmittedEvents.Event>> events) {
+    this.events = events;
+  }
+
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
@@ -165,6 +175,7 @@ public class InstrumentationModule {
     @Nullable private Set<String> agentTargetVersions;
     @Nullable private Map<String, List<EmittedMetrics.Metric>> metrics;
     @Nullable private Map<String, List<EmittedSpans.Span>> spans;
+    @Nullable private Map<String, List<EmittedEvents.Event>> events;
     private boolean hasStandaloneLibrary;
     private boolean hasJavaAgent;
 
@@ -243,6 +254,12 @@ public class InstrumentationModule {
     @CanIgnoreReturnValue
     public Builder spans(Map<String, List<EmittedSpans.Span>> spans) {
       this.spans = spans;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder events(Map<String, List<EmittedEvents.Event>> events) {
+      this.events = events;
       return this;
     }
 

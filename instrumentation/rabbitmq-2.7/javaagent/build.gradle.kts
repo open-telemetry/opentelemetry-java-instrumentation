@@ -1,5 +1,9 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -12,8 +16,6 @@ muzzle {
 }
 
 dependencies {
-  bootstrap(project(":instrumentation:rabbitmq-2.7:bootstrap"))
-
   library("com.rabbitmq:amqp-client:2.7.0")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
@@ -24,44 +26,49 @@ dependencies {
   }
 
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
+}
 
-  testLibrary("io.projectreactor.rabbitmq:reactor-rabbitmq:1.0.0.RELEASE")
+testing.suites {
+  register<JvmTestSuite>("reactorTest") {
+    dependencies {
+      implementation("io.projectreactor.rabbitmq:reactor-rabbitmq:${baseVersion("1.0.0.RELEASE").orLatest()}")
+      implementation("com.rabbitmq:amqp-client:${baseVersion("5.5.1").orLatest()}")
+    }
+  }
+  register<JvmTestSuite>("recoveryTest") {
+    dependencies {
+      implementation("com.rabbitmq:amqp-client:${baseVersion("4.0.0").orLatest()}")
+    }
+  }
+  withType<JvmTestSuite>().configureEach {
+    sources.java.srcDir("src/testCommon/java")
+    dependencies {
+      implementation("org.testcontainers:testcontainers")
+    }
+    val baseline = name == "test"
+    executions {
+      configureEach {
+        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+      }
+      register("Experimental") {
+        telemetryConfig("otel.instrumentation.rabbitmq.experimental-span-attributes", "true")
+      }
+      if (baseline) {
+        register("ReceiveSpansDisabled") {
+          telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "false")
+        }
+      }
+    }
+  }
 }
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
 
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
-
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.rabbitmq.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.rabbitmq.experimental-span-attributes=true")
-  }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "false")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
-
-  check {
-    dependsOn(testExperimental, testMessagingPreview, testBothSemconv)
+    // add byte buddy agent for mockito
+    configurations.testRuntimeClasspath.get().find { it.name.contains("byte-buddy-agent") }?.apply {
+      jvmArgs("-javaagent:$absolutePath")
+    }
   }
 }

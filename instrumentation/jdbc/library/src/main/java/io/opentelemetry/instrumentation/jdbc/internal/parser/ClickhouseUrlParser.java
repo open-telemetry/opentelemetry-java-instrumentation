@@ -35,12 +35,6 @@ public final class ClickhouseUrlParser implements JdbcUrlParser {
 
     String clickhouseUrl = jdbcUrl.substring("clickhouse:".length());
 
-    // Extract protocol (http or https) as subtype from URLs like "http://..." or "https://..."
-    int protoLoc = clickhouseUrl.indexOf("://");
-    if (protoLoc > 0) {
-      ctx.subtype(clickhouseUrl.substring(0, protoLoc));
-    }
-
     GenericUrlParser.INSTANCE.parse(clickhouseUrl, ctx);
   }
 }

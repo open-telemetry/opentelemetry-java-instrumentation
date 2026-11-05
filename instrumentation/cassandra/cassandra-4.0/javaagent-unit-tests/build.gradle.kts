@@ -1,0 +1,13 @@
+plugins {
+  id("otel.java-conventions")
+}
+
+dependencies {
+  testImplementation(project(":instrumentation:cassandra:cassandra-4.0:javaagent"))
+  testImplementation(project(":instrumentation-api-incubator"))
+  testImplementation(project(":javaagent-extension-api"))
+
+  // The javaagent module compiles against driver 4.0.0, where SniEndPoint does not exist. SNI
+  // arrived in driver 4.3, so this module uses 4.3.1 to test the reflective detection.
+  testImplementation("com.datastax.oss:java-driver-core:4.3.1")
+}

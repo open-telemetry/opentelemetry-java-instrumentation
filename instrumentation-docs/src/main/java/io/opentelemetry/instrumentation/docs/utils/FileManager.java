@@ -72,7 +72,7 @@ public record FileManager(Path rootDir) {
     }
 
     if (normalized.matches(
-        ".*(/test/|/testing|/build/|-common/|-common-|common-|/compile-stub/|-testing|bootstrap/src).*")) {
+        ".*(/test/|/testing|/build/|-common/|-common-|common-|/compile-stub/|-testing|bootstrap/src|/src/).*")) {
       return false;
     }
 

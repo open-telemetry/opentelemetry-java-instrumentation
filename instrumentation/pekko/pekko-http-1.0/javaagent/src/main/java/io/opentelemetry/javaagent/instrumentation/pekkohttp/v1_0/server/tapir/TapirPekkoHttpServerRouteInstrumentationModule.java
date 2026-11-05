@@ -15,13 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class TapirPekkoHttpServerRouteInstrumentationModule extends InstrumentationModule {
   public TapirPekkoHttpServerRouteInstrumentationModule() {
-    super(
-        "pekko-http",
-        "pekko-http-1.0",
-        "pekko-http-server",
-        "pekko-http-server-route",
-        "tapir-pekko-http-server",
-        "tapir-pekko-http-server-route");
+    super("pekko-http-1.0", "pekko-http-server", "pekko-http", "pekko");
   }
 
   @Override

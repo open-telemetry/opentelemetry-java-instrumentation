@@ -11,8 +11,8 @@ description: |
   The dispatch job verifies eligibility (not closed/merged; commenter has
   write permission for `/review`), reacts to the triggering comment with
   `eyes`, and emits trigger-agnostic outputs. The agent job builds a
-  deterministic review bundle (PR diff + post-change file contents +
-  knowledge articles, all fetched via `gh api`, never by checking out the
+  deterministic review bundle (PR diff + post-change file contents,
+  fetched via `gh api`, never by checking out the
   PR head) and hands it to Copilot. The finalize job validates the agent's
   findings JSON against the diff hunks and posts the review.
 
@@ -28,6 +28,7 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
+  copilot-requests: write
 
 concurrency:
   group: pr-review-${{ github.event.pull_request.number || github.event.issue.number }}
@@ -223,7 +224,7 @@ output contract, and the hard rules. Those apply unchanged to this run.
 
 The bundle for this run is at **`/tmp/gh-aw/bundle`** (also in
 `$REVIEW_BUNDLE_DIR`). It contains everything described in the persona:
-`pr.diff`, `metadata.json`, `diff-scope.json`, `files/`, and `knowledge/`.
+`pr.diff`, `metadata.json`, `diff-scope.json`, and `files/`.
 
 A pre-rendered prompt with the exact bundled-file list and deleted-file list
 for this PR is at **`/tmp/gh-aw/bundle/prompt.md`**. Read it once before you

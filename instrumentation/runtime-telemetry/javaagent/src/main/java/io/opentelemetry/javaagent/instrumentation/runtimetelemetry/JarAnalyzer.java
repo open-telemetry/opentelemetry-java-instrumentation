@@ -42,30 +42,33 @@ import java.util.concurrent.LinkedBlockingDeque;
  */
 final class JarAnalyzer implements ClassFileTransformer {
 
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.runtime-telemetry";
   private static final java.util.logging.Logger logger =
       java.util.logging.Logger.getLogger(JarAnalyzer.class.getName());
 
   private static final String EVENT_NAME_INFO = "package.info";
-  static final AttributeKey<String> PACKAGE_NAME = AttributeKey.stringKey("package.name");
-  static final AttributeKey<String> PACKAGE_VERSION = AttributeKey.stringKey("package.version");
-  static final AttributeKey<String> PACKAGE_TYPE = AttributeKey.stringKey("package.type");
-  static final AttributeKey<String> PACKAGE_DESCRIPTION =
+  private static final AttributeKey<String> PACKAGE_NAME = AttributeKey.stringKey("package.name");
+  private static final AttributeKey<String> PACKAGE_VERSION =
+      AttributeKey.stringKey("package.version");
+  private static final AttributeKey<String> PACKAGE_TYPE = AttributeKey.stringKey("package.type");
+  private static final AttributeKey<String> PACKAGE_DESCRIPTION =
       AttributeKey.stringKey("package.description");
-  static final AttributeKey<String> PACKAGE_CHECKSUM = AttributeKey.stringKey("package.checksum");
-  static final AttributeKey<String> PACKAGE_CHECKSUM_ALGORITHM =
+  private static final AttributeKey<String> PACKAGE_CHECKSUM =
+      AttributeKey.stringKey("package.checksum");
+  private static final AttributeKey<String> PACKAGE_CHECKSUM_ALGORITHM =
       AttributeKey.stringKey("package.checksum_algorithm");
-  static final AttributeKey<String> PACKAGE_PATH = AttributeKey.stringKey("package.path");
+  private static final AttributeKey<String> PACKAGE_PATH = AttributeKey.stringKey("package.path");
 
   private final Set<URI> seenUris = ConcurrentHashMap.newKeySet();
   private final BlockingQueue<URL> toProcess = new LinkedBlockingDeque<>();
 
-  private JarAnalyzer(OpenTelemetry openTelemetry, String instrumentationName, int jarsPerSecond) {
+  private JarAnalyzer(OpenTelemetry openTelemetry, int jarsPerSecond) {
     String instrumentationVersion =
-        EmbeddedInstrumentationProperties.findVersion(instrumentationName);
+        EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
     Logger logger =
         openTelemetry
             .getLogsBridge()
-            .loggerBuilder(instrumentationName)
+            .loggerBuilder(INSTRUMENTATION_NAME)
             .setInstrumentationVersion(instrumentationVersion)
             .build();
     Worker worker = new Worker(logger, toProcess, jarsPerSecond);
@@ -76,10 +79,8 @@ final class JarAnalyzer implements ClassFileTransformer {
   }
 
   /** Create {@link JarAnalyzer} and start the worker thread. */
-  // TODO can remove instrumentationName parameter in 3.0
-  static JarAnalyzer create(
-      OpenTelemetry openTelemetry, String instrumentationName, int jarsPerSecond) {
-    return new JarAnalyzer(openTelemetry, instrumentationName, jarsPerSecond);
+  static JarAnalyzer create(OpenTelemetry openTelemetry, int jarsPerSecond) {
+    return new JarAnalyzer(openTelemetry, jarsPerSecond);
   }
 
   /**

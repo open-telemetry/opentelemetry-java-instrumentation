@@ -22,7 +22,6 @@ import io.opentelemetry.context.ImplicitContextKeyed;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcData;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.sql.Connection;
@@ -100,7 +99,7 @@ class ConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] processSql(
         @Advice.This Connection connection, @Advice.Argument(0) String sql) {
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       if (PrepareContext.get(context) == null) {
         // process sql only in the outermost prepare call and save the original sql in context
         String processSql = JdbcSingletons.processSql(connection, sql, false);
@@ -116,7 +115,7 @@ class ConnectionInstrumentation implements TypeInstrumentation {
         @Advice.Return @Nullable PreparedStatement statement,
         @Advice.Enter Object[] enterResult,
         @Advice.Thrown @Nullable Throwable error) {
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       PrepareContext prepareContext = PrepareContext.get(context);
       Scope scope = (Scope) enterResult[1];
       if (scope != null) {

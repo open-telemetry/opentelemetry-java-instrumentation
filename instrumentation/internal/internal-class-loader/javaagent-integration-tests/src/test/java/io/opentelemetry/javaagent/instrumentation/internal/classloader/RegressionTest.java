@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +18,8 @@ class RegressionTest {
   // this test verifies that the duplicate class definition LinkageError is not thrown into
   // application code
   @Test
-  void noDuplicateClassDefinition() throws ClassNotFoundException {
-    assertThat(Class.forName("org.apache.commons.lang3.function.FailableCallable")).isNotNull();
+  void noDuplicateClassDefinition() {
+    assertThatNoException()
+        .isThrownBy(() -> Class.forName("org.apache.commons.lang3.function.FailableCallable"));
   }
 }

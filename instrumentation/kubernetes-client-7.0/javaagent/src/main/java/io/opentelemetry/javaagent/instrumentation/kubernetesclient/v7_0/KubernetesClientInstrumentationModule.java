@@ -16,7 +16,7 @@ import java.util.List;
 public class KubernetesClientInstrumentationModule extends InstrumentationModule {
 
   public KubernetesClientInstrumentationModule() {
-    super("kubernetes-client", "kubernetes-client-7.0");
+    super("kubernetes-client-7.0", "kubernetes-client");
   }
 
   @Override

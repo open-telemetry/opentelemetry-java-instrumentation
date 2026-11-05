@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -45,57 +46,28 @@ dependencies {
   latestDepTestLibrary("co.elastic.clients:elasticsearch-java:7.17.19") // native on-by-default instrumentation after this version
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("version8Test") {
-      dependencies {
-        sources {
-          java {
-            setSrcDirs(listOf("src/test/java"))
-          }
-          resources {
-            setSrcDirs(listOf("src/test/resources"))
-          }
-        }
-
-        implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
-        implementation("org.testcontainers:testcontainers-elasticsearch")
-
-        // 8.10+ has native, on-by-default opentelemetry instrumentation
-        implementation("co.elastic.clients:elasticsearch-java:${baseVersion("8.0.0").orLatest("8.9.+")}")
+testing.suites {
+  register<JvmTestSuite>("version8Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
+      resources {
+        setSrcDirs(listOf("src/test/resources"))
+      }
+    }
+    dependencies {
+      implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
+      implementation("org.testcontainers:testcontainers-elasticsearch")
+
+      // 8.10+ has native, on-by-default opentelemetry instrumentation
+      implementation("co.elastic.clients:elasticsearch-java:${baseVersion("8.0.0").orLatest("8.9.+")}")
     }
   }
 }
 
 tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.opt-in=database")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-      }
-    }
-
-  // exercises capturing the sanitized search query, which is on by default under v3-preview
-  val testV3Preview = register<Test>("testV3Preview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.common.v3-preview=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.v3-preview=true")
-  }
-
   check {
-    dependsOn(testing.suites, stableSemconvSuites, testV3Preview)
+    dependsOn(testing.suites)
   }
 }

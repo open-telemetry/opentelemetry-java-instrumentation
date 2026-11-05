@@ -5,15 +5,14 @@ on:
 
 permissions:
   contents: read
+  copilot-requests: write
 
 concurrency:
-  group: draft-release-notes
+  group: draft-release-notes-${{ github.ref }}
 
 jobs:
   draft:
     if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
-    permissions:
-      contents: write  # for git push to PR branch
     runs-on: ubuntu-latest
     environment: protected
     steps:
@@ -22,8 +21,10 @@ jobs:
           # need full history and tags so the release-notes script can resolve
           # the previous release tag (e.g. v2.27.0) when computing the commit range
           fetch-depth: 0
-          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
-          persist-credentials: true
+          persist-credentials: false
+
+      - name: Verify development branch
+        run: python .github/scripts/release-config.py prepare --ref "$GITHUB_REF_NAME" >> "$GITHUB_ENV"
 
       - name: Install Copilot CLI
         run: |
@@ -35,26 +36,28 @@ jobs:
 
       - name: Run draft-release-notes
         env:
+          CLASSIFY_MODEL: ${{ vars.DRAFT_RELEASE_NOTES_MODEL || 'gpt-6-luna' }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python .github/scripts/draft-release-notes/draft-release-notes.py
 
       - name: Upload draft diagnostics artifact
         if: always()
         id: upload-diagnostics
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: draft-release-notes-diagnostics-${{ github.run_id }}
           path: build/changelog-bundle/**
 
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         id: otelbot-token
         with:
-          client-id: ${{ vars.OTELBOT_CLIENT_ID }}
-          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+          client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          permission-contents: write
           permission-pull-requests: write
 
-      - name: Create pull request against main
+      - name: Create pull request against the development branch
         env:
           ARTIFACT_URL: ${{ steps.upload-diagnostics.outputs.artifact-url }}
           # pull requests from secrets.GITHUB_TOKEN do not run workflows
@@ -71,6 +74,7 @@ jobs:
           )
           branch="otelbot/draft-release-notes-${GITHUB_RUN_ID}"
 
+          gh auth setup-git
           git checkout -b $branch
           git add CHANGELOG.md
           git commit -m "$message"
@@ -78,4 +82,4 @@ jobs:
           gh pr create \
             --title "$message" \
             --body "$body" \
-            --base main
+            --base "$DEVELOPMENT_BRANCH"

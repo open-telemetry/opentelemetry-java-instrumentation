@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 import java.lang.reflect.Field;
 import javax.annotation.Nullable;
 import org.springframework.scheduling.support.ScheduledMethodRunnable;
@@ -66,7 +66,7 @@ public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGette
   }
 
   @Override
-  public String getMethodName(Runnable runnable) {
+  public String getCodeMethodName(Runnable runnable) {
     runnable = unwrap(runnable);
     if (runnable instanceof ScheduledMethodRunnable) {
       ScheduledMethodRunnable scheduledMethodRunnable = (ScheduledMethodRunnable) runnable;

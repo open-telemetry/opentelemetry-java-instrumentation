@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.quartz.v2_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static java.util.Objects.requireNonNull;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
@@ -15,13 +15,11 @@ import static org.quartz.TriggerBuilder.newTrigger;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
-import java.util.List;
 import java.util.Properties;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -38,10 +36,14 @@ import org.quartz.impl.StdSchedulerFactory;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractQuartzTest {
 
-  protected static final boolean EXPERIMENTAL_ATTRIBUTES =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.quartz.experimental-span-attributes");
 
   private Scheduler scheduler;
+
+  protected boolean captureExperimentalSpanAttributes() {
+    return EXPERIMENTAL_ATTRIBUTES;
+  }
 
   protected abstract void configureScheduler(Scheduler scheduler);
 
@@ -67,9 +69,6 @@ public abstract class AbstractQuartzTest {
 
     scheduler.scheduleJob(jobDetail, trigger);
 
-    List<AttributeAssertion> assertions = codeFunctionAssertions(SuccessfulJob.class, "execute");
-    assertions.add(equalTo(stringKey("job.system"), EXPERIMENTAL_ATTRIBUTES ? "quartz" : null));
-
     getTesting()
         .waitAndAssertTraces(
             trace ->
@@ -79,7 +78,12 @@ public abstract class AbstractQuartzTest {
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasStatus(StatusData.unset())
-                            .hasAttributesSatisfyingExactly(assertions),
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    CODE_FUNCTION_NAME, SuccessfulJob.class.getName() + ".execute"),
+                                equalTo(
+                                    stringKey("job.system"),
+                                    captureExperimentalSpanAttributes() ? "quartz" : null)),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -94,9 +98,6 @@ public abstract class AbstractQuartzTest {
 
     scheduler.scheduleJob(jobDetail, trigger);
 
-    List<AttributeAssertion> assertions = codeFunctionAssertions(FailingJob.class, "execute");
-    assertions.add(equalTo(stringKey("job.system"), EXPERIMENTAL_ATTRIBUTES ? "quartz" : null));
-
     getTesting()
         .waitAndAssertTraces(
             trace ->
@@ -107,7 +108,12 @@ public abstract class AbstractQuartzTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalStateException("Bad job"))
-                            .hasAttributesSatisfyingExactly(assertions)));
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    CODE_FUNCTION_NAME, FailingJob.class.getName() + ".execute"),
+                                equalTo(
+                                    stringKey("job.system"),
+                                    captureExperimentalSpanAttributes() ? "quartz" : null))));
   }
 
   private static Scheduler createScheduler() throws Exception {

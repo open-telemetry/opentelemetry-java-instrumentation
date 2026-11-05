@@ -53,6 +53,8 @@ public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCu
     DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
         "io.opentelemetry.contrib.cloudfoundry.resources.CloudFoundryResourceProvider",
         "cloudfoundry");
+    DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
+        "io.opentelemetry.instrumentation.resources.HostIdResourceProvider", "host-id");
     // for testing
     DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
         "io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizerTest$Provider",

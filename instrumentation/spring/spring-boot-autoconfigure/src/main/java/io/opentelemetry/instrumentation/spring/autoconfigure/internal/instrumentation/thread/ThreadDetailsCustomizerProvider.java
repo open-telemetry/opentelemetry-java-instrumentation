@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 
 import io.opentelemetry.instrumentation.thread.internal.AbstractThreadDetailsCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.DistributionModel;
-import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.DistributionPropertyModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
+import java.util.Map;
 
 /**
  * Adds thread details span attributes when enabled via the {@code distribution.spring_starter}
@@ -25,12 +25,11 @@ public final class ThreadDetailsCustomizerProvider extends AbstractThreadDetails
     if (distribution == null) {
       return false;
     }
-    DistributionPropertyModel springStarter =
-        distribution.getAdditionalProperties().get("spring_starter");
-    if (springStarter == null) {
+    Object springStarter = distribution.getExtensionProperties().get("spring_starter");
+    if (!(springStarter instanceof Map)) {
       return false;
     }
-    Object enabled = springStarter.getAdditionalProperties().get("thread_details_enabled");
+    Object enabled = ((Map<?, ?>) springStarter).get("thread_details_enabled");
     if (enabled instanceof Boolean) {
       return (Boolean) enabled;
     }

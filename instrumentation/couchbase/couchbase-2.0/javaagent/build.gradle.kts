@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -10,6 +13,33 @@ muzzle {
     // these versions were released as ".bundle" instead of ".jar"
     skip("2.7.5", "2.7.8")
     assertInverse.set(true)
+
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase20NetworkInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase26NetworkInstrumentationModule")
+  }
+  pass {
+    // instrumentation-docs:ignore - verification only, the directive above is the range we document
+    name.set("Pre-2.6 network instrumentation")
+    group.set("com.couchbase.client")
+    module.set("java-client")
+    versions.set("[2,2.6)")
+    assertInverse.set(true)
+
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase26NetworkInstrumentationModule")
+  }
+  pass {
+    // instrumentation-docs:ignore - verification only, the first directive is the range we document
+    name.set("Couchbase 2.6 network instrumentation")
+    group.set("com.couchbase.client")
+    module.set("java-client")
+    versions.set("[2.6.0,3)")
+    // these versions were released as ".bundle" instead of ".jar"
+    skip("2.7.5", "2.7.8")
+    assertInverse.set(true)
+
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.network.Couchbase20NetworkInstrumentationModule")
   }
   fail {
     group.set("com.couchbase.client")
@@ -23,44 +53,65 @@ dependencies {
   implementation(project(":instrumentation:rxjava:rxjava-1.0:library"))
 
   library("com.couchbase.client:java-client:2.0.0")
+  compileOnly("com.couchbase.client:core-io:1.6.0")
 
-  testImplementation(project(":instrumentation:couchbase:couchbase-common:testing"))
+  testImplementation("com.couchbase.mock:CouchbaseMock:1.5.19")
 
-  testInstrumentation(project(":instrumentation:couchbase:couchbase-2.6:javaagent"))
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1:javaagent"))
-  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1.6:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
-  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.4:javaagent"))
 
-  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:2.+") // see couchbase-2.6 module
-  latestDepTestLibrary("com.couchbase.client:java-client:2.5.+") // see couchbase-2.6 module
+  latestDepTestLibrary("com.couchbase.client:java-client:2.5.+") // see test suite below
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
-
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
+testing.suites {
+  register<JvmTestSuite>("version25Test") {
+    dependencies {
+      implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
+      implementation("com.couchbase.client:java-client:${baseVersion("2.5.0").orLatest("2.5.+")}")
+      implementation(
+        "org.springframework.data:spring-data-couchbase:${baseVersion("2.0.0.RELEASE").orLatest("2.+")}"
+      )
     }
   }
+  register<JvmTestSuite>("version26Test") {
+    dependencies {
+      implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
+      implementation("com.couchbase.client:java-client:${baseVersion("2.6.0").orLatest("2.+")}")
+      implementation(
+        "org.springframework.data:spring-data-couchbase:${baseVersion("3.1.0.RELEASE").orLatest("3.1.+")}"
+      )
+      implementation("com.couchbase.client:encryption:${baseVersion("1.0.0").orLatest("1.+")}")
+    }
+  }
+  withType<JvmTestSuite>().configureEach {
+    executions {
+      configureEach {
+        // required on jdk17
+        jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+        jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
+        jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+        if (otelProps.denyUnsafe) {
+          enabled = false
+        }
+      }
+
+      register("Experimental") {
+        telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
+      }
+      if (name == "version25Test") {
+        register("QuerySanitizationDisabled") {
+          filter {
+            includeTestsMatching("CouchbaseQuerySanitizationTest")
+          }
+          jvmArgs("-Dotel.instrumentation.couchbase.query-sanitization.enabled=false")
+          systemProperty("testQuerySanitizationEnabled", "false")
+        }
+      }
+    }
+  }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }

@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -59,9 +60,6 @@ testing {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
   named("compileHibernateReactive2TestJava", JavaCompile::class).configure {
     options.release.set(11)
   }
@@ -85,34 +83,8 @@ tasks {
     }
   }
 
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.opt-in=database,service.peer")
-      }
-    }
-
-  if (testJavaVersion.isJava8) {
-    named("hibernateReactive2TestStableSemconv", Test::class).configure {
-      enabled = false
-    }
-    if (otelProps.testLatestDeps) {
-      named("hibernateReactive1TestStableSemconv", Test::class).configure {
-        enabled = false
-      }
-    }
-  }
-  if (testJavaVersion.isJava8 || testJavaVersion.isJava11) {
-    named("hibernateReactive4TestStableSemconv", Test::class).configure {
-      enabled = false
-    }
-  }
-
   check {
-    dependsOn(testing.suites, stableSemconvSuites)
+    dependsOn(testing.suites)
   }
 }
 

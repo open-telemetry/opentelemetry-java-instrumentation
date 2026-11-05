@@ -5,12 +5,15 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
+import static java.util.Collections.emptyList;
+
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -53,13 +56,19 @@ class EmbeddedConfigFile {
   private static Map<String, String> extractSpringProperties(ConfigurableEnvironment environment) {
     MutablePropertySources propertySources = environment.getPropertySources();
 
+    Map<String, PropertySource<?>> listSources = findListSources(propertySources);
     Map<String, String> props = new HashMap<>();
     for (PropertySource<?> propertySource : propertySources) {
       if (propertySource instanceof EnumerablePropertySource<?>) {
         for (String propertyName :
             ((EnumerablePropertySource<?>) propertySource).getPropertyNames()) {
-          if (propertyName.startsWith("otel.")) {
+          List<String> listPaths = listPaths(propertyName);
+          if (propertyName.startsWith("otel.")
+              && isFromListSources(listPaths, propertySource, listSources)) {
             String property = environment.getProperty(propertyName);
+            if (!listPaths.isEmpty() && propertySource.getProperty(propertyName) == null) {
+              property = null; // not filled in from a lower source that does not own the list
+            }
             if (Objects.equals(property, "")) {
               property = null; // spring returns empty string for yaml null
             }
@@ -93,6 +102,64 @@ class EmbeddedConfigFile {
               + "'environment.getProperty(\"otel.file_format\", String.class) != null' earlier");
     }
     return props;
+  }
+
+  /**
+   * Returns, for each list, the highest-priority source that gives it a value. Like Spring Boot, a
+   * list is taken as a whole from that source rather than merging items from several sources, see
+   * https://docs.spring.io/spring-boot/reference/features/external-config.html#features.external-config.typesafe-configuration-properties.merging-complex-types
+   */
+  private static Map<String, PropertySource<?>> findListSources(
+      MutablePropertySources propertySources) {
+    Map<String, PropertySource<?>> listSources = new HashMap<>();
+    for (PropertySource<?> propertySource : propertySources) {
+      if (propertySource instanceof EnumerablePropertySource<?>) {
+        for (String propertyName :
+            ((EnumerablePropertySource<?>) propertySource).getPropertyNames()) {
+          // a null value does not define a list, like in Spring's resolution
+          if (propertyName.startsWith("otel.")
+              && propertySource.getProperty(propertyName) != null) {
+            for (String listPath : listPaths(propertyName)) {
+              PropertySource<?> listSource = listSources.putIfAbsent(listPath, propertySource);
+              if (listSource != null && listSource != propertySource) {
+                break; // lists nested in another source's list items belong to that source
+              }
+            }
+          }
+        }
+      }
+    }
+    return listSources;
+  }
+
+  private static boolean isFromListSources(
+      List<String> listPaths,
+      PropertySource<?> propertySource,
+      Map<String, PropertySource<?>> listSources) {
+    for (String listPath : listPaths) {
+      PropertySource<?> listSource = listSources.get(listPath);
+      if (listSource != null && listSource != propertySource) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /** Returns the paths of the lists a property belongs to, as split by convertFlatPropsToNested. */
+  private static List<String> listPaths(String propertyName) {
+    if (propertyName.indexOf('[') < 0) {
+      return emptyList();
+    }
+    List<String> listPaths = new ArrayList<>();
+    StringBuilder path = new StringBuilder();
+    for (String part : propertyName.split("\\.")) {
+      Matcher matcher = ARRAY_PATTERN.matcher(part);
+      if (matcher.matches()) {
+        listPaths.add(path + matcher.group(1));
+      }
+      path.append(part).append('.');
+    }
+    return listPaths;
   }
 
   static OpenTelemetryConfigurationModel convertToOpenTelemetryConfigurationModel(

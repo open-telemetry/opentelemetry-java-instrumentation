@@ -1,5 +1,9 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 // compiling against 1.11.0, but instrumentation should work against 1.10.33 with varying effects,
@@ -16,7 +20,7 @@ muzzle {
     versions.set("[1.10.33,)")
     assertInverse.set(true)
 
-    excludeInstrumentationName("aws-sdk-1.11-sqs")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.SqsInstrumentationModule")
   }
 
   fail {
@@ -24,7 +28,7 @@ muzzle {
     module.set("aws-java-sdk-core")
     versions.set("[1.10.33,)")
 
-    excludeInstrumentationName("aws-sdk-1.11-core")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.awssdk.v1_11.AwsSdkInstrumentationModule")
   }
 
   pass {
@@ -67,53 +71,62 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
 }
 
-testing {
-  suites {
-    // Features used in test_1_11_106 (builder) is available since 1.11.84, but
-    // using 1.11.106 because of previous concerns with byte code differences
-    // in 1.11.106, also, the DeleteOptionGroup request generates more spans
-    // in 1.11.106 than 1.11.84.
-    // We test older version in separate test set to test newer version and latest deps in the 'default'
-    // test dir. Otherwise we get strange warnings in Idea.
-    register<JvmTestSuite>("test_before_1_11_106") {
-      dependencies {
-        implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
+testing.suites {
+  // Features used in test_1_11_106 (builder) is available since 1.11.84, but
+  // using 1.11.106 because of previous concerns with byte code differences
+  // in 1.11.106, also, the DeleteOptionGroup request generates more spans
+  // in 1.11.106 than 1.11.84.
+  // We test older version in separate test set to test newer version and latest deps in the 'default'
+  // test dir. Otherwise we get strange warnings in Idea.
+  register<JvmTestSuite>("version1_11_0Test") {
+    dependencies {
+      implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 
-        implementation("com.amazonaws:aws-java-sdk-s3:1.11.0")
-        implementation("com.amazonaws:aws-java-sdk-rds:1.11.0")
-        implementation("com.amazonaws:aws-java-sdk-ec2:1.11.0")
-        implementation("com.amazonaws:aws-java-sdk-kinesis:1.11.0")
-        implementation("com.amazonaws:aws-java-sdk-dynamodb:1.11.0")
-        implementation("com.amazonaws:aws-java-sdk-sns:1.11.0")
+      implementation("com.amazonaws:aws-java-sdk-s3:1.11.0")
+      implementation("com.amazonaws:aws-java-sdk-rds:1.11.0")
+      implementation("com.amazonaws:aws-java-sdk-ec2:1.11.0")
+      implementation("com.amazonaws:aws-java-sdk-kinesis:1.11.0")
+      implementation("com.amazonaws:aws-java-sdk-dynamodb:1.11.0")
+      implementation("com.amazonaws:aws-java-sdk-sns:1.11.0")
 
-        // needed by S3
-        implementation("javax.xml.bind:jaxb-api:2.3.1")
-      }
+      // needed by S3
+      implementation("javax.xml.bind:jaxb-api:2.3.1")
     }
-
-    // We test SQS separately since we have special logic for it and want to make sure the presence of
-    // SQS on the classpath doesn't conflict with tests for usage of the core SDK. This only affects
-    // the agent.
-    register<JvmTestSuite>("testSqs") {
-      dependencies {
-        implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
-        implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest()}")
-      }
-
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-          }
+    if (!otelProps.testLatestDeps) {
+      executions {
+        register("ExperimentalAttributes") {
+          systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
         }
       }
     }
+  }
 
-    register<JvmTestSuite>("testSqsNoReceiveTelemetry") {
-      dependencies {
-        implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
-        implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest()}")
+  // We test SQS separately since we have special logic for it and want to make sure the presence of
+  // SQS on the classpath doesn't conflict with tests for usage of the core SDK. This only affects
+  // the agent.
+  register<JvmTestSuite>("testSqs") {
+    dependencies {
+      implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
+      implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest()}")
+    }
+    executions {
+      register("ReceiveTelemetry") {
+        telemetryConfig("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
       }
+    }
+  }
+
+  register<JvmTestSuite>("testSqsNoReceiveTelemetry") {
+    dependencies {
+      implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
+      implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest()}")
+    }
+  }
+
+  executions("test") {
+    register("ExperimentalAttributes") {
+      telemetryConfig("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     }
   }
 }
@@ -130,55 +143,7 @@ tasks {
   }
 
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets["testSqs"].output.classesDirs
-    classpath = sourceSets["testSqs"].runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testMessagingPreviewNoReceiveTelemetry = register<Test>("testMessagingPreviewNoReceiveTelemetry") {
-    testClassesDirs = sourceSets["testSqsNoReceiveTelemetry"].output.classesDirs
-    classpath = sourceSets["testSqsNoReceiveTelemetry"].runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets["testSqs"].output.classesDirs
-    classpath = sourceSets["testSqs"].runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    // with the v3 preview off, the legacy opt-in flag selects the new messaging semconv too
-    jvmArgs("-Dotel.semconv-stability.opt-in=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=messaging/dup")
-  }
-
-  check {
-    dependsOn(
-      testStableSemconv,
-      testMessagingPreview,
-      testMessagingPreviewNoReceiveTelemetry,
-      testBothSemconv
-    )
   }
 
   if (otelProps.denyUnsafe) {

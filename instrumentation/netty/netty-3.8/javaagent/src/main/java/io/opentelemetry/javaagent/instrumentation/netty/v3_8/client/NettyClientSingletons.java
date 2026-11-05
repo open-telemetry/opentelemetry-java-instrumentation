@@ -8,16 +8,16 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 import static io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder.setHttpClientExceptionEventExtractor;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpSchemaUrls;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
-import io.opentelemetry.semconv.SchemaUrls;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
@@ -45,9 +45,9 @@ public class NettyClientSingletons {
             .addAttributesExtractor(
                 HttpClientAttributesExtractor.create(new NettyConnectHttpAttributesGetter()))
             .addAttributesExtractor(
-                HttpClientServicePeerAttributesExtractor.create(
+                HttpClientServerServiceAttributesExtractor.create(
                     new NettyConnectHttpAttributesGetter(), GlobalOpenTelemetry.get()))
-            .setSchemaUrl(SchemaUrls.V1_41_0);
+            .setSchemaUrl(HttpSchemaUrls.SCHEMA_URL);
     setHttpClientExceptionEventExtractor(builder);
     connectionInstrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }

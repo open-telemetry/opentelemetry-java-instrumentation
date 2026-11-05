@@ -30,7 +30,7 @@ class CamelMuzzleInstrumentation implements TypeInstrumentation {
   @SuppressWarnings({"ReturnValueIgnored", "unused"})
   public static class CamelVersionReferenceAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(inline = false)
     public static void onEnter(CamelContext context) {
       context.hasService(CamelTracingService.class);
     }

@@ -32,6 +32,8 @@ for libraries where library instrumentation is not possible, such as `URLConnect
 intercept even the JDK's classes. Such libraries will not have library instrumentation but will have
 agent instrumentation.
 
+Before proposing new instrumentation, review the repository's [instrumentation scope](../scope.md).
+
 ## Folder Structure
 
 Refer to some of our existing instrumentations for examples of the folder structure, for example:
@@ -161,6 +163,11 @@ the library interfaces which adds the telemetry. This part might look different 
 instrumented library: some of them expose interceptor/listener interfaces that can be easily plugged
 into the library, some others have a library interface that you can use to implement a decorator that
 emits telemetry when used.
+
+Factories and builders for instrumented library objects should return the library's interface or base
+class when it provides the full caller-facing contract. Concrete types are appropriate when required
+for supported setup or framework integration. This rule does not apply to OpenTelemetry-defined types
+or SPIs.
 
 Consider the following builder class:
 
@@ -461,28 +468,27 @@ accessible from the instrumented application code.
 Ideally javaagent instrumentation is just a thin wrapper over library instrumentation, and so there
 is no need to write unit tests that directly access the javaagent instrumentation classes.
 
-If you still want to write a unit test against javaagent instrumentation, add another module
-named `javaagent-unit-tests`. Continuing with the example above:
-
-```
-instrumentation ->
-    ...
-    yarpc-1.0 ->
-        javaagent
-            build.gradle.kts
-        javaagent-unit-tests
-            build.gradle.kts
-        ...
-```
-
-Set up the unit tests project as a standard Java project:
+If you still want to write a unit test against javaagent instrumentation, add a JVM test suite
+whose name ends with `unitTests` to the `javaagent` module. These suites run without the javaagent
+and keep the instrumentation classes on the test classpath:
 
 ```kotlin
-plugins {
-  id("otel.java-conventions")
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+      }
+    }
+  }
 }
 
-dependencies {
-  testImplementation(project(":instrumentation:yarpc-1.0:javaagent"))
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
 }
 ```
+
+Place the tests under `src/unitTests`. Add any test-only dependencies to the suite's
+`dependencies` block.

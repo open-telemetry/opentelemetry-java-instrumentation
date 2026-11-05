@@ -26,9 +26,7 @@ class GradleParserTest {
             }""";
     DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
-    assertThat(info.versions().size()).isEqualTo(1);
-    assertThat(info.versions().stream().findFirst().get())
-        .isEqualTo("org.elasticsearch.client:rest:[5.0,6.4)");
+    assertThat(info.versions()).containsExactly("org.elasticsearch.client:rest:[5.0,6.4)");
   }
 
   @Test
@@ -44,8 +42,7 @@ class GradleParserTest {
 
     DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
-    assertThat(info.versions().size()).isEqualTo(1);
-    assertThat(info.versions().stream().findFirst().get()).isEqualTo("Java 8+");
+    assertThat(info.versions()).containsExactly("Java 8+");
   }
 
   @Test
@@ -65,9 +62,8 @@ class GradleParserTest {
 
     DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
-    assertThat(info.versions().size()).isEqualTo(1);
     assertThat(info.minJavaVersionSupported()).isEqualTo(11);
-    assertThat(info.versions().stream().findFirst().get()).isEqualTo("Java 11+");
+    assertThat(info.versions()).containsExactly("Java 11+");
   }
 
   @Test
@@ -89,8 +85,75 @@ class GradleParserTest {
 
     DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
-    assertThat(info.versions().size()).isEqualTo(1);
-    assertThat(info.versions().stream().findFirst().get()).isEqualTo("Java 8+");
+    assertThat(info.versions()).containsExactly("Java 8+");
+  }
+
+  @Test
+  void testDocsIgnoreSkipsPassBlock() {
+    String gradleBuildFileContent =
+        """
+            muzzle {
+              pass {
+                group.set("com.couchbase.client")
+                module.set("java-client")
+                versions.set("[2,3)")
+                assertInverse.set(true)
+              }
+              pass {
+                // instrumentation-docs:ignore - verification only
+                name.set("Pre-2.6 network instrumentation")
+                group.set("com.couchbase.client")
+                module.set("java-client")
+                versions.set("[2,2.6)")
+                assertInverse.set(true)
+              }
+              pass {
+                group.set("com.couchbase.client")
+                module.set("java-client")
+                versions.set("[3,4)")
+                assertInverse.set(true)
+              }
+            }""";
+
+    DependencyInfo info =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+    assertThat(info.versions())
+        .containsExactlyInAnyOrder(
+            "com.couchbase.client:java-client:[2,3)", "com.couchbase.client:java-client:[3,4)");
+  }
+
+  @Test
+  void testDocsIgnoreSkipsCoreJdkPassBlock() {
+    String gradleBuildFileContent =
+        """
+            muzzle {
+              pass {
+                // instrumentation-docs:ignore
+                coreJdk.set(true)
+              }
+            }""";
+
+    DependencyInfo info =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+    assertThat(info.versions()).isEmpty();
+  }
+
+  @Test
+  void testDocsIgnoreAbovePassBlockIsNotHonored() {
+    String gradleBuildFileContent =
+        """
+            muzzle {
+              // instrumentation-docs:ignore
+              pass {
+                group.set("com.couchbase.client")
+                module.set("java-client")
+                versions.set("[2,2.6)")
+              }
+            }""";
+
+    DependencyInfo info =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+    assertThat(info.versions()).containsExactly("com.couchbase.client:java-client:[2,2.6)");
   }
 
   @Test
@@ -103,26 +166,23 @@ class GradleParserTest {
             id("otel.scala-conventions")
           }
 
-          val zioVersion = "2.0.0"
-          val scalaVersion = "2.12"
-
           muzzle {
             pass {
               group.set("dev.zio")
               module.set("zio_2.12")
-              versions.set("[$zioVersion,)")
+              versions.set("[2.0.0,)")
               assertInverse.set(true)
             }
             pass {
               group.set("dev.zio")
               module.set("zio_2.13")
-              versions.set("[$zioVersion,)")
+              versions.set("[2.0.0,)")
               assertInverse.set(true)
             }
             pass {
               group.set("dev.zio")
               module.set("zio_3")
-              versions.set("[$zioVersion,)")
+              versions.set("[2.0.0,)")
               assertInverse.set(true)
             }
           }

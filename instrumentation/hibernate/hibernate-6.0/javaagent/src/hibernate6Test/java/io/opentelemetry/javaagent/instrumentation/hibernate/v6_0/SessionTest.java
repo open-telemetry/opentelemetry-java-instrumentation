@@ -6,22 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.HIBERNATE_SESSION_ID;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.H2;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
@@ -134,9 +127,7 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Session." + parameter.methodName + " " + parameter.resource),
-                span ->
-                    assertClientSpan(
-                        span, trace.getSpan(1), emitStableDatabaseSemconv() ? "select" : "SELECT"),
+                span -> assertClientSpan(span, trace.getSpan(1), "select"),
                 span ->
                     assertSpanWithSessionId(
                         span,
@@ -246,23 +237,10 @@ class SessionTest extends AbstractHibernateTest {
                     span.hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
-                            equalTo(maybeStable(DB_NAME), "db1"),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
-                            equalTo(
-                                DB_CONNECTION_STRING,
-                                emitStableDatabaseSemconv() ? null : "h2:mem:"),
-                            satisfies(
-                                maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                emitStableDatabaseSemconv() ? parameter.clientSpanName : null),
-                            equalTo(
-                                maybeStable(DB_OPERATION),
-                                emitStableDatabaseSemconv() ? null : "SELECT"),
-                            equalTo(
-                                maybeStable(DB_SQL_TABLE),
-                                emitStableDatabaseSemconv() ? null : "Value")),
+                            equalTo(DB_SYSTEM_NAME, "h2database"),
+                            equalTo(DB_NAMESPACE, "db1"),
+                            satisfies(DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
+                            equalTo(DB_QUERY_SUMMARY, parameter.clientSpanName)),
                 span ->
                     assertSpanWithSessionId(
                         span,
@@ -317,9 +295,7 @@ class SessionTest extends AbstractHibernateTest {
                   sessionId2.set(
                       trace.getSpan(2).getAttributes().get(stringKey("hibernate.session_id")));
                 },
-                span ->
-                    assertClientSpan(
-                        span, trace.getSpan(2), emitStableDatabaseSemconv() ? "insert" : "INSERT"),
+                span -> assertClientSpan(span, trace.getSpan(2), "insert"),
                 span -> {
                   assertSessionSpan(
                       span,
@@ -337,14 +313,8 @@ class SessionTest extends AbstractHibernateTest {
                 span ->
                     assertSpanWithSessionId(
                         span, trace.getSpan(0), "Transaction.commit", sessionId1.get()),
-                span ->
-                    assertClientSpan(
-                        span, trace.getSpan(6), emitStableDatabaseSemconv() ? "insert" : "INSERT"),
-                span ->
-                    assertClientSpan(
-                        span,
-                        trace.getSpan(6),
-                        emitStableDatabaseSemconv() ? "delete" : "DELETE")));
+                span -> assertClientSpan(span, trace.getSpan(6), "insert"),
+                span -> assertClientSpan(span, trace.getSpan(6), "delete")));
 
     if (ExperimentalTestHelper.EXPERIMENTAL_ATTRIBUTES) {
       assertThat(sessionId2.get()).isNotEqualTo(sessionId1.get());
@@ -716,35 +686,26 @@ class SessionTest extends AbstractHibernateTest {
             named(
                 "createQuery",
                 new QueryParameter(
-                    emitStableDatabaseSemconv()
-                        ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value"
-                        : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value",
+                    "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
+                    "select Value",
                     queryBuildMethods.get(0)))),
         Arguments.of(
             named(
                 "getNamedQuery",
                 new QueryParameter(
-                    emitStableDatabaseSemconv()
-                        ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value"
-                        : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value",
+                    "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
+                    "select Value",
                     queryBuildMethods.get(1)))),
         Arguments.of(
             named(
                 "createNativeQuery",
-                new QueryParameter(
-                    "SELECT Value",
-                    emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value",
-                    queryBuildMethods.get(2)))),
+                new QueryParameter("SELECT Value", "SELECT Value", queryBuildMethods.get(2)))),
         Arguments.of(
             named(
                 "createSelectionQuery",
                 new QueryParameter(
-                    emitStableDatabaseSemconv()
-                        ? "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value"
-                        : "SELECT io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
-                    emitStableDatabaseSemconv() ? "select Value" : "SELECT db1.Value",
+                    "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
+                    "select Value",
                     queryBuildMethods.get(3)))));
   }
 
@@ -806,47 +767,31 @@ class SessionTest extends AbstractHibernateTest {
     return span.hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
-            equalTo(maybeStable(DB_NAME), "db1"),
-            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
-            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
-            satisfies(maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
+            equalTo(DB_SYSTEM_NAME, "h2database"),
+            equalTo(DB_NAMESPACE, "db1"),
+            satisfies(DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
             satisfies(
                 DB_QUERY_SUMMARY,
                 val -> {
-                  if (emitStableDatabaseSemconv()) {
-                    val.isInstanceOf(String.class);
-                  } else {
-                    val.isNull();
-                  }
+                  val.isInstanceOf(String.class);
                 }),
             satisfies(
-                maybeStable(DB_OPERATION),
+                DB_OPERATION_NAME,
                 val -> {
-                  if (emitStableDatabaseSemconv()) {
-                    val.isNull();
-                  } else {
-                    val.isInstanceOf(String.class);
-                  }
-                }),
-            equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "Value"));
+                  val.isNull();
+                }));
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   private static SpanDataAssert assertClientSpan(
       SpanDataAssert span, SpanData parent, String verb) {
-    return span.hasName(
-            emitStableDatabaseSemconv() ? verb.concat(" Value") : verb.concat(" db1.Value"))
+    return span.hasName(verb.concat(" Value"))
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(H2)),
-            equalTo(maybeStable(DB_NAME), "db1"),
-            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
-            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
-            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWithIgnoringCase(verb)),
-            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? verb + " Value" : null),
-            equalTo(maybeStable(DB_OPERATION), emitStableDatabaseSemconv() ? null : verb),
-            equalTo(maybeStable(DB_SQL_TABLE), emitStableDatabaseSemconv() ? null : "Value"));
+            equalTo(DB_SYSTEM_NAME, "h2database"),
+            equalTo(DB_NAMESPACE, "db1"),
+            satisfies(DB_QUERY_TEXT, val -> val.startsWithIgnoringCase(verb)),
+            equalTo(DB_QUERY_SUMMARY, verb + " Value"));
   }
 }

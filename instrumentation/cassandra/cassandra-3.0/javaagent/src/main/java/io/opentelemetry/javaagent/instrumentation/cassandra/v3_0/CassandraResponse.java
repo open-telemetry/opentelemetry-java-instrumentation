@@ -13,26 +13,37 @@ import javax.annotation.Nullable;
 
 class CassandraResponse {
   @Nullable private final ExecutionInfo executionInfo;
-  @Nullable private final InetSocketAddress coordinatorAddress;
+  @Nullable private final InetSocketAddress peerAddress;
 
   private CassandraResponse(
-      @Nullable ExecutionInfo executionInfo, @Nullable InetSocketAddress coordinatorAddress) {
+      @Nullable ExecutionInfo executionInfo, @Nullable InetSocketAddress peerAddress) {
     this.executionInfo = executionInfo;
-    this.coordinatorAddress = coordinatorAddress;
+    this.peerAddress = peerAddress;
   }
 
   static CassandraResponse create(ExecutionInfo executionInfo) {
     Host coordinator = executionInfo.getQueriedHost();
-    return new CassandraResponse(
-        executionInfo, coordinator == null ? null : coordinator.getSocketAddress());
+    if (coordinator == null) {
+      return new CassandraResponse(executionInfo, null);
+    }
+    if (CassandraEndPoints.isSniEndPoint(coordinator)) {
+      // SniEndPoint.resolve() returns the proxy, performs DNS, and advances the driver's shared
+      // round-robin counter, so the actual proxy is not safe to obtain here.
+      return new CassandraResponse(executionInfo, null);
+    }
+    return new CassandraResponse(executionInfo, coordinator.getSocketAddress());
   }
 
   @Nullable
   static CassandraResponse create(Throwable throwable) {
-    if (throwable instanceof CoordinatorException) {
-      return new CassandraResponse(null, ((CoordinatorException) throwable).getAddress());
+    if (!(throwable instanceof CoordinatorException)) {
+      return null;
     }
-    return null;
+    CoordinatorException exception = (CoordinatorException) throwable;
+    if (CassandraEndPoints.isSniEndPoint(exception)) {
+      return new CassandraResponse(null, null);
+    }
+    return new CassandraResponse(null, exception.getAddress());
   }
 
   @Nullable
@@ -41,7 +52,7 @@ class CassandraResponse {
   }
 
   @Nullable
-  InetSocketAddress getCoordinatorAddress() {
-    return coordinatorAddress;
+  InetSocketAddress getPeerAddress() {
+    return peerAddress;
   }
 }

@@ -5,16 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
-import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 
 class KafkaFetchRecordsInstrumentation implements TypeInstrumentation {
 
@@ -25,25 +25,18 @@ class KafkaFetchRecordsInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("run"), getClass().getName() + "$RunAdvice");
+    transformer.applyAdviceToMethod(
+        namedOneOf("doRun", "run"), getClass().getName() + "$MarkConsumerAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class RunAdvice {
+  public static class MarkConsumerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
-    public static Boolean onEnter() {
-      if (!emitStableMessagingSemconv()) {
-        return null;
-      }
-      return KafkaClientsConsumerProcessTracing.setWrappingEnabled(false);
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Boolean previousValue) {
-      if (previousValue != null) {
-        KafkaClientsConsumerProcessTracing.setWrappingEnabled(previousValue);
+    public static void onEnter(
+        @Advice.FieldValue("consumer") @Nullable KafkaConsumer<?, ?> consumer) {
+      if (consumer != null) {
+        CamelKafkaProcessingOwnership.markConsumer(consumer);
       }
     }
   }

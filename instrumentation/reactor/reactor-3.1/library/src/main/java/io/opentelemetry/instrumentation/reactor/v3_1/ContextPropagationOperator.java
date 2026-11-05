@@ -148,8 +148,9 @@ public final class ContextPropagationOperator {
    *     context.
    * @return Trace context or default value.
    */
+  @Nullable
   public static Context getOpenTelemetryContext(
-      reactor.util.context.Context context, Context defaultTraceContext) {
+      reactor.util.context.Context context, @Nullable Context defaultTraceContext) {
     return context.getOrDefault(TRACE_CONTEXT_KEY, defaultTraceContext);
   }
 
@@ -162,8 +163,9 @@ public final class ContextPropagationOperator {
    * @return Trace context or default value.
    */
   @NoMuzzle
+  @Nullable
   public static Context getOpenTelemetryContextFromContextView(
-      ContextView contextView, Context defaultTraceContext) {
+      ContextView contextView, @Nullable Context defaultTraceContext) {
     return contextView.getOrDefault(TRACE_CONTEXT_KEY, defaultTraceContext);
   }
 
@@ -359,10 +361,12 @@ public final class ContextPropagationOperator {
     }
   }
 
-  static class ScalarPropagatingFlux extends Flux<Object> implements Scannable {
+  static class ScalarPropagatingFlux extends Mono<Object> implements Scannable {
 
     static <T> Flux<T> create(Flux<T> source) {
-      return new ScalarPropagatingFlux(source).flatMap(unused -> source);
+      // flatMapMany passes downstream demand to the source unchanged, while Flux.flatMap would
+      // prefetch from it
+      return new ScalarPropagatingFlux(source).flatMapMany(unused -> source);
     }
 
     private final Flux<?> source;

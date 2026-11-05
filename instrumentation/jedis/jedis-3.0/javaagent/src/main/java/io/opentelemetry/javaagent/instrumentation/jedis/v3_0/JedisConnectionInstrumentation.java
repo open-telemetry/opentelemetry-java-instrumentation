@@ -5,18 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisSingletons.instrumenter;
 import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.is;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.v1_4.JedisRequestContext;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisRequestContext;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -32,12 +35,69 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$SetTargetAdvice");
+    transformer.applyAdviceToMethod(
+        namedOneOf("setHost", "setPort").and(takesArguments(1)),
+        getClass().getName() + "$SetTargetAdvice");
+
     transformer.applyAdviceToMethod(
         named("sendCommand")
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("redis.clients.jedis.commands.ProtocolCommand")))
-            .and(takesArgument(1, is(byte[][].class))),
+            .and(
+                takesArguments(
+                    named("redis.clients.jedis.commands.ProtocolCommand"), is(byte[][].class))),
         getClass().getName() + "$SendCommandAdvice");
+
+    transformer.applyAdviceToMethod(
+        named("getMany").and(takesArguments(1)), getClass().getName() + "$ManyResponseAdvice");
+    transformer.applyAdviceToMethod(
+        named("getObjectMultiBulkReply").and(takesArguments(0)),
+        getClass().getName() + "$TransactionResponseAdvice");
+    transformer.applyAdviceToMethod(
+        named("readProtocolWithCheckingBroken").and(takesArguments(0)),
+        getClass().getName() + "$ConnectionReplyAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class SetTargetAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Connection connection) {
+      JedisConfiguredTargets.captureConnectionTarget(
+          connection, RedisServerTarget.ofHostAndPort(connection.getHost(), connection.getPort()));
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ConnectionReplyAdvice {
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static JedisRequestContext<JedisRequest> onEnter(@Advice.This Connection connection) {
+      return JedisRequestContext.attachForConnectionReply(connection);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable JedisRequestContext<JedisRequest> requestContext) {
+      if (requestContext != null) {
+        requestContext.detachAndEnd(throwable);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ManyResponseAdvice {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Connection connection) {
+      JedisRequestContext.completePipelineReplies(connection);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class TransactionResponseAdvice {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Connection connection) {
+      JedisRequestContext.completeTransactionReplies(connection);
+    }
   }
 
   @SuppressWarnings("unused")
@@ -57,18 +117,18 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(
           Connection connection, ProtocolCommand command, byte[][] args) {
-        if (JedisPipelineContext.inTransactionFraming()) {
-          // MULTI/EXEC/DISCARD frame a batched transaction; they are represented by the MULTI
-          // batch span rather than getting their own spans.
-          return null;
-        }
-        Context parentContext = Context.current();
         JedisRequest request = JedisRequest.create(connection, command, asList(args));
         if (JedisPipelineContext.capture(request)) {
           // A pipeline or transaction is active, so this command is captured and aggregated into
           // the batch span created at sync()/exec() rather than getting its own span.
           return null;
         }
+        if (JedisPipelineContext.inTransactionFraming()) {
+          // MULTI/EXEC/DISCARD frame a batched transaction; they are represented by the MULTI
+          // batch span rather than getting their own spans.
+          return null;
+        }
+        Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
         }

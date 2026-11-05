@@ -7,6 +7,8 @@
 - [Automation](#automation)
 - [Setup and Usage](#setup-and-usage)
 - [Visualization](#visualization)
+- [Ordinary agent startup benchmark](#ordinary-agent-startup-benchmark)
+- [JDK 25 AOT startup comparison](#jdk-25-aot-startup-comparison)
 
 This directory will contain tools and utilities
 that help us to measure the performance overhead introduced by
@@ -79,14 +81,12 @@ Currently, we test:
 - no agent versus latest released agent
 - no agent versus latest snapshot
 - latest release vs. latest snapshot
-- latest snapshot with indy enabled
 
 Additional configurations can be created by submitting a PR against the `Configs` class.
 
 ### Agents
 
-An agent is defined in code as a name, description, optional URL, and optional additional
-arguments to be passed to the JVM (not including `-javaagent:`). New agents may be defined
+An agent is defined in code as a name, description, and optional URL. New agents may be defined
 by creating new instances of the `Agent` class. The `AgentResolver` is used to download
 the relevant agent jar for an `Agent` definition.
 
@@ -113,3 +113,146 @@ cd benchmark-overhead
 None yet. Help wanted! Our goal is to have the results and a rich UI running in the
 `gh-pages` branch similar to [earlier tools](https://breedx-splk.github.io/iguanodon/web/).
 Please help us make this happen.
+
+## Ordinary agent startup benchmark
+
+The opt-in `agentStartupBenchmark` task compares ordinary `-javaagent` launches
+of the small Spring smoke application with a no-agent control. Supply an optional
+baseline agent JAR to compare agent-added overhead before and after a change.
+It reuses the pinned JDK 25 smoke image from the AOT benchmark, without AOT or
+bootstrap-classpath preloading. Instrumentation and the SDK remain active when
+an agent is present; all exporters are `none`.
+
+Use JDK 25 and Docker with Linux containers. Each application container has a
+two-CPU quota, a 1 GiB memory limit, and `-Xmx512m`. Do not build artifacts or run
+other benchmarks during measurement.
+
+Build the agent and the smoke application's startup fixture, then run the
+standalone benchmark with its exact local JAR:
+
+```sh
+./gradlew :javaagent:shadowJar :smoke-tests:images:spring-boot:classes
+cd benchmark-overhead
+./gradlew agentStartupBenchmark \
+  -PstartupBenchmarkAgentJar=/absolute/path/to/opentelemetry-javaagent-VERSION.jar \
+  -PstartupBenchmarkFixtureClass=/absolute/path/to/WebController.class
+```
+
+The workflow also packages the recorder JAR with the agent and fixture so a
+measurement-only rerun reuses the same built inputs.
+
+To compare two agents, also pass
+`-PstartupBenchmarkBaselineAgentJar=/absolute/path/to/baseline-agent.jar`.
+Record their revisions with `-PstartupBenchmarkRevision` and
+`-PstartupBenchmarkBaselineRevision`. The no-agent control uses the same image,
+fixture, classpath, heap, and resource limits, but omits `-javaagent`.
+
+Defaults are two discarded fresh-process starts and twenty measured starts per
+configuration. Configurations run serially, rotating their order each round.
+Set `-PstartupBenchmarkWarmups=0 -PstartupBenchmarkSamples=1` for a short
+functional run, not a performance conclusion.
+
+The sole metric is JVM uptime sampled by the `/greeting` handler while producing
+the first successful HTTP 200 response with body `Hi!`. The application reports
+its own JVM-relative uptime, sampled immediately before returning the response;
+this includes JVM startup and `premain()` but excludes container setup and
+host-side request timing. Uptime is reported with millisecond resolution.
+Readiness polling waits for that response; failed starts abort the benchmark and
+retain diagnostics, and measured starts are not retried or filtered as outliers.
+
+Agent-added startup overhead is the agent's median minus the no-agent median.
+When a baseline agent is supplied, the report also shows the absolute reduction
+and its percentage of baseline agent-added overhead. These are differences of
+configuration medians, not medians of paired per-round differences.
+
+Results under `build/reports/agent-startup/<run-id>/` include raw observations,
+host load averages, agent hash and version, the selected source revision, exact
+JVM command, image/JDK identity, and the startup-to-readiness timing distribution.
+
+One separate untimed launch per agent records a startup JFR file and
+execution-sample summary. A diagnostic-only recorder agent starts JFR before OpenTelemetry's
+`premain()`; the JVM's `-XX:StartFlightRecording` option starts too late to
+capture agent initialization. This launch is excluded from timing results.
+These are fresh JVMs with warm image/filesystem caches, not cold-machine starts
+or throughput measurements.
+
+Manually dispatch `agent-startup-benchmark.yml` on the branch or tag to measure.
+For example, run `gh workflow run agent-startup-benchmark.yml --ref my-startup-change`.
+Pass `-f baseline-ref=<revision-on-main>` to also build and measure a baseline
+agent in the same run. The workflow rejects baseline revisions that are not
+reachable from upstream `main` before executing their build.
+The selected revision must contain the workflow and benchmark.
+Dispatch requires
+repository write access; only run trusted code, since it executes on a shared host.
+
+The workflow builds the selected agent, any baseline agent, and the startup
+fixture on a standard hosted runner. It packages them with the harness from the
+selected revision as one artifact.
+It unpacks the inputs under `RUNNER_TEMP`, without checking out sources on the
+bare-metal host, and measures serially on
+`oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24` without repository credentials,
+and uploads source identity, host information, complete reports, and profiles
+as workflow artifacts. The benchmark copies its files into each application
+container and relies on Testcontainers to clean up those containers; workflow
+cleanup removes only the attempt's files. It does not prune Docker or tune the
+shared host. This is opt-in tooling, not required PR CI, a scheduled benchmark,
+or a performance threshold gate.
+
+Rerun only the `benchmark` job to repeat measurements with the same built inputs.
+Each attempt uploads a separate `agent-startup-results-<attempt>` artifact,
+retaining the earlier observations.
+
+## JDK 25 AOT startup comparison
+
+The opt-in `aotStartupBenchmark` task compares the existing small Spring smoke application on HotSpot JDK 25 in four configurations: normal and AOT, each with and without the Java agent. It does not run in ordinary tests or the nightly overhead workflow, and has no performance pass/fail thresholds.
+
+Use JDK 21 or newer for Gradle and Docker with Linux containers. The benchmark uses a pinned JDK 25 Spring smoke image, two container CPUs, a 1 GiB container memory limit, and `-Xmx512m`. Run it on an otherwise idle machine.
+
+Build the current agent from the repository root:
+
+```sh
+./gradlew :javaagent:shadowJar
+```
+
+Then run the standalone benchmark, passing the exact local agent JAR:
+
+```sh
+cd benchmark-overhead
+./gradlew aotStartupBenchmark \
+  -PaotBenchmarkAgentJar=/absolute/path/to/opentelemetry-javaagent-VERSION.jar
+```
+
+On Windows, use `.\gradlew.bat` and a quoted Windows path:
+
+```powershell
+Set-Location benchmark-overhead
+.\gradlew.bat aotStartupBenchmark "-PaotBenchmarkAgentJar=C:\path\to\opentelemetry-javaagent-VERSION.jar"
+```
+
+Each invocation collects fresh observations even when compiled classes are up to date. Defaults are two discarded starts and twenty measured starts per variant. For a short functional run, add `-PaotBenchmarkWarmups=0 -PaotBenchmarkSamples=1`. Both options count fresh JVM starts, not warmup within a running JVM.
+
+The benchmark creates separate no-agent and agent-compatible caches without an active agent. It packages the image's exploded classes and resources into a JAR once so all four configurations use the same flat class path. Cache preparation, diagnostic preflight, and image pulls are outside the measurements. Images without the expected flat layout are rejected rather than silently benchmarking a cache of only JDK classes.
+
+Within each pair, only AOT options differ. Both agent configurations preload the agent JAR on the bootstrap class path and add `java.instrument`; the no-agent configurations do neither. The normal agent configuration is therefore the AOT-compatible recipe without a cache, not an ordinary `-javaagent`-only launch. Field injection uses its enabled default. Instrumentation remains active, but traces, metrics, and logs exporters are all `none`; this measures neither telemetry delivery nor collector overhead.
+
+Every AOT sample requires cache use. Separate untimed runs confirm AOT-linked classes, archived application-class loading, and agent transformation. Timed runs omit agent debug, class-load and instrumentation tracing, and expensive cache verification.
+
+Starts run serially in rotating order. Every sample must return HTTP 200 and `Hi!` from `/greeting`; a failure aborts the benchmark and retains diagnostics without producing a comparison. Samples are not retried or filtered as outliers.
+
+Results are written to `build/reports/aot-startup/<run-id>/`:
+
+- `samples.csv` contains discarded and measured observations.
+- `metadata.properties` records exact commands, image/JDK identity, agent hash/version, repository state, resource limits, sample counts, and cache preparation costs.
+- `summary.md` compares medians and interquartile ranges and calculates absolute and percentage AOT reductions within each pair.
+- `startup.svg` is a presentation-ready grouped chart with a shared zero-based axis and interquartile ranges.
+- Preparation, preflight, and per-sample logs accompany the report.
+
+The primary metric is **JVM uptime at Spring startup completion**, from Spring's `JVM running for` log field. It includes `premain()` and work before Spring's own timer starts. It is not an isolated agent-installation measurement or an exact OS-process lifetime. Spring initialization and container-to-HTTP time are secondary metrics; the latter includes Docker and harness overhead.
+
+These are fresh-process starts with warmed filesystem/image caches, not cold-machine starts. Results apply to this small Spring workload and the recorded environment. They do not establish throughput, JIT warmup, or the benefit for larger services. Read both seconds saved and percentage reduction: a smaller relative benefit with an agent does not necessarily mean less absolute time saved.
+
+To exercise only the parser, configuration, statistics, and report tests without Docker:
+
+```sh
+./gradlew test --tests 'io.opentelemetry.startup.*Test'
+```

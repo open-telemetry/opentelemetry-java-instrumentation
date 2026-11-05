@@ -62,7 +62,7 @@ class ServerInstrumentation implements TypeInstrumentation {
 
     @Override
     public Unit invoke(AbstractKtorServerTelemetryBuilder builder) {
-      builder.setOpenTelemetry(GlobalOpenTelemetry.get());
+      builder.openTelemetry(GlobalOpenTelemetry.get());
       KtorBuilderUtil.serverBuilderExtractor.invoke(builder).configure(AgentCommonConfig.get());
       return Unit.INSTANCE;
     }

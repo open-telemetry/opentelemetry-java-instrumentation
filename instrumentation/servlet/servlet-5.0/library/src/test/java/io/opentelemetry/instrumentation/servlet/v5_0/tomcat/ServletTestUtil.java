@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.servlet.v5_0.tomcat;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.servlet.v5_0.ServletTelemetry;
 import io.opentelemetry.instrumentation.servlet.v5_0.ServletTelemetryBuilder;
 import io.opentelemetry.instrumentation.servlet.v5_0.internal.Experimental;
@@ -19,13 +20,13 @@ import org.apache.tomcat.util.descriptor.web.FilterMap;
 
 class ServletTestUtil {
 
-  @SuppressWarnings("deprecation") // testing deprecated API
   static Filter newFilter(OpenTelemetry openTelemetry) {
     ServletTelemetryBuilder builder =
         ServletTelemetry.builder(openTelemetry)
-            .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER));
-    Experimental.setCaptureRequestParameters(builder, singletonList("test-parameter"));
+            .setRequestHeaders(AbstractHttpServerTest.TEST_HEADERS)
+            .setResponseHeaders(AbstractHttpServerTest.TEST_HEADERS);
+    Experimental.setRequestParameters(
+        builder, IncludeExclude.builder().setIncluded(singletonList("test-parameter")).build());
     Experimental.setTraceIdRequestAttributeEnabled(builder, true);
     return builder.build().createFilter();
   }

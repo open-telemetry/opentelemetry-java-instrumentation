@@ -142,7 +142,7 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
 
   @ParameterizedTest
   @CsvSource({"1", "4"})
-  void accessLogHasIdsForCountRequests(int count) {
+  void accessLogHasConfiguredTraceAttributesForCountRequests(int count) {
     AggregatedHttpRequest request = request(ACCESS_LOG_SUCCESS, "GET");
 
     IntStream.range(0, count)
@@ -173,14 +173,19 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
                                           span, "GET", ACCESS_LOG_SUCCESS, SUCCESS.getStatus()),
                                   span -> assertControllerSpan(span, null));
                               SpanData span = trace.getSpan(0);
-                              assertThat(loggedTraces).contains(span.getTraceId());
-                              assertThat(loggedSpans).contains(span.getSpanId());
+                              if (traceIdRequestAttributeEnabled()) {
+                                assertThat(loggedTraces).contains(span.getTraceId());
+                                assertThat(loggedSpans).contains(span.getSpanId());
+                              } else {
+                                assertThat(loggedTraces).containsOnlyNulls();
+                                assertThat(loggedSpans).containsOnlyNulls();
+                              }
                             })
                 .collect(toList()));
   }
 
   @Test
-  void accessLogHasIdsForErrorRequest() {
+  void accessLogHasConfiguredTraceAttributesForErrorRequest() {
     assumeTrue(testError());
 
     AggregatedHttpRequest request = request(ACCESS_LOG_ERROR, "GET");
@@ -211,8 +216,19 @@ public abstract class AbstractTomcatServlet5Test extends AbstractServlet5Test<To
                       .collect(toList()));
               SpanData span = trace.getSpan(0);
               Map.Entry<String, String> entry = accessLogValve.getLoggedIds().get(0);
-              assertThat(entry.getKey()).isEqualTo(span.getTraceId());
-              assertThat(entry.getValue()).isEqualTo(span.getSpanId());
+              if (traceIdRequestAttributeEnabled()) {
+                assertThat(entry.getKey()).isEqualTo(span.getTraceId());
+                assertThat(entry.getValue()).isEqualTo(span.getSpanId());
+              } else {
+                assertThat(entry.getKey()).isNull();
+                assertThat(entry.getValue()).isNull();
+              }
             });
+  }
+
+  private boolean traceIdRequestAttributeEnabled() {
+    return !isAgentTest()
+        || Boolean.getBoolean(
+            "otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled");
   }
 }

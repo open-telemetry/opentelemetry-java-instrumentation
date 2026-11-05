@@ -5,27 +5,25 @@
 
 package io.opentelemetry.testing.cassandra.v4_4;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_CONSISTENCY_LEVEL;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_COORDINATOR_DC;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_COORDINATOR_ID;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_IDEMPOTENCE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_PAGE_SIZE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_TABLE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_CONSISTENCY_LEVEL;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_COORDINATOR_DC;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_COORDINATOR_ID;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_PAGE_SIZE;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_QUERY_IDEMPOTENT;
+import static io.opentelemetry.semconv.incubating.CassandraIncubatingAttributes.CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
 import static org.junit.jupiter.api.Named.named;
 
@@ -65,33 +63,27 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    NETWORK_TYPE,
-                                    emitStableDatabaseSemconv()
-                                        ? val -> val.isNull()
-                                        : val -> val.isIn("ipv4", "ipv6")),
+                                satisfies(NETWORK_TYPE, val -> val.isNull()),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                                 equalTo(NETWORK_PEER_PORT, cassandraPort),
-                                equalTo(maybeStable(DB_SYSTEM), CASSANDRA),
-                                equalTo(maybeStable(DB_NAME), parameter.keyspace),
-                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedQueryText),
-                                equalTo(
-                                    DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv() ? parameter.spanName : null),
-                                equalTo(maybeStable(DB_OPERATION), parameter.operation),
-                                equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
-                                equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
+                                equalTo(DB_SYSTEM_NAME, CASSANDRA),
+                                equalTo(DB_NAMESPACE, parameter.keyspace),
+                                equalTo(DB_QUERY_TEXT, parameter.expectedQueryText),
+                                equalTo(DB_QUERY_SUMMARY, parameter.spanName),
+                                equalTo(DB_OPERATION_NAME, parameter.operation),
+                                equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
+                                equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
                                 satisfies(
-                                    maybeStable(DB_CASSANDRA_COORDINATOR_ID),
+                                    CASSANDRA_COORDINATOR_ID,
                                     val -> val.isInstanceOf(String.class)),
                                 satisfies(
-                                    maybeStable(DB_CASSANDRA_IDEMPOTENCE),
+                                    CASSANDRA_QUERY_IDEMPOTENT,
                                     val -> val.isInstanceOf(Boolean.class)),
-                                equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
-                                equalTo(maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0),
-                                equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
+                                equalTo(CASSANDRA_PAGE_SIZE, 5000),
+                                equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
+                                equalTo(DB_COLLECTION_NAME, parameter.table)),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -107,7 +99,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     null,
                     "DROP KEYSPACE IF EXISTS reactive_test",
                     "DROP KEYSPACE IF EXISTS reactive_test",
-                    emitStableDatabaseSemconv() ? "DROP KEYSPACE" : "DROP",
+                    "DROP KEYSPACE",
                     "DROP",
                     null))),
         Arguments.of(
@@ -117,7 +109,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     null,
                     "CREATE KEYSPACE reactive_test WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor':3}",
                     "CREATE KEYSPACE reactive_test WITH REPLICATION = {?:?, ?:?}",
-                    emitStableDatabaseSemconv() ? "CREATE KEYSPACE" : "CREATE",
+                    "CREATE KEYSPACE",
                     "CREATE",
                     null))),
         Arguments.of(
@@ -147,7 +139,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     "reactive_test",
                     "SELECT * FROM users where name = 'alice' ALLOW FILTERING",
                     "SELECT * FROM users where name = ? ALLOW FILTERING",
-                    emitStableDatabaseSemconv() ? "SELECT users" : "SELECT reactive_test.users",
+                    "SELECT users",
                     "SELECT",
                     "users"))));
   }

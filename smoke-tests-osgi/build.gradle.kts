@@ -39,14 +39,16 @@ dependencies {
   // environment requirement that the JavaSE-21 OSGi runtime can't satisfy.
   osgiInfraImplementation(platform("org.junit:junit-bom:5.14.4"))
   osgiInfraImplementation("org.junit.jupiter:junit-jupiter")
-  osgiInfraImplementation("org.osgi:org.osgi.test.junit5")
+  osgiInfraImplementation("org.osgi:org.osgi.test.junit5:1.3.0")
   osgiInfraRuntimeOnly("org.junit.platform:junit-platform-launcher")
-  osgiInfraRuntimeOnly("org.apache.felix:org.apache.felix.framework")
-  osgiInfraRuntimeOnly("org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle")
+  osgiInfraRuntimeOnly("org.apache.felix:org.apache.felix.framework:8.0.0")
+  osgiInfraRuntimeOnly("org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:1.3.8")
 }
 
 /** Typed dependency scope for an OSGi test suite, avoiding stringly-typed invoke() calls. */
 class OsgiSuiteDependencies(private val sourceSet: SourceSet, private val handler: DependencyHandler) {
+  fun project(path: String) = handler.project(path)
+
   fun implementation(notation: Any) = handler.add(sourceSet.implementationConfigurationName, notation)
   fun compileOnly(notation: Any) = handler.add(sourceSet.compileOnlyConfigurationName, notation)
   fun runtimeOnly(notation: Any) = handler.add(sourceSet.runtimeOnlyConfigurationName, notation)
@@ -80,7 +82,7 @@ fun registerOsgiSuite(
   configurations[sourceSet.runtimeOnlyConfigurationName].extendsFrom(osgiInfraRuntimeOnly)
   // osgi.core is compile-only (provided by the OSGi container at runtime). extendsFrom does not
   // propagate to custom source set compile classpaths, so we add it directly.
-  dependencies.add(sourceSet.compileOnlyConfigurationName, "org.osgi:osgi.core")
+  dependencies.add(sourceSet.compileOnlyConfigurationName, "org.osgi:osgi.core:8.0.0")
 
   val bsn = "opentelemetry-osgi-testing-$suiteName"
 
@@ -276,7 +278,7 @@ val apacheHttpClientSuiteTask = registerOsgiSuite("apacheHttpClient") {
   implementation("commons-logging:commons-logging") {
     version { strictly("1.2") }
   }
-  runtimeOnly("org.apache.felix:org.apache.felix.configadmin:1.9.26")
+  runtimeOnly("org.apache.felix:org.apache.felix.configadmin:1.10.0")
 }
 
 // Suite: logbackAppender - a representative library instrumentation bundle, resolving against

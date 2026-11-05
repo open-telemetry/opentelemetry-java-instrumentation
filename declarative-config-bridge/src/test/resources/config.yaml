@@ -5,8 +5,7 @@ instrumentation/development:
       full_name:
         preserved: true
     agent:
-      experimental:
-        indy: true
+      enabled: false
     runtime_telemetry:
       enabled: false
     example_instrumentation:

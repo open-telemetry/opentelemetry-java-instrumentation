@@ -16,12 +16,14 @@ import java.util.List;
 public class RediscalaInstrumentationModule extends InstrumentationModule {
 
   public RediscalaInstrumentationModule() {
-    super("rediscala", "rediscala-1.8");
+    super("rediscala-1.8", "rediscala");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new RediscalaClientActorLikeInstrumentation(),
+        new RediscalaMutablePoolInstrumentation(),
         new RequestInstrumentation(),
         new TransactionBuilderInstrumentation(),
         new TransactionInstrumentation());

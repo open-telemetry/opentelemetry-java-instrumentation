@@ -20,7 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class DubboInstrumentationModule extends InstrumentationModule {
   public DubboInstrumentationModule() {
-    super("apache-dubbo", "apache-dubbo-2.7");
+    super("apache-dubbo-2.7", "apache-dubbo");
   }
 
   @Override

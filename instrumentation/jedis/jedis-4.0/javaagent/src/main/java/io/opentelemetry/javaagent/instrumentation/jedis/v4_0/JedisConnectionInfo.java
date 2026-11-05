@@ -5,50 +5,39 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import javax.annotation.Nullable;
-import redis.clients.jedis.DefaultJedisSocketFactoryUtil;
-import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisClientConfig;
 import redis.clients.jedis.JedisSocketFactory;
 
 class JedisConnectionInfo {
-  @Nullable private final String serverAddress;
-  @Nullable private final Integer serverPort;
+  @Nullable private final RedisServerTarget serverTarget;
   @Nullable private final Long databaseIndex;
 
   private JedisConnectionInfo(
-      @Nullable String serverAddress, @Nullable Integer serverPort, @Nullable Long databaseIndex) {
-    this.serverAddress = serverAddress;
-    this.serverPort = serverPort;
+      @Nullable RedisServerTarget serverTarget, @Nullable Long databaseIndex) {
+    this.serverTarget = serverTarget;
     this.databaseIndex = databaseIndex;
   }
 
   static JedisConnectionInfo create(
       @Nullable JedisSocketFactory socketFactory, @Nullable Object clientConfig) {
-    HostAndPort hostAndPort = DefaultJedisSocketFactoryUtil.getHostAndPort(socketFactory);
     // Without a client config, Jedis leaves the new Redis connection on the default database 0.
     Long databaseIndex =
         clientConfig instanceof JedisClientConfig
             ? Long.valueOf(((JedisClientConfig) clientConfig).getDatabase())
             : 0L;
     return new JedisConnectionInfo(
-        hostAndPort != null ? hostAndPort.getHost() : null,
-        hostAndPort != null ? hostAndPort.getPort() : null,
-        databaseIndex);
-  }
-
-  @Nullable
-  String getServerAddress() {
-    return serverAddress;
-  }
-
-  @Nullable
-  Integer getServerPort() {
-    return serverPort;
+        JedisConfiguredTargets.socketFactoryTarget(socketFactory), databaseIndex);
   }
 
   @Nullable
   Long getDatabaseIndex() {
     return databaseIndex;
+  }
+
+  @Nullable
+  RedisServerTarget getServerTarget() {
+    return serverTarget;
   }
 }

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.extension.instrumentation.internal;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -20,11 +19,6 @@ class AgentDistributionConfigTest {
     // Initialize OpenTelemetry SDK to load declarative configuration
     OpenTelemetryInstaller.installOpenTelemetrySdk(
         AgentDistributionConfigTest.class.getClassLoader());
-  }
-
-  @Test
-  void testIndyDevelopmentProperty() {
-    assertThat(AgentDistributionConfig.get().isIndyEnabled()).isTrue();
   }
 
   @Test
@@ -55,15 +49,11 @@ class AgentDistributionConfigTest {
   }
 
   @Test
-  void testV3PreviewProperty() {
-    assertThat(AgentCommonConfig.get().isV3Preview()).isTrue();
-  }
-
-  @Test
   void testInstrumentationEnabled() {
     AgentDistributionConfig config = AgentDistributionConfig.get();
     assertThat(config.isInstrumentationEnabled("tomcat", false)).isTrue();
     assertThat(config.isInstrumentationEnabled("spring_webmvc", false)).isTrue();
+    assertThat(config.isInstrumentationEnabled("reactor-3.1", false)).isTrue();
     assertThat(config.isInstrumentationEnabled("unknown", false)).isFalse();
   }
 

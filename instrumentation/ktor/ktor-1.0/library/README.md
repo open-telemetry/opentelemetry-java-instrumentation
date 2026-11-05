@@ -38,7 +38,7 @@ OpenTelemetry openTelemetry = ...
 
 embeddedServer(Netty, 8080) {
   install(KtorServerTelemetry) {
-    setOpenTelemetry(openTelemetry)
+    openTelemetry(openTelemetry)
   }
 }
 ```

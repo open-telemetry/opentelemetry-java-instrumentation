@@ -3,6 +3,7 @@ import com.google.protobuf.gradle.*
 plugins {
   id("otel.javaagent-instrumentation")
   id("com.google.protobuf")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -55,30 +56,6 @@ afterEvaluate {
   dependencies {
     add("compileProtoPath", platform(project(":dependencyManagement")))
     add("testCompileProtoPath", platform(project(":dependencyManagement")))
-  }
-}
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.opt-in=rpc/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=rpc/dup")
-  }
-
-  check {
-    dependsOn(testStableSemconv, testBothSemconv)
   }
 }
 

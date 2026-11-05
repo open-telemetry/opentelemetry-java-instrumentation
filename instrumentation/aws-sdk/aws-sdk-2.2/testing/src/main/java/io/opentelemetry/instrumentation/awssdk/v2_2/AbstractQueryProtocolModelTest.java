@@ -11,16 +11,15 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
@@ -44,7 +43,7 @@ import software.amazon.awssdk.services.ses.model.SendEmailRequest;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SuppressWarnings("deprecation") // using deprecated semconv
-public abstract class AbstractQueryProtocolModelTest {
+public abstract class AbstractQueryProtocolModelTest extends AbstractAwsSdkTest {
   private final MockWebServerExtension server = new MockWebServerExtension();
 
   @BeforeAll
@@ -63,8 +62,6 @@ public abstract class AbstractQueryProtocolModelTest {
   }
 
   protected abstract ClientOverrideConfiguration.Builder createClientOverrideConfigurationBuilder();
-
-  protected abstract InstrumentationExtension getTesting();
 
   @Test
   void testClientWithQueryProtocolModel() {
@@ -111,7 +108,7 @@ public abstract class AbstractQueryProtocolModelTest {
                         equalTo(RPC_SERVICE, "Ses"),
                         equalTo(RPC_METHOD, "SendEmail"),
                         equalTo(AWS_REQUEST_ID, "UNKNOWN"),
-                        equalTo(stringKey("aws.agent"), isJavaagentTest() ? "java-aws-sdk" : null),
+                        equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
                         satisfies(
                             URL_FULL,
                             val ->
@@ -122,9 +119,5 @@ public abstract class AbstractQueryProtocolModelTest {
                                     })));
                   });
             });
-  }
-
-  private boolean isJavaagentTest() {
-    return getClass().getName().startsWith("io.opentelemetry.javaagent.");
   }
 }

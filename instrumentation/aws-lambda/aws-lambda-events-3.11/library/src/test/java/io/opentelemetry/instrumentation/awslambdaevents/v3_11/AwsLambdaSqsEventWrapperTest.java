@@ -5,21 +5,17 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldMessagingSemconv;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsMetricsAssertions.assertMetrics;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_RESOURCE_ID;
-import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.when;
@@ -32,6 +28,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.lang.reflect.Constructor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,8 +55,7 @@ class AwsLambdaSqsEventWrapperTest {
   void setUp() {
     when(context.getFunctionName()).thenReturn("my_function");
     when(context.getAwsRequestId()).thenReturn("1-22-333");
-    when(context.getInvokedFunctionArn())
-        .thenReturn("arn:aws:lambda:us-east-1:123456789:function:test");
+    AwsLambdaTestUtils.stubInvokedFunctionArn(context);
   }
 
   @AfterEach
@@ -67,7 +63,6 @@ class AwsLambdaSqsEventWrapperTest {
     assertThat(testing.forceFlushCalled()).isTrue();
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void eventTraced() {
     SQSEvent event = new SQSEvent();
@@ -88,31 +83,29 @@ class AwsLambdaSqsEventWrapperTest {
                 span ->
                     span.hasName("my_function")
                         .hasKind(SpanKind.SERVER)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CLOUD_RESOURCE_ID,
-                                "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(FAAS_INVOCATION_ID, "1-22-333")),
+                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                    ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                                    : null),
+                            equalTo(
+                                CLOUD_ACCOUNT_ID,
+                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                    ? "123456789"
+                                    : null),
+                            equalTo(stringKey("faas.invocation.id"), "1-22-333")),
                 span ->
-                    span.hasName(emitStableMessagingSemconv() ? "process otel" : "aws:sqs process")
+                    span.hasName("process otel")
                         .hasKind(SpanKind.CONSUMER)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                            equalTo(
-                                MESSAGING_OPERATION, emitOldMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_DESTINATION_NAME,
-                                emitStableMessagingSemconv() ? "otel" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_NAME,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_OPERATION_TYPE,
-                                emitStableMessagingSemconv() ? "process" : null),
-                            equalTo(
-                                MESSAGING_BATCH_MESSAGE_COUNT,
-                                emitStableMessagingSemconv() ? Long.valueOf(1) : null))));
+                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "otel"),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(1)))));
     assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "otel", 1, 1, null);
   }
 

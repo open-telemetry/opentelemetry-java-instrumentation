@@ -6,9 +6,12 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_ENCODING_FORMATS;
@@ -22,6 +25,8 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.OpenAIClientAsync;
@@ -30,17 +35,23 @@ import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
 import com.openai.errors.OpenAIIoException;
 import com.openai.models.embeddings.CreateEmbeddingResponse;
 import com.openai.models.embeddings.EmbeddingCreateParams;
+import com.openai.services.async.EmbeddingServiceAsync;
+import com.openai.services.blocking.EmbeddingService;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.concurrent.CompletionException;
+import java.util.function.Function;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-// TODO: Remove after https://github.com/open-telemetry/semantic-conventions-genai/issues/247
-// is resolved.
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
   private static final String MODEL = "text-embedding-3-small";
 
@@ -99,6 +110,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                     maybeWithTransportSpan(
                         span ->
                             span.hasName("embeddings text-embedding-3-small")
+                                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                                 .hasKind(SpanKind.CLIENT)
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
@@ -118,6 +130,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -132,6 +145,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -144,6 +158,62 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                             equalTo(GEN_AI_REQUEST_MODEL, MODEL),
                                             equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
                                             equalTo(GEN_AI_TOKEN_TYPE, INPUT)))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("withOptionsCases")
+  void withOptions(
+      Function<OpenAIClient, EmbeddingService> sync,
+      Function<OpenAIClientAsync, EmbeddingServiceAsync> async) {
+    // withOptions was added in SDK 2.x
+    assumeTrue(testLatestDeps());
+    EmbeddingCreateParams request =
+        EmbeddingCreateParams.builder()
+            .model(MODEL)
+            .inputOfArrayOfStrings(singletonList("South Atlantic Ocean."))
+            .build();
+
+    CreateEmbeddingResponse response =
+        call(
+            client -> sync.apply(client).create(request),
+            client -> async.apply(client).create(request));
+    assertThat(response.data()).hasSize(1);
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    maybeWithTransportSpan(
+                        span ->
+                            span.hasName("embeddings text-embedding-3-small")
+                                .hasKind(SpanKind.CLIENT)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                                    equalTo(GEN_AI_USAGE_INPUT_TOKENS, 4),
+                                    // Newer versions of the library populate base64 when unset by
+                                    // the user.
+                                    satisfies(
+                                        GEN_AI_REQUEST_ENCODING_FORMATS,
+                                        val -> val.isIn(singletonList("base64"), null))))));
+  }
+
+  private static Stream<Arguments> withOptionsCases() {
+    return Stream.of(
+        argumentSet(
+            "client",
+            (Function<OpenAIClient, EmbeddingService>)
+                client -> testHelper.withoutRetries(client).embeddings(),
+            (Function<OpenAIClientAsync, EmbeddingServiceAsync>)
+                client -> testHelper.withoutRetries(client).embeddings()),
+        argumentSet(
+            "embedding service",
+            (Function<OpenAIClient, EmbeddingService>)
+                client -> testHelper.withoutRetries(client.embeddings()),
+            (Function<OpenAIClientAsync, EmbeddingServiceAsync>)
+                client -> testHelper.withoutRetries(client.embeddings())));
   }
 
   @Test
@@ -249,6 +319,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                 .hasKind(SpanKind.CLIENT)
                                 .hasException(emitExceptionAsSpanEvents() ? thrown : null)
                                 .hasAttributesSatisfyingExactly(
+                                    equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
                                     equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                     equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                     equalTo(GEN_AI_REQUEST_MODEL, MODEL),
@@ -273,6 +344,7 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfyingExactly(
+                                            equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
                                             equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                                             equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
                                             equalTo(GEN_AI_REQUEST_MODEL, MODEL)))));

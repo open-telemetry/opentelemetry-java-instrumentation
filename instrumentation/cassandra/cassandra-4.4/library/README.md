@@ -45,8 +45,38 @@ CassandraTelemetry telemetry = CassandraTelemetry.create(openTelemetry);
 // Create a CqlSession
 CqlSession session = CqlSession.builder().build();
 
-// Wrap the session
-CqlSession tracedSession = telemetry.wrap(session);
+// Instrument the session
+CqlSession tracedSession = telemetry.instrument(session);
 
 // ... use the tracedSession to make requests
 ```
+
+### Configured server target
+
+To record `server.address` and `server.port`,
+pass the complete original contact-point list when instrumenting the session:
+
+```java
+import java.net.InetSocketAddress;
+import java.util.Arrays;
+import java.util.List;
+
+List<InetSocketAddress> contactPoints =
+    Arrays.asList(
+        new InetSocketAddress("cassandra1.example.com", 9042),
+        new InetSocketAddress("cassandra2.example.com", 9042));
+CqlSession session =
+    CqlSession.builder()
+        .addContactPoints(contactPoints)
+        .withLocalDatacenter("datacenter1")
+        .build();
+CqlSession tracedSession = telemetry.instrument(session, contactPoints);
+```
+
+Include contact points from every source, including the session builder and driver configuration.
+Do not use the current coordinator or discovered cluster nodes. The instrumentation uses the list
+only to derive database server attributes.
+
+`telemetry.instrument(session)` still traces operations but omits `server.address` and `server.port`.
+The Java agent captures configured contact points
+automatically and does not require this overload.

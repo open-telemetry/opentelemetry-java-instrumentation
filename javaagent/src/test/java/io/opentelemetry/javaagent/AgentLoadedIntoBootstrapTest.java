@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import jvmbootstraptest.AgentLoadedChecker;
+import jvmbootstraptest.ChildFirstSystemClassLoader;
 import jvmbootstraptest.MyClassLoaderIsNotBootstrap;
 import org.junit.jupiter.api.Test;
 
@@ -19,9 +20,46 @@ class AgentLoadedIntoBootstrapTest {
   void agentLoadsWhenSeparateJvmIsLaunched() throws Exception {
     int exitCode =
         IntegrationTestUtils.runOnSeparateJvm(
-            AgentLoadedChecker.class.getName(), new String[0], new String[0], emptyMap(), true);
+            AgentLoadedChecker.class.getName(),
+            new String[0],
+            new String[] {IntegrationTestUtils.getAgentJarPath()},
+            emptyMap(),
+            true);
 
     assertThat(exitCode).isZero();
+  }
+
+  @Test
+  void agentLoadsWithChildFirstSystemClassLoader() throws Exception {
+    int exitCode =
+        IntegrationTestUtils.runOnSeparateJvm(
+            AgentLoadedChecker.class.getName(),
+            new String[] {
+              "-Djava.system.class.loader=" + ChildFirstSystemClassLoader.class.getName()
+            },
+            new String[] {IntegrationTestUtils.getAgentJarPath()},
+            emptyMap(),
+            true);
+
+    assertThat(exitCode).isZero();
+  }
+
+  @Test
+  void agentLoadsWhenAgentJarIsAlreadyOnBootstrapClasspath() throws Exception {
+    String agentJarPath = IntegrationTestUtils.getAgentJarPath();
+
+    IntegrationTestUtils.ProcessResult result =
+        IntegrationTestUtils.runOnSeparateJvmAndCaptureOutput(
+            AgentLoadedChecker.class.getName(),
+            new String[] {"-Xbootclasspath/a:" + agentJarPath, "-Djdk.instrument.traceUsage=true"},
+            new String[] {agentJarPath},
+            emptyMap(),
+            System.getProperty("java.class.path"),
+            true);
+
+    assertThat(result.getExitCode()).isZero();
+    assertThat(result.getOutput())
+        .doesNotContain("Instrumentation.appendToBootstrapClassLoaderSearch has been called");
   }
 
   // this tests the case where someone adds the contents of opentelemetry-javaagent.jar by mistake

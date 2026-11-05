@@ -5,102 +5,68 @@
 
 package io.opentelemetry.javaagent.instrumentation.vaadin.v14_2;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static java.util.Objects.requireNonNull;
-import static org.awaitility.Awaitility.await;
 
 import com.vaadin.flow.server.Version;
 import com.vaadin.flow.spring.annotation.EnableVaadin;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.openqa.selenium.By;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.remote.RemoteWebDriver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.testcontainers.Testcontainers;
-import org.testcontainers.containers.output.Slf4jLogConsumer;
-import org.testcontainers.selenium.BrowserWebDriverContainer;
 
 public abstract class AbstractVaadinTest
     extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
 
-  private static final Logger logger = LoggerFactory.getLogger(AbstractVaadinTest.class);
+  private static final String INSTRUMENTATION_SCOPE = "io.opentelemetry.vaadin-14.2";
+  private static final boolean CONTROLLER_TELEMETRY_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.common.controller-telemetry.enabled");
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  private BrowserWebDriverContainer browser;
-
   @SpringBootApplication
   @EnableVaadin("test.vaadin")
   static class TestApplication {
     public TestApplication() {}
 
-    static ConfigurableApplicationContext start(int port, String contextPath) {
+    static ConfigurableApplicationContext start(
+        int port, String contextPath, boolean productionMode) {
       SpringApplication app = new SpringApplication(TestApplication.class);
       Map<String, Object> properties = new HashMap<>();
       properties.put("server.port", port);
       properties.put("server.servlet.contextPath", contextPath);
+      properties.put(
+          "server.servlet.context-parameters.original.frontend.resources", productionMode);
       properties.put("server.error.include-message", "always");
+      properties.put("vaadin.productionMode", productionMode);
+      properties.put("vaadin.compatibilityMode", false);
       app.setDefaultProperties(properties);
       return app.run();
     }
   }
 
   @BeforeAll
-  protected void setup() throws URISyntaxException {
+  protected void setup() {
     startServer();
     cleanup.deferAfterAll(this::cleanupServer);
-
-    Testcontainers.exposeHostPorts(port);
-
-    browser =
-        new BrowserWebDriverContainer("selenium/standalone-chrome:4.43.0")
-            .withLogConsumer(new Slf4jLogConsumer(logger));
-    browser.start();
-    cleanup.deferAfterAll(browser::stop);
-
-    address = new URI("http://host.testcontainers.internal:" + port + getContextPath() + "/");
+    address = URI.create("http://localhost:" + port + getContextPath() + "/");
   }
 
-  protected void prepareVaadinBaseDir(File baseDir) {}
-
-  protected static void copyClasspathResource(String resource, Path destination) {
-    if (!Files.exists(destination)) {
-      try (InputStream inputStream =
-          requireNonNull(
-              AbstractVaadinTest.class.getResourceAsStream(resource),
-              "Missing resource: " + resource)) {
-        Files.copy(inputStream, destination);
-      } catch (IOException e) {
-        throw new IllegalStateException(e);
-      }
-    }
+  protected boolean isProductionMode() {
+    return true;
   }
 
   @Override
@@ -109,12 +75,8 @@ public abstract class AbstractVaadinTest
     if (!baseDir.mkdirs() && !baseDir.isDirectory()) {
       throw new IllegalStateException("Could not create directory: " + baseDir);
     }
-    prepareVaadinBaseDir(baseDir);
-
-    // set directory for files generated by vaadin development mode
-    // by default these go to project root
     System.setProperty("vaadin.project.basedir", baseDir.getAbsolutePath());
-    return TestApplication.start(port, getContextPath());
+    return TestApplication.start(port, getContextPath(), isProductionMode());
   }
 
   @Override
@@ -127,81 +89,15 @@ public abstract class AbstractVaadinTest
     return "/xyz";
   }
 
-  private void waitForStart(RemoteWebDriver driver) {
-    // In development mode ui javascript is compiled when application starts
-    // this involves downloading and installing npm and a bunch of packages
-    // and running webpack. Wait until all of this is done before starting test.
-    driver.manage().timeouts().implicitlyWait(Duration.ofMinutes(3));
-    driver.get(address.resolve("main").toString());
-    // wait for page to load
-    driver.findElement(By.id("main.label"));
-    // clear traces so test would start from clean state
-    testing.clearData();
-
-    driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(30));
-  }
-
-  private RemoteWebDriver getWebDriver() {
-    return new RemoteWebDriver(browser.getSeleniumAddress(), new ChromeOptions(), false);
-  }
-
   abstract void assertFirstRequest();
 
-  private void assertButtonClick() {
-    await()
-        .untilAsserted(
-            () -> {
-              List<List<SpanData>> traces = testing.waitForTraces(1);
-              assertThat(traces.get(0))
-                  .satisfies(
-                      spans -> {
-                        assertThat(spans.get(0))
-                            .hasName("POST " + getContextPath() + "/main")
-                            .hasNoParent()
-                            .hasKind(SpanKind.SERVER);
-                        assertThat(spans.get(1))
-                            .hasName("SpringVaadinServletService.handleRequest")
-                            .hasParent(spans.get(0))
-                            .hasKind(SpanKind.INTERNAL);
-                        // we don't assert all the handler spans as these vary between
-                        // vaadin versions
-                        assertThat(spans.get(spans.size() - 2))
-                            .hasName("UidlRequestHandler.handleRequest")
-                            .hasParent(spans.get(1))
-                            .hasKind(SpanKind.INTERNAL);
-                        assertThat(spans.get(spans.size() - 1))
-                            .hasName("EventRpcHandler.handle/click")
-                            .hasParent(spans.get(spans.size() - 2))
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasAttributesSatisfyingExactly(
-                                codeFunctionAssertions(
-                                    "com.vaadin.flow.server.communication.rpc.EventRpcHandler",
-                                    "handle"));
-                      });
-            });
+  protected static boolean controllerTelemetryEnabled() {
+    return CONTROLLER_TELEMETRY_ENABLED;
   }
 
-  @Test
-  void navigateFromMainToOtherView() {
-    RemoteWebDriver driver = getWebDriver();
-    cleanup.deferCleanup(driver::quit);
-
-    waitForStart(driver);
-
-    // fetch the test page
-    driver.get(address.resolve("main").toString());
-
-    // wait for page to load
-    assertThat(driver.findElement(By.id("main.label")).getText()).isEqualTo("Main view");
-    assertFirstRequest();
-
-    testing.clearData();
-
-    // click a button to trigger calling java code in MainView
-    driver.findElement(By.id("main.button")).click();
-
-    // wait for page to load
-    assertThat(driver.findElement(By.id("other.label")).getText()).isEqualTo("Other view");
-    assertButtonClick();
+  protected static void assertNoControllerSpans(List<? extends SpanData> spans) {
+    assertThat(spans)
+        .noneMatch(
+            span -> INSTRUMENTATION_SCOPE.equals(span.getInstrumentationScopeInfo().getName()));
   }
 }

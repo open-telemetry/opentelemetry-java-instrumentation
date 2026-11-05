@@ -16,7 +16,12 @@ import java.util.List;
 public class HystrixInstrumentationModule extends InstrumentationModule {
 
   public HystrixInstrumentationModule() {
-    super("hystrix", "hystrix-1.4");
+    super("hystrix-1.4", "hystrix");
+  }
+
+  @Override
+  public boolean defaultEnabled() {
+    return false;
   }
 
   @Override

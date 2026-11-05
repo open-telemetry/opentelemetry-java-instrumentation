@@ -35,14 +35,14 @@ class C3p0InstrumentationTest extends AbstractC3p0InstrumentationTest {
   void shouldUseJdbcUrlForDataSourceName() throws Exception {
     ComboPooledDataSource dataSource = createDataSource("jdbc:mock://db.example:5432/orders");
 
-    assertDataSourceName(dataSource, "db.example:5432/orders");
+    assertDataSourceName(dataSource, "orders");
   }
 
   @Test
   void shouldUseIpv6JdbcUrlForDataSourceName() throws Exception {
     ComboPooledDataSource dataSource = createDataSource("jdbc:mock://[2001:db8::1]:5432/orders");
 
-    assertDataSourceName(dataSource, "[2001:db8::1]:5432/orders");
+    assertDataSourceName(dataSource, "orders");
   }
 
   @Test
@@ -54,14 +54,14 @@ class C3p0InstrumentationTest extends AbstractC3p0InstrumentationTest {
     properties.setProperty("databaseName", "inventory");
     dataSource.setProperties(properties);
 
-    assertDataSourceName(dataSource, "properties.example:5433/inventory");
+    assertDataSourceName(dataSource, "inventory");
   }
 
   @Test
   void shouldUseFallbackDataSourceName() throws Exception {
     ComboPooledDataSource dataSource = createDataSource("jdbc:mock:testDatabase");
 
-    assertDataSourceName(dataSource, "c3p0");
+    assertDataSourceName(dataSource, "other_sql");
   }
 
   private void assertDataSourceName(ComboPooledDataSource dataSource, String expectedName)

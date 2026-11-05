@@ -1,5 +1,8 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -24,15 +27,9 @@ dependencies {
   testInstrumentation(project(":instrumentation:apache-commons-pool-2.0:javaagent"))
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testWithCommonsPoolInstrumentation =
-    register<Test>("testWithCommonsPoolInstrumentation") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
+testing.suites {
+  executions("test") {
+    register("WithCommonsPoolInstrumentation") {
       filter {
         includeTestsMatching(
           "ApacheDbcpInstrumentationTest.shouldNotReportCommonsPoolMetrics",
@@ -41,16 +38,5 @@ tasks {
 
       jvmArgs("-Dotel.instrumentation.apache-commons-pool.enabled=true")
     }
-
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  check {
-    dependsOn(testWithCommonsPoolInstrumentation, testStableSemconv)
   }
 }

@@ -21,13 +21,10 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-@SuppressWarnings("deprecation") // supporting old semconv until 3.0
 public final class H2UrlParser implements JdbcUrlParser {
 
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String H2DATABASE = "h2database";
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
-  private static final String H2 = "h2";
 
   private static final int DEFAULT_PORT = 8082;
   private static final String[] LOCAL_MODES = {"mem", "file", "zip"};
@@ -40,7 +37,6 @@ public final class H2UrlParser implements JdbcUrlParser {
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
     ctx.system(H2DATABASE);
-    ctx.oldSemconvSystem(H2);
 
     ctx.applyUserProperty();
 
@@ -49,23 +45,23 @@ public final class H2UrlParser implements JdbcUrlParser {
     for (String mode : LOCAL_MODES) {
       String prefix = mode + ":";
       if (h2Url.startsWith(prefix)) {
-        parseLocalMode(h2Url.substring(prefix.length()), mode, ctx);
+        parseLocalMode(h2Url.substring(prefix.length()), ctx);
         return;
       }
     }
 
     for (String mode : NETWORK_MODES) {
       if (h2Url.startsWith(mode + ":")) {
-        parseNetworkMode(mode, jdbcUrl, ctx);
+        parseNetworkMode(jdbcUrl, ctx);
         return;
       }
     }
 
     // Default to file
-    parseLocalMode(h2Url, "file", ctx);
+    parseLocalMode(h2Url, ctx);
   }
 
-  private static void parseLocalMode(String remainder, String subtype, ParseContext ctx) {
+  private static void parseLocalMode(String remainder, ParseContext ctx) {
     // Local modes have no network host/port — clear any values set by DataSource properties
     ctx.host(null);
     ctx.port(null);
@@ -76,12 +72,10 @@ public final class H2UrlParser implements JdbcUrlParser {
     if (!databaseName.isEmpty()) {
       ctx.databaseName(databaseName);
     }
-    ctx.subtype(subtype);
   }
 
-  private static void parseNetworkMode(String subtype, String jdbcUrl, ParseContext ctx) {
-    ctx.port(DEFAULT_PORT);
-    ctx.subtype(subtype);
+  private static void parseNetworkMode(String jdbcUrl, ParseContext ctx) {
+    ctx.defaultPort(DEFAULT_PORT);
     ctx.parseUrl(jdbcUrl);
   }
 }

@@ -16,7 +16,7 @@ import java.util.List;
 public class Log4jAppenderInstrumentationModule extends InstrumentationModule {
 
   public Log4jAppenderInstrumentationModule() {
-    super("log4j-appender", "log4j-appender-1.2");
+    super("log4j-appender-1.2", "log4j-appender", "log4j");
   }
 
   @Override

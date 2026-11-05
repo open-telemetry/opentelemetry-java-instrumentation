@@ -4,11 +4,27 @@ OpenTelemetry Auto-Instrumentation for Java uses [SemVer standard](https://semve
 
 The version is specified in [version.gradle.kts](version.gradle.kts).
 
+## Development and release branches
+
+| Branch | Purpose |
+| --- | --- |
+| `main` | Primary development line |
+| `maintenance/v<major>.x` | Further compatible minor releases of a supported older major |
+| `release/v<major>.<minor>.x` | Preparation and publication of a minor release and its patches |
+
+For example, `maintenance/v2.x` can prepare `release/v2.33.x` while `main` develops a newer major.
+Before activating another maintenance line, configure its branch protections, protected-environment
+access, and explicit Renovate base branch, then initialize it from a reviewed commit of that major.
+The snapshot version's major must match the maintenance branch name.
+
 ## Snapshot builds
 
-Every successful CI build of the main branch automatically executes `./gradlew publishToSonatype`
-as the last step, which publishes a snapshot build to
+The daily build workflow on the default branch executes `./gradlew publishToSonatype`,
+which publishes a snapshot build to
 [Sonatype snapshot repository](https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/io/opentelemetry/).
+To publish a maintenance snapshot, manually run the
+[Build (daily) workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/build-daily.yml)
+with the maintenance branch selected, for example `maintenance/v2.x`.
 
 ## Release cadence
 
@@ -18,22 +34,28 @@ the second Monday of the month (roughly a few days after the monthly minor relea
 
 ## Preparing a new major or minor release
 
+Choose the development branch: `main` for the current major, or `maintenance/v<major>.x`
+for a supported maintenance major.
+
 - Check that
   [renovate has run](https://developer.mend.io/github/open-telemetry/opentelemetry-java-instrumentation)
   sometime in the past day (this link is only accessible if you have write access to the
-  repository), and check that all
+  repository), and check that the applicable
   [renovate PRs](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pulls/app%2Frenovate)
-  have been merged.
+  targeting the chosen development branch have been merged.
+- For a maintenance release, backport the selected compatible changes and SDK upgrades to its development branch using the
+  [Backport workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/backport.yml).
 - Close the [release milestone](https://github.com/open-telemetry/opentelemetry-java-instrumentation/milestones)
   if there is one.
-- Merge a pull request to `main` updating the `CHANGELOG.md`.
+- Merge a pull request to the chosen development branch updating the `CHANGELOG.md`.
   - The heading for the unreleased entries should be `## Unreleased`.
   - Use `python3 .github/scripts/draft-release-notes/draft-release-notes.py`
-    as the starting point for writing the change log.
+    as the starting point for writing the change log. The default range starts after the highest patch
+    of the preceding minor (or the highest full version of the preceding major for a major release).
 - Run the [Prepare release branch workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-release-branch.yml).
-  - Press the "Run workflow" button, and leave the default branch `main` selected.
+  - Press the "Run workflow" button, and select the chosen development branch.
   - Review and merge the two pull requests that it creates
-    (one is targeted to the release branch and one is targeted to `main`).
+    (one is targeted to the release branch and one advances the snapshot version on the development branch).
 
 ## Preparing a new patch release
 
@@ -68,12 +90,10 @@ and deadlocks.
     - Publish the artifacts to Maven Central
     - Generate [GitHub Artifact Attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations) for the Java agent jar and SBOM bundle
     - Publish a GitHub release with release notes, Java agent jar, and SBOM bundle
-  - Review and merge the pull request that it creates for updating the apidiff baseline version
-    to the newly released version (note that this pull request won't be made until after the release
-    is available in maven central).
-  - Review and merge the pull request that it creates for updating the change log in main
-    (note that if this is not a patch release then the change log on main may already be up-to-date,
-    in which case no pull request will be created).
+  - Review and merge the post-release pull request into `maintenance/vN.x` if it exists,
+    otherwise into `main` with a matching snapshot major. Publication stops if the target is missing or mismatched.
+    The PR always updates the changelog. Releases newer than the branch's API baseline also update
+    the baseline and API diffs after reaching Maven Central, plus the README download link on maintenance branches.
 
 ## Credentials
 

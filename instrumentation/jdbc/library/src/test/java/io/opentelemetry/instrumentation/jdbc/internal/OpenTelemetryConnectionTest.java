@@ -101,16 +101,7 @@ class OpenTelemetryConnectionTest {
   }
 
   private static DbInfo getDbInfo() {
-    return DbInfo.builder()
-        .dbSystemName("my_system")
-        .dbSystem("my_system")
-        .dbConnectionString("my_connection_string")
-        .dbUser("my_user")
-        .dbName("my_name")
-        .dbNamespace("my_name")
-        .serverAddress("my_host")
-        .serverPort(1234)
-        .build();
+    return DbInfo.builder().dbSystemName("my_system").dbNamespace("my_name").build();
   }
 
   private static OpenTelemetryConnection getConnection(OpenTelemetry openTelemetry) {

@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RxJava3InstrumentationModule extends InstrumentationModule {
 
   public RxJava3InstrumentationModule() {
-    super("rxjava", "rxjava-3.0");
+    super("rxjava-3.0", "rxjava");
   }
 
   @Override

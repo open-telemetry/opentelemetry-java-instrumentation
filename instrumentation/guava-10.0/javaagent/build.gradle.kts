@@ -1,5 +1,8 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -27,29 +30,20 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
 }
 
-tasks {
-  val testStableSemconv = register<Test>("testStableSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=code")
+testing.suites {
+  register<JvmTestSuite>("version19Test") {
+    dependencies {
+      implementation("com.google.guava:guava:${baseVersion("19.0").orLatest()}")
+    }
   }
 
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
+  executions("test") {
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.guava.experimental-span-attributes=true")
+    }
   }
+}
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.guava.experimental-span-attributes=true")
-  }
-
-  check {
-    dependsOn(testStableSemconv, testBothSemconv, testExperimental)
-  }
+tasks.check {
+  dependsOn(testing.suites)
 }

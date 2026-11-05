@@ -1,6 +1,10 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -34,102 +38,66 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-kafka:latest.release")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("testNoReceiveTelemetry") {
-      dependencies {
-        implementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
+testing.suites {
+  register<JvmTestSuite>("testAsyncAcks") {
+    dependencies {
+      // async acks were added in 2.8
+      val springKafkaVersion = baseVersion("2.8.0").orLatest()
+      implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
+    }
+  }
 
-        // the "library" configuration is not recognized by the test suite plugin
-        val springKafkaVersion = baseVersion("2.7.0").orLatest()
-        val springBootVersion = baseVersion("2.5.3").orLatest()
-        implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
-        implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
-        implementation("org.springframework.boot:spring-boot-starter:$springBootVersion")
+  register<JvmTestSuite>("testNoReceiveTelemetry") {
+    dependencies {
+      implementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
 
-        if (otelProps.testLatestDeps) {
-          implementation("org.springframework.boot:spring-boot-starter-kafka:latest.release")
-        }
+      // the "library" configuration is not recognized by the test suite plugin
+      val springKafkaVersion = baseVersion("2.7.0").orLatest()
+      val springBootVersion = baseVersion("2.5.3").orLatest()
+      implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
+      implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
+      implementation("org.springframework.boot:spring-boot-starter:$springBootVersion")
+
+      if (otelProps.testLatestDeps) {
+        implementation("org.springframework.boot:spring-boot-starter-kafka:latest.release")
       }
+    }
+  }
 
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
-          }
-        }
+  executions("testNoReceiveTelemetry") {
+    configureDefault {
+      jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
+    }
+  }
+
+  executions("test") {
+    configureDefault {
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    }
+
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+      telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
+    }
+
+    register("SpringDisabled") {
+      filter {
+        includeTestsMatching("SpringKafkaMockConsumerTest")
       }
+      systemProperty("springDisabled", true)
+      telemetryConfig("otel.instrumentation.spring-kafka.enabled", "false")
     }
   }
 }
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true",
-    )
-  }
-
-  val testMessagingPreview = register<Test>("testMessagingPreview") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("SpringKafkaTest.shouldCreateSpansForSingleRecordProcess")
-      includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaListener")
-      includeTestsMatching("SpringKafkaTest.shouldCreateSpansForBatchReceiveAndProcess")
-      includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaBatchListener")
-    }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("SpringKafkaTest.shouldCreateSpansForSingleRecordProcess")
-      includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaListener")
-      includeTestsMatching("SpringKafkaTest.shouldCreateSpansForBatchReceiveAndProcess")
-      includeTestsMatching("SpringKafkaTest.shouldHandleFailureInKafkaBatchListener")
-    }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging/dup")
-  }
-
-  val testMessagingPreviewNoReceiveTelemetry = register<Test>("testMessagingPreviewNoReceiveTelemetry") {
-    testClassesDirs = sourceSets["testNoReceiveTelemetry"].output.classesDirs
-    classpath = sourceSets["testNoReceiveTelemetry"].runtimeClasspath
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
-    jvmArgs("-Dotel.semconv-stability.preview=messaging")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=messaging")
-  }
-
-  test {
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true",
-    )
   }
 
   check {
-    dependsOn(testing.suites, testExperimental, testMessagingPreview, testBothSemconv, testMessagingPreviewNoReceiveTelemetry)
+    dependsOn(testing.suites)
   }
 }
 
@@ -142,19 +110,13 @@ if (otelProps.testLatestDeps) {
 
 // spring 6 uses slf4j 2.0
 if (!otelProps.testLatestDeps) {
-  configurations {
-    listOf(
-      testRuntimeClasspath,
-      named("testNoReceiveTelemetryRuntimeClasspath"),
-    )
-      .forEach {
-        it.configure {
-          resolutionStrategy {
-            // requires old logback (and therefore also old slf4j)
-            force("ch.qos.logback:logback-classic:1.2.11")
-            force("org.slf4j:slf4j-api:1.7.36")
-          }
-        }
+  testing.suites.withType(JvmTestSuite::class).configureEach {
+    configurations.named(sources.runtimeClasspathConfigurationName) {
+      resolutionStrategy {
+        // requires old logback (and therefore also old slf4j)
+        force("ch.qos.logback:logback-classic:1.2.11")
+        force("org.slf4j:slf4j-api:1.7.36")
       }
+    }
   }
 }

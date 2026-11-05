@@ -1,9 +1,0 @@
-display_name: Jedis
-description: This instrumentation enables database client spans and database client metrics for Jedis Redis operations.
-semantic_conventions:
-  - DATABASE_CLIENT_SPANS
-  - DATABASE_CLIENT_METRICS
-library_link: https://github.com/redis/jedis
-configurations:
-  - ref: common.db.query-sanitization.enabled
-  - ref: common.peer-service-mapping

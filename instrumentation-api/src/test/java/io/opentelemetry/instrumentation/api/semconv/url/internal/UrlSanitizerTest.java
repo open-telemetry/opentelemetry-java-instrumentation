@@ -23,6 +23,21 @@ class UrlSanitizerTest {
 
   private static final String URL_WITH_USER_INFO = "https://user:pass@example.com?secret=val";
 
+  @Test
+  void defaultSensitiveQueryParameters() {
+    // Default sensitive query parameters from semantic conventions:
+    // https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/#url-full
+    assertThat(HttpConstants.SENSITIVE_QUERY_PARAMETERS)
+        .containsExactlyInAnyOrder(
+            "X-Amz-Signature",
+            "X-Amz-Credential",
+            "X-Amz-Security-Token",
+            "AWSAccessKeyId",
+            "Signature",
+            "sig",
+            "X-Goog-Signature");
+  }
+
   @ParameterizedTest
   @CsvSource({
     "https://user1:secret@github.com, https://REDACTED:REDACTED@github.com",
@@ -35,6 +50,8 @@ class UrlSanitizerTest {
     "user1:secret@github.com, user1:secret@github.com",
     "https://github.com@, https://github.com@",
     "https://service.com?paramA=valA&paramB=valB, https://service.com?paramA=valA&paramB=valB",
+    // Default sensitive query parameters from semantic conventions:
+    // https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/#url-full
     "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7, https://service.com?AWSAccessKeyId=REDACTED",
     "https://service.com?Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0%3A377, https://service.com?Signature=REDACTED",
     "https://service.com?X-Amz-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, https://service.com?X-Amz-Signature=REDACTED",
@@ -42,6 +59,7 @@ class UrlSanitizerTest {
     "https://service.com?X-Amz-Security-Token=FwoGZXIvYXdzEBYaDG, https://service.com?X-Amz-Security-Token=REDACTED",
     "https://service.com?sig=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, https://service.com?sig=REDACTED",
     "https://service.com?X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, https://service.com?X-Goog-Signature=REDACTED",
+    "https://service.com?x-amz-signature=value&prefixX-Amz-Signature=value&X-Amz-Signature=value, https://service.com?x-amz-signature=value&prefixX-Amz-Signature=value&X-Amz-Signature=REDACTED",
     "https://service.com?paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7&paramB=valB, https://service.com?paramA=valA&AWSAccessKeyId=REDACTED&paramB=valB",
     "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&paramA=valA, https://service.com?AWSAccessKeyId=REDACTED&paramA=valA",
     "https://service.com?paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7, https://service.com?paramA=valA&AWSAccessKeyId=REDACTED",

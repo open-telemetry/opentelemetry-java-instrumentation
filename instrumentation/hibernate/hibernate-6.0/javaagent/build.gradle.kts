@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -36,43 +39,52 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("hibernate6Test") {
-      targets.all {
-        testTask.configure {
-          jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-          systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
-        }
-      }
-      dependencies {
-        implementation("com.h2database:h2:1.4.197")
-        implementation("org.hsqldb:hsqldb:2.0.0")
-        implementation(project(":instrumentation:hibernate:testing"))
-        implementation("org.hibernate.orm:hibernate-core:${baseVersion("6.0.0.Final").orLatest("6.+")}")
-      }
+testing.suites {
+  register<JvmTestSuite>("hibernate6Test") {
+    dependencies {
+      implementation("com.h2database:h2:1.4.197")
+      implementation("org.hsqldb:hsqldb:2.0.0")
+      implementation(project(":instrumentation:hibernate:testing"))
+      implementation("org.hibernate.orm:hibernate-core:${baseVersion("6.0.0.Final").orLatest("6.+")}")
+    }
+  }
+
+  register<JvmTestSuite>("hibernate7Test") {
+    dependencies {
+      implementation("com.h2database:h2:1.4.197")
+      implementation("org.hsqldb:hsqldb:2.0.0")
+      implementation(project(":instrumentation:hibernate:testing"))
+      implementation("org.hibernate.orm:hibernate-core:${baseVersion("7.0.0.Final").orLatest("7.+")}")
+    }
+  }
+
+  executions("hibernate6Test", "hibernate7Test") {
+    configureDefault {
+      telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
+    }
+  }
+
+  executions("test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
     }
 
-    register<JvmTestSuite>("hibernate7Test") {
-      targets.all {
-        testTask.configure {
-          jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-          systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
-        }
+    register("Disabled") {
+      filter {
+        includeTestsMatching("*DefaultEnablementTest")
       }
-      dependencies {
-        implementation("com.h2database:h2:1.4.197")
-        implementation("org.hsqldb:hsqldb:2.0.0")
-        implementation(project(":instrumentation:hibernate:testing"))
-        implementation("org.hibernate.orm:hibernate-core:${baseVersion("7.0.0.Final").orLatest("7.+")}")
-      }
+
+      jvmArgs("-Dotel.instrumentation.jdbc.enabled=false")
     }
   }
 }
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
+
+    if (name != "testDisabled") {
+      jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
+    }
   }
 
   named("compileHibernate7TestJava", JavaCompile::class).configure {
@@ -85,32 +97,7 @@ tasks {
     }
   }
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
-  }
-
-  val stableSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}StableSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.opt-in=database")
-        systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-      }
-    }
-
-  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
-    named("hibernate7TestStableSemconv", Test::class).configure {
-      enabled = false
-    }
-  }
-
   check {
-    dependsOn(testing.suites, testExperimental, stableSemconvSuites)
+    dependsOn(testing.suites)
   }
 }

@@ -9,6 +9,9 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
@@ -21,17 +24,14 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 import org.apache.log4j.Logger;
 import org.apache.log4j.MDC;
-import org.apache.log4j.helpers.Loader;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -41,17 +41,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 class Log4j1Test {
 
   static {
-    // this is needed because log4j1 incorrectly thinks the initial releases of Java 10-19
-    // (which have no '.' in their versions since there is no minor version) are Java 1.1,
-    // which is before ThreadLocal was introduced and so log4j1 disables MDC functionality
-    // (and the MDC tests below fail)
-    try {
-      Field java1 = Loader.class.getDeclaredField("java1");
-      java1.setAccessible(true);
-      java1.set(null, false);
-    } catch (NoSuchFieldException | IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
+    Log4jMdcTestHelper.enableMdc();
   }
 
   @RegisterExtension
@@ -70,13 +60,6 @@ class Log4j1Test {
   @Test
   void testCodeAttributes() {
     logger.info("this is test message");
-    List<AttributeAssertion> assertions =
-        SemconvCodeStabilityUtil.codeFileAndLineAssertions("Log4j1Test.java");
-    assertions.addAll(
-        SemconvCodeStabilityUtil.codeFunctionAssertions(Log4j1Test.class, "testCodeAttributes"));
-    assertions.add(equalTo(THREAD_NAME, Thread.currentThread().getName()));
-    assertions.add(equalTo(THREAD_ID, Thread.currentThread().getId()));
-
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
@@ -84,7 +67,12 @@ class Log4j1Test {
                 .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
                 .hasSeverity(Severity.INFO)
                 .hasSeverityText("INFO")
-                .hasAttributesSatisfyingExactly(assertions));
+                .hasAttributesSatisfyingExactly(
+                    equalTo(CODE_FILE_PATH, "Log4j1Test.java"),
+                    satisfies(CODE_LINE_NUMBER, val -> val.isPositive()),
+                    equalTo(CODE_FUNCTION_NAME, Log4j1Test.class.getName() + ".testCodeAttributes"),
+                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(THREAD_ID, Thread.currentThread().getId())));
   }
 
   @ParameterizedTest
@@ -152,11 +140,10 @@ class Log4j1Test {
                       satisfies(
                           EXCEPTION_STACKTRACE, val -> val.contains(Log4j1Test.class.getName()))));
             }
-            attributeAsserts.addAll(
-                SemconvCodeStabilityUtil.codeFunctionAssertions(
-                    Log4j1Test.class, "performLogging"));
-            attributeAsserts.addAll(
-                SemconvCodeStabilityUtil.codeFileAndLineAssertions("Log4j1Test.java"));
+            attributeAsserts.add(
+                equalTo(CODE_FUNCTION_NAME, Log4j1Test.class.getName() + ".performLogging"));
+            attributeAsserts.add(equalTo(CODE_FILE_PATH, "Log4j1Test.java"));
+            attributeAsserts.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
             logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
 
             assertThat(logRecord.actual().getTimestampEpochNanos())
@@ -182,14 +169,6 @@ class Log4j1Test {
       MDC.remove("otel.event.name");
     }
 
-    List<AttributeAssertion> assertions =
-        SemconvCodeStabilityUtil.codeFileAndLineAssertions("Log4j1Test.java");
-    assertions.addAll(SemconvCodeStabilityUtil.codeFunctionAssertions(Log4j1Test.class, "testMdc"));
-    assertions.add(equalTo(stringKey("key1"), "val1"));
-    assertions.add(equalTo(stringKey("key2"), "val2"));
-    assertions.add(equalTo(THREAD_NAME, Thread.currentThread().getName()));
-    assertions.add(equalTo(THREAD_ID, Thread.currentThread().getId()));
-
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
@@ -198,7 +177,14 @@ class Log4j1Test {
                 .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
                 .hasSeverity(Severity.INFO)
                 .hasSeverityText("INFO")
-                .hasAttributesSatisfyingExactly(assertions));
+                .hasAttributesSatisfyingExactly(
+                    equalTo(CODE_FILE_PATH, "Log4j1Test.java"),
+                    satisfies(CODE_LINE_NUMBER, val -> val.isPositive()),
+                    equalTo(CODE_FUNCTION_NAME, Log4j1Test.class.getName() + ".testMdc"),
+                    equalTo(stringKey("key1"), "val1"),
+                    equalTo(stringKey("key2"), "val2"),
+                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(THREAD_ID, Thread.currentThread().getId())));
   }
 
   private static void performLogging(

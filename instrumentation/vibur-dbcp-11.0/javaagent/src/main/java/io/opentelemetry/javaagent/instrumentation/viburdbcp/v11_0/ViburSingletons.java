@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.viburdbcp.v11_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolNameUtil;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.instrumentation.viburdbcp.v11_0.ViburTelemetry;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
@@ -38,10 +38,18 @@ public class ViburSingletons {
     return Boolean.TRUE.equals(CONFIGURED_NAME_FIELD.get(config));
   }
 
-  public static String getDataSourceName(ViburDBCPDataSource dataSource) {
-    DbInfo dbInfo =
-        JdbcConnectionUrlParser.parse(dataSource.getJdbcUrl(), dataSource.getDriverProperties());
-    return JdbcConnectionPoolNameUtil.poolName(dbInfo, DEFAULT_DATA_SOURCE_NAME);
+  public static void registerMetrics(ViburDBCPDataSource dataSource) {
+    String poolName = isDataSourceNameConfigured(dataSource) ? dataSource.getName() : null;
+    DbInfo dbInfo = getDbInfo(dataSource);
+    telemetry()
+        .registerMetrics(
+            dataSource,
+            JdbcConnectionPoolMetricsUtil.poolName(dbInfo, poolName, DEFAULT_DATA_SOURCE_NAME),
+            JdbcConnectionPoolMetricsUtil.databaseAttributes(dbInfo));
+  }
+
+  private static DbInfo getDbInfo(ViburDBCPDataSource dataSource) {
+    return JdbcConnectionUrlParser.parse(dataSource.getJdbcUrl(), dataSource.getDriverProperties());
   }
 
   private ViburSingletons() {}

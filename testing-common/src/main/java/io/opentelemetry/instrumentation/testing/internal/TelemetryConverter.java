@@ -10,6 +10,9 @@ import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.valueKey;
+import static io.opentelemetry.testing.internal.proto.trace.v1.SpanFlags.SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK_VALUE;
+import static io.opentelemetry.testing.internal.proto.trace.v1.SpanFlags.SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK_VALUE;
+import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.stream.Collectors.toList;
 
@@ -28,12 +31,17 @@ import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.DoublePointData;
+import io.opentelemetry.sdk.metrics.data.ExponentialHistogramBuckets;
+import io.opentelemetry.sdk.metrics.data.ExponentialHistogramPointData;
 import io.opentelemetry.sdk.metrics.data.HistogramPointData;
 import io.opentelemetry.sdk.metrics.data.LongPointData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.data.SummaryPointData;
 import io.opentelemetry.sdk.metrics.data.ValueAtQuantile;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableDoublePointData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableExponentialHistogramBuckets;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableExponentialHistogramData;
+import io.opentelemetry.sdk.metrics.internal.data.ImmutableExponentialHistogramPointData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableGaugeData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableHistogramData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableHistogramPointData;
@@ -57,6 +65,7 @@ import io.opentelemetry.testing.internal.proto.logs.v1.LogRecord;
 import io.opentelemetry.testing.internal.proto.logs.v1.ResourceLogs;
 import io.opentelemetry.testing.internal.proto.logs.v1.ScopeLogs;
 import io.opentelemetry.testing.internal.proto.logs.v1.SeverityNumber;
+import io.opentelemetry.testing.internal.proto.metrics.v1.ExponentialHistogramDataPoint;
 import io.opentelemetry.testing.internal.proto.metrics.v1.HistogramDataPoint;
 import io.opentelemetry.testing.internal.proto.metrics.v1.Metric;
 import io.opentelemetry.testing.internal.proto.metrics.v1.NumberDataPoint;
@@ -175,11 +184,7 @@ public class TelemetryConverter {
                           .map(
                               link ->
                                   LinkData.create(
-                                      SpanContext.create(
-                                          bytesToHex(link.getTraceId().toByteArray()),
-                                          bytesToHex(link.getSpanId().toByteArray()),
-                                          TraceFlags.fromByte((byte) link.getFlags()),
-                                          extractTraceState(link.getTraceState())),
+                                      createLinkContext(link),
                                       fromProto(link.getAttributesList()),
                                       link.getDroppedAttributesCount() + link.getAttributesCount()))
                           .collect(toList()))
@@ -196,6 +201,18 @@ public class TelemetryConverter {
     return spans;
   }
 
+  private static SpanContext createLinkContext(Span.Link link) {
+    String traceId = bytesToHex(link.getTraceId().toByteArray());
+    String spanId = bytesToHex(link.getSpanId().toByteArray());
+    TraceFlags traceFlags = TraceFlags.fromByte((byte) link.getFlags());
+    TraceState traceState = extractTraceState(link.getTraceState());
+    if ((link.getFlags() & SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK_VALUE) != 0
+        && (link.getFlags() & SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK_VALUE) != 0) {
+      return SpanContext.createFromRemoteParent(traceId, spanId, traceFlags, traceState);
+    }
+    return SpanContext.create(traceId, spanId, traceFlags, traceState);
+  }
+
   public static List<MetricData> getMetricsData(Collection<ResourceMetrics> allResourceMetrics) {
     List<MetricData> metrics = new ArrayList<>();
     for (ResourceMetrics resourceMetrics : allResourceMetrics) {
@@ -206,12 +223,14 @@ public class TelemetryConverter {
               createMetricData(
                   metric,
                   io.opentelemetry.sdk.resources.Resource.create(
-                      fromProto(resource.getAttributesList())),
+                      fromProto(resource.getAttributesList()),
+                      emptyToNull(resourceMetrics.getSchemaUrl())),
                   InstrumentationScopeInfo.builder(ilMetrics.getScope().getName())
                       // emptyToNull since they are the same at protobuf layer,
                       // and allows for simpler verification of InstrumentationScope
                       .setVersion(emptyToNull(ilMetrics.getScope().getVersion()))
                       .setSchemaUrl(emptyToNull(ilMetrics.getSchemaUrl()))
+                      .setAttributes(fromProto(ilMetrics.getScope().getAttributesList()))
                       .build()));
         }
       }
@@ -303,6 +322,17 @@ public class TelemetryConverter {
             ImmutableHistogramData.create(
                 getTemporality(metric.getHistogram().getAggregationTemporality()),
                 getDoubleHistogramDataPoints(metric.getHistogram().getDataPointsList())));
+      case EXPONENTIAL_HISTOGRAM:
+        return ImmutableMetricData.createExponentialHistogram(
+            resource,
+            instrumentationScopeInfo,
+            metric.getName(),
+            metric.getDescription(),
+            metric.getUnit(),
+            ImmutableExponentialHistogramData.create(
+                getTemporality(metric.getExponentialHistogram().getAggregationTemporality()),
+                getExponentialHistogramDataPoints(
+                    metric.getExponentialHistogram().getDataPointsList())));
       case SUMMARY:
         return ImmutableMetricData.createDoubleSummary(
             resource,
@@ -550,6 +580,34 @@ public class TelemetryConverter {
                     point.getExplicitBoundsList(),
                     point.getBucketCountsList()))
         .collect(toList());
+  }
+
+  private static Collection<ExponentialHistogramPointData> getExponentialHistogramDataPoints(
+      List<ExponentialHistogramDataPoint> dataPointsList) {
+    return dataPointsList.stream()
+        .map(
+            point ->
+                ImmutableExponentialHistogramPointData.create(
+                    point.getScale(),
+                    point.getSum(),
+                    point.getZeroCount(),
+                    point.hasMin(),
+                    point.getMin(),
+                    point.hasMax(),
+                    point.getMax(),
+                    getBuckets(point.getScale(), point.getPositive()),
+                    getBuckets(point.getScale(), point.getNegative()),
+                    point.getStartTimeUnixNano(),
+                    point.getTimeUnixNano(),
+                    fromProto(point.getAttributesList()),
+                    emptyList()))
+        .collect(toList());
+  }
+
+  private static ExponentialHistogramBuckets getBuckets(
+      int scale, ExponentialHistogramDataPoint.Buckets buckets) {
+    return ImmutableExponentialHistogramBuckets.create(
+        scale, buckets.getOffset(), buckets.getBucketCountsList());
   }
 
   private static Collection<SummaryPointData> getDoubleSummaryDataPoints(
