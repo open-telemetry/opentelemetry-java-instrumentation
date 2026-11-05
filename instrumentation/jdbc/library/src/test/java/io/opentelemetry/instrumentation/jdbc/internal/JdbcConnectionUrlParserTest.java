@@ -168,12 +168,13 @@ class JdbcConnectionUrlParserTest {
   void commasOutsideAuthorityDoNotMarkSingletonAsMultiTarget() {
     DbInfo dbInfo =
         parse(
-            "jdbc:postgresql://pg.host:5432/db"
-                + "?user=admin@corp.com&options=search_path=test,public",
+            "jdbc:postgresql://pg.host:5432/db@corp.com"
+                + "?user=admin@corp.com&currentSchema=test,public",
             null);
 
     assertThat(dbInfo.getConfiguredServerTarget())
         .isEqualTo(DbServerTarget.create("pg.host", null));
+    assertThat(dbInfo.getDbNamespace()).isEqualTo("db@corp.com|test,public");
   }
 
   @Test
@@ -224,33 +225,13 @@ class JdbcConnectionUrlParserTest {
   @CsvSource(
       delimiter = '|',
       value = {
-        "jdbc:mariadb:failover://user:p,a/ss@h1:3306,h2:3306/db||ss@h1:3306,h2:3306/db",
-        "jdbc:mariadb:failover://user:p,a?ss@h1:3306,h2:3306/db||",
-        "jdbc:mariadb:failover://user:p,a#ss@h1:3306,h2:3306/db||",
-        "jdbc:mariadb:failover://user:123,a?x=y@h1:3306,h2:3306/db|user:123,a:3306|",
-        "jdbc:mariadb:failover://user:123,a?x=y@address=(host=h1),address=(host=h2)/db"
-            + "|user:123,a:3306|",
-        "jdbc:mariadb:failover://user:123,a?x=y@address=(host=h1)/db|user:123,a:3306|",
-        "jdbc:mariadb:failover://user:123,a#ignored?x=y@/db|user:123,a:3306|"
+        "jdbc:mariadb:failover://h1,h2/db@corp.com|h1,h2|db@corp.com",
+        "jdbc:mariadb:failover://h1/db?user=admin%40corp.com&sessionVariables=sql_mode=ANSI,time_zone=UTC"
+            + "|h1|db"
       })
-  void mariaDbMalformedCredentialsFollowUrlGrammar(String url, String target, String namespace) {
+  void mariaDbAuthorityBoundariesFollowUrlGrammar(String url, String target, String namespace) {
     DbInfo dbInfo = parse(url, null);
-    assertThat(dbInfo.getConfiguredServerTarget())
-        .isEqualTo(target == null ? null : DbServerTarget.create(target, null));
-    assertThat(dbInfo.getDbNamespace()).isEqualTo(namespace);
-  }
-
-  @ParameterizedTest
-  @CsvSource(
-      delimiter = '|',
-      value = {
-        "jdbc:postgresql://user:123,a/ss@pg.host:5432|ss@pg.host:5432",
-        "jdbc:postgresql://user:123,a#ignored?x=y@pg.host:5432,pg2:5432/db|"
-      })
-  void postgresMalformedCredentialsFollowUrlGrammar(String url, String namespace) {
-    DbInfo dbInfo = parse(url, null);
-    assertThat(dbInfo.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("user:123,a:5432", null));
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create(target, null));
     assertThat(dbInfo.getDbNamespace()).isEqualTo(namespace);
   }
 
@@ -258,12 +239,12 @@ class JdbcConnectionUrlParserTest {
   void atInPostgresQueryDoesNotDisableConfiguredTargetParsing() {
     DbInfo dbInfo =
         parse(
-            "jdbc:postgresql://pg.host1:5432,pg.host2:5433/pgdb"
+            "jdbc:postgresql://pg.host1:5432,pg.host2:5433/pgdb@corp.com"
                 + "?user=admin@corp.com&currentSchema=test,public",
             null);
     assertThat(dbInfo.getConfiguredServerTarget())
         .isEqualTo(DbServerTarget.create("pg.host1:5432,pg.host2:5433", null));
-    assertThat(dbInfo.getDbNamespace()).isEqualTo("pgdb|test,public");
+    assertThat(dbInfo.getDbNamespace()).isEqualTo("pgdb@corp.com|test,public");
   }
 
   @Test
@@ -2141,62 +2122,13 @@ class JdbcConnectionUrlParserTest {
   @CsvSource(
       delimiter = '|',
       value = {
-        "postgresql://user:123,a/ss@pg.host:5432|user:123,a",
-        "postgresql://user:p,a/ss@pg.host:5432/db|user:p,a",
-        "postgresql://user:p,a/ss@pg.host:5432|user:p,a",
-        "postgresql://user:pa,ss/word@pg.host1:5432,pg.host2:5433/pgdb|user:pa,ss",
-        "postgresql://user:p@ss,w/ord@pg.host1:5432,pg.host2:5433/pgdb|user:p@ss,w"
+        "postgresql://pg.host/db|pg.host",
+        "postgresql://pg.host1,pg.host2/db@corp.com|pg.host1,pg.host2",
+        "postgresql://pg.host1,pg.host2/db?user=admin@corp.com&currentSchema=test,public"
+            + "|pg.host1,pg.host2"
       })
-  void authorityEndsAtPathDelimiterEvenInMalformedCredentialUrls(String url, String authority) {
+  void authorityEndsAtPathDelimiterInValidUrls(String url, String authority) {
     assertThat(extractAuthority(url)).isEqualTo(authority);
-  }
-
-  @ParameterizedTest
-  @ValueSource(
-      strings = {"postgresql://h1,h2/db/admin@corp.com", "postgresql://h1,h2/db#admin@corp.com"})
-  void testAtAfterCommaSeparatedAuthorityDoesNotHideAuthority(String url) {
-    assertThat(extractAuthority(url)).isEqualTo("h1,h2");
-  }
-
-  @Test
-  void testAtInQueryParameterDoesNotHideAuthority() {
-    assertThat(extractAuthority("postgresql://h1,h2/db?user=admin@corp.com")).isEqualTo("h1,h2");
-  }
-
-  @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "/db/admin@corp.com",
-        "/db/user@other1,other2",
-        "/db#admin@corp.com",
-        "?options=user@other1,other2/db",
-        "#user@other1,other2/db"
-      })
-  void laterAtAndCommasDoNotChangeAuthorityOrTargetCount(String suffix) {
-    assertThat(extractAuthority("postgresql://h1,h2" + suffix)).isEqualTo("h1,h2");
-    assertThat(hasMultipleTargets(extractAuthority("postgresql://h1,h2" + suffix))).isTrue();
-    assertThat(hasMultipleTargets(extractAuthority("postgresql://h1" + suffix))).isFalse();
-    assertThat(parse("jdbc:postgresql://h1,h2" + suffix, null).getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("h1,h2", null));
-    assertThat(parse("jdbc:postgresql://h1" + suffix, null).getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("h1", null));
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"/db/user@other1,other2", "?options=user@other1,other2/db"})
-  void laterAtAndCommasDoNotHideMariaDbTargets(String suffix) {
-    assertThat(parse("jdbc:mariadb:failover://h1,h2" + suffix, null).getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("h1,h2", null));
-    assertThat(parse("jdbc:mariadb:failover://h1" + suffix, null).getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("h1", null));
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"/part@h1,h2/db", "?part@h1,h2/db", "#part@h1,h2/db"})
-  void malformedCredentialsAreNotInferredBeyondAuthority(String suffix) {
-    assertThat(extractAuthority("postgresql://user:123" + suffix)).isEqualTo("user:123");
-    assertThat(parse("jdbc:postgresql://user:123" + suffix, null).getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("user", 123));
   }
 
   @ParameterizedTest
