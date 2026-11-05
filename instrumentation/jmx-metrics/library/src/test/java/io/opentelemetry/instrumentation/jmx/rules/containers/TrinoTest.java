@@ -12,13 +12,12 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.instrumentation.jmx.rules.MetricsVerifier;
+import io.opentelemetry.instrumentation.jmx.rules.TargetSystemTest;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import io.opentelemetry.instrumentation.jmx.rules.MetricsVerifier;
-import io.opentelemetry.instrumentation.jmx.rules.TargetSystemTest;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.Container.ExecResult;
 import org.testcontainers.containers.GenericContainer;
