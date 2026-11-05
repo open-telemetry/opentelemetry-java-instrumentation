@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.mcpsdk.v0_14;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.modelcontextprotocol.client.transport.customizer.McpAsyncHttpClientRequestCustomizer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -36,8 +36,12 @@ class McpHttpTransportBuilderInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$BuildAdvice");
     // since 2.1.0
     transformer.applyAdviceToMethod(
-        named("build").and(takesArguments(0)).and(hasDeclaredField("httpRequestCustomizers")),
-        getClass().getName() + "$BuildListAdvice");
+        named("httpRequestCustomizer")
+            .and(
+                returns(
+                    named(
+                        "io.modelcontextprotocol.client.transport.customizer.McpAsyncHttpClientRequestCustomizer"))),
+        getClass().getName() + "$CustomizerAdvice");
   }
 
   private static ElementMatcher<MethodDescription> hasDeclaredField(String fieldName) {
@@ -59,12 +63,12 @@ class McpHttpTransportBuilderInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class BuildListAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(
-        @Advice.FieldValue("httpRequestCustomizers")
-            List<McpAsyncHttpClientRequestCustomizer> customizers) {
-      McpHttpRequestCustomizer.wrap(customizers);
+  public static class CustomizerAdvice {
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static McpAsyncHttpClientRequestCustomizer onExit(
+        @Advice.Return McpAsyncHttpClientRequestCustomizer customizer) {
+      return McpHttpRequestCustomizer.wrap(customizer);
     }
   }
 }
