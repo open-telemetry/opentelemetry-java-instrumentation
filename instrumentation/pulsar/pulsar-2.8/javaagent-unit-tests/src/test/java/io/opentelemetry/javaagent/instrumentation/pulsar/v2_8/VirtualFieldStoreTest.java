@@ -9,6 +9,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.baggage.Baggage;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
@@ -23,6 +28,8 @@ import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.impl.SendCallback;
 import org.apache.pulsar.client.impl.TopicMessageImpl;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class VirtualFieldStoreTest {
   private static final ContextKey<String> TEST_KEY = ContextKey.named("test-key");
@@ -140,25 +147,76 @@ class VirtualFieldStoreTest {
     assertThat(VirtualFieldStore.extractSendCallbackData(callback)).isNull();
   }
 
-  @Test
-  void prematureFutureCompletionDoesNotClearSendCallbackData() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void prematureFutureCompletionPreservesApplicationContextAndSendCallbackData(boolean fail) {
     SendCallback callback = mock(SendCallback.class);
     Message<?> message = mock(Message.class);
     String topic = "persistent://public/default/premature-send-future-completion";
     when(message.getTopicName()).thenReturn(topic);
     PulsarRequest request =
         PulsarRequest.create(message, ProducerData.create("pulsar://localhost:6650", topic));
-    SendCallbackData data = SendCallbackData.create(Context.root(), Context.root(), request);
+    Context caller =
+        Baggage.builder()
+            .put("pulsar-test", "caller")
+            .build()
+            .storeInContext(
+                Context.root()
+                    .with(
+                        Span.wrap(
+                            SpanContext.create(
+                                "00000000000000000000000000000001",
+                                "0000000000000001",
+                                TraceFlags.getSampled(),
+                                TraceState.getDefault())))
+                    .with(TEST_KEY, "caller"));
+    Context application =
+        Baggage.builder()
+            .put("pulsar-test", "application")
+            .build()
+            .storeInContext(
+                Context.root()
+                    .with(
+                        Span.wrap(
+                            SpanContext.create(
+                                "00000000000000000000000000000002",
+                                "0000000000000002",
+                                TraceFlags.getSampled(),
+                                TraceState.getDefault())))
+                    .with(TEST_KEY, "application"));
+    SendCallbackData data = SendCallbackData.create(caller, caller, request);
     CompletableFuture<MessageId> future = data.createSendFuture();
     VirtualFieldStore.inject(callback, data);
+    MessageId messageId = mock(MessageId.class);
+    IllegalStateException failure = new IllegalStateException("application failure");
+    CompletableFuture<Context> continuation =
+        future.handle(
+            (result, error) -> {
+              assertThat(result).isSameAs(fail ? null : messageId);
+              assertThat(error).isSameAs(fail ? failure : null);
+              return Context.current();
+            });
 
-    future.complete(mock(MessageId.class));
-    assertThat(VirtualFieldStore.extractSendCallbackData(message)).isSameAs(data);
+    assertThat(future).isNotDone();
+    Context previous = Context.current();
+    try (Scope ignored = application.makeCurrent()) {
+      if (fail) {
+        assertThat(future.completeExceptionally(failure)).isTrue();
+      } else {
+        assertThat(future.complete(messageId)).isTrue();
+      }
+      assertThat(Context.current()).isSameAs(application);
+    }
+    assertThat(continuation.join()).isSameAs(application);
+    assertThat(Context.current()).isSameAs(previous);
     assertThat(VirtualFieldStore.extractSendCallbackData(message)).isSameAs(data);
     assertThat(VirtualFieldStore.extractSendCallbackData(callback)).isSameAs(data);
     try (Scope ignored = data.callbackCompletionContext().makeCurrent()) {
-      future.complete(mock(MessageId.class));
+      Context completionContext = Context.current();
+      assertThat(future.complete(mock(MessageId.class))).isFalse();
+      assertThat(Context.current()).isSameAs(completionContext);
     }
+    assertThat(Context.current()).isSameAs(previous);
     assertThat(VirtualFieldStore.extractSendCallbackData(message)).isNull();
     assertThat(VirtualFieldStore.extractSendCallbackData(callback)).isNull();
   }

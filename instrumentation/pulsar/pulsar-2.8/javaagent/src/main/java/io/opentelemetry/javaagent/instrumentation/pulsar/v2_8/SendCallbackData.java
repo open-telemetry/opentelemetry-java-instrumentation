@@ -191,13 +191,11 @@ public class SendCallbackData {
 
     private boolean finish(@Nullable MessageId messageId, @Nullable Throwable error) {
       SendCallbackData callbackData = data;
-      if (callbackData == null) {
+      if (callbackData == null || !SendCallbackData.isCallbackCompletion()) {
         return error == null ? super.complete(messageId) : super.completeExceptionally(error);
       }
-      if (SendCallbackData.isCallbackCompletion()) {
-        data = null;
-        callbackData.end(error);
-      }
+      data = null;
+      callbackData.end(error);
       try (Scope ignored = callbackData.parent.makeCurrent()) {
         return error == null ? super.complete(messageId) : super.completeExceptionally(error);
       }
