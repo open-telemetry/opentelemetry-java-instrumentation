@@ -27,14 +27,10 @@ dependencies {
   testInstrumentation(project(":instrumentation:rxjava:rxjava-3.0:javaagent"))
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("Experimental") {
-          jvmArgs("-Dotel.instrumentation.rxjava.experimental-span-attributes=true")
-        }
-      }
+testing.suites {
+  executions("test") {
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.rxjava.experimental-span-attributes=true")
     }
   }
 }
