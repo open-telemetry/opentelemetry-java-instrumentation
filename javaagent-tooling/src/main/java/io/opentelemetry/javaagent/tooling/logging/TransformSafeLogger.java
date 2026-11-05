@@ -64,23 +64,28 @@ final class TransformSafeLogger implements InternalLogger {
 
   @Override
   public boolean isLoggable(Level level) {
-    if (AgentCircularityLock.INSTANCE.isHeldByCurrentThread()
-        && (Thread.currentThread() == loggerThread || delegate == null)) {
-      // class is being transformed on the logger thread, avoid calling into underlying logger
-      // as it could trigger loading more classes which wouldn't get transformed
+    if (AgentCircularityLock.INSTANCE.isHeldByCurrentThread()) {
+      // class is being transformed, avoid calling into underlying logger as it could trigger
+      // loading more classes which wouldn't get transformed
+      // we'll redo the isLoggable check when processing queued message
       return true;
     }
-    // the assumption is that calling isLoggable is safe once the underlying logger has been created
     return delegate().isLoggable(level);
   }
 
   @Override
   public void log(Level level, String message, @Nullable Throwable error) {
+    log(level, message, null, error);
+  }
+
+  @Override
+  public void log(
+      Level level, String message, @Nullable Object[] parameters, @Nullable Throwable error) {
     if (AgentCircularityLock.INSTANCE.isHeldByCurrentThread()) {
-      queueLogMessage.accept(new LogMessage(level, this::delegate, message, error));
+      queueLogMessage.accept(new LogMessage(level, this::delegate, message, parameters, error));
       return;
     }
-    delegate().log(level, message, error);
+    delegate().log(level, message, parameters, error);
   }
 
   @Override
@@ -101,7 +106,11 @@ final class TransformSafeLogger implements InternalLogger {
       while (true) {
         try {
           LogMessage logMessage = queue.take();
-          logMessage.logger.get().log(logMessage.level, logMessage.message, logMessage.error);
+          InternalLogger logger = logMessage.logger.get();
+          if (logger.isLoggable(logMessage.level)) {
+            logger.log(
+                logMessage.level, logMessage.message, logMessage.parameters, logMessage.error);
+          }
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
           return;
@@ -117,13 +126,19 @@ final class TransformSafeLogger implements InternalLogger {
     private final Level level;
     private final Supplier<InternalLogger> logger;
     private final String message;
+    @Nullable private final Object[] parameters;
     @Nullable private final Throwable error;
 
     private LogMessage(
-        Level level, Supplier<InternalLogger> logger, String message, @Nullable Throwable error) {
+        Level level,
+        Supplier<InternalLogger> logger,
+        String message,
+        @Nullable Object[] parameters,
+        @Nullable Throwable error) {
       this.level = level;
       this.logger = logger;
       this.message = message;
+      this.parameters = parameters;
       this.error = error;
     }
   }
