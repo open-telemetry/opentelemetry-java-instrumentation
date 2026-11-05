@@ -45,6 +45,8 @@ dependencies {
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
 
   testImplementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
+
+  testInstrumentation(project(":instrumentation:logback:logback-mdc-1.0:javaagent"))
 }
 
 testing.suites {
@@ -113,6 +115,21 @@ testing.suites {
         filter.includeTestsMatching("*LogbackKeyValuePairSelectorTest")
         jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.excluded=*")
         systemProperty("testKeyValuePairConfiguration", "none")
+      }
+    }
+  }
+
+  register<JvmTestSuite>("logbackMdcTest") {
+    dependencies {
+      implementation("ch.qos.logback:logback-classic") {
+        version {
+          strictly(baseVersion("1.0.0").orLatest())
+        }
+      }
+      implementation("org.slf4j:slf4j-api") {
+        version {
+          strictly(baseVersion("1.7.36").orLatest())
+        }
       }
     }
   }
@@ -194,6 +211,32 @@ testing.suites {
         jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.excluded=*")
         systemProperty("testLogstashStructuredArgsConfiguration", "none")
       }
+    }
+  }
+
+  executions("logbackMdcTest") {
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=*")
+    }
+
+    configureDefault {
+      filter.includeTestsMatching("*LogbackMdcTest")
+      jvmArgs("-Dotel.instrumentation.logback-mdc.add-baggage=true")
+    }
+
+    register("Disabled") {
+      filter.includeTestsMatching("*LogbackMdcDisabledTest")
+      jvmArgs("-Dotel.instrumentation.logback-mdc.enabled=false")
+    }
+
+    register("LoggingKeys") {
+      filter.includeTestsMatching("*LogbackMdcLoggingKeysTest")
+      jvmArgs(
+        "-Dotel.instrumentation.logback-mdc.add-baggage=true",
+        "-Dotel.instrumentation.common.logging.trace-id-key=trace_id_test",
+        "-Dotel.instrumentation.common.logging.span-id-key=span_id_test",
+        "-Dotel.instrumentation.common.logging.trace-flags-key=trace_flags_test",
+      )
     }
   }
 }

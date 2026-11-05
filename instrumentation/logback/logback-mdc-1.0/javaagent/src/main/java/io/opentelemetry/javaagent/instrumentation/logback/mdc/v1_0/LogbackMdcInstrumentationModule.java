@@ -19,6 +19,13 @@ public class LogbackMdcInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
+  public int order() {
+    // Install before the logback appender instrumentation so that the context is stored on the
+    // logging event before the appender reads the MDC.
+    return -1;
+  }
+
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new LoggerInstrumentation(), new LoggingEventInstrumentation());
   }

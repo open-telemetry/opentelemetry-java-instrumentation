@@ -7,11 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.LoggingConfig;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.function.Predicate;
+import javax.annotation.Nullable;
 
 public class LogbackSingletons {
 
@@ -40,7 +43,7 @@ public class LogbackSingletons {
     mapper =
         LoggingEventMapper.builder()
             .setCaptureExperimentalAttributes(captureExperimentalAttributes)
-            .setMdcAttributes(mdcAttributes)
+            .setMdcAttributes(excludeTraceContextKeys(mdcAttributes))
             .setCaptureCodeAttributes(captureCodeAttributes)
             .setCaptureMarkerAttribute(captureMarkerAttribute)
             .setStructuredAttributes(structuredAttributes)
@@ -48,6 +51,23 @@ public class LogbackSingletons {
             .setCaptureTemplate(captureTemplate)
             .setCaptureArguments(captureArguments)
             .build();
+  }
+
+  // the exported log record already carries the trace context in dedicated fields
+  @Nullable
+  private static Predicate<String> excludeTraceContextKeys(@Nullable Predicate<String> selector) {
+    if (selector == null) {
+      return null;
+    }
+    CommonConfig commonConfig = AgentCommonConfig.get();
+    String traceIdKey = commonConfig.getTraceIdKey();
+    String spanIdKey = commonConfig.getSpanIdKey();
+    String traceFlagsKey = commonConfig.getTraceFlagsKey();
+    return key ->
+        !key.equals(traceIdKey)
+            && !key.equals(spanIdKey)
+            && !key.equals(traceFlagsKey)
+            && selector.test(key);
   }
 
   public static LoggingEventMapper mapper() {
