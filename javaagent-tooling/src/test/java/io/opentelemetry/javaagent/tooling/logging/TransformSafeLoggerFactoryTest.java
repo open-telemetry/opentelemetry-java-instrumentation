@@ -52,7 +52,7 @@ class TransformSafeLoggerFactoryTest {
 
     verify(delegate).create("test");
     verify(applicationLogger).isLoggable(INFO);
-    verify(applicationLogger).log(INFO, "message", error);
+    verify(applicationLogger).log(INFO, "message", null, error);
     verifyNoMoreInteractions(delegate, applicationLogger);
   }
 
@@ -74,15 +74,14 @@ class TransformSafeLoggerFactoryTest {
   @Test
   void doesNotCallInitializedDelegateUnderLock() {
     when(delegate.create("test")).thenReturn(applicationLogger);
-    when(applicationLogger.isLoggable(INFO)).thenReturn(false);
     InternalLogger logger = new TransformSafeLoggerFactory(delegate, false).create("test");
     logger.log(INFO, "before", null);
     verify(delegate).create("test");
-    verify(applicationLogger).log(INFO, "before", null);
+    verify(applicationLogger).log(INFO, "before", null, null);
 
     assertThat(AgentCircularityLock.INSTANCE.acquire()).isTrue();
     try {
-      assertThat(logger.isLoggable(INFO)).isFalse();
+      assertThat(logger.isLoggable(INFO)).isTrue();
       logger.log(INFO, "suppressed", null);
       verifyNoMoreInteractions(delegate, applicationLogger);
     } finally {
@@ -90,7 +89,7 @@ class TransformSafeLoggerFactoryTest {
     }
 
     logger.log(INFO, "after", null);
-    verify(applicationLogger).log(INFO, "after", null);
+    verify(applicationLogger).log(INFO, "after", null, null);
     verifyNoMoreInteractions(delegate, applicationLogger);
   }
 
@@ -110,7 +109,7 @@ class TransformSafeLoggerFactoryTest {
           .get(10, SECONDS);
       verify(delegate).create("test");
       verify(applicationLogger).isLoggable(INFO);
-      verify(applicationLogger).log(INFO, "other thread", null);
+      verify(applicationLogger).log(INFO, "other thread", null, null);
       verifyNoMoreInteractions(delegate, applicationLogger);
     } finally {
       AgentCircularityLock.INSTANCE.release();
