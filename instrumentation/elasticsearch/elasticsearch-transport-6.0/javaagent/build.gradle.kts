@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -39,64 +42,47 @@ dependencies {
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("elasticsearch6Test") {
-      dependencies {
-        val version = baseVersion("6.0.0").orLatest("6.4.+")
-        implementation("org.elasticsearch.client:transport:$version")
-        implementation("org.elasticsearch.plugin:transport-netty4-client:$version")
-        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
-        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing"))
+testing.suites {
+  register<JvmTestSuite>("elasticsearch6Test") {
+    dependencies {
+      val version = baseVersion("6.0.0").orLatest("6.4.+")
+      implementation("org.elasticsearch.client:transport:$version")
+      implementation("org.elasticsearch.plugin:transport-netty4-client:$version")
+      implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
+      implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing"))
+    }
+  }
+
+  register<JvmTestSuite>("elasticsearch65Test") {
+    dependencies {
+      val version = baseVersion("6.5.0").orLatest("6.+")
+      implementation("org.elasticsearch.client:transport:$version")
+      implementation("org.elasticsearch.plugin:transport-netty4-client:$version")
+      implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
+      implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing"))
+    }
+  }
+
+  register<JvmTestSuite>("elasticsearch7Test") {
+    dependencies {
+      val version = baseVersion("7.0.0").orLatest()
+      implementation("org.elasticsearch.client:transport:$version")
+      implementation("org.elasticsearch.plugin:transport-netty4-client:$version")
+      implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
+      implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing"))
+    }
+  }
+
+  executions {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+      if (otelProps.denyUnsafe) {
+        enabled = false
       }
     }
 
-    register<JvmTestSuite>("elasticsearch65Test") {
-      dependencies {
-        val version = baseVersion("6.5.0").orLatest("6.+")
-        implementation("org.elasticsearch.client:transport:$version")
-        implementation("org.elasticsearch.plugin:transport-netty4-client:$version")
-        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
-        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing"))
-      }
-    }
-
-    register<JvmTestSuite>("elasticsearch7Test") {
-      dependencies {
-        val version = baseVersion("7.0.0").orLatest()
-        implementation("org.elasticsearch.client:transport:$version")
-        implementation("org.elasticsearch.plugin:transport-netty4-client:$version")
-        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
-        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common-5.0:testing"))
-      }
-    }
-  }
-}
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  val testSuites = testing.suites.withType(JvmTestSuite::class)
-
-  val experimentalSuites = testSuites.map { suite ->
-    register<Test>("${suite.name}Experimental") {
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
-      systemProperty("metadataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
-    }
-  }
-
-  check {
-    dependsOn(testing.suites, experimentalSuites)
-  }
-
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.elasticsearch.experimental-span-attributes", "true")
     }
   }
 }

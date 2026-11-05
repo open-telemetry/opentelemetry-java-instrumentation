@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.java-conventions")
   id("otel.publish-conventions")
@@ -33,6 +35,23 @@ abstract class ExtractJar : Copy() {
 
   init {
     from(jarFile.elements.map { files -> files.map { archiveOperations.zipTree(it) } })
+  }
+}
+
+testing.suites {
+  executions("test") {
+    register("TemporalityDelta") {
+      filter {
+        includeTestsMatching("io.opentelemetry.javaagent.testing.AgentMetricTemporalityTest")
+      }
+      systemProperty("otel.javaagent.testing.exporter.temporality", "delta")
+    }
+    register("TemporalityCumulative") {
+      filter {
+        includeTestsMatching("io.opentelemetry.javaagent.testing.AgentMetricTemporalityTest")
+      }
+      systemProperty("otel.javaagent.testing.exporter.temporality", "cumulative")
+    }
   }
 }
 

@@ -29,12 +29,16 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.testing.internal.proto.common.v1.AnyValue;
+import io.opentelemetry.testing.internal.proto.common.v1.InstrumentationScope;
 import io.opentelemetry.testing.internal.proto.common.v1.KeyValue;
 import io.opentelemetry.testing.internal.proto.metrics.v1.ExponentialHistogram;
 import io.opentelemetry.testing.internal.proto.metrics.v1.ExponentialHistogramDataPoint;
 import io.opentelemetry.testing.internal.proto.metrics.v1.Metric;
+import io.opentelemetry.testing.internal.proto.metrics.v1.NumberDataPoint;
 import io.opentelemetry.testing.internal.proto.metrics.v1.ResourceMetrics;
 import io.opentelemetry.testing.internal.proto.metrics.v1.ScopeMetrics;
+import io.opentelemetry.testing.internal.proto.metrics.v1.Sum;
+import io.opentelemetry.testing.internal.proto.resource.v1.Resource;
 import io.opentelemetry.testing.internal.proto.trace.v1.ResourceSpans;
 import io.opentelemetry.testing.internal.proto.trace.v1.ScopeSpans;
 import io.opentelemetry.testing.internal.proto.trace.v1.Span;
@@ -125,6 +129,140 @@ class TelemetryConverterTest {
         argumentSet("unsampled remote", 0x380, true),
         argumentSet("remote bit without known bit", 0x281, false),
         argumentSet("reserved bits", 0x80000381, true));
+  }
+
+  @Test
+  void metricsDataPreservesResourceAndScopeIdentity() {
+    InstrumentationScope scope =
+        InstrumentationScope.newBuilder()
+            .setName("scope")
+            .setVersion("1.0")
+            .addAttributes(stringAttribute("scope.attribute", "scope-value"))
+            .build();
+    ResourceMetrics resourceMetrics =
+        ResourceMetrics.newBuilder()
+            .setResource(
+                Resource.newBuilder().addAttributes(stringAttribute("resource.attribute", "value")))
+            .setSchemaUrl("resource-schema")
+            .addScopeMetrics(
+                ScopeMetrics.newBuilder()
+                    .setScope(scope)
+                    .setSchemaUrl("scope-schema")
+                    .addMetrics(
+                        Metric.newBuilder()
+                            .setName("metric")
+                            .setDescription("metric description")
+                            .setUnit("items")
+                            .setSum(
+                                Sum.newBuilder()
+                                    .setIsMonotonic(true)
+                                    .setAggregationTemporality(
+                                        io.opentelemetry.testing.internal.proto.metrics.v1
+                                            .AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA)
+                                    .addDataPoints(
+                                        NumberDataPoint.newBuilder()
+                                            .setStartTimeUnixNano(3)
+                                            .setTimeUnixNano(4)
+                                            .addAttributes(
+                                                stringAttribute("point.attribute", "point-value"))
+                                            .setAsInt(42)))))
+            .build();
+    ResourceMetrics differentResourceSchema =
+        resourceMetrics.toBuilder().setSchemaUrl("different-resource-schema").build();
+    ResourceMetrics differentScopeAttributes =
+        resourceMetrics.toBuilder()
+            .setScopeMetrics(
+                0,
+                resourceMetrics.getScopeMetrics(0).toBuilder()
+                    .setScope(
+                        scope.toBuilder()
+                            .clearAttributes()
+                            .addAttributes(stringAttribute("scope.attribute", "different-value"))
+                            .build())
+                    .build())
+            .build();
+
+    MetricData converted = getSingleMetric(resourceMetrics);
+    MetricData convertedWithDifferentResourceSchema = getSingleMetric(differentResourceSchema);
+    MetricData convertedWithDifferentScopeAttributes = getSingleMetric(differentScopeAttributes);
+
+    assertThat(converted.getResource().getAttributes())
+        .isEqualTo(Attributes.of(stringKey("resource.attribute"), "value"));
+    assertThat(converted.getResource().getSchemaUrl()).isEqualTo("resource-schema");
+    assertThat(converted.getResource())
+        .isNotEqualTo(convertedWithDifferentResourceSchema.getResource());
+
+    assertThat(converted.getInstrumentationScopeInfo().getName()).isEqualTo("scope");
+    assertThat(converted.getInstrumentationScopeInfo().getVersion()).isEqualTo("1.0");
+    assertThat(converted.getInstrumentationScopeInfo().getSchemaUrl()).isEqualTo("scope-schema");
+    assertThat(converted.getInstrumentationScopeInfo().getAttributes())
+        .isEqualTo(Attributes.of(stringKey("scope.attribute"), "scope-value"));
+    assertThat(converted.getInstrumentationScopeInfo())
+        .isNotEqualTo(convertedWithDifferentScopeAttributes.getInstrumentationScopeInfo());
+
+    assertThat(
+            asList(
+                converted,
+                convertedWithDifferentResourceSchema,
+                convertedWithDifferentScopeAttributes))
+        .allSatisfy(
+            metricData -> {
+              assertThat(metricData.getName()).isEqualTo("metric");
+              assertThat(metricData.getDescription()).isEqualTo("metric description");
+              assertThat(metricData.getUnit()).isEqualTo("items");
+              assertThat(metricData.getLongSumData().isMonotonic()).isTrue();
+              assertThat(metricData.getLongSumData().getAggregationTemporality())
+                  .isEqualTo(AggregationTemporality.DELTA);
+              assertThat(metricData.getLongSumData().getPoints())
+                  .singleElement()
+                  .satisfies(
+                      point -> {
+                        assertThat(point.getStartEpochNanos()).isEqualTo(3);
+                        assertThat(point.getEpochNanos()).isEqualTo(4);
+                        assertThat(point.getAttributes())
+                            .isEqualTo(Attributes.of(stringKey("point.attribute"), "point-value"));
+                        assertThat(point.getValue()).isEqualTo(42);
+                      });
+            });
+  }
+
+  @Test
+  void metricsDataWithoutMetadataKeepsEmptyAndNullValues() {
+    ResourceMetrics resourceMetrics =
+        ResourceMetrics.newBuilder()
+            .addScopeMetrics(
+                ScopeMetrics.newBuilder()
+                    .setScope(InstrumentationScope.newBuilder().setName("scope"))
+                    .addMetrics(
+                        Metric.newBuilder()
+                            .setName("metric")
+                            .setSum(
+                                Sum.newBuilder()
+                                    .setAggregationTemporality(
+                                        io.opentelemetry.testing.internal.proto.metrics.v1
+                                            .AggregationTemporality
+                                            .AGGREGATION_TEMPORALITY_DELTA))))
+            .build();
+
+    MetricData converted = getSingleMetric(resourceMetrics);
+
+    assertThat(converted.getResource().getAttributes()).isEqualTo(Attributes.empty());
+    assertThat(converted.getResource().getSchemaUrl()).isNull();
+    assertThat(converted.getInstrumentationScopeInfo().getVersion()).isNull();
+    assertThat(converted.getInstrumentationScopeInfo().getSchemaUrl()).isNull();
+    assertThat(converted.getInstrumentationScopeInfo().getAttributes())
+        .isEqualTo(Attributes.empty());
+  }
+
+  private static MetricData getSingleMetric(ResourceMetrics resourceMetrics) {
+    return TelemetryConverter.getMetricsData(singletonList(resourceMetrics)).get(0);
+  }
+
+  private static KeyValue stringAttribute(String key, String value) {
+    return KeyValue.newBuilder()
+        .setKey(key)
+        .setValue(AnyValue.newBuilder().setStringValue(value))
+        .build();
   }
 
   @ParameterizedTest

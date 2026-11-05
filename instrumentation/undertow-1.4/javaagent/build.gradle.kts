@@ -22,8 +22,8 @@ dependencies {
   bootstrap(project(":instrumentation:undertow-1.4:bootstrap"))
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     register("ExceptionSignalLogs") {
       telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }

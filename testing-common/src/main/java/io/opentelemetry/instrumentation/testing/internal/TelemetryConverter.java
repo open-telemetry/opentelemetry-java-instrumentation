@@ -223,12 +223,14 @@ public class TelemetryConverter {
               createMetricData(
                   metric,
                   io.opentelemetry.sdk.resources.Resource.create(
-                      fromProto(resource.getAttributesList())),
+                      fromProto(resource.getAttributesList()),
+                      emptyToNull(resourceMetrics.getSchemaUrl())),
                   InstrumentationScopeInfo.builder(ilMetrics.getScope().getName())
                       // emptyToNull since they are the same at protobuf layer,
                       // and allows for simpler verification of InstrumentationScope
                       .setVersion(emptyToNull(ilMetrics.getScope().getVersion()))
                       .setSchemaUrl(emptyToNull(ilMetrics.getSchemaUrl()))
+                      .setAttributes(fromProto(ilMetrics.getScope().getAttributesList()))
                       .build()));
         }
       }

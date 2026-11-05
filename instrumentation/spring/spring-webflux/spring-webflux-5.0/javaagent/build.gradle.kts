@@ -70,8 +70,8 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:3.+") // see testing-webflux7 module
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       // required on jdk17
       jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")

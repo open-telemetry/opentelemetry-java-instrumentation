@@ -10,6 +10,7 @@ import com.openai.client.OpenAIClientAsync;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.embeddings.CreateEmbeddingResponse;
 import com.openai.models.embeddings.EmbeddingCreateParams;
+import com.openai.models.responses.Response;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -19,6 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 public final class OpenAITelemetry {
   private final Instrumenter<ChatCompletionRequest, ChatCompletion> chatInstrumenter;
   private final Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingsInstrumenter;
+  private final Instrumenter<ResponseCreateRequest, Response> responsesInstrumenter;
   private final Logger eventLogger;
   private final boolean captureMessageContent;
 
@@ -37,10 +39,12 @@ public final class OpenAITelemetry {
   OpenAITelemetry(
       Instrumenter<ChatCompletionRequest, ChatCompletion> chatInstrumenter,
       Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingsInstrumenter,
+      Instrumenter<ResponseCreateRequest, Response> responsesInstrumenter,
       Logger eventLogger,
       boolean captureMessageContent) {
     this.chatInstrumenter = chatInstrumenter;
     this.embeddingsInstrumenter = embeddingsInstrumenter;
+    this.responsesInstrumenter = responsesInstrumenter;
     this.eventLogger = eventLogger;
     this.captureMessageContent = captureMessageContent;
   }
@@ -48,14 +52,24 @@ public final class OpenAITelemetry {
   /** Returns an instrumented {@link OpenAIClient} based on the provided client. */
   public OpenAIClient instrument(OpenAIClient client) {
     return new InstrumentedOpenAiClient(
-            client, chatInstrumenter, embeddingsInstrumenter, eventLogger, captureMessageContent)
+            client,
+            chatInstrumenter,
+            embeddingsInstrumenter,
+            responsesInstrumenter,
+            eventLogger,
+            captureMessageContent)
         .createProxy();
   }
 
   /** Returns an instrumented {@link OpenAIClientAsync} based on the provided client. */
   public OpenAIClientAsync instrument(OpenAIClientAsync client) {
     return new InstrumentedOpenAiClientAsync(
-            client, chatInstrumenter, embeddingsInstrumenter, eventLogger, captureMessageContent)
+            client,
+            chatInstrumenter,
+            embeddingsInstrumenter,
+            responsesInstrumenter,
+            eventLogger,
+            captureMessageContent)
         .createProxy();
   }
 }

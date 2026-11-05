@@ -78,6 +78,7 @@ public final class UrlParsingUtils {
    * @return a map of key-value pairs
    */
   // Source: https://stackoverflow.com/a/13592567
+  @SuppressWarnings("PreferCharsetOverload") // URLDecoder.decode accepts Charset since 10
   public static Map<String, String> splitQuery(String query, String separator) {
     if (query == null || query.isEmpty()) {
       return emptyMap();
@@ -214,7 +215,7 @@ public final class UrlParsingUtils {
     return indexOfAny(str, 0, chars);
   }
 
-  private static int indexOfAny(String str, int fromIndex, char... chars) {
+  static int indexOfAny(String str, int fromIndex, char... chars) {
     for (int i = Math.max(fromIndex, 0); i < str.length(); i++) {
       char c = str.charAt(i);
       for (char match : chars) {
@@ -268,7 +269,7 @@ public final class UrlParsingUtils {
   }
 
   // IPv6 brackets and address=(...) blocks may contain commas.
-  private static List<String> splitHostList(String hostList) {
+  static List<String> splitHostList(String hostList) {
     List<String> entries = new ArrayList<>();
     int depth = 0;
     int start = 0;
@@ -294,24 +295,14 @@ public final class UrlParsingUtils {
       return host.indexOf('=') < 0 && isValidHostPort(host) ? host : null;
     }
 
-    Matcher hostMatcher = ADDRESS_HOST_PATTERN.matcher(host);
-    if (!hostMatcher.find()) {
+    HostPort endpoint = extractAddressHostPort(host);
+    if (endpoint == null) {
       return null;
     }
-    String addressHost = hostMatcher.group(1).trim();
-    if (!isValidHostPort(addressHost) || hostMatcher.find()) {
-      return null;
-    }
-    StringBuilder sanitized = new StringBuilder("address=(host=");
-    sanitized.append(addressHost).append(')');
-
-    Matcher portMatcher = ADDRESS_PORT_PATTERN.matcher(host);
-    if (portMatcher.find()) {
-      String addressPort = portMatcher.group(1).trim();
-      if (!isValidPort(addressPort) || portMatcher.find()) {
-        return null;
-      }
-      sanitized.append("(port=").append(addressPort).append(')');
+    StringBuilder sanitized =
+        new StringBuilder("address=(host=").append(endpoint.host()).append(')');
+    if (endpoint.port() != null) {
+      sanitized.append("(port=").append(endpoint.port()).append(')');
     }
     return sanitized.toString();
   }
@@ -333,7 +324,7 @@ public final class UrlParsingUtils {
     return firstColon < 0 || (firstColon > 0 && isValidPort(value.substring(firstColon + 1)));
   }
 
-  private static boolean isValidPort(String value) {
+  static boolean isValidPort(String value) {
     if (value.isEmpty()) {
       return false;
     }
@@ -384,6 +375,9 @@ public final class UrlParsingUtils {
     boolean hasSpecialTarget = defaultPort == null;
     for (String entry : entries) {
       HostPort endpoint = extractSanitizedHostPort(entry);
+      if (endpoint == null) {
+        return null;
+      }
       endpoints.add(endpoint);
       if (endpoint.host().startsWith("/") || endpoint.host().indexOf('\\') >= 0) {
         hasSpecialTarget = true;
@@ -459,15 +453,33 @@ public final class UrlParsingUtils {
     return address.toString();
   }
 
+  @Nullable
   private static HostPort extractSanitizedHostPort(String entry) {
     if (!ADDRESS_ENTRY_PATTERN.matcher(entry).find()) {
       return extractHostPort(entry);
     }
+    return extractAddressHostPort(entry);
+  }
+
+  @Nullable
+  static HostPort extractAddressHostPort(String entry) {
     Matcher hostMatcher = ADDRESS_HOST_PATTERN.matcher(entry);
-    hostMatcher.find();
-    Matcher portMatcher = ADDRESS_PORT_PATTERN.matcher(entry);
-    Integer port = portMatcher.find() ? parsePort(portMatcher.group(1)) : null;
+    if (!hostMatcher.find()) {
+      return null;
+    }
     String host = hostMatcher.group(1).trim();
+    if (!isValidHostPort(host) || hostMatcher.find()) {
+      return null;
+    }
+    Matcher portMatcher = ADDRESS_PORT_PATTERN.matcher(entry);
+    Integer port = null;
+    if (portMatcher.find()) {
+      String value = portMatcher.group(1).trim();
+      if (!isValidPort(value) || portMatcher.find()) {
+        return null;
+      }
+      port = Integer.valueOf(value);
+    }
     return new HostPort(stripIpv6Brackets(host), port, host.indexOf(':') >= 0 ? host : null);
   }
 
@@ -482,7 +494,7 @@ public final class UrlParsingUtils {
     @Nullable private final Integer port;
     @Nullable private final String ipv6Address;
 
-    private HostPort(String host, @Nullable Integer port, @Nullable String ipv6Address) {
+    HostPort(String host, @Nullable Integer port, @Nullable String ipv6Address) {
       this.host = host;
       this.port = port;
       this.ipv6Address = ipv6Address;

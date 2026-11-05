@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -32,33 +33,27 @@ dependencies {
   testInstrumentation(project(":instrumentation:jms:jms-3.0:javaagent"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":javaagent-bootstrap"))
-        implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
-        implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
-        implementation(project(":javaagent-extension-api"))
-        implementation("javax.jms:jms-api:1.1-rev-1")
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":javaagent-bootstrap"))
+      implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
+      implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
+      implementation(project(":javaagent-extension-api"))
+      implementation("javax.jms:jms-api:1.1-rev-1")
     }
+  }
 
-    register<JvmTestSuite>("jms2Test") {
-      dependencies {
-        implementation("org.hornetq:hornetq-jms-client:2.4.7.Final")
-        implementation("org.hornetq:hornetq-jms-server:2.4.7.Final")
-      }
+  register<JvmTestSuite>("jms2Test") {
+    dependencies {
+      implementation("org.hornetq:hornetq-jms-client:2.4.7.Final")
+      implementation("org.hornetq:hornetq-jms-server:2.4.7.Final")
     }
   }
 }
 
 tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
   check {
     dependsOn(testing.suites)
   }

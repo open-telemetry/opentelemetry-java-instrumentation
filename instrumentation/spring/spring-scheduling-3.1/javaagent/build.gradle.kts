@@ -21,8 +21,8 @@ dependencies {
   library("org.springframework:spring-context:3.1.0.RELEASE")
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       // required on jdk17
       jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
