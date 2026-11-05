@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
-import static io.opentelemetry.javaagent.bootstrap.runtimetelemetry.RuntimeTelemetryObservation.registeredJmxObservers;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparingInt;
 
@@ -20,7 +18,6 @@ import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.AbstractSet;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -42,14 +39,13 @@ public class MicrometerSingletons {
         builder, TimeUnitParser.parseConfigValue(config.getString("base_time_unit")));
     Experimental.setMicrometerHistogramGaugesEnabled(
         builder, config.get("histogram_gauges/development").getBoolean("enabled", false));
-    DeclarativeConfigProperties ownership = config.get("jvm_metrics_ownership/development");
-    if (ownership.getBoolean("enabled", false)) {
+    if (config.get("jvm_metrics_ownership/development").getBoolean("enabled", false)) {
+      boolean emitExperimentalMetrics =
+          DeclarativeConfigUtil.getInstrumentationConfig(
+                  GlobalOpenTelemetry.get(), "runtime_telemetry")
+              .getBoolean("emit_experimental_metrics/development", false);
       Experimental.setSuppressionPredicate(
-          builder,
-          new JvmMetricsOwnership(
-              true,
-              new HashSet<>(ownership.getScalarList("kept", String.class, emptyList())),
-              registeredJmxObservers()));
+          builder, new JvmMetricsOwnership(emitExperimentalMetrics));
     }
     meterRegistry = builder.build();
   }

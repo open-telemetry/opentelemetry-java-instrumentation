@@ -22,7 +22,6 @@ import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import javax.management.Notification;
@@ -60,10 +59,6 @@ public class GarbageCollector {
 
   /** Register observers for java runtime memory metrics. */
   public static List<AutoCloseable> registerObservers(Meter meter) {
-    return registerObservers(meter, unused -> {});
-  }
-
-  static List<AutoCloseable> registerObservers(Meter meter, Consumer<String> registered) {
     if (!isNotificationClassPresent()) {
       logger.fine(
           "The com.sun.management.GarbageCollectionNotificationInfo class is not available;"
@@ -74,8 +69,7 @@ public class GarbageCollector {
     return registerObservers(
         meter,
         ManagementFactory.getGarbageCollectorMXBeans(),
-        GarbageCollector::extractNotificationInfo,
-        registered);
+        GarbageCollector::extractNotificationInfo);
   }
 
   // Visible for testing
@@ -83,15 +77,6 @@ public class GarbageCollector {
       Meter meter,
       List<GarbageCollectorMXBean> gcBeans,
       Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor) {
-    return registerObservers(meter, gcBeans, notificationInfoExtractor, unused -> {});
-  }
-
-  // Visible for testing
-  static List<AutoCloseable> registerObservers(
-      Meter meter,
-      List<GarbageCollectorMXBean> gcBeans,
-      Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor,
-      Consumer<String> registered) {
 
     DoubleHistogram gcDuration =
         meter
@@ -111,10 +96,6 @@ public class GarbageCollector {
           new GcNotificationListener(gcDuration, notificationInfoExtractor);
       notificationEmitter.addNotificationListener(listener, GC_FILTER, null);
       result.add(() -> notificationEmitter.removeNotificationListener(listener));
-    }
-    // An instrument without a notification listener does not cover any GC observations.
-    if (!result.isEmpty()) {
-      registered.accept("jvm.gc.duration");
     }
     return result;
   }

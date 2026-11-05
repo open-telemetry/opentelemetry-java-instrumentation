@@ -36,26 +36,21 @@ public class MemoryPools {
 
   /** Register observers for java runtime memory metrics. */
   public static List<AutoCloseable> registerObservers(Meter meter) {
-    return registerObservers(meter, unused -> true, unused -> {});
+    return registerObservers(meter, unused -> true);
   }
 
-  static List<AutoCloseable> registerObservers(
-      Meter meter, Predicate<String> metricNamePredicate, Consumer<String> registered) {
-    return registerObservers(
-        meter, ManagementFactory.getMemoryPoolMXBeans(), metricNamePredicate, registered);
+  static List<AutoCloseable> registerObservers(Meter meter, Predicate<String> metricNamePredicate) {
+    return registerObservers(meter, ManagementFactory.getMemoryPoolMXBeans(), metricNamePredicate);
   }
 
   // Visible for testing
   public static List<AutoCloseable> registerObservers(
       Meter meter, List<MemoryPoolMXBean> poolBeans) {
-    return registerObservers(meter, poolBeans, unused -> true, unused -> {});
+    return registerObservers(meter, poolBeans, unused -> true);
   }
 
   private static List<AutoCloseable> registerObservers(
-      Meter meter,
-      List<MemoryPoolMXBean> poolBeans,
-      Predicate<String> metricNamePredicate,
-      Consumer<String> registered) {
+      Meter meter, List<MemoryPoolMXBean> poolBeans, Predicate<String> metricNamePredicate) {
     List<AutoCloseable> observables = new ArrayList<>();
 
     if (metricNamePredicate.test("jvm.memory.used")) {
@@ -71,7 +66,6 @@ public class MemoryPools {
                       poolBeans,
                       MemoryPoolMXBean::getUsage,
                       MemoryUsage::getUsed)));
-      registered.accept("jvm.memory.used");
     }
     if (metricNamePredicate.test("jvm.memory.committed")) {
       observables.add(
@@ -86,7 +80,6 @@ public class MemoryPools {
                       poolBeans,
                       MemoryPoolMXBean::getUsage,
                       MemoryUsage::getCommitted)));
-      registered.accept("jvm.memory.committed");
     }
     if (metricNamePredicate.test("jvm.memory.limit")) {
       observables.add(
@@ -101,7 +94,6 @@ public class MemoryPools {
                       poolBeans,
                       MemoryPoolMXBean::getUsage,
                       MemoryUsage::getMax)));
-      registered.accept("jvm.memory.limit");
     }
     if (metricNamePredicate.test("jvm.memory.used_after_last_gc")) {
       observables.add(
@@ -117,7 +109,6 @@ public class MemoryPools {
                       poolBeans,
                       MemoryPoolMXBean::getCollectionUsage,
                       MemoryUsage::getUsed)));
-      registered.accept("jvm.memory.used_after_last_gc");
     }
 
     return observables;

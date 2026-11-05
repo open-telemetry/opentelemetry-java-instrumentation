@@ -5,125 +5,91 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
-import static java.util.Collections.unmodifiableSet;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.WARNING;
 
 import io.micrometer.core.instrument.Meter;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 
 /**
- * Selects supported standard JVM meters whose observations are owned by agent JMX telemetry.
- * Complementary metrics and unknown names remain bridged.
+ * Selects standard Micrometer JVM meters that duplicate observations reported by agent runtime
+ * telemetry. Complementary metrics and unknown names remain bridged.
  */
 final class JvmMetricsOwnership implements Predicate<Meter.Id> {
   private static final Logger logger = Logger.getLogger(JvmMetricsOwnership.class.getName());
 
-  private final boolean enabled;
-  private final Set<String> kept;
-  private final Set<String> registeredObservers;
+  private static final Map<String, Meter.Type> STABLE;
+  private static final Map<String, Meter.Type> EXPERIMENTAL;
 
-  JvmMetricsOwnership(boolean enabled, Set<String> kept, Set<String> registeredObservers) {
-    this.enabled = enabled;
-    this.kept = unmodifiableSet(new HashSet<>(kept));
-    this.registeredObservers = unmodifiableSet(new HashSet<>(registeredObservers));
-    if (enabled && registeredObservers.isEmpty()) {
-      // runtime telemetry is disabled, reports these metrics through JFR, or has not been
-      // installed yet (agent listeners are delayed when the application uses a custom LogManager)
-      logger.log(
-          WARNING,
-          "Micrometer JVM metrics ownership is enabled, but runtime telemetry has not registered"
-              + " any supported JMX metrics; all Micrometer meters will be bridged.");
-    }
+  static {
+    Map<String, Meter.Type> stable = new HashMap<>();
+    // ClassLoaderMetrics (with either the Micrometer or the OpenTelemetry naming convention) reads
+    // the same ClassLoadingMXBean values as runtime telemetry's Classes. Function counters have
+    // Meter.Type.COUNTER.
+    stable.put("jvm.classes.loaded", Meter.Type.GAUGE);
+    stable.put("jvm.class.count", Meter.Type.GAUGE);
+    stable.put("jvm.classes.loaded.count", Meter.Type.COUNTER);
+    stable.put("jvm.class.loaded", Meter.Type.COUNTER);
+    stable.put("jvm.classes.unloaded", Meter.Type.COUNTER);
+    stable.put("jvm.class.unloaded", Meter.Type.COUNTER);
+    // MemoryPoolMXBean.getUsage(): same pools and used/committed/max values. The agent
+    // omits unavailable (-1) values and uses native pool/type attributes.
+    stable.put("jvm.memory.used", Meter.Type.GAUGE);
+    stable.put("jvm.memory.committed", Meter.Type.GAUGE);
+    stable.put("jvm.memory.max", Meter.Type.GAUGE);
+    stable.put("jvm.memory.limit", Meter.Type.GAUGE);
+    // Native thread counts partition live platform threads by state and daemon flag.
+    // Peak, total-started, deadlocked and virtual-thread observations are complementary.
+    stable.put("jvm.threads.live", Meter.Type.GAUGE);
+    stable.put("jvm.threads.daemon", Meter.Type.GAUGE);
+    stable.put("jvm.threads.states", Meter.Type.GAUGE);
+    stable.put("jvm.thread.count", Meter.Type.GAUGE);
+    // ProcessorMetrics with OpenTelemetry conventions reads the same OS bean values.
+    stable.put("system.cpu.count", Meter.Type.GAUGE);
+    stable.put("jvm.cpu.count", Meter.Type.GAUGE);
+    stable.put("process.cpu.usage", Meter.Type.GAUGE);
+    stable.put("jvm.cpu.recent_utilization", Meter.Type.GAUGE);
+    stable.put("process.cpu.time", Meter.Type.COUNTER);
+    stable.put("jvm.cpu.time", Meter.Type.COUNTER);
+    // Both timers partition the same GC notifications collected by the native histogram.
+    // Selecting ownership adopts native GC attributes, including GC cause capture.
+    stable.put("jvm.gc.pause", Meter.Type.TIMER);
+    stable.put("jvm.gc.concurrent.phase.time", Meter.Type.TIMER);
+    // In particular, jvm.memory.usage.after.gc is a utilization ratio, not the native
+    // jvm.memory.used_after_last_gc byte count. GC allocation/promotion/live-data metrics,
+    // compilation time and JVM info also remain bridged.
+    STABLE = unmodifiableMap(stable);
+
+    // Replacements emitted only with runtime telemetry's experimental JMX metrics.
+    Map<String, Meter.Type> experimental = new HashMap<>();
+    experimental.put("jvm.buffer.count", Meter.Type.GAUGE);
+    experimental.put("jvm.buffer.memory.used", Meter.Type.GAUGE);
+    experimental.put("jvm.buffer.total.capacity", Meter.Type.GAUGE);
+    experimental.put("system.cpu.usage", Meter.Type.GAUGE);
+    experimental.put("system.load.average.1m", Meter.Type.GAUGE);
+    experimental.put("process.files.open", Meter.Type.GAUGE);
+    experimental.put("process.files.max", Meter.Type.GAUGE);
+    EXPERIMENTAL = unmodifiableMap(experimental);
+  }
+
+  private final boolean emitExperimentalMetrics;
+
+  JvmMetricsOwnership(boolean emitExperimentalMetrics) {
+    this.emitExperimentalMetrics = emitExperimentalMetrics;
   }
 
   @Override
   public boolean test(Meter.Id id) {
-    if (!enabled || kept.contains(id.getName())) {
-      return false;
+    String name = id.getName();
+    boolean suppressed =
+        id.getType() == STABLE.get(name)
+            || (emitExperimentalMetrics && id.getType() == EXPERIMENTAL.get(name));
+    if (suppressed && logger.isLoggable(FINE)) {
+      logger.log(FINE, "Not bridging Micrometer meter {0}, runtime telemetry reports it", name);
     }
-    String replacement = replacement(id);
-    if (replacement == null || !registeredObservers.contains(replacement)) {
-      return false;
-    }
-    if (logger.isLoggable(FINE)) {
-      logger.log(
-          FINE,
-          "Not bridging Micrometer meter {0}, runtime telemetry reports {1}",
-          new Object[] {id.getName(), replacement});
-    }
-    return true;
-  }
-
-  @Nullable
-  private static String replacement(Meter.Id id) {
-    // ClassLoaderMetrics (with either the Micrometer or the OpenTelemetry naming convention) reads
-    // the same ClassLoadingMXBean values as runtime telemetry's Classes. Function counters have
-    // Meter.Type.COUNTER.
-    switch (id.getName()) {
-      case "jvm.classes.loaded":
-      case "jvm.class.count":
-        return id.getType() == Meter.Type.GAUGE ? "jvm.class.count" : null;
-      case "jvm.classes.loaded.count":
-      case "jvm.class.loaded":
-        return id.getType() == Meter.Type.COUNTER ? "jvm.class.loaded" : null;
-      case "jvm.classes.unloaded":
-      case "jvm.class.unloaded":
-        return id.getType() == Meter.Type.COUNTER ? "jvm.class.unloaded" : null;
-      // MemoryPoolMXBean.getUsage(): same pools and used/committed/max values. The agent
-      // omits unavailable (-1) values and uses native pool/type attributes.
-      case "jvm.memory.used":
-      case "jvm.memory.committed":
-        return id.getType() == Meter.Type.GAUGE ? id.getName() : null;
-      case "jvm.memory.max":
-      case "jvm.memory.limit":
-        return id.getType() == Meter.Type.GAUGE ? "jvm.memory.limit" : null;
-      // BufferPoolMXBean values; available only with experimental JMX buffer telemetry.
-      case "jvm.buffer.count":
-      case "jvm.buffer.memory.used":
-        return id.getType() == Meter.Type.GAUGE ? id.getName() : null;
-      case "jvm.buffer.total.capacity":
-        return id.getType() == Meter.Type.GAUGE ? "jvm.buffer.memory.limit" : null;
-      // Native thread counts partition live platform threads by state and daemon flag.
-      // Peak, total-started, deadlocked and virtual-thread observations are complementary.
-      case "jvm.threads.live":
-      case "jvm.threads.daemon":
-      case "jvm.threads.states":
-      case "jvm.thread.count":
-        return id.getType() == Meter.Type.GAUGE ? "jvm.thread.count" : null;
-      // ProcessorMetrics with OpenTelemetry conventions reads the same OS bean values.
-      case "system.cpu.count":
-      case "jvm.cpu.count":
-        return id.getType() == Meter.Type.GAUGE ? "jvm.cpu.count" : null;
-      case "process.cpu.usage":
-      case "jvm.cpu.recent_utilization":
-        return id.getType() == Meter.Type.GAUGE ? "jvm.cpu.recent_utilization" : null;
-      case "process.cpu.time":
-      case "jvm.cpu.time":
-        return id.getType() == Meter.Type.COUNTER ? "jvm.cpu.time" : null;
-      // These OS observations require experimental JMX telemetry and platform support.
-      case "system.cpu.usage":
-        return id.getType() == Meter.Type.GAUGE ? "jvm.system.cpu.utilization" : null;
-      case "system.load.average.1m":
-        return id.getType() == Meter.Type.GAUGE ? "jvm.system.cpu.load_1m" : null;
-      case "process.files.open":
-        return id.getType() == Meter.Type.GAUGE ? "jvm.file_descriptor.count" : null;
-      case "process.files.max":
-        return id.getType() == Meter.Type.GAUGE ? "jvm.file_descriptor.limit" : null;
-      // Both timers partition the same GC notifications collected by the native histogram.
-      // Selecting ownership adopts native GC attributes, including GC cause capture.
-      case "jvm.gc.pause":
-      case "jvm.gc.concurrent.phase.time":
-        return id.getType() == Meter.Type.TIMER ? "jvm.gc.duration" : null;
-      // In particular, jvm.memory.usage.after.gc is a utilization ratio, not the native
-      // jvm.memory.used_after_last_gc byte count. GC allocation/promotion/live-data metrics,
-      // compilation time and JVM info also remain bridged.
-      default:
-        return null;
-    }
+    return suppressed;
   }
 }

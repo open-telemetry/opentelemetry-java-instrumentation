@@ -33,28 +33,22 @@ public final class BufferPools {
 
   /** Register observers for java runtime buffer pool metrics. */
   public static List<AutoCloseable> registerObservers(Meter meter) {
-    return registerObservers(meter, unused -> true, unused -> {});
+    return registerObservers(meter, unused -> true);
   }
 
-  static List<AutoCloseable> registerObservers(
-      Meter meter, Predicate<String> metricNamePredicate, Consumer<String> registered) {
-    return registerObservers(
-        meter,
-        ManagementFactory.getPlatformMXBeans(BufferPoolMXBean.class),
-        metricNamePredicate,
-        registered);
+  static List<AutoCloseable> registerObservers(Meter meter, Predicate<String> metricNamePredicate) {
+    List<BufferPoolMXBean> bufferBeans =
+        ManagementFactory.getPlatformMXBeans(BufferPoolMXBean.class);
+    return registerObservers(meter, bufferBeans, metricNamePredicate);
   }
 
   // Visible for testing
   static List<AutoCloseable> registerObservers(Meter meter, List<BufferPoolMXBean> bufferBeans) {
-    return registerObservers(meter, bufferBeans, unused -> true, unused -> {});
+    return registerObservers(meter, bufferBeans, unused -> true);
   }
 
   private static List<AutoCloseable> registerObservers(
-      Meter meter,
-      List<BufferPoolMXBean> bufferBeans,
-      Predicate<String> metricNamePredicate,
-      Consumer<String> registered) {
+      Meter meter, List<BufferPoolMXBean> bufferBeans, Predicate<String> metricNamePredicate) {
     List<AutoCloseable> observables = new ArrayList<>();
     if (metricNamePredicate.test("jvm.buffer.memory.used")) {
       observables.add(
@@ -63,7 +57,6 @@ public final class BufferPools {
               .setDescription("Measure of memory used by buffers.")
               .setUnit("By")
               .buildWithCallback(callback(bufferBeans, BufferPoolMXBean::getMemoryUsed)));
-      registered.accept("jvm.buffer.memory.used");
     }
     if (metricNamePredicate.test("jvm.buffer.memory.limit")) {
       observables.add(
@@ -72,7 +65,6 @@ public final class BufferPools {
               .setDescription("Measure of total memory capacity of buffers.")
               .setUnit("By")
               .buildWithCallback(callback(bufferBeans, BufferPoolMXBean::getTotalCapacity)));
-      registered.accept("jvm.buffer.memory.limit");
     }
     if (metricNamePredicate.test("jvm.buffer.count")) {
       observables.add(
@@ -81,7 +73,6 @@ public final class BufferPools {
               .setDescription("Number of buffers in the pool.")
               .setUnit("{buffer}")
               .buildWithCallback(callback(bufferBeans, BufferPoolMXBean::getCount)));
-      registered.accept("jvm.buffer.count");
     }
     return observables;
   }

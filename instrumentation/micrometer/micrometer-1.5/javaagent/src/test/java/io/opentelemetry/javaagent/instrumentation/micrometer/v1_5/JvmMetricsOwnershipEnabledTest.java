@@ -27,7 +27,7 @@ import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-// runs with jvm-metrics-ownership enabled and jvm.classes.unloaded kept, see build.gradle.kts
+// runs with jvm-metrics-ownership enabled, see build.gradle.kts
 class JvmMetricsOwnershipEnabledTest {
   private static final String MICROMETER_SCOPE = "io.opentelemetry.micrometer-1.5";
   private static final String RUNTIME_TELEMETRY_SCOPE = "io.opentelemetry.runtime-telemetry";
@@ -41,15 +41,12 @@ class JvmMetricsOwnershipEnabledTest {
 
     testing.waitAndAssertMetrics(
         RUNTIME_TELEMETRY_SCOPE, "jvm.class.count", AbstractIterableAssert::isNotEmpty);
-    // kept, so still bridged
-    testing.waitAndAssertMetrics(
-        MICROMETER_SCOPE, "jvm.classes.unloaded", AbstractIterableAssert::isNotEmpty);
 
     assertThat(testing.metrics())
         .filteredOn(
             metric -> metric.getInstrumentationScopeInfo().getName().equals(MICROMETER_SCOPE))
         .extracting(MetricData::getName)
-        .doesNotContain("jvm.classes.loaded", "jvm.classes.loaded.count");
+        .doesNotContain("jvm.classes.loaded", "jvm.classes.loaded.count", "jvm.classes.unloaded");
   }
 
   @Test
@@ -68,7 +65,7 @@ class JvmMetricsOwnershipEnabledTest {
       testing.waitAndAssertMetrics(
           RUNTIME_TELEMETRY_SCOPE, name, AbstractIterableAssert::isNotEmpty);
     }
-    // Buffers are retained because experimental JMX telemetry is disabled in this task.
+    // Buffers are still bridged because experimental runtime telemetry is disabled in this task.
     for (String name : new String[] {"jvm.buffer.count", "jvm.threads.peak"}) {
       testing.waitAndAssertMetrics(MICROMETER_SCOPE, name, AbstractIterableAssert::isNotEmpty);
     }

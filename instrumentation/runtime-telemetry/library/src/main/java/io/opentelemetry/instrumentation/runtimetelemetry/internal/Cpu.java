@@ -10,7 +10,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import io.opentelemetry.api.metrics.Meter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -33,17 +32,15 @@ public class Cpu {
 
   /** Register observers for java runtime CPU metrics. */
   public static List<AutoCloseable> registerObservers(Meter meter) {
-    return registerObservers(meter, unused -> true, unused -> {});
+    return registerObservers(meter, unused -> true);
   }
 
-  static List<AutoCloseable> registerObservers(
-      Meter meter, Predicate<String> metricNamePredicate, Consumer<String> registered) {
+  static List<AutoCloseable> registerObservers(Meter meter, Predicate<String> metricNamePredicate) {
     return registerObservers(
         meter,
         CpuMethods.processCpuTime(),
         CpuMethods.processCpuUtilization(),
-        metricNamePredicate,
-        registered);
+        metricNamePredicate);
   }
 
   // Visible for testing
@@ -51,17 +48,14 @@ public class Cpu {
       Meter meter,
       @Nullable Supplier<Long> processCpuTime,
       @Nullable Supplier<Double> processCpuUtilization) {
-    return registerObservers(
-        meter, processCpuTime, processCpuUtilization, unused -> true, unused -> {});
+    return registerObservers(meter, processCpuTime, processCpuUtilization, unused -> true);
   }
 
-  // Visible for testing
-  static List<AutoCloseable> registerObservers(
+  private static List<AutoCloseable> registerObservers(
       Meter meter,
       @Nullable Supplier<Long> processCpuTime,
       @Nullable Supplier<Double> processCpuUtilization,
-      Predicate<String> metricNamePredicate,
-      Consumer<String> registered) {
+      Predicate<String> metricNamePredicate) {
     List<AutoCloseable> observables = new ArrayList<>();
 
     if (processCpuTime != null && metricNamePredicate.test("jvm.cpu.time")) {
@@ -78,7 +72,6 @@ public class Cpu {
                       observableMeasurement.record(cpuTimeNanos / NANOS_PER_S);
                     }
                   }));
-      registered.accept("jvm.cpu.time");
     }
     if (processCpuUtilization != null && metricNamePredicate.test("jvm.cpu.recent_utilization")) {
       observables.add(
@@ -93,7 +86,6 @@ public class Cpu {
                       observableMeasurement.record(cpuUsage);
                     }
                   }));
-      registered.accept("jvm.cpu.recent_utilization");
     }
 
     return observables;

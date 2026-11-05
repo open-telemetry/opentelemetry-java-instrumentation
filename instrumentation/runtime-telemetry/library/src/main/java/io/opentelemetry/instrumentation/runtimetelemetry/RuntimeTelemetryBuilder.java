@@ -21,7 +21,6 @@ import io.opentelemetry.instrumentation.runtimetelemetry.internal.JfrConfig;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.JmxRuntimeMetricsFactory;
 import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -90,16 +89,14 @@ public final class RuntimeTelemetryBuilder {
                 emitExperimentalMetrics);
     Set<String> jfrMetricNames = jfrTelemetry.getMetricNames();
 
-    Set<String> registeredJmxObservers = new HashSet<>();
     List<AutoCloseable> observables =
         disableJmx
             ? emptyList()
             : JmxRuntimeMetricsFactory.buildObservables(
                 emitExperimentalMetrics,
                 metricName -> !jfrMetricNames.contains(metricName),
-                schemaMeter,
-                registeredJmxObservers::add);
-    return new RuntimeTelemetry(observables, jfrTelemetry.getTelemetry(), registeredJmxObservers);
+                schemaMeter);
+    return new RuntimeTelemetry(observables, jfrTelemetry.getTelemetry());
   }
 
   private static boolean isJfrMetricCoveredBySchema(String metricName) {
