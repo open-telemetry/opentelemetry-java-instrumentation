@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -47,17 +49,17 @@ dependencies {
   latestDepTestLibrary("com.typesafe.play:play-test_2.11:2.5.+") // see play-2.6 module
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("play24Test") {
-      dependencies {
-        val version = baseVersion("2.4.0").orLatest("2.4.+")
-        implementation("com.typesafe.play:play-java_2.11:$version")
-        implementation("com.typesafe.play:play-java-ws_2.11:$version")
-        implementation("com.typesafe.play:play-test_2.11:$version")
-      }
+testing.suites {
+  register<JvmTestSuite>("play24Test") {
+    dependencies {
+      val version = baseVersion("2.4.0").orLatest("2.4.+")
+      implementation("com.typesafe.play:play-java_2.11:$version")
+      implementation("com.typesafe.play:play-java-ws_2.11:$version")
+      implementation("com.typesafe.play:play-test_2.11:$version")
     }
   }
+
+  executions("test", "play24Test") {}
 }
 
 tasks {
