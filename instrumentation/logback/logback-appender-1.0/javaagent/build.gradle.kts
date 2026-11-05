@@ -136,68 +136,6 @@ testing.suites {
         }
       }
     }
-
-    executions {
-      configureDefault {
-        jvmArgs("-Dotel.instrumentation.logback-mdc.add-baggage=true")
-        jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=*")
-      }
-    }
-  }
-
-  register<JvmTestSuite>("logbackMdcDisabledTest") {
-    dependencies {
-      if (otelProps.testLatestDeps) {
-        implementation("ch.qos.logback:logback-classic:latest.release")
-      } else {
-        implementation("ch.qos.logback:logback-classic") {
-          version {
-            strictly("1.0.0")
-          }
-        }
-        implementation("org.slf4j:slf4j-api") {
-          version {
-            strictly("1.7.36")
-          }
-        }
-      }
-    }
-
-    executions {
-      configureDefault {
-        jvmArgs("-Dotel.instrumentation.logback-mdc.enabled=false")
-        jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=*")
-      }
-    }
-  }
-
-  register<JvmTestSuite>("logbackMdcLoggingKeysTest") {
-    dependencies {
-      if (otelProps.testLatestDeps) {
-        implementation("ch.qos.logback:logback-classic:latest.release")
-      } else {
-        implementation("ch.qos.logback:logback-classic") {
-          version {
-            strictly("1.0.0")
-          }
-        }
-        implementation("org.slf4j:slf4j-api") {
-          version {
-            strictly("1.7.36")
-          }
-        }
-      }
-    }
-
-    executions {
-      configureDefault {
-        jvmArgs("-Dotel.instrumentation.logback-mdc.add-baggage=true")
-        jvmArgs("-Dotel.instrumentation.common.logging.trace-id-key=trace_id_test")
-        jvmArgs("-Dotel.instrumentation.common.logging.span-id-key=span_id_test")
-        jvmArgs("-Dotel.instrumentation.common.logging.trace-flags-key=trace_flags_test")
-        jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=*")
-      }
-    }
   }
 
   register<JvmTestSuite>("logstashMarkerTest") {
@@ -277,6 +215,32 @@ testing.suites {
         jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.excluded=*")
         systemProperty("testLogstashStructuredArgsConfiguration", "none")
       }
+    }
+  }
+
+  executions("logbackMdcTest") {
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=*")
+    }
+
+    configureDefault {
+      filter.includeTestsMatching("*LogbackMdcTest")
+      jvmArgs("-Dotel.instrumentation.logback-mdc.add-baggage=true")
+    }
+
+    register("Disabled") {
+      filter.includeTestsMatching("*LogbackMdcDisabledTest")
+      jvmArgs("-Dotel.instrumentation.logback-mdc.enabled=false")
+    }
+
+    register("LoggingKeys") {
+      filter.includeTestsMatching("*LogbackMdcLoggingKeysTest")
+      jvmArgs(
+        "-Dotel.instrumentation.logback-mdc.add-baggage=true",
+        "-Dotel.instrumentation.common.logging.trace-id-key=trace_id_test",
+        "-Dotel.instrumentation.common.logging.span-id-key=span_id_test",
+        "-Dotel.instrumentation.common.logging.trace-flags-key=trace_flags_test",
+      )
     }
   }
 }
