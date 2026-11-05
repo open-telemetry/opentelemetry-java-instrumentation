@@ -30,8 +30,11 @@ class LogbackMdcDisabledTest {
   private static final Logger logger = LoggerFactory.getLogger("test");
 
   @Test
-  void capturesApplicationTraceIdKey() {
+  void skipsTraceContextKeys() {
     MDC.put("trace_id", "application-value");
+    MDC.put("span_id", "application-value");
+    MDC.put("trace_flags", "application-value");
+    MDC.put("key", "value");
     try {
       logger.info("log message");
     } finally {
@@ -43,11 +46,11 @@ class LogbackMdcDisabledTest {
             logRecord
                 .hasBody("log message")
                 .hasAttributesSatisfyingExactly(
-                    equalTo(stringKey("trace_id"), "application-value"),
+                    equalTo(stringKey("key"), "value"),
                     equalTo(CODE_FILE_PATH, LogbackMdcDisabledTest.class.getSimpleName() + ".java"),
                     equalTo(
                         CODE_FUNCTION_NAME,
-                        LogbackMdcDisabledTest.class.getName() + ".capturesApplicationTraceIdKey"),
+                        LogbackMdcDisabledTest.class.getName() + ".skipsTraceContextKeys"),
                     satisfies(CODE_LINE_NUMBER, val -> val.isPositive()),
                     equalTo(THREAD_NAME, Thread.currentThread().getName()),
                     equalTo(THREAD_ID, Thread.currentThread().getId())));
