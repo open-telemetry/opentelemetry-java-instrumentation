@@ -6,12 +6,14 @@
 package io.opentelemetry.instrumentation.gradle
 
 import org.gradle.api.Action
+import org.gradle.api.NamedDomainObjectCollection
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.plugins.jvm.JvmTestSuite
 import org.gradle.api.tasks.testing.Test
 import org.gradle.testing.base.TestingExtension
+import org.gradle.testing.base.TestSuite
 
 class TestSuiteExecutionsPlugin : Plugin<Project> {
   override fun apply(project: Project) {
@@ -27,17 +29,39 @@ fun JvmTestSuite.executions(action: Action<TestSuiteExecutions>) {
   (this as ExtensionAware).extensions.getByType(TestSuiteExecutions::class.java).configure(action)
 }
 
+fun NamedDomainObjectCollection<TestSuite>.executions(
+  vararg suiteNames: String,
+  action: Action<TestSuiteExecutions>,
+) {
+  if (suiteNames.isEmpty()) {
+    withType(JvmTestSuite::class.java).configureEach { executions(action) }
+  } else {
+    suiteNames.forEach { suiteName ->
+      named(suiteName).configure {
+        require(this is JvmTestSuite) { "Test suite '$suiteName' is not a JVM test suite" }
+        executions(action)
+      }
+    }
+  }
+}
+
 /** Configuration of a suite's existing default execution and explicit variants. */
 class TestSuiteExecutions internal constructor(
   private val project: Project,
   private val suite: JvmTestSuite,
 ) {
   private val common = mutableListOf<Action<Test>>()
+  private val defaultOnly = mutableListOf<Action<Test>>()
   private val variants = linkedMapOf<String, Action<Test>>()
   private var configured = false
 
   fun configureEach(action: Action<Test>) {
     common.add(action)
+  }
+
+  /** Configure the suite's default execution after common configuration. */
+  fun configureDefault(action: Action<Test>) {
+    defaultOnly.add(action)
   }
 
   /** The suffix is appended to the suite name, e.g. test + Experimental. */
@@ -56,6 +80,7 @@ class TestSuiteExecutions internal constructor(
     suite.targets.configureEach {
       testTask.configure {
         common.forEach { it.execute(this) }
+        defaultOnly.forEach { it.execute(this) }
       }
       project.tasks.named("check").configure {
         dependsOn(testTask)

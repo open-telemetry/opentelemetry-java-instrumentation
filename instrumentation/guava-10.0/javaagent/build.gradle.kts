@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -28,15 +30,20 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
 }
 
-tasks {
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.guava.experimental-span-attributes=true")
+testing.suites {
+  register<JvmTestSuite>("version19Test") {
+    dependencies {
+      implementation("com.google.guava:guava:${baseVersion("19.0").orLatest()}")
+    }
   }
 
-  check {
-    dependsOn(testExperimental)
+  executions("test") {
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.guava.experimental-span-attributes=true")
+    }
   }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }

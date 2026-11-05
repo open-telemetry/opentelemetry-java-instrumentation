@@ -28,6 +28,16 @@ public class HandlerWrapper<T> implements Handler<T> {
     return handler;
   }
 
+  public static <T> Handler<T> wrap(@Nullable Handler<T> handler, Context context) {
+    if (handler == null) {
+      return null;
+    }
+    if (handler instanceof HandlerWrapper && ((HandlerWrapper<?>) handler).context == context) {
+      return handler;
+    }
+    return new HandlerWrapper<>(handler, context);
+  }
+
   @Override
   public void handle(T t) {
     try (Scope ignored = context.makeCurrent()) {

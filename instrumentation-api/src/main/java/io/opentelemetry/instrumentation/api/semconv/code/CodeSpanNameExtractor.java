@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.semconv.code;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.ClassNames;
+import java.lang.reflect.Proxy;
 
 /**
  * A helper {@link SpanNameExtractor} implementation for instrumentations that target specific Java
@@ -36,6 +37,15 @@ public final class CodeSpanNameExtractor<REQUEST> implements SpanNameExtractor<R
     if (lambdaIdx > -1) {
       // need to produce low-cardinality name, since lambda class names change with each restart
       className = className.substring(0, lambdaIdx + "$$Lambda".length());
+    } else if (cls != null && Proxy.isProxyClass(cls)) {
+      className = "$Proxy";
+    } else {
+      int generatedIdx = className.indexOf("$$");
+      if (generatedIdx > -1
+          && !className.contains("$$anon$")
+          && !className.contains("$$anonfun$")) {
+        className = className.substring(0, generatedIdx);
+      }
     }
     String methodName = getter.getCodeMethodName(request);
     if (methodName == null) {

@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -25,6 +26,15 @@ dependencies {
 
 testing {
   suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
+        implementation(project(":instrumentation-api-incubator"))
+        implementation("redis.clients:jedis:4.0.0")
+      }
+    }
+
     register<JvmTestSuite>("jedis51Test") {
       sources {
         java {
@@ -44,12 +54,11 @@ tasks {
   withType<Test>().configureEach {
     // latest dep test fails because peer ip is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
     jvmArgs("-Djava.net.preferIPv4Stack=true")
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps && !name.startsWith("jedis51"))
     systemProperty(
       "testJedis51OrLater",
       otelProps.testLatestDeps || name.startsWith("jedis51"),
     )
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
   check {

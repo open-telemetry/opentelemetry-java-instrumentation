@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertCounter;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertHistogram;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertNoMetric;
@@ -12,7 +13,6 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.or
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -161,7 +161,7 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
     Attributes processAttributes =
         Attributes.builder()
             .put(MESSAGING_OPERATION_NAME, "process")
-            .put(MESSAGING_SYSTEM, "jms")
+            .put(stringKey("messaging.system.name"), "jms")
             .put(MESSAGING_DESTINATION_NAME, DESTINATION_NAME)
             .put(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, SUBSCRIPTION_NAME)
             .build();
@@ -171,7 +171,7 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
     Attributes receiveAttributes =
         Attributes.builder()
             .put(MESSAGING_OPERATION_NAME, "receive")
-            .put(MESSAGING_SYSTEM, "jms")
+            .put(stringKey("messaging.system.name"), "jms")
             .put(MESSAGING_DESTINATION_NAME, DESTINATION_NAME)
             .put(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, SUBSCRIPTION_NAME)
             .build();

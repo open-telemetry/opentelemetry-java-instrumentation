@@ -13,6 +13,8 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Map;
 import org.apache.http.HttpEntity;
@@ -20,6 +22,8 @@ import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicHttpRequest;
@@ -116,6 +120,42 @@ public abstract class AbstractApacheHttpClientTest {
 
   @Nested
   class ApacheClientHostRequestTest extends ApacheHttpClientTest<BasicHttpRequest> {
+
+    @Override
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      super.configure(optionsBuilder);
+      optionsBuilder.setTestProxy(true).setExpectProxyNetworkPeerAttributes(false);
+    }
+
+    @Override
+    public int sendRequestWithProxy(
+        BasicHttpRequest request,
+        String method,
+        URI uri,
+        Map<String, String> headers,
+        InetSocketAddress proxyAddress)
+        throws IOException {
+      String host = uri.getHost();
+      byte[] addressBytes = InetAddress.getByName(host).getAddress();
+
+      // Store the host to avoid reverse DNS when HttpCore 4.4 calls InetAddress.getHostName().
+      InetAddress targetAddress = InetAddress.getByAddress(host, addressBytes);
+
+      // Use an explicit destination IP to catch it being incorrectly reported as the network peer.
+      HttpHost target = new HttpHost(targetAddress, uri.getPort(), uri.getScheme());
+
+      HttpClientContext context = HttpClientContext.create();
+      context.setRequestConfig(
+          RequestConfig.custom()
+              .setConnectTimeout((int) connectTimeout().toMillis())
+              .setSocketTimeout((int) readTimeout().toMillis())
+              .setProxy(
+                  new HttpHost(proxyAddress.getAddress().getHostAddress(), proxyAddress.getPort()))
+              .build());
+
+      return getClient(uri)
+          .execute(target, request, AbstractApacheHttpClientTest::getResponseCode, context);
+    }
 
     @Override
     public BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {

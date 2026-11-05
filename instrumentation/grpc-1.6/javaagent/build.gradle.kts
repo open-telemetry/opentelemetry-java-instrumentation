@@ -40,10 +40,10 @@ testing {
           // The agent context debug mechanism isn't compatible with the bridge approach which may add a
           // gRPC context to the root.
           jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
-          jvmArgs("-Dotel.instrumentation.grpc.client.request-metadata.included=some-*-key")
-          jvmArgs("-Dotel.instrumentation.grpc.client.request-metadata.excluded=*-excluded-key")
-          jvmArgs("-Dotel.instrumentation.grpc.server.request-metadata.included=some-*-key")
-          jvmArgs("-Dotel.instrumentation.grpc.server.request-metadata.excluded=*-excluded-key")
+          jvmArgs("-Dotel.instrumentation.grpc.client.request-headers.included=some-*-key")
+          jvmArgs("-Dotel.instrumentation.grpc.client.request-headers.excluded=*-excluded-key")
+          jvmArgs("-Dotel.instrumentation.grpc.server.request-headers.included=some-*-key")
+          jvmArgs("-Dotel.instrumentation.grpc.server.request-headers.excluded=*-excluded-key")
           // latest dep test occasionally fails because network type is ipv6 instead of the expected ipv4
           // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
           jvmArgs("-Djava.net.preferIPv4Stack=true")
@@ -56,12 +56,6 @@ testing {
         }
         register("Experimental") {
           telemetryConfig("otel.instrumentation.grpc.experimental-span-attributes", "true")
-        }
-        register("PreviewSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "rpc")
-        }
-        register("BothSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "rpc/dup")
         }
         register("ExceptionSignalLogs") {
           telemetryConfig("otel.semconv.exception.signal.preview", "logs")

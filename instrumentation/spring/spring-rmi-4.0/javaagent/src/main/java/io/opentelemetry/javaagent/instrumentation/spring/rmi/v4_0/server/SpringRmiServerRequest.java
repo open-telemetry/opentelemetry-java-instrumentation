@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,30 +40,29 @@ public final class SpringRmiServerRequest {
         }
       };
 
-  private final ClassAndMethod legacyRequest;
   @Nullable private final Class<?> serviceInterface;
   private final MethodSignature methodSignature;
 
   SpringRmiServerRequest(
-      ClassAndMethod legacyRequest,
-      @Nullable Class<?> serviceInterface,
-      String methodName,
-      @Nullable Class<?>[] parameterTypes) {
-    this.legacyRequest = legacyRequest;
+      @Nullable Class<?> serviceInterface, String methodName, @Nullable Class<?>[] parameterTypes) {
     this.serviceInterface = serviceInterface;
     this.methodSignature = new MethodSignature(methodName, parameterTypes);
   }
 
-  ClassAndMethod legacyRequest() {
-    return legacyRequest;
+  String rpcMethod() {
+    String method =
+        serviceInterface == null ? null : rpcMethods.get(serviceInterface).get(methodSignature);
+    return method == null ? "_OTHER" : method;
   }
 
   @Nullable
-  String rpcMethod() {
-    if (serviceInterface == null) {
+  String rpcMethodOriginal() {
+    if (!rpcMethod().equals("_OTHER")) {
       return null;
     }
-    return rpcMethods.get(serviceInterface).get(methodSignature);
+    return serviceInterface == null
+        ? methodSignature.name
+        : serviceInterface.getName() + "/" + methodSignature.name;
   }
 
   private static final class MethodSignature {

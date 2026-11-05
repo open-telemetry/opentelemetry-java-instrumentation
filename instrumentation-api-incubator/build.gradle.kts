@@ -96,12 +96,6 @@ testing {
         configureEach {
           inputs.dir(jflexOutputDir)
         }
-        register("PreviewSemconv") {
-          jvmArgs("-Dotel.semconv-stability.preview=rpc,service.peer")
-        }
-        register("BothSemconv") {
-          jvmArgs("-Dotel.semconv-stability.preview=rpc/dup,service.peer/dup")
-        }
         register("ExceptionSignalLogs") {
           jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
         }

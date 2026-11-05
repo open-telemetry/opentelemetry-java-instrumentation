@@ -22,7 +22,7 @@ dependencies {
 // 4.0 introduces submitListenable() methods
 testing {
   suites {
-    val version4Test by registering(JvmTestSuite::class) {
+    register<JvmTestSuite>("version4Test") {
       dependencies {
         implementation(sourceSets.test.get().output)
         implementation("org.springframework:spring-core:${baseVersion("4.0.0.RELEASE").orLatest()}")

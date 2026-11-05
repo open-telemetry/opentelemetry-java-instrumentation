@@ -16,6 +16,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.TraceStateBuilder;
+import io.opentelemetry.javaagent.bootstrap.ApplicationSpanHolder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.ValueBridging;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,16 @@ public class Bridging {
   private static final Logger logger = Logger.getLogger(Bridging.class.getName());
 
   public static application.io.opentelemetry.api.trace.Span toApplication(Span agentSpan) {
+    // we add ApplicationSpanHolder interface to span implementations used in agent via
+    // instrumentation
+    // this lets us associate the original application span with the agent span so we can convert
+    // the agent span back to exactly the same application span that the agent span was created for
+    if (agentSpan instanceof ApplicationSpanHolder) {
+      Object applicationSpan = ((ApplicationSpanHolder) agentSpan).getApplicationSpan();
+      if (applicationSpan instanceof application.io.opentelemetry.api.trace.Span) {
+        return (application.io.opentelemetry.api.trace.Span) applicationSpan;
+      }
+    }
     if (!agentSpan.getSpanContext().isValid()) {
       // no need to wrap
       return application.io.opentelemetry.api.trace.Span.getInvalid();
@@ -67,6 +78,10 @@ public class Bridging {
 
   private static application.io.opentelemetry.api.trace.TraceState toApplication(
       TraceState agentTraceState) {
+    if (agentTraceState.isEmpty()) {
+      return application.io.opentelemetry.api.trace.TraceState.getDefault();
+    }
+
     application.io.opentelemetry.api.trace.TraceStateBuilder applicationTraceState =
         application.io.opentelemetry.api.trace.TraceState.builder();
     agentTraceState.forEach(applicationTraceState::put);
@@ -187,6 +202,10 @@ public class Bridging {
 
   private static TraceState toAgent(
       application.io.opentelemetry.api.trace.TraceState applicationTraceState) {
+    if (applicationTraceState.isEmpty()) {
+      return TraceState.getDefault();
+    }
+
     TraceStateBuilder agentTraceState = TraceState.builder();
     applicationTraceState.forEach(agentTraceState::put);
     return agentTraceState.build();
