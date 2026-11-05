@@ -9,18 +9,16 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":javaagent-extension-api"))
-        implementation(project(":instrumentation:jmx-metrics:library"))
-        implementation(project(":declarative-config-bridge"))
-        implementation(project(":testing-common"))
-        implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-        implementation("io.opentelemetry:opentelemetry-sdk-testing")
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":javaagent-extension-api"))
+      implementation(project(":instrumentation:jmx-metrics:library"))
+      implementation(project(":declarative-config-bridge"))
+      implementation(project(":testing-common"))
+      implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+      implementation("io.opentelemetry:opentelemetry-sdk-testing")
     }
   }
 }

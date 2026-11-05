@@ -11,17 +11,13 @@ dependencies {
   testImplementation(project(":instrumentation:openai:openai-java-1.1:testing"))
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          systemProperty("testLatestDeps", otelProps.testLatestDeps)
-        }
-        register("ExceptionSignalLogs") {
-          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-        }
-      }
+testing.suites {
+  executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+    register("ExceptionSignalLogs") {
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
     }
   }
 }

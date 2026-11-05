@@ -29,22 +29,24 @@ dependencies {
   testImplementation("javax.servlet:javax.servlet-api:3.0.1")
 }
 
-testing.suites.executions("test") {
-  register("RequestParameterCapture") {
-    telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.included", "test-*")
-  }
-
-  register("UserNameCapture") {
-    filter {
-      includeTestsMatching("*TomcatHandlerTest.capturesUserNameFromPrincipal")
+testing.suites {
+  executions("test") {
+    register("RequestParameterCapture") {
+      telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.included", "test-*")
     }
-    jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    telemetryConfig("otel.instrumentation.common.user.name.enabled", "true")
-  }
 
-  register("Experimental") {
-    jvmArgs("-Dotel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true")
+    register("UserNameCapture") {
+      filter {
+        includeTestsMatching("*TomcatHandlerTest.capturesUserNameFromPrincipal")
+      }
+      jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+      telemetryConfig("otel.instrumentation.common.user.name.enabled", "true")
+    }
+
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true")
+    }
   }
 }
 

@@ -35,15 +35,13 @@ configurations.configureEach {
   }
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("testDeclarativeConfig") {
-      dependencies {
-        implementation(project())
-        implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
-        implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
-        implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
-      }
+testing.suites {
+  register<JvmTestSuite>("testDeclarativeConfig") {
+    dependencies {
+      implementation(project())
+      implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
+      implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+      implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
     }
   }
 }

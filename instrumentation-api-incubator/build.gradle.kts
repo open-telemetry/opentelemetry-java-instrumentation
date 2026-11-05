@@ -89,20 +89,16 @@ tasks {
   }
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          inputs.dir(jflexOutputDir)
-        }
-        register("ExceptionSignalLogs") {
-          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-        }
-        register("ExceptionSignalLogsDup") {
-          jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
-        }
-      }
+testing.suites {
+  executions("test") {
+    configureEach {
+      inputs.dir(jflexOutputDir)
+    }
+    register("ExceptionSignalLogs") {
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    }
+    register("ExceptionSignalLogsDup") {
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
     }
   }
 }

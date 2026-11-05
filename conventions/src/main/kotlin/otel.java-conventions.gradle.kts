@@ -189,8 +189,8 @@ dependencies {
   }
 }
 
-testing {
-  suites.withType(JvmTestSuite::class).configureEach {
+testing.suites {
+  withType(JvmTestSuite::class).configureEach {
     dependencies {
       implementation("org.junit.jupiter:junit-jupiter-api")
       implementation("org.junit.jupiter:junit-jupiter-params")

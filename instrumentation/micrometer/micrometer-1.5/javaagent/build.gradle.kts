@@ -35,53 +35,55 @@ testing {
   }
 }
 
-testing.suites.executions("test") {
-  configureEach {
-    jvmArgs("-Dotel.instrumentation.micrometer.enabled=true")
-  }
-
-  configureDefault {
-    filter {
-      excludeTestsMatching("*TimerMillisecondsTest")
-      excludeTestsMatching("*PrometheusModeTest")
-      excludeTestsMatching("*HistogramGaugesTest")
-      excludeTestsMatching("*JvmMetricsOwnershipEnabledTest")
+testing.suites {
+  executions("test") {
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.micrometer.enabled=true")
     }
-  }
 
-  register("JvmMetricsOwnership") {
-    filter {
-      includeTestsMatching("*JvmMetricsOwnershipEnabledTest")
+    configureDefault {
+      filter {
+        excludeTestsMatching("*TimerMillisecondsTest")
+        excludeTestsMatching("*PrometheusModeTest")
+        excludeTestsMatching("*HistogramGaugesTest")
+        excludeTestsMatching("*JvmMetricsOwnershipEnabledTest")
+      }
     }
-    include("**/*JvmMetricsOwnershipEnabledTest.*")
-    jvmArgs(
-      "-Dotel.instrumentation.micrometer.experimental.jvm-metrics-ownership.enabled=true",
-      "-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true",
-    )
-  }
 
-  register("PrometheusMode") {
-    filter {
-      includeTestsMatching("*PrometheusModeTest")
+    register("JvmMetricsOwnership") {
+      filter {
+        includeTestsMatching("*JvmMetricsOwnershipEnabledTest")
+      }
+      include("**/*JvmMetricsOwnershipEnabledTest.*")
+      jvmArgs(
+        "-Dotel.instrumentation.micrometer.experimental.jvm-metrics-ownership.enabled=true",
+        "-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true",
+      )
     }
-    include("**/*PrometheusModeTest.*")
-    jvmArgs("-Dotel.instrumentation.micrometer.prometheus-mode.enabled=true")
-  }
 
-  register("BaseTimeUnit") {
-    filter {
-      includeTestsMatching("*TimerMillisecondsTest")
+    register("PrometheusMode") {
+      filter {
+        includeTestsMatching("*PrometheusModeTest")
+      }
+      include("**/*PrometheusModeTest.*")
+      jvmArgs("-Dotel.instrumentation.micrometer.prometheus-mode.enabled=true")
     }
-    include("**/*TimerMillisecondsTest.*")
-    jvmArgs("-Dotel.instrumentation.micrometer.base-time-unit=milliseconds")
-  }
 
-  register("HistogramGauges") {
-    filter {
-      includeTestsMatching("*HistogramGaugesTest")
+    register("BaseTimeUnit") {
+      filter {
+        includeTestsMatching("*TimerMillisecondsTest")
+      }
+      include("**/*TimerMillisecondsTest.*")
+      jvmArgs("-Dotel.instrumentation.micrometer.base-time-unit=milliseconds")
     }
-    include("**/*HistogramGaugesTest.*")
-    jvmArgs("-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true")
+
+    register("HistogramGauges") {
+      filter {
+        includeTestsMatching("*HistogramGaugesTest")
+      }
+      include("**/*HistogramGaugesTest.*")
+      jvmArgs("-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true")
+    }
   }
 }
 
