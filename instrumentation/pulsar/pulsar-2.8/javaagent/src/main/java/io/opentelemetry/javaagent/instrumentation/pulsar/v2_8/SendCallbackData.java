@@ -13,13 +13,11 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarRequest;
-import java.lang.ref.WeakReference;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.MessageId;
-import org.apache.pulsar.client.impl.SendCallback;
 
 public class SendCallbackData {
   private static final Logger logger = Logger.getLogger(SendCallbackData.class.getName());
@@ -35,9 +33,9 @@ public class SendCallbackData {
   private final AtomicBoolean ended = new AtomicBoolean();
   private boolean internalSendAsyncPending;
   @Nullable private CompletableFuture<MessageId> sendFuture;
-  @Nullable private WeakReference<SendCallback> callback;
   public PulsarRequest request;
   private final MessageAssociation messageAssociation;
+  private final CallbackAssociation callbackAssociation;
 
   public static SendCallbackData create(Context parent, Context context, PulsarRequest request) {
     return new SendCallbackData(parent, context, request, false);
@@ -54,7 +52,8 @@ public class SendCallbackData {
     this.context = context;
     this.request = request;
     this.internalSendAsyncPending = internalSendAsyncPending;
-    this.messageAssociation = new MessageAssociation(this);
+    this.messageAssociation = new MessageAssociation(parent);
+    this.callbackAssociation = new CallbackAssociation(this);
   }
 
   MessageAssociation messageAssociation() {
@@ -90,13 +89,8 @@ public class SendCallbackData {
     return parent.with(KEY, this);
   }
 
-  void associateCallback(SendCallback callback) {
-    this.callback = new WeakReference<>(callback);
-  }
-
-  @Nullable
-  SendCallback callback() {
-    return callback == null ? null : callback.get();
+  CallbackAssociation callbackAssociation() {
+    return callbackAssociation;
   }
 
   Context parentContext() {
@@ -116,15 +110,38 @@ public class SendCallbackData {
   }
 
   static final class MessageAssociation {
-    private final WeakReference<SendCallbackData> data;
+    private final Context parent;
 
-    private MessageAssociation(SendCallbackData data) {
-      this.data = new WeakReference<>(data);
+    private MessageAssociation(Context parent) {
+      this.parent = parent;
+    }
+
+    Context parentContext() {
+      return parent;
+    }
+  }
+
+  static final class CallbackAssociation {
+    @Nullable private volatile SendCallbackData data;
+
+    private CallbackAssociation(SendCallbackData data) {
+      this.data = data;
     }
 
     @Nullable
     SendCallbackData get() {
-      return data.get();
+      return data;
+    }
+
+    @Nullable
+    SendCallbackData take() {
+      SendCallbackData data = this.data;
+      this.data = null;
+      return data;
+    }
+
+    void clear() {
+      data = null;
     }
   }
 

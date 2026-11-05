@@ -119,6 +119,75 @@ class VirtualFieldStoreTest {
     assertThat(VirtualFieldStore.takeSendCallbackData(callback)).isNull();
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void messageAssociationStoresOnlyCallerContext(boolean withSpan) {
+    Message<?> message = mock(Message.class);
+    SendCallback callback = mock(SendCallback.class);
+    Context caller = Context.root().with(TEST_KEY, "caller");
+    if (withSpan) {
+      caller =
+          caller.with(
+              Span.wrap(
+                  SpanContext.create(
+                      "00000000000000000000000000000001",
+                      "0000000000000001",
+                      TraceFlags.getSampled(),
+                      TraceState.getDefault())));
+    }
+    caller = Baggage.builder().put("pulsar-test", "caller").build().storeInContext(caller);
+    Context processParent = Context.root().with(TEST_KEY, "consumer");
+    String topic = "persistent://public/default/caller-context";
+    when(message.getTopicName()).thenReturn(topic);
+    PulsarRequest request =
+        PulsarRequest.create(message, ProducerData.create("pulsar://localhost:6650", topic));
+    SendCallbackData data = SendCallbackData.create(caller, Context.root(), request);
+    VirtualFieldStore.setProcessParentContext(message, processParent);
+
+    VirtualFieldStore.inject(callback, data);
+
+    Context parent = VirtualFieldStore.extractSendCallerContext(message);
+    assertThat(parent).isSameAs(caller);
+    try (Scope ignored = parent.makeCurrent()) {
+      assertThat(SendCallbackData.current()).isNull();
+      assertThat(Context.current().get(TEST_KEY)).isEqualTo("caller");
+      assertThat(Baggage.current().getEntryValue("pulsar-test")).isEqualTo("caller");
+      assertThat(Span.current().getSpanContext().isValid()).isEqualTo(withSpan);
+    }
+    data.end(null);
+    assertThat(VirtualFieldStore.extractSendCallerContext(message)).isNull();
+    assertThat(VirtualFieldStore.extractProcessParentContext(message)).isSameAs(processParent);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void oldOperationCleanupPreservesNewAssociations(boolean takeBeforeReplacement) {
+    SendCallback callback = mock(SendCallback.class);
+    Message<?> message = mock(Message.class);
+    String topic = "persistent://public/default/reused-send-associations";
+    when(message.getTopicName()).thenReturn(topic);
+    PulsarRequest request =
+        PulsarRequest.create(message, ProducerData.create("pulsar://localhost:6650", topic));
+    SendCallbackData first = SendCallbackData.create(Context.root(), Context.root(), request);
+    Context caller = Context.root().with(TEST_KEY, "second");
+    SendCallbackData second = SendCallbackData.create(caller, Context.root(), request);
+    VirtualFieldStore.inject(callback, first);
+    if (takeBeforeReplacement) {
+      assertThat(VirtualFieldStore.takeSendCallbackData(callback)).isSameAs(first);
+      assertThat(VirtualFieldStore.takeSendCallbackData(callback)).isNull();
+    }
+    VirtualFieldStore.inject(callback, second);
+
+    first.end(null);
+
+    assertThat(first.callbackAssociation().get()).isNull();
+    assertThat(VirtualFieldStore.extractSendCallbackData(callback)).isSameAs(second);
+    assertThat(VirtualFieldStore.extractSendCallerContext(message)).isSameAs(caller);
+    second.end(null);
+    assertThat(VirtualFieldStore.takeSendCallbackData(callback)).isNull();
+    assertThat(VirtualFieldStore.extractSendCallerContext(message)).isNull();
+  }
+
   @Test
   void clearsSendCallbackDataOnPulsarCompletionAfterFutureCancellation() {
     SendCallback callback = mock(SendCallback.class);
@@ -132,18 +201,21 @@ class VirtualFieldStoreTest {
     when(callback.getFuture()).thenReturn(future);
 
     VirtualFieldStore.inject(callback, data);
+    SendCallbackData.CallbackAssociation association = data.callbackAssociation();
 
-    assertThat(VirtualFieldStore.extractSendCallbackData(message)).isSameAs(data);
+    assertThat(VirtualFieldStore.extractSendCallerContext(message)).isSameAs(Context.root());
     assertThat(future.cancel(false)).isTrue();
-    assertThat(VirtualFieldStore.extractSendCallbackData(message)).isSameAs(data);
+    assertThat(VirtualFieldStore.extractSendCallerContext(message)).isSameAs(Context.root());
     assertThat(VirtualFieldStore.extractSendCallbackData(callback)).isSameAs(data);
+    assertThat(association.get()).isSameAs(data);
 
     try (Scope ignored = data.callbackCompletionContext().makeCurrent()) {
       future.complete(mock(MessageId.class));
     }
 
     assertThat(future).isCancelled();
-    assertThat(VirtualFieldStore.extractSendCallbackData(message)).isNull();
+    assertThat(association.get()).isNull();
+    assertThat(VirtualFieldStore.extractSendCallerContext(message)).isNull();
     assertThat(VirtualFieldStore.extractSendCallbackData(callback)).isNull();
   }
 
@@ -209,7 +281,7 @@ class VirtualFieldStoreTest {
     }
     assertThat(continuation.join()).isSameAs(application);
     assertThat(Context.current()).isSameAs(previous);
-    assertThat(VirtualFieldStore.extractSendCallbackData(message)).isSameAs(data);
+    assertThat(VirtualFieldStore.extractSendCallerContext(message)).isSameAs(caller);
     assertThat(VirtualFieldStore.extractSendCallbackData(callback)).isSameAs(data);
     try (Scope ignored = data.callbackCompletionContext().makeCurrent()) {
       Context completionContext = Context.current();
@@ -217,7 +289,7 @@ class VirtualFieldStoreTest {
       assertThat(Context.current()).isSameAs(completionContext);
     }
     assertThat(Context.current()).isSameAs(previous);
-    assertThat(VirtualFieldStore.extractSendCallbackData(message)).isNull();
+    assertThat(VirtualFieldStore.extractSendCallerContext(message)).isNull();
     assertThat(VirtualFieldStore.extractSendCallbackData(callback)).isNull();
   }
 
@@ -236,7 +308,7 @@ class VirtualFieldStoreTest {
   }
 
   @Test
-  void messageAssociationReturnsNullAfterSendStateIsCollected()
+  void messageAssociationRetainsCallerContextWithoutRetainingSendState()
       throws InterruptedException, TimeoutException {
     MessageAndWeakData association = createSendWithRetainedMessage();
 
@@ -244,7 +316,35 @@ class VirtualFieldStoreTest {
     expungeCollectedCallbacks();
     GcUtils.awaitGc(association.data, Duration.ofSeconds(10));
 
-    assertThat(VirtualFieldStore.extractSendCallbackData(association.message)).isNull();
+    assertThat(VirtualFieldStore.extractSendCallerContext(association.message))
+        .isSameAs(Context.root());
+  }
+
+  @Test
+  void liveCallbackRetainsSendStateUntilTerminalCompletion()
+      throws InterruptedException, TimeoutException {
+    SendCallback callback = mock(SendCallback.class);
+    WeakReferences references = createSendWithRetainedCallback(callback);
+
+    GcUtils.awaitGc(Duration.ofSeconds(10));
+
+    assertThat(references.data.get()).isNotNull();
+    assertThat(VirtualFieldStore.extractSendCallbackData(callback)).isSameAs(references.data.get());
+    completeSend(callback);
+    assertThat(VirtualFieldStore.extractSendCallbackData(callback)).isNull();
+    GcUtils.awaitGc(references.data, Duration.ofSeconds(10));
+    assertThat(VirtualFieldStore.takeSendCallbackData(callback)).isNull();
+  }
+
+  private static void completeSend(SendCallback callback) {
+    // Linked completions end the operation without taking the callback's association.
+    VirtualFieldStore.extractSendCallbackData(callback).end(null);
+  }
+
+  private static WeakReferences createSendWithRetainedCallback(SendCallback callback) {
+    MessageAndWeakData association = createSendWithRetainedMessage(callback);
+    return new WeakReferences(
+        new WeakReference<>(association.message), association.data, association.callback);
   }
 
   private static WeakReferences createAbandonedSend() {
@@ -259,10 +359,13 @@ class VirtualFieldStoreTest {
   }
 
   private static MessageAndWeakData createSendWithRetainedMessage() {
+    return createSendWithRetainedMessage(mock(SendCallback.class));
+  }
+
+  private static MessageAndWeakData createSendWithRetainedMessage(SendCallback callback) {
     Message<?> message = mock(Message.class);
     String topic = "persistent://public/default/abandoned-send";
     when(message.getTopicName()).thenReturn(topic);
-    SendCallback callback = mock(SendCallback.class);
     PulsarRequest request =
         PulsarRequest.create(message, ProducerData.create("pulsar://localhost:6650", topic));
     SendCallbackData data = SendCallbackData.create(Context.root(), Context.root(), request);

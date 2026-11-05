@@ -21,8 +21,9 @@ public class VirtualFieldStore {
       VirtualField.find(Producer.class, ProducerData.class);
   private static final VirtualField<Consumer<?>, String> CONSUMER_FIELD =
       VirtualField.find(Consumer.class, String.class);
-  private static final VirtualField<SendCallback, SendCallbackData> CALLBACK_FIELD =
-      VirtualField.find(SendCallback.class, SendCallbackData.class);
+  private static final VirtualField<SendCallback, SendCallbackData.CallbackAssociation>
+      CALLBACK_FIELD =
+          VirtualField.find(SendCallback.class, SendCallbackData.CallbackAssociation.class);
   private static final VirtualField<Message<?>, SendCallbackData.MessageAssociation>
       MESSAGE_SEND_CALLBACK_FIELD =
           VirtualField.find(Message.class, SendCallbackData.MessageAssociation.class);
@@ -39,8 +40,7 @@ public class VirtualFieldStore {
 
   public static void inject(SendCallback instance, SendCallbackData data) {
     if (instance != null) {
-      CALLBACK_FIELD.set(instance, data);
-      data.associateCallback(instance);
+      CALLBACK_FIELD.set(instance, data.callbackAssociation());
       Message<?> message = data.request.getMessage();
       if (message != null) {
         MESSAGE_SEND_CALLBACK_FIELD.set(message, data.messageAssociation());
@@ -49,13 +49,9 @@ public class VirtualFieldStore {
   }
 
   static void clearSendCallbackData(SendCallbackData data) {
-    SendCallback callback = data.callback();
-    if (callback != null && CALLBACK_FIELD.get(callback) == data) {
-      CALLBACK_FIELD.set(callback, null);
-    }
+    data.callbackAssociation().clear();
     Message<?> message = data.request.getMessage();
-    if (message != null
-        && MESSAGE_SEND_CALLBACK_FIELD.get(message) == data.messageAssociation()) {
+    if (message != null && MESSAGE_SEND_CALLBACK_FIELD.get(message) == data.messageAssociation()) {
       MESSAGE_SEND_CALLBACK_FIELD.set(message, null);
     }
   }
@@ -100,20 +96,20 @@ public class VirtualFieldStore {
   }
 
   @Nullable
-  public static SendCallbackData extractSendCallbackData(Message<?> instance) {
+  public static Context extractSendCallerContext(Message<?> instance) {
     SendCallbackData.MessageAssociation association = MESSAGE_SEND_CALLBACK_FIELD.get(instance);
-    return association == null ? null : association.get();
+    return association == null ? null : association.parentContext();
   }
 
   @Nullable
   public static SendCallbackData extractSendCallbackData(SendCallback instance) {
-    return CALLBACK_FIELD.get(instance);
+    SendCallbackData.CallbackAssociation association = CALLBACK_FIELD.get(instance);
+    return association == null ? null : association.get();
   }
 
   @Nullable
   public static SendCallbackData takeSendCallbackData(SendCallback instance) {
-    SendCallbackData callbackData = CALLBACK_FIELD.get(instance);
-    CALLBACK_FIELD.set(instance, null);
-    return callbackData;
+    SendCallbackData.CallbackAssociation association = CALLBACK_FIELD.get(instance);
+    return association == null ? null : association.take();
   }
 }
