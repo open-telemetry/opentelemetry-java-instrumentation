@@ -57,12 +57,17 @@ public class PekkoHttpParsingErrorSingletons {
    * <p>An {@code ErrorInfo} that was not marked is not a rejected request. The same handler answers
    * a request entity stream that failed and a response stream that failed, and both of those happen
    * after the request was delivered and already has a span of its own.
+   *
+   * <p>The mark is consumed, so a custom handler that delegates to another handler, for example to
+   * {@code DefaultParsingErrorHandler}, produces one span rather than one per handler. Span
+   * suppression does not cover that when it is configured with the {@code none} strategy.
    */
   @Nullable
   public static Object[] startSpan(ErrorInfo info) {
     if (PARSING_ERROR.get(info) == null) {
       return null;
     }
+    PARSING_ERROR.set(info, null);
 
     Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, info)) {

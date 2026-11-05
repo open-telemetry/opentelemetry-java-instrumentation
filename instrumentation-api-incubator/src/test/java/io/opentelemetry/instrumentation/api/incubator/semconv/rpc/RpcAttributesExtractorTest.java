@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD_ORIGINAL;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD_ORIGINAL;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_SYSTEM_NAME;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.entry;
 

@@ -5,20 +5,19 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import example.GreeterGrpc;
 import example.Helloworld;
@@ -29,18 +28,23 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Metadata;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.ServerCall;
+import io.grpc.ServerCallHandler;
+import io.grpc.ServerInterceptor;
 import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.Experimental;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -57,23 +61,26 @@ class GrpcTest extends AbstractGrpcTest {
 
   @Override
   protected ServerBuilder<?> configureServer(ServerBuilder<?> server) {
-    return server.intercept(
+    GrpcTelemetry telemetry =
         GrpcTelemetry.builder(testing.getOpenTelemetry())
-            .setServerRequestMetadata(
+            .setServerRequestHeaders(
                 IncludeExclude.builder()
-                    .setIncluded(singletonList(SERVER_REQUEST_METADATA_KEY))
+                    .setIncluded(singletonList(SERVER_REQUEST_HEADER_KEY))
                     .build())
-            .build()
-            .createServerInterceptor());
+            .build();
+    telemetry.configureServerBuilder(server);
+    // A server can be configured more than once.
+    telemetry.configureServerBuilder(server);
+    return server;
   }
 
   @Override
   protected ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client) {
     Experimental.addClientInterceptor(
         GrpcTelemetry.builder(testing.getOpenTelemetry())
-            .setClientRequestMetadata(
+            .setClientRequestHeaders(
                 IncludeExclude.builder()
-                    .setIncluded(singletonList(CLIENT_REQUEST_METADATA_KEY))
+                    .setIncluded(singletonList(CLIENT_REQUEST_HEADER_KEY))
                     .build())
             .build(),
         client);
@@ -88,6 +95,59 @@ class GrpcTest extends AbstractGrpcTest {
   @Override
   protected InstrumentationExtension testing() {
     return testing;
+  }
+
+  @Test
+  void registeredMethodShortCircuitedBeforeTracingInterceptor() throws Exception {
+    ServerBuilder<?> serverBuilder =
+        ServerBuilder.forPort(0).addService(new GreeterGrpc.GreeterImplBase() {});
+    GrpcTelemetry.create(testing.getOpenTelemetry()).configureServerBuilder(serverBuilder);
+    serverBuilder.intercept(
+        new ServerInterceptor() {
+          @Override
+          public <REQUEST, RESPONSE> ServerCall.Listener<REQUEST> interceptCall(
+              ServerCall<REQUEST, RESPONSE> call,
+              Metadata headers,
+              ServerCallHandler<REQUEST, RESPONSE> next) {
+            call.close(
+                Status.UNIMPLEMENTED.withDescription(
+                    "Method not found: " + call.getMethodDescriptor().getFullMethodName()),
+                new Metadata());
+            return new ServerCall.Listener<REQUEST>() {};
+          }
+        });
+    Server server = serverBuilder.build().start();
+    ManagedChannel channel =
+        createChannel(
+            configureClient(ManagedChannelBuilder.forAddress("localhost", server.getPort())));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
+    closer.add(() -> server.shutdownNow().awaitTermination());
+
+    GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
+
+    assertThatThrownBy(() -> client.sayHello(request)).isInstanceOf(StatusRuntimeException.class);
+
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT)));
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  void nonMethodUnimplementedStatusDoesNotStartSpan() {
+    Instrumenter<GrpcRequest, Status> instrumenter = mock(Instrumenter.class);
+    TracingServerStreamTracer tracer =
+        new TracingServerStreamTracer(
+            instrumenter,
+            ContextPropagators.noop(),
+            "example.Greeter/SayHello",
+            new Metadata(),
+            Context.root());
+
+    tracer.streamClosed(
+        Status.UNIMPLEMENTED.withDescription("Can't find decompressor for unsupported"));
+
+    verifyNoInteractions(instrumenter);
   }
 
   @ParameterizedTest
@@ -154,101 +214,6 @@ class GrpcTest extends AbstractGrpcTest {
     verify(builder).intercept(isA(ClientInterceptor.class));
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  @SuppressWarnings("deprecation")
-  void deprecatedRequestMetadataSetters(boolean captureMetadata) throws Exception {
-    List<String> clientCapturedMetadata =
-        captureMetadata ? singletonList(CLIENT_REQUEST_METADATA_KEY) : emptyList();
-    List<String> serverCapturedMetadata =
-        captureMetadata ? singletonList(SERVER_REQUEST_METADATA_KEY) : emptyList();
-
-    BindableService greeter =
-        new GreeterGrpc.GreeterImplBase() {
-          @Override
-          public void sayHello(
-              Helloworld.Request req, StreamObserver<Helloworld.Response> responseObserver) {
-            responseObserver.onNext(
-                Helloworld.Response.newBuilder().setMessage("Hello " + req.getName()).build());
-            responseObserver.onCompleted();
-          }
-        };
-
-    Server server =
-        ServerBuilder.forPort(0)
-            .addService(greeter)
-            .intercept(
-                GrpcTelemetry.builder(testing.getOpenTelemetry())
-                    .setCapturedServerRequestMetadata(serverCapturedMetadata)
-                    .build()
-                    .createServerInterceptor())
-            .build()
-            .start();
-    ManagedChannel channel =
-        createChannel(
-            ManagedChannelBuilder.forAddress("localhost", server.getPort())
-                .intercept(
-                    GrpcTelemetry.builder(testing.getOpenTelemetry())
-                        .setCapturedClientRequestMetadata(clientCapturedMetadata)
-                        .build()
-                        .createClientInterceptor()));
-    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
-    closer.add(() -> server.shutdownNow().awaitTermination());
-
-    String clientMetadataValue = "client-value";
-    String serverMetadataValue = "server-value";
-    Metadata metadata = new Metadata();
-    metadata.put(
-        Metadata.Key.of(CLIENT_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
-        clientMetadataValue);
-    metadata.put(
-        Metadata.Key.of(SERVER_REQUEST_METADATA_KEY, Metadata.ASCII_STRING_MARSHALLER),
-        serverMetadataValue);
-
-    GreeterGrpc.GreeterBlockingStub client =
-        GreeterGrpc.newBlockingStub(channel)
-            .withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata));
-    Helloworld.Response response =
-        testing()
-            .runWithSpan(
-                "parent",
-                () -> client.sayHello(Helloworld.Request.newBuilder().setName("test").build()));
-
-    assertThat(response.getMessage()).isEqualTo("Hello test");
-
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfying(
-                                equalTo(
-                                    stringArrayKey(
-                                        "rpc.request.metadata." + CLIENT_REQUEST_METADATA_KEY),
-                                    captureMetadata ? singletonList(clientMetadataValue) : null),
-                                equalTo(
-                                    stringArrayKey(
-                                        "rpc.request.metadata." + SERVER_REQUEST_METADATA_KEY),
-                                    null)),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfying(
-                                equalTo(
-                                    stringArrayKey(
-                                        "rpc.request.metadata." + CLIENT_REQUEST_METADATA_KEY),
-                                    null),
-                                equalTo(
-                                    stringArrayKey(
-                                        "rpc.request.metadata." + SERVER_REQUEST_METADATA_KEY),
-                                    captureMetadata ? singletonList(serverMetadataValue) : null))));
-  }
-
   /**
    * metadataProvided. testing as well 2 extra methods: {@link
    * GrpcTelemetryBuilder#addClientAttributeExtractor} and {@link
@@ -268,17 +233,14 @@ class GrpcTest extends AbstractGrpcTest {
           }
         };
 
-    Server server =
-        ServerBuilder.forPort(0)
-            .addService(greeter)
-            .intercept(
-                GrpcTelemetry.builder(testing.getOpenTelemetry())
-                    .addAttributesExtractor(new CustomAttributesExtractor())
-                    .addServerAttributeExtractor(new CustomAttributesExtractorV2("serverSideValue"))
-                    .build()
-                    .createServerInterceptor())
-            .build()
-            .start();
+    GrpcTelemetry serverTelemetry =
+        GrpcTelemetry.builder(testing.getOpenTelemetry())
+            .addAttributesExtractor(new CustomAttributesExtractor())
+            .addServerAttributeExtractor(new CustomAttributesExtractorV2("serverSideValue"))
+            .build();
+    ServerBuilder<?> serverBuilder = ServerBuilder.forPort(0).addService(greeter);
+    serverTelemetry.configureServerBuilder(serverBuilder);
+    Server server = serverBuilder.build().start();
 
     ManagedChannelBuilder<?> channelBuilder =
         ManagedChannelBuilder.forAddress("localhost", server.getPort());

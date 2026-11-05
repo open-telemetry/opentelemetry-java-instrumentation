@@ -57,6 +57,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
             .put("path.home", esWorkingDir.getPath())
             .put("transport.type", "netty3")
             .put("http.type", "netty3")
+            .put("transport.tcp.port", "0")
             .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
             .build();
     testNode =

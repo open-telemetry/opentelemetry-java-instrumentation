@@ -30,7 +30,7 @@ final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, 
 
   @Override
   public String getRpcMethod(GrpcRequest request) {
-    return request.getMethod().getFullMethodName();
+    return request.getFullMethodName();
   }
 
   @Override
@@ -43,6 +43,12 @@ final class GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest, 
   @Nullable
   public Long getResponseSize(GrpcRequest request) {
     return request.getResponseSize();
+  }
+
+  @Override
+  @Nullable
+  public String getRpcMethodOriginal(GrpcRequest request) {
+    return request.getOriginalFullMethodName();
   }
 
   @Override

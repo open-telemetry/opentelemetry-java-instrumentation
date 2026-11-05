@@ -14,7 +14,9 @@ import javax.annotation.Nullable;
 
 public final class GrpcRequest {
 
-  private final MethodDescriptor<?, ?> method;
+  @Nullable private final MethodDescriptor<?, ?> method;
+  private final String fullMethodName;
+  @Nullable private final String originalFullMethodName;
 
   @Nullable private volatile Metadata metadata;
   @Nullable private final String serverAddress;
@@ -74,14 +76,35 @@ public final class GrpcRequest {
       @Nullable String serverAddress,
       @Nullable Integer serverPort) {
     this.method = method;
+    this.fullMethodName = method.getFullMethodName();
+    this.originalFullMethodName = null;
     this.metadata = metadata;
     this.peerSocketAddress = peerSocketAddress;
     this.serverAddress = serverAddress;
     this.serverPort = serverPort;
   }
 
+  GrpcRequest(String fullMethodName, @Nullable String originalFullMethodName, Metadata metadata) {
+    this.method = null;
+    this.fullMethodName = fullMethodName;
+    this.originalFullMethodName = originalFullMethodName;
+    this.metadata = metadata;
+    this.serverAddress = null;
+    this.serverPort = null;
+  }
+
+  @Nullable
   public MethodDescriptor<?, ?> getMethod() {
     return method;
+  }
+
+  String getFullMethodName() {
+    return fullMethodName;
+  }
+
+  @Nullable
+  String getOriginalFullMethodName() {
+    return originalFullMethodName;
   }
 
   @Nullable

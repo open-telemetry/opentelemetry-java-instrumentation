@@ -16,7 +16,8 @@ on:
       skip-windows-smoke-tests:
         type: boolean
         required: false
-      reduced-appserver-tests:
+      limited-appserver-matrix:
+        description: Run only the limited app-server matrix on Linux; Windows retains full coverage.
         type: boolean
         required: false
     secrets:
@@ -45,7 +46,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
           cache-read-only: true
 
@@ -74,7 +75,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
           cache-read-only: true
 
@@ -118,7 +119,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
           cache-read-only: true
 
@@ -164,6 +165,10 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Test PR review bundle preparation
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
+        run: python3 -m unittest discover -s .github/scripts/pr-review -p 'test_*.py'
 
       # this is needed because we don't auto-update dependencies in instrumentation/**
       # and so we want to enforce that all "real" dependencies are dependency managed
@@ -236,7 +241,7 @@ jobs:
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx4g /" gradle.properties
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
           gradle-home-cache-excludes: >-
@@ -336,7 +341,7 @@ jobs:
         run: .github/scripts/deadlock-detector.sh
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
           cache-read-only: true
 
@@ -413,13 +418,10 @@ jobs:
           - websphere
           - wildfly
           - other
-          - spring-aot
         exclude:
           - os: ${{ inputs.skip-windows-smoke-tests && 'windows-latest' || '' }}
           - os: windows-latest
             smoke-test-suite: websphere
-          - os: windows-latest
-            smoke-test-suite: spring-aot
       fail-fast: false
     steps:
       - name: Support long paths
@@ -450,7 +452,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
           cache-read-only: true
 
@@ -464,13 +466,12 @@ jobs:
       - name: Test
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
-        # Reduced app-server mode owns the OpenJ9 policy; disabling it here would make the TomEE suite run no tests.
         run: >
           ./gradlew
-          :smoke-tests:test
+          :smoke-tests:testLimitedMatrix
+          ${{ (!inputs.limited-appserver-matrix || matrix.os == 'windows-latest') && ':smoke-tests:testAdditionalVariants' || '' }}
           -PsmokeTestSuite=${{ matrix.smoke-test-suite }}
-          ${{ inputs.reduced-appserver-tests && matrix.os != 'windows-latest' && '-PreducedAppServerTests=true' || '' }}
-          ${{ inputs.skip-openj9-tests && !inputs.reduced-appserver-tests && matrix.smoke-test-suite != 'websphere' && '-PskipOpenJ9SmokeTests=true' || '' }}
+          ${{ inputs.skip-openj9-tests && !inputs.limited-appserver-matrix && matrix.os != 'windows-latest' && '-PskipOpenJ9SmokeTests=true' || '' }}
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Build scan
@@ -515,7 +516,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
           cache-read-only: true
 
@@ -544,7 +545,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
           cache-read-only: true
 

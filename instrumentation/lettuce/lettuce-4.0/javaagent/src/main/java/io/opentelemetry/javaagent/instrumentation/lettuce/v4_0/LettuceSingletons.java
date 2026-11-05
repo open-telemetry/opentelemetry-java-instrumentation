@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -93,7 +93,7 @@ public class LettuceSingletons {
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, redisUri -> "CONNECT")
             .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(
-                ServicePeerAttributesExtractor.create(
+                ServerServiceAttributesExtractor.create(
                     netAttributesGetter, GlobalOpenTelemetry.get()))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
             .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -12,7 +13,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.stream.Collectors.toSet;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -191,7 +191,7 @@ public class CamelMessagingMetricsAssertions {
                                       if (destinationPartitionId != null) {
                                         point.hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                            equalTo(MESSAGING_SYSTEM, system),
+                                            equalTo(stringKey("messaging.system.name"), system),
                                             equalTo(MESSAGING_DESTINATION_NAME, destination),
                                             equalTo(
                                                 MESSAGING_DESTINATION_PARTITION_ID,
@@ -201,7 +201,7 @@ public class CamelMessagingMetricsAssertions {
                                       } else {
                                         point.hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                            equalTo(MESSAGING_SYSTEM, system),
+                                            equalTo(stringKey("messaging.system.name"), system),
                                             equalTo(MESSAGING_DESTINATION_NAME, destination),
                                             equalTo(MESSAGING_OPERATION_TYPE, operationType),
                                             equalTo(ERROR_TYPE, errorType));
@@ -210,7 +210,7 @@ public class CamelMessagingMetricsAssertions {
                                       if (destinationPartitionId != null) {
                                         point.hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                            equalTo(MESSAGING_SYSTEM, system),
+                                            equalTo(stringKey("messaging.system.name"), system),
                                             equalTo(MESSAGING_DESTINATION_NAME, destination),
                                             equalTo(
                                                 MESSAGING_DESTINATION_PARTITION_ID,
@@ -219,7 +219,7 @@ public class CamelMessagingMetricsAssertions {
                                       } else {
                                         point.hasAttributesSatisfyingExactly(
                                             equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                            equalTo(MESSAGING_SYSTEM, system),
+                                            equalTo(stringKey("messaging.system.name"), system),
                                             equalTo(MESSAGING_DESTINATION_NAME, destination),
                                             equalTo(ERROR_TYPE, errorType));
                                       }
@@ -254,7 +254,7 @@ public class CamelMessagingMetricsAssertions {
                                     if (destinationPartitionId != null) {
                                       point.hasAttributesSatisfyingExactly(
                                           equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                          equalTo(MESSAGING_SYSTEM, system),
+                                          equalTo(stringKey("messaging.system.name"), system),
                                           equalTo(MESSAGING_DESTINATION_NAME, destination),
                                           equalTo(
                                               MESSAGING_DESTINATION_PARTITION_ID,
@@ -263,7 +263,7 @@ public class CamelMessagingMetricsAssertions {
                                     } else {
                                       point.hasAttributesSatisfyingExactly(
                                           equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                          equalTo(MESSAGING_SYSTEM, system),
+                                          equalTo(stringKey("messaging.system.name"), system),
                                           equalTo(MESSAGING_DESTINATION_NAME, destination),
                                           equalTo(ERROR_TYPE, errorType));
                                     }
@@ -291,7 +291,7 @@ public class CamelMessagingMetricsAssertions {
             .flatMap(metric -> metric.getLongSumData().getPoints().stream())
             .filter(
                 point ->
-                    system.equals(point.getAttributes().get(MESSAGING_SYSTEM))
+                    system.equals(point.getAttributes().get(stringKey("messaging.system.name")))
                         && destination.equals(
                             point.getAttributes().get(MESSAGING_DESTINATION_NAME)))
             .mapToLong(point -> point.getValue())
@@ -315,7 +315,10 @@ public class CamelMessagingMetricsAssertions {
                             point ->
                                 operationName.equals(
                                         point.getAttributes().get(MESSAGING_OPERATION_NAME))
-                                    && system.equals(point.getAttributes().get(MESSAGING_SYSTEM))
+                                    && system.equals(
+                                        point
+                                            .getAttributes()
+                                            .get(stringKey("messaging.system.name")))
                                     && destination.equals(
                                         point.getAttributes().get(MESSAGING_DESTINATION_NAME))))
             .collect(toSet());

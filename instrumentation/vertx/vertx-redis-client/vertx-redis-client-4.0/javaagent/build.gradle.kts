@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -33,72 +34,48 @@ dependencies {
   testLibrary("io.vertx:vertx-codegen:4.0.0")
 }
 
-testing {
-  suites {
-    withType<JvmTestSuite>().configureEach {
-      if (!name.endsWith("unitTests", true)) {
-        sources {
-          java {
-            srcDir("src/testShared/java")
-          }
-        }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation-api-incubator"))
+      implementation("io.vertx:vertx-redis-client:4.4.4")
+    }
+  }
+
+  register<JvmTestSuite>("test403") {
+    sources {
+      java {
+        srcDir("src/testShared/java")
+        srcDir("src/testCompatibility/java")
       }
     }
 
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation-api-incubator"))
-        implementation("io.vertx:vertx-redis-client:4.4.4")
+    dependencies {
+      implementation("io.vertx:vertx-redis-client:4.0.3")
+      implementation("io.vertx:vertx-codegen:4.0.3")
+      implementation("org.testcontainers:testcontainers")
+    }
+  }
+  register<JvmTestSuite>("test445") {
+    sources {
+      java {
+        srcDir("src/testShared/java")
+        srcDir("src/testCompatibility/java")
       }
     }
 
-    register<JvmTestSuite>("previewSemconvUnitTests") {
-      sources {
-        java {
-          srcDir("src/unitTests/java")
-        }
-      }
-
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation-api-incubator"))
-        implementation("io.vertx:vertx-redis-client:4.4.4")
-      }
-
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-          }
-        }
-      }
+    dependencies {
+      implementation("io.vertx:vertx-redis-client:4.4.5")
+      implementation("io.vertx:vertx-codegen:4.4.5")
+      implementation("org.testcontainers:testcontainers")
     }
+  }
 
-    register<JvmTestSuite>("test403") {
-      sources {
-        java {
-          srcDir("src/testCompatibility/java")
-        }
-      }
-
-      dependencies {
-        implementation("io.vertx:vertx-redis-client:4.0.3")
-        implementation("io.vertx:vertx-codegen:4.0.3")
-        implementation("org.testcontainers:testcontainers")
-      }
-    }
-    register<JvmTestSuite>("test445") {
-      sources {
-        java {
-          srcDir("src/testCompatibility/java")
-        }
-      }
-
-      dependencies {
-        implementation("io.vertx:vertx-redis-client:4.4.5")
-        implementation("io.vertx:vertx-codegen:4.4.5")
-        implementation("org.testcontainers:testcontainers")
+  named<JvmTestSuite>("test") {
+    sources {
+      java {
+        srcDir("src/testShared/java")
       }
     }
   }
@@ -106,28 +83,10 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .filter { !it.name.endsWith("unitTests", true) }
-    .associate { suite ->
-      suite.name to register<Test>("${suite.name}PreviewSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-        systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-      }
-    }
-
   check {
-    dependsOn(testing.suites.named("unitTests"), testing.suites.named("previewSemconvUnitTests"))
-    if (otelProps.testLatestDeps) {
-      dependsOn(previewSemconvSuites.getValue("test"))
-    } else {
-      dependsOn(testing.suites, previewSemconvSuites.values)
-    }
+    dependsOn(testing.suites)
   }
 }

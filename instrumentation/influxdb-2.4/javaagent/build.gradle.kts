@@ -1,5 +1,9 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -23,25 +27,6 @@ dependencies {
   testLibrary("org.influxdb:influxdb-java:2.14")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation("org.influxdb:influxdb-java:2.4")
-      }
-    }
-
-    register<JvmTestSuite>("test24") {
-      dependencies {
-        implementation(project())
-        implementation("org.influxdb:influxdb-java:2.4")
-        implementation("org.testcontainers:testcontainers")
-      }
-    }
-  }
-}
-
 val test225RuntimeClasspath = configurations.create("test225RuntimeClasspath") {
   extendsFrom(configurations.testRuntimeClasspath.get())
   resolutionStrategy.force("org.influxdb:influxdb-java:2.25")
@@ -55,63 +40,71 @@ val test29RuntimeClasspath = configurations.create("test29RuntimeClasspath") {
   resolutionStrategy.force("org.influxdb:influxdb-java:2.9")
 }
 
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation("org.influxdb:influxdb-java:2.4")
+    }
+  }
+
+  register<JvmTestSuite>("test24") {
+    dependencies {
+      implementation(project())
+      implementation("org.influxdb:influxdb-java:2.4")
+      implementation("org.testcontainers:testcontainers")
+    }
+  }
+
+  executions("test") {
+    configureDefault {
+      filter {
+        excludeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
+      }
+    }
+
+    register("QuerySanitizationDisabled") {
+      filter {
+        includeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
+      }
+      telemetryConfig("otel.instrumentation.influxdb.query-sanitization.enabled", "false")
+    }
+
+    register("225") {
+      classpath = sourceSets.test.get().output + test225RuntimeClasspath
+      systemProperty("influxdb.test.client-version", "2.25")
+      filter {
+        includeTestsMatching("InfluxDbQueryLifecycleTest")
+      }
+    }
+
+    register("213") {
+      classpath = sourceSets.test.get().output + test213RuntimeClasspath
+      include("**/InfluxDbLegacyQueryLifecycleTest.class")
+      filter {
+        includeTestsMatching("*InfluxDbLegacyQueryLifecycleTest.sameQueryReentrantAsyncQueryDuringChunkedEncodingDoesNotEndOuterQuery")
+      }
+    }
+
+    register("29") {
+      classpath = sourceSets.test.get().output + test29RuntimeClasspath
+      include("**/InfluxDbLegacyQueryLifecycleTest.class")
+      filter {
+        includeTestsMatching("*InfluxDbLegacyQueryLifecycleTest.sameQueryReentrantAsyncQueryDuringChunkedEncodingDoesNotEndOuterQuery")
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     // we disable the okhttp instrumentation, so we don't need to assert on the okhttp spans
     // from the okhttp instrumentation we need OkHttp3IgnoredTypesConfigurer to fix context leaks
     jvmArgs("-Dotel.instrumentation.okhttp.enabled=false")
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
-    }
-  }
-
-  val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("InfluxDbQuerySanitizationDisabledTest")
-    }
-    systemProperty("metadataConfig", "otel.instrumentation.influxdb.query-sanitization.enabled=false")
-    jvmArgs("-Dotel.instrumentation.influxdb.query-sanitization.enabled=false")
-  }
-
-  val test225 = register<Test>("test225") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().output + test225RuntimeClasspath
-    systemProperty("influxdb.test.client-version", "2.25")
-
-    filter {
-      includeTestsMatching("InfluxDbQueryLifecycleTest")
-    }
-  }
-
-  val test213 = register<Test>("test213") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().output + test213RuntimeClasspath
-    include("**/InfluxDbLegacyQueryLifecycleTest.class")
-
-    filter {
-      includeTestsMatching("*InfluxDbLegacyQueryLifecycleTest.sameQueryReentrantAsyncQueryDuringChunkedEncodingDoesNotEndOuterQuery")
-    }
-  }
-
-  val test29 = register<Test>("test29") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().output + test29RuntimeClasspath
-    include("**/InfluxDbLegacyQueryLifecycleTest.class")
-
-    filter {
-      includeTestsMatching("*InfluxDbLegacyQueryLifecycleTest.sameQueryReentrantAsyncQueryDuringChunkedEncodingDoesNotEndOuterQuery")
-    }
   }
 
   check {
-    dependsOn(testing.suites, testQuerySanitizationDisabled, test213, test225, test29)
+    dependsOn(testing.suites)
   }
 }

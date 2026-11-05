@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -47,33 +48,23 @@ dependencies {
   testImplementation("org.hsqldb:hsqldb:2.3.4")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common-4.0:javaagent"))
-        implementation(project(":javaagent-extension-api"))
-        implementation("io.vertx:vertx-sql-client:5.0.0")
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common-4.0:javaagent"))
+      implementation(project(":javaagent-extension-api"))
+      implementation("io.vertx:vertx-sql-client:5.0.0")
     }
   }
 }
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-  }
-
   check {
-    dependsOn(testing.suites, testPreviewSemconv)
+    dependsOn(testing.suites)
   }
 }

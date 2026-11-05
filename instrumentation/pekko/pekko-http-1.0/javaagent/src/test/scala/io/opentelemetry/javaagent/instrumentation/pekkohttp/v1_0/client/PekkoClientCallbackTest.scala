@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.client
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.model.{HttpRequest, IllegalUriException}
-import org.apache.pekko.stream.ActorMaterializer
+import org.apache.pekko.stream.Materializer
 import com.typesafe.config.ConfigFactory
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension
@@ -101,8 +101,8 @@ class PekkoClientCallbackTest {
       override def close(): Unit = Await.result(system.terminate(), 10.seconds)
     })
     val dispatcher = system.dispatcher
-    implicit val materializer: ActorMaterializer =
-      ActorMaterializer.create(system)
+    implicit val materializer: Materializer =
+      Materializer(system)
     val http = Http.get(system)
 
     val workerStarted = new CountDownLatch(1)

@@ -54,6 +54,8 @@ java {
 
 springBoot {
   buildInfo {
+    // Leave out the timestamp so Gradle can reuse cached results.
+    excludes.add("time")
     properties {
       version = "1.2.3"
     }
