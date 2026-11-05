@@ -587,44 +587,106 @@ public abstract class AbstractDubboTest {
 
   @Test
   void testTripleInternalStatusFailure() throws ReflectiveOperationException {
-    assertTripleStatusFailure("INTERNAL", "INTERNAL", "INTERNAL", true);
+    assertTripleStatusFailure("INTERNAL", "INTERNAL", true);
+  }
+
+  @Test
+  void testTripleUnknownServiceProtocolStatus() throws ReflectiveOperationException {
+    Assumptions.assumeTrue(testLatestDeps(), "Triple protocol requires Dubbo 3.x");
+
+    // Triple rejects the unexported service before invoking the provider filter.
+    ReferenceConfig<MiddleService> referenceConfig =
+        configureTripleClient(new HelloServiceImpl(), MiddleService.class);
+    MiddleService service = referenceConfig.get();
+    assertThatThrownBy(() -> service.hello("hello"))
+        .hasRootCauseExactlyInstanceOf(
+            Class.forName("org.apache.dubbo.rpc.StatusRpcException").asSubclass(Throwable.class));
+
+    String clientMethod =
+        "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello";
+    Consumer<SpanDataAssert> clientSpanAssert =
+        span ->
+            span.hasName(clientMethod)
+                .hasKind(SpanKind.CLIENT)
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                .hasNoParent()
+                .hasStatus(StatusData.error())
+                .hasAttributesSatisfyingExactly(
+                    equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                    equalTo(RPC_METHOD, clientMethod),
+                    equalTo(ERROR_TYPE, "UNIMPLEMENTED"),
+                    equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                    equalTo(SERVER_ADDRESS, "localhost"),
+                    equalTo(SERVER_PORT, protocolConfig.getPort()),
+                    satisfies(NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
+                    satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                    satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType),
+                    equalTo(stringKey("rpc.status_code"), null));
+    if (canCaptureUnknownServiceSpans()) {
+      testing()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      clientSpanAssert,
+                      span ->
+                          span.hasName("dubbo")
+                              .hasKind(SpanKind.SERVER)
+                              .hasParent(trace.getSpan(0))
+                              .hasStatus(StatusData.error())));
+    } else {
+      testing().waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(clientSpanAssert));
+    }
+    assertErrorMetric("rpc.client.call.duration", clientMethod, "UNIMPLEMENTED");
   }
 
   @Test
   void testTripleInvalidArgumentStatus() throws ReflectiveOperationException {
-    assertTripleStatusFailure("INVALID_ARGUMENT", "INVALID_ARGUMENT", null, false);
+    assertTripleStatusFailure("INVALID_ARGUMENT", null, false);
   }
 
   private void assertTripleStatusFailure(
-      String statusCode,
-      String clientErrorType,
-      String serverErrorType,
-      boolean serverStatusIsError)
+      String statusCode, String serverErrorType, boolean serverStatusIsError)
       throws ReflectiveOperationException {
     Assumptions.assumeTrue(testLatestDeps(), "Triple protocol requires Dubbo 3.x");
 
+    RuntimeException failure = tripleStatusException(statusCode);
+    ReferenceConfig<HelloService> referenceConfig =
+        configureTripleClient(
+            new HelloServiceImpl() {
+              @Override
+              public String hello(String hello) {
+                throw failure;
+              }
+            },
+            HelloService.class);
+    HelloService service = referenceConfig.get();
+    assertThatThrownBy(() -> service.hello("hello")).isInstanceOf(RuntimeException.class);
+
+    assertFailureTelemetry(
+        "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello",
+        // STRICT serialization rejects the business exception's TriRpcStatus. Triple sends UNKNOWN
+        // instead, while the original status is still observable in the server filter.
+        "UNKNOWN",
+        serverErrorType,
+        serverStatusIsError);
+  }
+
+  private <T> ReferenceConfig<T> configureTripleClient(
+      HelloServiceImpl implementation, Class<T> serviceClass) throws ReflectiveOperationException {
     int port = PortUtils.findOpenPort();
     protocolConfig.setName("tri");
     protocolConfig.setPort(port);
-    RuntimeException failure = tripleStatusException(statusCode);
 
     DubboBootstrap bootstrap = DubboTestUtil.newDubboBootstrap();
     cleanup.deferCleanup(bootstrap::destroy);
     bootstrap
         .application(new ApplicationConfig("dubbo-test-triple-failure-provider"))
-        .service(
-            configureServer(
-                new HelloServiceImpl() {
-                  @Override
-                  public String hello(String hello) {
-                    throw failure;
-                  }
-                }))
+        .service(configureServer(implementation))
         .protocol(protocolConfig)
         .start();
 
-    ReferenceConfig<HelloService> referenceConfig = new ReferenceConfig<>();
-    referenceConfig.setInterface(HelloService.class);
+    ReferenceConfig<T> referenceConfig = new ReferenceConfig<>();
+    referenceConfig.setInterface(serviceClass);
     referenceConfig.setRetries(0);
     referenceConfig.setUrl("tri://localhost:" + port + "/?timeout=30000");
     ProtocolConfig consumerProtocolConfig = new ProtocolConfig();
@@ -637,14 +699,7 @@ public abstract class AbstractDubboTest {
         .protocol(consumerProtocolConfig)
         .start();
 
-    HelloService service = referenceConfig.get();
-    assertThatThrownBy(() -> service.hello("hello")).isInstanceOf(RuntimeException.class);
-
-    assertFailureTelemetry(
-        "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello",
-        clientErrorType,
-        serverErrorType,
-        serverStatusIsError);
+    return referenceConfig;
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
