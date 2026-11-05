@@ -56,6 +56,10 @@ public final class ExecutorAdviceHelper {
       return false;
     }
 
+    if (task instanceof ContextPropagatingRunnable || task instanceof ContextPropagatingCallable) {
+      return true;
+    }
+
     return InstrumentedTaskClasses.canInstrumentTaskClass(task.getClass());
   }
 
