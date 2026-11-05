@@ -12,8 +12,12 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarRequest;
+import java.lang.ref.WeakReference;
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeoutException;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.impl.SendCallback;
@@ -157,5 +161,85 @@ class VirtualFieldStoreTest {
     }
     assertThat(VirtualFieldStore.extractSendCallbackData(message)).isNull();
     assertThat(VirtualFieldStore.extractSendCallbackData(callback)).isNull();
+  }
+
+  @Test
+  void messageAssociationDoesNotRetainAbandonedSendState()
+      throws InterruptedException, TimeoutException {
+    WeakReferences references = createAbandonedSend();
+
+    GcUtils.awaitGc(references.callback, Duration.ofSeconds(10));
+    expungeCollectedCallbacks();
+    GcUtils.awaitGc(references.message, Duration.ofSeconds(10));
+    GcUtils.awaitGc(references.data, Duration.ofSeconds(10));
+
+    assertThat(references.message.get()).isNull();
+    assertThat(references.data.get()).isNull();
+  }
+
+  @Test
+  void messageAssociationReturnsNullAfterSendStateIsCollected()
+      throws InterruptedException, TimeoutException {
+    MessageAndWeakData association = createSendWithRetainedMessage();
+
+    GcUtils.awaitGc(association.callback, Duration.ofSeconds(10));
+    expungeCollectedCallbacks();
+    GcUtils.awaitGc(association.data, Duration.ofSeconds(10));
+
+    assertThat(VirtualFieldStore.extractSendCallbackData(association.message)).isNull();
+  }
+
+  private static WeakReferences createAbandonedSend() {
+    MessageAndWeakData association = createSendWithRetainedMessage();
+    return new WeakReferences(
+        new WeakReference<>(association.message), association.data, association.callback);
+  }
+
+  private static void expungeCollectedCallbacks() {
+    // Unit tests do not start the agent's background weak-reference cleaner.
+    VirtualFieldStore.extractSendCallbackData(mock(SendCallback.class));
+  }
+
+  private static MessageAndWeakData createSendWithRetainedMessage() {
+    Message<?> message = mock(Message.class);
+    String topic = "persistent://public/default/abandoned-send";
+    when(message.getTopicName()).thenReturn(topic);
+    SendCallback callback = mock(SendCallback.class);
+    PulsarRequest request =
+        PulsarRequest.create(message, ProducerData.create("pulsar://localhost:6650", topic));
+    SendCallbackData data = SendCallbackData.create(Context.root(), Context.root(), request);
+    VirtualFieldStore.inject(callback, data);
+    return new MessageAndWeakData(
+        message, new WeakReference<>(data), new WeakReference<>(callback));
+  }
+
+  private static final class MessageAndWeakData {
+    private final Message<?> message;
+    private final WeakReference<SendCallbackData> data;
+    private final WeakReference<SendCallback> callback;
+
+    private MessageAndWeakData(
+        Message<?> message,
+        WeakReference<SendCallbackData> data,
+        WeakReference<SendCallback> callback) {
+      this.message = message;
+      this.data = data;
+      this.callback = callback;
+    }
+  }
+
+  private static final class WeakReferences {
+    private final WeakReference<Message<?>> message;
+    private final WeakReference<SendCallbackData> data;
+    private final WeakReference<SendCallback> callback;
+
+    private WeakReferences(
+        WeakReference<Message<?>> message,
+        WeakReference<SendCallbackData> data,
+        WeakReference<SendCallback> callback) {
+      this.message = message;
+      this.data = data;
+      this.callback = callback;
+    }
   }
 }

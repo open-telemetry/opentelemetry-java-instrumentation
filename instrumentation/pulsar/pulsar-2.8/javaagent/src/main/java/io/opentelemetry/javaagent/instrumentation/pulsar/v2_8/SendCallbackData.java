@@ -37,6 +37,7 @@ public class SendCallbackData {
   @Nullable private CompletableFuture<MessageId> sendFuture;
   @Nullable private WeakReference<SendCallback> callback;
   public PulsarRequest request;
+  private final MessageAssociation messageAssociation;
 
   public static SendCallbackData create(Context parent, Context context, PulsarRequest request) {
     return new SendCallbackData(parent, context, request, false);
@@ -53,6 +54,11 @@ public class SendCallbackData {
     this.context = context;
     this.request = request;
     this.internalSendAsyncPending = internalSendAsyncPending;
+    this.messageAssociation = new MessageAssociation(this);
+  }
+
+  MessageAssociation messageAssociation() {
+    return messageAssociation;
   }
 
   public boolean claimInternalSendAsync() {
@@ -107,6 +113,19 @@ public class SendCallbackData {
 
   public static boolean isSendSuppressed() {
     return Boolean.TRUE.equals(Context.current().get(SUPPRESSED_SEND_KEY));
+  }
+
+  static final class MessageAssociation {
+    private final WeakReference<SendCallbackData> data;
+
+    private MessageAssociation(SendCallbackData data) {
+      this.data = new WeakReference<>(data);
+    }
+
+    @Nullable
+    SendCallbackData get() {
+      return data.get();
+    }
   }
 
   public void end(@Nullable Throwable error) {

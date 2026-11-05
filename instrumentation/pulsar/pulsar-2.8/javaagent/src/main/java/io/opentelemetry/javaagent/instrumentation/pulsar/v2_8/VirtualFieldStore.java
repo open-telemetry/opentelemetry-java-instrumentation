@@ -23,8 +23,9 @@ public class VirtualFieldStore {
       VirtualField.find(Consumer.class, String.class);
   private static final VirtualField<SendCallback, SendCallbackData> CALLBACK_FIELD =
       VirtualField.find(SendCallback.class, SendCallbackData.class);
-  private static final VirtualField<Message<?>, SendCallbackData> MESSAGE_SEND_CALLBACK_FIELD =
-      VirtualField.find(Message.class, SendCallbackData.class);
+  private static final VirtualField<Message<?>, SendCallbackData.MessageAssociation>
+      MESSAGE_SEND_CALLBACK_FIELD =
+          VirtualField.find(Message.class, SendCallbackData.MessageAssociation.class);
 
   private VirtualFieldStore() {}
 
@@ -42,7 +43,7 @@ public class VirtualFieldStore {
       data.associateCallback(instance);
       Message<?> message = data.request.getMessage();
       if (message != null) {
-        MESSAGE_SEND_CALLBACK_FIELD.set(message, data);
+        MESSAGE_SEND_CALLBACK_FIELD.set(message, data.messageAssociation());
       }
     }
   }
@@ -53,7 +54,8 @@ public class VirtualFieldStore {
       CALLBACK_FIELD.set(callback, null);
     }
     Message<?> message = data.request.getMessage();
-    if (message != null && MESSAGE_SEND_CALLBACK_FIELD.get(message) == data) {
+    if (message != null
+        && MESSAGE_SEND_CALLBACK_FIELD.get(message) == data.messageAssociation()) {
       MESSAGE_SEND_CALLBACK_FIELD.set(message, null);
     }
   }
@@ -99,7 +101,8 @@ public class VirtualFieldStore {
 
   @Nullable
   public static SendCallbackData extractSendCallbackData(Message<?> instance) {
-    return MESSAGE_SEND_CALLBACK_FIELD.get(instance);
+    SendCallbackData.MessageAssociation association = MESSAGE_SEND_CALLBACK_FIELD.get(instance);
+    return association == null ? null : association.get();
   }
 
   @Nullable
