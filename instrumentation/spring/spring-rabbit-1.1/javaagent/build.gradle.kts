@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -30,61 +33,56 @@ dependencies {
   }
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":javaagent-extension-api"))
-        implementation("org.springframework.amqp:spring-rabbit:${baseVersion("2.1.7.RELEASE").orLatest()}")
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":javaagent-extension-api"))
+      implementation("org.springframework.amqp:spring-rabbit:${baseVersion("2.1.7.RELEASE").orLatest()}")
+    }
+  }
+
+  register<JvmTestSuite>("version11Test") {
+    dependencies {
+      implementation("io.opentelemetry:opentelemetry-sdk-testing")
+      implementation("org.testcontainers:testcontainers")
+      implementation("org.springframework.amqp:spring-rabbit:1.1.0.RELEASE")
+    }
+  }
+
+  register<JvmTestSuite>("version20Test") {
+    dependencies {
+      implementation("io.opentelemetry:opentelemetry-sdk-testing")
+      implementation("org.testcontainers:testcontainers")
+      implementation("org.springframework.amqp:spring-rabbit:2.0.1.RELEASE")
+    }
+  }
+
+  executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
     }
 
-    register<JvmTestSuite>("version11Test") {
-      dependencies {
-        implementation("io.opentelemetry:opentelemetry-sdk-testing")
-        implementation("org.testcontainers:testcontainers")
-        implementation("org.springframework.amqp:spring-rabbit:1.1.0.RELEASE")
+    register("SpringDisabled") {
+      filter {
+        includeTestsMatching("*SpringRabbitRegistrationTest")
+        includeTestsMatching("*SpringRabbitTemplateTest")
       }
-    }
-
-    register<JvmTestSuite>("version20Test") {
-      dependencies {
-        implementation("io.opentelemetry:opentelemetry-sdk-testing")
-        implementation("org.testcontainers:testcontainers")
-        implementation("org.springframework.amqp:spring-rabbit:2.0.1.RELEASE")
-      }
+      telemetryConfig("otel.instrumentation.spring-rabbit.enabled", "false")
     }
   }
 }
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-
     // add byte buddy agent for mockito
     configurations.testRuntimeClasspath.get().find { it.name.contains("byte-buddy-agent") }?.apply {
       jvmArgs("-javaagent:$absolutePath")
     }
   }
 
-  val testSpringDisabled = register<Test>("testSpringDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("*SpringRabbitRegistrationTest")
-      includeTestsMatching("*SpringRabbitTemplateTest")
-    }
-    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
-
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.spring-rabbit.enabled=false",
-    )
-  }
-
   check {
-    dependsOn(testing.suites, testSpringDisabled)
+    dependsOn(testing.suites)
   }
 }
 

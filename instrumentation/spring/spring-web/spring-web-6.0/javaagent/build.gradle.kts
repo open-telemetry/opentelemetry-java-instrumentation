@@ -26,8 +26,8 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     register("Experimental") {
       telemetryConfig("otel.instrumentation.http.client.emit-experimental-telemetry", "true")
     }

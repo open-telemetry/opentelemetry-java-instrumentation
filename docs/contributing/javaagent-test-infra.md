@@ -12,6 +12,8 @@ The central projects keep distinct roles:
   Gradle substitution. `:testing:shaded-dependencies` produces the relocated third-party dependency
   bundle consumed by that wrapper and the testing support.
 
+Metric exporters use delta-preferred aggregation temporality by default.
+
 ## Running javaagent tests
 
 The repository's `otel.javaagent-testing` plugin configures javaagent tests automatically. Outside

@@ -47,8 +47,8 @@ dependencies {
   latestDepTestLibrary("org.elasticsearch.client:transport:5.2.+") // see elasticsearch-transport-5.3 module
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       // required on jdk17
       jvmArgs("--add-opens=java.base/java.nio=ALL-UNNAMED")

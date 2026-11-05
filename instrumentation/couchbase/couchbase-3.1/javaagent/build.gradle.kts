@@ -32,8 +32,8 @@ dependencies {
   latestDepTestLibrary("com.couchbase.client:java-client:3.1.+") // see couchbase-3.2 module
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
       if (otelProps.denyUnsafe) {

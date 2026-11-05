@@ -1,6 +1,6 @@
 pluginManagement {
   plugins {
-    id("com.github.jk1.dependency-license-report") version "3.1.4"
+    id("com.github.jk1.dependency-license-report") version "3.1.5"
     id("com.google.cloud.tools.jib") version "3.5.4"
     id("com.gradle.plugin-publish") version "2.2.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
@@ -497,6 +497,7 @@ include(":instrumentation:logback:logback-appender-1.0:testing")
 include(":instrumentation:logback:logback-mdc-1.0:javaagent")
 include(":instrumentation:logback:logback-mdc-1.0:library")
 include(":instrumentation:logback:logback-mdc-1.0:testing")
+include(":instrumentation:mcp-java-sdk-0.14:javaagent")
 include(":instrumentation:methods:javaagent")
 include(":instrumentation:micrometer:micrometer-1.5:javaagent")
 include(":instrumentation:micrometer:micrometer-1.5:library")

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.grails.v3_0;
 import static io.opentelemetry.javaagent.instrumentation.grails.v3_0.GrailsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
@@ -29,11 +28,7 @@ class DefaultGrailsControllerClassInstrumentation implements TypeInstrumentation
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("invoke"))
-            .and(takesArguments(2))
-            .and(takesArgument(0, named(Object.class.getName())))
-            .and(takesArgument(1, named(String.class.getName()))),
+        isPublic().and(named("invoke")).and(takesArguments(Object.class, String.class)),
         getClass().getName() + "$ControllerAdvice");
   }
 

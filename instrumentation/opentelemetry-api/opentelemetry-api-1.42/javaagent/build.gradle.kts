@@ -27,12 +27,10 @@ configurations.configureEach {
   }
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("incubatorTest") {
-      dependencies {
-        implementation("io.opentelemetry:opentelemetry-api-incubator:1.42.0-alpha")
-      }
+testing.suites {
+  register<JvmTestSuite>("incubatorTest") {
+    dependencies {
+      implementation("io.opentelemetry:opentelemetry-api-incubator:1.42.0-alpha")
     }
   }
 }

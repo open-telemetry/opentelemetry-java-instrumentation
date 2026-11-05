@@ -27,12 +27,10 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot:2.+") // documented limitation
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
     }
   }
 }

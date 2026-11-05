@@ -63,7 +63,7 @@ class JdbcTelemetryTest {
                 span ->
                     span.hasName("SELECT")
                         .hasAttribute(equalTo(DB_QUERY_TEXT, "SELECT ?;"))
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))));
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))));
 
     assertDurationMetric(
         testing,
@@ -77,7 +77,7 @@ class JdbcTelemetryTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0)));
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0)));
   }
 
   @ParameterizedTest
@@ -303,7 +303,7 @@ class JdbcTelemetryTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
-                span -> span.hasName("COMMIT").satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))));
+                span -> span.hasName("COMMIT").satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))));
 
     assertDurationMetric(
         testing,
@@ -317,7 +317,7 @@ class JdbcTelemetryTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0)));
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0)));
   }
 
   @Test
