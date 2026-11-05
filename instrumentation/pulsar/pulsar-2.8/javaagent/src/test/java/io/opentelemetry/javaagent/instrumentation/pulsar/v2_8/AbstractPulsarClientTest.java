@@ -12,6 +12,7 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.as
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -43,6 +44,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
@@ -384,14 +386,18 @@ abstract class AbstractPulsarClientTest {
                 span ->
                     span.hasName("send " + topic)
                         .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0))),
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.unset())),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("direct-send-failure-parent"),
                 span ->
                     span.hasName("send " + topic)
                         .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0))));
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasAttribute(
+                            ERROR_TYPE, failedCallbackError.get().getClass().getName())));
     assertThat(Span.fromContext(successfulParent.get()).getSpanContext().isValid()).isTrue();
     assertThat(Span.fromContext(failedParent.get()).getSpanContext().isValid()).isTrue();
   }

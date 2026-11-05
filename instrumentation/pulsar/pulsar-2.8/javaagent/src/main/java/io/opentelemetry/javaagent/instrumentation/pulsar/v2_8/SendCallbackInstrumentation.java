@@ -80,9 +80,11 @@ class SendCallbackInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Enter @Nullable AdviceScope adviceScope, @Advice.Thrown @Nullable Throwable error) {
+        @Advice.Enter @Nullable AdviceScope adviceScope,
+        @Advice.Argument(0) @Nullable Throwable callbackError,
+        @Advice.Thrown @Nullable Throwable error) {
       if (adviceScope != null) {
-        adviceScope.end(error);
+        adviceScope.end(callbackError != null ? callbackError : error);
       }
     }
   }
