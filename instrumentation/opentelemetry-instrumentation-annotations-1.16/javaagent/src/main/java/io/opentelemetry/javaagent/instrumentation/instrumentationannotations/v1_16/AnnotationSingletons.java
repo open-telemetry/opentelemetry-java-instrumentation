@@ -99,8 +99,7 @@ public class AnnotationSingletons {
 
   private static SpanKind spanKindFromMethod(Method method) {
     application.io.opentelemetry.instrumentation.annotations.WithSpan annotation =
-        method.getDeclaredAnnotation(
-            application.io.opentelemetry.instrumentation.annotations.WithSpan.class);
+        MethodAnnotationResolver.findWithSpanOrNull(method);
     if (annotation == null) {
       return SpanKind.INTERNAL;
     }
@@ -123,8 +122,7 @@ public class AnnotationSingletons {
 
   private static String spanNameFromMethod(Method method) {
     application.io.opentelemetry.instrumentation.annotations.WithSpan annotation =
-        method.getDeclaredAnnotation(
-            application.io.opentelemetry.instrumentation.annotations.WithSpan.class);
+        MethodAnnotationResolver.findWithSpanOrNull(method);
     String spanName = annotation.value();
     if (spanName.isEmpty()) {
       spanName = SpanNames.fromMethod(method);
@@ -142,8 +140,7 @@ public class AnnotationSingletons {
     }
 
     application.io.opentelemetry.instrumentation.annotations.WithSpan annotation =
-        method.getDeclaredAnnotation(
-            application.io.opentelemetry.instrumentation.annotations.WithSpan.class);
+        MethodAnnotationResolver.findWithSpanOrNull(method);
     try {
       return (boolean) INHERIT_CONTEXT_METHOD_HANDLE.invoke(annotation);
     } catch (Throwable t) {

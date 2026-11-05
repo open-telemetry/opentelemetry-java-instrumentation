@@ -34,6 +34,12 @@ jobs:
         with:
           cache-read-only: true
 
+      - name: Validate inherited annotation benchmark candidate
+        run: |
+          ./gradlew :instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent:spotlessApply :javaagent-extension-api:spotlessApply :javaagent-tooling:spotlessApply "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" --max-workers=2
+          git diff --exit-code
+          ./gradlew :instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent:test --tests '*InheritedWithSpanInstrumentationTest' --tests '*WithSpanInstrumentationTest' :javaagent-tooling:test --tests '*HasSuperMethodMatcherTest' "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" --max-workers=2
+
       - name: Build agent from selected revision
         run: ./gradlew :javaagent:shadowJar :smoke-tests:images:spring-boot:classes -PremoveJarVersionNumbers=true "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" --max-workers=2
 

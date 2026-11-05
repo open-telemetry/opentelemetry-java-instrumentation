@@ -20,6 +20,10 @@ import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.C;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.PackagePrivateBase;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.PackagePrivateOverrideOfPackagePrivateBase;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.PublicOverrideOfPackagePrivateBase;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.SamePackageSubclass;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.Trace;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.TracedClass;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.UntracedClass;
@@ -92,6 +96,45 @@ class HasSuperMethodMatcherTest {
   }
 
   @Test
+  void testGenericInterfaceMethodImplementedWithConcreteType() throws Exception {
+    assertThat(matches(StringHandler.class, "handle", String.class)).isTrue();
+  }
+
+  @Test
+  void testGenericInterfaceMethodOverriddenInSubclassOfImplementation() throws Exception {
+    assertThat(matches(ExtendedStringHandler.class, "handle", String.class)).isTrue();
+  }
+
+  @Test
+  void testPrivateSuperMethodIsNotOverridden() throws Exception {
+    assertThat(matches(PrivateBase.class, "work")).isTrue();
+    assertThat(matches(PrivateSubclass.class, "work")).isFalse();
+  }
+
+  @Test
+  void testStaticSuperMethodIsNotOverridden() throws Exception {
+    assertThat(matches(StaticBase.class, "run")).isTrue();
+    assertThat(matches(StaticSubclass.class, "run")).isFalse();
+  }
+
+  @Test
+  void testPackagePrivateSuperMethodIsOnlyOverriddenFromSamePackage() throws Exception {
+    assertThat(matches(SamePackageSubclass.class, "run")).isTrue();
+    assertThat(matches(OtherPackageSubclass.class, "run")).isFalse();
+  }
+
+  @Test
+  void testPackagePrivateSuperMethodIsOverriddenThroughPublicOverride() throws Exception {
+    assertThat(matches(OverrideOfPublicOverride.class, "run")).isTrue();
+  }
+
+  @Test
+  void testPackagePrivateSuperMethodIsNotOverriddenThroughPackagePrivateOverride()
+      throws Exception {
+    assertThat(matches(OverrideOfPackagePrivateOverride.class, "run")).isFalse();
+  }
+
+  @Test
   void testConstructorNeverMatches() {
     MethodDescription method = mock(MethodDescription.class);
     when(method.isConstructor()).thenReturn(true);
@@ -120,6 +163,13 @@ class HasSuperMethodMatcherTest {
     verifyNoMoreInteractions(method);
   }
 
+  private static boolean matches(Class<?> type, String name, Class<?>... parameterTypes)
+      throws Exception {
+    return hasSuperMethod(isAnnotatedWith(Trace.class))
+        .matches(
+            new MethodDescription.ForLoadedMethod(type.getDeclaredMethod(name, parameterTypes)));
+  }
+
   private static Method method(
       Class<?> type, Class<?> returnType, Class<?> parameterType, boolean bridge) {
     return Arrays.stream(type.getDeclaredMethods())
@@ -144,6 +194,58 @@ class HasSuperMethodMatcherTest {
     public String get(Integer value) {
       return value.toString();
     }
+  }
+
+  interface GenericHandler<T> {
+    @Trace
+    void handle(T value);
+  }
+
+  static class StringHandler implements GenericHandler<String> {
+    @Override
+    public void handle(String value) {}
+
+    public void handle(Integer value) {}
+  }
+
+  static class ExtendedStringHandler extends StringHandler {
+    @Override
+    public void handle(String value) {}
+  }
+
+  @SuppressWarnings({"unused", "MethodCanBeStatic"})
+  static class PrivateBase {
+    @Trace
+    private void work() {}
+  }
+
+  @SuppressWarnings({"unused", "MethodCanBeStatic"})
+  static class PrivateSubclass extends PrivateBase {
+    private void work() {}
+  }
+
+  @SuppressWarnings("OtelPrivateConstructorForUtilityClass")
+  static class StaticBase {
+    @Trace
+    static void run() {}
+  }
+
+  @SuppressWarnings("OtelPrivateConstructorForUtilityClass")
+  static class StaticSubclass extends StaticBase {
+    static void run() {}
+  }
+
+  static class OverrideOfPublicOverride extends PublicOverrideOfPackagePrivateBase {
+    @Override
+    public void run() {}
+  }
+
+  static class OverrideOfPackagePrivateOverride extends PackagePrivateOverrideOfPackagePrivateBase {
+    public void run() {}
+  }
+
+  static class OtherPackageSubclass extends PackagePrivateBase {
+    void run() {}
   }
 
   static class CovariantSuperclass {
