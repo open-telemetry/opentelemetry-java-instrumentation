@@ -1,8 +1,9 @@
 # Javaagent instrumentation testing
 
-`:testing:testing-common` provides shared test APIs used by javaagent instrumentation tests.
+Javaagent instrumentation tests use a fully shaded `-javaagent` to exercise the same bytecode
+instrumentation as when the agent runs against a normal application.
 
-The central projects keep distinct roles:
+## Testing components
 
 - `:testing:javaagent-test-exporters` contains in-memory exporters and helpers loaded by the agent.
 - `:testing:javaagent-for-testing` is the testing agent distribution that embeds those exporters.
@@ -14,85 +15,24 @@ The central projects keep distinct roles:
 
 Metric exporters use delta-preferred aggregation temporality by default.
 
+The exporters and their captured telemetry live in the `AgentClassLoader`. They store telemetry as
+OTLP protobuf messages, which can be serialized into byte arrays and passed across the class-loader
+boundary. `:testing:testing-common` accesses the exporters using reflection and deserializes the
+messages in the test class loader, hiding this complexity from test authors.
+
 ## Running javaagent tests
 
-The repository's `otel.javaagent-testing` plugin configures javaagent tests automatically. Outside
-the repository, use the support and testing-agent artifacts from the same release:
-
-```kotlin
-import java.io.File
-import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.testing.Test
-import org.gradle.process.CommandLineArgumentProvider
-
-val testAgent = configurations.create("testAgent") {
-  isCanBeResolved = true
-  isCanBeConsumed = false
-}
-val testInstrumentation = configurations.create("testInstrumentation") {
-  isCanBeResolved = true
-  isCanBeConsumed = false
-}
-
-dependencies {
-  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common:$version")
-  testAgent("io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing:$version")
-  // Declare companion javaagent instrumentation modules needed by these tests
-  // in testInstrumentation.
-}
-
-// With the Shadow plugin applied, shade this module's instrumentation classes, runtime dependencies,
-// and testInstrumentation dependencies. Match the testing agent's package relocations.
-tasks.shadowJar {
-  configurations = listOf(project.configurations.runtimeClasspath.get(), testInstrumentation)
-  mergeServiceFiles()
-  filesMatching("META-INF/services/**") {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-  }
-  archiveFileName.set("agent-testing.jar")
-}
-
-val testAgentJar = testAgent.elements.map { it.first().asFile }
-val initializerJar = tasks.shadowJar.flatMap { it.archiveFile }.map { it.asFile }
-
-tasks.withType<Test>().configureEach {
-  dependsOn(tasks.shadowJar)
-  dependsOn(testAgent.buildDependencies)
-  jvmArgumentProviders.add(
-    JavaagentTestArguments(testAgentJar, initializerJar)
-  )
-}
-
-class JavaagentTestArguments(
-  @get:InputFile
-  @get:PathSensitive(PathSensitivity.RELATIVE)
-  val agentJar: Provider<File>,
-  @get:InputFile
-  @get:PathSensitive(PathSensitivity.RELATIVE)
-  val initializerJar: Provider<File>,
-) : CommandLineArgumentProvider {
-  override fun asArguments(): Iterable<String> =
-    listOf(
-      "-javaagent:${agentJar.get().absolutePath}",
-      "-Dotel.javaagent.experimental.initializer.jar=${initializerJar.get().absolutePath}",
-    )
-}
-```
-
-The `-javaagent` argument points to the `javaagent-for-testing` distribution. The initializer
-property instead points to the shaded instrumentation JAR (`agent-testing.jar` in the repository
-plugin), not an ordinary test JAR. Keep the two JARs separate and use the same relocations as the
-agent.
+The repository's `otel.javaagent-testing` convention plugin shades the instrumentation and
+configures the test JVM arguments:
 
 ```text
 -javaagent:<javaagent-for-testing.jar>
 -Dotel.javaagent.experimental.initializer.jar=<shaded-instrumentation.jar>
 ```
 
-Adding `opentelemetry-testing-common` alone does not attach an agent. The repository's
-`io.opentelemetry.instrumentation.javaagent-testing` convention plugin configures these arguments;
-the [`examples/distro` testing-agent project](../../examples/distro/testing/agent-for-testing)
-also shows how the testing-agent distribution is assembled.
+The initializer JAR contains the instrumentation and its dependencies, shaded with the same package
+relocations as the agent. Loading it into the `AgentClassLoader` lets tests run instrumentation
+changes without rebuilding the testing-agent distribution.
+
+See the [javaagent testing convention plugin](../../conventions/src/main/kotlin/io.opentelemetry.instrumentation.javaagent-testing.gradle.kts)
+for the shading and JVM argument wiring.
