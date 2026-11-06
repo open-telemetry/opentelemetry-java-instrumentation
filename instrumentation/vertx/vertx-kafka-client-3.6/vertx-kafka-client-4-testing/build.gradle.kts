@@ -30,16 +30,6 @@ testing.suites {
     }
   }
 
-  executions("testNoReceiveTelemetry") {
-    configureEach {
-      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
-    }
-
-    configureDefault {
-      jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
-    }
-  }
-
   executions("test") {
     configureEach {
       jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
