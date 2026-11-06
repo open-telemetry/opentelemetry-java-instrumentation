@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  testImplementation(project(":testing-common"))
+  testImplementation(project(":testing:testing-common"))
   testImplementation(project(":instrumentation-api-incubator"))
   testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
   testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))

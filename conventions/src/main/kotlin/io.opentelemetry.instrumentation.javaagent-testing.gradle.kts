@@ -68,7 +68,7 @@ val agentForTesting = configurations.create("agentForTesting") {
 }
 
 dependencies {
-  agentForTesting("io.opentelemetry.javaagent:opentelemetry-agent-for-testing")
+  agentForTesting("io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing")
 }
 
 class JavaagentTestArgumentsProvider(
