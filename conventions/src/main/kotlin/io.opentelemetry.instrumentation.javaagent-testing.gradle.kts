@@ -43,8 +43,8 @@ dependencies {
   compileOnly("com.google.code.findbugs:annotations")
 }
 
-testing {
-  suites.withType(JvmTestSuite::class).configureEach {
+testing.suites {
+  withType(JvmTestSuite::class).configureEach {
     dependencies {
       implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
     }

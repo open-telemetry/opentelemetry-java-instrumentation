@@ -27,47 +27,49 @@ dependencies {
   latestDepTestLibrary("org.springframework.batch:spring-batch-core:4.+") // documented limitation
 }
 
-testing.suites.executions("test") {
-  configureEach {
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+testing.suites {
+  executions("test") {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    jvmArgs("-Dotel.instrumentation.spring-batch.enabled=true")
-  }
-
-  configureDefault {
-    filter {
-      excludeTestsMatching("*ChunkRootSpanTest")
-      excludeTestsMatching("*ItemLevelSpanTest")
-      excludeTestsMatching("*CustomSpanEventTest")
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+      jvmArgs("-Dotel.instrumentation.spring-batch.enabled=true")
     }
-  }
 
-  register("ChunkRootSpan") {
-    filter {
-      includeTestsMatching("*ChunkRootSpanTest")
+    configureDefault {
+      filter {
+        excludeTestsMatching("*ChunkRootSpanTest")
+        excludeTestsMatching("*ItemLevelSpanTest")
+        excludeTestsMatching("*CustomSpanEventTest")
+      }
     }
-    include("**/*ChunkRootSpanTest.*")
-    telemetryConfig("otel.instrumentation.spring-batch.experimental.chunk.new-trace", "true")
-  }
 
-  register("ItemLevelSpan") {
-    filter {
-      includeTestsMatching("*ItemLevelSpanTest")
-      includeTestsMatching("*CustomSpanEventTest")
+    register("ChunkRootSpan") {
+      filter {
+        includeTestsMatching("*ChunkRootSpanTest")
+      }
+      include("**/*ChunkRootSpanTest.*")
+      telemetryConfig("otel.instrumentation.spring-batch.experimental.chunk.new-trace", "true")
     }
-    include("**/*ItemLevelSpanTest.*", "**/*CustomSpanEventTest.*")
-    telemetryConfig("otel.instrumentation.spring-batch.item.enabled", "true")
-  }
 
-  register("Experimental") {
-    filter {
-      excludeTestsMatching("*ChunkRootSpanTest")
-      excludeTestsMatching("*ItemLevelSpanTest")
-      excludeTestsMatching("*CustomSpanEventTest")
+    register("ItemLevelSpan") {
+      filter {
+        includeTestsMatching("*ItemLevelSpanTest")
+        includeTestsMatching("*CustomSpanEventTest")
+      }
+      include("**/*ItemLevelSpanTest.*", "**/*CustomSpanEventTest.*")
+      telemetryConfig("otel.instrumentation.spring-batch.item.enabled", "true")
     }
-    telemetryConfig("otel.instrumentation.spring-batch.experimental-span-attributes", "true")
+
+    register("Experimental") {
+      filter {
+        excludeTestsMatching("*ChunkRootSpanTest")
+        excludeTestsMatching("*ItemLevelSpanTest")
+        excludeTestsMatching("*CustomSpanEventTest")
+      }
+      telemetryConfig("otel.instrumentation.spring-batch.experimental-span-attributes", "true")
+    }
   }
 }

@@ -18,20 +18,16 @@ dependencies {
   }
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          systemProperty("testLatestDeps", otelProps.testLatestDeps)
-        }
-        register("AsyncLogger") {
-          jvmArgs(
-            "-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector",
-            "-Dlog4j2.ContextDataInjector=io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderContextDataInjector",
-          )
-        }
-      }
+testing.suites {
+  executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+    register("AsyncLogger") {
+      jvmArgs(
+        "-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector",
+        "-Dlog4j2.ContextDataInjector=io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderContextDataInjector",
+      )
     }
   }
 }

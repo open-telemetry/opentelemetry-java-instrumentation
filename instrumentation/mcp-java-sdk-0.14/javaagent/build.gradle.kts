@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -26,23 +28,23 @@ dependencies {
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation-api"))
-        implementation("io.modelcontextprotocol.sdk:mcp-core:0.14.1")
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation-api"))
+      implementation("io.modelcontextprotocol.sdk:mcp-core:0.14.1")
+    }
+  }
+
+  executions("test") {
+    configureDefault {
+      systemProperty("collectMetadata", otelProps.collectMetadata)
     }
   }
 }
 
 tasks {
-  test {
-    systemProperty("collectMetadata", otelProps.collectMetadata)
-  }
-
   check {
     dependsOn(testing.suites)
   }

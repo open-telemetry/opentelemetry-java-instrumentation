@@ -297,7 +297,7 @@ class McpHttpCustomizerContextTest {
       result =
           Map.of(
               "protocolVersion",
-              "2024-11-05",
+              "2025-03-26",
               "capabilities",
               Map.of("tools", Map.of("listChanged", false)),
               "serverInfo",
