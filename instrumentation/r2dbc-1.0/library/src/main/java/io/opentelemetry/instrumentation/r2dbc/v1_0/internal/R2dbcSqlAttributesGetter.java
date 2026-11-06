@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlResponseStatusCodeUtil;
 import io.r2dbc.spi.R2dbcException;
 import java.util.Collection;
 import javax.annotation.Nullable;
@@ -19,14 +20,6 @@ import javax.annotation.Nullable;
  */
 public final class R2dbcSqlAttributesGetter
     implements SqlClientAttributesGetter<DbExecution, Void> {
-
-  private static final String MYSQL_DATABASE = "mysql";
-  private static final String MARIADB_DATABASE = "mariadb";
-  private static final String POSTGRESQL_DATABASE = "postgresql";
-  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
-  private static final String ORACLE_DB = "oracle.db";
-  private static final String SQL_SERVER_DATABASE = "microsoft.sql_server";
-  private static final String DB2_DATABASE = "ibm.db2";
 
   @Override
   public String getDbSystemName(DbExecution request) {
@@ -69,29 +62,8 @@ public final class R2dbcSqlAttributesGetter
     String dbSystemName = getDbSystemName(request);
     int errorCode = getErrorCode(error);
     String sqlState = getAvailableSqlState(error);
-    boolean hasErrorCode = errorCode != 0;
-
-    if (prefersVendorCode(dbSystemName) && hasErrorCode) {
-      return Integer.toString(errorCode);
-    }
-    if (POSTGRESQL_DATABASE.equals(dbSystemName) && sqlState != null) {
-      return sqlState;
-    }
-    if (sqlState != null && hasErrorCode) {
-      return sqlState + "/" + errorCode;
-    }
-    if (sqlState != null) {
-      return sqlState;
-    }
-    return hasErrorCode ? Integer.toString(errorCode) : null;
-  }
-
-  private static boolean prefersVendorCode(String dbSystemName) {
-    return MYSQL_DATABASE.equals(dbSystemName)
-        || MARIADB_DATABASE.equals(dbSystemName)
-        || ORACLE_DB.equals(dbSystemName)
-        || SQL_SERVER_DATABASE.equals(dbSystemName)
-        || DB2_DATABASE.equals(dbSystemName);
+    String vendorCode = errorCode == 0 ? null : Integer.toString(errorCode);
+    return SqlResponseStatusCodeUtil.getResponseStatusCode(dbSystemName, sqlState, vendorCode);
   }
 
   private static int getErrorCode(@Nullable Throwable error) {

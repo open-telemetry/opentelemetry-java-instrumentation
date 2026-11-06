@@ -31,19 +31,16 @@ class ClickHouseErrorCodeExtractorTest {
     ClickHouseException response = ClickHouseException.of(message, null);
     ClickHouseException wrappedResponse = ClickHouseException.of(new IOException(message), null);
 
-    assertThat(ClickHouseErrorCodeExtractor.getResponseStatusCode(response))
+    assertThat(ClickHouseErrorCodeExtractor.getErrorType(response))
         .isEqualTo(Integer.toString(code));
-    assertThat(ClickHouseErrorCodeExtractor.getResponseStatusCode(wrappedResponse))
+    assertThat(ClickHouseErrorCodeExtractor.getErrorType(wrappedResponse))
         .isEqualTo(Integer.toString(code));
   }
 
   @ParameterizedTest
   @MethodSource("clientFailures")
-  void retainsClientCodesWithoutChangingErrorType(
-      ClickHouseException error, String expectedErrorCode) {
-    assertThat(ClickHouseErrorCodeExtractor.getErrorType(error)).isEqualTo(expectedErrorCode);
-    assertThat(ClickHouseErrorCodeExtractor.getResponseStatusCode(error))
-        .isEqualTo(expectedErrorCode);
+  void retainsSuppliedClientCodes(ClickHouseException error, String expectedCode) {
+    assertThat(ClickHouseErrorCodeExtractor.getErrorType(error)).isEqualTo(expectedCode);
   }
 
   private static Stream<Arguments> clientFailures() {
@@ -84,17 +81,15 @@ class ClickHouseErrorCodeExtractorTest {
 
   @Test
   void omitsUnavailableCodes() {
-    assertThat(ClickHouseErrorCodeExtractor.getResponseStatusCode(null)).isNull();
-    assertThat(
-            ClickHouseErrorCodeExtractor.getResponseStatusCode(new IllegalStateException("test")))
+    assertThat(ClickHouseErrorCodeExtractor.getErrorType(null)).isNull();
+    assertThat(ClickHouseErrorCodeExtractor.getErrorType(new IllegalStateException("test")))
         .isNull();
   }
 
   @Test
-  void keepsZeroStatusWithoutChangingErrorType() {
+  void omitsZeroCode() {
     ClickHouseException error = new ClickHouseException(0, "test", null);
 
-    assertThat(ClickHouseErrorCodeExtractor.getResponseStatusCode(error)).isEqualTo("0");
     assertThat(ClickHouseErrorCodeExtractor.getErrorType(error)).isNull();
   }
 }

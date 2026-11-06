@@ -54,7 +54,6 @@ import java.sql.Driver;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -511,105 +510,6 @@ public abstract class AbstractJdbcInstrumentationTest {
                       .hasException(error)
                       .hasTotalAttributeCount(3));
     }
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"statement", "prepared", "callable"})
-  void statementWarningsAreNotReadAutomaticallyOrRecorded(String statementType)
-      throws SQLException {
-    TestConnection testConnectionWithoutWarning = new TestConnection();
-    Connection connectionWithoutWarning = wrap(testConnectionWithoutWarning);
-    cleanup.deferCleanup(connectionWithoutWarning);
-    Statement statementWithoutWarning = createStatement(connectionWithoutWarning, statementType);
-    cleanup.deferCleanup(statementWithoutWarning);
-
-    SQLWarning warning = new SQLWarning("warning", null, 0);
-    warning.setNextWarning(new SQLWarning("next warning", "01001", 0));
-    TestConnection testConnection = new TestConnection();
-    testConnection.setStatementWarning(warning);
-    Connection connectionWithWarning = wrap(testConnection);
-    cleanup.deferCleanup(connectionWithWarning);
-    Statement statementWithWarning = createStatement(connectionWithWarning, statementType);
-    cleanup.deferCleanup(statementWithWarning);
-
-    boolean result =
-        testing()
-            .runWithSpan(
-                "parent",
-                () -> {
-                  assertThat(executeStatement(statementWithoutWarning)).isTrue();
-                  return executeStatement(statementWithWarning);
-                });
-    assertThat(result).isTrue();
-    assertThat(testConnectionWithoutWarning.getStatementWarningReadCount()).isZero();
-    assertThat(testConnection.getStatementWarningReadCount()).isZero();
-    SQLWarning applicationWarning = statementWithWarning.getWarnings();
-    assertThat((Object) applicationWarning).isSameAs(warning);
-    SQLWarning nextWarning = applicationWarning.getNextWarning();
-    assertThat(nextWarning.getSQLState()).isEqualTo("01001");
-    assertThat((Throwable) nextWarning.getNextWarning()).isNull();
-    assertThat(testConnection.getStatementWarningReadCount()).isEqualTo(1);
-
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasKind(SpanKind.CLIENT)
-                            .hasStatus(StatusData.unset())
-                            .hasAttributesSatisfying(
-                                equalTo(DB_RESPONSE_STATUS_CODE, null), equalTo(ERROR_TYPE, null)),
-                    span ->
-                        span.hasKind(SpanKind.CLIENT)
-                            .hasStatus(StatusData.unset())
-                            .hasAttributesSatisfying(
-                                equalTo(DB_RESPONSE_STATUS_CODE, null),
-                                equalTo(ERROR_TYPE, null))));
-
-    testing()
-        .waitAndAssertMetrics(
-            "io.opentelemetry.jdbc",
-            metric ->
-                metric
-                    .hasName("db.client.operation.duration")
-                    .hasUnit("s")
-                    .hasDescription("Duration of database client operations.")
-                    .satisfies(
-                        data -> {
-                          assertThat(data.getHistogramData().getPoints())
-                              .hasSize(1)
-                              .allSatisfy(
-                                  point ->
-                                      assertThat(point.getAttributes().asMap())
-                                          .containsOnlyKeys(
-                                              DB_SYSTEM_NAME,
-                                              DB_NAMESPACE,
-                                              DB_QUERY_SUMMARY,
-                                              SERVER_ADDRESS)
-                                          .doesNotContainKeys(DB_RESPONSE_STATUS_CODE, ERROR_TYPE));
-                        }));
-  }
-
-  private static Statement createStatement(Connection connection, String statementType)
-      throws SQLException {
-    switch (statementType) {
-      case "statement":
-        return connection.createStatement();
-      case "prepared":
-        return connection.prepareStatement("SELECT 1");
-      case "callable":
-        return connection.prepareCall("CALL ABS(3)");
-      default:
-        throw new IllegalArgumentException(statementType);
-    }
-  }
-
-  private static boolean executeStatement(Statement statement) throws SQLException {
-    if (statement instanceof PreparedStatement) {
-      return ((PreparedStatement) statement).execute();
-    }
-    return statement.execute("SELECT 1");
   }
 
   static Stream<Arguments> preparedStatementStream() throws SQLException {

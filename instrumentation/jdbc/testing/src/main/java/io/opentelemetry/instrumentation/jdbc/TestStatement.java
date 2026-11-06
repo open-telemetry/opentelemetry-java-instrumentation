@@ -15,7 +15,6 @@ import java.util.function.Consumer;
 class TestStatement implements Statement {
   private final Connection connection;
   private final Consumer<String> sqlConsumer;
-  private SQLWarning warning;
 
   TestStatement(Connection connection) {
     this.connection = connection;
@@ -25,10 +24,6 @@ class TestStatement implements Statement {
   TestStatement(Connection connection, Consumer<String> sqlConsumer) {
     this.connection = connection;
     this.sqlConsumer = sqlConsumer;
-  }
-
-  void setWarning(SQLWarning warning) {
-    this.warning = warning;
   }
 
   protected boolean hasResultSet() {
@@ -186,8 +181,7 @@ class TestStatement implements Statement {
 
   @Override
   public SQLWarning getWarnings() throws SQLException {
-    ((TestConnection) connection).recordStatementWarningRead();
-    return warning;
+    return null;
   }
 
   @Override

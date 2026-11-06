@@ -62,12 +62,12 @@ class LettuceDbAttributesGetterTest {
   }
 
   @Test
-  void preservesExceptionFallback() {
+  void prefersResponsePrefixOverExceptionFallback() {
     LettuceResponse response = LettuceResponse.fromErrorMessage("WRONGTYPE error");
     RedisCommandExecutionException error = new RedisCommandExecutionException("WRONGTYPE error");
 
     assertThat(getter.getDbResponseStatusCode(null, response, error)).isEqualTo("WRONGTYPE");
-    assertThat(getter.getErrorType(null, response, error)).isNull();
+    assertThat(getter.getErrorType(null, response, error)).isEqualTo("WRONGTYPE");
   }
 
   @Test

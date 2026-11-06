@@ -19,13 +19,5 @@ final class ClickHouseErrorCodeExtractor {
     return null;
   }
 
-  @Nullable
-  static String getResponseStatusCode(@Nullable Throwable error) {
-    if (error instanceof ClickHouseException) {
-      return Integer.toString(((ClickHouseException) error).getErrorCode());
-    }
-    return null;
-  }
-
   private ClickHouseErrorCodeExtractor() {}
 }

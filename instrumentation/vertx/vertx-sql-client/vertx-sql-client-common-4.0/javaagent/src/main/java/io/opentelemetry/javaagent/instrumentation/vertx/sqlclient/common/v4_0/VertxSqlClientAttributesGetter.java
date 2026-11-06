@@ -6,15 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
-import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
-import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
-import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlResponseStatusCodeUtil;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -24,15 +20,15 @@ import javax.annotation.Nullable;
 class VertxSqlClientAttributesGetter
     implements SqlClientAttributesGetter<VertxSqlClientRequest, Void> {
 
-  private static final Function<Throwable, String> responseStatusExtractor =
-      createResponseStatusExtractor(false);
-  private static final Function<Throwable, String> dbResponseStatusExtractor =
-      createResponseStatusExtractor(true);
-  private static final Function<Throwable, String> mysqlDbResponseStatusExtractor =
-      responseStatusExtractor("io.vertx.mysqlclient.MySQLException", "getSqlState", true);
-  private static final Function<Throwable, String> db2DbResponseStatusExtractor =
-      responseStatusExtractor("io.vertx.db2client.DB2Exception", "getSqlState", true);
-  private static final Function<Throwable, String> dbResponseErrorCodeExtractor =
+  private static final Function<Throwable, String> errorTypeExtractor =
+      createSqlStateExtractor(false);
+  private static final Function<Throwable, String> dbResponseStatusCodeExtractor =
+      createSqlStateExtractor(true);
+  private static final Function<Throwable, String> mysqlSqlStateExtractor =
+      sqlStateExtractor("io.vertx.mysqlclient.MySQLException", "getSqlState", true);
+  private static final Function<Throwable, String> db2SqlStateExtractor =
+      sqlStateExtractor("io.vertx.db2client.DB2Exception", "getSqlState", true);
+  private static final Function<Throwable, String> vendorResponseStatusCodeExtractor =
       createNonZeroErrorCodeExtractor();
 
   @Override
@@ -78,7 +74,7 @@ class VertxSqlClientAttributesGetter
   @Override
   public String getErrorType(
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
-    return responseStatusExtractor.apply(error);
+    return errorTypeExtractor.apply(error);
   }
 
   @Nullable
@@ -87,35 +83,18 @@ class VertxSqlClientAttributesGetter
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
     String dbSystemName = request.getDbSystemName();
     String sqlState = getAvailableSqlState(error);
-    String errorCode = dbResponseErrorCodeExtractor.apply(error);
-
-    if (prefersVendorCode(dbSystemName) && errorCode != null) {
-      return errorCode;
-    }
-    if (POSTGRESQL.equals(dbSystemName) && sqlState != null) {
-      return sqlState;
-    }
-    if (sqlState != null && errorCode != null) {
-      return sqlState + "/" + errorCode;
-    }
-    return sqlState != null ? sqlState : errorCode;
-  }
-
-  private static boolean prefersVendorCode(String dbSystemName) {
-    return MYSQL.equals(dbSystemName)
-        || ORACLE_DB.equals(dbSystemName)
-        || MICROSOFT_SQL_SERVER.equals(dbSystemName)
-        || IBM_DB2.equals(dbSystemName);
+    String vendorCode = vendorResponseStatusCodeExtractor.apply(error);
+    return SqlResponseStatusCodeUtil.getResponseStatusCode(dbSystemName, sqlState, vendorCode);
   }
 
   @Nullable
   private static String getAvailableSqlState(@Nullable Throwable error) {
-    String sqlState = dbResponseStatusExtractor.apply(error);
+    String sqlState = dbResponseStatusCodeExtractor.apply(error);
     if (sqlState == null || sqlState.isEmpty()) {
-      sqlState = mysqlDbResponseStatusExtractor.apply(error);
+      sqlState = mysqlSqlStateExtractor.apply(error);
     }
     if (sqlState == null || sqlState.isEmpty()) {
-      sqlState = db2DbResponseStatusExtractor.apply(error);
+      sqlState = db2SqlStateExtractor.apply(error);
     }
     return sqlState == null || sqlState.isEmpty() ? null : sqlState;
   }
@@ -126,13 +105,12 @@ class VertxSqlClientAttributesGetter
     return request.isParameterizedQuery();
   }
 
-  private static Function<Throwable, String> createResponseStatusExtractor(boolean preserveNull) {
+  private static Function<Throwable, String> createSqlStateExtractor(boolean preserveNull) {
     Function<Throwable, String> extractor =
-        responseStatusExtractor(
-            "io.vertx.sqlclient.DatabaseException", "getSqlState", preserveNull);
+        sqlStateExtractor("io.vertx.sqlclient.DatabaseException", "getSqlState", preserveNull);
     // older versions only have this method
     Function<Throwable, String> fallback =
-        responseStatusExtractor("io.vertx.pgclient.PgException", "getCode", preserveNull);
+        sqlStateExtractor("io.vertx.pgclient.PgException", "getCode", preserveNull);
     return error -> {
       String status = extractor.apply(error);
       return status != null ? status : fallback.apply(error);
@@ -191,7 +169,7 @@ class VertxSqlClientAttributesGetter
     }
   }
 
-  private static Function<Throwable, String> responseStatusExtractor(
+  private static Function<Throwable, String> sqlStateExtractor(
       String className, String methodName, boolean preserveNull) {
     try {
       // loaded via reflection, because this class is not available in all versions that we support

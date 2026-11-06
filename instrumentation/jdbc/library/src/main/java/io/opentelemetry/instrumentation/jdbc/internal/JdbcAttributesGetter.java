@@ -6,14 +6,11 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
-import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MARIADB;
-import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
-import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
-import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlResponseStatusCodeUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -25,11 +22,6 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
-
-  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
-  private static final String IBM_DB2 = "ibm.db2";
-  private static final String ORACLE_DB = "oracle.db";
-  private static final String SQLITE = "sqlite";
 
   @Override
   public String getDbSystemName(DbRequest request) {
@@ -79,30 +71,8 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
     String dbSystemName = getDbSystemName(request);
     String sqlState = getAvailableSqlState(sqlException);
     int errorCode = sqlException.getErrorCode();
-    boolean hasErrorCode = errorCode != 0;
-
-    if (prefersVendorCode(dbSystemName) && hasErrorCode) {
-      return Integer.toString(errorCode);
-    }
-    if (POSTGRESQL.equals(dbSystemName) && sqlState != null) {
-      return sqlState;
-    }
-    if (sqlState != null && hasErrorCode) {
-      return sqlState + "/" + errorCode;
-    }
-    if (sqlState != null) {
-      return sqlState;
-    }
-    return hasErrorCode ? Integer.toString(errorCode) : null;
-  }
-
-  private static boolean prefersVendorCode(String dbSystemName) {
-    return IBM_DB2.equals(dbSystemName)
-        || MARIADB.equals(dbSystemName)
-        || MICROSOFT_SQL_SERVER.equals(dbSystemName)
-        || MYSQL.equals(dbSystemName)
-        || ORACLE_DB.equals(dbSystemName)
-        || SQLITE.equals(dbSystemName);
+    String vendorCode = errorCode == 0 ? null : Integer.toString(errorCode);
+    return SqlResponseStatusCodeUtil.getResponseStatusCode(dbSystemName, sqlState, vendorCode);
   }
 
   @Nullable
