@@ -121,26 +121,22 @@ val targets = mapOf(
     ImageTarget(
       listOf("7.0.109"),
       listOf("hotspot", "openj9"),
-      listOf("8"),
-      mapOf("majorVersion" to "7")
+      listOf("8")
     ),
     ImageTarget(
       listOf("8.5.98"),
       listOf("hotspot", "openj9"),
-      listOf("8", "11", "17", "21", "25", latestJava),
-      mapOf("majorVersion" to "8")
+      listOf("8", "11", "17", "21", "25", latestJava)
     ),
     ImageTarget(
       listOf("9.0.111"),
       listOf("hotspot", "openj9"),
-      listOf("8", "11", "17", "21", "25", latestJava),
-      mapOf("majorVersion" to "9")
+      listOf("8", "11", "17", "21", "25", latestJava)
     ),
     ImageTarget(
       listOf("10.1.48"),
       listOf("hotspot", "openj9"),
       listOf("11", "17", "21", "25", latestJava),
-      mapOf("majorVersion" to "10"),
       "servlet-5.0"
     ),
   ),
@@ -355,6 +351,14 @@ fun configureImage(
   val jdkImageHash = if (jdkImageParts.size > 1) jdkImageParts[1].removePrefix("sha256:") else ""
 
   val extraArgs = args.toMutableMap()
+
+  if (server == "tomcat" && isWindows) {
+    extraArgs["tomcatDownloadUrl"] = if (version == "7.0.109") {
+      "https://archive.apache.org/dist/tomcat/tomcat-7/v7.0.109/bin/apache-tomcat-7.0.109-windows-x64.zip"
+    } else {
+      "https://repo.maven.apache.org/maven2/org/apache/tomcat/tomcat/$version/tomcat-$version-windows-x64.zip"
+    }
+  }
 
   // Pass the full image name with tag (for servers that need it)
   if (imageNameWithTag.contains(":")) {
