@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0;
 
 import static io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0.VirtualFields.ENVELOPE_PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -24,7 +25,8 @@ class PekkoDispatcherInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.pekko.dispatch.Dispatcher");
+    return namedOneOf(
+        "org.apache.pekko.dispatch.Dispatcher", "org.apache.pekko.dispatch.BalancingDispatcher");
   }
 
   @Override
