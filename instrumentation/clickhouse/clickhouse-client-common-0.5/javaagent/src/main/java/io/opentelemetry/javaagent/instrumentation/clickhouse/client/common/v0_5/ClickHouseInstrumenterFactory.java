@@ -21,9 +21,9 @@ import java.util.function.Function;
 public class ClickHouseInstrumenterFactory {
 
   public static Instrumenter<ClickHouseDbRequest, Void> createInstrumenter(
-      String instrumenterName, Function<Throwable, String> errorTypeExtractor) {
+      String instrumenterName, Function<Throwable, String> errorCodeExtractor) {
     ClickHouseAttributesGetter dbAttributesGetter =
-        new ClickHouseAttributesGetter(errorTypeExtractor);
+        new ClickHouseAttributesGetter(errorCodeExtractor);
 
     InstrumenterBuilder<ClickHouseDbRequest, Void> builder =
         Instrumenter.<ClickHouseDbRequest, Void>builder(

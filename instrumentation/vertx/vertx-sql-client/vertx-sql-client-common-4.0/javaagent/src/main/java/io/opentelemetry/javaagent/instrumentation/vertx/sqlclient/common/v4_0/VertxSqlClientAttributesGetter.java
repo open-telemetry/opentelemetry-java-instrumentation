@@ -22,13 +22,13 @@ class VertxSqlClientAttributesGetter
 
   private static final Function<Throwable, String> errorTypeExtractor =
       createSqlStateExtractor(false);
-  private static final Function<Throwable, String> dbResponseStatusCodeExtractor =
+  private static final Function<Throwable, String> sqlStateExtractor =
       createSqlStateExtractor(true);
   private static final Function<Throwable, String> mysqlSqlStateExtractor =
       sqlStateExtractor("io.vertx.mysqlclient.MySQLException", "getSqlState", true);
   private static final Function<Throwable, String> db2SqlStateExtractor =
       sqlStateExtractor("io.vertx.db2client.DB2Exception", "getSqlState", true);
-  private static final Function<Throwable, String> vendorResponseStatusCodeExtractor =
+  private static final Function<Throwable, String> vendorCodeExtractor =
       createNonZeroErrorCodeExtractor();
 
   @Override
@@ -83,13 +83,13 @@ class VertxSqlClientAttributesGetter
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
     String dbSystemName = request.getDbSystemName();
     String sqlState = getAvailableSqlState(error);
-    String vendorCode = vendorResponseStatusCodeExtractor.apply(error);
+    String vendorCode = vendorCodeExtractor.apply(error);
     return SqlResponseStatusCodeUtil.getResponseStatusCode(dbSystemName, sqlState, vendorCode);
   }
 
   @Nullable
   private static String getAvailableSqlState(@Nullable Throwable error) {
-    String sqlState = dbResponseStatusCodeExtractor.apply(error);
+    String sqlState = sqlStateExtractor.apply(error);
     if (sqlState == null || sqlState.isEmpty()) {
       sqlState = mysqlSqlStateExtractor.apply(error);
     }

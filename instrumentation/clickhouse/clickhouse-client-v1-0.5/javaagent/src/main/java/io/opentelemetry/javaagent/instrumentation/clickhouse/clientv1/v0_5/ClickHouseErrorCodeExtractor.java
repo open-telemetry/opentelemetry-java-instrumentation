@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 final class ClickHouseErrorCodeExtractor {
 
   @Nullable
-  static String getErrorType(@Nullable Throwable error) {
+  static String getErrorCode(@Nullable Throwable error) {
     if (error instanceof ClickHouseException) {
       int errorCode = ((ClickHouseException) error).getErrorCode();
       return errorCode == 0 ? null : Integer.toString(errorCode);

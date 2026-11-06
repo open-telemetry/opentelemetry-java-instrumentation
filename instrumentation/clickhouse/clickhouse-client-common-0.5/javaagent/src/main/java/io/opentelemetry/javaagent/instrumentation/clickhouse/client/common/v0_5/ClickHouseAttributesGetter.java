@@ -18,10 +18,10 @@ import javax.annotation.Nullable;
 
 class ClickHouseAttributesGetter implements SqlClientAttributesGetter<ClickHouseDbRequest, Void> {
 
-  private final Function<Throwable, String> errorTypeExtractor;
+  private final Function<Throwable, String> errorCodeExtractor;
 
-  ClickHouseAttributesGetter(Function<Throwable, String> errorTypeExtractor) {
-    this.errorTypeExtractor = errorTypeExtractor;
+  ClickHouseAttributesGetter(Function<Throwable, String> errorCodeExtractor) {
+    this.errorCodeExtractor = errorCodeExtractor;
   }
 
   @Override
@@ -56,14 +56,14 @@ class ClickHouseAttributesGetter implements SqlClientAttributesGetter<ClickHouse
   @Override
   public String getErrorType(
       ClickHouseDbRequest request, @Nullable Void response, @Nullable Throwable error) {
-    return errorTypeExtractor.apply(error);
+    return errorCodeExtractor.apply(error);
   }
 
   @Nullable
   @Override
   public String getDbResponseStatusCode(
       ClickHouseDbRequest request, @Nullable Void response, @Nullable Throwable error) {
-    return errorTypeExtractor.apply(error);
+    return errorCodeExtractor.apply(error);
   }
 
   @Nullable

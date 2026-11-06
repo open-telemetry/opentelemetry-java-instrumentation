@@ -69,16 +69,10 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Nullable
   private String getDbResponseStatusCode(DbRequest request, SQLException sqlException) {
     String dbSystemName = getDbSystemName(request);
-    String sqlState = getAvailableSqlState(sqlException);
+    String sqlState = sqlException.getSQLState();
     int errorCode = sqlException.getErrorCode();
     String vendorCode = errorCode == 0 ? null : Integer.toString(errorCode);
     return SqlResponseStatusCodeUtil.getResponseStatusCode(dbSystemName, sqlState, vendorCode);
-  }
-
-  @Nullable
-  private static String getAvailableSqlState(SQLException sqlException) {
-    String sqlState = sqlException.getSQLState();
-    return sqlState == null || sqlState.isEmpty() ? null : sqlState;
   }
 
   @Nullable

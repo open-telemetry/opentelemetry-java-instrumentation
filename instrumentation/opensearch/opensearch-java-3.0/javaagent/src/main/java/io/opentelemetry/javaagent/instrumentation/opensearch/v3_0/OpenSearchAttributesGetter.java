@@ -42,7 +42,7 @@ final class OpenSearchAttributesGetter
   @Nullable
   public String getErrorType(
       OpenSearchRequest request, @Nullable Void response, @Nullable Throwable error) {
-    Integer statusCode = getErrorCode(error);
+    Integer statusCode = getStatusCode(error);
     return statusCode != null && (statusCode >= 400 || statusCode < 100)
         ? statusCode.toString()
         : null;
@@ -52,7 +52,7 @@ final class OpenSearchAttributesGetter
   @Nullable
   public String getDbResponseStatusCode(
       OpenSearchRequest request, @Nullable Void response, @Nullable Throwable error) {
-    Integer statusCode = getErrorCode(error);
+    Integer statusCode = getStatusCode(error);
     return statusCode != null ? statusCode.toString() : null;
   }
 
@@ -71,7 +71,7 @@ final class OpenSearchAttributesGetter
   }
 
   @Nullable
-  private static Integer getErrorCode(@Nullable Throwable error) {
+  private static Integer getStatusCode(@Nullable Throwable error) {
     if (error instanceof CompletionException) {
       error = error.getCause();
     }

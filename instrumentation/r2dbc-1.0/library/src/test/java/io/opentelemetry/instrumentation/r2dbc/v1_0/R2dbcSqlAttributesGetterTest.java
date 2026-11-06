@@ -19,7 +19,7 @@ import io.r2dbc.proxy.test.MockConnectionInfo;
 import io.r2dbc.proxy.test.MockQueryExecutionInfo;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import io.r2dbc.spi.R2dbcBadGrammarException;
-import java.lang.reflect.Constructor;
+import io.r2dbc.spi.R2dbcException;
 import java.util.Collection;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -51,34 +51,14 @@ class R2dbcSqlAttributesGetterTest {
             new R2dbcBadGrammarException("test", "42601", 42),
             "42601",
             "42601"),
+        argumentSet(
+            "ordinary SPI exception exposes SQLSTATE",
+            new R2dbcException("test", "08006", 0) {},
+            "08006",
+            "08006"),
         argumentSet("no SQLSTATE", new R2dbcBadGrammarException("test"), null, null),
         argumentSet("non-database failure", new IllegalStateException("test"), null, null),
         argumentSet("success", null, null, null));
-  }
-
-  @Test
-  void capturesPostgresqlClosedConnectionCodeWithoutChangingErrorType()
-      throws ReflectiveOperationException {
-    DbExecution request =
-        new DbExecution(
-            queryExecutionInfo(),
-            ConnectionFactoryOptions.parse("r2dbc:postgresql://localhost/db"));
-    Throwable error = postgresqlConnectionClosedException();
-
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo("08006");
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("08006");
-  }
-
-  @Test
-  void keepsPostgresqlServerConnectionFailureCode() throws ReflectiveOperationException {
-    DbExecution request =
-        new DbExecution(
-            queryExecutionInfo(),
-            ConnectionFactoryOptions.parse("r2dbc:postgresql://localhost/db"));
-    Throwable error = postgresqlServerConnectionFailure();
-
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo("08006");
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("08006");
   }
 
   @ParameterizedTest
@@ -160,31 +140,6 @@ class R2dbcSqlAttributesGetterTest {
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("00000");
     assertThat(getter.getErrorType(request, null, error)).isEqualTo("00000");
-  }
-
-  private static Throwable postgresqlConnectionClosedException()
-      throws ReflectiveOperationException {
-    Class<?> exceptionClass =
-        Class.forName(
-            "io.r2dbc.postgresql.client.ReactorNettyClient$PostgresConnectionClosedException");
-    Constructor<?> constructor = exceptionClass.getDeclaredConstructor(String.class);
-    constructor.setAccessible(true);
-    return (Throwable) constructor.newInstance("Connection closed");
-  }
-
-  private static Throwable postgresqlServerConnectionFailure() throws ReflectiveOperationException {
-    Class<?> errorDetailsClass = Class.forName("io.r2dbc.postgresql.api.ErrorDetails");
-    Object errorDetails =
-        errorDetailsClass
-            .getMethod("fromCodeAndMessage", String.class, String.class)
-            .invoke(null, "08006", "Server connection failure");
-    Class<?> exceptionClass =
-        Class.forName(
-            "io.r2dbc.postgresql.ExceptionFactory$PostgresqlNonTransientResourceException");
-    Constructor<?> constructor =
-        exceptionClass.getDeclaredConstructor(errorDetailsClass, String.class);
-    constructor.setAccessible(true);
-    return (Throwable) constructor.newInstance(errorDetails, "SELECT 1");
   }
 
   @Test

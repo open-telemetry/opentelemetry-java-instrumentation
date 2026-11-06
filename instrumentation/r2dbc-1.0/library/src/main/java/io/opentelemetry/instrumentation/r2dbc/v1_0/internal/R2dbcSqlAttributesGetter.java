@@ -61,7 +61,7 @@ public final class R2dbcSqlAttributesGetter
       DbExecution request, @Nullable Void response, @Nullable Throwable error) {
     String dbSystemName = getDbSystemName(request);
     int errorCode = getErrorCode(error);
-    String sqlState = getAvailableSqlState(error);
+    String sqlState = getSqlState(error);
     String vendorCode = errorCode == 0 ? null : Integer.toString(errorCode);
     return SqlResponseStatusCodeUtil.getResponseStatusCode(dbSystemName, sqlState, vendorCode);
   }
@@ -76,12 +76,6 @@ public final class R2dbcSqlAttributesGetter
       return ((R2dbcException) error).getSqlState();
     }
     return null;
-  }
-
-  @Nullable
-  private static String getAvailableSqlState(@Nullable Throwable error) {
-    String sqlState = getSqlState(error);
-    return sqlState == null || sqlState.isEmpty() ? null : sqlState;
   }
 
   @Nullable

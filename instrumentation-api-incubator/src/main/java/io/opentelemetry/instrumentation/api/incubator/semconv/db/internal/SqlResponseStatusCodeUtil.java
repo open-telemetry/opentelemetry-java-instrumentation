@@ -20,9 +20,7 @@ public final class SqlResponseStatusCodeUtil {
 
   // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String IBM_DB2 = "ibm.db2";
-  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String ORACLE_DB = "oracle.db";
-  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
   private static final String SQLITE = "sqlite";
 
   @Nullable

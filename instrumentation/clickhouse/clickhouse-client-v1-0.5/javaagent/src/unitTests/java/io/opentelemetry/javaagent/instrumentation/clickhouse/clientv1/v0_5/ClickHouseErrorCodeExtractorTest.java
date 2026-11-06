@@ -31,16 +31,16 @@ class ClickHouseErrorCodeExtractorTest {
     ClickHouseException response = ClickHouseException.of(message, null);
     ClickHouseException wrappedResponse = ClickHouseException.of(new IOException(message), null);
 
-    assertThat(ClickHouseErrorCodeExtractor.getErrorType(response))
+    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(response))
         .isEqualTo(Integer.toString(code));
-    assertThat(ClickHouseErrorCodeExtractor.getErrorType(wrappedResponse))
+    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(wrappedResponse))
         .isEqualTo(Integer.toString(code));
   }
 
   @ParameterizedTest
   @MethodSource("clientFailures")
   void retainsSuppliedClientCodes(ClickHouseException error, String expectedCode) {
-    assertThat(ClickHouseErrorCodeExtractor.getErrorType(error)).isEqualTo(expectedCode);
+    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(error)).isEqualTo(expectedCode);
   }
 
   private static Stream<Arguments> clientFailures() {
@@ -81,8 +81,8 @@ class ClickHouseErrorCodeExtractorTest {
 
   @Test
   void omitsUnavailableCodes() {
-    assertThat(ClickHouseErrorCodeExtractor.getErrorType(null)).isNull();
-    assertThat(ClickHouseErrorCodeExtractor.getErrorType(new IllegalStateException("test")))
+    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(null)).isNull();
+    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(new IllegalStateException("test")))
         .isNull();
   }
 
@@ -90,6 +90,6 @@ class ClickHouseErrorCodeExtractorTest {
   void omitsZeroCode() {
     ClickHouseException error = new ClickHouseException(0, "test", null);
 
-    assertThat(ClickHouseErrorCodeExtractor.getErrorType(error)).isNull();
+    assertThat(ClickHouseErrorCodeExtractor.getErrorCode(error)).isNull();
   }
 }

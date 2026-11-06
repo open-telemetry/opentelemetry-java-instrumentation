@@ -13,9 +13,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.vertx.sqlclient.DatabaseException;
-import java.io.IOException;
-import java.net.ConnectException;
-import java.sql.SQLException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -27,22 +24,7 @@ class VertxSqlClientAttributesGetterTest {
 
   @Test
   void capturesOracleConnectionStatusWithoutChangingErrorType() {
-    SQLException cause =
-        new SQLException(
-            "No listener",
-            "66000",
-            12541,
-            new IOException("Oracle network failure", new ConnectException("Connection refused")));
-    DatabaseException error = new DatabaseException("No listener", 12541, "66000", cause) {};
-
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo("66000");
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("12541");
-  }
-
-  @Test
-  void keepsServerStatusWithoutTransportFailure() {
-    SQLException cause = new SQLException("Server failure", "66000", 12541);
-    DatabaseException error = new DatabaseException("Server failure", 12541, "66000", cause) {};
+    DatabaseException error = new DatabaseException("No listener", 12541, "66000") {};
 
     assertThat(getter.getErrorType(request, null, error)).isEqualTo("66000");
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("12541");
@@ -111,15 +93,6 @@ class VertxSqlClientAttributesGetterTest {
 
     assertThat(getter.getErrorType(request, null, error)).isEqualTo("null");
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isNull();
-  }
-
-  @Test
-  void handlesCyclicCauseChain() {
-    SQLException cause = new SQLException("Server failure", "66000", 12541);
-    DatabaseException error = new DatabaseException("Server failure", 12541, "66000", cause) {};
-    cause.initCause(error);
-
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("12541");
   }
 
   private static VertxSqlClientRequest request(String dbSystemName) {
