@@ -30,6 +30,11 @@ class SnippetInjectingPrintWriterTest {
           }
 
           @Override
+          public boolean isCurrentRequest() {
+            return true;
+          }
+
+          @Override
           public void updateContentLengthIfPreviouslySet() {}
 
           @Override
