@@ -82,9 +82,10 @@ class DynamoDbAttributesGetter implements DbClientAttributesGetter<ExecutionAttr
       @Nullable Response response,
       @Nullable Throwable error) {
     String serviceErrorCode = getServiceErrorCode(error);
-    return serviceErrorCode != null
-        ? serviceErrorCode
-        : error == null ? null : error.getClass().getName();
+    if (serviceErrorCode != null) {
+      return serviceErrorCode;
+    }
+    return error == null ? null : error.getClass().getName();
   }
 
   @Nullable

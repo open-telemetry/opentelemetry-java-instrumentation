@@ -89,12 +89,16 @@ class DbClientMetricsTest {
     Map<String, String> request = singletonMap("db.system.name", "myDb");
     Throwable error = classification.equals("success") ? null : new IllegalStateException();
     String expectedErrorType = getter.getErrorType(request, null, error);
+    String expectedClassification;
+    if (classification.equals("custom")) {
+      expectedClassification = "CUSTOM";
+    } else if (classification.equals("default")) {
+      expectedClassification = IllegalStateException.class.getName();
+    } else {
+      expectedClassification = null;
+    }
     // Check the contract independently of the getter used by both telemetry signals.
-    assertThat(expectedErrorType)
-        .isEqualTo(
-            classification.equals("custom")
-                ? "CUSTOM"
-                : classification.equals("default") ? IllegalStateException.class.getName() : null);
+    assertThat(expectedErrorType).isEqualTo(expectedClassification);
 
     Context context = instrumenter.start(Context.root(), request);
     instrumenter.end(context, request, null, error);

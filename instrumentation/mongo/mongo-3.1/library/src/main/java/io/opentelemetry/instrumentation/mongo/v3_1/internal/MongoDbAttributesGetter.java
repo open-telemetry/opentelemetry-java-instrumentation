@@ -180,7 +180,10 @@ class MongoDbAttributesGetter
       @Nullable CommandSucceededEvent response,
       @Nullable Throwable error) {
     String errorCode = getServerErrorCode(response, error);
-    return errorCode != null ? errorCode : error == null ? null : error.getClass().getName();
+    if (errorCode != null) {
+      return errorCode;
+    }
+    return error == null ? null : error.getClass().getName();
   }
 
   @Nullable

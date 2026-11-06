@@ -43,9 +43,10 @@ final class OpenSearchAttributesGetter
   public String getErrorType(
       OpenSearchRequest request, @Nullable Void response, @Nullable Throwable error) {
     Integer statusCode = getStatusCode(error);
-    return statusCode != null && (statusCode >= 400 || statusCode < 100)
-        ? statusCode.toString()
-        : error == null ? null : error.getClass().getName();
+    if (statusCode != null && (statusCode >= 400 || statusCode < 100)) {
+      return statusCode.toString();
+    }
+    return error == null ? null : error.getClass().getName();
   }
 
   @Override
