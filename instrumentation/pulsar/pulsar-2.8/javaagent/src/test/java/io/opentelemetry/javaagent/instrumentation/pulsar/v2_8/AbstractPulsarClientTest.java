@@ -45,6 +45,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
@@ -62,6 +63,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.InvocationHandlerAdapter;
 import org.apache.pulsar.PulsarVersion;
@@ -417,28 +419,33 @@ abstract class AbstractPulsarClientTest {
     CompletableFuture<MessageId> future = new CompletableFuture<>();
     InvocationHandler handler =
         (proxy, method, args) -> {
-          switch (method.getName()) {
-            case "getFuture":
-              return future;
-            case "getNextSendCallback":
-            case "getNextMessage":
-            case "addCallback":
-              return null;
-            case "sendComplete":
-              Throwable error = (Throwable) args[0];
-              callbackContext.set(Context.current());
-              callbackError.set(error);
-              if (error == null) {
-                future.complete(null);
-              } else {
-                future.completeExceptionally(error);
-              }
-              completed.countDown();
-              return null;
-            default:
-              throw new UnsupportedOperationException(method.getName());
+          String methodName = method.getName();
+          if (methodName.equals("getFuture")) {
+            return future;
           }
+          if (methodName.equals("getNextSendCallback")
+              || methodName.equals("getNextMessage")
+              || methodName.equals("addCallback")) {
+            return null;
+          }
+          if (methodName.equals("sendComplete")) {
+            Throwable error = (Throwable) args[0];
+            callbackContext.set(Context.current());
+            callbackError.set(error);
+            if (error == null) {
+              future.complete(null);
+            } else {
+              future.completeExceptionally(error);
+            }
+            completed.countDown();
+            return null;
+          }
+          throw new UnsupportedOperationException(methodName);
         };
+    ClassLoadingStrategy<ClassLoader> classLoadingStrategy =
+        ClassFileVersion.ofThisVm().isAtLeast(ClassFileVersion.JAVA_V9)
+            ? ClassLoadingStrategy.UsingLookup.of(MethodHandles.lookup())
+            : ClassLoadingStrategy.Default.INJECTION;
     SendCallback callback;
     try {
       callback =
@@ -453,7 +460,7 @@ abstract class AbstractPulsarClientTest {
                   .method(isAbstract())
                   .intercept(InvocationHandlerAdapter.of(handler))
                   .make()
-                  .load(SendCallback.class.getClassLoader(), ClassLoadingStrategy.Default.INJECTION)
+                  .load(SendCallback.class.getClassLoader(), classLoadingStrategy)
                   .getLoaded()
                   .getDeclaredConstructor()
                   .newInstance());
@@ -648,7 +655,7 @@ abstract class AbstractPulsarClientTest {
         client
             .newProducer(Schema.STRING)
             .topic(topic)
-            .enableBatching(batching || failure)
+            .enableBatching(batching)
             .batchingMaxPublishDelay(1, HOURS)
             .intercept(
                 new ProducerInterceptor() {
@@ -686,6 +693,9 @@ abstract class AbstractPulsarClientTest {
                   }
                 })
             .create();
+    if (failure) {
+      admin.topics().terminateTopic(topic);
+    }
     Runnable send =
         () -> {
           caller.set(
@@ -729,10 +739,7 @@ abstract class AbstractPulsarClientTest {
       assertThat(preparationBaggage).containsOnly("caller");
       SpanContext callerSpanContext = Span.fromContext(caller.get()).getSpanContext();
       assertThat(preparations).containsOnly(callerSpanContext);
-      if (failure) {
-        admin.topics().terminateTopic(topic);
-      }
-      if (batching || failure) {
+      if (batching) {
         producer.flushAsync();
       }
       assertThat(acknowledged.await(1, MINUTES)).isTrue();
