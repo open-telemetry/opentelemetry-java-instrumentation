@@ -40,6 +40,9 @@ final class DubboRpcStatus {
   }
 
   static boolean isError(String statusCode, boolean isClient) {
+    // Triple follows gRPC semantic conventions: all non-OK statuses are client errors,
+    // but only the statuses listed below are server errors.
+    // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/grpc.md#spans
     if (isClient) {
       return !"OK".equals(statusCode);
     }
