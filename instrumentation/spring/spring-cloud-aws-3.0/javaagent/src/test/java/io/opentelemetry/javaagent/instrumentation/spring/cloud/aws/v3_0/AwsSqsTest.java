@@ -102,117 +102,112 @@ class AwsSqsTest {
     Message<String> result = messageFuture.get(10, SECONDS);
     assertThat(result.getPayload()).isEqualTo(messageContent);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("Sqs.GetQueueUrl")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, "aws-api"),
-                            equalTo(RPC_METHOD, "GetQueueUrl"),
-                            equalTo(RPC_SERVICE, "Sqs"),
-                            equalTo(HTTP_REQUEST_METHOD, POST),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
-                            satisfies(
-                                URL_FULL,
-                                val ->
-                                    val.startsWith(
-                                        "http://localhost:" + AwsSqsTestApplication.sqsPort)),
-                            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
-                span ->
-                    span.hasName("send test-queue")
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, "aws-api"),
-                            equalTo(RPC_METHOD, "SendMessage"),
-                            equalTo(RPC_SERVICE, "Sqs"),
-                            equalTo(HTTP_REQUEST_METHOD, POST),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
-                            satisfies(
-                                URL_FULL,
-                                val ->
-                                    val.startsWith(
-                                        "http://localhost:" + AwsSqsTestApplication.sqsPort)),
-                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "test-queue"),
-                            equalTo(
-                                AWS_SQS_QUEUE_URL,
-                                "http://localhost:"
-                                    + AwsSqsTestApplication.sqsPort
-                                    + "/000000000000/test-queue"),
-                            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
-                span -> {
-                  span.hasName("process test-queue")
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasParent(trace.getSpan(2))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(RPC_SYSTEM, "aws-api"),
-                          equalTo(RPC_METHOD, "ReceiveMessage"),
-                          equalTo(RPC_SERVICE, "Sqs"),
-                          equalTo(HTTP_REQUEST_METHOD, POST),
-                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                          equalTo(SERVER_ADDRESS, "localhost"),
-                          equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
-                          satisfies(
-                              URL_FULL,
-                              val ->
-                                  val.startsWith(
-                                      "http://localhost:" + AwsSqsTestApplication.sqsPort)),
-                          equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                          satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                          equalTo(MESSAGING_OPERATION_NAME, "process"),
-                          equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                          equalTo(MESSAGING_DESTINATION_NAME, "test-queue"));
-                  span.hasLinksSatisfying(
-                      links ->
-                          assertThat(links)
-                              .singleElement()
-                              .satisfies(
-                                  link ->
-                                      assertThat(link.getSpanContext().getSpanId())
-                                          .isEqualTo(trace.getSpan(2).getSpanId())));
-                },
-                span ->
-                    span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(3)),
-                span ->
-                    span.hasName("delete test-queue")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(2))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, "aws-api"),
-                            equalTo(RPC_METHOD, "DeleteMessageBatch"),
-                            equalTo(RPC_SERVICE, "Sqs"),
-                            equalTo(HTTP_REQUEST_METHOD, POST),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
-                            satisfies(
-                                URL_FULL,
-                                val ->
-                                    val.startsWith(
-                                        "http://localhost:" + AwsSqsTestApplication.sqsPort)),
-                            equalTo(
-                                AWS_SQS_QUEUE_URL,
-                                "http://localhost:"
-                                    + AwsSqsTestApplication.sqsPort
-                                    + "/000000000000/test-queue"),
-                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "test-queue"),
-                            equalTo(MESSAGING_OPERATION_NAME, "delete"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "settle"),
-                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(1)),
-                            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("Sqs.GetQueueUrl")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(RPC_SYSTEM, "aws-api"),
+                        equalTo(RPC_METHOD, "GetQueueUrl"),
+                        equalTo(RPC_SERVICE, "Sqs"),
+                        equalTo(HTTP_REQUEST_METHOD, POST),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+                        satisfies(
+                            URL_FULL,
+                            val ->
+                                val.startsWith(
+                                    "http://localhost:" + AwsSqsTestApplication.sqsPort)),
+                        satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
+            span ->
+                span.hasName("send test-queue")
+                    .hasKind(SpanKind.PRODUCER)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(RPC_SYSTEM, "aws-api"),
+                        equalTo(RPC_METHOD, "SendMessage"),
+                        equalTo(RPC_SERVICE, "Sqs"),
+                        equalTo(HTTP_REQUEST_METHOD, POST),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+                        satisfies(
+                            URL_FULL,
+                            val ->
+                                val.startsWith(
+                                    "http://localhost:" + AwsSqsTestApplication.sqsPort)),
+                        equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                        satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                        equalTo(MESSAGING_OPERATION_NAME, "send"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                        equalTo(MESSAGING_DESTINATION_NAME, "test-queue"),
+                        equalTo(
+                            AWS_SQS_QUEUE_URL,
+                            "http://localhost:"
+                                + AwsSqsTestApplication.sqsPort
+                                + "/000000000000/test-queue"),
+                        satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class))),
+            span -> {
+              span.hasName("process test-queue")
+                  .hasKind(SpanKind.CONSUMER)
+                  .hasParent(trace.getSpan(2))
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM, "aws-api"),
+                      equalTo(RPC_METHOD, "ReceiveMessage"),
+                      equalTo(RPC_SERVICE, "Sqs"),
+                      equalTo(HTTP_REQUEST_METHOD, POST),
+                      equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                      equalTo(SERVER_ADDRESS, "localhost"),
+                      equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+                      satisfies(
+                          URL_FULL,
+                          val ->
+                              val.startsWith("http://localhost:" + AwsSqsTestApplication.sqsPort)),
+                      equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                      satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                      equalTo(MESSAGING_OPERATION_NAME, "process"),
+                      equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                      equalTo(MESSAGING_DESTINATION_NAME, "test-queue"));
+              span.hasLinksSatisfying(links ->
+                  assertThat(links)
+                      .singleElement()
+                      .satisfies(link ->
+                          assertThat(link.getSpanContext().getSpanId())
+                              .isEqualTo(trace.getSpan(2).getSpanId())));
+            },
+            span -> span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(3)),
+            span ->
+                span.hasName("delete test-queue")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(2))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(RPC_SYSTEM, "aws-api"),
+                        equalTo(RPC_METHOD, "DeleteMessageBatch"),
+                        equalTo(RPC_SERVICE, "Sqs"),
+                        equalTo(HTTP_REQUEST_METHOD, POST),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+                        satisfies(
+                            URL_FULL,
+                            val ->
+                                val.startsWith(
+                                    "http://localhost:" + AwsSqsTestApplication.sqsPort)),
+                        equalTo(
+                            AWS_SQS_QUEUE_URL,
+                            "http://localhost:"
+                                + AwsSqsTestApplication.sqsPort
+                                + "/000000000000/test-queue"),
+                        equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                        equalTo(MESSAGING_DESTINATION_NAME, "test-queue"),
+                        equalTo(MESSAGING_OPERATION_NAME, "delete"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "settle"),
+                        equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(1)),
+                        satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)))));
     assertConsumedMessages();
 
     testing.clearData();
@@ -230,35 +225,31 @@ class AwsSqsTest {
 
     assertThat(handler.invoked).isTrue();
     await()
-        .untilAsserted(
-            () ->
-                assertThat(testing.spans())
-                    .singleElement()
-                    .satisfies(
-                        span ->
-                            assertThat(span)
-                                .hasName("process test-queue")
-                                .hasKind(SpanKind.CONSUMER)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM, "aws-api"),
-                                    equalTo(RPC_METHOD, "ReceiveMessage"),
-                                    equalTo(RPC_SERVICE, "Sqs"),
-                                    equalTo(HTTP_REQUEST_METHOD, POST),
-                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
-                                    satisfies(
-                                        URL_FULL,
-                                        val ->
-                                            val.startsWith(
-                                                "http://localhost:"
-                                                    + AwsSqsTestApplication.sqsPort)),
-                                    equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                                    satisfies(
-                                        MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                    equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                                    equalTo(MESSAGING_DESTINATION_NAME, "test-queue"))));
+        .untilAsserted(() ->
+            assertThat(testing.spans())
+                .singleElement()
+                .satisfies(span ->
+                    assertThat(span)
+                        .hasName("process test-queue")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM, "aws-api"),
+                            equalTo(RPC_METHOD, "ReceiveMessage"),
+                            equalTo(RPC_SERVICE, "Sqs"),
+                            equalTo(HTTP_REQUEST_METHOD, POST),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+                            satisfies(
+                                URL_FULL,
+                                val ->
+                                    val.startsWith(
+                                        "http://localhost:" + AwsSqsTestApplication.sqsPort)),
+                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "test-queue"))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.aws-sdk-2.2",
         "messaging.process.duration",
@@ -278,25 +269,19 @@ class AwsSqsTest {
 
     assertThat(messageFuture.get(10, SECONDS)).containsExactly("hello");
     await()
-        .untilAsserted(
-            () ->
-                assertThat(testing.spans())
-                    .filteredOn(span -> span.getName().equals("delete batch-queue"))
-                    .hasSize(1));
+        .untilAsserted(() ->
+            assertThat(testing.spans())
+                .filteredOn(span -> span.getName().equals("delete batch-queue"))
+                .hasSize(1));
     assertThat(testing.spans())
-        .filteredOn(
-            span ->
-                span.getInstrumentationScopeInfo().getName().equals("io.opentelemetry.aws-sdk-2.2")
-                    && span.getName().equals("process batch-queue"))
+        .filteredOn(span ->
+            span.getInstrumentationScopeInfo().getName().equals("io.opentelemetry.aws-sdk-2.2")
+                && span.getName().equals("process batch-queue"))
         .isEmpty();
     assertThat(testing.metrics())
-        .filteredOn(
-            metric ->
-                metric
-                        .getInstrumentationScopeInfo()
-                        .getName()
-                        .equals("io.opentelemetry.aws-sdk-2.2")
-                    && metric.getName().equals("messaging.client.consumed.messages"))
+        .filteredOn(metric ->
+            metric.getInstrumentationScopeInfo().getName().equals("io.opentelemetry.aws-sdk-2.2")
+                && metric.getName().equals("messaging.client.consumed.messages"))
         .isEmpty();
   }
 
@@ -307,25 +292,19 @@ class AwsSqsTest {
         "io.opentelemetry.aws-sdk-2.2",
         "messaging.client.consumed.messages",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(
-                                                    stringKey("messaging.system.name"), "aws.sqs"),
-                                                equalTo(ERROR_TYPE, null),
-                                                equalTo(MESSAGING_DESTINATION_NAME, "test-queue"),
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(
-                                                    SERVER_PORT,
-                                                    AwsSqsTestApplication.sqsPort))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasLongSumSatisfying(sum ->
+                        sum.hasPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                                    equalTo(ERROR_TYPE, null),
+                                    equalTo(MESSAGING_DESTINATION_NAME, "test-queue"),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort))))));
   }
 
   private static void assertAsyncCompletion(
@@ -348,16 +327,14 @@ class AwsSqsTest {
     StatusData expectedStatus =
         completion == AsyncCompletion.SUCCESS ? StatusData.unset() : StatusData.error();
     await()
-        .untilAsserted(
-            () ->
-                assertThat(testing.spans())
-                    .singleElement()
-                    .satisfies(
-                        span ->
-                            assertThat(span)
-                                .hasName("process test-queue")
-                                .hasKind(SpanKind.CONSUMER)
-                                .hasStatus(expectedStatus)));
+        .untilAsserted(() ->
+            assertThat(testing.spans())
+                .singleElement()
+                .satisfies(span ->
+                    assertThat(span)
+                        .hasName("process test-queue")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasStatus(expectedStatus)));
   }
 
   private static CompletableFuture<Message<String>> processMessage(

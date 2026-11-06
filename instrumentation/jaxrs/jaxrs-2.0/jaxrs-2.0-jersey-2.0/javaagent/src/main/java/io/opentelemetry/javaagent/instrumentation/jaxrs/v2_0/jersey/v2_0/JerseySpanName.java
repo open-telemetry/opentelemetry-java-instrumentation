@@ -35,7 +35,7 @@ public class JerseySpanName implements HttpServerRouteGetter<Request> {
     UriInfo uriInfo = containerRequest.getUriInfo();
     ExtendedUriInfo extendedUriInfo = (ExtendedUriInfo) uriInfo;
     return extendedUriInfo.getMatchedTemplates().stream()
-        .map((uriTemplate) -> normalizePath(uriTemplate.getTemplate()))
+        .map(uriTemplate -> normalizePath(uriTemplate.getTemplate()))
         .reduce((a, b) -> b + a)
         .map(s -> ServletContextPath.prepend(context, JaxrsContextPath.prepend(context, s)))
         .orElse(null);

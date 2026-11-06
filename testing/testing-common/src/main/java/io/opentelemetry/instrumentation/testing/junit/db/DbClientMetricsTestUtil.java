@@ -29,13 +29,9 @@ public class DbClientMetricsTestUtil {
                 .hasName("db.client.operation.duration")
                 .hasUnit("s")
                 .hasDescription("Duration of database client operations.")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes.asMap())
-                                            .containsOnlyKeys(expectedKeys)))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point.hasAttributesSatisfying(attributes ->
+                            assertThat(attributes.asMap()).containsOnlyKeys(expectedKeys)))));
   }
 }

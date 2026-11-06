@@ -85,10 +85,9 @@ public class DocGeneratorApplication {
 
     long withDescriptions =
         metadata.stream()
-            .filter(
-                m ->
-                    m.getMetadata().getDescription() != null
-                        && !m.getMetadata().getDescription().isEmpty())
+            .filter(m ->
+                m.getMetadata().getDescription() != null
+                    && !m.getMetadata().getDescription().isEmpty())
             .count();
 
     long withConfigurations =
@@ -120,10 +119,9 @@ public class DocGeneratorApplication {
         .collect(groupingBy(m -> m.getMetadata().getClassification(), TreeMap::new, toList()))
         .entrySet()
         .stream()
-        .map(
-            entry ->
-                String.format(
-                    Locale.getDefault(FORMAT), "\t%s: %d", entry.getKey(), entry.getValue().size()))
+        .map(entry ->
+            String.format(
+                Locale.getDefault(FORMAT), "\t%s: %d", entry.getKey(), entry.getValue().size()))
         .collect(joining("\n"));
   }
 
@@ -150,15 +148,14 @@ public class DocGeneratorApplication {
     // checklist of all modules sorted by name, with a check if description is set
     return modules.stream()
         .sorted(Comparator.comparing(InstrumentationModule::getInstrumentationName))
-        .map(
-            module -> {
-              boolean hasDescription =
-                  module.getMetadata() != null
-                      && module.getMetadata().getDescription() != null
-                      && !module.getMetadata().getDescription().isEmpty();
-              String checkbox = hasDescription ? "- [x] " : "- [ ] ";
-              return checkbox + module.getInstrumentationName();
-            })
+        .map(module -> {
+          boolean hasDescription =
+              module.getMetadata() != null
+                  && module.getMetadata().getDescription() != null
+                  && !module.getMetadata().getDescription().isEmpty();
+          String checkbox = hasDescription ? "- [x] " : "- [ ] ";
+          return checkbox + module.getInstrumentationName();
+        })
         .collect(joining("\n"));
   }
 
@@ -167,15 +164,14 @@ public class DocGeneratorApplication {
     // checklist of all modules sorted by name, with a check if config is set
     return modules.stream()
         .sorted(Comparator.comparing(InstrumentationModule::getInstrumentationName))
-        .map(
-            module -> {
-              boolean hasDescription =
-                  module.getMetadata() != null
-                      && module.getMetadata().getConfigurations() != null
-                      && !module.getMetadata().getConfigurations().isEmpty();
-              String checkbox = hasDescription ? "- [x] " : "- [ ] ";
-              return checkbox + module.getInstrumentationName();
-            })
+        .map(module -> {
+          boolean hasDescription =
+              module.getMetadata() != null
+                  && module.getMetadata().getConfigurations() != null
+                  && !module.getMetadata().getConfigurations().isEmpty();
+          String checkbox = hasDescription ? "- [x] " : "- [ ] ";
+          return checkbox + module.getInstrumentationName();
+        })
         .collect(joining("\n"));
   }
 

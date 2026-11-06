@@ -80,18 +80,15 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
             expectedStatus);
     assertThat(responseHeaders).containsKeys("X-Test-TraceId", "X-Test-SpanId");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("HTTP")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasStatus(StatusData.unset())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, expectedStatus))
-                        .hasTraceId(responseHeaders.get("X-Test-TraceId"))
-                        .hasSpanId(responseHeaders.get("X-Test-SpanId"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("HTTP")
+                .hasKind(SpanKind.SERVER)
+                .hasNoParent()
+                .hasStatus(StatusData.unset())
+                .hasAttributesSatisfyingExactly(equalTo(HTTP_RESPONSE_STATUS_CODE, expectedStatus))
+                .hasTraceId(responseHeaders.get("X-Test-TraceId"))
+                .hasSpanId(responseHeaders.get("X-Test-SpanId"))));
   }
 
   private static Stream<Arguments> malformedRequestTargetCases() {
@@ -110,9 +107,8 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
             .newServerAt("localhost", 0)
             .bindFlow(
                 Flow.of(HttpRequest.class)
-                    .flatMapConcat(
-                        request ->
-                            request.entity().getDataBytes().map(bytes -> HttpResponse.create())))
+                    .flatMapConcat(request ->
+                        request.entity().getDataBytes().map(bytes -> HttpResponse.create())))
             .toCompletableFuture()
             .get(10, SECONDS);
     cleanup.deferCleanup(() -> binding.unbind().toCompletableFuture().get(10, SECONDS));
@@ -124,10 +120,9 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
             + "Connection: close\r\n\r\ninvalid-chunk-size\r\n",
         400);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("POST").hasKind(SpanKind.SERVER).hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("POST").hasKind(SpanKind.SERVER).hasNoParent()));
   }
 
   private static Map<String, String> assertResponse(int port, String request, int status)
@@ -164,7 +159,7 @@ class AkkaHttpServerJavaRouteTest extends AllDirectives {
                 () ->
                     concat(
                         pathSingleSlash(() -> complete("test")),
-                        path(integerSegment(), (i) -> complete("ok")))));
+                        path(integerSegment(), i -> complete("ok")))));
 
     ServerBinding binding =
         http.newServerAt("localhost", 0).bind(route).toCompletableFuture().get(10, SECONDS);

@@ -45,29 +45,21 @@ class JavaHttpServerHeaderSelectorTest {
 
     send();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasAttributesSatisfying(
-                        attributes -> {
-                          // matched by a wildcard include pattern, which requires enumerating the
-                          // request header names
-                          assertThat(headerValues(attributes, "http.request.header.x-test-request"))
-                              .containsExactly("request-value");
-                          assertThat(
-                                  headerValues(attributes, "http.request.header.x-other-request"))
-                              .isNull();
-                          // matched by an exclude-only selector, which requires enumerating the
-                          // response header names
-                          assertThat(
-                                  headerValues(attributes, "http.response.header.x-test-response"))
-                              .containsExactly("response-value");
-                          assertThat(
-                                  headerValues(
-                                      attributes, "http.response.header.x-secret-response"))
-                              .isNull();
-                        })));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasAttributesSatisfying(attributes -> {
+              // matched by a wildcard include pattern, which requires enumerating the
+              // request header names
+              assertThat(headerValues(attributes, "http.request.header.x-test-request"))
+                  .containsExactly("request-value");
+              assertThat(headerValues(attributes, "http.request.header.x-other-request")).isNull();
+              // matched by an exclude-only selector, which requires enumerating the
+              // response header names
+              assertThat(headerValues(attributes, "http.response.header.x-test-response"))
+                  .containsExactly("response-value");
+              assertThat(headerValues(attributes, "http.response.header.x-secret-response"))
+                  .isNull();
+            })));
   }
 
   @Test
@@ -81,18 +73,14 @@ class JavaHttpServerHeaderSelectorTest {
 
     send();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasAttributesSatisfying(
-                        attributes -> {
-                          assertThat(headerValues(attributes, "http.request.header.x-test-request"))
-                              .containsExactly("request-value");
-                          assertThat(
-                                  headerValues(attributes, "http.response.header.x-test-response"))
-                              .containsExactly("response-value");
-                        })));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasAttributesSatisfying(attributes -> {
+              assertThat(headerValues(attributes, "http.request.header.x-test-request"))
+                  .containsExactly("request-value");
+              assertThat(headerValues(attributes, "http.response.header.x-test-response"))
+                  .containsExactly("response-value");
+            })));
   }
 
   @Test
@@ -101,20 +89,13 @@ class JavaHttpServerHeaderSelectorTest {
 
     send();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasAttributesSatisfying(
-                        attributes -> {
-                          assertThat(headerValues(attributes, "http.request.header.x-test-request"))
-                              .isNull();
-                          assertThat(headerValues(attributes, "http.request.header.authorization"))
-                              .isNull();
-                          assertThat(
-                                  headerValues(attributes, "http.response.header.x-test-response"))
-                              .isNull();
-                        })));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasAttributesSatisfying(attributes -> {
+              assertThat(headerValues(attributes, "http.request.header.x-test-request")).isNull();
+              assertThat(headerValues(attributes, "http.request.header.authorization")).isNull();
+              assertThat(headerValues(attributes, "http.response.header.x-test-response")).isNull();
+            })));
   }
 
   private void start(Filter filter) throws IOException {

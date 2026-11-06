@@ -82,37 +82,36 @@ class CouchbaseExceptionSignalTest {
         .isInstanceOf(CompletionException.class)
         .hasCauseInstanceOf(UnambiguousTimeoutException.class);
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("get _default")
-                        .hasKind(CLIENT)
-                        .satisfies(hasScopeName("io.opentelemetry.couchbase-3.2"))
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasException(emitExceptionAsSpanEvents() ? error : null)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "couchbase"),
-                            equalTo(DB_NAMESPACE, "test"),
-                            equalTo(DB_COLLECTION_NAME, "_default"),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(ERROR_TYPE, UnambiguousTimeoutException.class.getName()),
-                            equalTo(stringKey("db.couchbase.document_id"), experimental("id")),
-                            equalTo(stringKey("db.couchbase.scope"), experimental("_default")),
-                            satisfies(
-                                longKey("db.couchbase.retries"),
-                                val -> {
-                                  if (EXPERIMENTAL_TELEMETRY) {
-                                    val.isNotNegative();
-                                  } else {
-                                    val.isNull();
-                                  }
-                                }),
-                            equalTo(stringKey("db.couchbase.service"), experimental("kv")),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, port))));
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("get _default")
+                    .hasKind(CLIENT)
+                    .satisfies(hasScopeName("io.opentelemetry.couchbase-3.2"))
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasException(emitExceptionAsSpanEvents() ? error : null)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, "couchbase"),
+                        equalTo(DB_NAMESPACE, "test"),
+                        equalTo(DB_COLLECTION_NAME, "_default"),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(ERROR_TYPE, UnambiguousTimeoutException.class.getName()),
+                        equalTo(stringKey("db.couchbase.document_id"), experimental("id")),
+                        equalTo(stringKey("db.couchbase.scope"), experimental("_default")),
+                        satisfies(
+                            longKey("db.couchbase.retries"),
+                            val -> {
+                              if (EXPERIMENTAL_TELEMETRY) {
+                                val.isNotNegative();
+                              } else {
+                                val.isNull();
+                              }
+                            }),
+                        equalTo(stringKey("db.couchbase.service"), experimental("kv")),
+                        equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                        equalTo(SERVER_PORT, port))));
 
     if (emitExceptionAsLogs()) {
       SpanData couchbaseSpan =
@@ -120,17 +119,16 @@ class CouchbaseExceptionSignalTest {
               .filter(span -> span.getKind() == CLIENT)
               .findFirst()
               .orElseThrow(() -> new AssertionError("Missing Couchbase span"));
-      testing.waitAndAssertLogRecords(
-          log ->
-              log.hasSeverity(Severity.WARN)
-                  .hasEventName("db.client.operation.exception")
-                  .hasException(error)
-                  .hasTotalAttributeCount(3)
-                  .hasSpanContext(couchbaseSpan.getSpanContext())
-                  .hasInstrumentationScope(
-                      InstrumentationScopeInfo.builder("io.opentelemetry.couchbase-3.2")
-                          .setSchemaUrl(SchemaUrls.V1_45_0)
-                          .build()));
+      testing.waitAndAssertLogRecords(log ->
+          log.hasSeverity(Severity.WARN)
+              .hasEventName("db.client.operation.exception")
+              .hasException(error)
+              .hasTotalAttributeCount(3)
+              .hasSpanContext(couchbaseSpan.getSpanContext())
+              .hasInstrumentationScope(
+                  InstrumentationScopeInfo.builder("io.opentelemetry.couchbase-3.2")
+                      .setSchemaUrl(SchemaUrls.V1_45_0)
+                      .build()));
     } else {
       assertThat(testing.logRecords()).isEmpty();
     }

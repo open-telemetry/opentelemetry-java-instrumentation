@@ -44,10 +44,8 @@ class SpringBootAotSmokeTest extends AbstractSpringBootSmokeTest {
     assertThat(agentStarted).isNotNegative();
     assertThat(applicationLoadedFromCache).isNotNegative();
     assertThat(logLines)
-        .noneMatch(
-            line ->
-                line.contains(
-                    "Instrumentation.appendToBootstrapClassLoaderSearch has been called"));
+        .noneMatch(line ->
+            line.contains("Instrumentation.appendToBootstrapClassLoaderSearch has been called"));
 
     assertSpringBootTelemetry(output);
   }

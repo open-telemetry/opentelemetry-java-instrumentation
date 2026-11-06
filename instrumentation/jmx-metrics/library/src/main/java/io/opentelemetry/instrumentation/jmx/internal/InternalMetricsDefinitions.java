@@ -66,11 +66,10 @@ public class InternalMetricsDefinitions {
   public void loadInternalRules(IncludeExclude systemFilter, HandlerRegistry handlerRegistry) {
     getSupportedSystems().stream()
         .filter(systemFilter::matches)
-        .forEach(
-            s -> {
-              loadRules(s, false, handlerRegistry);
-              loadRules(s, true, handlerRegistry);
-            });
+        .forEach(s -> {
+          loadRules(s, false, handlerRegistry);
+          loadRules(s, true, handlerRegistry);
+        });
   }
 
   private void loadRules(String systemName, boolean stable, HandlerRegistry handlerRegistry) {

@@ -80,16 +80,15 @@ abstract class ExecutorInstrumentationTest<T extends ExecutorService>
 
     @Test
     void scheduleLambdaCallable() {
-      executeTwoTasks(
-          task ->
-              executor()
-                  .schedule(
-                      () -> {
-                        task.run();
-                        return null;
-                      },
-                      10,
-                      MICROSECONDS));
+      executeTwoTasks(task ->
+          executor()
+              .schedule(
+                  () -> {
+                    task.run();
+                    return null;
+                  },
+                  10,
+                  MICROSECONDS));
     }
 
     @Test

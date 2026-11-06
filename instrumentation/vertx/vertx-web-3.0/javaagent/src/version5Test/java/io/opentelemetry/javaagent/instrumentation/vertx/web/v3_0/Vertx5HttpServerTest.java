@@ -41,15 +41,14 @@ class Vertx5HttpServerTest extends AbstractVertxHttpServerTest {
                     new JsonObject()
                         .put(AbstractVertxWebServer.CONFIG_HTTP_SERVER_PORT, (Object) port))
                 .setInstances(3))
-        .onComplete(
-            res -> {
-              if (!res.succeeded()) {
-                future.completeExceptionally(
-                    new IllegalStateException("Cannot deploy server Verticle", res.cause()));
-                return;
-              }
-              future.complete(null);
-            });
+        .onComplete(res -> {
+          if (!res.succeeded()) {
+            future.completeExceptionally(
+                new IllegalStateException("Cannot deploy server Verticle", res.cause()));
+            return;
+          }
+          future.complete(null);
+        });
 
     future.get(30, SECONDS);
     return server;

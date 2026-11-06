@@ -35,9 +35,8 @@ public class NettyClientSingletons {
             new NettyHttpClientAttributesGetter(),
             new HttpRequestHeadersSetter(),
             builder ->
-                builder.addContextCustomizer(
-                    (context, requestAndChannel, startAttributes) ->
-                        NettyErrorHolder.init(context)));
+                builder.addContextCustomizer((context, requestAndChannel, startAttributes) ->
+                    NettyErrorHolder.init(context)));
 
     InstrumenterBuilder<NettyConnectionRequest, Channel> builder =
         Instrumenter.<NettyConnectionRequest, Channel>builder(

@@ -29,82 +29,64 @@ class PlayAsyncServerTest extends PlayServerTest {
     RoutingDsl router =
         new RoutingDsl()
             .GET(SUCCESS.getPath())
-            .routeAsync(
-                () ->
-                    F.Promise.promise(
-                        () ->
-                            controller(
-                                SUCCESS,
-                                () -> Results.status(SUCCESS.getStatus(), SUCCESS.getBody()))))
+            .routeAsync(() ->
+                F.Promise.promise(() ->
+                    controller(
+                        SUCCESS, () -> Results.status(SUCCESS.getStatus(), SUCCESS.getBody()))))
             .GET(INDEXED_CHILD.getPath())
-            .routeAsync(
-                () ->
-                    F.Promise.promise(
-                        () ->
-                            controller(
-                                INDEXED_CHILD,
-                                () -> {
-                                  INDEXED_CHILD.collectSpanAttributes(
-                                      it -> Implicit.request().getQueryString(it));
-                                  return Results.status(
-                                      INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
-                                })))
+            .routeAsync(() ->
+                F.Promise.promise(() ->
+                    controller(
+                        INDEXED_CHILD,
+                        () -> {
+                          INDEXED_CHILD.collectSpanAttributes(
+                              it -> Implicit.request().getQueryString(it));
+                          return Results.status(INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
+                        })))
             .GET(QUERY_PARAM.getPath())
-            .routeAsync(
-                () ->
-                    F.Promise.promise(
-                        () ->
-                            controller(
-                                QUERY_PARAM,
-                                () ->
-                                    Results.status(
-                                        QUERY_PARAM.getStatus(), QUERY_PARAM.getBody()))))
+            .routeAsync(() ->
+                F.Promise.promise(() ->
+                    controller(
+                        QUERY_PARAM,
+                        () -> Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody()))))
             .GET(REDIRECT.getPath())
-            .routeAsync(
-                () ->
-                    F.Promise.promise(
-                        () -> controller(REDIRECT, () -> Results.found(REDIRECT.getBody()))))
+            .routeAsync(() ->
+                F.Promise.promise(
+                    () -> controller(REDIRECT, () -> Results.found(REDIRECT.getBody()))))
             .GET(CAPTURE_HEADERS.getPath())
-            .routeAsync(
-                () ->
-                    F.Promise.promise(
-                        () ->
-                            controller(
-                                CAPTURE_HEADERS,
-                                () -> {
-                                  Results.Status javaResult =
-                                      Results.status(
-                                          CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody());
-                                  Tuple2<String, String> header =
-                                      new Tuple2<>(
-                                          "X-Test-Response",
-                                          Implicit.request().getHeader("X-Test-Request"));
-                                  return new Results.Status(
-                                      javaResult
-                                          .toScala()
-                                          .withHeaders(
-                                              JavaConverters.asScalaIteratorConverter(
-                                                      singletonList(header).iterator())
-                                                  .asScala()
-                                                  .toSeq()));
-                                })))
+            .routeAsync(() ->
+                F.Promise.promise(() ->
+                    controller(
+                        CAPTURE_HEADERS,
+                        () -> {
+                          Results.Status javaResult =
+                              Results.status(
+                                  CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody());
+                          Tuple2<String, String> header =
+                              new Tuple2<>(
+                                  "X-Test-Response",
+                                  Implicit.request().getHeader("X-Test-Request"));
+                          return new Results.Status(
+                              javaResult
+                                  .toScala()
+                                  .withHeaders(
+                                      JavaConverters.asScalaIteratorConverter(
+                                              singletonList(header).iterator())
+                                          .asScala()
+                                          .toSeq()));
+                        })))
             .GET(ERROR.getPath())
-            .routeAsync(
-                () ->
-                    F.Promise.promise(
-                        () ->
-                            controller(
-                                ERROR, () -> Results.status(ERROR.getStatus(), ERROR.getBody()))))
+            .routeAsync(() ->
+                F.Promise.promise(() ->
+                    controller(ERROR, () -> Results.status(ERROR.getStatus(), ERROR.getBody()))))
             .GET(EXCEPTION.getPath())
-            .routeAsync(
-                () ->
-                    F.Promise.promise(
-                        () ->
-                            controller(
-                                EXCEPTION,
-                                () -> {
-                                  throw new IllegalArgumentException(EXCEPTION.getBody());
-                                })));
+            .routeAsync(() ->
+                F.Promise.promise(() ->
+                    controller(
+                        EXCEPTION,
+                        () -> {
+                          throw new IllegalArgumentException(EXCEPTION.getBody());
+                        })));
 
     return Server.forRouter(router.build(), port);
   }

@@ -204,48 +204,45 @@ class RuleParserTest {
 
     assertThat(metricDef.getMetricExtractors())
         .hasSize(3)
-        .anySatisfy(
-            m -> {
-              assertThat(m.getMetricValueExtractor().getAttributeName()).isEqualTo("A.b");
-              assertThat(m.getAttributes())
-                  .hasSize(3)
-                  .extracting("attributeName")
-                  .contains("LABEL_KEY1", "LABEL_KEY2", "LABEL_KEY3");
+        .anySatisfy(m -> {
+          assertThat(m.getMetricValueExtractor().getAttributeName()).isEqualTo("A.b");
+          assertThat(m.getAttributes())
+              .hasSize(3)
+              .extracting("attributeName")
+              .contains("LABEL_KEY1", "LABEL_KEY2", "LABEL_KEY3");
 
-              MetricInfo metricInfo = m.getInfo();
-              assertThat(metricInfo.getMetricName()).isEqualTo("PREFIX.METRIC_NAME1");
-              assertThat(metricInfo.getDescription()).isEqualTo("DESCRIPTION1");
-              assertThat(metricInfo.getSourceUnit()).isEqualTo("SOURCE_UNIT1");
-              assertThat(metricInfo.getUnit()).isEqualTo("UNIT1");
-              assertThat(metricInfo.getType()).isEqualTo(MetricInfo.Type.COUNTER);
-            })
-        .anySatisfy(
-            m -> {
-              assertThat(m.getMetricValueExtractor().getAttributeName()).isEqualTo("ATTRIBUTE2");
-              assertThat(m.getAttributes())
-                  .hasSize(2)
-                  .extracting("attributeName")
-                  .contains("LABEL_KEY1", "LABEL_KEY2");
+          MetricInfo metricInfo = m.getInfo();
+          assertThat(metricInfo.getMetricName()).isEqualTo("PREFIX.METRIC_NAME1");
+          assertThat(metricInfo.getDescription()).isEqualTo("DESCRIPTION1");
+          assertThat(metricInfo.getSourceUnit()).isEqualTo("SOURCE_UNIT1");
+          assertThat(metricInfo.getUnit()).isEqualTo("UNIT1");
+          assertThat(metricInfo.getType()).isEqualTo(MetricInfo.Type.COUNTER);
+        })
+        .anySatisfy(m -> {
+          assertThat(m.getMetricValueExtractor().getAttributeName()).isEqualTo("ATTRIBUTE2");
+          assertThat(m.getAttributes())
+              .hasSize(2)
+              .extracting("attributeName")
+              .contains("LABEL_KEY1", "LABEL_KEY2");
 
-              MetricInfo metricInfo = m.getInfo();
-              assertThat(metricInfo.getMetricName()).isEqualTo("PREFIX.METRIC_NAME2");
-              assertThat(metricInfo.getDescription()).isEqualTo("DESCRIPTION2");
-              assertThat(metricInfo.getSourceUnit()).isEqualTo(jmxDef.getSourceUnit());
-              assertThat(metricInfo.getUnit()).isEqualTo("UNIT2");
-            })
-        .anySatisfy(
-            m -> {
-              assertThat(m.getMetricValueExtractor().getAttributeName()).isEqualTo("ATTRIBUTE3");
+          MetricInfo metricInfo = m.getInfo();
+          assertThat(metricInfo.getMetricName()).isEqualTo("PREFIX.METRIC_NAME2");
+          assertThat(metricInfo.getDescription()).isEqualTo("DESCRIPTION2");
+          assertThat(metricInfo.getSourceUnit()).isEqualTo(jmxDef.getSourceUnit());
+          assertThat(metricInfo.getUnit()).isEqualTo("UNIT2");
+        })
+        .anySatisfy(m -> {
+          assertThat(m.getMetricValueExtractor().getAttributeName()).isEqualTo("ATTRIBUTE3");
 
-              MetricInfo metricInfo = m.getInfo();
-              assertThat(metricInfo.getMetricName()).isEqualTo("PREFIX.ATTRIBUTE3");
-              assertThat(metricInfo.getDescription()).isNull();
+          MetricInfo metricInfo = m.getInfo();
+          assertThat(metricInfo.getMetricName()).isEqualTo("PREFIX.ATTRIBUTE3");
+          assertThat(metricInfo.getDescription()).isNull();
 
-              // syntax extension - defining a default unit and type
-              assertThat(metricInfo.getType()).isEqualTo(jmxDef.getMetricType());
-              assertThat(metricInfo.getUnit()).isEqualTo(jmxDef.getUnit());
-              assertThat(metricInfo.getSourceUnit()).isEqualTo(jmxDef.getSourceUnit());
-            });
+          // syntax extension - defining a default unit and type
+          assertThat(metricInfo.getType()).isEqualTo(jmxDef.getMetricType());
+          assertThat(metricInfo.getUnit()).isEqualTo(jmxDef.getUnit());
+          assertThat(metricInfo.getSourceUnit()).isEqualTo(jmxDef.getSourceUnit());
+        });
   }
 
   private static final String CONF5 = // minimal valid definition
@@ -434,30 +431,28 @@ class RuleParserTest {
     MetricDef metricDef = jmxRule.buildMetricDef();
     assertThat(metricDef.getMetricExtractors())
         .hasSize(3)
-        .allSatisfy(
-            me -> {
-              assertThat(me.getInfo().getMetricName()).isEqualTo("state_metric");
-              assertThat(me.getInfo().getType()).isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
-              assertThat(me.getInfo().getUnit()).isEqualTo("1");
+        .allSatisfy(me -> {
+          assertThat(me.getInfo().getMetricName()).isEqualTo("state_metric");
+          assertThat(me.getInfo().getType()).isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
+          assertThat(me.getInfo().getUnit()).isEqualTo("1");
 
-              assertThat(me.getAttributes()).hasSize(1);
-              MetricAttribute stateAttribute = me.getAttributes().get(0);
-              assertThat(stateAttribute.getAttributeName()).isEqualTo("state_attribute");
-              String stateAttributeValue =
-                  stateAttribute.acquireAttributeValue(mockConnection, objectName);
+          assertThat(me.getAttributes()).hasSize(1);
+          MetricAttribute stateAttribute = me.getAttributes().get(0);
+          assertThat(stateAttribute.getAttributeName()).isEqualTo("state_attribute");
+          String stateAttributeValue =
+              stateAttribute.acquireAttributeValue(mockConnection, objectName);
 
-              BeanAttributeExtractor attributeExtractor = me.getMetricValueExtractor();
-              assertThat(attributeExtractor).isNotNull();
-              assertThat(attributeExtractor.getSampleValue(null, null)).isInstanceOf(Integer.class);
+          BeanAttributeExtractor attributeExtractor = me.getMetricValueExtractor();
+          assertThat(attributeExtractor).isNotNull();
+          assertThat(attributeExtractor.getSampleValue(null, null)).isInstanceOf(Integer.class);
 
-              assertThat(attributeExtractor.getAttributeInfo(mockConnection, objectName))
-                  .isNotNull();
+          assertThat(attributeExtractor.getAttributeInfo(mockConnection, objectName)).isNotNull();
 
-              int expectedValue = stateAttributeValue.equals("failed") ? 1 : 0;
-              Number extractedValue =
-                  attributeExtractor.extractNumericalAttribute(mockConnection, objectName);
-              assertThat(extractedValue).isEqualTo(expectedValue);
-            });
+          int expectedValue = stateAttributeValue.equals("failed") ? 1 : 0;
+          Number extractedValue =
+              attributeExtractor.extractNumericalAttribute(mockConnection, objectName);
+          assertThat(extractedValue).isEqualTo(expectedValue);
+        });
   }
 
   private static final String CONF10 =

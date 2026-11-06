@@ -106,10 +106,8 @@ public class RabbitSingletons {
         Instrumenter.<ChannelAndMethod, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
-            .addContextCustomizer(
-                (context, request, startAttributes) ->
-                    context.with(
-                        CHANNEL_AND_METHOD_CONTEXT_KEY, new RabbitChannelAndMethodHolder()));
+            .addContextCustomizer((context, request, startAttributes) ->
+                context.with(CHANNEL_AND_METHOD_CONTEXT_KEY, new RabbitChannelAndMethodHolder()));
     if (messagingOperation) {
       builder.addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter));
     }

@@ -54,29 +54,28 @@ public abstract class JaxRsHttpServerTest<SERVER> extends AbstractJaxRsHttpServe
     assertThat(response.contentUtf8()).isEqualTo("item");
 
     testing()
-        .waitAndAssertTraces(
-            trace -> {
-              Consumer<SpanDataAssert> serverSpan =
-                  span ->
-                      assertServerSpan(
-                              span,
-                              "GET",
-                              new ServerEndpoint("covariant", path, 200, "item", false),
-                              200)
-                          .hasNoParent();
-              if (CONTROLLER_TELEMETRY_ENABLED) {
-                trace.hasSpansSatisfyingExactly(
-                    serverSpan,
-                    span ->
-                        span.hasName(resourceClass.getSimpleName() + ".get")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_FUNCTION_NAME, resourceClass.getName() + ".get")));
-              } else {
-                trace.hasSpansSatisfyingExactly(serverSpan);
-              }
-            });
+        .waitAndAssertTraces(trace -> {
+          Consumer<SpanDataAssert> serverSpan =
+              span ->
+                  assertServerSpan(
+                          span,
+                          "GET",
+                          new ServerEndpoint("covariant", path, 200, "item", false),
+                          200)
+                      .hasNoParent();
+          if (CONTROLLER_TELEMETRY_ENABLED) {
+            trace.hasSpansSatisfyingExactly(
+                serverSpan,
+                span ->
+                    span.hasName(resourceClass.getSimpleName() + ".get")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, resourceClass.getName() + ".get")));
+          } else {
+            trace.hasSpansSatisfyingExactly(serverSpan);
+          }
+        });
   }
 
   private static Stream<Arguments> covariantResources() {

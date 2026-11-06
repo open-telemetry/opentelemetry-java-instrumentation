@@ -158,17 +158,15 @@ class SpymemcachedRequestTest {
     ExecutorService ioThread = Executors.newSingleThreadExecutor();
     try {
       when(node.getSocketAddress())
-          .thenAnswer(
-              invocation -> {
-                ioThread
-                    .submit(
-                        () -> {
-                          request.suppressHandlingNodeAddress();
-                          assertThat(request.getHandlingNodeAddress()).isNull();
-                        })
-                    .get(10, SECONDS);
-                return address;
-              });
+          .thenAnswer(invocation -> {
+            ioThread
+                .submit(() -> {
+                  request.suppressHandlingNodeAddress();
+                  assertThat(request.getHandlingNodeAddress()).isNull();
+                })
+                .get(10, SECONDS);
+            return address;
+          });
 
       request.setHandlingNode(node);
     } finally {

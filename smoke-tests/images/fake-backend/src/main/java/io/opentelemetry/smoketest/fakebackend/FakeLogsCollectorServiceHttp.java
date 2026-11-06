@@ -28,19 +28,18 @@ class FakeLogsCollectorServiceHttp implements HttpService {
     return HttpResponse.of(
         request
             .aggregate()
-            .thenApply(
-                aggregatedRequest -> {
-                  try {
-                    storage.addLogsRequest(
-                        ExportLogsServiceRequest.parseFrom(aggregatedRequest.content().array()));
-                    return HttpResponse.of(
-                        HttpStatus.OK,
-                        MediaType.X_PROTOBUF,
-                        ExportLogsServiceResponse.getDefaultInstance().toByteArray());
-                  } catch (InvalidProtocolBufferException e) {
-                    return HttpResponse.of(
-                        HttpStatus.BAD_REQUEST, MediaType.PLAIN_TEXT_UTF_8, e.getMessage());
-                  }
-                }));
+            .thenApply(aggregatedRequest -> {
+              try {
+                storage.addLogsRequest(
+                    ExportLogsServiceRequest.parseFrom(aggregatedRequest.content().array()));
+                return HttpResponse.of(
+                    HttpStatus.OK,
+                    MediaType.X_PROTOBUF,
+                    ExportLogsServiceResponse.getDefaultInstance().toByteArray());
+              } catch (InvalidProtocolBufferException e) {
+                return HttpResponse.of(
+                    HttpStatus.BAD_REQUEST, MediaType.PLAIN_TEXT_UTF_8, e.getMessage());
+              }
+            }));
   }
 }

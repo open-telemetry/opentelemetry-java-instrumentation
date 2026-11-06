@@ -31,10 +31,9 @@ class ApplicationLoggerInstrumentationTest {
     List<String> logs = forkAndRun(mainClass.getName());
 
     assertThat(logs)
-        .anyMatch(
-            log ->
-                log.startsWith(
-                    "INFO io.opentelemetry.javaagent.tooling.VersionLogger :: opentelemetry-javaagent - version: "));
+        .anyMatch(log ->
+            log.startsWith(
+                "INFO io.opentelemetry.javaagent.tooling.VersionLogger :: opentelemetry-javaagent - version: "));
     // spring boot's LoggingApplicationListener re-triggers our instrumentation during startup,
     // this shouldn't be reported as multiple application logger implementations being installed
     assertThat(logs).noneMatch(log -> log.contains("Multiple application logger implementations"));
@@ -60,20 +59,18 @@ class ApplicationLoggerInstrumentationTest {
     InputStream stdout = process.getInputStream();
 
     CompletableFuture<List<String>> output =
-        CompletableFuture.supplyAsync(
-            () -> {
-              try (BufferedReader reader =
-                  new BufferedReader(new InputStreamReader(stdout, UTF_8))) {
-                List<String> lines = new ArrayList<>();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                  lines.add(line);
-                }
-                return lines;
-              } catch (IOException e) {
-                throw new AssertionError("Unexpected error while retrieving subprocess output", e);
-              }
-            });
+        CompletableFuture.supplyAsync(() -> {
+          try (BufferedReader reader = new BufferedReader(new InputStreamReader(stdout, UTF_8))) {
+            List<String> lines = new ArrayList<>();
+            String line;
+            while ((line = reader.readLine()) != null) {
+              lines.add(line);
+            }
+            return lines;
+          } catch (IOException e) {
+            throw new AssertionError("Unexpected error while retrieving subprocess output", e);
+          }
+        });
 
     boolean exited = process.waitFor(30, SECONDS);
     if (!exited) {

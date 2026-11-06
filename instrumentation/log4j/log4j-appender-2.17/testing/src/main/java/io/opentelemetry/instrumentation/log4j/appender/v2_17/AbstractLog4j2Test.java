@@ -104,38 +104,36 @@ public abstract class AbstractLog4j2Test {
 
     if (expectedSeverity != null) {
       testing()
-          .waitAndAssertLogRecords(
-              logRecord -> {
-                logRecord
-                    .hasBody("xyz: 123")
-                    .hasInstrumentationScope(
-                        InstrumentationScopeInfo.builder(expectedLoggerName).build())
-                    .hasSeverity(expectedSeverity)
-                    .hasSeverityText(expectedSeverityText)
-                    .hasSpanContext(
-                        withParent
-                            ? testing().spans().get(0).getSpanContext()
-                            : SpanContext.getInvalid());
+          .waitAndAssertLogRecords(logRecord -> {
+            logRecord
+                .hasBody("xyz: 123")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(expectedLoggerName).build())
+                .hasSeverity(expectedSeverity)
+                .hasSeverityText(expectedSeverityText)
+                .hasSpanContext(
+                    withParent
+                        ? testing().spans().get(0).getSpanContext()
+                        : SpanContext.getInvalid());
 
-                List<AttributeAssertion> attributeAsserts =
-                    addCodeLocationAttributes("performLogging");
-                attributeAsserts.addAll(threadAttributesAssertions());
+            List<AttributeAssertion> attributeAsserts = addCodeLocationAttributes("performLogging");
+            attributeAsserts.addAll(threadAttributesAssertions());
 
-                if (logException) {
-                  attributeAsserts.addAll(
-                      asList(
-                          equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                          equalTo(EXCEPTION_MESSAGE, "hello"),
-                          satisfies(
-                              EXCEPTION_STACKTRACE,
-                              val -> val.contains(AbstractLog4j2Test.class.getName()))));
-                }
-                logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
+            if (logException) {
+              attributeAsserts.addAll(
+                  asList(
+                      equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                      equalTo(EXCEPTION_MESSAGE, "hello"),
+                      satisfies(
+                          EXCEPTION_STACKTRACE,
+                          val -> val.contains(AbstractLog4j2Test.class.getName()))));
+            }
+            logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
 
-                assertThat(logRecord.actual().getTimestampEpochNanos())
-                    .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(start.toEpochMilli()))
-                    .isLessThanOrEqualTo(MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
-              });
+            assertThat(logRecord.actual().getTimestampEpochNanos())
+                .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(start.toEpochMilli()))
+                .isLessThanOrEqualTo(MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
+          });
     } else {
       Thread.sleep(500); // sleep a bit just to make sure no log is captured
       assertThat(testing().logRecords()).isEmpty();
@@ -159,15 +157,14 @@ public abstract class AbstractLog4j2Test {
     assertions.add(equalTo(stringKey("key2"), "val2"));
 
     testing()
-        .waitAndAssertLogRecords(
-            logRecord ->
-                logRecord
-                    .hasBody("xyz: 123")
-                    .hasEventName("MyEventName")
-                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-                    .hasSeverity(Severity.INFO)
-                    .hasSeverityText("INFO")
-                    .hasAttributesSatisfyingExactly(assertions));
+        .waitAndAssertLogRecords(logRecord ->
+            logRecord
+                .hasBody("xyz: 123")
+                .hasEventName("MyEventName")
+                .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                .hasSeverity(Severity.INFO)
+                .hasSeverityText("INFO")
+                .hasAttributesSatisfyingExactly(assertions));
   }
 
   @Test
@@ -183,14 +180,13 @@ public abstract class AbstractLog4j2Test {
     assertions.add(equalTo(mapMessageKey("key2"), "val2"));
 
     testing()
-        .waitAndAssertLogRecords(
-            logRecord ->
-                logRecord
-                    .hasBody((Value<?>) null)
-                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-                    .hasSeverity(Severity.INFO)
-                    .hasSeverityText("INFO")
-                    .hasAttributesSatisfyingExactly(assertions));
+        .waitAndAssertLogRecords(logRecord ->
+            logRecord
+                .hasBody((Value<?>) null)
+                .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                .hasSeverity(Severity.INFO)
+                .hasSeverityText("INFO")
+                .hasAttributesSatisfyingExactly(assertions));
   }
 
   @Test
@@ -206,14 +202,13 @@ public abstract class AbstractLog4j2Test {
     assertions.add(equalTo(mapMessageKey("key1"), "val1"));
 
     testing()
-        .waitAndAssertLogRecords(
-            logRecord ->
-                logRecord
-                    .hasBody("val2")
-                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-                    .hasSeverity(Severity.INFO)
-                    .hasSeverityText("INFO")
-                    .hasAttributesSatisfyingExactly(assertions));
+        .waitAndAssertLogRecords(logRecord ->
+            logRecord
+                .hasBody("val2")
+                .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                .hasSeverity(Severity.INFO)
+                .hasSeverityText("INFO")
+                .hasAttributesSatisfyingExactly(assertions));
   }
 
   @Test
@@ -229,14 +224,13 @@ public abstract class AbstractLog4j2Test {
     assertions.add(equalTo(mapMessageKey("key2"), "val2"));
 
     testing()
-        .waitAndAssertLogRecords(
-            logRecord ->
-                logRecord
-                    .hasBody("a message")
-                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-                    .hasSeverity(Severity.INFO)
-                    .hasSeverityText("INFO")
-                    .hasAttributesSatisfyingExactly(assertions));
+        .waitAndAssertLogRecords(logRecord ->
+            logRecord
+                .hasBody("a message")
+                .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                .hasSeverity(Severity.INFO)
+                .hasSeverityText("INFO")
+                .hasAttributesSatisfyingExactly(assertions));
   }
 
   @Test
@@ -256,14 +250,13 @@ public abstract class AbstractLog4j2Test {
     assertions.add(equalTo(mapMessageKey("key1"), "message-value"));
 
     testing()
-        .waitAndAssertLogRecords(
-            logRecord ->
-                logRecord
-                    .hasBody((Value<?>) null)
-                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-                    .hasSeverity(Severity.INFO)
-                    .hasSeverityText("INFO")
-                    .hasAttributesSatisfyingExactly(assertions));
+        .waitAndAssertLogRecords(logRecord ->
+            logRecord
+                .hasBody((Value<?>) null)
+                .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                .hasSeverity(Severity.INFO)
+                .hasSeverityText("INFO")
+                .hasAttributesSatisfyingExactly(assertions));
   }
 
   @Test
@@ -294,15 +287,14 @@ public abstract class AbstractLog4j2Test {
     assertions.add(equalTo(mapMessageKey("key1"), "val1"));
 
     testing()
-        .waitAndAssertLogRecords(
-            logRecord ->
-                logRecord
-                    .hasBody((Value<?>) null)
-                    .hasEventName("MyEventName")
-                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-                    .hasSeverity(Severity.INFO)
-                    .hasSeverityText("INFO")
-                    .hasAttributesSatisfyingExactly(assertions));
+        .waitAndAssertLogRecords(logRecord ->
+            logRecord
+                .hasBody((Value<?>) null)
+                .hasEventName("MyEventName")
+                .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                .hasSeverity(Severity.INFO)
+                .hasSeverityText("INFO")
+                .hasAttributesSatisfyingExactly(assertions));
   }
 
   private static void performLogging(

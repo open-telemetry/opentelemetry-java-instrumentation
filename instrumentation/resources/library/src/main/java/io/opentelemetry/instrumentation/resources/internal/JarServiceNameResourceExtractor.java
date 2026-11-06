@@ -43,13 +43,11 @@ public final class JarServiceNameResourceExtractor {
   public Resource extract() {
     return jarPathSupplier
         .get()
-        .map(
-            jarPath -> {
-              String serviceName = getServiceName(jarPath);
-              logger.log(
-                  FINE, "Auto-detected service name from the jar file name: {0}", serviceName);
-              return ServiceResource.create(serviceName, null);
-            })
+        .map(jarPath -> {
+          String serviceName = getServiceName(jarPath);
+          logger.log(FINE, "Auto-detected service name from the jar file name: {0}", serviceName);
+          return ServiceResource.create(serviceName, null);
+        })
         .orElseGet(Resource::empty);
   }
 

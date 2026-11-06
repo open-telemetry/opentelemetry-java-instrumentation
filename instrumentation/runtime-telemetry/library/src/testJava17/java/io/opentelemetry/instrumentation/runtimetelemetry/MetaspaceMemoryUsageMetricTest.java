@@ -24,16 +24,14 @@ class MetaspaceMemoryUsageMetricTest {
     System.gc();
 
     // Memory spaces in metaspace usage test
-    jfrExtension.waitAndAssertMetrics(
-        metric ->
-            metric
-                .hasName(METRIC_NAME_MEMORY)
-                .hasUnit(BYTES)
-                .hasDescription(METRIC_DESCRIPTION_MEMORY)
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.containsPointsSatisfying(
-                            point -> point.hasAttributes(ATTR_METASPACE),
-                            point -> point.hasAttributes(ATTR_COMPRESSED_CLASS_SPACE))));
+    jfrExtension.waitAndAssertMetrics(metric ->
+        metric
+            .hasName(METRIC_NAME_MEMORY)
+            .hasUnit(BYTES)
+            .hasDescription(METRIC_DESCRIPTION_MEMORY)
+            .hasLongSumSatisfying(sum ->
+                sum.containsPointsSatisfying(
+                    point -> point.hasAttributes(ATTR_METASPACE),
+                    point -> point.hasAttributes(ATTR_COMPRESSED_CLASS_SPACE))));
   }
 }

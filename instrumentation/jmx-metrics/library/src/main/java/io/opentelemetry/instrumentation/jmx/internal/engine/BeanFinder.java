@@ -35,13 +35,12 @@ class BeanFinder {
   private final MetricRegistrar registrar;
   private final MetricConfiguration conf;
   private final ScheduledExecutorService exec =
-      Executors.newSingleThreadScheduledExecutor(
-          runnable -> {
-            Thread result = new Thread(runnable, "jmx_bean_finder");
-            result.setDaemon(true);
-            result.setContextClassLoader(null);
-            return result;
-          });
+      Executors.newSingleThreadScheduledExecutor(runnable -> {
+        Thread result = new Thread(runnable, "jmx_bean_finder");
+        result.setDaemon(true);
+        result.setContextClassLoader(null);
+        return result;
+      });
   private final long discoveryDelay;
   private final long maxDelay;
   private long delay = 1000; // number of milliseconds until first attempt to discover MBeans

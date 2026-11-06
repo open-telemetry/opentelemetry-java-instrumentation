@@ -249,22 +249,19 @@ class JmsSimplifiedApiTest {
     MessageListener providerListener = consumer.getMessageListener();
     providerListener.onMessage(message);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process someTopic")
-                        .hasKind(CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "someTopic"),
-                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                            satisfies(MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull),
-                            equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                subscriptionName + "-listener"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("process someTopic")
+                .hasKind(CONSUMER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("messaging.system.name"), "jms"),
+                    equalTo(MESSAGING_DESTINATION_NAME, "someTopic"),
+                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                    satisfies(MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull),
+                    equalTo(
+                        MESSAGING_DESTINATION_SUBSCRIPTION_NAME, subscriptionName + "-listener"))));
   }
 
   // durable subscriptions outlive the consumer that created them, so each case gets its own name

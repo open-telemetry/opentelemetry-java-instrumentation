@@ -44,14 +44,13 @@ class OpenSearchRestTest extends AbstractOpenSearchRestTest {
         SSLContextBuilder.create().loadTrustMaterial(null, new TrustAllStrategy()).build();
 
     return RestClient.builder(httpHosts(hostAddresses))
-        .setHttpClientConfigCallback(
-            httpClientBuilder ->
-                httpClientBuilder
-                    .setSSLContext(sslContext)
-                    // Required for non-localhost Docker runtimes, the SSL cert in the
-                    // OpenSearch image is registered to "localhost"
-                    .setSSLHostnameVerifier(new NoopHostnameVerifier())
-                    .setDefaultCredentialsProvider(credentialsProvider))
+        .setHttpClientConfigCallback(httpClientBuilder ->
+            httpClientBuilder
+                .setSSLContext(sslContext)
+                // Required for non-localhost Docker runtimes, the SSL cert in the
+                // OpenSearch image is registered to "localhost"
+                .setSSLHostnameVerifier(new NoopHostnameVerifier())
+                .setDefaultCredentialsProvider(credentialsProvider))
         .build();
   }
 

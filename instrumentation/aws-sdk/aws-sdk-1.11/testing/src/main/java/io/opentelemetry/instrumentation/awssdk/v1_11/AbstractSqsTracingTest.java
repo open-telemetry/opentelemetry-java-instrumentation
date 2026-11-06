@@ -161,26 +161,24 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
         new ArrayList<>(
             asList(
                 trace ->
-                    trace.hasSpansSatisfyingExactly(
-                        span ->
-                            span.hasName("SQS.CreateQueue")
-                                .hasKind(SpanKind.CLIENT)
-                                .hasNoParent()
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
-                                    equalTo(
-                                        stringKey("aws.queue.name"), experimental("testSdkSqs")),
-                                    satisfies(
-                                        AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
-                                    equalTo(RPC_SYSTEM, "aws-api"),
-                                    equalTo(RPC_SERVICE, "AmazonSQS"),
-                                    equalTo(RPC_METHOD, "CreateQueue"),
-                                    equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                    equalTo(URL_FULL, "http://localhost:" + sqsPort),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, sqsPort),
-                                    equalTo(NETWORK_PROTOCOL_VERSION, "1.1"))),
+                    trace.hasSpansSatisfyingExactly(span ->
+                        span.hasName("SQS.CreateQueue")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                                equalTo(stringKey("aws.queue.name"), experimental("testSdkSqs")),
+                                satisfies(
+                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
+                                equalTo(RPC_SYSTEM, "aws-api"),
+                                equalTo(RPC_SERVICE, "AmazonSQS"),
+                                equalTo(RPC_METHOD, "CreateQueue"),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, sqsPort),
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"))),
                 trace -> {
                   publishSpan.set(trace.getSpan(0));
 
@@ -195,10 +193,9 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                               .hasTotalAttributeCount(0));
                 }));
     if (receiveTelemetryEnabled()) {
-      traceAssertions.add(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> assertReceiveSpan(span, publishSpan.get(), testCaptureHeaders)));
+      traceAssertions.add(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> assertReceiveSpan(span, publishSpan.get(), testCaptureHeaders)));
     }
     testing().waitAndAssertTraces(traceAssertions);
   }
@@ -283,14 +280,12 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
       span.hasParent(parent);
     }
 
-    span.hasLinksSatisfying(
-        links ->
-            assertThat(links)
-                .singleElement()
-                .satisfies(
-                    link ->
-                        assertThat(link.getSpanContext().getSpanId())
-                            .isEqualTo(creationContext.getSpanId())));
+    span.hasLinksSatisfying(links ->
+        assertThat(links)
+            .singleElement()
+            .satisfies(link ->
+                assertThat(link.getSpanContext().getSpanId())
+                    .isEqualTo(creationContext.getSpanId())));
   }
 
   private void assertProcessSpan(
@@ -329,14 +324,12 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
         .hasAttributesSatisfyingExactly(attributes);
 
     if (creationContext != null) {
-      span.hasLinksSatisfying(
-          links ->
-              assertThat(links)
-                  .singleElement()
-                  .satisfies(
-                      link ->
-                          assertThat(link.getSpanContext().getSpanId())
-                              .isEqualTo(creationContext.getSpanId())));
+      span.hasLinksSatisfying(links ->
+          assertThat(links)
+              .singleElement()
+              .satisfies(link ->
+                  assertThat(link.getSpanContext().getSpanId())
+                      .isEqualTo(creationContext.getSpanId())));
     }
   }
 
@@ -369,26 +362,20 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                         span.hasName("process testSdkSqs")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(0))
-                            .hasLinksSatisfying(
-                                links ->
-                                    assertThat(links)
-                                        .singleElement()
-                                        .satisfies(
-                                            link -> assertBareLink(link, publishSpan.get())))),
+                            .hasLinksSatisfying(links ->
+                                assertThat(links)
+                                    .singleElement()
+                                    .satisfies(link -> assertBareLink(link, publishSpan.get())))),
             trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("receive testSdkSqs")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasLinksSatisfying(
-                                links ->
-                                    assertThat(links)
-                                        .singleElement()
-                                        .satisfies(
-                                            link ->
-                                                assertMessageLink(
-                                                    link, publishSpan.get(), messageId)))));
+                trace.hasSpansSatisfyingExactly(span ->
+                    span.hasName("receive testSdkSqs")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasLinksSatisfying(links ->
+                            assertThat(links)
+                                .singleElement()
+                                .satisfies(link ->
+                                    assertMessageLink(link, publishSpan.get(), messageId)))));
   }
 
   @Test
@@ -437,42 +424,36 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                   span -> span.hasName("create testSdkSqs").hasKind(SpanKind.PRODUCER));
             },
             trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("send testSdkSqs")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasLinksSatisfying(
-                                links -> {
-                                  assertThat(links).hasSize(3);
-                                  for (int i = 0; i < links.size(); i++) {
-                                    assertBareLink(links.get(i), createSpans.get(i));
-                                  }
-                                })),
+                trace.hasSpansSatisfyingExactly(span ->
+                    span.hasName("send testSdkSqs")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasLinksSatisfying(links -> {
+                          assertThat(links).hasSize(3);
+                          for (int i = 0; i < links.size(); i++) {
+                            assertBareLink(links.get(i), createSpans.get(i));
+                          }
+                        })),
             trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("receive testSdkSqs")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasLinksSatisfying(
-                                links -> {
-                                  assertThat(links)
-                                      .extracting(link -> link.getSpanContext().getSpanId())
-                                      .containsExactlyInAnyOrder(
-                                          createSpans.get(0).getSpanId(),
-                                          createSpans.get(1).getSpanId(),
-                                          createSpans.get(2).getSpanId());
-                                  assertThat(links)
-                                      .extracting(LinkData::getAttributes)
-                                      .containsExactlyInAnyOrder(
-                                          Attributes.of(MESSAGING_MESSAGE_ID, messageIds.get(0)),
-                                          Attributes.of(MESSAGING_MESSAGE_ID, messageIds.get(1)),
-                                          Attributes.of(MESSAGING_MESSAGE_ID, messageIds.get(2)));
-                                })));
+                trace.hasSpansSatisfyingExactly(span ->
+                    span.hasName("receive testSdkSqs")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasLinksSatisfying(links -> {
+                          assertThat(links)
+                              .extracting(link -> link.getSpanContext().getSpanId())
+                              .containsExactlyInAnyOrder(
+                                  createSpans.get(0).getSpanId(),
+                                  createSpans.get(1).getSpanId(),
+                                  createSpans.get(2).getSpanId());
+                          assertThat(links)
+                              .extracting(LinkData::getAttributes)
+                              .containsExactlyInAnyOrder(
+                                  Attributes.of(MESSAGING_MESSAGE_ID, messageIds.get(0)),
+                                  Attributes.of(MESSAGING_MESSAGE_ID, messageIds.get(1)),
+                                  Attributes.of(MESSAGING_MESSAGE_ID, messageIds.get(2)));
+                        })));
     assertThat(createSpans)
-        .allSatisfy(
-            span ->
-                assertThat(span.getEndEpochNanos())
-                    .isGreaterThanOrEqualTo(span.getStartEpochNanos()));
+        .allSatisfy(span ->
+            assertThat(span.getEndEpochNanos()).isGreaterThanOrEqualTo(span.getStartEpochNanos()));
   }
 
   @Test
@@ -504,12 +485,11 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                   trace.hasSpansSatisfyingExactly(
                       span -> span.hasName("SQS.CreateQueue").hasKind(SpanKind.CLIENT)),
               trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName("send testSdkSqs")
-                              .hasKind(SpanKind.PRODUCER)
-                              .hasNoParent()
-                              .hasTotalRecordedLinks(0)));
+                  trace.hasSpansSatisfyingExactly(span ->
+                      span.hasName("send testSdkSqs")
+                          .hasKind(SpanKind.PRODUCER)
+                          .hasNoParent()
+                          .hasTotalRecordedLinks(0)));
       return;
     }
 
@@ -521,76 +501,70 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                     span -> span.hasName("SQS.CreateQueue").hasKind(SpanKind.CLIENT)),
             trace -> {
               createSpans.add(trace.getSpan(0));
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("create testSdkSqs")
-                          .hasKind(SpanKind.PRODUCER)
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                              equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                              equalTo(MESSAGING_OPERATION_NAME, "create"),
-                              equalTo(MESSAGING_OPERATION_TYPE, "create")));
+              trace.hasSpansSatisfyingExactly(span ->
+                  span.hasName("create testSdkSqs")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasNoParent()
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                          equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                          equalTo(MESSAGING_OPERATION_NAME, "create"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "create")));
             },
             trace -> {
               createSpans.add(trace.getSpan(0));
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("create testSdkSqs")
-                          .hasKind(SpanKind.PRODUCER)
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                              equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                              equalTo(MESSAGING_OPERATION_NAME, "create"),
-                              equalTo(MESSAGING_OPERATION_TYPE, "create")));
+              trace.hasSpansSatisfyingExactly(span ->
+                  span.hasName("create testSdkSqs")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasNoParent()
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                          equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                          equalTo(MESSAGING_OPERATION_NAME, "create"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "create")));
             },
             trace -> {
               createSpans.add(trace.getSpan(0));
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("create testSdkSqs")
-                          .hasKind(SpanKind.PRODUCER)
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                              equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                              equalTo(MESSAGING_OPERATION_NAME, "create"),
-                              equalTo(MESSAGING_OPERATION_TYPE, "create")));
+              trace.hasSpansSatisfyingExactly(span ->
+                  span.hasName("create testSdkSqs")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasNoParent()
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                          equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                          equalTo(MESSAGING_OPERATION_NAME, "create"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "create")));
             },
             trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("send testSdkSqs")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
-                                equalTo(AWS_SQS_QUEUE_URL, queueUrl),
-                                satisfies(
-                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RPC_METHOD, "SendMessageBatch"),
-                                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, sqsPort),
-                                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 3),
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"))
-                            .hasLinksSatisfying(
-                                links ->
-                                    assertThat(links)
-                                        .extracting(link -> link.getSpanContext().getSpanId())
-                                        .containsExactlyInAnyOrder(
-                                            createSpans.get(0).getSpanId(),
-                                            createSpans.get(1).getSpanId(),
-                                            createSpans.get(2).getSpanId()))));
+                trace.hasSpansSatisfyingExactly(span ->
+                    span.hasName("send testSdkSqs")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                            equalTo(AWS_SQS_QUEUE_URL, queueUrl),
+                            satisfies(AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
+                            equalTo(RPC_SYSTEM, "aws-api"),
+                            equalTo(RPC_SERVICE, "AmazonSQS"),
+                            equalTo(RPC_METHOD, "SendMessageBatch"),
+                            equalTo(HTTP_REQUEST_METHOD, "POST"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, sqsPort),
+                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 3),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"))
+                        .hasLinksSatisfying(links ->
+                            assertThat(links)
+                                .extracting(link -> link.getSpanContext().getSpanId())
+                                .containsExactlyInAnyOrder(
+                                    createSpans.get(0).getSpanId(),
+                                    createSpans.get(1).getSpanId(),
+                                    createSpans.get(2).getSpanId()))));
   }
 
   protected static boolean supportsMessageSystemAttributes() {
@@ -610,31 +584,28 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
     sqsClient.deleteMessage(new DeleteMessageRequest(queueUrl, receiptHandle));
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("delete testSdkSqs")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
-                                equalTo(AWS_SQS_QUEUE_URL, queueUrl),
-                                satisfies(
-                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RPC_METHOD, "DeleteMessage"),
-                                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, sqsPort),
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                equalTo(MESSAGING_OPERATION_NAME, "delete"),
-                                equalTo(MESSAGING_OPERATION_TYPE, "settle"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("delete testSdkSqs")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                        equalTo(AWS_SQS_QUEUE_URL, queueUrl),
+                        satisfies(AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
+                        equalTo(RPC_SYSTEM, "aws-api"),
+                        equalTo(RPC_SERVICE, "AmazonSQS"),
+                        equalTo(RPC_METHOD, "DeleteMessage"),
+                        equalTo(HTTP_REQUEST_METHOD, "POST"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, sqsPort),
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                        equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                        equalTo(MESSAGING_OPERATION_NAME, "delete"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "settle"))));
   }
 
   @Test
@@ -650,37 +621,34 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                 new DeleteMessageBatchRequestEntry("i2", receiptHandles.get(1))));
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      List<AttributeAssertion> attributes =
-                          new ArrayList<>(
-                              asList(
-                                  equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
-                                  equalTo(AWS_SQS_QUEUE_URL, queueUrl),
-                                  satisfies(
-                                      AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
-                                  equalTo(RPC_SYSTEM, "aws-api"),
-                                  equalTo(RPC_SERVICE, "AmazonSQS"),
-                                  equalTo(RPC_METHOD, "DeleteMessageBatch"),
-                                  equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                  equalTo(URL_FULL, "http://localhost:" + sqsPort),
-                                  equalTo(SERVER_ADDRESS, "localhost"),
-                                  equalTo(SERVER_PORT, sqsPort),
-                                  equalTo(NETWORK_PROTOCOL_VERSION, "1.1")));
-                      attributes.add(equalTo(stringKey("messaging.system.name"), "aws.sqs"));
-                      attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
-                      attributes.add(equalTo(MESSAGING_OPERATION_NAME, "delete"));
-                      attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
-                      attributes.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span -> {
+              List<AttributeAssertion> attributes =
+                  new ArrayList<>(
+                      asList(
+                          equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                          equalTo(AWS_SQS_QUEUE_URL, queueUrl),
+                          satisfies(AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
+                          equalTo(RPC_SYSTEM, "aws-api"),
+                          equalTo(RPC_SERVICE, "AmazonSQS"),
+                          equalTo(RPC_METHOD, "DeleteMessageBatch"),
+                          equalTo(HTTP_REQUEST_METHOD, "POST"),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                          equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                          equalTo(SERVER_ADDRESS, "localhost"),
+                          equalTo(SERVER_PORT, sqsPort),
+                          equalTo(NETWORK_PROTOCOL_VERSION, "1.1")));
+              attributes.add(equalTo(stringKey("messaging.system.name"), "aws.sqs"));
+              attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"));
+              attributes.add(equalTo(MESSAGING_OPERATION_NAME, "delete"));
+              attributes.add(equalTo(MESSAGING_OPERATION_TYPE, "settle"));
+              attributes.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2));
 
-                      span.hasName("delete testSdkSqs")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(attributes);
-                    }));
+              span.hasName("delete testSdkSqs")
+                  .hasKind(SpanKind.CLIENT)
+                  .hasNoParent()
+                  .hasAttributesSatisfyingExactly(attributes);
+            }));
   }
 
   @Test
@@ -695,32 +663,29 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
             .withVisibilityTimeout(1));
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      List<AttributeAssertion> attributes =
-                          new ArrayList<>(
-                              asList(
-                                  equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
-                                  equalTo(AWS_SQS_QUEUE_URL, queueUrl),
-                                  satisfies(
-                                      AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
-                                  equalTo(RPC_SYSTEM, "aws-api"),
-                                  equalTo(RPC_SERVICE, "AmazonSQS"),
-                                  equalTo(RPC_METHOD, "ChangeMessageVisibility"),
-                                  equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                  equalTo(URL_FULL, "http://localhost:" + sqsPort),
-                                  equalTo(SERVER_ADDRESS, "localhost"),
-                                  equalTo(SERVER_PORT, sqsPort),
-                                  equalTo(NETWORK_PROTOCOL_VERSION, "1.1")));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span -> {
+              List<AttributeAssertion> attributes =
+                  new ArrayList<>(
+                      asList(
+                          equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                          equalTo(AWS_SQS_QUEUE_URL, queueUrl),
+                          satisfies(AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
+                          equalTo(RPC_SYSTEM, "aws-api"),
+                          equalTo(RPC_SERVICE, "AmazonSQS"),
+                          equalTo(RPC_METHOD, "ChangeMessageVisibility"),
+                          equalTo(HTTP_REQUEST_METHOD, "POST"),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                          equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                          equalTo(SERVER_ADDRESS, "localhost"),
+                          equalTo(SERVER_PORT, sqsPort),
+                          equalTo(NETWORK_PROTOCOL_VERSION, "1.1")));
 
-                      span.hasName("SQS.ChangeMessageVisibility")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(attributes);
-                    }));
+              span.hasName("SQS.ChangeMessageVisibility")
+                  .hasKind(SpanKind.CLIENT)
+                  .hasNoParent()
+                  .hasAttributesSatisfyingExactly(attributes);
+            }));
   }
 
   @Test
@@ -742,32 +707,29 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                     .withVisibilityTimeout(1)));
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      List<AttributeAssertion> attributes =
-                          new ArrayList<>(
-                              asList(
-                                  equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
-                                  equalTo(AWS_SQS_QUEUE_URL, queueUrl),
-                                  satisfies(
-                                      AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
-                                  equalTo(RPC_SYSTEM, "aws-api"),
-                                  equalTo(RPC_SERVICE, "AmazonSQS"),
-                                  equalTo(RPC_METHOD, "ChangeMessageVisibilityBatch"),
-                                  equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                  equalTo(URL_FULL, "http://localhost:" + sqsPort),
-                                  equalTo(SERVER_ADDRESS, "localhost"),
-                                  equalTo(SERVER_PORT, sqsPort),
-                                  equalTo(NETWORK_PROTOCOL_VERSION, "1.1")));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span -> {
+              List<AttributeAssertion> attributes =
+                  new ArrayList<>(
+                      asList(
+                          equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                          equalTo(AWS_SQS_QUEUE_URL, queueUrl),
+                          satisfies(AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
+                          equalTo(RPC_SYSTEM, "aws-api"),
+                          equalTo(RPC_SERVICE, "AmazonSQS"),
+                          equalTo(RPC_METHOD, "ChangeMessageVisibilityBatch"),
+                          equalTo(HTTP_REQUEST_METHOD, "POST"),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                          equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                          equalTo(SERVER_ADDRESS, "localhost"),
+                          equalTo(SERVER_PORT, sqsPort),
+                          equalTo(NETWORK_PROTOCOL_VERSION, "1.1")));
 
-                      span.hasName("SQS.ChangeMessageVisibilityBatch")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(attributes);
-                    }));
+              span.hasName("SQS.ChangeMessageVisibilityBatch")
+                  .hasKind(SpanKind.CLIENT)
+                  .hasNoParent()
+                  .hasAttributesSatisfyingExactly(attributes);
+            }));
   }
 
   @Test
@@ -780,29 +742,27 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
 
     assertThat(error).isInstanceOf(QueueDoesNotExistException.class);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("delete missing")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
-                                equalTo(AWS_SQS_QUEUE_URL, queueUrl),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RPC_METHOD, "DeleteMessage"),
-                                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, sqsPort),
-                                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                                equalTo(MESSAGING_DESTINATION_NAME, "missing"),
-                                equalTo(MESSAGING_OPERATION_NAME, "delete"),
-                                equalTo(MESSAGING_OPERATION_TYPE, "settle"),
-                                equalTo(ERROR_TYPE, QueueDoesNotExistException.class.getName()))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("delete missing")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                        equalTo(AWS_SQS_QUEUE_URL, queueUrl),
+                        equalTo(RPC_SYSTEM, "aws-api"),
+                        equalTo(RPC_SERVICE, "AmazonSQS"),
+                        equalTo(RPC_METHOD, "DeleteMessage"),
+                        equalTo(HTTP_REQUEST_METHOD, "POST"),
+                        equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, sqsPort),
+                        equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                        equalTo(MESSAGING_DESTINATION_NAME, "missing"),
+                        equalTo(MESSAGING_OPERATION_NAME, "delete"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "settle"),
+                        equalTo(ERROR_TYPE, QueueDoesNotExistException.class.getName()))));
   }
 
   private List<String> createMessages(String queueUrl, int count) {
@@ -846,31 +806,28 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
     testing()
         .waitAndAssertTraces(
             trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("SQS.CreateQueue")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
-                                equalTo(stringKey("aws.queue.name"), experimental("testSdkSqs")),
-                                satisfies(
-                                    AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RPC_METHOD, "CreateQueue"),
-                                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, sqsPort),
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"))),
+                trace.hasSpansSatisfyingExactly(span ->
+                    span.hasName("SQS.CreateQueue")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                            equalTo(stringKey("aws.queue.name"), experimental("testSdkSqs")),
+                            satisfies(AWS_REQUEST_ID, AbstractSqsTracingTest::assertAwsRequestId),
+                            equalTo(RPC_SYSTEM, "aws-api"),
+                            equalTo(RPC_SERVICE, "AmazonSQS"),
+                            equalTo(RPC_METHOD, "CreateQueue"),
+                            equalTo(HTTP_REQUEST_METHOD, "POST"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, sqsPort),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"))),
             trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      producerSpan.set(trace.getSpan(0));
-                      assertPublishSpan(span, false);
-                    }),
+                trace.hasSpansSatisfyingExactly(span -> {
+                  producerSpan.set(trace.getSpan(0));
+                  assertPublishSpan(span, false);
+                }),
             trace -> {
               Consumer<SpanDataAssert> receiveSpanAssertion =
                   span -> assertReceiveSpan(span, trace.getSpan(0), producerSpan.get(), false);
@@ -897,11 +854,10 @@ public abstract class AbstractSqsTracingTest extends AbstractAwsSdkTest {
                 assertions.add(sdkSpanAssertion);
               }
               assertions.add(processSpanAssertion);
-              assertions.add(
-                  span ->
-                      span.hasName("process child")
-                          .hasParent(trace.getSpan(receiveTelemetryEnabled() ? 3 : 2))
-                          .hasTotalAttributeCount(0));
+              assertions.add(span ->
+                  span.hasName("process child")
+                      .hasParent(trace.getSpan(receiveTelemetryEnabled() ? 3 : 2))
+                      .hasTotalAttributeCount(0));
               trace.hasSpansSatisfyingExactly(assertions);
             });
   }

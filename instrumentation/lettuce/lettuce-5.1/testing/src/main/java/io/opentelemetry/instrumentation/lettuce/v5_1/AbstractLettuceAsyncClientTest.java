@@ -137,16 +137,15 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     cleanup.deferCleanup(testConnectionClient::shutdown);
 
     Throwable thrown =
-        catchThrowable(
-            () -> {
-              ConnectionFuture<StatefulRedisConnection<String, String>> connectionFuture =
-                  testConnectionClient.connectAsync(
-                      StringCodec.UTF8,
-                      RedisURI.create("redis://" + host + ":" + incorrectPort + "?timeout=3s"));
-              StatefulRedisConnection<String, String> connection1 = connectionFuture.get();
-              cleanup.deferCleanup(connection1);
-              assertThat(connection1).isNull();
-            });
+        catchThrowable(() -> {
+          ConnectionFuture<StatefulRedisConnection<String, String>> connectionFuture =
+              testConnectionClient.connectAsync(
+                  StringCodec.UTF8,
+                  RedisURI.create("redis://" + host + ":" + incorrectPort + "?timeout=3s"));
+          StatefulRedisConnection<String, String> connection1 = connectionFuture.get();
+          cleanup.deferCleanup(connection1);
+          assertThat(connection1).isNull();
+        });
 
     assertThat(thrown).isInstanceOf(ExecutionException.class);
 
@@ -163,23 +162,22 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     assertThat(res).isEqualTo("OK");
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(spanName("SET"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(DB_QUERY_TEXT, "SET TESTSETKEY ?"),
-                                    equalTo(DB_OPERATION_NAME, "SET")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(spanName("SET"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            addExtraAttributes(
+                                equalTo(NETWORK_PEER_ADDRESS, ip),
+                                equalTo(NETWORK_PEER_PORT, port),
+                                equalTo(SERVER_ADDRESS, host),
+                                equalTo(SERVER_PORT, port),
+                                equalTo(DB_SYSTEM_NAME, REDIS),
+                                equalTo(DB_QUERY_TEXT, "SET TESTSETKEY ?"),
+                                equalTo(DB_OPERATION_NAME, "SET")))));
 
     assertCommandMetric("SET", null);
   }
@@ -199,28 +197,26 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
         .hasCauseInstanceOf(RedisCommandExecutionException.class);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(spanName("LPUSH"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasStatus(StatusData.error())
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(DB_QUERY_TEXT, "LPUSH " + WRONG_TYPE_KEY + " ?"),
-                                    equalTo(DB_OPERATION_NAME, "LPUSH"),
-                                    equalTo(
-                                        ERROR_TYPE,
-                                        testLatestDeps()
-                                            ? RedisCommandExecutionException.class.getName()
-                                            : "_OTHER")))
-                            .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(spanName("LPUSH"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        addExtraAttributes(
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "LPUSH " + WRONG_TYPE_KEY + " ?"),
+                            equalTo(DB_OPERATION_NAME, "LPUSH"),
+                            equalTo(
+                                ERROR_TYPE,
+                                testLatestDeps()
+                                    ? RedisCommandExecutionException.class.getName()
+                                    : "_OTHER")))
+                    .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
 
     assertCommandMetric(
         "LPUSH", testLatestDeps() ? RedisCommandExecutionException.class.getName() : "_OTHER");
@@ -251,28 +247,26 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
         .hasCauseInstanceOf(RedisCommandTimeoutException.class);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(spanName("BLPOP"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(DB_QUERY_TEXT, "BLPOP TIMEOUT_LIST 1"),
-                                    equalTo(DB_OPERATION_NAME, "BLPOP"),
-                                    equalTo(
-                                        ERROR_TYPE,
-                                        testLatestDeps()
-                                            ? RedisCommandTimeoutException.class.getName()
-                                            : "_OTHER")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(spanName("BLPOP"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        addExtraAttributes(
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "BLPOP TIMEOUT_LIST 1"),
+                            equalTo(DB_OPERATION_NAME, "BLPOP"),
+                            equalTo(
+                                ERROR_TYPE,
+                                testLatestDeps()
+                                    ? RedisCommandTimeoutException.class.getName()
+                                    : "_OTHER")))));
 
     assertCommandMetric(
         "BLPOP", testLatestDeps() ? RedisCommandTimeoutException.class.getName() : "_OTHER");
@@ -294,13 +288,10 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     RedisFuture<?> pending = pendingConnection.async().blpop(0, "PENDING_DISCONNECT_LIST");
     await()
         .atMost(Duration.ofSeconds(5))
-        .until(
-            () ->
-                Stream.of(observer.sync().clientList().split("\n"))
-                    .anyMatch(
-                        line ->
-                            line.contains("name=otel-pending-disconnect")
-                                && line.contains("cmd=blpop")));
+        .until(() ->
+            Stream.of(observer.sync().clientList().split("\n"))
+                .anyMatch(line ->
+                    line.contains("name=otel-pending-disconnect") && line.contains("cmd=blpop")));
     assertThat(pending.isDone()).isFalse();
 
     pendingConnection.close();
@@ -310,28 +301,24 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
         .hasCauseInstanceOf(RedisException.class);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(spanName("BLPOP"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(DB_QUERY_TEXT, "BLPOP PENDING_DISCONNECT_LIST 0"),
-                                    equalTo(DB_OPERATION_NAME, "BLPOP"),
-                                    equalTo(
-                                        ERROR_TYPE,
-                                        testLatestDeps()
-                                            ? RedisException.class.getName()
-                                            : "_OTHER")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(spanName("BLPOP"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        addExtraAttributes(
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "BLPOP PENDING_DISCONNECT_LIST 0"),
+                            equalTo(DB_OPERATION_NAME, "BLPOP"),
+                            equalTo(
+                                ERROR_TYPE,
+                                testLatestDeps() ? RedisException.class.getName() : "_OTHER")))));
 
     assertCommandMetric("BLPOP", testLatestDeps() ? RedisException.class.getName() : "_OTHER");
   }
@@ -358,35 +345,31 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     assertThat(future.get(10, SECONDS)).isEqualTo("TESTVAL");
 
     testing()
-        .waitAndAssertTraces(
-            trace -> {
-              List<Consumer<SpanDataAssert>> spanAsserts =
-                  new ArrayList<>(
-                      asList(
-                          span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                          span ->
-                              span.hasName(spanName("GET"))
-                                  .hasKind(SpanKind.CLIENT)
-                                  .hasParent(trace.getSpan(0))
-                                  .hasAttributesSatisfyingExactly(
-                                      addExtraAttributes(
-                                          equalTo(NETWORK_PEER_ADDRESS, ip),
-                                          equalTo(NETWORK_PEER_PORT, port),
-                                          equalTo(SERVER_ADDRESS, host),
-                                          equalTo(SERVER_PORT, port),
-                                          equalTo(DB_SYSTEM_NAME, REDIS),
-                                          equalTo(DB_QUERY_TEXT, "GET TESTKEY"),
-                                          equalTo(DB_OPERATION_NAME, "GET")))));
+        .waitAndAssertTraces(trace -> {
+          List<Consumer<SpanDataAssert>> spanAsserts =
+              new ArrayList<>(
+                  asList(
+                      span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                      span ->
+                          span.hasName(spanName("GET"))
+                              .hasKind(SpanKind.CLIENT)
+                              .hasParent(trace.getSpan(0))
+                              .hasAttributesSatisfyingExactly(
+                                  addExtraAttributes(
+                                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NETWORK_PEER_PORT, port),
+                                      equalTo(SERVER_ADDRESS, host),
+                                      equalTo(SERVER_PORT, port),
+                                      equalTo(DB_SYSTEM_NAME, REDIS),
+                                      equalTo(DB_QUERY_TEXT, "GET TESTKEY"),
+                                      equalTo(DB_OPERATION_NAME, "GET")))));
 
-              if (testCallback()) {
-                spanAsserts.add(
-                    span ->
-                        span.hasName("callback")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)));
-              }
-              trace.hasSpansSatisfyingExactly(spanAsserts);
-            });
+          if (testCallback()) {
+            spanAsserts.add(span ->
+                span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
+          }
+          trace.hasSpansSatisfyingExactly(spanAsserts);
+        });
   }
 
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
@@ -434,40 +417,39 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     assertThat(future.get(10, SECONDS)).isEqualTo(successStr);
 
     testing()
-        .waitAndAssertTraces(
-            trace -> {
-              List<Consumer<SpanDataAssert>> spanAsserts =
-                  new ArrayList<>(
-                      asList(
-                          span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                          span ->
-                              span.hasName(spanName("GET"))
-                                  .hasKind(SpanKind.CLIENT)
-                                  .hasParent(trace.getSpan(0))
-                                  .hasAttributesSatisfyingExactly(
-                                      addExtraAttributes(
-                                          equalTo(NETWORK_PEER_ADDRESS, ip),
-                                          equalTo(NETWORK_PEER_PORT, port),
-                                          equalTo(SERVER_ADDRESS, host),
-                                          equalTo(SERVER_PORT, port),
-                                          equalTo(DB_SYSTEM_NAME, REDIS),
-                                          equalTo(DB_QUERY_TEXT, "GET NON_EXISTENT_KEY"),
-                                          equalTo(DB_OPERATION_NAME, "GET")))));
+        .waitAndAssertTraces(trace -> {
+          List<Consumer<SpanDataAssert>> spanAsserts =
+              new ArrayList<>(
+                  asList(
+                      span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                      span ->
+                          span.hasName(spanName("GET"))
+                              .hasKind(SpanKind.CLIENT)
+                              .hasParent(trace.getSpan(0))
+                              .hasAttributesSatisfyingExactly(
+                                  addExtraAttributes(
+                                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NETWORK_PEER_PORT, port),
+                                      equalTo(SERVER_ADDRESS, host),
+                                      equalTo(SERVER_PORT, port),
+                                      equalTo(DB_SYSTEM_NAME, REDIS),
+                                      equalTo(DB_QUERY_TEXT, "GET NON_EXISTENT_KEY"),
+                                      equalTo(DB_OPERATION_NAME, "GET")))));
 
-              if (testCallback()) {
-                spanAsserts.addAll(
-                    asList(
-                        span ->
-                            span.hasName("callback1")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParent(trace.getSpan(0)),
-                        span ->
-                            span.hasName("callback2")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParent(trace.getSpan(0))));
-              }
-              trace.hasSpansSatisfyingExactly(spanAsserts);
-            });
+          if (testCallback()) {
+            spanAsserts.addAll(
+                asList(
+                    span ->
+                        span.hasName("callback1")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0)),
+                    span ->
+                        span.hasName("callback2")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
+          }
+          trace.hasSpansSatisfyingExactly(spanAsserts);
+        });
   }
 
   @Test
@@ -497,35 +479,31 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     assertThat(future.get(10, SECONDS)).isNotNull();
 
     testing()
-        .waitAndAssertTraces(
-            trace -> {
-              List<Consumer<SpanDataAssert>> spanAsserts =
-                  new ArrayList<>(
-                      asList(
-                          span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                          span ->
-                              span.hasName(spanName("RANDOMKEY"))
-                                  .hasKind(SpanKind.CLIENT)
-                                  .hasParent(trace.getSpan(0))
-                                  .hasAttributesSatisfyingExactly(
-                                      addExtraAttributes(
-                                          equalTo(NETWORK_PEER_ADDRESS, ip),
-                                          equalTo(NETWORK_PEER_PORT, port),
-                                          equalTo(SERVER_ADDRESS, host),
-                                          equalTo(SERVER_PORT, port),
-                                          equalTo(DB_SYSTEM_NAME, REDIS),
-                                          equalTo(DB_QUERY_TEXT, "RANDOMKEY"),
-                                          equalTo(DB_OPERATION_NAME, "RANDOMKEY")))));
+        .waitAndAssertTraces(trace -> {
+          List<Consumer<SpanDataAssert>> spanAsserts =
+              new ArrayList<>(
+                  asList(
+                      span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                      span ->
+                          span.hasName(spanName("RANDOMKEY"))
+                              .hasKind(SpanKind.CLIENT)
+                              .hasParent(trace.getSpan(0))
+                              .hasAttributesSatisfyingExactly(
+                                  addExtraAttributes(
+                                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NETWORK_PEER_PORT, port),
+                                      equalTo(SERVER_ADDRESS, host),
+                                      equalTo(SERVER_PORT, port),
+                                      equalTo(DB_SYSTEM_NAME, REDIS),
+                                      equalTo(DB_QUERY_TEXT, "RANDOMKEY"),
+                                      equalTo(DB_OPERATION_NAME, "RANDOMKEY")))));
 
-              if (testCallback()) {
-                spanAsserts.add(
-                    span ->
-                        span.hasName("callback")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)));
-              }
-              trace.hasSpansSatisfyingExactly(spanAsserts);
-            });
+          if (testCallback()) {
+            spanAsserts.add(span ->
+                span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
+          }
+          trace.hasSpansSatisfyingExactly(spanAsserts);
+        });
   }
 
   @Test
@@ -533,60 +511,55 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     CompletableFuture<Map<String, String>> future = new CompletableFuture<>();
 
     RedisFuture<String> hmsetFuture = asyncCommands.hmset("TESTHM", TEST_HASH_MAP);
-    hmsetFuture.thenApplyAsync(
-        setResult -> {
-          // Wait for 'hmset' trace to get written
-          testing().waitForTraces(1);
+    hmsetFuture.thenApplyAsync(setResult -> {
+      // Wait for 'hmset' trace to get written
+      testing().waitForTraces(1);
 
-          if (!"OK".equals(setResult)) {
-            future.completeExceptionally(new AssertionError("Wrong hmset result " + setResult));
-            return null;
-          }
+      if (!"OK".equals(setResult)) {
+        future.completeExceptionally(new AssertionError("Wrong hmset result " + setResult));
+        return null;
+      }
 
-          RedisFuture<Map<String, String>> hmGetAllFuture = asyncCommands.hgetall("TESTHM");
-          hmGetAllFuture.whenComplete(
-              (result, exception) -> {
-                if (exception != null) {
-                  future.completeExceptionally(exception);
-                } else {
-                  future.complete(result);
-                }
-              });
-          return null;
-        });
+      RedisFuture<Map<String, String>> hmGetAllFuture = asyncCommands.hgetall("TESTHM");
+      hmGetAllFuture.whenComplete((result, exception) -> {
+        if (exception != null) {
+          future.completeExceptionally(exception);
+        } else {
+          future.complete(result);
+        }
+      });
+      return null;
+    });
 
     assertThat(future.get(10, SECONDS)).isEqualTo(TEST_HASH_MAP);
 
     testing()
         .waitAndAssertTraces(
             trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(spanName("HMSET"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(
-                                        DB_QUERY_TEXT, "HMSET TESTHM firstname ? lastname ? age ?"),
-                                    equalTo(DB_OPERATION_NAME, "HMSET")))),
+                trace.hasSpansSatisfyingExactly(span ->
+                    span.hasName(spanName("HMSET"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            addExtraAttributes(
+                                equalTo(NETWORK_PEER_ADDRESS, ip),
+                                equalTo(NETWORK_PEER_PORT, port),
+                                equalTo(SERVER_ADDRESS, host),
+                                equalTo(SERVER_PORT, port),
+                                equalTo(DB_SYSTEM_NAME, REDIS),
+                                equalTo(DB_QUERY_TEXT, "HMSET TESTHM firstname ? lastname ? age ?"),
+                                equalTo(DB_OPERATION_NAME, "HMSET")))),
             trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(spanName("HGETALL"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(DB_QUERY_TEXT, "HGETALL TESTHM"),
-                                    equalTo(DB_OPERATION_NAME, "HGETALL")))));
+                trace.hasSpansSatisfyingExactly(span ->
+                    span.hasName(spanName("HGETALL"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            addExtraAttributes(
+                                equalTo(NETWORK_PEER_ADDRESS, ip),
+                                equalTo(NETWORK_PEER_PORT, port),
+                                equalTo(SERVER_ADDRESS, host),
+                                equalTo(SERVER_PORT, port),
+                                equalTo(DB_SYSTEM_NAME, REDIS),
+                                equalTo(DB_QUERY_TEXT, "HGETALL TESTHM"),
+                                equalTo(DB_OPERATION_NAME, "HGETALL")))));
   }
 }

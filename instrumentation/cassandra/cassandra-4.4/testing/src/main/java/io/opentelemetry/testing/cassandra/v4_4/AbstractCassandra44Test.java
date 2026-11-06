@@ -54,40 +54,35 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                     .blockLast());
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(parameter.spanName)
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(NETWORK_TYPE, val -> val.isNull()),
-                                equalTo(SERVER_ADDRESS, cassandraHost),
-                                equalTo(SERVER_PORT, cassandraPort),
-                                equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
-                                equalTo(NETWORK_PEER_PORT, cassandraPort),
-                                equalTo(DB_SYSTEM_NAME, CASSANDRA),
-                                equalTo(DB_NAMESPACE, parameter.keyspace),
-                                equalTo(DB_QUERY_TEXT, parameter.expectedQueryText),
-                                equalTo(DB_QUERY_SUMMARY, parameter.spanName),
-                                equalTo(DB_OPERATION_NAME, parameter.operation),
-                                equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
-                                equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
-                                satisfies(
-                                    CASSANDRA_COORDINATOR_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                satisfies(
-                                    CASSANDRA_QUERY_IDEMPOTENT,
-                                    val -> val.isInstanceOf(Boolean.class)),
-                                equalTo(CASSANDRA_PAGE_SIZE, 5000),
-                                equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
-                                equalTo(DB_COLLECTION_NAME, parameter.table)),
-                    span ->
-                        span.hasName("child")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(parameter.spanName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(NETWORK_TYPE, val -> val.isNull()),
+                            equalTo(SERVER_ADDRESS, cassandraHost),
+                            equalTo(SERVER_PORT, cassandraPort),
+                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                            equalTo(NETWORK_PEER_PORT, cassandraPort),
+                            equalTo(DB_SYSTEM_NAME, CASSANDRA),
+                            equalTo(DB_NAMESPACE, parameter.keyspace),
+                            equalTo(DB_QUERY_TEXT, parameter.expectedQueryText),
+                            equalTo(DB_QUERY_SUMMARY, parameter.spanName),
+                            equalTo(DB_OPERATION_NAME, parameter.operation),
+                            equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
+                            equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
+                            satisfies(
+                                CASSANDRA_COORDINATOR_ID, val -> val.isInstanceOf(String.class)),
+                            satisfies(
+                                CASSANDRA_QUERY_IDEMPOTENT, val -> val.isInstanceOf(Boolean.class)),
+                            equalTo(CASSANDRA_PAGE_SIZE, 5000),
+                            equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
+                            equalTo(DB_COLLECTION_NAME, parameter.table)),
+                span ->
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   private static Stream<Arguments> provideReactiveParameters() {

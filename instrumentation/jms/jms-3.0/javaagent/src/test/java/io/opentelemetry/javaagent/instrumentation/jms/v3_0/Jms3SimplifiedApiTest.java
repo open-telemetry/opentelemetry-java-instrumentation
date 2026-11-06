@@ -63,20 +63,19 @@ class Jms3SimplifiedApiTest {
 
     testing.runWithSpan("parent", () -> producer.send(queue, message));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("send " + QUEUE_NAME)
-                        .hasKind(PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, QUEUE_NAME),
-                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                            equalTo(MESSAGING_MESSAGE_ID, MESSAGE_ID))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span ->
+                span.hasName("send " + QUEUE_NAME)
+                    .hasKind(PRODUCER)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "jms"),
+                        equalTo(MESSAGING_DESTINATION_NAME, QUEUE_NAME),
+                        equalTo(MESSAGING_OPERATION_NAME, "send"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                        equalTo(MESSAGING_MESSAGE_ID, MESSAGE_ID))));
   }
 
   @ParameterizedTest
@@ -89,20 +88,19 @@ class Jms3SimplifiedApiTest {
 
     testing.runWithSpan("consumer parent", () -> receiver.apply(consumer));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("consumer parent").hasNoParent(),
-                span ->
-                    span.hasName("receive " + QUEUE_NAME)
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, QUEUE_NAME),
-                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
-                            equalTo(MESSAGING_MESSAGE_ID, MESSAGE_ID))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("consumer parent").hasNoParent(),
+            span ->
+                span.hasName("receive " + QUEUE_NAME)
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "jms"),
+                        equalTo(MESSAGING_DESTINATION_NAME, QUEUE_NAME),
+                        equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                        equalTo(MESSAGING_MESSAGE_ID, MESSAGE_ID))));
   }
 
   @ParameterizedTest

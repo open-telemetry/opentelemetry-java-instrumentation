@@ -169,38 +169,33 @@ public abstract class AbstractR2dbcStatementTest {
             "parent",
             () -> {
               Mono.from(connectionFactory.create())
-                  .flatMapMany(
-                      connection ->
-                          Mono.from(connection.createStatement(parameter.queryText).execute())
-                              // Subscribe to the Statement.execute()
-                              .flatMapMany(result -> result.map((row, metadata) -> ""))
-                              .concatWith(Mono.from(connection.close()).cast(String.class)))
+                  .flatMapMany(connection ->
+                      Mono.from(connection.createStatement(parameter.queryText).execute())
+                          // Subscribe to the Statement.execute()
+                          .flatMapMany(result -> result.map((row, metadata) -> ""))
+                          .concatWith(Mono.from(connection.close()).cast(String.class)))
                   .doFinally(e -> getTesting().runWithSpan("child", () -> {}))
                   .blockLast(Duration.ofMinutes(1));
             });
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-                    span ->
-                        span.hasName(parameter.spanName)
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM_NAME, parameter.system),
-                                equalTo(DB_NAMESPACE, DB),
-                                equalTo(DB_QUERY_TEXT, parameter.expectedQueryText),
-                                equalTo(DB_QUERY_SUMMARY, parameter.getQuerySummary()),
-                                equalTo(
-                                    stringKey("server.service.name"), expectedMappedServiceName()),
-                                equalTo(SERVER_ADDRESS, container.getHost()),
-                                equalTo(SERVER_PORT, port)),
-                    span ->
-                        span.hasName("child")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName(parameter.spanName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, parameter.system),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, parameter.expectedQueryText),
+                            equalTo(DB_QUERY_SUMMARY, parameter.getQuerySummary()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                            equalTo(SERVER_ADDRESS, container.getHost()),
+                            equalTo(SERVER_PORT, port)),
+                span ->
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -216,16 +211,14 @@ public abstract class AbstractR2dbcStatementTest {
               () ->
                   assertThat(
                           Flux.from(connection.createStatement("SELECT 42").execute())
-                              .flatMap(
-                                  result ->
-                                      result
-                                          .filter(segment -> segment instanceof Result.RowSegment)
-                                          .flatMap(
-                                              segment ->
-                                                  Mono.just(
-                                                      ((Result.RowSegment) segment)
-                                                          .row()
-                                                          .get(0, Integer.class))))
+                              .flatMap(result ->
+                                  result
+                                      .filter(segment -> segment instanceof Result.RowSegment)
+                                      .flatMap(segment ->
+                                          Mono.just(
+                                              ((Result.RowSegment) segment)
+                                                  .row()
+                                                  .get(0, Integer.class))))
                               .collectList()
                               .block(Duration.ofSeconds(10)))
                       .containsExactly(42));
@@ -234,49 +227,45 @@ public abstract class AbstractR2dbcStatementTest {
     }
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-                    span ->
-                        span.hasName("SELECT")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("SELECT").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
 
   private static Stream<Arguments> provideParameters() {
     return systems.values().stream()
-        .flatMap(
-            system ->
-                Stream.of(
-                    Arguments.of(
-                        named(
-                            system.system + " Simple Select",
-                            new Parameter(system.system, "SELECT 3", "SELECT ?", "SELECT"))),
-                    Arguments.of(
-                        named(
-                            system.system + " Create Table",
-                            new Parameter(
-                                system.system,
-                                "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(255), last_name VARCHAR(255))",
-                                "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(?), last_name VARCHAR(?))",
-                                "CREATE TABLE person"))),
-                    Arguments.of(
-                        named(
-                            system.system + " Insert",
-                            new Parameter(
-                                system.system,
-                                "INSERT INTO person (id, first_name, last_name) values (1, 'tom', 'johnson')",
-                                "INSERT INTO person (id, first_name, last_name) values (?, ?, ?)",
-                                "INSERT person"))),
-                    Arguments.of(
-                        named(
-                            system.system + " Select from Table",
-                            new Parameter(
-                                system.system,
-                                "SELECT * FROM person where first_name = 'tom'",
-                                "SELECT * FROM person where first_name = ?",
-                                "SELECT person")))));
+        .flatMap(system ->
+            Stream.of(
+                Arguments.of(
+                    named(
+                        system.system + " Simple Select",
+                        new Parameter(system.system, "SELECT 3", "SELECT ?", "SELECT"))),
+                Arguments.of(
+                    named(
+                        system.system + " Create Table",
+                        new Parameter(
+                            system.system,
+                            "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(255), last_name VARCHAR(255))",
+                            "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(?), last_name VARCHAR(?))",
+                            "CREATE TABLE person"))),
+                Arguments.of(
+                    named(
+                        system.system + " Insert",
+                        new Parameter(
+                            system.system,
+                            "INSERT INTO person (id, first_name, last_name) values (1, 'tom', 'johnson')",
+                            "INSERT INTO person (id, first_name, last_name) values (?, ?, ?)",
+                            "INSERT person"))),
+                Arguments.of(
+                    named(
+                        system.system + " Select from Table",
+                        new Parameter(
+                            system.system,
+                            "SELECT * FROM person where first_name = 'tom'",
+                            "SELECT * FROM person where first_name = ?",
+                            "SELECT person")))));
   }
 
   @Test
@@ -296,11 +285,10 @@ public abstract class AbstractR2dbcStatementTest {
                 .build());
 
     Mono.from(connectionFactory.create())
-        .flatMapMany(
-            connection ->
-                Mono.from(connection.createStatement("SELECT 3").execute())
-                    .flatMapMany(result -> result.map((row, metadata) -> ""))
-                    .concatWith(Mono.from(connection.close()).cast(String.class)))
+        .flatMapMany(connection ->
+            Mono.from(connection.createStatement("SELECT 3").execute())
+                .flatMapMany(result -> result.map((row, metadata) -> ""))
+                .concatWith(Mono.from(connection.close()).cast(String.class)))
         .blockLast(Duration.ofMinutes(1));
 
     assertDurationMetric(
@@ -339,73 +327,66 @@ public abstract class AbstractR2dbcStatementTest {
     getTesting().clearData();
 
     Throwable thrown =
-        catchThrowable(
-            () ->
-                getTesting()
-                    .runWithSpan(
-                        "parent",
-                        () -> {
-                          Mono.from(connectionFactory.create())
-                              .flatMapMany(
-                                  connection -> {
-                                    Batch batch = connection.createBatch();
-                                    for (String query : scenario.queries) {
-                                      batch.add(query);
-                                    }
-                                    return Flux.from(batch.execute())
-                                        .flatMap(result -> result.map((row, metadata) -> ""))
-                                        .concatWith(
-                                            Mono.from(connection.close()).cast(String.class));
-                                  })
-                              .blockLast(Duration.ofMinutes(1));
-                        }));
+        catchThrowable(() ->
+            getTesting()
+                .runWithSpan(
+                    "parent",
+                    () -> {
+                      Mono.from(connectionFactory.create())
+                          .flatMapMany(connection -> {
+                            Batch batch = connection.createBatch();
+                            for (String query : scenario.queries) {
+                              batch.add(query);
+                            }
+                            return Flux.from(batch.execute())
+                                .flatMap(result -> result.map((row, metadata) -> ""))
+                                .concatWith(Mono.from(connection.close()).cast(String.class));
+                          })
+                          .blockLast(Duration.ofMinutes(1));
+                    }));
 
     if (scenario.queries.isEmpty()) {
       // an empty batch fails to execute but still produces a client span
       assertThat(thrown).isInstanceOf(NoSuchElementException.class);
       getTesting()
-          .waitAndAssertTraces(
-              trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-                      span ->
-                          span.hasName("BATCH")
-                              .hasKind(SpanKind.CLIENT)
-                              .hasParent(trace.getSpan(0))
-                              .hasAttributesSatisfyingExactly(
-                                  equalTo(DB_SYSTEM_NAME, MARIADB.system),
-                                  equalTo(DB_NAMESPACE, DB),
-                                  equalTo(DB_QUERY_SUMMARY, "BATCH"),
-                                  equalTo(DB_OPERATION_BATCH_SIZE, 0L),
-                                  equalTo(
-                                      stringKey("server.service.name"),
-                                      expectedMappedServiceName()),
-                                  equalTo(SERVER_ADDRESS, container.getHost()),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(ERROR_TYPE, "java.util.NoSuchElementException"))));
+          .waitAndAssertTraces(trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                  span ->
+                      span.hasName("BATCH")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(DB_SYSTEM_NAME, MARIADB.system),
+                              equalTo(DB_NAMESPACE, DB),
+                              equalTo(DB_QUERY_SUMMARY, "BATCH"),
+                              equalTo(DB_OPERATION_BATCH_SIZE, 0L),
+                              equalTo(
+                                  stringKey("server.service.name"), expectedMappedServiceName()),
+                              equalTo(SERVER_ADDRESS, container.getHost()),
+                              equalTo(SERVER_PORT, port),
+                              equalTo(ERROR_TYPE, "java.util.NoSuchElementException"))));
       return;
     }
 
     assertThat(thrown).isNull();
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-                    span ->
-                        span.hasName(scenario.spanName)
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM_NAME, MARIADB.system),
-                                equalTo(DB_NAMESPACE, DB),
-                                equalTo(DB_QUERY_TEXT, scenario.queryText),
-                                equalTo(DB_QUERY_SUMMARY, scenario.summary),
-                                equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                                equalTo(
-                                    stringKey("server.service.name"), expectedMappedServiceName()),
-                                equalTo(SERVER_ADDRESS, container.getHost()),
-                                equalTo(SERVER_PORT, port))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName(scenario.spanName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, MARIADB.system),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, scenario.queryText),
+                            equalTo(DB_QUERY_SUMMARY, scenario.summary),
+                            equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                            equalTo(SERVER_ADDRESS, container.getHost()),
+                            equalTo(SERVER_PORT, port))));
   }
 
   private static Stream<Arguments> batchScenarios() {
@@ -444,18 +425,17 @@ public abstract class AbstractR2dbcStatementTest {
 
   private void recreateBatchTestTable(ConnectionFactory connectionFactory) {
     Mono.from(connectionFactory.create())
-        .flatMapMany(
-            connection ->
-                Mono.from(connection.createStatement("DROP TABLE IF EXISTS batch_test").execute())
-                    .flatMapMany(result -> result.map((row, metadata) -> ""))
-                    .concatWith(
-                        Mono.from(
-                                connection
-                                    .createStatement(
-                                        "CREATE TABLE batch_test (id INTEGER PRIMARY KEY, num INTEGER)")
-                                    .execute())
-                            .flatMapMany(result -> result.map((row, metadata) -> "")))
-                    .concatWith(Mono.from(connection.close()).cast(String.class)))
+        .flatMapMany(connection ->
+            Mono.from(connection.createStatement("DROP TABLE IF EXISTS batch_test").execute())
+                .flatMapMany(result -> result.map((row, metadata) -> ""))
+                .concatWith(
+                    Mono.from(
+                            connection
+                                .createStatement(
+                                    "CREATE TABLE batch_test (id INTEGER PRIMARY KEY, num INTEGER)")
+                                .execute())
+                        .flatMapMany(result -> result.map((row, metadata) -> "")))
+                .concatWith(Mono.from(connection.close()).cast(String.class)))
         .blockLast(Duration.ofMinutes(1));
   }
 

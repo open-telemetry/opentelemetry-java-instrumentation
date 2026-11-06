@@ -47,18 +47,17 @@ class HttpClientUrlTemplateCustomizerTest {
 
     assertThat(responseCode).isEqualTo(200);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET /hello/*")
-                        .hasNoParent()
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttribute(URL_TEMPLATE, "/hello/*")
-                        .hasStatus(StatusData.unset()),
-                span ->
-                    span.hasName("test-http-server")
-                        .hasParent(trace.getSpan(0))
-                        .hasKind(SpanKind.SERVER)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET /hello/*")
+                    .hasNoParent()
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttribute(URL_TEMPLATE, "/hello/*")
+                    .hasStatus(StatusData.unset()),
+            span ->
+                span.hasName("test-http-server")
+                    .hasParent(trace.getSpan(0))
+                    .hasKind(SpanKind.SERVER)));
   }
 }

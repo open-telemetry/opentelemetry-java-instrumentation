@@ -25,12 +25,11 @@ public class TomcatInstrumenterFactory {
             InstrumenterUtil.propagateOperationListenersToOnEnd(
                 builder
                     .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor))
-                    .addContextCustomizer(
-                        (context, request, attributes) ->
-                            new AppServerBridge.Builder()
-                                .captureServletAttributes()
-                                .recordException()
-                                .init(context))));
+                    .addContextCustomizer((context, request, attributes) ->
+                        new AppServerBridge.Builder()
+                            .captureServletAttributes()
+                            .recordException()
+                            .init(context))));
   }
 
   private TomcatInstrumenterFactory() {}

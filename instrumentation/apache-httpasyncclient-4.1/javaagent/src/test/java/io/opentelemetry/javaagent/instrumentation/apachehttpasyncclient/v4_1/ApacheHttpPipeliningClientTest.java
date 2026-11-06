@@ -164,27 +164,26 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
         .extracting(response -> getResponseCode(response))
         .containsExactly(200, 500);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span ->
-                    assertClientSpan(span, successUri, "GET", 200, null)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.unset()),
-                span ->
-                    assertClientSpan(span, errorUri, "GET", 500, null)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error()),
-                span ->
-                    assertServerSpan(span)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 1)),
-                span ->
-                    assertServerSpan(span)
-                        .hasParent(trace.getSpan(3))
-                        .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 2)),
-                span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactlyInAnyOrder(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span ->
+                assertClientSpan(span, successUri, "GET", 200, null)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.unset()),
+            span ->
+                assertClientSpan(span, errorUri, "GET", 500, null)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error()),
+            span ->
+                assertServerSpan(span)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 1)),
+            span ->
+                assertServerSpan(span)
+                    .hasParent(trace.getSpan(3))
+                    .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 2)),
+            span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -244,47 +243,43 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
         };
 
     Throwable thrown =
-        catchThrowable(
-            () ->
-                testing.runWithSpan(
-                    "parent",
-                    () ->
-                        client
-                            .execute(target, requestProducers, responseConsumers, null, callback)
-                            .get()));
+        catchThrowable(() ->
+            testing.runWithSpan(
+                "parent",
+                () ->
+                    client
+                        .execute(target, requestProducers, responseConsumers, null, callback)
+                        .get()));
 
     assertThat(thrown).isInstanceOf(ExecutionException.class).hasCause(consumerFailure);
     assertThat(callbackDone.await(10, SECONDS)).isTrue();
     assertThat(callbackFailure.get()).isSameAs(consumerFailure);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error()),
-                span ->
-                    assertClientSpan(span, firstUri, "GET", 200, null)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error()),
-                span ->
-                    assertClientSpan(span, secondUri, "GET", null, null)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error()),
-                span ->
-                    assertServerSpan(span)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 3)),
-                span ->
-                    assertServerSpan(span)
-                        .hasParent(trace.getSpan(3))
-                        .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 4)),
-                span ->
-                    span.hasName("failure-callback")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactlyInAnyOrder(
+            span ->
+                span.hasName("parent")
+                    .hasKind(INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error()),
+            span ->
+                assertClientSpan(span, firstUri, "GET", 200, null)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error()),
+            span ->
+                assertClientSpan(span, secondUri, "GET", null, null)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error()),
+            span ->
+                assertServerSpan(span)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 3)),
+            span ->
+                assertServerSpan(span)
+                    .hasParent(trace.getSpan(3))
+                    .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 4)),
+            span ->
+                span.hasName("failure-callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -305,38 +300,36 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
         };
 
     Throwable thrown =
-        catchThrowable(
-            () ->
-                testing.runWithSpan(
-                    "parent",
-                    () ->
-                        client
-                            .execute(
-                                target,
-                                singletonList(new BasicAsyncRequestProducer(target, request)),
-                                singletonList(responseConsumer),
-                                null,
-                                null)
-                            .get()));
+        catchThrowable(() ->
+            testing.runWithSpan(
+                "parent",
+                () ->
+                    client
+                        .execute(
+                            target,
+                            singletonList(new BasicAsyncRequestProducer(target, request)),
+                            singletonList(responseConsumer),
+                            null,
+                            null)
+                        .get()));
 
     assertThat(thrown).isInstanceOf(ExecutionException.class).hasCause(consumerFailure);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error()),
-                span ->
-                    assertClientSpan(span, uri, "GET", 200, null)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasException(consumerFailure),
-                span ->
-                    assertServerSpan(span)
-                        .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 6))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactlyInAnyOrder(
+            span ->
+                span.hasName("parent")
+                    .hasKind(INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error()),
+            span ->
+                assertClientSpan(span, uri, "GET", 200, null)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasException(consumerFailure),
+            span ->
+                assertServerSpan(span)
+                    .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 6))));
   }
 
   @Test
@@ -406,19 +399,17 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
     assertThat(future.isCancelled()).isTrue();
     assertThat(future.isDone()).isTrue();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span ->
-                    assertClientSpan(span, uri, "GET", 200, null)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.unset()),
-                span ->
-                    assertServerSpan(span)
-                        .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 7)),
-                span ->
-                    span.hasName("cancel-callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactlyInAnyOrder(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span ->
+                assertClientSpan(span, uri, "GET", 200, null)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.unset()),
+            span ->
+                assertServerSpan(span)
+                    .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 7)),
+            span -> span.hasName("cancel-callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -486,32 +477,28 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
         singletonList(closeFailingConsumer);
 
     Throwable thrown =
-        catchThrowable(
-            () ->
-                testing.runWithSpan(
-                    "parent",
-                    () ->
-                        client
-                            .execute(target, requestProducers, responseConsumers, null, null)
-                            .get()));
+        catchThrowable(() ->
+            testing.runWithSpan(
+                "parent",
+                () ->
+                    client.execute(target, requestProducers, responseConsumers, null, null).get()));
 
     assertThat(thrown).isInstanceOf(ExecutionException.class).hasCause(closeFailure);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error()),
-                span ->
-                    assertClientSpan(span, uri, "GET", 200, null)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error()),
-                span ->
-                    assertServerSpan(span)
-                        .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 5))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactlyInAnyOrder(
+            span ->
+                span.hasName("parent")
+                    .hasKind(INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error()),
+            span ->
+                assertClientSpan(span, uri, "GET", 200, null)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error()),
+            span ->
+                assertServerSpan(span)
+                    .hasAttributesSatisfyingExactly(equalTo(longKey("test.request.id"), 5))));
   }
 
   @Test
@@ -528,29 +515,23 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
         };
 
     Throwable thrown =
-        catchThrowable(
-            () ->
-                testing.runWithSpan(
-                    "parent",
-                    () ->
-                        client.execute(
-                            null,
-                            singletonList(requestProducer),
-                            singletonList(new BasicAsyncResponseConsumer()),
-                            context(uri),
-                            null)));
+        catchThrowable(() ->
+            testing.runWithSpan(
+                "parent",
+                () ->
+                    client.execute(
+                        null,
+                        singletonList(requestProducer),
+                        singletonList(new BasicAsyncResponseConsumer()),
+                        context(uri),
+                        null)));
 
     assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
     assertThat(generateCalls).hasValue(0);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasStatus(StatusData.error())));
   }
 
   @Test
@@ -568,33 +549,27 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
         };
 
     Throwable thrown =
-        catchThrowable(
-            () ->
-                testing.runWithSpan(
-                    "parent",
-                    () ->
-                        client
-                            .execute(
-                                target,
-                                singletonList(nullRequestProducer),
-                                singletonList(new BasicAsyncResponseConsumer()),
-                                null,
-                                null)
-                            .get()));
+        catchThrowable(() ->
+            testing.runWithSpan(
+                "parent",
+                () ->
+                    client
+                        .execute(
+                            target,
+                            singletonList(nullRequestProducer),
+                            singletonList(new BasicAsyncResponseConsumer()),
+                            null,
+                            null)
+                        .get()));
 
     assertThat(thrown)
         .isInstanceOf(ExecutionException.class)
         .hasCauseInstanceOf(IllegalArgumentException.class);
     assertThat(generateCalls).hasValue(1);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasStatus(StatusData.error())));
   }
 
   private static HttpHost target(URI uri) {

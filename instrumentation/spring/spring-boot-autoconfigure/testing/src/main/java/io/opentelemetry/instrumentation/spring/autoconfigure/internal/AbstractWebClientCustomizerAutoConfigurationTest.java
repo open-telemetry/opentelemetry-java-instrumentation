@@ -37,10 +37,9 @@ public abstract class AbstractWebClientCustomizerAutoConfigurationTest<T> {
   void shouldCreateCustomizerWhenEnabled() {
     contextRunner
         .withPropertyValues("otel.instrumentation.spring-webflux.enabled=true")
-        .run(
-            context ->
-                assertThat(context.getBean("otelWebClientCustomizer"))
-                    .isInstanceOf(webClientCustomizerClass()));
+        .run(context ->
+            assertThat(context.getBean("otelWebClientCustomizer"))
+                .isInstanceOf(webClientCustomizerClass()));
   }
 
   @Test
@@ -52,34 +51,27 @@ public abstract class AbstractWebClientCustomizerAutoConfigurationTest<T> {
 
   @Test
   void shouldCreateCustomizerByDefault() {
-    contextRunner.run(
-        context ->
-            assertThat(context.getBean("otelWebClientCustomizer"))
-                .isInstanceOf(webClientCustomizerClass()));
+    contextRunner.run(context ->
+        assertThat(context.getBean("otelWebClientCustomizer"))
+            .isInstanceOf(webClientCustomizerClass()));
   }
 
   @Test
   void shouldAddTracingFilterWhenCustomizerApplied() {
-    contextRunner.run(
-        context -> {
-          T customizer = context.getBean("otelWebClientCustomizer", webClientCustomizerClass());
-          WebClient.Builder builder = WebClient.builder();
-          customizeWebClient(customizer, builder);
+    contextRunner.run(context -> {
+      T customizer = context.getBean("otelWebClientCustomizer", webClientCustomizerClass());
+      WebClient.Builder builder = WebClient.builder();
+      customizeWebClient(customizer, builder);
 
-          builder
-              .build()
-              .mutate()
-              .filters(
-                  filters ->
-                      assertThat(filters)
-                          .filteredOn(
-                              filter ->
-                                  filter
-                                      .getClass()
-                                      .getName()
-                                      .startsWith("io.opentelemetry.instrumentation"))
-                          .hasSize(1));
-        });
+      builder
+          .build()
+          .mutate()
+          .filters(filters ->
+              assertThat(filters)
+                  .filteredOn(filter ->
+                      filter.getClass().getName().startsWith("io.opentelemetry.instrumentation"))
+                  .hasSize(1));
+    });
   }
 
   @Test

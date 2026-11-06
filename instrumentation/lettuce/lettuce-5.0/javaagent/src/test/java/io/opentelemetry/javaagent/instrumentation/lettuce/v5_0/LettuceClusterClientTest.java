@@ -126,70 +126,64 @@ class LettuceClusterClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + configuredTarget)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, configuredTarget),
-                            equalTo(NETWORK_PEER_ADDRESS, host),
-                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(DB_QUERY_TEXT, "SET CLUSTER_COMMAND_KEY ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SET " + configuredTarget)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(SERVER_ADDRESS, configuredTarget),
+                        equalTo(NETWORK_PEER_ADDRESS, host),
+                        equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(DB_QUERY_TEXT, "SET CLUSTER_COMMAND_KEY ?"),
+                        equalTo(DB_OPERATION_NAME, "SET"))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("PIPELINE SET " + configuredTarget)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, configuredTarget),
-                            equalTo(NETWORK_PEER_ADDRESS, host),
-                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(
-                                DB_QUERY_TEXT,
-                                "SET CLUSTER_BATCH_KEY_1 ?; SET CLUSTER_BATCH_KEY_2 ?"),
-                            equalTo(DB_OPERATION_NAME, "PIPELINE SET"),
-                            equalTo(DB_OPERATION_BATCH_SIZE, Long.valueOf(2)))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("PIPELINE SET " + configuredTarget)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(SERVER_ADDRESS, configuredTarget),
+                        equalTo(NETWORK_PEER_ADDRESS, host),
+                        equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(
+                            DB_QUERY_TEXT, "SET CLUSTER_BATCH_KEY_1 ?; SET CLUSTER_BATCH_KEY_2 ?"),
+                        equalTo(DB_OPERATION_NAME, "PIPELINE SET"),
+                        equalTo(DB_OPERATION_BATCH_SIZE, Long.valueOf(2)))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + configuredTarget)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, configuredTarget),
-                            equalTo(NETWORK_PEER_ADDRESS, host),
-                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET CLUSTER_REACTIVE_KEY ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SET " + configuredTarget)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(SERVER_ADDRESS, configuredTarget),
+                        equalTo(NETWORK_PEER_ADDRESS, host),
+                        equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "SET CLUSTER_REACTIVE_KEY ?"),
+                        equalTo(DB_OPERATION_NAME, "SET"))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + configuredTarget)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, configuredTarget),
-                            equalTo(NETWORK_PEER_ADDRESS, host),
-                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET NODE_REACTIVE_KEY ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SET " + configuredTarget)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(SERVER_ADDRESS, configuredTarget),
+                        equalTo(NETWORK_PEER_ADDRESS, host),
+                        equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "SET NODE_REACTIVE_KEY ?"),
+                        equalTo(DB_OPERATION_NAME, "SET"))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("PUBLISH " + configuredTarget)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, configuredTarget),
-                            equalTo(NETWORK_PEER_ADDRESS, host),
-                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "PUBLISH CLUSTER_CHANNEL ?"),
-                            equalTo(DB_OPERATION_NAME, "PUBLISH"))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("PUBLISH " + configuredTarget)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(SERVER_ADDRESS, configuredTarget),
+                        equalTo(NETWORK_PEER_ADDRESS, host),
+                        equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "PUBLISH CLUSTER_CHANNEL ?"),
+                        equalTo(DB_OPERATION_NAME, "PUBLISH"))));
 
     redisServer.assertNoFailure();
   }
@@ -212,13 +206,11 @@ class LettuceClusterClientTest {
 
     assertThat(redirectConnection.sync().set("REDIRECT_WARMUP_KEY", "value")).isEqualTo("OK");
     await()
-        .untilAsserted(
-            () ->
-                assertThat(testing.spans())
-                    .anySatisfy(
-                        span ->
-                            assertThat(span.getAttributes().get(DB_QUERY_TEXT))
-                                .isEqualTo("SET REDIRECT_WARMUP_KEY ?")));
+        .untilAsserted(() ->
+            assertThat(testing.spans())
+                .anySatisfy(span ->
+                    assertThat(span.getAttributes().get(DB_QUERY_TEXT))
+                        .isEqualTo("SET REDIRECT_WARMUP_KEY ?")));
     source.resetRedirect();
     testing.clearData();
 
@@ -226,19 +218,18 @@ class LettuceClusterClientTest {
 
     Consumer<TraceAssert> traceAssertion =
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + source.getHost() + ":" + source.getPort())
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, source.getHost()),
-                            equalTo(SERVER_PORT, Long.valueOf(source.getPort())),
-                            equalTo(NETWORK_PEER_ADDRESS, target.getHost()),
-                            equalTo(NETWORK_PEER_PORT, Long.valueOf(target.getPort())),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(DB_QUERY_TEXT, "SET REDIRECT_KEY ?"),
-                            equalTo(DB_OPERATION_NAME, "SET")));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SET " + source.getHost() + ":" + source.getPort())
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(SERVER_ADDRESS, source.getHost()),
+                        equalTo(SERVER_PORT, Long.valueOf(source.getPort())),
+                        equalTo(NETWORK_PEER_ADDRESS, target.getHost()),
+                        equalTo(NETWORK_PEER_PORT, Long.valueOf(target.getPort())),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(DB_QUERY_TEXT, "SET REDIRECT_KEY ?"),
+                        equalTo(DB_OPERATION_NAME, "SET")));
     List<Consumer<TraceAssert>> traceAssertions = new ArrayList<>();
     traceAssertions.add(traceAssertion);
     testing.waitAndAssertTraces(traceAssertions);

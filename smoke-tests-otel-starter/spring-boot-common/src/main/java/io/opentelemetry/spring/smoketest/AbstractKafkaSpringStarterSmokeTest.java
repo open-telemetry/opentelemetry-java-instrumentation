@@ -38,72 +38,63 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void shouldInstrumentProducerAndConsumer() {
-    runProducerTest(
-        () -> {
-          testing.runWithSpan(
-              "producer",
-              () -> {
-                kafkaTemplate.executeInTransaction(
-                    ops -> {
-                      // return type is incompatible between Spring Boot 2 and 3
-                      try {
-                        ops.getClass()
-                            .getDeclaredMethod("send", String.class, Object.class, Object.class)
-                            .invoke(ops, "testTopic", "10", "testSpan");
-                      } catch (Exception e) {
-                        throw new IllegalStateException(e);
-                      }
-                      return 0;
-                    });
-              });
+    runProducerTest(() -> {
+      testing.runWithSpan(
+          "producer",
+          () -> {
+            kafkaTemplate.executeInTransaction(ops -> {
+              // return type is incompatible between Spring Boot 2 and 3
+              try {
+                ops.getClass()
+                    .getDeclaredMethod("send", String.class, Object.class, Object.class)
+                    .invoke(ops, "testTopic", "10", "testSpan");
+              } catch (Exception e) {
+                throw new IllegalStateException(e);
+              }
+              return 0;
+            });
+          });
 
-          testing.waitAndAssertTraces(
-              trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span -> span.hasName("producer"),
-                      span ->
-                          span.hasName("send testTopic")
-                              .hasKind(SpanKind.PRODUCER)
-                              .hasParent(trace.getSpan(0))
-                              .hasAttributesSatisfyingExactly(
-                                  equalTo(stringKey("messaging.system.name"), "kafka"),
-                                  equalTo(MESSAGING_DESTINATION_NAME, "testTopic"),
-                                  equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                  equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                                  satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
-                                  satisfies(
-                                      MESSAGING_DESTINATION_PARTITION_ID,
-                                      AbstractStringAssert::isNotEmpty),
-                                  satisfies(
-                                      longKey("kafka.offset"), AbstractLongAssert::isNotNegative),
-                                  equalTo(stringKey("kafka.message.key"), "10"),
-                                  satisfies(
-                                      stringKey("kafka.cluster.id"),
-                                      AbstractStringAssert::isNotEmpty)),
-                      span ->
-                          span.hasName("process testTopic")
-                              .hasKind(SpanKind.CONSUMER)
-                              .hasParent(trace.getSpan(1))
-                              .hasAttributesSatisfying(
-                                  equalTo(stringKey("messaging.system.name"), "kafka"),
-                                  equalTo(MESSAGING_DESTINATION_NAME, "testTopic"),
-                                  equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                  equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                                  satisfies(MESSAGING_MESSAGE_BODY_SIZE, val -> val.isNull()),
-                                  satisfies(
-                                      MESSAGING_DESTINATION_PARTITION_ID,
-                                      AbstractStringAssert::isNotEmpty),
-                                  satisfies(
-                                      longKey("kafka.offset"), AbstractLongAssert::isNotNegative),
-                                  equalTo(stringKey("kafka.message.key"), "10"),
-                                  equalTo(MESSAGING_CONSUMER_GROUP_NAME, "testListener"),
-                                  satisfies(
-                                      longKey("kafka.record.queue_time_ms"),
-                                      AbstractLongAssert::isNotNegative),
-                                  satisfies(
-                                      MESSAGING_CLIENT_ID, val -> val.startsWith("consumer"))),
-                      span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
-        });
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("producer"),
+              span ->
+                  span.hasName("send testTopic")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(stringKey("messaging.system.name"), "kafka"),
+                          equalTo(MESSAGING_DESTINATION_NAME, "testTopic"),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                          satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")),
+                          satisfies(
+                              MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
+                          satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative),
+                          equalTo(stringKey("kafka.message.key"), "10"),
+                          satisfies(
+                              stringKey("kafka.cluster.id"), AbstractStringAssert::isNotEmpty)),
+              span ->
+                  span.hasName("process testTopic")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(1))
+                      .hasAttributesSatisfying(
+                          equalTo(stringKey("messaging.system.name"), "kafka"),
+                          equalTo(MESSAGING_DESTINATION_NAME, "testTopic"),
+                          equalTo(MESSAGING_OPERATION_NAME, "process"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                          satisfies(MESSAGING_MESSAGE_BODY_SIZE, val -> val.isNull()),
+                          satisfies(
+                              MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
+                          satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative),
+                          equalTo(stringKey("kafka.message.key"), "10"),
+                          equalTo(MESSAGING_CONSUMER_GROUP_NAME, "testListener"),
+                          satisfies(
+                              longKey("kafka.record.queue_time_ms"),
+                              AbstractLongAssert::isNotNegative),
+                          satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer"))),
+              span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+    });
   }
 
   protected void runProducerTest(Runnable runnable) {

@@ -103,35 +103,30 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
     RestTemplate restTemplate = restTemplateBuilder.rootUri("http://localhost:" + port).build();
     restTemplate.getForObject(OtelSpringStarterSmokeTestController.PING, String.class);
-    testing.waitAndAssertTraces(
-        traceAssert ->
-            traceAssert.hasSpansSatisfyingExactly(
-                span ->
-                    HttpSpanDataAssert.create(span)
-                        .assertClientGetRequest("/ping")
-                        .hasResourceSatisfying(
-                            r ->
-                                r.hasAttribute(
-                                    // to make sure the declarative config is picked up
-                                    // in application.yaml
-                                    SERVICE_NAME, "declarative-config-spring-boot-2")),
-                span ->
-                    span.hasKind(SpanKind.SERVER)
-                        .hasResourceSatisfying(
-                            r ->
-                                r.hasAttribute(
-                                        TELEMETRY_DISTRO_NAME, "opentelemetry-spring-boot-starter")
-                                    .hasAttribute(
-                                        satisfies(
-                                            TELEMETRY_DISTRO_VERSION,
-                                            AbstractCharSequenceAssert::isNotBlank))
-                                    .hasAttribute(
-                                        satisfies(
-                                            SERVICE_INSTANCE_ID,
-                                            AbstractCharSequenceAssert::isNotBlank)))
-                        .hasAttribute(HTTP_ROUTE, "/ping")
-                        .hasAttribute(satisfies(THREAD_ID, val -> val.isNotZero()))
-                        .hasAttribute(satisfies(THREAD_NAME, val -> val.isNotBlank())),
-                AbstractSpringStarterSmokeTest::withSpanAssert));
+    testing.waitAndAssertTraces(traceAssert ->
+        traceAssert.hasSpansSatisfyingExactly(
+            span ->
+                HttpSpanDataAssert.create(span)
+                    .assertClientGetRequest("/ping")
+                    .hasResourceSatisfying(r ->
+                        r.hasAttribute(
+                            // to make sure the declarative config is picked up
+                            // in application.yaml
+                            SERVICE_NAME, "declarative-config-spring-boot-2")),
+            span ->
+                span.hasKind(SpanKind.SERVER)
+                    .hasResourceSatisfying(r ->
+                        r.hasAttribute(TELEMETRY_DISTRO_NAME, "opentelemetry-spring-boot-starter")
+                            .hasAttribute(
+                                satisfies(
+                                    TELEMETRY_DISTRO_VERSION,
+                                    AbstractCharSequenceAssert::isNotBlank))
+                            .hasAttribute(
+                                satisfies(
+                                    SERVICE_INSTANCE_ID, AbstractCharSequenceAssert::isNotBlank)))
+                    .hasAttribute(HTTP_ROUTE, "/ping")
+                    .hasAttribute(satisfies(THREAD_ID, val -> val.isNotZero()))
+                    .hasAttribute(satisfies(THREAD_NAME, val -> val.isNotBlank())),
+            AbstractSpringStarterSmokeTest::withSpanAssert));
   }
 }

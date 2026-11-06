@@ -89,33 +89,29 @@ class ServerH2Test extends AbstractServerTest {
     String method = "GET";
     ServerEndpoint endpoint = SUCCESS;
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
-          // client initiation
-          spanAssertions.add(
-              s -> s.hasName("h2-upgrade-client").hasNoParent().hasKind(SpanKind.INTERNAL));
-          // actual client netty span (including upgrade event)
-          spanAssertions.add(
-              s ->
-                  s.hasKind(SpanKind.CLIENT)
-                      .hasName(method)
-                      .hasParent(trace.getSpan(0))
-                      .hasEventsSatisfyingExactly(ServerH2Test::assertSwitchingProtocolsEvent));
-          // server netty span (including upgrade event)
-          spanAssertions.add(
-              span ->
-                  assertServerSpan(span, method, endpoint, endpoint.getStatus())
-                      .hasParent(trace.getSpan(1))
-                      .hasEventsSatisfyingExactly(ServerH2Test::assertSwitchingProtocolsEvent));
-          // server controller span
-          spanAssertions.add(
-              span -> {
-                assertControllerSpan(span, null);
-                span.hasParent(trace.getSpan(2));
-              });
+    testing.waitAndAssertTraces(trace -> {
+      List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
+      // client initiation
+      spanAssertions.add(
+          s -> s.hasName("h2-upgrade-client").hasNoParent().hasKind(SpanKind.INTERNAL));
+      // actual client netty span (including upgrade event)
+      spanAssertions.add(s ->
+          s.hasKind(SpanKind.CLIENT)
+              .hasName(method)
+              .hasParent(trace.getSpan(0))
+              .hasEventsSatisfyingExactly(ServerH2Test::assertSwitchingProtocolsEvent));
+      // server netty span (including upgrade event)
+      spanAssertions.add(span ->
+          assertServerSpan(span, method, endpoint, endpoint.getStatus())
+              .hasParent(trace.getSpan(1))
+              .hasEventsSatisfyingExactly(ServerH2Test::assertSwitchingProtocolsEvent));
+      // server controller span
+      spanAssertions.add(span -> {
+        assertControllerSpan(span, null);
+        span.hasParent(trace.getSpan(2));
+      });
 
-          trace.hasSpansSatisfyingExactly(spanAssertions);
-        });
+      trace.hasSpansSatisfyingExactly(spanAssertions);
+    });
   }
 }

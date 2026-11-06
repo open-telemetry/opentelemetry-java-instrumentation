@@ -99,24 +99,22 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
   }
 
   private void assertFullTrace(String path, String responseBody, boolean captureHeader) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  assertServerSpan(span, path);
-                  if (captureHeader) {
-                    span.hasAttribute(
-                        stringArrayKey("http.request.header.x-test-request"), List.of("test"));
-                  }
-                },
-                span ->
-                    assertSpan(span)
-                        .hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttribute(URL_FULL, "http://localhost:8080/app/headers"),
-                span ->
-                    assertServerSpan(span, "/app/headers")
-                        .hasAttribute(CLIENT_ADDRESS, "127.0.0.1")));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> {
+              assertServerSpan(span, path);
+              if (captureHeader) {
+                span.hasAttribute(
+                    stringArrayKey("http.request.header.x-test-request"), List.of("test"));
+              }
+            },
+            span ->
+                assertSpan(span)
+                    .hasName("GET")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttribute(URL_FULL, "http://localhost:8080/app/headers"),
+            span ->
+                assertServerSpan(span, "/app/headers").hasAttribute(CLIENT_ADDRESS, "127.0.0.1")));
 
     // trace id is present in the HTTP headers as reported by the called endpoint
     assertThat(responseBody).contains(getSpanTraceIds().iterator().next());
@@ -163,13 +161,10 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
 
     assertThat(response.status().code()).isEqualTo(500);
 
-    getAndAssertServerSpan(
-        span ->
-            assertServerSpan(span, path)
-                .hasEventsSatisfyingExactly(
-                    event ->
-                        event.hasAttributesSatisfying(
-                            equalTo(EXCEPTION_MESSAGE, "This is expected"))));
+    getAndAssertServerSpan(span ->
+        assertServerSpan(span, path)
+            .hasEventsSatisfyingExactly(event ->
+                event.hasAttributesSatisfying(equalTo(EXCEPTION_MESSAGE, "This is expected"))));
   }
 
   @Test
@@ -226,11 +221,10 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
   }
 
   private SpanDataAssert assertSpan(SpanDataAssert span) {
-    return span.hasResourceSatisfying(
-            resource ->
-                resource
-                    .hasAttribute(OS_TYPE, getExpectedOsType())
-                    .hasAttribute(TELEMETRY_DISTRO_VERSION, getAgentVersion()))
+    return span.hasResourceSatisfying(resource ->
+            resource
+                .hasAttribute(OS_TYPE, getExpectedOsType())
+                .hasAttribute(TELEMETRY_DISTRO_VERSION, getAgentVersion()))
         .hasAttribute(NETWORK_PROTOCOL_VERSION, "1.1");
   }
 

@@ -29,11 +29,10 @@ public final class NettyClientTelemetryBuilder {
   private boolean emitExperimentalHttpClientEvents = false;
 
   static {
-    Experimental.internalSetEmitExperimentalClientTelemetry(
-        (builder, emit) -> {
-          builder.builder.setEmitExperimentalHttpClientTelemetry(emit);
-          builder.emitExperimentalHttpClientEvents = emit;
-        });
+    Experimental.internalSetEmitExperimentalClientTelemetry((builder, emit) -> {
+      builder.builder.setEmitExperimentalHttpClientTelemetry(emit);
+      builder.emitExperimentalHttpClientEvents = emit;
+    });
   }
 
   NettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {

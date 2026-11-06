@@ -58,14 +58,13 @@ public abstract class AbstractRouteMappingTest {
     AggregatedHttpResponse response = client.post("/gateway/echo", requestBody).aggregate().join();
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo(requestBody);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(getSpanName())
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(getExpectedAttributes()),
-                span -> span.hasName(getInternalSpanName()).hasKind(SpanKind.INTERNAL)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName(getSpanName())
+                    .hasKind(SpanKind.SERVER)
+                    .hasAttributesSatisfying(getExpectedAttributes()),
+            span -> span.hasName(getInternalSpanName()).hasKind(SpanKind.INTERNAL)));
   }
 
   @Test
@@ -74,14 +73,13 @@ public abstract class AbstractRouteMappingTest {
     AggregatedHttpResponse response = client.post("/uuid/echo", requestBody).aggregate().join();
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo(requestBody);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(getRandomUuidSpanName())
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(getRandomUuidExpectedAttributes()),
-                span -> span.hasName(getInternalSpanName()).hasKind(SpanKind.INTERNAL)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName(getRandomUuidSpanName())
+                    .hasKind(SpanKind.SERVER)
+                    .hasAttributesSatisfying(getRandomUuidExpectedAttributes()),
+            span -> span.hasName(getInternalSpanName()).hasKind(SpanKind.INTERNAL)));
   }
 
   @Test
@@ -91,14 +89,13 @@ public abstract class AbstractRouteMappingTest {
     AggregatedHttpResponse response = client.post("/fake/echo", requestBody).aggregate().join();
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo(requestBody);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(getFakeUuidSpanName(routeId))
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(getFakeUuidExpectedAttributes(routeId)),
-                span -> span.hasName(getInternalSpanName()).hasKind(SpanKind.INTERNAL)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName(getFakeUuidSpanName(routeId))
+                    .hasKind(SpanKind.SERVER)
+                    .hasAttributesSatisfying(getFakeUuidExpectedAttributes(routeId)),
+            span -> span.hasName(getInternalSpanName()).hasKind(SpanKind.INTERNAL)));
   }
 
   protected String getRandomUuidSpanName() {

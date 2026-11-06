@@ -98,81 +98,80 @@ class AwsLambdaSqsMessageHandlerTest {
     assertThat(response.getBatchItemFailures())
         .satisfiesExactly(item -> assertThat(item.getItemIdentifier()).isEqualTo("message2"));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("my_function")
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.unset())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("faas.invocation.id"), "1-22-333")),
-                span ->
-                    span.hasName("process queue1")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasStatus(StatusData.unset())
-                        .hasParentSpanId(trace.getSpan(0).getSpanId())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "queue1"),
-                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(2)))
-                        .hasLinks(
-                            LinkData.create(
-                                SpanContext.createFromRemoteParent(
-                                    "5759e988bd862e3fe1be46a994272793",
-                                    "53995c3f42cd8ad8",
-                                    TraceFlags.getSampled(),
-                                    TraceState.getDefault()),
-                                Attributes.of(MESSAGING_MESSAGE_ID, "message1")),
-                            LinkData.create(
-                                SpanContext.createFromRemoteParent(
-                                    "5759e988bd862e3fe1be46a994272793",
-                                    "53995c3f42cd8ad9",
-                                    TraceFlags.getSampled(),
-                                    TraceState.getDefault()),
-                                Attributes.of(MESSAGING_MESSAGE_ID, "message2"))),
-                span ->
-                    span.hasName("process queue1")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasStatus(StatusData.unset())
-                        .hasParentSpanId(trace.getSpan(1).getSpanId())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                            equalTo(MESSAGING_MESSAGE_ID, "message1"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "queue1"))
-                        .hasLinks(
-                            LinkData.create(
-                                SpanContext.createFromRemoteParent(
-                                    "5759e988bd862e3fe1be46a994272793",
-                                    "53995c3f42cd8ad8",
-                                    TraceFlags.getSampled(),
-                                    TraceState.getDefault()))),
-                span ->
-                    span.hasName("process queue1")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasStatus(StatusData.error())
-                        .hasParentSpanId(trace.getSpan(1).getSpanId())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                            equalTo(MESSAGING_MESSAGE_ID, "message2"),
-                            equalTo(ERROR_TYPE, "_OTHER"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "queue1"))
-                        .hasLinks(
-                            LinkData.create(
-                                SpanContext.createFromRemoteParent(
-                                    "5759e988bd862e3fe1be46a994272793",
-                                    "53995c3f42cd8ad9",
-                                    TraceFlags.getSampled(),
-                                    TraceState.getDefault())))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("my_function")
+                    .hasKind(SpanKind.SERVER)
+                    .hasStatus(StatusData.unset())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("faas.invocation.id"), "1-22-333")),
+            span ->
+                span.hasName("process queue1")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasStatus(StatusData.unset())
+                    .hasParentSpanId(trace.getSpan(0).getSpanId())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                        equalTo(MESSAGING_DESTINATION_NAME, "queue1"),
+                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                        equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(2)))
+                    .hasLinks(
+                        LinkData.create(
+                            SpanContext.createFromRemoteParent(
+                                "5759e988bd862e3fe1be46a994272793",
+                                "53995c3f42cd8ad8",
+                                TraceFlags.getSampled(),
+                                TraceState.getDefault()),
+                            Attributes.of(MESSAGING_MESSAGE_ID, "message1")),
+                        LinkData.create(
+                            SpanContext.createFromRemoteParent(
+                                "5759e988bd862e3fe1be46a994272793",
+                                "53995c3f42cd8ad9",
+                                TraceFlags.getSampled(),
+                                TraceState.getDefault()),
+                            Attributes.of(MESSAGING_MESSAGE_ID, "message2"))),
+            span ->
+                span.hasName("process queue1")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasStatus(StatusData.unset())
+                    .hasParentSpanId(trace.getSpan(1).getSpanId())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                        equalTo(MESSAGING_MESSAGE_ID, "message1"),
+                        equalTo(MESSAGING_DESTINATION_NAME, "queue1"))
+                    .hasLinks(
+                        LinkData.create(
+                            SpanContext.createFromRemoteParent(
+                                "5759e988bd862e3fe1be46a994272793",
+                                "53995c3f42cd8ad8",
+                                TraceFlags.getSampled(),
+                                TraceState.getDefault()))),
+            span ->
+                span.hasName("process queue1")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasStatus(StatusData.error())
+                    .hasParentSpanId(trace.getSpan(1).getSpanId())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                        equalTo(MESSAGING_MESSAGE_ID, "message2"),
+                        equalTo(ERROR_TYPE, "_OTHER"),
+                        equalTo(MESSAGING_DESTINATION_NAME, "queue1"))
+                    .hasLinks(
+                        LinkData.create(
+                            SpanContext.createFromRemoteParent(
+                                "5759e988bd862e3fe1be46a994272793",
+                                "53995c3f42cd8ad9",
+                                TraceFlags.getSampled(),
+                                TraceState.getDefault())))));
     assertMetrics(
         testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "queue1", 2, 2, null, 1, "_OTHER");
   }
@@ -219,12 +218,11 @@ class AwsLambdaSqsMessageHandlerTest {
     testing.clearData();
 
     handler.handleRequest(event, context);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("my_function"),
-                span -> span.hasName("process queue1"),
-                span -> span.hasName("process queue1")));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("my_function"),
+            span -> span.hasName("process queue1"),
+            span -> span.hasName("process queue1")));
     assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "queue1", 2, 1, null);
   }
 
@@ -239,12 +237,11 @@ class AwsLambdaSqsMessageHandlerTest {
 
     new TestHandler(testing.getOpenTelemetrySdk()).handleRequest(event, context);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("my_function"),
-                span -> span.hasName("process queue1"),
-                span -> span.hasName("process queue1")));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("my_function"),
+            span -> span.hasName("process queue1"),
+            span -> span.hasName("process queue1")));
   }
 
   @Test
@@ -265,15 +262,14 @@ class AwsLambdaSqsMessageHandlerTest {
             .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
     new TestHandler(openTelemetrySdk, eventInstrumenter).handleRequest(event, context);
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("my_function"),
-              span ->
-                  span.hasName("custom process")
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasParent(trace.getSpan(0)));
-        });
+    testing.waitAndAssertTraces(trace -> {
+      trace.hasSpansSatisfyingExactly(
+          span -> span.hasName("my_function"),
+          span ->
+              span.hasName("custom process")
+                  .hasKind(SpanKind.CONSUMER)
+                  .hasParent(trace.getSpan(0)));
+    });
   }
 
   // Constructor private in early versions.

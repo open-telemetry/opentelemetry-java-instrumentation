@@ -62,27 +62,23 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
 
     assertThat(clusterHealthStatus.name()).isEqualTo("GREEN");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("cluster:monitor/health")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
-                            equalTo(DB_OPERATION_NAME, "cluster:monitor/health"),
-                            equalTo(
-                                stringKey("elasticsearch.action"),
-                                experimental("ClusterHealthAction")),
-                            equalTo(
-                                stringKey("elasticsearch.request"),
-                                experimental("ClusterHealthRequest"))),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("cluster:monitor/health")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                        equalTo(DB_OPERATION_NAME, "cluster:monitor/health"),
+                        equalTo(
+                            stringKey("elasticsearch.action"), experimental("ClusterHealthAction")),
+                        equalTo(
+                            stringKey("elasticsearch.request"),
+                            experimental("ClusterHealthRequest"))),
+            span ->
+                span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   private Stream<Arguments> errorArguments() {
@@ -117,26 +113,23 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                     stringKey("elasticsearch.request.indices"), experimental("invalid-index"))));
 
     assertions.add(equalTo(ERROR_TYPE, "org.elasticsearch.index.IndexNotFoundException"));
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(expectedException),
-                span ->
-                    span.hasName("indices:data/read/get")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasException(expectedException)
-                        .hasAttributesSatisfyingExactly(assertions),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(expectedException),
+            span ->
+                span.hasName("indices:data/read/get")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasException(expectedException)
+                    .hasAttributesSatisfyingExactly(assertions),
+            span ->
+                span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   protected void waitYellowStatus() {
@@ -196,83 +189,68 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("indices:admin/create")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
-                            equalTo(DB_OPERATION_NAME, "indices:admin/create"),
-                            equalTo(
-                                stringKey("elasticsearch.action"),
-                                experimental("CreateIndexAction")),
-                            equalTo(
-                                stringKey("elasticsearch.request"),
-                                experimental("CreateIndexRequest")),
-                            equalTo(
-                                stringKey("elasticsearch.request.indices"),
-                                experimental(indexName)))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("indices:admin/create")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                        equalTo(DB_OPERATION_NAME, "indices:admin/create"),
+                        equalTo(
+                            stringKey("elasticsearch.action"), experimental("CreateIndexAction")),
+                        equalTo(
+                            stringKey("elasticsearch.request"), experimental("CreateIndexRequest")),
+                        equalTo(
+                            stringKey("elasticsearch.request.indices"), experimental(indexName)))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("cluster:monitor/health")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
-                            equalTo(DB_OPERATION_NAME, "cluster:monitor/health"),
-                            equalTo(
-                                stringKey("elasticsearch.action"),
-                                experimental("ClusterHealthAction")),
-                            equalTo(
-                                stringKey("elasticsearch.request"),
-                                experimental("ClusterHealthRequest")))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("cluster:monitor/health")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                        equalTo(DB_OPERATION_NAME, "cluster:monitor/health"),
+                        equalTo(
+                            stringKey("elasticsearch.action"), experimental("ClusterHealthAction")),
+                        equalTo(
+                            stringKey("elasticsearch.request"),
+                            experimental("ClusterHealthRequest")))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("indices:data/read/get")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            getActionAttributes(indexName, indexType, id, -1))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("indices:data/read/get")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        getActionAttributes(indexName, indexType, id, -1))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("indices:data/write/index")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
-                            equalTo(DB_OPERATION_NAME, "indices:data/write/index"),
-                            equalTo(stringKey("elasticsearch.action"), experimental("IndexAction")),
-                            equalTo(
-                                stringKey("elasticsearch.request"), experimental("IndexRequest")),
-                            equalTo(
-                                stringKey("elasticsearch.request.indices"),
-                                experimental(indexName)),
-                            equalTo(
-                                stringKey("elasticsearch.request.write.type"),
-                                experimental(indexType)),
-                            equalTo(longKey("elasticsearch.response.status"), experimental(201)),
-                            equalTo(
-                                longKey("elasticsearch.shard.replication.total"), experimental(2)),
-                            equalTo(
-                                longKey("elasticsearch.shard.replication.successful"),
-                                experimental(1)),
-                            equalTo(
-                                longKey("elasticsearch.shard.replication.failed"), experimental(0)),
-                            equalTo(
-                                longKey("elasticsearch.request.write.version"),
-                                hasWriteVersion() ? experimental(-3) : null))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("indices:data/write/index")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                        equalTo(DB_OPERATION_NAME, "indices:data/write/index"),
+                        equalTo(stringKey("elasticsearch.action"), experimental("IndexAction")),
+                        equalTo(stringKey("elasticsearch.request"), experimental("IndexRequest")),
+                        equalTo(
+                            stringKey("elasticsearch.request.indices"), experimental(indexName)),
+                        equalTo(
+                            stringKey("elasticsearch.request.write.type"), experimental(indexType)),
+                        equalTo(longKey("elasticsearch.response.status"), experimental(201)),
+                        equalTo(longKey("elasticsearch.shard.replication.total"), experimental(2)),
+                        equalTo(
+                            longKey("elasticsearch.shard.replication.successful"), experimental(1)),
+                        equalTo(longKey("elasticsearch.shard.replication.failed"), experimental(0)),
+                        equalTo(
+                            longKey("elasticsearch.request.write.version"),
+                            hasWriteVersion() ? experimental(-3) : null))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("indices:data/read/get")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            getActionAttributes(indexName, indexType, id, 1))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("indices:data/read/get")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        getActionAttributes(indexName, indexType, id, 1))));
   }
 
   protected boolean hasWriteVersion() {

@@ -117,21 +117,18 @@ class SpringRabbitRegistrationTest {
                 span ->
                     span.hasName("process input")
                         .hasParent(trace.getSpan(0))
-                        .hasLinksSatisfying(
-                            links ->
-                                assertThat(links)
-                                    .singleElement()
-                                    .satisfies(
-                                        link -> {
-                                          assertThat(link.getSpanContext().getTraceId())
-                                              .isEqualTo(upstreamSpanContext.get().getTraceId());
-                                          assertThat(link.getSpanContext().getSpanId())
-                                              .isEqualTo(upstreamSpanContext.get().getSpanId());
-                                        }))
-                        .satisfies(
-                            data ->
-                                assertThat(data.getInstrumentationScopeInfo().getName())
-                                    .isEqualTo("io.opentelemetry.spring-rabbit-1.1"))));
+                        .hasLinksSatisfying(links ->
+                            assertThat(links)
+                                .singleElement()
+                                .satisfies(link -> {
+                                  assertThat(link.getSpanContext().getTraceId())
+                                      .isEqualTo(upstreamSpanContext.get().getTraceId());
+                                  assertThat(link.getSpanContext().getSpanId())
+                                      .isEqualTo(upstreamSpanContext.get().getSpanId());
+                                }))
+                        .satisfies(data ->
+                            assertThat(data.getInstrumentationScopeInfo().getName())
+                                .isEqualTo("io.opentelemetry.spring-rabbit-1.1"))));
   }
 
   @Test
@@ -150,28 +147,27 @@ class SpringRabbitRegistrationTest {
     container.setQueueNames("spring");
     container.setMessageListener(
         (MessageListener) message -> testing.runWithSpan("listener", () -> {}));
-    container.setConsumerTagStrategy(
-        queue -> {
-          try {
-            channel.basicConsume(
-                "nested",
-                true,
-                new DefaultConsumer(channel) {
-                  @Override
-                  public void handleDelivery(
-                      String consumerTag,
-                      Envelope envelope,
-                      AMQP.BasicProperties properties,
-                      byte[] body) {
-                    assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                    testing.runWithSpan("nested listener", () -> {});
-                  }
-                });
-          } catch (IOException e) {
-            throw new IllegalStateException(e);
-          }
-          return queue;
-        });
+    container.setConsumerTagStrategy(queue -> {
+      try {
+        channel.basicConsume(
+            "nested",
+            true,
+            new DefaultConsumer(channel) {
+              @Override
+              public void handleDelivery(
+                  String consumerTag,
+                  Envelope envelope,
+                  AMQP.BasicProperties properties,
+                  byte[] body) {
+                assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                testing.runWithSpan("nested listener", () -> {});
+              }
+            });
+      } catch (IOException e) {
+        throw new IllegalStateException(e);
+      }
+      return queue;
+    });
     BlockingQueueConsumer consumer = container.createConsumer();
     consumer.start();
     testing.waitForTraces(4);
@@ -180,13 +176,12 @@ class SpringRabbitRegistrationTest {
     ExecutorService executor = Executors.newSingleThreadExecutor();
     cleanup.deferCleanup(executor::shutdownNow);
     executor
-        .submit(
-            () -> {
-              channel.deliver("nested");
-              channel.deliver("spring");
-              assertThat(Span.current().getSpanContext().isValid()).isFalse();
-              return null;
-            })
+        .submit(() -> {
+          channel.deliver("nested");
+          channel.deliver("spring");
+          assertThat(Span.current().getSpanContext().isValid()).isFalse();
+          return null;
+        })
         .get();
     Message message = consumer.nextMessage(1000);
     assertThat(message).isNotNull();
@@ -204,20 +199,18 @@ class SpringRabbitRegistrationTest {
           "io.opentelemetry.rabbitmq-2.7",
           "messaging.client.consumed.messages",
           metrics ->
-              metrics.satisfiesExactly(
-                  metric ->
-                      assertThat(
-                              metric.getLongSumData().getPoints().stream()
-                                  .mapToLong(point -> point.getValue())
-                                  .sum())
-                          .isEqualTo(2)));
+              metrics.satisfiesExactly(metric ->
+                  assertThat(
+                          metric.getLongSumData().getPoints().stream()
+                              .mapToLong(point -> point.getValue())
+                              .sum())
+                      .isEqualTo(2)));
       assertThat(testing.metrics())
-          .noneMatch(
-              metric ->
-                  metric
-                      .getInstrumentationScopeInfo()
-                      .getName()
-                      .equals("io.opentelemetry.spring-rabbit-1.1"));
+          .noneMatch(metric ->
+              metric
+                  .getInstrumentationScopeInfo()
+                  .getName()
+                  .equals("io.opentelemetry.spring-rabbit-1.1"));
       return;
     }
 
@@ -227,19 +220,17 @@ class SpringRabbitRegistrationTest {
                 span ->
                     span.hasName("process nested")
                         .hasNoParent()
-                        .satisfies(
-                            data ->
-                                assertThat(data.getInstrumentationScopeInfo().getName())
-                                    .isEqualTo("io.opentelemetry.rabbitmq-2.7")),
+                        .satisfies(data ->
+                            assertThat(data.getInstrumentationScopeInfo().getName())
+                                .isEqualTo("io.opentelemetry.rabbitmq-2.7")),
                 span -> span.hasName("nested listener").hasParent(trace.getSpan(0))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("process spring")
-                        .satisfies(
-                            data ->
-                                assertThat(data.getInstrumentationScopeInfo().getName())
-                                    .isEqualTo("io.opentelemetry.spring-rabbit-1.1")),
+                        .satisfies(data ->
+                            assertThat(data.getInstrumentationScopeInfo().getName())
+                                .isEqualTo("io.opentelemetry.spring-rabbit-1.1")),
                 span -> span.hasName("listener").hasParent(trace.getSpan(0))));
     assertConsumedMessages("io.opentelemetry.rabbitmq-2.7", 1);
     assertConsumedMessages("io.opentelemetry.spring-rabbit-1.1", 1);
@@ -300,13 +291,12 @@ class SpringRabbitRegistrationTest {
         "io.opentelemetry.rabbitmq-2.7",
         "messaging.client.consumed.messages",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(
-                            metric.getLongSumData().getPoints().stream()
-                                .mapToLong(point -> point.getValue())
-                                .sum())
-                        .isEqualTo(2)));
+            metrics.satisfiesExactly(metric ->
+                assertThat(
+                        metric.getLongSumData().getPoints().stream()
+                            .mapToLong(point -> point.getValue())
+                            .sum())
+                    .isEqualTo(2)));
   }
 
   @Test
@@ -334,16 +324,14 @@ class SpringRabbitRegistrationTest {
     testing.clearData();
 
     channel.deliver("direct");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process direct")
-                        .satisfies(
-                            data ->
-                                assertThat(data.getInstrumentationScopeInfo().getName())
-                                    .isEqualTo("io.opentelemetry.spring-rabbit-1.1")),
-                span -> span.hasName("listener").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("process direct")
+                    .satisfies(data ->
+                        assertThat(data.getInstrumentationScopeInfo().getName())
+                            .isEqualTo("io.opentelemetry.spring-rabbit-1.1")),
+            span -> span.hasName("listener").hasParent(trace.getSpan(0))));
     assertConsumedMessages("io.opentelemetry.spring-rabbit-1.1", 1);
   }
 
@@ -374,13 +362,11 @@ class SpringRabbitRegistrationTest {
     container.invoke(channel, consumer.nextMessage(1000));
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process batch")
-                        .satisfies(
-                            data ->
-                                assertThat(data.getInstrumentationScopeInfo().getName())
-                                    .isEqualTo("io.opentelemetry.rabbitmq-2.7"))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("process batch")
+                    .satisfies(data ->
+                        assertThat(data.getInstrumentationScopeInfo().getName())
+                            .isEqualTo("io.opentelemetry.rabbitmq-2.7"))),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("listener").hasNoParent()));
     assertConsumedMessages("io.opentelemetry.rabbitmq-2.7", 1);
   }
@@ -390,11 +376,10 @@ class SpringRabbitRegistrationTest {
         scope,
         "messaging.client.consumed.messages",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum -> sum.hasPointsSatisfying(point -> point.hasValue(count)))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasLongSumSatisfying(
+                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(count)))));
   }
 
   private static class TestContainer extends SimpleMessageListenerContainer {

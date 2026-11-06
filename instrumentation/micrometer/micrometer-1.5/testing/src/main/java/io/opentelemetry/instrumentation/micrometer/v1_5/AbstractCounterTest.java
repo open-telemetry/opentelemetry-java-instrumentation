@@ -49,15 +49,13 @@ public abstract class AbstractCounterTest {
                     .hasName("testCounter")
                     .hasDescription("This is a test counter")
                     .hasUnit("items")
-                    .hasDoubleSumSatisfying(
-                        sum ->
-                            sum.isMonotonic()
-                                .hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(3)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleSumSatisfying(sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(point ->
+                                point
+                                    .hasValue(3)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("tag"), "value")))));
 
     // when
     Metrics.globalRegistry.remove(counter);

@@ -241,26 +241,24 @@ class SpymemcachedTest {
           }
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span ->
-                    span.hasName(spanName("set"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "set"),
-                            equalTo(DB_QUERY_TEXT, "set too-large 3600 ?"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, memcachedAddress.getPort()),
-                            equalTo(ERROR_TYPE, errorType))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span ->
+                span.hasName(spanName("set"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "set"),
+                        equalTo(DB_QUERY_TEXT, "set too-large 3600 ?"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, memcachedAddress.getPort()),
+                        equalTo(ERROR_TYPE, errorType))));
     assertDurationMetric(
         testing,
         "io.opentelemetry.spymemcached-2.12",
@@ -279,25 +277,23 @@ class SpymemcachedTest {
     testing.runWithSpan(
         "parent", () -> assertThat(memcached.get("test-get")).isEqualTo("get test"));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get test-get"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), experimental("hit")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "get test-get"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                        equalTo(stringKey("spymemcached.result"), experimental("hit")))));
   }
 
   @Test
@@ -306,25 +302,23 @@ class SpymemcachedTest {
     testing.runWithSpan(
         "parent", () -> assertThat(memcached.get("test-get-key-that-doesn't-exist")).isNull());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get test-get-key-that-doesn't-exist"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), experimental("miss")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "get test-get-key-that-doesn't-exist"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                        equalTo(stringKey("spymemcached.result"), experimental("miss")))));
   }
 
   @Test
@@ -346,27 +340,24 @@ class SpymemcachedTest {
           }
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get test-get"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(
-                                booleanKey("spymemcached.command.cancelled"),
-                                experimental(true)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "get test-get"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                        equalTo(
+                            booleanKey("spymemcached.command.cancelled"), experimental(true)))));
   }
 
   @Test
@@ -393,42 +384,32 @@ class SpymemcachedTest {
       queueLock.unlock();
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            EXCEPTION_TYPE,
-                                            CheckedOperationTimeoutException.class.getName()),
-                                        equalTo(
-                                            EXCEPTION_MESSAGE,
-                                            "Operation timed out. - failing node: "
-                                                + memcachedAddress),
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class))))
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(spanName("get"))
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasStatus(StatusData.error())
+                .hasEventsSatisfyingExactly(event ->
+                    event
+                        .hasName("exception")
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                ERROR_TYPE,
-                                "net.spy.memcached.internal.CheckedOperationTimeoutException"),
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get test-get"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                                EXCEPTION_TYPE, CheckedOperationTimeoutException.class.getName()),
                             equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+                                EXCEPTION_MESSAGE,
+                                "Operation timed out. - failing node: " + memcachedAddress),
+                            satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        ERROR_TYPE, "net.spy.memcached.internal.CheckedOperationTimeoutException"),
+                    equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                    equalTo(DB_OPERATION_NAME, "get"),
+                    equalTo(DB_QUERY_TEXT, "get test-get"),
+                    equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                    equalTo(NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                    equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                    equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @ParameterizedTest
@@ -478,26 +459,24 @@ class SpymemcachedTest {
         .containsEntry("test-get", "get test")
         .containsEntry("test-get-2", "get test 2");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(
-                                DB_QUERY_TEXT,
-                                capturesKeys ? "getBulk test-get test-get-2" : "getBulk"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(
+                            DB_QUERY_TEXT,
+                            capturesKeys ? "getBulk test-get test-get-2" : "getBulk"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test
@@ -511,22 +490,20 @@ class SpymemcachedTest {
 
     assertThat(result).hasSize(1).containsEntry("test-get", "get test");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "getBulk"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("get"))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "getBulk"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test
@@ -559,39 +536,36 @@ class SpymemcachedTest {
           return null;
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "getBulk test-get"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort())),
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get test-get"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), experimental("hit")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "getBulk test-get"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort())),
+            span ->
+                span.hasName(spanName("get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "get test-get"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                        equalTo(stringKey("spymemcached.result"), experimental("hit")))));
   }
 
   @Test
@@ -631,19 +605,17 @@ class SpymemcachedTest {
                             equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "getBulk " + nestedKey),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(spanName("get"))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "getBulk " + nestedKey),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test
@@ -668,28 +640,25 @@ class SpymemcachedTest {
     }
     assertThat(Context.current()).isSameAs(original);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.unset())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "getBulk cancel-bulk"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, memcachedAddress.getPort()),
-                            equalTo(
-                                booleanKey("spymemcached.command.cancelled"),
-                                experimental(true)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.unset())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "getBulk cancel-bulk"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, memcachedAddress.getPort()),
+                        equalTo(
+                            booleanKey("spymemcached.command.cancelled"), experimental(true)))));
   }
 
   @Test
@@ -701,24 +670,22 @@ class SpymemcachedTest {
           assertThat(memcached.set("test-set", EXPIRATION_SECONDS, "bar").get()).isTrue();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("set"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "set"),
-                            equalTo(DB_QUERY_TEXT, "set test-set 3600 ?"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("set"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "set"),
+                        equalTo(DB_QUERY_TEXT, "set test-set 3600 ?"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test
@@ -739,27 +706,24 @@ class SpymemcachedTest {
           }
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("set"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "set"),
-                            equalTo(DB_QUERY_TEXT, "set test-set-cancel 3600 ?"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(
-                                booleanKey("spymemcached.command.cancelled"),
-                                experimental(true)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("set"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "set"),
+                        equalTo(DB_QUERY_TEXT, "set test-set-cancel 3600 ?"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                        equalTo(
+                            booleanKey("spymemcached.command.cancelled"), experimental(true)))));
   }
 
   @Test
@@ -772,39 +736,36 @@ class SpymemcachedTest {
           assertThat(memcached.get("test-add")).isEqualTo("add bar");
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("add"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "add"),
-                            equalTo(DB_QUERY_TEXT, "add test-add 3600 ?"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort())),
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get test-add"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), experimental("hit")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("add"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "add"),
+                        equalTo(DB_QUERY_TEXT, "add test-add 3600 ?"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort())),
+            span ->
+                span.hasName(spanName("get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "get test-add"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                        equalTo(stringKey("spymemcached.result"), experimental("hit")))));
   }
 
   @Test
@@ -817,38 +778,35 @@ class SpymemcachedTest {
           assertThat(memcached.add("test-add2", EXPIRATION_SECONDS, "add bar 123").get()).isFalse();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("add"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "add"),
-                            equalTo(DB_QUERY_TEXT, "add test-add2 3600 ?"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort())),
-                span ->
-                    span.hasName(spanName("add"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "add"),
-                            equalTo(DB_QUERY_TEXT, "add test-add2 3600 ?"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("add"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "add"),
+                        equalTo(DB_QUERY_TEXT, "add test-add2 3600 ?"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort())),
+            span ->
+                span.hasName(spanName("add"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "add"),
+                        equalTo(DB_QUERY_TEXT, "add test-add2 3600 ?"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test
@@ -861,39 +819,36 @@ class SpymemcachedTest {
           assertThat(memcached.get("test-delete")).isNull();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("delete"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "delete"),
-                            equalTo(DB_QUERY_TEXT, "delete test-delete"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort())),
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get test-delete"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), experimental("miss")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("delete"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "delete"),
+                        equalTo(DB_QUERY_TEXT, "delete test-delete"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort())),
+            span ->
+                span.hasName(spanName("get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "get test-delete"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                        equalTo(stringKey("spymemcached.result"), experimental("miss")))));
   }
 
   @Test
@@ -905,24 +860,22 @@ class SpymemcachedTest {
           assertThat(memcached.delete("test-delete-non-existent").get()).isFalse();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("delete"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "delete"),
-                            equalTo(DB_QUERY_TEXT, "delete test-delete-non-existent"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("delete"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "delete"),
+                        equalTo(DB_QUERY_TEXT, "delete test-delete-non-existent"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test
@@ -936,39 +889,36 @@ class SpymemcachedTest {
           assertThat(memcached.get("test-replace")).isEqualTo("new value");
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("replace"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "replace"),
-                            equalTo(DB_QUERY_TEXT, "replace test-replace 3600 ?"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort())),
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get test-replace"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), experimental("hit")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("replace"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "replace"),
+                        equalTo(DB_QUERY_TEXT, "replace test-replace 3600 ?"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort())),
+            span ->
+                span.hasName(spanName("get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "get test-replace"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                        equalTo(stringKey("spymemcached.result"), experimental("hit")))));
   }
 
   @Test
@@ -984,24 +934,22 @@ class SpymemcachedTest {
               .isFalse();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("replace"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "replace"),
-                            equalTo(DB_QUERY_TEXT, "replace test-replace-non-existent 3600 ?"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("replace"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "replace"),
+                        equalTo(DB_QUERY_TEXT, "replace test-replace-non-existent 3600 ?"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test
@@ -1016,54 +964,49 @@ class SpymemcachedTest {
           assertThat(memcached.get("test-append")).isEqualTo("append test appended");
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("gets"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "gets"),
-                            equalTo(DB_QUERY_TEXT, "gets test-append"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort())),
-                span ->
-                    span.hasName(spanName("append"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "append"),
-                            satisfies(
-                                DB_QUERY_TEXT, val -> val.matches("append \\d+ test-append \\?")),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort())),
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get test-append"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), experimental("hit")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("gets"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "gets"),
+                        equalTo(DB_QUERY_TEXT, "gets test-append"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort())),
+            span ->
+                span.hasName(spanName("append"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "append"),
+                        satisfies(DB_QUERY_TEXT, val -> val.matches("append \\d+ test-append \\?")),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort())),
+            span ->
+                span.hasName(spanName("get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "get test-append"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                        equalTo(stringKey("spymemcached.result"), experimental("hit")))));
   }
 
   @Test
@@ -1078,54 +1021,50 @@ class SpymemcachedTest {
           assertThat(memcached.get("test-prepend")).isEqualTo("prepended prepend test");
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("gets"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "gets"),
-                            equalTo(DB_QUERY_TEXT, "gets test-prepend"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort())),
-                span ->
-                    span.hasName(spanName("prepend"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "prepend"),
-                            satisfies(
-                                DB_QUERY_TEXT, val -> val.matches("prepend \\d+ test-prepend \\?")),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort())),
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get test-prepend"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), experimental("hit")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("gets"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "gets"),
+                        equalTo(DB_QUERY_TEXT, "gets test-prepend"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort())),
+            span ->
+                span.hasName(spanName("prepend"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "prepend"),
+                        satisfies(
+                            DB_QUERY_TEXT, val -> val.matches("prepend \\d+ test-prepend \\?")),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort())),
+            span ->
+                span.hasName(spanName("get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "get test-prepend"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                        equalTo(stringKey("spymemcached.result"), experimental("hit")))));
   }
 
   @Test
@@ -1139,39 +1078,35 @@ class SpymemcachedTest {
               .isEqualTo(CASResponse.OK);
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("gets"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "gets"),
-                            equalTo(DB_QUERY_TEXT, "gets test-cas"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort())),
-                span ->
-                    span.hasName(spanName("cas"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "cas"),
-                            satisfies(
-                                DB_QUERY_TEXT, val -> val.matches("cas test-cas \\d+ 3600 \\?")),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("gets"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "gets"),
+                        equalTo(DB_QUERY_TEXT, "gets test-cas"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort())),
+            span ->
+                span.hasName(spanName("cas"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "cas"),
+                        satisfies(DB_QUERY_TEXT, val -> val.matches("cas test-cas \\d+ 3600 \\?")),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @ParameterizedTest
@@ -1197,30 +1132,26 @@ class SpymemcachedTest {
             });
     assertThat(result).isEqualTo(CASResponse.NOT_FOUND);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("cas"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "cas"),
-                            equalTo(
-                                DB_QUERY_TEXT,
-                                "cas "
-                                    + casKey
-                                    + (numericValue && !withExpiration
-                                        ? " 1234 ?"
-                                        : " 1234 3600 ?")),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("cas"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "cas"),
+                        equalTo(
+                            DB_QUERY_TEXT,
+                            "cas "
+                                + casKey
+                                + (numericValue && !withExpiration ? " 1234 ?" : " 1234 3600 ?")),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test
@@ -1232,24 +1163,22 @@ class SpymemcachedTest {
           assertThat(memcached.touch("test-touch", EXPIRATION_SECONDS).get()).isTrue();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("touch"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "touch"),
-                            equalTo(DB_QUERY_TEXT, "touch test-touch 3600"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("touch"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "touch"),
+                        equalTo(DB_QUERY_TEXT, "touch test-touch 3600"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test
@@ -1262,24 +1191,22 @@ class SpymemcachedTest {
               .isFalse();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("touch"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "touch"),
-                            equalTo(DB_QUERY_TEXT, "touch test-touch-non-existent 3600"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("touch"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "touch"),
+                        equalTo(DB_QUERY_TEXT, "touch test-touch-non-existent 3600"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test
@@ -1292,24 +1219,22 @@ class SpymemcachedTest {
               .isEqualTo("touch test");
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("gat"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "gat"),
-                            equalTo(DB_QUERY_TEXT, "getAndTouch test-touch 3600"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("gat"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "gat"),
+                        equalTo(DB_QUERY_TEXT, "getAndTouch test-touch 3600"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test
@@ -1321,24 +1246,22 @@ class SpymemcachedTest {
           assertThat(memcached.getAndTouch("test-touch-non-existent", EXPIRATION_SECONDS)).isNull();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("gat"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "gat"),
-                            equalTo(DB_QUERY_TEXT, "getAndTouch test-touch-non-existent 3600"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("gat"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "gat"),
+                        equalTo(DB_QUERY_TEXT, "getAndTouch test-touch-non-existent 3600"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test
@@ -1355,39 +1278,36 @@ class SpymemcachedTest {
           assertThat(memcached.get("test-decr")).isEqualTo("195");
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("decr"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "decr"),
-                            equalTo(DB_QUERY_TEXT, "decr test-decr 5"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort())),
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get test-decr"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), experimental("hit")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("decr"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "decr"),
+                        equalTo(DB_QUERY_TEXT, "decr test-decr 5"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort())),
+            span ->
+                span.hasName(spanName("get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "get test-decr"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                        equalTo(stringKey("spymemcached.result"), experimental("hit")))));
   }
 
   @Test
@@ -1399,24 +1319,22 @@ class SpymemcachedTest {
           assertThat(memcached.decr("test-decr-non-existent", 5)).isEqualTo(-1);
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("decr"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "decr"),
-                            equalTo(DB_QUERY_TEXT, "decr test-decr-non-existent 5"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("decr"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "decr"),
+                        equalTo(DB_QUERY_TEXT, "decr test-decr-non-existent 5"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test
@@ -1425,23 +1343,20 @@ class SpymemcachedTest {
     assertThatThrownBy(() -> memcached.decr("long key: " + longString(), 5))
         .isInstanceOf(IllegalArgumentException.class);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(spanName("decr"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(
-                            new IllegalArgumentException("Key is too long (maxlen = 250)"))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(ERROR_TYPE, "java.lang.IllegalArgumentException"),
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "decr"),
-                            equalTo(DB_QUERY_TEXT, "decr long key: " + longString() + " 5"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(SERVER_PORT, (long) memcachedAddress.getPort()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(spanName("decr"))
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasStatus(StatusData.error())
+                .hasException(new IllegalArgumentException("Key is too long (maxlen = 250)"))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(ERROR_TYPE, "java.lang.IllegalArgumentException"),
+                    equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                    equalTo(DB_OPERATION_NAME, "decr"),
+                    equalTo(DB_QUERY_TEXT, "decr long key: " + longString() + " 5"),
+                    equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                    equalTo(SERVER_PORT, (long) memcachedAddress.getPort()))));
   }
 
   @Test
@@ -1458,39 +1373,36 @@ class SpymemcachedTest {
           assertThat(memcached.get("test-incr")).isEqualTo("105");
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("incr"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "incr"),
-                            equalTo(DB_QUERY_TEXT, "incr test-incr 5"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort())),
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get test-incr"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), experimental("hit")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("incr"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "incr"),
+                        equalTo(DB_QUERY_TEXT, "incr test-incr 5"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort())),
+            span ->
+                span.hasName(spanName("get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "get test-incr"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                        equalTo(stringKey("spymemcached.result"), experimental("hit")))));
   }
 
   @Test
@@ -1502,24 +1414,22 @@ class SpymemcachedTest {
           assertThat(memcached.incr("test-incr-non-existent", 5)).isEqualTo(-1);
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("incr"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "incr"),
-                            equalTo(DB_QUERY_TEXT, "incr test-incr-non-existent 5"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("incr"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "incr"),
+                        equalTo(DB_QUERY_TEXT, "incr test-incr-non-existent 5"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()))));
   }
 
   @Test
@@ -1528,23 +1438,20 @@ class SpymemcachedTest {
     assertThatThrownBy(() -> memcached.incr("long key: " + longString(), 5))
         .isInstanceOf(IllegalArgumentException.class);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(spanName("incr"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(
-                            new IllegalArgumentException("Key is too long (maxlen = 250)"))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(ERROR_TYPE, "java.lang.IllegalArgumentException"),
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "incr"),
-                            equalTo(DB_QUERY_TEXT, "incr long key: " + longString() + " 5"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(SERVER_PORT, (long) memcachedAddress.getPort()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(spanName("incr"))
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasStatus(StatusData.error())
+                .hasException(new IllegalArgumentException("Key is too long (maxlen = 250)"))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(ERROR_TYPE, "java.lang.IllegalArgumentException"),
+                    equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                    equalTo(DB_OPERATION_NAME, "incr"),
+                    equalTo(DB_QUERY_TEXT, "incr long key: " + longString() + " 5"),
+                    equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                    equalTo(SERVER_PORT, (long) memcachedAddress.getPort()))));
   }
 
   @Test
@@ -1617,30 +1524,29 @@ class SpymemcachedTest {
             + secondMemcachedAddress.getHostString()
             + ":"
             + secondMemcachedAddress.getPort();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("get", target))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get " + keys.get(0)),
-                            equalTo(SERVER_ADDRESS, target),
-                            equalTo(stringKey("spymemcached.result"), experimental("miss"))),
-                span ->
-                    span.hasName(spanName("get", target))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get " + keys.get(1)),
-                            equalTo(SERVER_ADDRESS, target),
-                            equalTo(stringKey("spymemcached.result"), experimental("miss")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("get", target))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "get " + keys.get(0)),
+                        equalTo(SERVER_ADDRESS, target),
+                        equalTo(stringKey("spymemcached.result"), experimental("miss"))),
+            span ->
+                span.hasName(spanName("get", target))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "get " + keys.get(1)),
+                        equalTo(SERVER_ADDRESS, target),
+                        equalTo(stringKey("spymemcached.result"), experimental("miss")))));
   }
 
   @ParameterizedTest
@@ -1699,22 +1605,21 @@ class SpymemcachedTest {
             + secondMemcachedAddress.getHostString()
             + ":"
             + secondMemcachedAddress.getPort();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("get", target))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get " + requestKey),
-                            equalTo(SERVER_ADDRESS, target),
-                            equalTo(NETWORK_PEER_ADDRESS, peer.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) peer.getPort()),
-                            equalTo(stringKey("spymemcached.result"), experimental("miss")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("get", target))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "get " + requestKey),
+                        equalTo(SERVER_ADDRESS, target),
+                        equalTo(NETWORK_PEER_ADDRESS, peer.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) peer.getPort()),
+                        equalTo(stringKey("spymemcached.result"), experimental("miss")))));
   }
 
   @Test
@@ -1731,17 +1636,16 @@ class SpymemcachedTest {
                 builder
                     .setProtocol(TEXT)
                     .setFailureMode(Redistribute)
-                    .setOpQueueFactory(
-                        () ->
-                            getLockableQueue(
-                                queueLock,
-                                (queue, operation) -> {
-                                  BiConsumer<BlockingQueue<Operation>, Operation> action =
-                                      afterEnqueue.getAndSet(null);
-                                  if (action != null) {
-                                    action.accept(queue, operation);
-                                  }
-                                })));
+                    .setOpQueueFactory(() ->
+                        getLockableQueue(
+                            queueLock,
+                            (queue, operation) -> {
+                              BiConsumer<BlockingQueue<Operation>, Operation> action =
+                                  afterEnqueue.getAndSet(null);
+                              if (action != null) {
+                                action.accept(queue, operation);
+                              }
+                            })));
     MemcachedConnection connection = memcached.getConnection();
     waitForNodes(connection);
     String requestKey = "early-retry";
@@ -1757,19 +1661,17 @@ class SpymemcachedTest {
     GetFuture<Object> future;
     queueLock.lock();
     try {
-      afterEnqueue.set(
-          (queue, operation) -> {
-            assertThat(queue.remove(operation)).isTrue();
-            assertThat(
-                    ioThread.submit(
-                        () -> {
-                          markForRetry(operation);
-                          initialNode.reconnecting();
-                          connection.redistributeOperation(operation);
-                          return null;
-                        }))
-                .succeedsWithin(Duration.ofSeconds(10));
-          });
+      afterEnqueue.set((queue, operation) -> {
+        assertThat(queue.remove(operation)).isTrue();
+        assertThat(
+                ioThread.submit(() -> {
+                  markForRetry(operation);
+                  initialNode.reconnecting();
+                  connection.redistributeOperation(operation);
+                  return null;
+                }))
+            .succeedsWithin(Duration.ofSeconds(10));
+      });
       future = testing.runWithSpan("parent", () -> memcached.asyncGet(requestKey));
     } finally {
       queueLock.unlock();
@@ -1784,22 +1686,21 @@ class SpymemcachedTest {
             + secondMemcachedAddress.getHostString()
             + ":"
             + secondMemcachedAddress.getPort();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("get", target))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get " + requestKey),
-                            equalTo(SERVER_ADDRESS, target),
-                            equalTo(NETWORK_PEER_ADDRESS, retryPeer.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) retryPeer.getPort()),
-                            equalTo(stringKey("spymemcached.result"), experimental("miss")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("get", target))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "get " + requestKey),
+                        equalTo(SERVER_ADDRESS, target),
+                        equalTo(NETWORK_PEER_ADDRESS, retryPeer.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) retryPeer.getPort()),
+                        equalTo(stringKey("spymemcached.result"), experimental("miss")))));
   }
 
   @Test
@@ -1815,43 +1716,42 @@ class SpymemcachedTest {
             + secondMemcachedAddress.getHostString()
             + ":"
             + secondMemcachedAddress.getPort();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("get", address))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get test-several-nodes"),
-                            satisfies(
-                                SERVER_ADDRESS,
-                                val -> {
-                                  val.isEqualTo(address);
-                                }),
-                            satisfies(
-                                SERVER_PORT,
-                                val -> {
-                                  val.isNull();
-                                }),
-                            satisfies(
-                                NETWORK_PEER_ADDRESS,
-                                val -> {
-                                  val.isIn(
-                                      memcachedAddress.getAddress().getHostAddress(),
-                                      secondMemcachedAddress.getAddress().getHostAddress());
-                                }),
-                            satisfies(
-                                NETWORK_PEER_PORT,
-                                val -> {
-                                  val.isIn(
-                                      (long) memcachedAddress.getPort(),
-                                      (long) secondMemcachedAddress.getPort());
-                                }),
-                            equalTo(stringKey("spymemcached.result"), experimental("miss")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("get", address))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "get test-several-nodes"),
+                        satisfies(
+                            SERVER_ADDRESS,
+                            val -> {
+                              val.isEqualTo(address);
+                            }),
+                        satisfies(
+                            SERVER_PORT,
+                            val -> {
+                              val.isNull();
+                            }),
+                        satisfies(
+                            NETWORK_PEER_ADDRESS,
+                            val -> {
+                              val.isIn(
+                                  memcachedAddress.getAddress().getHostAddress(),
+                                  secondMemcachedAddress.getAddress().getHostAddress());
+                            }),
+                        satisfies(
+                            NETWORK_PEER_PORT,
+                            val -> {
+                              val.isIn(
+                                  (long) memcachedAddress.getPort(),
+                                  (long) secondMemcachedAddress.getPort());
+                            }),
+                        equalTo(stringKey("spymemcached.result"), experimental("miss")))));
 
     assertDurationMetric(
         testing,
@@ -1874,25 +1774,23 @@ class SpymemcachedTest {
     testing.runWithSpan(
         "parent", () -> assertThat(memcached.get("test-node-list-mutation")).isNull());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(spanName("get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(DB_QUERY_TEXT, "get test-node-list-mutation"),
-                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
-                            equalTo(
-                                NETWORK_PEER_ADDRESS,
-                                memcachedAddress.getAddress().getHostAddress()),
-                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
-                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
-                            equalTo(stringKey("spymemcached.result"), experimental("miss")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(spanName("get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(DB_QUERY_TEXT, "get test-node-list-mutation"),
+                        equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                        equalTo(
+                            NETWORK_PEER_ADDRESS, memcachedAddress.getAddress().getHostAddress()),
+                        equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                        equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                        equalTo(stringKey("spymemcached.result"), experimental("miss")))));
   }
 
   private static List<String> keysForNode(

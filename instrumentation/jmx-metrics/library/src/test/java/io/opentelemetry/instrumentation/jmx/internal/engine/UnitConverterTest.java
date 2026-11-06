@@ -95,13 +95,13 @@ class UnitConverterTest {
     "'', By", "By, ''",
   })
   void shouldNotAllowRegisteringConversionWithAnyUnitEmpty(String sourceUnit, String targetUnit) {
-    assertThatThrownBy(() -> UnitConverter.registerConversion(sourceUnit, targetUnit, (value) -> 0))
+    assertThatThrownBy(() -> UnitConverter.registerConversion(sourceUnit, targetUnit, value -> 0))
         .hasMessageMatching("Non empty .+Unit must be provided");
   }
 
   @Test
   void shouldNotAllowRegisteringAgainAlreadyExistingConversion() {
-    assertThatThrownBy(() -> UnitConverter.registerConversion("ms", "s", (v) -> 0))
+    assertThatThrownBy(() -> UnitConverter.registerConversion("ms", "s", v -> 0))
         .hasMessage("Conversion from [ms] to [s] already defined");
   }
 }

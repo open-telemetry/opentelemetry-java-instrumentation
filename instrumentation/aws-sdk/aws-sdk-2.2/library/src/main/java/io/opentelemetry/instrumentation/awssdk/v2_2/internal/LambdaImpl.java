@@ -78,7 +78,7 @@ public final class LambdaImpl {
         jsonNode
             .asObject()
             .computeIfAbsent(
-                CLIENT_CONTEXT_CUSTOM_FIELDS_KEY, (k) -> new ObjectJsonNode(new LinkedHashMap<>()));
+                CLIENT_CONTEXT_CUSTOM_FIELDS_KEY, k -> new ObjectJsonNode(new LinkedHashMap<>()));
     if (!customNode.isObject()) {
       return null;
     }

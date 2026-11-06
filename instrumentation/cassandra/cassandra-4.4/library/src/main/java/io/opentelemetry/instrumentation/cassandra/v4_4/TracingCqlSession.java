@@ -150,10 +150,9 @@ final class TracingCqlSession {
     try (Scope ignored = context.makeCurrent()) {
       CompletionStage<AsyncResultSet> stage = query.get();
       return wrap(
-          stage.whenComplete(
-              (asyncResultSet, throwable) ->
-                  instrumenter.end(
-                      context, request, getExecutionInfo(asyncResultSet, throwable), throwable)),
+          stage.whenComplete((asyncResultSet, throwable) ->
+              instrumenter.end(
+                  context, request, getExecutionInfo(asyncResultSet, throwable), throwable)),
           parentContext);
     }
   }
@@ -170,16 +169,15 @@ final class TracingCqlSession {
 
   private static <T> CompletableFuture<T> wrap(CompletionStage<T> future, Context context) {
     CompletableFuture<T> result = new CompletableFuture<>();
-    future.whenComplete(
-        (T value, Throwable throwable) -> {
-          try (Scope ignored = context.makeCurrent()) {
-            if (throwable != null) {
-              result.completeExceptionally(throwable);
-            } else {
-              result.complete(value);
-            }
-          }
-        });
+    future.whenComplete((T value, Throwable throwable) -> {
+      try (Scope ignored = context.makeCurrent()) {
+        if (throwable != null) {
+          result.completeExceptionally(throwable);
+        } else {
+          result.complete(value);
+        }
+      }
+    });
 
     return result;
   }

@@ -197,11 +197,10 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             .setContextData(contextData)
             .build());
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasEventName("MyEventName")
-                .hasAttributesSatisfyingExactly(equalTo(stringKey("new-1"), "captured")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord
+            .hasEventName("MyEventName")
+            .hasAttributesSatisfyingExactly(equalTo(stringKey("new-1"), "captured")));
   }
 
   @Test
@@ -229,9 +228,8 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             .setContextData(contextData)
             .build());
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("request-id"), "captured")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("request-id"), "captured")));
   }
 
   @Test
@@ -261,11 +259,10 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             .setContextData(contextData)
             .build());
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(stringKey("request-id"), "captured"),
-                equalTo(stringKey("request-secret"), "captured")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(stringKey("request-id"), "captured"),
+            equalTo(stringKey("request-secret"), "captured")));
   }
 
   @Test
@@ -295,13 +292,12 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             .setContextData(contextData)
             .build());
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(stringKey("request.*"), "captured"),
-                equalTo(stringKey("user?"), "captured"),
-                equalTo(stringKey("*"), "captured"),
-                equalTo(stringKey("userId"), "captured")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(stringKey("request.*"), "captured"),
+            equalTo(stringKey("user?"), "captured"),
+            equalTo(stringKey("*"), "captured"),
+            equalTo(stringKey("userId"), "captured")));
   }
 
   @Test
@@ -326,11 +322,10 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             .setContextData(contextData)
             .build());
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(stringKey("request.secret"), "captured"),
-                equalTo(stringKey("userId"), "captured")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(stringKey("request.secret"), "captured"),
+            equalTo(stringKey("userId"), "captured")));
   }
 
   @Test
@@ -404,10 +399,9 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             .setContextData(contextData)
             .build());
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(stringKey(OTEL_CONTEXT_DATA_KEY), "value")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(stringKey(OTEL_CONTEXT_DATA_KEY), "value")));
   }
 
   @Test
@@ -474,24 +468,22 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             .setContextData(contextData)
             .build());
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(stringKey("string"), "value"),
-                equalTo(booleanKey("boolean"), true),
-                equalTo(longKey("short"), 7),
-                equalTo(longKey("int"), 25),
-                equalTo(doubleKey("float"), 0.5),
-                equalTo(doubleKey("double"), 1.5),
-                equalTo(stringArrayKey("string-array"), asList("one", "two")),
-                equalTo(longArrayKey("int-array"), asList(1L, 2L)),
-                equalTo(longArrayKey("long-list"), asList(1L, 2L)),
-                equalTo(booleanArrayKey("boolean-list"), asList(true, false)),
-                equalTo(stringKey("uuid"), "123e4567-e89b-12d3-a456-426614174000"),
-                equalTo(
-                    stringArrayKey("uuid-list"),
-                    singletonList("123e4567-e89b-12d3-a456-426614174000")),
-                equalTo(stringKey("big-decimal"), "1.10")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(stringKey("string"), "value"),
+            equalTo(booleanKey("boolean"), true),
+            equalTo(longKey("short"), 7),
+            equalTo(longKey("int"), 25),
+            equalTo(doubleKey("float"), 0.5),
+            equalTo(doubleKey("double"), 1.5),
+            equalTo(stringArrayKey("string-array"), asList("one", "two")),
+            equalTo(longArrayKey("int-array"), asList(1L, 2L)),
+            equalTo(longArrayKey("long-list"), asList(1L, 2L)),
+            equalTo(booleanArrayKey("boolean-list"), asList(true, false)),
+            equalTo(stringKey("uuid"), "123e4567-e89b-12d3-a456-426614174000"),
+            equalTo(
+                stringArrayKey("uuid-list"), singletonList("123e4567-e89b-12d3-a456-426614174000")),
+            equalTo(stringKey("big-decimal"), "1.10")));
   }
 
   @Test
@@ -525,19 +517,18 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             .setContextData(contextData)
             .build());
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(
-                    valueKey("map"),
-                    Value.of(
-                        KeyValue.of("fn", Value.of("firstname")),
-                        KeyValue.of("age", Value.of(25L)),
-                        KeyValue.of("numbers", Value.of(Value.of(1L), Value.of(2L))),
-                        KeyValue.of("1", Value.of("last")))),
-                equalTo(valueKey("mixed-list"), Value.of(Value.of("one"), Value.of(2L))),
-                equalTo(valueKey("null-element"), Value.of(Value.of("one"), Value.empty())),
-                equalTo(valueKey("empty-array"), Value.of(emptyList()))));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(
+                valueKey("map"),
+                Value.of(
+                    KeyValue.of("fn", Value.of("firstname")),
+                    KeyValue.of("age", Value.of(25L)),
+                    KeyValue.of("numbers", Value.of(Value.of(1L), Value.of(2L))),
+                    KeyValue.of("1", Value.of("last")))),
+            equalTo(valueKey("mixed-list"), Value.of(Value.of("one"), Value.of(2L))),
+            equalTo(valueKey("null-element"), Value.of(Value.of("one"), Value.empty())),
+            equalTo(valueKey("empty-array"), Value.of(emptyList()))));
   }
 
   @Test
@@ -572,16 +563,14 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             .setContextData(contextData)
             .build());
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(valueKey("list"), Value.of(Value.of("one"), Value.empty())),
-                equalTo(valueKey("map"), Value.of(KeyValue.of("self", Value.empty()))),
-                equalTo(
-                    valueKey("indirect"), Value.of(Value.of(KeyValue.of("outer", Value.empty())))),
-                equalTo(
-                    valueKey("shared"),
-                    Value.of(Value.of(Value.of("value")), Value.of(Value.of("value"))))));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(valueKey("list"), Value.of(Value.of("one"), Value.empty())),
+            equalTo(valueKey("map"), Value.of(KeyValue.of("self", Value.empty()))),
+            equalTo(valueKey("indirect"), Value.of(Value.of(KeyValue.of("outer", Value.empty())))),
+            equalTo(
+                valueKey("shared"),
+                Value.of(Value.of(Value.of("value")), Value.of(Value.of("value"))))));
   }
 
   @Test
@@ -596,12 +585,10 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
       ThreadContext.clearMap();
     }
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasBody("log message")
-                .hasAttributesSatisfyingExactly(
-                    equalTo(stringKey("selector-included"), "captured")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord
+            .hasBody("log message")
+            .hasAttributesSatisfyingExactly(equalTo(stringKey("selector-included"), "captured")));
   }
 
   @Test
@@ -629,10 +616,9 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             .setMessage(message)
             .build());
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured")));
   }
 
   @Test
@@ -656,10 +642,9 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             .setMessage(message)
             .build());
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured")));
   }
 
   @Test
@@ -688,11 +673,10 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             .setMessage(message)
             .build());
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured"),
-                equalTo(AbstractLog4j2Test.mapMessageKey("order-secret"), "captured")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured"),
+            equalTo(AbstractLog4j2Test.mapMessageKey("order-secret"), "captured")));
   }
 
   @Test
@@ -715,11 +699,10 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             .setMessage(message)
             .build());
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured"),
-                equalTo(AbstractLog4j2Test.mapMessageKey("other"), "captured")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(AbstractLog4j2Test.mapMessageKey("order-id"), "captured"),
+            equalTo(AbstractLog4j2Test.mapMessageKey("other"), "captured")));
   }
 
   @Test
@@ -741,9 +724,8 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
             .setMessage(message)
             .build());
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("order-id"), "captured")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("order-id"), "captured")));
   }
 
   @Test
@@ -763,11 +745,9 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
                 new StringMapMessage().with("order-id", "captured").with("other", "captured"))
             .build());
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(stringKey("order-id"), "captured"),
-                equalTo(stringKey("other"), "captured")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(stringKey("order-id"), "captured"), equalTo(stringKey("other"), "captured")));
   }
 
   @Test
@@ -779,10 +759,9 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     message.put("other", "ignored");
     selectorLogger.info(message);
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(AbstractLog4j2Test.mapMessageKey("selector-included"), "captured")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(AbstractLog4j2Test.mapMessageKey("selector-included"), "captured")));
   }
 
   @Test
@@ -799,10 +778,9 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
     LogManager.getLogger("DefaultMapMessageSelectorTestLogger")
         .info(new StringMapMessage().with("key1", "value1").with("key2", "value2"));
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(stringKey("key1"), "value1"), equalTo(stringKey("key2"), "value2")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(stringKey("key1"), "value1"), equalTo(stringKey("key2"), "value2")));
   }
 
   @Test

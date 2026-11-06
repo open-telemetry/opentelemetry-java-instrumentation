@@ -76,11 +76,10 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
         KafkaStreamsReflectionUtil.createBuilder();
     KStream<Integer, String> textLines = streamBuilder.stream(STREAM_PENDING);
     KStream<Integer, String> values =
-        textLines.mapValues(
-            textLine -> {
-              Span.current().setAttribute("asdf", "testing");
-              return textLine.toLowerCase(Locale.ROOT);
-            });
+        textLines.mapValues(textLine -> {
+          Span.current().setAttribute("asdf", "testing");
+          return textLine.toLowerCase(Locale.ROOT);
+        });
 
     KafkaStreams streams = streamBuilder.createStreams(values, config, STREAM_PROCESSED);
     cleanup.deferCleanup(() -> streams.close());

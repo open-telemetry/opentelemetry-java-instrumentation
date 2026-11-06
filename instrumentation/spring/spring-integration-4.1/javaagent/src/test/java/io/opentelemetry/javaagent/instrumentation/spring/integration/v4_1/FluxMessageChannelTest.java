@@ -75,15 +75,14 @@ class FluxMessageChannelTest {
           assertThat(handlerThread.get(10, SECONDS)).isSameAs(producerThread.get(10, SECONDS));
         }
 
-        testing.waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("producer").hasNoParent(),
-                    span ->
-                        span.hasName("process application.fluxChannel")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(0)),
-                    span -> span.hasName("handler").hasParent(trace.getSpan(1))));
+        testing.waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer").hasNoParent(),
+                span ->
+                    span.hasName("process application.fluxChannel")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0)),
+                span -> span.hasName("handler").hasParent(trace.getSpan(1))));
       } finally {
         subscription.dispose();
       }

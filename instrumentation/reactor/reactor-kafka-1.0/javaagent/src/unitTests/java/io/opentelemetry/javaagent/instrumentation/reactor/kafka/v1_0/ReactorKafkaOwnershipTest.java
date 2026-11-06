@@ -70,17 +70,15 @@ class ReactorKafkaOwnershipTest {
       List<SpanContext> observedContexts = new ArrayList<>();
       new KafkaClientProcessingHandoffFlux(Flux.just(records))
           .publishOn(scheduler)
-          .concatMap(
-              batch ->
-                  new InstrumentedKafkaFlux<>(
-                      Flux.fromIterable(recordsIn((ConsumerRecords<?, ?>) batch))))
-          .doOnNext(
-              record -> {
-                assertThat(batchState.getAsBoolean()).isFalse();
-                assertThat(rawProcessingEligibility(record).getAsBoolean()).isFalse();
-                assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                observedContexts.add(Span.current().getSpanContext());
-              })
+          .concatMap(batch ->
+              new InstrumentedKafkaFlux<>(
+                  Flux.fromIterable(recordsIn((ConsumerRecords<?, ?>) batch))))
+          .doOnNext(record -> {
+            assertThat(batchState.getAsBoolean()).isFalse();
+            assertThat(rawProcessingEligibility(record).getAsBoolean()).isFalse();
+            assertThat(Span.current().getSpanContext().isValid()).isTrue();
+            observedContexts.add(Span.current().getSpanContext());
+          })
           .blockLast();
 
       assertThat(observedContexts).hasSize(2);
@@ -133,30 +131,29 @@ class ReactorKafkaOwnershipTest {
         records, remoteSpanContext("00000000000000000000000000000004", "0000000000000004"));
     IllegalStateException error = new IllegalStateException("boom");
 
-    assertThatThrownBy(
-            () ->
-                new InstrumentedKafkaFlux.InstrumentedSubscriber(
-                        new CoreSubscriber<ConsumerRecord<?, ?>>() {
-                          @Override
-                          public void onSubscribe(Subscription subscription) {}
+    assertThatThrownBy(() ->
+            new InstrumentedKafkaFlux.InstrumentedSubscriber(
+                    new CoreSubscriber<ConsumerRecord<?, ?>>() {
+                      @Override
+                      public void onSubscribe(Subscription subscription) {}
 
-                          @Override
-                          public void onNext(ConsumerRecord<?, ?> value) {
-                            throw error;
-                          }
+                      @Override
+                      public void onNext(ConsumerRecord<?, ?> value) {
+                        throw error;
+                      }
 
-                          @Override
-                          public void onError(Throwable throwable) {}
+                      @Override
+                      public void onError(Throwable throwable) {}
 
-                          @Override
-                          public void onComplete() {}
+                      @Override
+                      public void onComplete() {}
 
-                          @Override
-                          public reactor.util.context.Context currentContext() {
-                            return reactor.util.context.Context.empty();
-                          }
-                        })
-                    .onNext(record))
+                      @Override
+                      public reactor.util.context.Context currentContext() {
+                        return reactor.util.context.Context.empty();
+                      }
+                    })
+                .onNext(record))
         .isSameAs(error);
     new InstrumentedKafkaFlux<>(Flux.just(record)).blockLast();
 
@@ -185,20 +182,18 @@ class ReactorKafkaOwnershipTest {
             .storeInContext(Context.current())
             .makeCurrent()) {
       new InstrumentedKafkaFlux<>(Flux.just(outerRecord))
-          .doOnNext(
-              outer -> {
-                assertThat(Baggage.current().getEntryValue("tenant")).isEqualTo("acme");
-                SpanContext outerSpan = Span.current().getSpanContext();
-                assertThat(outerSpan.isValid()).isTrue();
-                new InstrumentedKafkaFlux<>(Flux.just(innerRecord))
-                    .doOnNext(
-                        inner -> {
-                          observedRecords.add(inner);
-                          assertThat(Span.current().getSpanContext()).isEqualTo(outerSpan);
-                          assertThat(Baggage.current().getEntryValue("tenant")).isEqualTo("acme");
-                        })
-                    .blockLast();
-              })
+          .doOnNext(outer -> {
+            assertThat(Baggage.current().getEntryValue("tenant")).isEqualTo("acme");
+            SpanContext outerSpan = Span.current().getSpanContext();
+            assertThat(outerSpan.isValid()).isTrue();
+            new InstrumentedKafkaFlux<>(Flux.just(innerRecord))
+                .doOnNext(inner -> {
+                  observedRecords.add(inner);
+                  assertThat(Span.current().getSpanContext()).isEqualTo(outerSpan);
+                  assertThat(Baggage.current().getEntryValue("tenant")).isEqualTo("acme");
+                })
+                .blockLast();
+          })
           .blockLast();
     }
 
@@ -221,19 +216,17 @@ class ReactorKafkaOwnershipTest {
     prepareContexts(records(innerRecord), innerParent);
 
     new InstrumentedKafkaFlux<>(Flux.just(outerRecord))
-        .doOnNext(
-            outer -> {
-              SpanContext outerSpan = Span.current().getSpanContext();
-              assertThat(outerSpan.isValid()).isTrue();
-              new InstrumentedKafkaFlux<>(Flux.just(innerRecord))
-                  .doOnNext(
-                      inner -> {
-                        assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                        assertThat(Span.current().getSpanContext()).isNotEqualTo(outerSpan);
-                      })
-                  .blockLast();
-              assertThat(Span.current().getSpanContext()).isEqualTo(outerSpan);
-            })
+        .doOnNext(outer -> {
+          SpanContext outerSpan = Span.current().getSpanContext();
+          assertThat(outerSpan.isValid()).isTrue();
+          new InstrumentedKafkaFlux<>(Flux.just(innerRecord))
+              .doOnNext(inner -> {
+                assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                assertThat(Span.current().getSpanContext()).isNotEqualTo(outerSpan);
+              })
+              .blockLast();
+          assertThat(Span.current().getSpanContext()).isEqualTo(outerSpan);
+        })
         .blockLast();
 
     List<SpanData> spans = instrumentationSpans();

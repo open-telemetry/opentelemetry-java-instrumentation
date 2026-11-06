@@ -65,11 +65,10 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
     CountDownLatch handled = new CountDownLatch(1);
     Dispatcher dispatcher =
         connection
-            .createDispatcher(
-                msg -> {
-                  handled.countDown();
-                  throw new IllegalStateException("test");
-                })
+            .createDispatcher(msg -> {
+              handled.countDown();
+              throw new IllegalStateException("test");
+            })
             .subscribe("error");
     cleanup.deferCleanup(() -> connection.closeDispatcher(dispatcher));
 
@@ -89,11 +88,10 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
     // finally, to make sure we're unwrapping properly the
     // OpenTelemetryDispatcher in the library
     assertThatNoException()
-        .isThrownBy(
-            () -> {
-              d1.unsubscribe(s1);
-              connection.closeDispatcher(d1);
-            });
+        .isThrownBy(() -> {
+          d1.unsubscribe(s1);
+          connection.closeDispatcher(d1);
+        });
   }
 
   @Test
@@ -106,11 +104,10 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
     // finally, to make sure we're unwrapping properly the
     // OpenTelemetryDispatcher in the library
     assertThatNoException()
-        .isThrownBy(
-            () -> {
-              d1.unsubscribe(s1);
-              connection.closeDispatcher(d1);
-            });
+        .isThrownBy(() -> {
+          d1.unsubscribe(s1);
+          connection.closeDispatcher(d1);
+        });
   }
 
   @Test
@@ -134,26 +131,25 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
 
     // then
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasNoParent(),
-                    span ->
-                        span.hasName("publish sub")
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                messagingAttributes(
-                                    "publish",
-                                    "sub",
-                                    clientId,
-                                    equalTo(
-                                        MessageHeaderUtil.headerAttributeKey("Test-Message-Header"),
-                                        singletonList("test")))),
-                    span ->
-                        span.hasName("process sub")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(1))
-                            .hasLinksSatisfying(expectedProcessLinks(trace.getSpan(1)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span ->
+                    span.hasName("publish sub")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            messagingAttributes(
+                                "publish",
+                                "sub",
+                                clientId,
+                                equalTo(
+                                    MessageHeaderUtil.headerAttributeKey("Test-Message-Header"),
+                                    singletonList("test")))),
+                span ->
+                    span.hasName("process sub")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasLinksSatisfying(expectedProcessLinks(trace.getSpan(1)))));
   }
 
   void publishAndAssertTraceAndSpans() {
@@ -176,38 +172,33 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
     // ----- process (propagation with headers override)
     // -------- test
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasNoParent(),
-                    span ->
-                        span.hasName("publish sub")
-                            .hasKind(SpanKind.PRODUCER)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName("process sub")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(1))
-                            .hasLinksSatisfying(expectedProcessLinks(trace.getSpan(1))),
-                    span ->
-                        span.hasName("child")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(2)),
-                    span ->
-                        span.hasName("publish sub")
-                            .hasKind(SpanKind.PRODUCER)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName("process sub")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(4))
-                            .hasLinksSatisfying(expectedProcessLinks(trace.getSpan(4)))
-                            .hasAttributesSatisfyingExactly(
-                                messagingAttributes("process", "sub", clientId)),
-                    span ->
-                        span.hasName("child")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(5))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span ->
+                    span.hasName("publish sub")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("process sub")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasLinksSatisfying(expectedProcessLinks(trace.getSpan(1))),
+                span ->
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(2)),
+                span ->
+                    span.hasName("publish sub")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("process sub")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(4))
+                        .hasLinksSatisfying(expectedProcessLinks(trace.getSpan(4)))
+                        .hasAttributesSatisfyingExactly(
+                            messagingAttributes("process", "sub", clientId)),
+                span ->
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(5))));
   }
 
   void addChildSpan() {
@@ -222,13 +213,12 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
     return links -> {
       assertThat(links)
           .singleElement()
-          .satisfies(
-              link -> {
-                assertThat(link.getSpanContext().getTraceId())
-                    .isEqualTo(publishSpan.getSpanContext().getTraceId());
-                assertThat(link.getSpanContext().getSpanId())
-                    .isEqualTo(publishSpan.getSpanContext().getSpanId());
-              });
+          .satisfies(link -> {
+            assertThat(link.getSpanContext().getTraceId())
+                .isEqualTo(publishSpan.getSpanContext().getTraceId());
+            assertThat(link.getSpanContext().getSpanId())
+                .isEqualTo(publishSpan.getSpanContext().getSpanId());
+          });
     };
   }
 }

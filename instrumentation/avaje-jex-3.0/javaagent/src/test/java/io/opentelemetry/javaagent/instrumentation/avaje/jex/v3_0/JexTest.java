@@ -62,53 +62,49 @@ class JexTest {
 
     assertThat(content).isEqualTo(id);
     assertThat(response.status().code()).isEqualTo(200);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET /test/param/{id}")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(URL_SCHEME, "http"),
-                            equalTo(URL_PATH, "/test/param/" + id),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, "/test/param/{id}"),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("GET /test/param/{id}")
+                .hasKind(SpanKind.SERVER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(URL_SCHEME, "http"),
+                    equalTo(URL_PATH, "/test/param/" + id),
+                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                    satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                    equalTo(HTTP_ROUTE, "/test/param/{id}"),
+                    equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                    equalTo(SERVER_ADDRESS, "localhost"),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                    equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                    satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
   }
 
   @Test
   void testSpanNameAndHttpRouteSpanResponseError() {
     client.get("/test/error").aggregate().join();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET /test/error")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(URL_SCHEME, "http"),
-                            equalTo(URL_PATH, "/test/error"),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
-                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, "/test/error"),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(ERROR_TYPE, "500"),
-                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("GET /test/error")
+                .hasKind(SpanKind.SERVER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(URL_SCHEME, "http"),
+                    equalTo(URL_PATH, "/test/error"),
+                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
+                    satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                    equalTo(HTTP_ROUTE, "/test/error"),
+                    equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                    equalTo(SERVER_ADDRESS, "localhost"),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(ERROR_TYPE, "500"),
+                    equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                    equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                    satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
   }
 
   @Test
@@ -125,9 +121,8 @@ class JexTest {
         metric ->
             metric
                 .hasName("http.server.request.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point -> point.hasAttribute(HTTP_ROUTE, "/test/param/{id}"))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(
+                        point -> point.hasAttribute(HTTP_ROUTE, "/test/param/{id}"))));
   }
 }

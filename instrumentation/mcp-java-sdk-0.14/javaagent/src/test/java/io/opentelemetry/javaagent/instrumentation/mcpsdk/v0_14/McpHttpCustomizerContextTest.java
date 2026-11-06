@@ -83,19 +83,17 @@ class McpHttpCustomizerContextTest {
   @Test
   void restoresRootContextForSyncCustomizer() {
     AtomicReference<Context> customizerContext = new AtomicReference<>();
-    transportBuilder.httpRequestCustomizer(
-        (builder, method, endpoint, body, transportContext) -> {
-          if (body != null && body.contains(McpSchema.METHOD_TOOLS_CALL)) {
-            customizerContext.set(Context.current());
-            HttpResponse<String> response =
-                tokenClient
-                    .sendAsync(
-                        HttpRequest.newBuilder(tokenUri).build(),
-                        HttpResponse.BodyHandlers.ofString())
-                    .join();
-            builder.header("X-Customizer", response.body());
-          }
-        });
+    transportBuilder.httpRequestCustomizer((builder, method, endpoint, body, transportContext) -> {
+      if (body != null && body.contains(McpSchema.METHOD_TOOLS_CALL)) {
+        customizerContext.set(Context.current());
+        HttpResponse<String> response =
+            tokenClient
+                .sendAsync(
+                    HttpRequest.newBuilder(tokenUri).build(), HttpResponse.BodyHandlers.ofString())
+                .join();
+        builder.header("X-Customizer", response.body());
+      }
+    });
     McpAsyncClient client = newClient();
     assertThat(client.callTool(new McpSchema.CallToolRequest("test", Map.of(), null)).block())
         .isNotNull();
@@ -108,35 +106,33 @@ class McpHttpCustomizerContextTest {
                     span.hasName("tools/call test")
                         .hasKind(CLIENT)
                         .hasNoParent()
-                        .satisfies(
-                            spanData ->
-                                assertThat(
-                                        toolMessage
-                                            .get()
-                                            .path("params")
-                                            .path("_meta")
-                                            .path("traceparent")
-                                            .asText())
-                                    .isEqualTo(
-                                        "00-"
-                                            + spanData.getTraceId()
-                                            + "-"
-                                            + spanData.getSpanId()
-                                            + "-"
-                                            + spanData.getSpanContext().getTraceFlags().asHex())),
+                        .satisfies(spanData ->
+                            assertThat(
+                                    toolMessage
+                                        .get()
+                                        .path("params")
+                                        .path("_meta")
+                                        .path("traceparent")
+                                        .asText())
+                                .isEqualTo(
+                                    "00-"
+                                        + spanData.getTraceId()
+                                        + "-"
+                                        + spanData.getSpanId()
+                                        + "-"
+                                        + spanData.getSpanContext().getTraceFlags().asHex())),
                 span ->
                     span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .satisfies(
-                            spanData ->
-                                assertThat(toolHttpTraceparent.get())
-                                    .isEqualTo(
-                                        "00-"
-                                            + spanData.getTraceId()
-                                            + "-"
-                                            + spanData.getSpanId()
-                                            + "-"
-                                            + spanData.getSpanContext().getTraceFlags().asHex()))),
+                        .satisfies(spanData ->
+                            assertThat(toolHttpTraceparent.get())
+                                .isEqualTo(
+                                    "00-"
+                                        + spanData.getTraceId()
+                                        + "-"
+                                        + spanData.getSpanId()
+                                        + "-"
+                                        + spanData.getSpanContext().getTraceFlags().asHex()))),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasKind(CLIENT).hasNoParent()));
   }
 
@@ -184,21 +180,19 @@ class McpHttpCustomizerContextTest {
         });
     assertThat(contexts)
         .hasSize(3)
-        .allSatisfy(
-            context -> {
-              assertThat(context.get(key)).isEqualTo("caller");
-              assertThat(Baggage.fromContext(context).getEntryValue("tenant")).isEqualTo("caller");
-              assertThat(Span.fromContext(context).getSpanContext())
-                  .isEqualTo(Span.fromContext(caller.get()).getSpanContext());
-            });
+        .allSatisfy(context -> {
+          assertThat(context.get(key)).isEqualTo("caller");
+          assertThat(Baggage.fromContext(context).getEntryValue("tenant")).isEqualTo("caller");
+          assertThat(Span.fromContext(context).getSpanContext())
+              .isEqualTo(Span.fromContext(caller.get()).getSpanContext());
+        });
     assertThat(customHeader.get()).isEqualTo("token");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("tools/call test").hasKind(CLIENT).hasParent(trace.getSpan(0)),
-                span -> span.hasKind(CLIENT).hasParent(trace.getSpan(1)),
-                span -> span.hasKind(CLIENT).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("tools/call test").hasKind(CLIENT).hasParent(trace.getSpan(0)),
+            span -> span.hasKind(CLIENT).hasParent(trace.getSpan(1)),
+            span -> span.hasKind(CLIENT).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -227,10 +221,9 @@ class McpHttpCustomizerContextTest {
                     }
                   })
               .subscribeOn(Schedulers.boundedElastic())
-              .contextWrite(
-                  context ->
-                      ContextPropagationOperator.storeOpenTelemetryContext(
-                          context, explicitContext.get()));
+              .contextWrite(context ->
+                  ContextPropagationOperator.storeOpenTelemetryContext(
+                      context, explicitContext.get()));
         });
     McpAsyncClient client = newClient();
     testing.runWithSpan("explicit", () -> explicitContext.set(Context.current()));

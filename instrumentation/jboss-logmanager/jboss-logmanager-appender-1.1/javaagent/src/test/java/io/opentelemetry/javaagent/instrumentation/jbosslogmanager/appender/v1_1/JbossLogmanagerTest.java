@@ -147,50 +147,46 @@ class JbossLogmanagerTest {
     }
 
     if (expectedSeverity != null) {
-      testing.waitAndAssertLogRecords(
-          logRecord -> {
-            logRecord
-                .hasBody(withParam ? "xyz: 123" : "xyz")
-                .hasInstrumentationScope(
-                    InstrumentationScopeInfo.builder(expectedLoggerName).build())
-                .hasSeverity(expectedSeverity)
-                .hasSeverityText(expectedSeverityText)
-                .hasSpanContext(
-                    withParent
-                        ? testing.spans().get(0).getSpanContext()
-                        : SpanContext.getInvalid());
+      testing.waitAndAssertLogRecords(logRecord -> {
+        logRecord
+            .hasBody(withParam ? "xyz: 123" : "xyz")
+            .hasInstrumentationScope(InstrumentationScopeInfo.builder(expectedLoggerName).build())
+            .hasSeverity(expectedSeverity)
+            .hasSeverityText(expectedSeverityText)
+            .hasSpanContext(
+                withParent ? testing.spans().get(0).getSpanContext() : SpanContext.getInvalid());
 
-            List<AttributeAssertion> attributeAsserts =
-                new ArrayList<>(
-                    asList(
-                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                        equalTo(THREAD_ID, Thread.currentThread().getId())));
-            if (logException) {
-              attributeAsserts.addAll(
-                  asList(
-                      equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                      equalTo(EXCEPTION_MESSAGE, "hello"),
-                      satisfies(
-                          EXCEPTION_STACKTRACE,
-                          val -> val.contains(JbossLogmanagerTest.class.getName()))));
-            }
-            // logging via the Supplier + Throwable overload used above for logException doesn't
-            // support parameters, so the template/arguments attributes are only captured in the
-            // plain withParam case
-            if (withParam && !logException) {
-              if (CAPTURE_TEMPLATE) {
-                attributeAsserts.add(equalTo(LOG_BODY_TEMPLATE, "xyz: {0}"));
-              }
-              if (CAPTURE_ARGUMENTS) {
-                attributeAsserts.add(equalTo(LOG_BODY_PARAMETERS, singletonList("123")));
-              }
-            }
-            logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
+        List<AttributeAssertion> attributeAsserts =
+            new ArrayList<>(
+                asList(
+                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(THREAD_ID, Thread.currentThread().getId())));
+        if (logException) {
+          attributeAsserts.addAll(
+              asList(
+                  equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                  equalTo(EXCEPTION_MESSAGE, "hello"),
+                  satisfies(
+                      EXCEPTION_STACKTRACE,
+                      val -> val.contains(JbossLogmanagerTest.class.getName()))));
+        }
+        // logging via the Supplier + Throwable overload used above for logException doesn't
+        // support parameters, so the template/arguments attributes are only captured in the
+        // plain withParam case
+        if (withParam && !logException) {
+          if (CAPTURE_TEMPLATE) {
+            attributeAsserts.add(equalTo(LOG_BODY_TEMPLATE, "xyz: {0}"));
+          }
+          if (CAPTURE_ARGUMENTS) {
+            attributeAsserts.add(equalTo(LOG_BODY_PARAMETERS, singletonList("123")));
+          }
+        }
+        logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
 
-            assertThat(logRecord.actual().getTimestampEpochNanos())
-                .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(start.toEpochMilli()))
-                .isLessThanOrEqualTo(MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
-          });
+        assertThat(logRecord.actual().getTimestampEpochNanos())
+            .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(start.toEpochMilli()))
+            .isLessThanOrEqualTo(MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
+      });
     } else {
       Thread.sleep(500); // sleep a bit just to make sure no log is captured
       assertThat(testing.logRecords()).isEmpty();
@@ -243,36 +239,35 @@ class JbossLogmanagerTest {
       MDC.remove("otel.event.name");
     }
 
-    testing.waitAndAssertLogRecords(
-        logRecord -> {
-          List<AttributeAssertion> attributeAsserts =
-              new ArrayList<>(
-                  asList(
-                      equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                      equalTo(THREAD_ID, Thread.currentThread().getId())));
-          if (MDC_CONFIGURATION.equals("new")) {
-            attributeAsserts.add(equalTo(stringKey("exact"), "exact-value"));
-            attributeAsserts.add(equalTo(stringKey("prefix.public"), "prefix-value"));
-            attributeAsserts.add(equalTo(stringKey("single1"), "single-value"));
-          } else if (MDC_CONFIGURATION.equals("legacy")) {
-            attributeAsserts.add(equalTo(stringKey("legacy"), "legacy-value"));
-          } else if (MDC_CONFIGURATION.equals("excludedOnly")) {
-            // excluded patterns are prefix.secret and excluded*, so every other MDC key is captured
-            attributeAsserts.add(equalTo(stringKey("exact"), "exact-value"));
-            attributeAsserts.add(equalTo(stringKey("prefix.public"), "prefix-value"));
-            attributeAsserts.add(equalTo(stringKey("single1"), "single-value"));
-            attributeAsserts.add(equalTo(stringKey("single22"), "double-value"));
-            attributeAsserts.add(equalTo(stringKey("legacy"), "legacy-value"));
-            attributeAsserts.add(equalTo(stringKey("new"), "new-value"));
-          }
-          logRecord
-              .hasBody("xyz")
-              .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-              .hasSeverity(Severity.INFO)
-              .hasSeverityText("INFO")
-              .hasEventName("MyEventName")
-              .hasAttributesSatisfyingExactly(attributeAsserts);
-        });
+    testing.waitAndAssertLogRecords(logRecord -> {
+      List<AttributeAssertion> attributeAsserts =
+          new ArrayList<>(
+              asList(
+                  equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                  equalTo(THREAD_ID, Thread.currentThread().getId())));
+      if (MDC_CONFIGURATION.equals("new")) {
+        attributeAsserts.add(equalTo(stringKey("exact"), "exact-value"));
+        attributeAsserts.add(equalTo(stringKey("prefix.public"), "prefix-value"));
+        attributeAsserts.add(equalTo(stringKey("single1"), "single-value"));
+      } else if (MDC_CONFIGURATION.equals("legacy")) {
+        attributeAsserts.add(equalTo(stringKey("legacy"), "legacy-value"));
+      } else if (MDC_CONFIGURATION.equals("excludedOnly")) {
+        // excluded patterns are prefix.secret and excluded*, so every other MDC key is captured
+        attributeAsserts.add(equalTo(stringKey("exact"), "exact-value"));
+        attributeAsserts.add(equalTo(stringKey("prefix.public"), "prefix-value"));
+        attributeAsserts.add(equalTo(stringKey("single1"), "single-value"));
+        attributeAsserts.add(equalTo(stringKey("single22"), "double-value"));
+        attributeAsserts.add(equalTo(stringKey("legacy"), "legacy-value"));
+        attributeAsserts.add(equalTo(stringKey("new"), "new-value"));
+      }
+      logRecord
+          .hasBody("xyz")
+          .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+          .hasSeverity(Severity.INFO)
+          .hasSeverityText("INFO")
+          .hasEventName("MyEventName")
+          .hasAttributesSatisfyingExactly(attributeAsserts);
+    });
   }
 
   @FunctionalInterface

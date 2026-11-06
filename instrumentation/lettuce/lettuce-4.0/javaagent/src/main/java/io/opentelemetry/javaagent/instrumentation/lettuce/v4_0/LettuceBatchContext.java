@@ -132,11 +132,10 @@ public final class LettuceBatchContext {
       for (int i = 0; i < asyncCommands.size(); i++) {
         int index = i;
         AsyncCommand<?, ?, ?> asyncCommand = asyncCommands.get(i);
-        asyncCommand.handleAsync(
-            (value, throwable) -> {
-              scope.endOne(index, throwable);
-              return null;
-            });
+        asyncCommand.handleAsync((value, throwable) -> {
+          scope.endOne(index, throwable);
+          return null;
+        });
       }
       return scope;
     }

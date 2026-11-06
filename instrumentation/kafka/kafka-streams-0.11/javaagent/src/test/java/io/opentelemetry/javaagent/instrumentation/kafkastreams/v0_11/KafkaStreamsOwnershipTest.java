@@ -54,15 +54,14 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
         KafkaStreamsReflectionUtil.createBuilder();
     KStream<Integer, String> values =
         streamBuilder.stream(inputTopic)
-            .mapValues(
-                value -> {
-                  ConsumerRecords<Integer, String> nestedRecords =
-                      records("nested-topic", value.toLowerCase(Locale.ROOT));
-                  for (ConsumerRecord<Integer, String> ignored : nestedRecords) {
-                    // Raw iteration within the Streams Process scope must not start another span.
-                  }
-                  return value;
-                });
+            .mapValues(value -> {
+              ConsumerRecords<Integer, String> nestedRecords =
+                  records("nested-topic", value.toLowerCase(Locale.ROOT));
+              for (ConsumerRecord<Integer, String> ignored : nestedRecords) {
+                // Raw iteration within the Streams Process scope must not start another span.
+              }
+              return value;
+            });
 
     KafkaStreams streams =
         streamBuilder.createStreams(values, streamsConfig("ownership-success"), STREAM_PROCESSED);
@@ -87,11 +86,10 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
         KafkaStreamsReflectionUtil.createBuilder();
     KStream<Integer, String> values =
         streamBuilder.stream(inputTopic)
-            .mapValues(
-                value -> {
-                  invoked.countDown();
-                  throw new IllegalStateException("test failure");
-                });
+            .mapValues(value -> {
+              invoked.countDown();
+              throw new IllegalStateException("test failure");
+            });
 
     KafkaStreams streams =
         streamBuilder.createStreams(values, streamsConfig("ownership-failure"), STREAM_PROCESSED);
@@ -105,11 +103,10 @@ class KafkaStreamsOwnershipTest extends KafkaStreamsBaseTest {
     await()
         .dontCatchUncaughtExceptions()
         .atMost(Duration.ofSeconds(30))
-        .untilAsserted(
-            () ->
-                assertThat(onlySpan("io.opentelemetry.kafka-streams-0.11", inputTopic).getStatus())
-                    .extracting(status -> status.getStatusCode())
-                    .isEqualTo(StatusCode.ERROR));
+        .untilAsserted(() ->
+            assertThat(onlySpan("io.opentelemetry.kafka-streams-0.11", inputTopic).getStatus())
+                .extracting(status -> status.getStatusCode())
+                .isEqualTo(StatusCode.ERROR));
   }
 
   private static Properties streamsConfig(String applicationId) {

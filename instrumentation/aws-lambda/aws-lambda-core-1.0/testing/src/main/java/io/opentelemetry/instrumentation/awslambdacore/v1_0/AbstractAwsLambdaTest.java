@@ -66,15 +66,13 @@ public abstract class AbstractAwsLambdaTest {
     assertThat(result).isEqualTo("world");
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("my_function")
-                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                            .hasKind(SpanKind.SERVER)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("my_function")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasKind(SpanKind.SERVER)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 
   @Test
@@ -83,28 +81,25 @@ public abstract class AbstractAwsLambdaTest {
     assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("my_function")
-                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                            .hasKind(SpanKind.SERVER)
-                            .hasStatus(StatusData.error())
-                            .hasException(emitExceptionAsSpanEvents() ? thrown : null)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("my_function")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasKind(SpanKind.SERVER)
+                    .hasStatus(StatusData.error())
+                    .hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
 
     if (emitExceptionAsLogs()) {
       testing()
-          .waitAndAssertLogRecords(
-              logRecord ->
-                  logRecord
-                      .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                      .hasSeverity(Severity.ERROR)
-                      .hasEventName("faas.invocation.exception")
-                      .hasException(thrown)
-                      .hasTotalAttributeCount(3));
+          .waitAndAssertLogRecords(logRecord ->
+              logRecord
+                  .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                  .hasSeverity(Severity.ERROR)
+                  .hasEventName("faas.invocation.exception")
+                  .hasException(thrown)
+                  .hasTotalAttributeCount(3));
     }
   }
 
@@ -121,15 +116,13 @@ public abstract class AbstractAwsLambdaTest {
     assertThat(result).isEqualTo("world");
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("my_function")
-                            .hasKind(SpanKind.SERVER)
-                            .hasNoParent()
-                            .hasLinks()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("my_function")
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent()
+                    .hasLinks()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 }

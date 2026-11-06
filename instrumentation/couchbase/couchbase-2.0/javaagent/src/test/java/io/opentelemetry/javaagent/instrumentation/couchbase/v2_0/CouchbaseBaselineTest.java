@@ -109,12 +109,11 @@ class CouchbaseBaselineTest {
           assertThat(found.content().getString("hello")).isEqualTo("world");
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertKeyValueSpan(span, "Bucket.upsert").hasParent(trace.getSpan(0)),
-                span -> assertKeyValueSpan(span, "Bucket.get").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> assertKeyValueSpan(span, "Bucket.upsert").hasParent(trace.getSpan(0)),
+            span -> assertKeyValueSpan(span, "Bucket.get").hasParent(trace.getSpan(0))));
     assertKeyValueDurationMetric();
   }
 
@@ -138,12 +137,11 @@ class CouchbaseBaselineTest {
         .extracting(result -> result.content().getString("hello"))
         .isEqualTo("world");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertKeyValueSpan(span, "Bucket.upsert").hasParent(trace.getSpan(0)),
-                span -> assertKeyValueSpan(span, "Bucket.get").hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> assertKeyValueSpan(span, "Bucket.upsert").hasParent(trace.getSpan(0)),
+            span -> assertKeyValueSpan(span, "Bucket.get").hasParent(trace.getSpan(1))));
     assertKeyValueDurationMetric();
   }
 
@@ -168,11 +166,10 @@ class CouchbaseBaselineTest {
             metric
                 .hasName("db.client.operation.duration")
                 .hasUnit("s")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point -> assertKeyValueDurationPoint(point, "Bucket.upsert"),
-                            point -> assertKeyValueDurationPoint(point, "Bucket.get"))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(
+                        point -> assertKeyValueDurationPoint(point, "Bucket.upsert"),
+                        point -> assertKeyValueDurationPoint(point, "Bucket.get"))));
   }
 
   private void assertKeyValueDurationPoint(HistogramPointAssert point, String operation) {

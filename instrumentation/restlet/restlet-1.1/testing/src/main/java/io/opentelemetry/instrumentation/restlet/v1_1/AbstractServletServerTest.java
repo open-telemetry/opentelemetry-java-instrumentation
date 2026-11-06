@@ -53,20 +53,19 @@ public class AbstractServletServerTest extends AbstractHttpServerTest<Server> {
     options.setTestException(false);
     options.setTestPathParam(true);
     options.setResponseCodeOnNonStandardHttpMethod(405);
-    options.setExpectedHttpRoute(
-        (endpoint, method) -> {
-          if (HttpConstants._OTHER.equals(method)) {
-            return getContextPath() + endpoint.getPath();
-          }
+    options.setExpectedHttpRoute((endpoint, method) -> {
+      if (HttpConstants._OTHER.equals(method)) {
+        return getContextPath() + endpoint.getPath();
+      }
 
-          if (PATH_PARAM.equals(endpoint)) {
-            return getContextPath() + "/path/{id}/param";
-          } else if (NOT_FOUND.equals(endpoint)) {
-            return getContextPath() + "/*";
-          }
+      if (PATH_PARAM.equals(endpoint)) {
+        return getContextPath() + "/path/{id}/param";
+      } else if (NOT_FOUND.equals(endpoint)) {
+        return getContextPath() + "/*";
+      }
 
-          return expectedHttpRoute(endpoint, method);
-        });
+      return expectedHttpRoute(endpoint, method);
+    });
   }
 
   // used from web.xml

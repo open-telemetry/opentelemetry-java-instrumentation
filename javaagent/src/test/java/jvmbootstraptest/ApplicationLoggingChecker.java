@@ -26,37 +26,36 @@ public class ApplicationLoggingChecker {
     AtomicInteger applicationCalls = new AtomicInteger();
     AtomicReference<Thread> loggedOn = new AtomicReference<>();
     AtomicBoolean loadProbe = new AtomicBoolean();
-    ApplicationLoggerBridge.installApplicationLogger(
-        name ->
-            new InternalLogger() {
-              @Override
-              public boolean isLoggable(Level level) {
-                if (name.equals(VERSION_LOGGER)) {
-                  applicationCalls.incrementAndGet();
-                }
-                return level == Level.INFO;
-              }
+    ApplicationLoggerBridge.installApplicationLogger(name ->
+        new InternalLogger() {
+          @Override
+          public boolean isLoggable(Level level) {
+            if (name.equals(VERSION_LOGGER)) {
+              applicationCalls.incrementAndGet();
+            }
+            return level == Level.INFO;
+          }
 
-              @Override
-              public void log(Level level, String message, Throwable error) {
-                if (name.equals(VERSION_LOGGER)) {
-                  applicationCalls.incrementAndGet();
-                  loggedOn.set(Thread.currentThread());
-                  if (loadProbe.get()) {
-                    try {
-                      Class.forName(PROBE_CLASS);
-                    } catch (ClassNotFoundException e) {
-                      throw new IllegalStateException(e);
-                    }
-                  }
+          @Override
+          public void log(Level level, String message, Throwable error) {
+            if (name.equals(VERSION_LOGGER)) {
+              applicationCalls.incrementAndGet();
+              loggedOn.set(Thread.currentThread());
+              if (loadProbe.get()) {
+                try {
+                  Class.forName(PROBE_CLASS);
+                } catch (ClassNotFoundException e) {
+                  throw new IllegalStateException(e);
                 }
               }
+            }
+          }
 
-              @Override
-              public String name() {
-                return name;
-              }
-            });
+          @Override
+          public String name() {
+            return name;
+          }
+        });
     assertThat(loggedOn.get()).isSameAs(Thread.currentThread());
 
     // The recording bridge must be installed before the test utility initializes its SLF4J logger.

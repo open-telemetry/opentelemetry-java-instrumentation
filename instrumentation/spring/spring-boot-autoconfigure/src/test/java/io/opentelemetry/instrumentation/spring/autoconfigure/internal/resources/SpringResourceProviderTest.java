@@ -41,9 +41,8 @@ class SpringResourceProviderTest {
   void shouldDetermineServiceNameBySpringApplicationName() {
     this.contextRunner
         .withPropertyValues("spring.application.name=myapp-backend")
-        .run(
-            context ->
-                assertResourceAttributes(context).containsEntry(SERVICE_NAME, "myapp-backend"));
+        .run(context ->
+            assertResourceAttributes(context).containsEntry(SERVICE_NAME, "myapp-backend"));
   }
 
   @Test
@@ -55,11 +54,10 @@ class SpringResourceProviderTest {
     properties.put("version", "0.3");
     this.contextRunner
         .withBean("buildProperties", BuildProperties.class, () -> new BuildProperties(properties))
-        .run(
-            context ->
-                assertResourceAttributes(context)
-                    .containsEntry(SERVICE_NAME, "demo")
-                    .containsEntry(SERVICE_VERSION, "0.3"));
+        .run(context ->
+            assertResourceAttributes(context)
+                .containsEntry(SERVICE_NAME, "demo")
+                .containsEntry(SERVICE_VERSION, "0.3"));
   }
 
   private static AttributesAssert assertResourceAttributes(AssertableApplicationContext context) {

@@ -72,16 +72,15 @@ class RxJava2ConcurrencyTestHelper {
               .subscribeOn(iteration.scheduler)
               .observeOn(iteration.scheduler)
               .delay(iteration.index % 10, MILLISECONDS, iteration.scheduler)
-              .doOnSuccess(
-                  it -> {
-                    runner.runWithSpan(
-                        "inner",
-                        () -> {
-                          Span.current().setAttribute("iteration", it.index);
-                          return null;
-                        });
-                    it.countDown.countDown();
-                  })
+              .doOnSuccess(it -> {
+                runner.runWithSpan(
+                    "inner",
+                    () -> {
+                      Span.current().setAttribute("iteration", it.index);
+                      return null;
+                    });
+                it.countDown.countDown();
+              })
               .subscribe();
 
           return null;

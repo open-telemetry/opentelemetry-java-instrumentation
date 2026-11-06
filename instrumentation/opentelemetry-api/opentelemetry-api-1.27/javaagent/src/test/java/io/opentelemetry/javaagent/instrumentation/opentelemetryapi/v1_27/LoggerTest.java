@@ -69,22 +69,20 @@ class LoggerTest {
         .emit();
 
     await()
-        .untilAsserted(
-            () ->
-                assertThat(testing.logRecords())
-                    .satisfiesExactly(
-                        logRecordData -> {
-                          assertThat(logRecordData.getInstrumentationScopeInfo().getName())
-                              .isEqualTo(instrumentationName);
-                          assertThat(logRecordData.getInstrumentationScopeInfo().getVersion())
-                              .isEqualTo("1.2.3");
-                          assertThat(logRecordData.getTimestampEpochNanos()).isGreaterThan(0);
-                          assertThat(logRecordData.getSpanContext()).isEqualTo(spanContext);
-                          assertThat(logRecordData.getSeverity()).isEqualTo(Severity.DEBUG);
-                          assertThat(logRecordData.getSeverityText()).isEqualTo("debug");
-                          assertThat(logRecordData.getBody().asString()).isEqualTo("body");
-                          assertThat(logRecordData.getAttributes())
-                              .isEqualTo(Attributes.builder().put("key", "value").build());
-                        }));
+        .untilAsserted(() ->
+            assertThat(testing.logRecords())
+                .satisfiesExactly(logRecordData -> {
+                  assertThat(logRecordData.getInstrumentationScopeInfo().getName())
+                      .isEqualTo(instrumentationName);
+                  assertThat(logRecordData.getInstrumentationScopeInfo().getVersion())
+                      .isEqualTo("1.2.3");
+                  assertThat(logRecordData.getTimestampEpochNanos()).isGreaterThan(0);
+                  assertThat(logRecordData.getSpanContext()).isEqualTo(spanContext);
+                  assertThat(logRecordData.getSeverity()).isEqualTo(Severity.DEBUG);
+                  assertThat(logRecordData.getSeverityText()).isEqualTo("debug");
+                  assertThat(logRecordData.getBody().asString()).isEqualTo("body");
+                  assertThat(logRecordData.getAttributes())
+                      .isEqualTo(Attributes.builder().put("key", "value").build());
+                }));
   }
 }

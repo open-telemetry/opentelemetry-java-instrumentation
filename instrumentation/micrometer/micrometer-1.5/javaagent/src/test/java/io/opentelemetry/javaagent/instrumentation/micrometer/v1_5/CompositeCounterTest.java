@@ -62,14 +62,12 @@ class CompositeCounterTest {
                 .hasName("testCounter")
                 .hasDescription("This is a test counter")
                 .hasUnit("items")
-                .hasDoubleSumSatisfying(
-                    sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+                .hasDoubleSumSatisfying(sum ->
+                    sum.isMonotonic()
+                        .hasPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("tag"), "value")))));
   }
 }

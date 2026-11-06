@@ -163,19 +163,17 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
             producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));
           },
           trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("poll " + SHARED_TOPIC)
-                          .hasKind(SpanKind.CLIENT)
-                          .hasNoParent()
-                          .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
-                          .hasAttributesSatisfyingExactly(interceptorReceiveAttributes())),
+              trace.hasSpansSatisfyingExactly(span ->
+                  span.hasName("poll " + SHARED_TOPIC)
+                      .hasKind(SpanKind.CLIENT)
+                      .hasNoParent()
+                      .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
+                      .hasAttributesSatisfyingExactly(interceptorReceiveAttributes())),
           // ideally we'd want producer callback to be part of the main trace,
           // we just aren't able to instrument that
           trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
+              trace.hasSpansSatisfyingExactly(span ->
+                  span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
     } else {
       testing.waitAndAssertSortedTraces(
           orderByRootSpanName("parent", "producer callback"),
@@ -201,9 +199,8 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
           // ideally we'd want producer callback to be part of the main trace,
           // we just aren't able to instrument that
           trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
+              trace.hasSpansSatisfyingExactly(span ->
+                  span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
     }
   }
 

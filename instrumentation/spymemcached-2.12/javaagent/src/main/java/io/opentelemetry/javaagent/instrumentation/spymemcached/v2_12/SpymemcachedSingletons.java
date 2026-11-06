@@ -40,13 +40,12 @@ public class SpymemcachedSingletons {
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .setSpanStatusExtractor(
-                (status, request, response, error) -> {
-                  if (error != null
-                      || dbAttributesGetter.getErrorType(request, response, error) != null) {
-                    status.setStatus(StatusCode.ERROR);
-                  }
-                })
+            .setSpanStatusExtractor((status, request, response, error) -> {
+              if (error != null
+                  || dbAttributesGetter.getErrorType(request, response, error) != null) {
+                status.setStatus(StatusCode.ERROR);
+              }
+            })
             .addContextCustomizer(
                 (context, request, attributes) -> SpymemcachedRequestContext.init(context, request))
             .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)

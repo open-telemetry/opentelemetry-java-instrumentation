@@ -21,18 +21,16 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
   @Override
   HttpClient createHttpClient(boolean readTimeout) {
     return HttpClient.create()
-        .tcpConfiguration(
-            tcpClient -> {
-              if (readTimeout) {
-                tcpClient =
-                    tcpClient.doOnConnected(
-                        connection ->
-                            connection.addHandlerLast(
-                                new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), MILLISECONDS)));
-              }
-              return tcpClient.option(
-                  ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) CONNECTION_TIMEOUT.toMillis());
-            });
+        .tcpConfiguration(tcpClient -> {
+          if (readTimeout) {
+            tcpClient =
+                tcpClient.doOnConnected(connection ->
+                    connection.addHandlerLast(
+                        new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), MILLISECONDS)));
+          }
+          return tcpClient.option(
+              ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) CONNECTION_TIMEOUT.toMillis());
+        });
   }
 
   @Override
@@ -63,11 +61,10 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
             .headers(h -> headers.forEach(h::add))
             .get()
             .uri(path)
-            .responseSingle(
-                (resp, content) -> {
-                  // Make sure to consume content since that's when we close the span.
-                  return content.map(unused -> resp);
-                })
+            .responseSingle((resp, content) -> {
+              // Make sure to consume content since that's when we close the span.
+              return content.map(unused -> resp);
+            })
             .block()
             .status()
             .code();

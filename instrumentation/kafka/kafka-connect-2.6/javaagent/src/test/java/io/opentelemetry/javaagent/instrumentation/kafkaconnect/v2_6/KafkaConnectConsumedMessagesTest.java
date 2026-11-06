@@ -74,33 +74,27 @@ class KafkaConnectConsumedMessagesTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process mixed-retry-topic")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .satisfies(
-                            spanData -> {
-                              assertRecordLinks(spanData.getLinks());
-                              assertThat(
-                                      spanData.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT))
-                                  .isEqualTo(2);
-                            })),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("process mixed-retry-topic")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .satisfies(spanData -> {
+                      assertRecordLinks(spanData.getLinks());
+                      assertThat(spanData.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT))
+                          .isEqualTo(2);
+                    })),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process mixed-retry-topic")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasStatus(StatusData.unset())
-                        .satisfies(
-                            spanData -> {
-                              assertRecordLinks(spanData.getLinks());
-                              assertThat(
-                                      spanData.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT))
-                                  .isEqualTo(2);
-                            })));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("process mixed-retry-topic")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasNoParent()
+                    .hasStatus(StatusData.unset())
+                    .satisfies(spanData -> {
+                      assertRecordLinks(spanData.getLinks());
+                      assertThat(spanData.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT))
+                          .isEqualTo(2);
+                    })));
 
     assertProcessMetricsWithConsumedMessages(
         testing,

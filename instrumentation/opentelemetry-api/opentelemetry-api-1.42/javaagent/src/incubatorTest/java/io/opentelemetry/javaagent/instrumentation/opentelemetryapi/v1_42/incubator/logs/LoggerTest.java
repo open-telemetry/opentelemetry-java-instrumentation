@@ -79,25 +79,22 @@ class LoggerTest {
         .emit();
 
     await()
-        .untilAsserted(
-            () ->
-                assertThat(testing.logRecords())
-                    .satisfiesExactly(
-                        logRecordData -> {
-                          assertThat(logRecordData.getInstrumentationScopeInfo().getName())
-                              .isEqualTo(instrumentationName);
-                          assertThat(logRecordData.getInstrumentationScopeInfo().getVersion())
-                              .isEqualTo("1.2.3");
-                          assertThat(logRecordData.getTimestampEpochNanos()).isGreaterThan(0);
-                          assertThat(logRecordData.getSpanContext()).isEqualTo(spanContext);
-                          assertThat(logRecordData.getSeverity()).isEqualTo(Severity.DEBUG);
-                          assertThat(logRecordData.getSeverityText()).isEqualTo("debug");
-                          assertThat(logRecordData.getBodyValue().getType())
-                              .isEqualTo(ValueType.STRING);
-                          assertThat(logRecordData.getBodyValue().getValue()).isEqualTo("body");
-                          assertThat(logRecordData.getAttributes())
-                              .isEqualTo(Attributes.builder().put("key", "value").build());
-                        }));
+        .untilAsserted(() ->
+            assertThat(testing.logRecords())
+                .satisfiesExactly(logRecordData -> {
+                  assertThat(logRecordData.getInstrumentationScopeInfo().getName())
+                      .isEqualTo(instrumentationName);
+                  assertThat(logRecordData.getInstrumentationScopeInfo().getVersion())
+                      .isEqualTo("1.2.3");
+                  assertThat(logRecordData.getTimestampEpochNanos()).isGreaterThan(0);
+                  assertThat(logRecordData.getSpanContext()).isEqualTo(spanContext);
+                  assertThat(logRecordData.getSeverity()).isEqualTo(Severity.DEBUG);
+                  assertThat(logRecordData.getSeverityText()).isEqualTo("debug");
+                  assertThat(logRecordData.getBodyValue().getType()).isEqualTo(ValueType.STRING);
+                  assertThat(logRecordData.getBodyValue().getValue()).isEqualTo("body");
+                  assertThat(logRecordData.getAttributes())
+                      .isEqualTo(Attributes.builder().put("key", "value").build());
+                }));
   }
 
   private static Stream<Arguments> bodyValues() {
@@ -117,16 +114,12 @@ class LoggerTest {
     logger.logRecordBuilder().setBody(value).emit();
 
     await()
-        .untilAsserted(
-            () ->
-                assertThat(testing.logRecords())
-                    .satisfiesExactly(
-                        logRecordData -> {
-                          assertThat(logRecordData.getBodyValue().getType())
-                              .isEqualTo(value.getType());
-                          assertThat(logRecordData.getBodyValue().getValue())
-                              .isEqualTo(value.getValue());
-                        }));
+        .untilAsserted(() ->
+            assertThat(testing.logRecords())
+                .satisfiesExactly(logRecordData -> {
+                  assertThat(logRecordData.getBodyValue().getType()).isEqualTo(value.getType());
+                  assertThat(logRecordData.getBodyValue().getValue()).isEqualTo(value.getValue());
+                }));
   }
 
   @Test
@@ -135,10 +128,9 @@ class LoggerTest {
     logger.logRecordBuilder().setBody(value).emit();
 
     await()
-        .untilAsserted(
-            () ->
-                assertThat(testing.logRecords())
-                    .satisfiesExactly(
-                        logRecordData -> assertThat(logRecordData.getBodyValue()).isNull()));
+        .untilAsserted(() ->
+            assertThat(testing.logRecords())
+                .satisfiesExactly(
+                    logRecordData -> assertThat(logRecordData.getBodyValue()).isNull()));
   }
 }

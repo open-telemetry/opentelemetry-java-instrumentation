@@ -27,31 +27,31 @@ class EmittedEventParserTest {
 
     String file1Content =
         """
-        when: default
-        events_by_scope:
-          - scope: io.opentelemetry.openai-java-1.1
-            events:
-              - name: gen_ai.user.message
-                attributes:
-                  - name: gen_ai.provider.name
-                    type: STRING
-      """;
+          when: default
+          events_by_scope:
+            - scope: io.opentelemetry.openai-java-1.1
+              events:
+                - name: gen_ai.user.message
+                  attributes:
+                    - name: gen_ai.provider.name
+                      type: STRING
+        """;
 
     String file2Content =
         """
-        when: default
-        events_by_scope:
-          - scope: io.opentelemetry.openai-java-1.1
-            events:
-              - name: gen_ai.choice
-                attributes:
-                  - name: gen_ai.provider.name
-                    type: STRING
-              - name: gen_ai.user.message
-                attributes:
-                  - name: gen_ai.system
-                    type: STRING
-      """;
+          when: default
+          events_by_scope:
+            - scope: io.opentelemetry.openai-java-1.1
+              events:
+                - name: gen_ai.choice
+                  attributes:
+                    - name: gen_ai.provider.name
+                      type: STRING
+                - name: gen_ai.user.message
+                  attributes:
+                    - name: gen_ai.system
+                      type: STRING
+        """;
 
     Files.writeString(telemetryDir.resolve("events-1.yaml"), file1Content);
     Files.writeString(telemetryDir.resolve("events-2.yaml"), file2Content);
@@ -87,26 +87,26 @@ class EmittedEventParserTest {
 
     String defaultContent =
         """
-        when: default
-        events_by_scope:
-          - scope: io.opentelemetry.jdbc
-            events:
-              - name: package.info
-                attributes:
-      """;
+          when: default
+          events_by_scope:
+            - scope: io.opentelemetry.jdbc
+              events:
+                - name: package.info
+                  attributes:
+        """;
 
     String configuredContent =
         """
-        when: otel.semconv.exception.signal.preview=logs
-        events_by_scope:
-          - scope: io.opentelemetry.jdbc
-            events:
-              - name: db.client.operation.exception
-                severity: WARN
-                attributes:
-                  - name: exception.type
-                    type: STRING
-      """;
+          when: otel.semconv.exception.signal.preview=logs
+          events_by_scope:
+            - scope: io.opentelemetry.jdbc
+              events:
+                - name: db.client.operation.exception
+                  severity: WARN
+                  attributes:
+                    - name: exception.type
+                      type: STRING
+        """;
 
     Files.writeString(telemetryDir.resolve("events-1.yaml"), defaultContent);
     Files.writeString(telemetryDir.resolve("events-2.yaml"), configuredContent);
@@ -142,29 +142,29 @@ class EmittedEventParserTest {
     // instrumenter under one scope and keeps the default exception event, so it does exactly that.
     String serverContent =
         """
-        when: otel.semconv.exception.signal.preview=logs
-        events_by_scope:
-          - scope: io.opentelemetry.sofa-rpc-5.4
-            events:
-              - name: exception
-                severity: ERROR
-                attributes:
-                  - name: rpc.method
-                    type: STRING
-      """;
+          when: otel.semconv.exception.signal.preview=logs
+          events_by_scope:
+            - scope: io.opentelemetry.sofa-rpc-5.4
+              events:
+                - name: exception
+                  severity: ERROR
+                  attributes:
+                    - name: rpc.method
+                      type: STRING
+        """;
 
     String clientContent =
         """
-        when: otel.semconv.exception.signal.preview=logs
-        events_by_scope:
-          - scope: io.opentelemetry.sofa-rpc-5.4
-            events:
-              - name: exception
-                severity: WARN
-                attributes:
-                  - name: exception.type
-                    type: STRING
-      """;
+          when: otel.semconv.exception.signal.preview=logs
+          events_by_scope:
+            - scope: io.opentelemetry.sofa-rpc-5.4
+              events:
+                - name: exception
+                  severity: WARN
+                  attributes:
+                    - name: exception.type
+                      type: STRING
+        """;
 
     Files.writeString(telemetryDir.resolve("events-1.yaml"), serverContent);
     Files.writeString(telemetryDir.resolve("events-2.yaml"), clientContent);

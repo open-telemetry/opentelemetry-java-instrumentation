@@ -82,36 +82,30 @@ class DbClientMetricsTest {
     listener.onEnd(context1, responseAttributes, nanos(250));
 
     assertThat(metricReader.collectAllMetrics())
-        .satisfiesExactlyInAnyOrder(
-            metric ->
-                assertThat(metric)
-                    .hasName("db.client.operation.duration")
-                    .hasUnit("s")
-                    .hasDescription("Duration of database client operations.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(0.15 /* seconds */)
-                                        .hasAttributesSatisfying(
-                                            equalTo(DB_SYSTEM_NAME, "myDb"),
-                                            equalTo(DB_NAMESPACE, "potatoes"),
-                                            equalTo(DB_OPERATION_NAME, "SELECT"),
-                                            equalTo(DB_COLLECTION_NAME, "table"),
-                                            equalTo(DB_QUERY_SUMMARY, "SELECT table"),
-                                            equalTo(
-                                                SERVER_ADDRESS,
-                                                "db1.example:5432,db2.example:5432"),
-                                            equalTo(ERROR_TYPE, "400"),
-                                            equalTo(NETWORK_PEER_ADDRESS, "1.2.3.4"),
-                                            equalTo(NETWORK_PEER_PORT, 8080))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                                    .hasSpanId("090a0b0c0d0e0f00"))
-                                        .hasBucketBoundaries(DURATION_BUCKETS))));
+        .satisfiesExactlyInAnyOrder(metric ->
+            assertThat(metric)
+                .hasName("db.client.operation.duration")
+                .hasUnit("s")
+                .hasDescription("Duration of database client operations.")
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasSum(0.15 /* seconds */)
+                            .hasAttributesSatisfying(
+                                equalTo(DB_SYSTEM_NAME, "myDb"),
+                                equalTo(DB_NAMESPACE, "potatoes"),
+                                equalTo(DB_OPERATION_NAME, "SELECT"),
+                                equalTo(DB_COLLECTION_NAME, "table"),
+                                equalTo(DB_QUERY_SUMMARY, "SELECT table"),
+                                equalTo(SERVER_ADDRESS, "db1.example:5432,db2.example:5432"),
+                                equalTo(ERROR_TYPE, "400"),
+                                equalTo(NETWORK_PEER_ADDRESS, "1.2.3.4"),
+                                equalTo(NETWORK_PEER_PORT, 8080))
+                            .hasExemplarsSatisfying(exemplar ->
+                                exemplar
+                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                    .hasSpanId("090a0b0c0d0e0f00"))
+                            .hasBucketBoundaries(DURATION_BUCKETS))));
   }
 
   private static long nanos(int millis) {

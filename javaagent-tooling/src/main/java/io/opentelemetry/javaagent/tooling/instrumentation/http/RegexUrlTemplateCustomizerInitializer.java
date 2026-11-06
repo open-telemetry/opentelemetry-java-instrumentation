@@ -34,19 +34,18 @@ public final class RegexUrlTemplateCustomizerInitializer implements BeforeAgentL
         .get("http")
         .get("client")
         .getStructuredList("url_template_rules", emptyList())
-        .forEach(
-            rule -> {
-              String patternString = rule.getString("pattern", "");
-              String template = rule.getString("template", "");
-              if (patternString.isEmpty() || template.isEmpty()) {
-                return;
-              }
-              boolean override = rule.getBoolean("override", false);
-              Pattern pattern = toPattern(patternString);
-              if (pattern != null) {
-                UrlTemplateRules.addRule(pattern, template, override);
-              }
-            });
+        .forEach(rule -> {
+          String patternString = rule.getString("pattern", "");
+          String template = rule.getString("template", "");
+          if (patternString.isEmpty() || template.isEmpty()) {
+            return;
+          }
+          boolean override = rule.getBoolean("override", false);
+          Pattern pattern = toPattern(patternString);
+          if (pattern != null) {
+            UrlTemplateRules.addRule(pattern, template, override);
+          }
+        });
   }
 
   @Nullable

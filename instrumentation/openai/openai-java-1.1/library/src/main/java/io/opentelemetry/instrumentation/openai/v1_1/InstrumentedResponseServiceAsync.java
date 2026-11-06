@@ -103,16 +103,15 @@ final class InstrumentedResponseServiceAsync
       Object structuredParams, RequestOptions requestOptions) throws Throwable {
     CompletableFuture<Response> future =
         create(ResponseServiceOverloads.rawParams(structuredParams), requestOptions);
-    return future.thenApply(
-        response -> {
-          try {
-            return ResponseServiceOverloads.toStructuredResponse(structuredParams, response);
-          } catch (RuntimeException | Error e) {
-            throw e;
-          } catch (Throwable t) {
-            throw new IllegalStateException(t);
-          }
-        });
+    return future.thenApply(response -> {
+      try {
+        return ResponseServiceOverloads.toStructuredResponse(structuredParams, response);
+      } catch (RuntimeException | Error e) {
+        throw e;
+      } catch (Throwable t) {
+        throw new IllegalStateException(t);
+      }
+    });
   }
 
   private CompletableFuture<Response> create(

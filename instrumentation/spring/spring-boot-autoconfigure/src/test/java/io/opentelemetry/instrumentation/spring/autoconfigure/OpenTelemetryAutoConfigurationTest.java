@@ -53,14 +53,13 @@ class OpenTelemetryAutoConfigurationTest {
     this.contextRunner
         .withUserConfiguration(CustomOtelConfiguration.class)
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
-        .run(
-            context ->
-                assertThat(context)
-                    .hasBean("customOpenTelemetry")
-                    .doesNotHaveBean("openTelemetry")
-                    .hasBean("otelProperties")
-                    .getBean("configProvider")
-                    .isEqualTo(ConfigProvider.noop()));
+        .run(context ->
+            assertThat(context)
+                .hasBean("customOpenTelemetry")
+                .doesNotHaveBean("openTelemetry")
+                .hasBean("otelProperties")
+                .getBean("configProvider")
+                .isEqualTo(ConfigProvider.noop()));
   }
 
   @Test
@@ -69,11 +68,10 @@ class OpenTelemetryAutoConfigurationTest {
     this.contextRunner
         .withUserConfiguration(CustomOtelConfiguration.class)
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
-        .run(
-            context ->
-                assertThat(context)
-                    .getBean("configProvider", ConfigProvider.class)
-                    .isEqualTo(ConfigProvider.noop()));
+        .run(context ->
+            assertThat(context)
+                .getBean("configProvider", ConfigProvider.class)
+                .isEqualTo(ConfigProvider.noop()));
   }
 
   @Test
@@ -83,59 +81,52 @@ class OpenTelemetryAutoConfigurationTest {
     this.contextRunner
         .withPropertyValues("otel.instrumentation.common.default-enabled=false")
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
-        .run(
-            context -> {
-              assertThat(context)
-                  .hasBean("openTelemetry")
-                  .hasBean("otelProperties")
-                  .hasBean("configProvider");
-              ConfigProvider configProvider = context.getBean(ConfigProvider.class);
-              assertThat(
-                      configProvider
-                          .getInstrumentationConfig()
-                          .getStructured("java")
-                          .getStructured("common")
-                          .getBoolean("default_enabled"))
-                  .isFalse();
-            });
+        .run(context -> {
+          assertThat(context)
+              .hasBean("openTelemetry")
+              .hasBean("otelProperties")
+              .hasBean("configProvider");
+          ConfigProvider configProvider = context.getBean(ConfigProvider.class);
+          assertThat(
+                  configProvider
+                      .getInstrumentationConfig()
+                      .getStructured("java")
+                      .getStructured("common")
+                      .getBoolean("default_enabled"))
+              .isFalse();
+        });
   }
 
   @Test
   void specialListProperties() {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
-        .run(
-            context ->
-                assertThat(context)
-                    .getBean("otelProperties")
-                    .satisfies(
-                        p -> {
-                          ConfigProperties configProperties = (ConfigProperties) p;
-                          assertThat(configProperties.getList("otel.propagators"))
-                              .containsExactly("b3");
-                          assertThat(
-                                  configProperties.getList(
-                                      "otel.experimental.resource.disabled.keys"))
-                              .containsExactly("a", "b");
-                          assertThat(
-                                  configProperties.getList("otel.java.disabled.resource.providers"))
-                              .containsExactlyInAnyOrder(
-                                  "d",
-                                  "io.opentelemetry.contrib.azure.resource.AzureAksResourceProvider",
-                                  "io.opentelemetry.contrib.azure.resource.AzureAppServiceResourceProvider",
-                                  "io.opentelemetry.contrib.azure.resource.AzureContainersResourceProvider",
-                                  "io.opentelemetry.contrib.azure.resource.AzureFunctionsResourceProvider",
-                                  "io.opentelemetry.contrib.azure.resource.AzureVmResourceProvider",
-                                  "io.opentelemetry.contrib.aws.resource.BeanstalkResourceProvider",
-                                  "io.opentelemetry.contrib.aws.resource.Ec2ResourceProvider",
-                                  "io.opentelemetry.contrib.aws.resource.EcsResourceProvider",
-                                  "io.opentelemetry.contrib.aws.resource.EksResourceProvider",
-                                  "io.opentelemetry.contrib.aws.resource.LambdaResourceProvider",
-                                  "io.opentelemetry.contrib.gcp.resource.GCPResourceProvider",
-                                  "io.opentelemetry.contrib.cloudfoundry.resources.CloudFoundryResourceProvider",
-                                  "io.opentelemetry.instrumentation.resources.HostIdResourceProvider",
-                                  "io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizerTest$Provider");
-                        }));
+        .run(context ->
+            assertThat(context)
+                .getBean("otelProperties")
+                .satisfies(p -> {
+                  ConfigProperties configProperties = (ConfigProperties) p;
+                  assertThat(configProperties.getList("otel.propagators")).containsExactly("b3");
+                  assertThat(configProperties.getList("otel.experimental.resource.disabled.keys"))
+                      .containsExactly("a", "b");
+                  assertThat(configProperties.getList("otel.java.disabled.resource.providers"))
+                      .containsExactlyInAnyOrder(
+                          "d",
+                          "io.opentelemetry.contrib.azure.resource.AzureAksResourceProvider",
+                          "io.opentelemetry.contrib.azure.resource.AzureAppServiceResourceProvider",
+                          "io.opentelemetry.contrib.azure.resource.AzureContainersResourceProvider",
+                          "io.opentelemetry.contrib.azure.resource.AzureFunctionsResourceProvider",
+                          "io.opentelemetry.contrib.azure.resource.AzureVmResourceProvider",
+                          "io.opentelemetry.contrib.aws.resource.BeanstalkResourceProvider",
+                          "io.opentelemetry.contrib.aws.resource.Ec2ResourceProvider",
+                          "io.opentelemetry.contrib.aws.resource.EcsResourceProvider",
+                          "io.opentelemetry.contrib.aws.resource.EksResourceProvider",
+                          "io.opentelemetry.contrib.aws.resource.LambdaResourceProvider",
+                          "io.opentelemetry.contrib.gcp.resource.GCPResourceProvider",
+                          "io.opentelemetry.contrib.cloudfoundry.resources.CloudFoundryResourceProvider",
+                          "io.opentelemetry.instrumentation.resources.HostIdResourceProvider",
+                          "io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizerTest$Provider");
+                }));
   }
 
   @Test
@@ -143,16 +134,12 @@ class OpenTelemetryAutoConfigurationTest {
     this.contextRunner
         .withPropertyValues("otel.java.enabled.resource.providers=e1,e2")
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
-        .run(
-            context ->
-                assertThat(context)
-                    .getBean("otelProperties", ConfigProperties.class)
-                    .satisfies(
-                        configProperties ->
-                            assertThat(
-                                    configProperties.getList(
-                                        "otel.java.enabled.resource.providers"))
-                                .containsExactly("e1", "e2")));
+        .run(context ->
+            assertThat(context)
+                .getBean("otelProperties", ConfigProperties.class)
+                .satisfies(configProperties ->
+                    assertThat(configProperties.getList("otel.java.enabled.resource.providers"))
+                        .containsExactly("e1", "e2")));
   }
 
   @Test
@@ -184,9 +171,8 @@ class OpenTelemetryAutoConfigurationTest {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
         .withPropertyValues("otel.sdk.disabled=false")
-        .run(
-            context ->
-                assertThat(context).getBean("openTelemetry").isInstanceOf(OpenTelemetrySdk.class));
+        .run(context ->
+            assertThat(context).getBean("openTelemetry").isInstanceOf(OpenTelemetrySdk.class));
   }
 
   @Test
@@ -196,17 +182,15 @@ class OpenTelemetryAutoConfigurationTest {
         .withPropertyValues(
             "otel.sdk.disabled=true",
             "otel.resource.attributes=service.name=workflow-backend-dev,service.version=3c8f9ce9")
-        .run(
-            context -> {
-              assertThat(context).getBean("openTelemetry").isEqualTo(OpenTelemetry.noop());
-              assertThat(context).getBean("configProvider").isEqualTo(ConfigProvider.noop());
-              assertThat(context)
-                  .getBean("otelProperties", ConfigProperties.class)
-                  .satisfies(
-                      configProperties -> {
-                        assertThat(configProperties.getString("otel.sdk.disabled")).isNull();
-                        assertThat(configProperties.getList("otel.propagators")).isEmpty();
-                      });
-            });
+        .run(context -> {
+          assertThat(context).getBean("openTelemetry").isEqualTo(OpenTelemetry.noop());
+          assertThat(context).getBean("configProvider").isEqualTo(ConfigProvider.noop());
+          assertThat(context)
+              .getBean("otelProperties", ConfigProperties.class)
+              .satisfies(configProperties -> {
+                assertThat(configProperties.getString("otel.sdk.disabled")).isNull();
+                assertThat(configProperties.getList("otel.propagators")).isEmpty();
+              });
+        });
   }
 }

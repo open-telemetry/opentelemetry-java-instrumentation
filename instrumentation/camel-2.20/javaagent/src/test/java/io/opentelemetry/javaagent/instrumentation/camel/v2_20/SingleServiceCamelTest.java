@@ -72,19 +72,16 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
 
     client.post(h1RequestUrl.toString(), "testContent").aggregate().join();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("POST /camelService")
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(URL_FULL, requestUrl.toString()),
-                            equalTo(
-                                stringKey("camel.uri"),
-                                experimental(
-                                    requestUrl.toString().replace("localhost", "0.0.0.0"))))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("POST /camelService")
+                .hasKind(SpanKind.SERVER)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(HTTP_REQUEST_METHOD, "POST"),
+                    equalTo(URL_FULL, requestUrl.toString()),
+                    equalTo(
+                        stringKey("camel.uri"),
+                        experimental(requestUrl.toString().replace("localhost", "0.0.0.0"))))));
   }
 
   @Test
@@ -102,23 +99,22 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
       clientContext.createProducerTemplate().sendBody("direct:input", "testContent");
 
       String url = "http://localhost:" + port + "/camelService?sig=REDACTED";
-      testing.waitAndAssertTraces(
-          trace -> {
-            List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-            assertions.add(span -> span.hasName("input").hasKind(SpanKind.INTERNAL));
-            assertions.add(
-                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasAttribute(URL_FULL, url));
-            addNestedHttpClientSpan(
-                assertions,
-                "GET",
-                url,
-                "localhost",
-                port,
-                expectedMappedServiceName(),
-                trace.getSpan(1));
-            assertions.add(span -> span.hasName("GET /camelService").hasKind(SpanKind.SERVER));
-            trace.hasSpansSatisfyingExactly(assertions);
-          });
+      testing.waitAndAssertTraces(trace -> {
+        List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+        assertions.add(span -> span.hasName("input").hasKind(SpanKind.INTERNAL));
+        assertions.add(
+            span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasAttribute(URL_FULL, url));
+        addNestedHttpClientSpan(
+            assertions,
+            "GET",
+            url,
+            "localhost",
+            port,
+            expectedMappedServiceName(),
+            trace.getSpan(1));
+        assertions.add(span -> span.hasName("GET /camelService").hasKind(SpanKind.SERVER));
+        trace.hasSpansSatisfyingExactly(assertions);
+      });
     } finally {
       clientContext.stop();
     }
@@ -139,30 +135,27 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
     try {
       clientContext.createProducerTemplate().sendBody("direct:userInfoInput", "testContent");
 
-      testing.waitAndAssertTraces(
-          trace -> {
-            List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-            assertions.add(span -> span.hasName("userInfoInput").hasKind(SpanKind.INTERNAL));
-            assertions.add(
-                span ->
-                    span.hasName("POST")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttribute(
-                            URL_FULL,
-                            "http://REDACTED:REDACTED@localhost:" + port + "/camelService"));
-            // the http client library strips the user info before the nested http client
-            // instrumentation sees the url
-            addNestedHttpClientSpan(
-                assertions,
-                "POST",
-                "http://localhost:" + port + "/camelService",
-                "localhost",
-                port,
-                expectedMappedServiceName(),
-                trace.getSpan(1));
-            assertions.add(span -> span.hasName("POST /camelService").hasKind(SpanKind.SERVER));
-            trace.hasSpansSatisfyingExactly(assertions);
-          });
+      testing.waitAndAssertTraces(trace -> {
+        List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+        assertions.add(span -> span.hasName("userInfoInput").hasKind(SpanKind.INTERNAL));
+        assertions.add(span ->
+            span.hasName("POST")
+                .hasKind(SpanKind.CLIENT)
+                .hasAttribute(
+                    URL_FULL, "http://REDACTED:REDACTED@localhost:" + port + "/camelService"));
+        // the http client library strips the user info before the nested http client
+        // instrumentation sees the url
+        addNestedHttpClientSpan(
+            assertions,
+            "POST",
+            "http://localhost:" + port + "/camelService",
+            "localhost",
+            port,
+            expectedMappedServiceName(),
+            trace.getSpan(1));
+        assertions.add(span -> span.hasName("POST /camelService").hasKind(SpanKind.SERVER));
+        trace.hasSpansSatisfyingExactly(assertions);
+      });
     } finally {
       clientContext.stop();
     }

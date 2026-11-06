@@ -136,12 +136,11 @@ public class VertxReactiveWebServer extends AbstractVerticle {
 
       return client
           .rxQuery("SELECT id" + queryInfix + ", name, price, weight FROM products")
-          .flatMap(
-              result -> {
-                JsonArray arr = new JsonArray();
-                result.getRows().forEach(arr::add);
-                return Single.just(arr);
-              });
+          .flatMap(result -> {
+            JsonArray arr = new JsonArray();
+            result.getRows().forEach(arr::add);
+            return Single.just(arr);
+          });
     } finally {
       span.end();
     }
@@ -159,34 +158,33 @@ public class VertxReactiveWebServer extends AbstractVerticle {
   }
 
   private static void setUpInitialData(Handler<Void> done, Handler<Throwable> onError) {
-    client.getConnection(
-        res -> {
-          if (res.failed()) {
-            onError.handle(res.cause());
-            return;
-          }
+    client.getConnection(res -> {
+      if (res.failed()) {
+        onError.handle(res.cause());
+        return;
+      }
 
-          SQLConnection conn = res.result();
+      SQLConnection conn = res.result();
 
-          conn.execute(
-              "CREATE TABLE IF NOT EXISTS products(id INT IDENTITY, name VARCHAR(255), price FLOAT, weight INT)",
-              ddl -> {
-                if (ddl.failed()) {
-                  onError.handle(ddl.cause());
-                  return;
-                }
+      conn.execute(
+          "CREATE TABLE IF NOT EXISTS products(id INT IDENTITY, name VARCHAR(255), price FLOAT, weight INT)",
+          ddl -> {
+            if (ddl.failed()) {
+              onError.handle(ddl.cause());
+              return;
+            }
 
-                conn.execute(
-                    "INSERT INTO products (name, price, weight) VALUES ('Egg Whisk', 3.99, 150), ('Tea Cosy', 5.99, 100), ('Spatula', 1.00, 80)",
-                    fixtures -> {
-                      if (fixtures.failed()) {
-                        onError.handle(fixtures.cause());
-                        return;
-                      }
+            conn.execute(
+                "INSERT INTO products (name, price, weight) VALUES ('Egg Whisk', 3.99, 150), ('Tea Cosy', 5.99, 100), ('Spatula', 1.00, 80)",
+                fixtures -> {
+                  if (fixtures.failed()) {
+                    onError.handle(fixtures.cause());
+                    return;
+                  }
 
-                      done.handle(null);
-                    });
-              });
-        });
+                  done.handle(null);
+                });
+          });
+    });
   }
 }

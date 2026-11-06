@@ -77,33 +77,28 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
 
     assertThat(result).isEmpty();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("DocRepository.findAll")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME, DocRepository.class.getName() + ".findAll")),
-                span ->
-                    span.hasName("indices:data/read/search")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
-                            equalTo(DB_OPERATION_NAME, "indices:data/read/search"),
-                            equalTo(
-                                stringKey("elasticsearch.action"), experimental("SearchAction")),
-                            equalTo(
-                                stringKey("elasticsearch.request"), experimental("SearchRequest")),
-                            equalTo(
-                                stringKey("elasticsearch.request.indices"),
-                                experimental("test-index")),
-                            equalTo(
-                                stringKey("elasticsearch.request.search.types"),
-                                experimental("doc")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("DocRepository.findAll")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(CODE_FUNCTION_NAME, DocRepository.class.getName() + ".findAll")),
+            span ->
+                span.hasName("indices:data/read/search")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                        equalTo(DB_OPERATION_NAME, "indices:data/read/search"),
+                        equalTo(stringKey("elasticsearch.action"), experimental("SearchAction")),
+                        equalTo(stringKey("elasticsearch.request"), experimental("SearchRequest")),
+                        equalTo(
+                            stringKey("elasticsearch.request.indices"), experimental("test-index")),
+                        equalTo(
+                            stringKey("elasticsearch.request.search.types"),
+                            experimental("doc")))));
   }
 
   @Test
@@ -113,44 +108,41 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
 
     assertThat(repository.index(doc)).isEqualTo(doc);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("DocRepository.index")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, DocRepository.class.getName() + ".index")),
-                span ->
-                    span.hasName("indices:data/write/index")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(indexActionAssertions(201)),
-                span ->
-                    span.hasName("indices:admin/refresh")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(refreshActionAssertions())));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("DocRepository.index")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(CODE_FUNCTION_NAME, DocRepository.class.getName() + ".index")),
+            span ->
+                span.hasName("indices:data/write/index")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(indexActionAssertions(201)),
+            span ->
+                span.hasName("indices:admin/refresh")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(refreshActionAssertions())));
     testing.clearData();
 
     assertThat(repository.findById("1").get()).isEqualTo(doc);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("DocRepository.findById")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME, DocRepository.class.getName() + ".findById")),
-                span ->
-                    span.hasName("indices:data/read/get")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(getActionAssertions(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("DocRepository.findById")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(CODE_FUNCTION_NAME, DocRepository.class.getName() + ".findById")),
+            span ->
+                span.hasName("indices:data/read/get")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(getActionAssertions(1))));
     testing.clearData();
 
     doc.setData("other data");

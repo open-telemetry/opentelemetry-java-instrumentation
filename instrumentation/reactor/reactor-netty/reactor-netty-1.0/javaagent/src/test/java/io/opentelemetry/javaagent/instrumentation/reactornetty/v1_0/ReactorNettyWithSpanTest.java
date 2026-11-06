@@ -44,17 +44,15 @@ class ReactorNettyWithSpanTest {
     HttpClient httpClient = HttpClient.create();
 
     Mono<Integer> httpRequest =
-        Mono.defer(
-            () ->
-                httpClient
-                    .get()
-                    .uri("http://localhost:" + server.httpPort() + "/success")
-                    .responseSingle(
-                        (resp, content) -> {
-                          // Make sure to consume content since that's when we close the span.
-                          return content.map(unused -> resp);
-                        })
-                    .map(r -> r.status().code()));
+        Mono.defer(() ->
+            httpClient
+                .get()
+                .uri("http://localhost:" + server.httpPort() + "/success")
+                .responseSingle((resp, content) -> {
+                  // Make sure to consume content since that's when we close the span.
+                  return content.map(unused -> resp);
+                })
+                .map(r -> r.status().code()));
 
     Mono<Integer> getResponse =
         new TracedWithSpan()
@@ -68,12 +66,10 @@ class ReactorNettyWithSpanTest {
 
     StepVerifier.create(getResponse).expectNext(200).expectComplete().verify();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("TracedWithSpan.mono").hasKind(INTERNAL).hasNoParent(),
-                span -> span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("TracedWithSpan.mono").hasKind(INTERNAL).hasNoParent(),
+            span -> span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0)),
+            span -> span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1))));
   }
 }

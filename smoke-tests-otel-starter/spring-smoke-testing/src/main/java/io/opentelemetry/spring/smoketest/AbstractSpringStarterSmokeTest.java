@@ -66,14 +66,13 @@ public abstract class AbstractSpringStarterSmokeTest {
         // not a warning in Spring Boot 2
         .doesNotContain("is not eligible for getting processed by all BeanPostProcessors")
         // only look for WARN and ERROR log level, e.g. [Test worker] WARN
-        .satisfies(
-            s -> {
-              for (String line : s.toString().split("\n")) {
-                if (IGNORED_WARNINGS.stream().noneMatch(line::contains)) {
-                  assertThat(line).doesNotContain("] WARN").doesNotContain("] ERROR");
-                }
-              }
-            });
+        .satisfies(s -> {
+          for (String line : s.toString().split("\n")) {
+            if (IGNORED_WARNINGS.stream().noneMatch(line::contains)) {
+              assertThat(line).doesNotContain("] WARN").doesNotContain("] ERROR");
+            }
+          }
+        });
   }
 
   static SpanDataAssert withSpanAssert(SpanDataAssert span) {

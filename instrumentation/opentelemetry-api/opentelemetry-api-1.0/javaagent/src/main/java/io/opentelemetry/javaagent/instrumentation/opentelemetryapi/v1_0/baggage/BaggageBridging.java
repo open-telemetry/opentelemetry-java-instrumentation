@@ -15,25 +15,21 @@ public class BaggageBridging {
       Baggage agentBaggage) {
     application.io.opentelemetry.api.baggage.BaggageBuilder applicationBaggageBuilder =
         application.io.opentelemetry.api.baggage.Baggage.builder();
-    agentBaggage.forEach(
-        (key, entry) ->
-            applicationBaggageBuilder.put(
-                key,
-                entry.getValue(),
-                application.io.opentelemetry.api.baggage.BaggageEntryMetadata.create(
-                    entry.getMetadata().getValue())));
+    agentBaggage.forEach((key, entry) ->
+        applicationBaggageBuilder.put(
+            key,
+            entry.getValue(),
+            application.io.opentelemetry.api.baggage.BaggageEntryMetadata.create(
+                entry.getMetadata().getValue())));
     return applicationBaggageBuilder.build();
   }
 
   public static Baggage toAgent(
       application.io.opentelemetry.api.baggage.Baggage applicationBaggage) {
     BaggageBuilder agentBaggageBuilder = Baggage.builder();
-    applicationBaggage.forEach(
-        (key, entry) ->
-            agentBaggageBuilder.put(
-                key,
-                entry.getValue(),
-                BaggageEntryMetadata.create(entry.getMetadata().getValue())));
+    applicationBaggage.forEach((key, entry) ->
+        agentBaggageBuilder.put(
+            key, entry.getValue(), BaggageEntryMetadata.create(entry.getMetadata().getValue())));
     return agentBaggageBuilder.build();
   }
 

@@ -101,16 +101,15 @@ public abstract class AbstractHibernateReactiveTest {
         "parent",
         () -> {
           mutinySessionFactory
-              .withSession(
-                  session -> {
-                    if (!Span.current().getSpanContext().isValid()) {
-                      throw new IllegalStateException("missing parent span");
-                    }
+              .withSession(session -> {
+                if (!Span.current().getSpanContext().isValid()) {
+                  throw new IllegalStateException("missing parent span");
+                }
 
-                    return session
-                        .find(Value.class, 1L)
-                        .invoke(value -> testing.runWithSpan("callback", () -> {}));
-                  })
+                return session
+                    .find(Value.class, 1L)
+                    .invoke(value -> testing.runWithSpan("callback", () -> {}));
+              })
               .await()
               .atMost(Duration.ofSeconds(30));
         });
@@ -125,16 +124,15 @@ public abstract class AbstractHibernateReactiveTest {
             "parent",
             () ->
                 stageSessionFactory
-                    .withSession(
-                        session -> {
-                          if (!Span.current().getSpanContext().isValid()) {
-                            throw new IllegalStateException("missing parent span");
-                          }
+                    .withSession(session -> {
+                      if (!Span.current().getSpanContext().isValid()) {
+                        throw new IllegalStateException("missing parent span");
+                      }
 
-                          return session
-                              .find(Value.class, 1L)
-                              .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
-                        })
+                      return session
+                          .find(Value.class, 1L)
+                          .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                    })
                     .toCompletableFuture())
         .get(30, SECONDS);
 
@@ -148,16 +146,15 @@ public abstract class AbstractHibernateReactiveTest {
             "parent",
             () ->
                 stageSessionFactory
-                    .withStatelessSession(
-                        session -> {
-                          if (!Span.current().getSpanContext().isValid()) {
-                            throw new IllegalStateException("missing parent span");
-                          }
+                    .withStatelessSession(session -> {
+                      if (!Span.current().getSpanContext().isValid()) {
+                        throw new IllegalStateException("missing parent span");
+                      }
 
-                          return session
-                              .get(Value.class, 1L)
-                              .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
-                        })
+                      return session
+                          .get(Value.class, 1L)
+                          .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                    })
                     .toCompletableFuture())
         .get(30, SECONDS);
 
@@ -171,16 +168,15 @@ public abstract class AbstractHibernateReactiveTest {
             "parent",
             () ->
                 stageSessionFactory
-                    .withSession(
-                        session -> {
-                          if (!Span.current().getSpanContext().isValid()) {
-                            throw new IllegalStateException("missing parent span");
-                          }
+                    .withSession(session -> {
+                      if (!Span.current().getSpanContext().isValid()) {
+                        throw new IllegalStateException("missing parent span");
+                      }
 
-                          return session
-                              .withTransaction(transaction -> session.find(Value.class, 1L))
-                              .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
-                        })
+                      return session
+                          .withTransaction(transaction -> session.find(Value.class, 1L))
+                          .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                    })
                     .toCompletableFuture())
         .get(30, SECONDS);
 
@@ -194,16 +190,15 @@ public abstract class AbstractHibernateReactiveTest {
             "parent",
             () ->
                 stageSessionFactory
-                    .withStatelessSession(
-                        session -> {
-                          if (!Span.current().getSpanContext().isValid()) {
-                            throw new IllegalStateException("missing parent span");
-                          }
+                    .withStatelessSession(session -> {
+                      if (!Span.current().getSpanContext().isValid()) {
+                        throw new IllegalStateException("missing parent span");
+                      }
 
-                          return session
-                              .withTransaction(transaction -> session.get(Value.class, 1L))
-                              .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
-                        })
+                      return session
+                          .withTransaction(transaction -> session.get(Value.class, 1L))
+                          .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                    })
                     .toCompletableFuture())
         .get(30, SECONDS);
 
@@ -216,21 +211,19 @@ public abstract class AbstractHibernateReactiveTest {
     testing.runWithSpan(
         "parent",
         () ->
-            runWithVertx(
-                () ->
-                    stageSessionFactory
-                        .openSession()
-                        .thenCompose(
-                            session -> {
-                              if (!Span.current().getSpanContext().isValid()) {
-                                throw new IllegalStateException("missing parent span");
-                              }
+            runWithVertx(() ->
+                stageSessionFactory
+                    .openSession()
+                    .thenCompose(session -> {
+                      if (!Span.current().getSpanContext().isValid()) {
+                        throw new IllegalStateException("missing parent span");
+                      }
 
-                              return session
-                                  .find(Value.class, 1L)
-                                  .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
-                            })
-                        .whenComplete((value, throwable) -> complete(result, null, throwable))));
+                      return session
+                          .find(Value.class, 1L)
+                          .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                    })
+                    .whenComplete((value, throwable) -> complete(result, null, throwable))));
     result.get(30, SECONDS);
 
     assertTrace();
@@ -242,21 +235,19 @@ public abstract class AbstractHibernateReactiveTest {
     testing.runWithSpan(
         "parent",
         () ->
-            runWithVertx(
-                () ->
-                    stageSessionFactory
-                        .openStatelessSession()
-                        .thenCompose(
-                            session -> {
-                              if (!Span.current().getSpanContext().isValid()) {
-                                throw new IllegalStateException("missing parent span");
-                              }
+            runWithVertx(() ->
+                stageSessionFactory
+                    .openStatelessSession()
+                    .thenCompose(session -> {
+                      if (!Span.current().getSpanContext().isValid()) {
+                        throw new IllegalStateException("missing parent span");
+                      }
 
-                              return session
-                                  .get(Value.class, 1L)
-                                  .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
-                            })
-                        .whenComplete((value, throwable) -> complete(result, null, throwable))));
+                      return session
+                          .get(Value.class, 1L)
+                          .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
+                    })
+                    .whenComplete((value, throwable) -> complete(result, null, throwable))));
     result.get(30, SECONDS);
 
     assertTrace();
@@ -277,27 +268,24 @@ public abstract class AbstractHibernateReactiveTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   private void assertTrace() {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-                span ->
-                    span.hasName("select Value")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                            equalTo(DB_NAMESPACE, DB),
-                            equalTo(
-                                DB_QUERY_TEXT,
-                                "select v1_0.id,v1_0.name from Value v1_0 where v1_0.id=$1"),
-                            equalTo(DB_QUERY_SUMMARY, "select Value"),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+            span ->
+                span.hasName("select Value")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                        equalTo(DB_NAMESPACE, DB),
+                        equalTo(
+                            DB_QUERY_TEXT,
+                            "select v1_0.id,v1_0.name from Value v1_0 where v1_0.id=$1"),
+                        equalTo(DB_QUERY_SUMMARY, "select Value"),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
+            span ->
+                span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 }

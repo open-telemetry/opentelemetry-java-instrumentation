@@ -174,9 +174,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest extends AbstractAwsSdk
         case "spliterator":
           messages
               .spliterator()
-              .forEachRemaining(
-                  message ->
-                      assertThat(Span.current().getSpanContext().isValid()).isEqualTo(traced));
+              .forEachRemaining(message ->
+                  assertThat(Span.current().getSpanContext().isValid()).isEqualTo(traced));
           break;
         default:
           messages.forEach(
@@ -244,18 +243,16 @@ public abstract class AbstractSqsSuppressReceiveSpansTest extends AbstractAwsSdk
 
     outer
         .getMessages()
-        .forEach(
-            message -> {
-              Context outerContext = Context.current();
-              inner
-                  .getMessages()
-                  .forEach(
-                      nested ->
-                          assertThat(Span.current().getSpanContext())
-                              .isNotEqualTo(Span.fromContext(outerContext).getSpanContext()));
-              assertThat(Span.current().getSpanContext())
-                  .isEqualTo(Span.fromContext(outerContext).getSpanContext());
-            });
+        .forEach(message -> {
+          Context outerContext = Context.current();
+          inner
+              .getMessages()
+              .forEach(nested ->
+                  assertThat(Span.current().getSpanContext())
+                      .isNotEqualTo(Span.fromContext(outerContext).getSpanContext()));
+          assertThat(Span.current().getSpanContext())
+              .isEqualTo(Span.fromContext(outerContext).getSpanContext());
+        });
     assertThat(Span.current().getSpanContext().isValid()).isFalse();
     SqsMetricsAssertions.assertProcessMetrics(testing(), sqsPort, 2);
   }
@@ -290,11 +287,10 @@ public abstract class AbstractSqsSuppressReceiveSpansTest extends AbstractAwsSdk
             trace -> trace.hasSpansSatisfyingExactly(this::createQueueSpan),
             trace -> {
               List<Consumer<SpanDataAssert>> spanAsserts = new ArrayList<>();
-              spanAsserts.add(
-                  span -> {
-                    publishSpan.set(trace.getSpan(0));
-                    publishSpan(span);
-                  });
+              spanAsserts.add(span -> {
+                publishSpan.set(trace.getSpan(0));
+                publishSpan(span);
+              });
 
               trace.hasSpansSatisfyingExactly(spanAsserts);
             },
@@ -311,11 +307,10 @@ public abstract class AbstractSqsSuppressReceiveSpansTest extends AbstractAwsSdk
                            */
                           span -> receiveMessageSdkSpan(span, trace.getSpan(0))));
               spanAsserts.add(span -> processSpan(span, trace.getSpan(0), publishSpan.get()));
-              spanAsserts.add(
-                  span ->
-                      span.hasName("process child")
-                          .hasParent(trace.getSpan(2))
-                          .hasTotalAttributeCount(0));
+              spanAsserts.add(span ->
+                  span.hasName("process child")
+                      .hasParent(trace.getSpan(2))
+                      .hasTotalAttributeCount(0));
               trace.hasSpansSatisfyingExactly(spanAsserts);
             });
   }
@@ -387,14 +382,12 @@ public abstract class AbstractSqsSuppressReceiveSpansTest extends AbstractAwsSdk
             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"));
 
     // the creation context is linked even when it is also this span's parent
-    span.hasLinksSatisfying(
-        links ->
-            assertThat(links)
-                .singleElement()
-                .satisfies(
-                    link ->
-                        assertThat(link.getSpanContext().getSpanId())
-                            .isEqualTo(creationContext.getSpanId())));
+    span.hasLinksSatisfying(links ->
+        assertThat(links)
+            .singleElement()
+            .satisfies(link ->
+                assertThat(link.getSpanContext().getSpanId())
+                    .isEqualTo(creationContext.getSpanId())));
   }
 
   private void receiveMessageSdkSpan(SpanDataAssert span, SpanData parent) {

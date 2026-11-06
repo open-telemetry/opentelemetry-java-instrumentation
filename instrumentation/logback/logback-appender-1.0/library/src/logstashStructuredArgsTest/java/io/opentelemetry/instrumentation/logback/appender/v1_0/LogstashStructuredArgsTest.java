@@ -37,22 +37,20 @@ class LogstashStructuredArgsTest {
   void basicStructuredArgumentWithV() {
     logger.info("Basic structured arg: {}", StructuredArguments.v("customer_id", "123"));
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasBody("Basic structured arg: 123")
-                .hasAttributesSatisfyingExactly(equalTo(stringKey("customer_id"), "123")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord
+            .hasBody("Basic structured arg: 123")
+            .hasAttributesSatisfyingExactly(equalTo(stringKey("customer_id"), "123")));
   }
 
   @Test
   void structuredArgumentWithKeyValue() {
     logger.info("Processing order: {}", StructuredArguments.keyValue("order_id", "ORD-456"));
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasBody("Processing order: order_id=ORD-456")
-                .hasAttributesSatisfyingExactly(equalTo(stringKey("order_id"), "ORD-456")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord
+            .hasBody("Processing order: order_id=ORD-456")
+            .hasAttributesSatisfyingExactly(equalTo(stringKey("order_id"), "ORD-456")));
   }
 
   @Test
@@ -62,12 +60,11 @@ class LogstashStructuredArgsTest {
         StructuredArguments.v("customer_id", "789"),
         StructuredArguments.v("amount", 99.99));
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasBody("Transaction: 789 amount: 99.99")
-                .hasAttributesSatisfyingExactly(
-                    equalTo(stringKey("customer_id"), "789"), equalTo(doubleKey("amount"), 99.99)));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord
+            .hasBody("Transaction: 789 amount: 99.99")
+            .hasAttributesSatisfyingExactly(
+                equalTo(stringKey("customer_id"), "789"), equalTo(doubleKey("amount"), 99.99)));
   }
 
   @Test
@@ -77,12 +74,11 @@ class LogstashStructuredArgsTest {
         StructuredArguments.keyValue("key1", "val1"),
         StructuredArguments.keyValue("otel.event.name", "MyEventName"));
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasBody("Event occurred: key1=val1")
-                .hasEventName("MyEventName")
-                .hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "val1")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord
+            .hasBody("Event occurred: key1=val1")
+            .hasEventName("MyEventName")
+            .hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "val1")));
   }
 
   @Test
@@ -94,12 +90,11 @@ class LogstashStructuredArgsTest {
         StructuredArguments.v("timestamp", timestamp),
         StructuredArguments.v("session_active", true));
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(longKey("user_id"), 12345L),
-                equalTo(longKey("timestamp"), timestamp),
-                equalTo(booleanKey("session_active"), true)));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(longKey("user_id"), 12345L),
+            equalTo(longKey("timestamp"), timestamp),
+            equalTo(booleanKey("session_active"), true)));
   }
 
   @Test
@@ -108,10 +103,9 @@ class LogstashStructuredArgsTest {
     eventData.put("foo", "bar");
     logger.info("message: {}", StructuredArguments.entries(eventData));
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasBody("message: {foo=bar}")
-                .hasAttributesSatisfyingExactly(equalTo(stringKey("foo"), "bar")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord
+            .hasBody("message: {foo=bar}")
+            .hasAttributesSatisfyingExactly(equalTo(stringKey("foo"), "bar")));
   }
 }

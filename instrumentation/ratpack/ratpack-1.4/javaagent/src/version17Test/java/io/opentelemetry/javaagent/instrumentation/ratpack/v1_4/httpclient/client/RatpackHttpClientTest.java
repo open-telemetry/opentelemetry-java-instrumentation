@@ -49,39 +49,32 @@ class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
 
     assertThat(sendRequest(null, "GET", uri, emptyMap())).isEqualTo(200);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    assertClientSpan(span, uri, "GET", 200, null)
-                        .hasNoParent()
-                        .satisfies(
-                            spanData -> {
-                              assertThat(spanData.getInstrumentationScopeInfo().getName())
-                                  .isEqualTo("io.opentelemetry.ratpack-1.4");
-                              assertThat(spanData.getInstrumentationScopeInfo().getVersion())
-                                  .isNotEmpty();
-                            }),
-                span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                assertClientSpan(span, uri, "GET", 200, null)
+                    .hasNoParent()
+                    .satisfies(spanData -> {
+                      assertThat(spanData.getInstrumentationScopeInfo().getName())
+                          .isEqualTo("io.opentelemetry.ratpack-1.4");
+                      assertThat(spanData.getInstrumentationScopeInfo().getVersion()).isNotEmpty();
+                    }),
+            span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.ratpack-1.4",
         metric ->
             metric
                 .hasName("http.client.request.duration")
-                .satisfies(
-                    metricData ->
-                        assertThat(metricData.getInstrumentationScopeInfo().getVersion())
-                            .isNotEmpty())
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfyingExactly(
-                                    equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                    equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                    equalTo(SERVER_ADDRESS, uri.getHost()),
-                                    equalTo(SERVER_PORT, uri.getPort())))));
+                .satisfies(metricData ->
+                    assertThat(metricData.getInstrumentationScopeInfo().getVersion()).isNotEmpty())
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point.hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SERVER_ADDRESS, uri.getHost()),
+                            equalTo(SERVER_PORT, uri.getPort())))));
   }
 }

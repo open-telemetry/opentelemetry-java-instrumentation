@@ -23,15 +23,13 @@ final class McpSingletons {
               request -> McpSchema.METHOD_TOOLS_CALL + " " + request.getToolName())
           .addAttributesExtractor(new McpToolCallAttributesExtractor())
           .addOperationMetrics(McpClientMetrics.get())
-          .setSpanStatusExtractor(
-              (spanStatusBuilder, request, response, error) -> {
-                if (response != null && Boolean.TRUE.equals(response.isError())) {
-                  spanStatusBuilder.setStatus(StatusCode.ERROR);
-                } else {
-                  SpanStatusExtractor.getDefault()
-                      .extract(spanStatusBuilder, request, response, error);
-                }
-              })
+          .setSpanStatusExtractor((spanStatusBuilder, request, response, error) -> {
+            if (response != null && Boolean.TRUE.equals(response.isError())) {
+              spanStatusBuilder.setStatus(StatusCode.ERROR);
+            } else {
+              SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, response, error);
+            }
+          })
           .buildInstrumenter(SpanKindExtractor.alwaysClient());
 
   private static final ContextPropagators propagators = GlobalOpenTelemetry.get().getPropagators();

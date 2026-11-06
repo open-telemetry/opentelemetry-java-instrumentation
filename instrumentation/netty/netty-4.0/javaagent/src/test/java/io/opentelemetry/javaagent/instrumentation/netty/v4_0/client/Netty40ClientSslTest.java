@@ -90,53 +90,49 @@ class Netty40ClientSslTest {
     HttpHeaders.setHost(request, uri.getHost() + ":" + uri.getPort());
 
     Throwable thrownException = getThrowable(bootstrap, uri, request);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasStatus(StatusData.error())
-                        .hasException(thrownException),
-                span -> {
-                  span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
-                  span.hasAttributesSatisfyingExactly(
-                      equalTo(NETWORK_TRANSPORT, "tcp"),
-                      equalTo(NETWORK_TYPE, "ipv4"),
-                      equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                      equalTo(SERVER_ADDRESS, uri.getHost()),
-                      equalTo(SERVER_PORT, uri.getPort()),
-                      equalTo(NETWORK_PEER_PORT, uri.getPort()),
-                      equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
-                },
-                span -> {
-                  span.hasName("SSL handshake")
-                      .hasKind(INTERNAL)
-                      .hasParent(trace.getSpan(0))
-                      .hasStatus(StatusData.error());
-                  span.hasAttributesSatisfyingExactly(
-                      equalTo(NETWORK_TRANSPORT, "tcp"),
-                      equalTo(NETWORK_TYPE, "ipv4"),
-                      equalTo(NETWORK_PEER_PORT, uri.getPort()),
-                      equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
-                }));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent").hasStatus(StatusData.error()).hasException(thrownException),
+            span -> {
+              span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
+              span.hasAttributesSatisfyingExactly(
+                  equalTo(NETWORK_TRANSPORT, "tcp"),
+                  equalTo(NETWORK_TYPE, "ipv4"),
+                  equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                  equalTo(SERVER_ADDRESS, uri.getHost()),
+                  equalTo(SERVER_PORT, uri.getPort()),
+                  equalTo(NETWORK_PEER_PORT, uri.getPort()),
+                  equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
+            },
+            span -> {
+              span.hasName("SSL handshake")
+                  .hasKind(INTERNAL)
+                  .hasParent(trace.getSpan(0))
+                  .hasStatus(StatusData.error());
+              span.hasAttributesSatisfyingExactly(
+                  equalTo(NETWORK_TRANSPORT, "tcp"),
+                  equalTo(NETWORK_TYPE, "ipv4"),
+                  equalTo(NETWORK_PEER_PORT, uri.getPort()),
+                  equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
+            }));
   }
 
   private static Throwable getThrowable(
       Bootstrap bootstrap, URI uri, DefaultFullHttpRequest request) {
     Throwable thrown =
-        catchThrowable(
-            () ->
-                testing.runWithSpan(
-                    "parent",
-                    () -> {
-                      Channel channel =
-                          bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel();
-                      cleanup.deferCleanup(() -> channel.close().sync());
-                      CompletableFuture<Integer> result = new CompletableFuture<>();
-                      channel.pipeline().addLast(new ClientHandler(result));
-                      channel.writeAndFlush(request).get(10, SECONDS);
-                      result.get(10, SECONDS);
-                    }));
+        catchThrowable(() ->
+            testing.runWithSpan(
+                "parent",
+                () -> {
+                  Channel channel =
+                      bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel();
+                  cleanup.deferCleanup(() -> channel.close().sync());
+                  CompletableFuture<Integer> result = new CompletableFuture<>();
+                  channel.pipeline().addLast(new ClientHandler(result));
+                  channel.writeAndFlush(request).get(10, SECONDS);
+                  result.get(10, SECONDS);
+                }));
 
     // Then
     Throwable thrownException;
@@ -174,35 +170,34 @@ class Netty40ClientSslTest {
         });
 
     // then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span -> {
-                  span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
-                  span.hasAttributesSatisfyingExactly(
-                      equalTo(NETWORK_TRANSPORT, "tcp"),
-                      equalTo(NETWORK_TYPE, "ipv4"),
-                      equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                      equalTo(SERVER_ADDRESS, uri.getHost()),
-                      equalTo(SERVER_PORT, uri.getPort()),
-                      equalTo(NETWORK_PEER_PORT, uri.getPort()),
-                      equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
-                },
-                span -> {
-                  span.hasName("SSL handshake").hasKind(INTERNAL).hasParent(trace.getSpan(0));
-                  span.hasAttributesSatisfyingExactly(
-                      equalTo(NETWORK_TRANSPORT, "tcp"),
-                      equalTo(NETWORK_TYPE, "ipv4"),
-                      equalTo(NETWORK_PEER_PORT, uri.getPort()),
-                      equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
-                },
-                span -> {
-                  span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0));
-                },
-                span -> {
-                  span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(3));
-                }));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span -> {
+              span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
+              span.hasAttributesSatisfyingExactly(
+                  equalTo(NETWORK_TRANSPORT, "tcp"),
+                  equalTo(NETWORK_TYPE, "ipv4"),
+                  equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                  equalTo(SERVER_ADDRESS, uri.getHost()),
+                  equalTo(SERVER_PORT, uri.getPort()),
+                  equalTo(NETWORK_PEER_PORT, uri.getPort()),
+                  equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
+            },
+            span -> {
+              span.hasName("SSL handshake").hasKind(INTERNAL).hasParent(trace.getSpan(0));
+              span.hasAttributesSatisfyingExactly(
+                  equalTo(NETWORK_TRANSPORT, "tcp"),
+                  equalTo(NETWORK_TYPE, "ipv4"),
+                  equalTo(NETWORK_PEER_PORT, uri.getPort()),
+                  equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
+            },
+            span -> {
+              span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0));
+            },
+            span -> {
+              span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(3));
+            }));
   }
 
   // list of default ciphers copied from netty's JdkSslContext

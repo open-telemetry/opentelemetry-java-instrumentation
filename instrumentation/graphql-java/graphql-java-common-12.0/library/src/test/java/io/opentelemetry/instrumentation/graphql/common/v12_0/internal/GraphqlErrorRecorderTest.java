@@ -73,36 +73,33 @@ class GraphqlErrorRecorderTest {
 
       assertThat(spans.getFinishedSpanItems())
           .singleElement()
-          .satisfies(
-              spanData -> {
-                assertThat(spanData).hasInstrumentationScopeInfo(expectedScope);
-                if (emitExceptionAsSpanEvents()) {
-                  assertThat(spanData.getEvents())
-                      .singleElement()
-                      .satisfies(
-                          event ->
-                              assertThat(event)
-                                  .hasName("exception")
-                                  .hasAttributesSatisfyingExactly(
-                                      equalTo(EXCEPTION_TYPE, "ValidationError"),
-                                      equalTo(EXCEPTION_MESSAGE, "invalid field")));
-                } else {
-                  assertThat(spanData.getEvents()).isEmpty();
-                }
-              });
+          .satisfies(spanData -> {
+            assertThat(spanData).hasInstrumentationScopeInfo(expectedScope);
+            if (emitExceptionAsSpanEvents()) {
+              assertThat(spanData.getEvents())
+                  .singleElement()
+                  .satisfies(event ->
+                      assertThat(event)
+                          .hasName("exception")
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(EXCEPTION_TYPE, "ValidationError"),
+                              equalTo(EXCEPTION_MESSAGE, "invalid field")));
+            } else {
+              assertThat(spanData.getEvents()).isEmpty();
+            }
+          });
       if (emitExceptionAsLogs()) {
         assertThat(logs.getFinishedLogRecordItems())
             .singleElement()
-            .satisfies(
-                log ->
-                    assertThat(log)
-                        .hasEventName("exception")
-                        .hasSeverity(Severity.WARN)
-                        .hasSpanContext(span.getSpanContext())
-                        .hasInstrumentationScope(expectedScope)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(EXCEPTION_TYPE, "ValidationError"),
-                            equalTo(EXCEPTION_MESSAGE, "invalid field")));
+            .satisfies(log ->
+                assertThat(log)
+                    .hasEventName("exception")
+                    .hasSeverity(Severity.WARN)
+                    .hasSpanContext(span.getSpanContext())
+                    .hasInstrumentationScope(expectedScope)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(EXCEPTION_TYPE, "ValidationError"),
+                        equalTo(EXCEPTION_MESSAGE, "invalid field")));
       } else {
         assertThat(logs.getFinishedLogRecordItems()).isEmpty();
       }

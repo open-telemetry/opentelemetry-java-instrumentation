@@ -40,12 +40,11 @@ class LogbackLogstashStructuredArgsSelectorTest {
         StructuredArguments.keyValue("keyLong", "key-long-value"),
         StructuredArguments.keyValue("other", "other-value"));
 
-    testing.waitAndAssertLogRecords(
-        logRecord -> {
-          Attributes attributes = logRecord.actual().getAttributes();
-          assertThat(capturedStructuredArguments(attributes))
-              .containsExactlyInAnyOrderEntriesOf(expectedStructuredArguments());
-        });
+    testing.waitAndAssertLogRecords(logRecord -> {
+      Attributes attributes = logRecord.actual().getAttributes();
+      assertThat(capturedStructuredArguments(attributes))
+          .containsExactlyInAnyOrderEntriesOf(expectedStructuredArguments());
+    });
   }
 
   private static Map<String, String> structuredArguments() {
@@ -59,13 +58,12 @@ class LogbackLogstashStructuredArgsSelectorTest {
 
   private static Map<String, String> capturedStructuredArguments(Attributes attributes) {
     Map<String, String> captured = new HashMap<>();
-    STRUCTURED_ARGUMENTS.forEach(
-        (key, value) -> {
-          String attributeValue = attributes.get(stringKey(key));
-          if (attributeValue != null) {
-            captured.put(key, attributeValue);
-          }
-        });
+    STRUCTURED_ARGUMENTS.forEach((key, value) -> {
+      String attributeValue = attributes.get(stringKey(key));
+      if (attributeValue != null) {
+        captured.put(key, attributeValue);
+      }
+    });
     return captured;
   }
 

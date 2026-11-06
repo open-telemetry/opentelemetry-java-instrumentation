@@ -56,15 +56,13 @@ public abstract class AbstractFunctionTimerMillisecondsTest {
                     .hasName("testFunctionTimerMilliseconds.count")
                     .hasDescription("This is a test function timer")
                     .hasUnit("{invocation}")
-                    .hasLongSumSatisfying(
-                        sum ->
-                            sum.isMonotonic()
-                                .hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(stringKey("tag"), "value")))));
+                    .hasLongSumSatisfying(sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(point ->
+                                point
+                                    .hasValue(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("tag"), "value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -73,14 +71,12 @@ public abstract class AbstractFunctionTimerMillisecondsTest {
                     .hasName("testFunctionTimerMilliseconds.sum")
                     .hasDescription("This is a test function timer")
                     .hasUnit("ms")
-                    .hasDoubleSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(42_000)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleSumSatisfying(sum ->
+                        sum.hasPointsSatisfying(point ->
+                            point
+                                .hasValue(42_000)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("tag"), "value")))));
 
     // when
     Metrics.globalRegistry.remove(functionTimer);

@@ -69,24 +69,22 @@ class PulsarClientV5Test extends PulsarClientTest {
       testing.waitAndAssertSortedTraces(
           orderByRootSpanKind(SpanKind.PRODUCER, SpanKind.CLIENT),
           trace -> {
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("send " + segmentTopic)
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            sendAttributes(segmentTopic, segmentMessageId, false)));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("send " + segmentTopic)
+                    .hasKind(SpanKind.PRODUCER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        sendAttributes(segmentTopic, segmentMessageId, false)));
             producerSpan.set(trace.getSpan(0));
           },
           trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("receive " + segmentTopic)
-                          .hasKind(SpanKind.CLIENT)
-                          .hasNoParent()
-                          .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
-                          .hasAttributesSatisfyingExactly(
-                              receiveAttributes(segmentTopic, segmentMessageId, false))));
+              trace.hasSpansSatisfyingExactly(span ->
+                  span.hasName("receive " + segmentTopic)
+                      .hasKind(SpanKind.CLIENT)
+                      .hasNoParent()
+                      .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
+                      .hasAttributesSatisfyingExactly(
+                          receiveAttributes(segmentTopic, segmentMessageId, false))));
     }
   }
 }

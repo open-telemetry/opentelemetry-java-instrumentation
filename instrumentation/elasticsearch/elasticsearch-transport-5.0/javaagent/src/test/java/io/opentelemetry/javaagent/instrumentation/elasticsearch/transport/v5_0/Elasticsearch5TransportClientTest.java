@@ -218,14 +218,12 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
     }
     String stableSpanName =
         "cluster:monitor/health " + serverAddress + (serverPort == null ? "" : ":" + serverPort);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(stableSpanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            clusterHealthAttributes(serverAddress, serverPort))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(stableSpanName)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    clusterHealthAttributes(serverAddress, serverPort))));
   }
 
   private String configuredAddressListWithMixedPorts() {

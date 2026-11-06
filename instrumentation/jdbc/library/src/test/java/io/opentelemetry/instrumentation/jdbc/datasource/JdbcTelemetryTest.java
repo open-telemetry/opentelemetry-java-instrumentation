@@ -56,14 +56,13 @@ class JdbcTelemetryTest {
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span ->
-                    span.hasName("SELECT")
-                        .hasAttribute(equalTo(DB_QUERY_TEXT, "SELECT ?;"))
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span ->
+                span.hasName("SELECT")
+                    .hasAttribute(equalTo(DB_QUERY_TEXT, "SELECT ?;"))
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))));
 
     assertDurationMetric(
         testing,
@@ -89,17 +88,16 @@ class JdbcTelemetryTest {
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span ->
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                        equalTo(DB_NAMESPACE, "dbname"),
-                        equalTo(DB_QUERY_TEXT, "SELECT ?;"),
-                        equalTo(DB_QUERY_SUMMARY, "SELECT"),
-                        equalTo(SERVER_ADDRESS, expectedAddress))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span ->
+                span.hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                    equalTo(DB_NAMESPACE, "dbname"),
+                    equalTo(DB_QUERY_TEXT, "SELECT ?;"),
+                    equalTo(DB_QUERY_SUMMARY, "SELECT"),
+                    equalTo(SERVER_ADDRESS, expectedAddress))));
   }
 
   private static Stream<Arguments> groupTargets() {
@@ -129,11 +127,9 @@ class JdbcTelemetryTest {
 
     // span naming is unchanged: a query that has no summary and no namespace falls back to
     // server.address, which now holds the whole configured target
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span -> span.hasName("pg.host1:15432,pg.host2:15432")));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"), span -> span.hasName("pg.host1:15432,pg.host2:15432")));
   }
 
   @ParameterizedTest
@@ -151,26 +147,23 @@ class JdbcTelemetryTest {
         .execute(Mockito.anyString());
     DataSource dataSource = telemetry.instrument(source);
 
-    assertThatCode(
-            () ->
-                testing.runWithSpan(
-                    "parent",
-                    () -> dataSource.getConnection().createStatement().execute("SELECT 1;")))
+    assertThatCode(() ->
+            testing.runWithSpan(
+                "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;")))
         .isInstanceOf(SQLException.class);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span ->
-                    span.hasName("SELECT")
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                            equalTo(DB_NAMESPACE, "dbname"),
-                            equalTo(DB_QUERY_TEXT, "SELECT ?;"),
-                            equalTo(DB_QUERY_SUMMARY, "SELECT"),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(ERROR_TYPE, expectedErrorType))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span ->
+                span.hasName("SELECT")
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                        equalTo(DB_NAMESPACE, "dbname"),
+                        equalTo(DB_QUERY_TEXT, "SELECT ?;"),
+                        equalTo(DB_QUERY_SUMMARY, "SELECT"),
+                        equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                        equalTo(ERROR_TYPE, expectedErrorType))));
 
     assertDurationMetric(
         testing,
@@ -185,10 +178,9 @@ class JdbcTelemetryTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point -> point.hasAttribute(ERROR_TYPE, expectedErrorType))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(
+                        point -> point.hasAttribute(ERROR_TYPE, expectedErrorType))));
   }
 
   private static Stream<Arguments> errorCodes() {
@@ -237,10 +229,9 @@ class JdbcTelemetryTest {
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"), span -> span.hasName("SELECT")));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"), span -> span.hasName("SELECT")));
   }
 
   @Test
@@ -256,11 +247,9 @@ class JdbcTelemetryTest {
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span -> span.hasName("TestDataSource.getConnection")));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"), span -> span.hasName("TestDataSource.getConnection")));
   }
 
   @Test
@@ -280,12 +269,11 @@ class JdbcTelemetryTest {
           connection.rollback();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span -> span.hasName("COMMIT"),
-                span -> span.hasName("ROLLBACK")));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span -> span.hasName("COMMIT"),
+            span -> span.hasName("ROLLBACK")));
   }
 
   @Test
@@ -299,11 +287,10 @@ class JdbcTelemetryTest {
 
     testing.runWithSpan("parent", () -> dataSource.getConnection().commit());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span -> span.hasName("COMMIT").satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span -> span.hasName("COMMIT").satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))));
 
     assertDurationMetric(
         testing,
@@ -332,11 +319,10 @@ class JdbcTelemetryTest {
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span -> span.hasName("SELECT").hasAttribute(equalTo(DB_QUERY_TEXT, "SELECT 1;"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span -> span.hasName("SELECT").hasAttribute(equalTo(DB_QUERY_TEXT, "SELECT 1;"))));
   }
 
   @Test
@@ -368,18 +354,17 @@ class JdbcTelemetryTest {
           statement.executeBatch();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span ->
-                    span.hasName("BATCH INSERT test")
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                            equalTo(DB_NAMESPACE, "dbname"),
-                            equalTo(DB_QUERY_TEXT, "INSERT INTO test VALUES(?)"),
-                            equalTo(DB_OPERATION_BATCH_SIZE, 2L),
-                            equalTo(DB_QUERY_SUMMARY, "BATCH INSERT test"),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span ->
+                span.hasName("BATCH INSERT test")
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                        equalTo(DB_NAMESPACE, "dbname"),
+                        equalTo(DB_QUERY_TEXT, "INSERT INTO test VALUES(?)"),
+                        equalTo(DB_OPERATION_BATCH_SIZE, 2L),
+                        equalTo(DB_QUERY_SUMMARY, "BATCH INSERT test"),
+                        equalTo(SERVER_ADDRESS, "127.0.0.1"))));
   }
 }

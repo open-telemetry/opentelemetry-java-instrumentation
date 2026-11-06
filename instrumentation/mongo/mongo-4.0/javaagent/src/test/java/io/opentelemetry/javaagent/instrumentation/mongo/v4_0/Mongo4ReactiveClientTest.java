@@ -138,14 +138,13 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
     CompletableFuture<Object> result = new CompletableFuture<>();
     db.runCommand(command)
         .subscribe(
-            toSubscriber(
-                value -> {
-                  if (value instanceof Throwable) {
-                    result.completeExceptionally((Throwable) value);
-                  } else {
-                    result.complete(value);
-                  }
-                }));
+            toSubscriber(value -> {
+              if (value instanceof Throwable) {
+                result.completeExceptionally((Throwable) value);
+              } else {
+                result.complete(value);
+              }
+            }));
     return (Document) result.get(30, SECONDS);
   }
 
@@ -155,11 +154,10 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
     collection
         .insertOne(new Document("password", "SECRET"))
         .subscribe(
-            toSubscriber(
-                result ->
-                    collection
-                        .estimatedDocumentCount()
-                        .subscribe(toSubscriber(c -> count.complete(((Long) c))))));
+            toSubscriber(result ->
+                collection
+                    .estimatedDocumentCount()
+                    .subscribe(toSubscriber(c -> count.complete(((Long) c))))));
     return count.get(30, SECONDS);
   }
 
@@ -196,13 +194,12 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
             new BsonDocument("password", new BsonString("OLDPW")),
             new BsonDocument("$set", new BsonDocument("password", new BsonString("NEWPW"))))
         .subscribe(
-            toSubscriber(
-                updateResult -> {
-                  result.complete(((UpdateResult) updateResult));
-                  collection
-                      .estimatedDocumentCount()
-                      .subscribe(toSubscriber(o -> count.complete(((Long) o))));
-                }));
+            toSubscriber(updateResult -> {
+              result.complete(((UpdateResult) updateResult));
+              collection
+                  .estimatedDocumentCount()
+                  .subscribe(toSubscriber(o -> count.complete(((Long) o))));
+            }));
     return result.get(30, SECONDS).getModifiedCount();
   }
 
@@ -238,13 +235,12 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
     collection
         .deleteOne(new BsonDocument("password", new BsonString("SECRET")))
         .subscribe(
-            toSubscriber(
-                deleteResult -> {
-                  result.complete(((DeleteResult) deleteResult));
-                  collection
-                      .estimatedDocumentCount()
-                      .subscribe(toSubscriber(o -> count.complete(((Long) o))));
-                }));
+            toSubscriber(deleteResult -> {
+              result.complete(((DeleteResult) deleteResult));
+              collection
+                  .estimatedDocumentCount()
+                  .subscribe(toSubscriber(o -> count.complete(((Long) o))));
+            }));
     return result.get(30, SECONDS).getDeletedCount();
   }
 

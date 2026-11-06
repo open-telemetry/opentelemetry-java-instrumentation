@@ -30,11 +30,10 @@ class KafkaMetricsDefaultEnablementTest extends KafkaClientBaseTest {
         "parent",
         () -> producer.send(new ProducerRecord<>(SHARED_TOPIC, 10, "hello")).get(5, SECONDS));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span -> span.hasName("send " + SHARED_TOPIC).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span -> span.hasName("send " + SHARED_TOPIC).hasParent(trace.getSpan(0))));
 
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
@@ -46,10 +45,9 @@ class KafkaMetricsDefaultEnablementTest extends KafkaClientBaseTest {
           INSTRUMENTATION_NAME, "kafka.producer.record_send_rate", metrics -> metrics.isNotEmpty());
     } else {
       assertThat(testing.metrics())
-          .noneMatch(
-              metric ->
-                  metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
-                      && metric.getName().startsWith("kafka."));
+          .noneMatch(metric ->
+              metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
+                  && metric.getName().startsWith("kafka."));
     }
   }
 }

@@ -294,19 +294,17 @@ class LettuceNetworkAttributesGetterTest {
     ExecutorService executor = Executors.newFixedThreadPool(2);
     try {
       Future<Boolean> first =
-          executor.submit(
-              () -> {
-                ready.countDown();
-                release.await();
-                return LettuceCommandPeer.markSpanStarted(command);
-              });
+          executor.submit(() -> {
+            ready.countDown();
+            release.await();
+            return LettuceCommandPeer.markSpanStarted(command);
+          });
       Future<Boolean> second =
-          executor.submit(
-              () -> {
-                ready.countDown();
-                release.await();
-                return LettuceCommandPeer.markSpanStarted(command);
-              });
+          executor.submit(() -> {
+            ready.countDown();
+            release.await();
+            return LettuceCommandPeer.markSpanStarted(command);
+          });
 
       assertThat(ready.await(10, SECONDS)).isTrue();
       release.countDown();

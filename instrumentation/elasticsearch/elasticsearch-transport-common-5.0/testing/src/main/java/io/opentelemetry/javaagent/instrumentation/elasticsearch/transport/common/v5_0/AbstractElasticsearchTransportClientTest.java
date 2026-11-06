@@ -100,20 +100,17 @@ public abstract class AbstractElasticsearchTransportClientTest
 
     assertThat(clusterHealthStatus.name()).isEqualTo("GREEN");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(spanName("cluster:monitor/health"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            clusterHealthAttributes(getAddress(), serverPort())),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName(spanName("cluster:monitor/health"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        clusterHealthAttributes(getAddress(), serverPort())),
+            span ->
+                span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   protected List<AttributeAssertion> clusterHealthAttributes(
@@ -189,39 +186,33 @@ public abstract class AbstractElasticsearchTransportClientTest
             equalTo(stringKey("elasticsearch.request.indices"), experimental("invalid-index")));
 
     assertions.add(equalTo(ERROR_TYPE, "org.elasticsearch.index.IndexNotFoundException"));
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(expectedException),
-                span ->
-                    span.hasName(spanName("indices:data/read/get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            EXCEPTION_TYPE,
-                                            RemoteTransportException.class.getName()),
-                                        satisfies(
-                                            EXCEPTION_MESSAGE,
-                                            val -> val.contains("indices:data/read/get")),
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE,
-                                            val -> val.contains("IndexNotFoundException"))))
-                        .hasAttributesSatisfyingExactly(assertions),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(expectedException),
+            span ->
+                span.hasName(spanName("indices:data/read/get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasEventsSatisfyingExactly(event ->
+                        event
+                            .hasName("exception")
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(EXCEPTION_TYPE, RemoteTransportException.class.getName()),
+                                satisfies(
+                                    EXCEPTION_MESSAGE,
+                                    val -> val.contains("indices:data/read/get")),
+                                satisfies(
+                                    EXCEPTION_STACKTRACE,
+                                    val -> val.contains("IndexNotFoundException"))))
+                    .hasAttributesSatisfyingExactly(assertions),
+            span ->
+                span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   protected String getPutMappingActionName() {
@@ -271,95 +262,85 @@ public abstract class AbstractElasticsearchTransportClientTest
             spanName("indices:data/write/index"),
             spanName("indices:data/read/get")),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(spanName("indices:admin/create"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            addNetworkTypeAttribute(
-                                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
-                                equalTo(NETWORK_PEER_PORT, getPort()),
-                                equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
-                                equalTo(DB_OPERATION_NAME, "indices:admin/create"),
-                                equalTo(
-                                    stringKey("elasticsearch.action"),
-                                    experimental("CreateIndexAction")),
-                                equalTo(
-                                    stringKey("elasticsearch.request"),
-                                    experimental("CreateIndexRequest")),
-                                equalTo(
-                                    stringKey("elasticsearch.request.indices"),
-                                    experimental(indexName))))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(getPutMappingWireActionName())
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(spanName("indices:admin/create"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        addNetworkTypeAttribute(
+                            equalTo(NETWORK_PEER_ADDRESS, getAddress()),
+                            equalTo(NETWORK_PEER_PORT, getPort()),
                             equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
-                            equalTo(DB_OPERATION_NAME, getPutMappingWireActionName()),
+                            equalTo(DB_OPERATION_NAME, "indices:admin/create"),
                             equalTo(
                                 stringKey("elasticsearch.action"),
-                                experimental(getPutMappingActionName())),
+                                experimental("CreateIndexAction")),
                             equalTo(
                                 stringKey("elasticsearch.request"),
-                                experimental("PutMappingRequest")))),
+                                experimental("CreateIndexRequest")),
+                            equalTo(
+                                stringKey("elasticsearch.request.indices"),
+                                experimental(indexName))))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(spanName("indices:data/write/index"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            addNetworkTypeAttribute(
-                                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
-                                equalTo(NETWORK_PEER_PORT, getPort()),
-                                equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
-                                equalTo(DB_OPERATION_NAME, "indices:data/write/index"),
-                                equalTo(
-                                    stringKey("elasticsearch.action"), experimental("IndexAction")),
-                                equalTo(
-                                    stringKey("elasticsearch.request"),
-                                    experimental("IndexRequest")),
-                                equalTo(
-                                    stringKey("elasticsearch.request.indices"),
-                                    experimental(indexName)),
-                                equalTo(
-                                    stringKey("elasticsearch.request.write.type"),
-                                    experimental(indexType)),
-                                equalTo(
-                                    longKey("elasticsearch.response.status"), experimental(201)),
-                                equalTo(
-                                    longKey("elasticsearch.shard.replication.total"),
-                                    experimental(2)),
-                                equalTo(
-                                    longKey("elasticsearch.shard.replication.successful"),
-                                    experimental(1)),
-                                equalTo(
-                                    longKey("elasticsearch.shard.replication.failed"),
-                                    experimental(0)),
-                                equalTo(
-                                    longKey("elasticsearch.request.write.version"),
-                                    hasWriteVersion() ? experimental(-3) : null)))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(getPutMappingWireActionName())
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                        equalTo(DB_OPERATION_NAME, getPutMappingWireActionName()),
+                        equalTo(
+                            stringKey("elasticsearch.action"),
+                            experimental(getPutMappingActionName())),
+                        equalTo(
+                            stringKey("elasticsearch.request"),
+                            experimental("PutMappingRequest")))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(spanName("indices:data/write/index"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        addNetworkTypeAttribute(
+                            equalTo(NETWORK_PEER_ADDRESS, getAddress()),
+                            equalTo(NETWORK_PEER_PORT, getPort()),
+                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_OPERATION_NAME, "indices:data/write/index"),
+                            equalTo(stringKey("elasticsearch.action"), experimental("IndexAction")),
+                            equalTo(
+                                stringKey("elasticsearch.request"), experimental("IndexRequest")),
+                            equalTo(
+                                stringKey("elasticsearch.request.indices"),
+                                experimental(indexName)),
+                            equalTo(
+                                stringKey("elasticsearch.request.write.type"),
+                                experimental(indexType)),
+                            equalTo(longKey("elasticsearch.response.status"), experimental(201)),
+                            equalTo(
+                                longKey("elasticsearch.shard.replication.total"), experimental(2)),
+                            equalTo(
+                                longKey("elasticsearch.shard.replication.successful"),
+                                experimental(1)),
+                            equalTo(
+                                longKey("elasticsearch.shard.replication.failed"), experimental(0)),
+                            equalTo(
+                                longKey("elasticsearch.request.write.version"),
+                                hasWriteVersion() ? experimental(-3) : null)))),
         // moved here by sorting, chronologically happens before PutMappingAction
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(spanName("indices:data/read/get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            getActionAttributes(indexName, indexType, id, -1))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(spanName("indices:data/read/get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        getActionAttributes(indexName, indexType, id, -1))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(spanName("indices:data/read/get"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            getActionAttributes(indexName, indexType, id, 1))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(spanName("indices:data/read/get"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        getActionAttributes(indexName, indexType, id, 1))));
   }
 
   private List<AttributeAssertion> getActionAttributes(

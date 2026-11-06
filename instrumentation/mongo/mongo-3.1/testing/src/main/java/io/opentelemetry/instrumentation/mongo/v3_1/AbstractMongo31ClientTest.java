@@ -218,11 +218,10 @@ public abstract class AbstractMongo31ClientTest
     cleanup.deferCleanup(client);
 
     assertThatExceptionOfType(MongoTimeoutException.class)
-        .isThrownBy(
-            () -> {
-              MongoDatabase db = client.getDatabase("test_db");
-              db.createCollection(createCollectionName());
-            });
+        .isThrownBy(() -> {
+          MongoDatabase db = client.getDatabase("test_db");
+          db.createCollection(createCollectionName());
+        });
     // Unfortunately not caught by our instrumentation.
     assertThat(testing().spans()).isEmpty();
   }

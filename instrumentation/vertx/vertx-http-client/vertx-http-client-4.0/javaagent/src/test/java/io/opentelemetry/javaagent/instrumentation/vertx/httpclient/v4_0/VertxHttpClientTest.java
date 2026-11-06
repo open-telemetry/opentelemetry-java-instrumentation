@@ -91,17 +91,15 @@ class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientReques
     CompletableFuture<Integer> future = new CompletableFuture<>();
 
     request
-        .compose(
-            req ->
-                req.send()
-                    .onComplete(
-                        asyncResult -> {
-                          if (asyncResult.succeeded()) {
-                            future.complete(asyncResult.result().statusCode());
-                          } else {
-                            future.completeExceptionally(asyncResult.cause());
-                          }
-                        }))
+        .compose(req ->
+            req.send()
+                .onComplete(asyncResult -> {
+                  if (asyncResult.succeeded()) {
+                    future.complete(asyncResult.result().statusCode());
+                  } else {
+                    future.completeExceptionally(asyncResult.cause());
+                  }
+                }))
         .onFailure(future::completeExceptionally);
 
     return future;
@@ -159,14 +157,13 @@ class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientReques
               CompletableFuture<Integer> result = new CompletableFuture<>();
               request
                   .response()
-                  .onComplete(
-                      asyncResult -> {
-                        if (asyncResult.succeeded()) {
-                          result.complete(asyncResult.result().statusCode());
-                        } else {
-                          result.completeExceptionally(asyncResult.cause());
-                        }
-                      });
+                  .onComplete(asyncResult -> {
+                    if (asyncResult.succeeded()) {
+                      result.complete(asyncResult.result().statusCode());
+                    } else {
+                      result.completeExceptionally(asyncResult.cause());
+                    }
+                  });
 
               // Flush the request head before ending the request, so the headers (and the injected
               // trace context) are written on sendHead() and end() is a genuine second call.
@@ -178,27 +175,25 @@ class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientReques
 
     assertThat(responseCode).isEqualTo(200);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span -> span.hasKind(CLIENT).hasParent(trace.getSpan(0)),
-                span -> span.hasKind(SERVER).hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span -> span.hasKind(CLIENT).hasParent(trace.getSpan(0)),
+            span -> span.hasKind(SERVER).hasParent(trace.getSpan(1))));
   }
 
   @Test
   void responseCallbacksRetainCallerContextAndParentFollowupRequest() throws Exception {
     CompletableFuture<HttpServerResponse> pendingResponse = new CompletableFuture<>();
-    startHttp2Server(
-        request -> {
-          if (request.path().equals("/first")) {
-            HttpServerResponse response = request.response().setChunked(true);
-            response.write("body");
-            pendingResponse.complete(response);
-          } else {
-            request.response().end("followup");
-          }
-        });
+    startHttp2Server(request -> {
+      if (request.path().equals("/first")) {
+        HttpServerResponse response = request.response().setChunked(true);
+        response.write("body");
+        pendingResponse.complete(response);
+      } else {
+        request.response().end("followup");
+      }
+    });
 
     HttpClientRequest request = newHttp2Request("/first");
     HttpClientRequest followupRequest = newHttp2Request("/followup");
@@ -210,14 +205,13 @@ class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientReques
             () -> {
               request
                   .response()
-                  .onComplete(
-                      asyncResult -> {
-                        if (asyncResult.succeeded()) {
-                          responseFuture.complete(asyncResult.result());
-                        } else {
-                          responseFuture.completeExceptionally(asyncResult.cause());
-                        }
-                      });
+                  .onComplete(asyncResult -> {
+                    if (asyncResult.succeeded()) {
+                      responseFuture.complete(asyncResult.result());
+                    } else {
+                      responseFuture.completeExceptionally(asyncResult.cause());
+                    }
+                  });
               request.end();
               return Span.current().getSpanContext();
             });
@@ -229,66 +223,60 @@ class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientReques
     CompletableFuture<Void> followupCompleted = new CompletableFuture<>();
 
     assertThat(Span.current().getSpanContext()).isNotEqualTo(callerContext);
-    response.handler(
-        body -> {
-          if (bodyContext.complete(Span.current().getSpanContext())) {
-            followupRequest
-                .response()
-                .onComplete(
-                    asyncResult -> {
-                      if (asyncResult.succeeded()) {
-                        asyncResult
-                            .result()
-                            .end()
-                            .onComplete(
-                                endResult -> {
-                                  if (endResult.succeeded()) {
-                                    followupCompleted.complete(null);
-                                  } else {
-                                    followupCompleted.completeExceptionally(endResult.cause());
-                                  }
-                                });
+    response.handler(body -> {
+      if (bodyContext.complete(Span.current().getSpanContext())) {
+        followupRequest
+            .response()
+            .onComplete(asyncResult -> {
+              if (asyncResult.succeeded()) {
+                asyncResult
+                    .result()
+                    .end()
+                    .onComplete(endResult -> {
+                      if (endResult.succeeded()) {
+                        followupCompleted.complete(null);
                       } else {
-                        followupCompleted.completeExceptionally(asyncResult.cause());
+                        followupCompleted.completeExceptionally(endResult.cause());
                       }
                     });
-            followupRequest.end();
-          }
-        });
+              } else {
+                followupCompleted.completeExceptionally(asyncResult.cause());
+              }
+            });
+        followupRequest.end();
+      }
+    });
     response.endHandler(ignored -> endContext.complete(Span.current().getSpanContext()));
     response.customFrameHandler(ignored -> frameContext.complete(Span.current().getSpanContext()));
 
     HttpServerResponse serverResponse = pendingResponse.get(30, SECONDS);
-    vertx.runOnContext(
-        ignored -> {
-          serverResponse.writeCustomFrame(0xf, 0, Buffer.buffer());
-          serverResponse.end("end");
-        });
+    vertx.runOnContext(ignored -> {
+      serverResponse.writeCustomFrame(0xf, 0, Buffer.buffer());
+      serverResponse.end("end");
+    });
 
     assertThat(bodyContext.get(30, SECONDS)).isEqualTo(callerContext);
     assertThat(endContext.get(30, SECONDS)).isEqualTo(callerContext);
     assertThat(frameContext.get(30, SECONDS)).isEqualTo(callerContext);
     followupCompleted.get(30, SECONDS);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span -> span.hasKind(CLIENT).hasParent(trace.getSpan(0)),
-                span -> span.hasKind(CLIENT).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span -> span.hasKind(CLIENT).hasParent(trace.getSpan(0)),
+            span -> span.hasKind(CLIENT).hasParent(trace.getSpan(0))));
   }
 
   @Test
   void concurrentHttp2ResponseCallbacksRetainTheirParentContexts() throws Exception {
     ConcurrentMap<String, HttpServerResponse> pendingResponses = new ConcurrentHashMap<>();
-    startHttp2Server(
-        request -> {
-          HttpServerResponse response = request.response().setChunked(true);
-          pendingResponses.put(request.path(), response);
-          if (pendingResponses.size() == 2) {
-            pendingResponses.values().forEach(responseToWrite -> responseToWrite.write("body"));
-          }
-        });
+    startHttp2Server(request -> {
+      HttpServerResponse response = request.response().setChunked(true);
+      pendingResponses.put(request.path(), response);
+      if (pendingResponses.size() == 2) {
+        pendingResponses.values().forEach(responseToWrite -> responseToWrite.write("body"));
+      }
+    });
 
     HttpClientRequest firstRequest = newHttp2Request("/first");
     HttpClientRequest secondRequest = newHttp2Request("/second");
@@ -301,14 +289,13 @@ class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientReques
             () -> {
               firstRequest
                   .response()
-                  .onComplete(
-                      asyncResult -> {
-                        if (asyncResult.succeeded()) {
-                          firstResponseFuture.complete(asyncResult.result());
-                        } else {
-                          firstResponseFuture.completeExceptionally(asyncResult.cause());
-                        }
-                      });
+                  .onComplete(asyncResult -> {
+                    if (asyncResult.succeeded()) {
+                      firstResponseFuture.complete(asyncResult.result());
+                    } else {
+                      firstResponseFuture.completeExceptionally(asyncResult.cause());
+                    }
+                  });
               firstRequest.end();
               return Span.current().getSpanContext();
             });
@@ -318,14 +305,13 @@ class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientReques
             () -> {
               secondRequest
                   .response()
-                  .onComplete(
-                      asyncResult -> {
-                        if (asyncResult.succeeded()) {
-                          secondResponseFuture.complete(asyncResult.result());
-                        } else {
-                          secondResponseFuture.completeExceptionally(asyncResult.cause());
-                        }
-                      });
+                  .onComplete(asyncResult -> {
+                    if (asyncResult.succeeded()) {
+                      secondResponseFuture.complete(asyncResult.result());
+                    } else {
+                      secondResponseFuture.completeExceptionally(asyncResult.cause());
+                    }
+                  });
               secondRequest.end();
               return Span.current().getSpanContext();
             });
@@ -360,12 +346,11 @@ class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientReques
   @Test
   void responseExceptionHandlerRetainsCallerContext() throws Exception {
     CompletableFuture<HttpServerResponse> pendingResponse = new CompletableFuture<>();
-    startHttp2Server(
-        request -> {
-          HttpServerResponse response = request.response().setChunked(true);
-          response.write("partial");
-          pendingResponse.complete(response);
-        });
+    startHttp2Server(request -> {
+      HttpServerResponse response = request.response().setChunked(true);
+      response.write("partial");
+      pendingResponse.complete(response);
+    });
 
     HttpClientRequest request = newHttp2Request("/failure");
     CompletableFuture<HttpClientResponse> responseFuture = new CompletableFuture<>();
@@ -375,14 +360,13 @@ class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientReques
             () -> {
               request
                   .response()
-                  .onComplete(
-                      asyncResult -> {
-                        if (asyncResult.succeeded()) {
-                          responseFuture.complete(asyncResult.result());
-                        } else {
-                          responseFuture.completeExceptionally(asyncResult.cause());
-                        }
-                      });
+                  .onComplete(asyncResult -> {
+                    if (asyncResult.succeeded()) {
+                      responseFuture.complete(asyncResult.result());
+                    } else {
+                      responseFuture.completeExceptionally(asyncResult.cause());
+                    }
+                  });
               request.end();
               return Span.current().getSpanContext();
             });
@@ -395,11 +379,10 @@ class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientReques
     vertx.runOnContext(ignored -> serverResponse.reset(8));
 
     assertThat(failureContext.get(30, SECONDS)).isEqualTo(callerContext);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span -> span.hasKind(CLIENT).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span -> span.hasKind(CLIENT).hasParent(trace.getSpan(0))));
   }
 
   private void startHttp2Server(Handler<HttpServerRequest> requestHandler) throws Exception {

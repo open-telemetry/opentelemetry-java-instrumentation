@@ -75,9 +75,8 @@ class OpenTelemetryAppenderLoggerContextSelectorTest {
 
     log();
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
   }
 
   @Test
@@ -88,9 +87,8 @@ class OpenTelemetryAppenderLoggerContextSelectorTest {
 
     log();
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("request-id"), "123")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("request-id"), "123")));
   }
 
   @Test
@@ -113,9 +111,8 @@ class OpenTelemetryAppenderLoggerContextSelectorTest {
 
     log();
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
   }
 
   @Test
@@ -128,9 +125,8 @@ class OpenTelemetryAppenderLoggerContextSelectorTest {
 
     log();
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
     assertThat(warnings()).isEmpty();
   }
 
@@ -143,10 +139,9 @@ class OpenTelemetryAppenderLoggerContextSelectorTest {
 
     log();
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(stringKey("key1"), "value1"), equalTo(stringKey("key2"), "value2")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(stringKey("key1"), "value1"), equalTo(stringKey("key2"), "value2")));
     assertThat(warnings()).containsExactly(DEPRECATED_LOGGER_CONTEXT_ATTRIBUTES_WARNING);
   }
 

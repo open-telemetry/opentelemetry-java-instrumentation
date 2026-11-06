@@ -37,12 +37,11 @@ class AsyncOpenTelemetryAppenderTest {
         .filteredOn(status -> status.getOrigin() instanceof OpenTelemetryAppender)
         .filteredOn(status -> status.getMessage().contains("is downstream of AsyncAppender"))
         .singleElement()
-        .satisfies(
-            status ->
-                assertThat(status.getMessage())
-                    .contains(
-                        "OpenTelemetryAppender 'OpenTelemetry' is downstream of AsyncAppender"
-                            + " 'AsyncAppender'"));
+        .satisfies(status ->
+            assertThat(status.getMessage())
+                .contains(
+                    "OpenTelemetryAppender 'OpenTelemetry' is downstream of AsyncAppender"
+                        + " 'AsyncAppender'"));
     logger.info("log message 1");
 
     testing.waitAndAssertLogRecords(logRecord -> logRecord.hasBody("log message 1"));

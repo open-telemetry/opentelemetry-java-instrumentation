@@ -84,39 +84,37 @@ class WrapperTest extends AbstractWrapperTest {
             producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));
           },
           trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("poll " + SHARED_TOPIC)
-                          .hasKind(SpanKind.CLIENT)
-                          .hasNoParent()
-                          .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
-                          .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
+              trace.hasSpansSatisfyingExactly(span ->
+                  span.hasName("poll " + SHARED_TOPIC)
+                      .hasKind(SpanKind.CLIENT)
+                      .hasNoParent()
+                      .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
+                      .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
       assertMessagingMetrics();
     } else {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                  span ->
-                      span.hasName("send " + SHARED_TOPIC)
-                          .hasKind(SpanKind.PRODUCER)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              sendAttributes(testHeaders, testExperimental)),
-                  span ->
-                      span.hasName("process " + SHARED_TOPIC)
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(
-                              processAttributes(greeting, testHeaders, testExperimental)),
-                  span ->
-                      span.hasName("process child")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(2)),
-                  span ->
-                      span.hasName("producer callback")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(0))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span ->
+                  span.hasName("send " + SHARED_TOPIC)
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          sendAttributes(testHeaders, testExperimental)),
+              span ->
+                  span.hasName("process " + SHARED_TOPIC)
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(1))
+                      .hasAttributesSatisfyingExactly(
+                          processAttributes(greeting, testHeaders, testExperimental)),
+              span ->
+                  span.hasName("process child")
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasParent(trace.getSpan(2)),
+              span ->
+                  span.hasName("producer callback")
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasParent(trace.getSpan(0))));
       assertMessagingMetricsWithoutReceiveTelemetry();
     }
   }
@@ -236,30 +234,27 @@ class WrapperTest extends AbstractWrapperTest {
     Consumer<?, ?> wrappedConsumer = telemetry.instrument(mockConsumer);
     assertThatThrownBy(() -> wrappedConsumer.poll(Duration.ofSeconds(10))).isSameAs(error);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("poll")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(emitExceptionAsSpanEvents() ? error : null)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "kafka"),
-                            equalTo(MESSAGING_OPERATION_NAME, "poll"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
-                            equalTo(ERROR_TYPE, IllegalStateException.class.getName()),
-                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("poll")
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasStatus(StatusData.error())
+                .hasException(emitExceptionAsSpanEvents() ? error : null)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("messaging.system.name"), "kafka"),
+                    equalTo(MESSAGING_OPERATION_NAME, "poll"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                    equalTo(ERROR_TYPE, IllegalStateException.class.getName()),
+                    equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0))));
 
     if (emitExceptionAsLogs()) {
-      testing.waitAndAssertLogRecords(
-          logRecord ->
-              logRecord
-                  .hasSeverity(Severity.WARN)
-                  .hasEventName("messaging.receive.exception")
-                  .hasException(error)
-                  .hasTotalAttributeCount(3));
+      testing.waitAndAssertLogRecords(logRecord ->
+          logRecord
+              .hasSeverity(Severity.WARN)
+              .hasEventName("messaging.receive.exception")
+              .hasException(error)
+              .hasTotalAttributeCount(3));
     }
   }
 }

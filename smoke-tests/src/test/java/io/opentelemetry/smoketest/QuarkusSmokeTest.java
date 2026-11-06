@@ -19,11 +19,10 @@ class QuarkusSmokeTest extends AbstractSmokeTest<Integer> {
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
     options
-        .image(
-            jdk ->
-                String.format(
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk%s-%s",
-                    jdk, TestImageVersions.QUARKUS_VERSION))
+        .image(jdk ->
+            String.format(
+                "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk%s-%s",
+                jdk, TestImageVersions.QUARKUS_VERSION))
         .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Listening on.*"))
         .setServiceName(false);
   }
@@ -35,16 +34,13 @@ class QuarkusSmokeTest extends AbstractSmokeTest<Integer> {
 
     client().get("/hello").aggregate().join();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET /hello")
-                        .hasResourceSatisfying(
-                            resource -> {
-                              resource
-                                  .hasAttribute(TELEMETRY_DISTRO_VERSION, getAgentVersion())
-                                  .hasAttribute(SERVICE_NAME, "quarkus");
-                            })));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("GET /hello")
+                .hasResourceSatisfying(resource -> {
+                  resource
+                      .hasAttribute(TELEMETRY_DISTRO_VERSION, getAgentVersion())
+                      .hasAttribute(SERVICE_NAME, "quarkus");
+                })));
   }
 }

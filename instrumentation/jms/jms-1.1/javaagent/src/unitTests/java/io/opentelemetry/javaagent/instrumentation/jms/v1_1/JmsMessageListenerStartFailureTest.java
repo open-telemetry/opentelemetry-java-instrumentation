@@ -32,10 +32,9 @@ class JmsMessageListenerStartFailureTest {
     IllegalStateException failure = new IllegalStateException("failure");
 
     try (Scope ignored = throwingContext(failure).makeCurrent()) {
-      assertThatThrownBy(
-              () ->
-                  JmsMessageListenerInstrumentation.MessageListenerAdvice.AdviceScope.start(
-                      listener, message))
+      assertThatThrownBy(() ->
+              JmsMessageListenerInstrumentation.MessageListenerAdvice.AdviceScope.start(
+                  listener, message))
           .isSameAs(failure);
     }
 

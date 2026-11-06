@@ -260,24 +260,22 @@ public final class KafkaInstrumenterFactory {
   private static <REQUEST> void addConsumedMessagesIfNoReceiveOperation(
       InstrumenterBuilder<REQUEST, Void> builder, ToLongFunction<REQUEST> messageCounter) {
     builder
-        .addContextCustomizer(
-            (context, request, startAttributes) -> {
-              long consumedMessagesCount =
-                  KafkaConsumerContextUtil.hasReceiveOperation(context)
-                      ? 0
-                      : messageCounter.applyAsLong(request);
-              return context.with(CONSUMED_MESSAGES_COUNT_KEY, consumedMessagesCount);
-            })
+        .addContextCustomizer((context, request, startAttributes) -> {
+          long consumedMessagesCount =
+              KafkaConsumerContextUtil.hasReceiveOperation(context)
+                  ? 0
+                  : messageCounter.applyAsLong(request);
+          return context.with(CONSUMED_MESSAGES_COUNT_KEY, consumedMessagesCount);
+        })
         .addOperationMetrics(consumedMessagesMetrics);
   }
 
   private static void addReceiveConsumedMessages(
       InstrumenterBuilder<KafkaReceiveRequest, Void> builder) {
     builder
-        .addContextCustomizer(
-            (context, request, startAttributes) ->
-                context.with(
-                    CONSUMED_MESSAGES_COUNT_KEY, countConsumedMessages(request.getRecordList())))
+        .addContextCustomizer((context, request, startAttributes) ->
+            context.with(
+                CONSUMED_MESSAGES_COUNT_KEY, countConsumedMessages(request.getRecordList())))
         .addOperationMetrics(consumedMessagesMetrics);
   }
 

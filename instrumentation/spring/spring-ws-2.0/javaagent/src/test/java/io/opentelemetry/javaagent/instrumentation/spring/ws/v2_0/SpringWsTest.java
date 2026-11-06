@@ -124,24 +124,22 @@ class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplicationCo
     assertThat(response.getMessage()).isEqualTo("Hello Test");
 
     if (CONTROLLER_TELEMETRY) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasNoParent().hasName("POST /xyz/ws/*").hasKind(SpanKind.SERVER),
-                  span ->
-                      span.hasParent(trace.getSpan(0))
-                          .hasName("HelloEndpoint." + methodName)
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(
-                                  CODE_FUNCTION_NAME,
-                                  "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint."
-                                      + methodName))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasNoParent().hasName("POST /xyz/ws/*").hasKind(SpanKind.SERVER),
+              span ->
+                  span.hasParent(trace.getSpan(0))
+                      .hasName("HelloEndpoint." + methodName)
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(
+                              CODE_FUNCTION_NAME,
+                              "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint."
+                                  + methodName))));
     } else {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasNoParent().hasName("POST /xyz/ws/*").hasKind(SpanKind.SERVER)));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasNoParent().hasName("POST /xyz/ws/*").hasKind(SpanKind.SERVER)));
     }
   }
 
@@ -154,46 +152,40 @@ class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplicationCo
 
     Exception expectedException = new Exception("hello exception");
     if (CONTROLLER_TELEMETRY) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasNoParent()
-                          .hasName("POST /xyz/ws/*")
-                          .hasKind(SpanKind.SERVER)
-                          .hasStatus(StatusData.error()),
-                  span ->
-                      span.hasParent(trace.getSpan(0))
-                          .hasName("HelloEndpoint." + methodName)
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasStatus(StatusData.error())
-                          .hasEventsSatisfyingExactly(
-                              event ->
-                                  event
-                                      .hasName("exception")
-                                      .hasAttributesSatisfyingExactly(
-                                          equalTo(
-                                              EXCEPTION_TYPE,
-                                              expectedException.getClass().getCanonicalName()),
-                                          equalTo(
-                                              EXCEPTION_MESSAGE, expectedException.getMessage()),
-                                          satisfies(
-                                              EXCEPTION_STACKTRACE,
-                                              val -> val.isInstanceOf(String.class))))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(
-                                  CODE_FUNCTION_NAME,
-                                  "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint."
-                                      + methodName))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasNoParent()
+                      .hasName("POST /xyz/ws/*")
+                      .hasKind(SpanKind.SERVER)
+                      .hasStatus(StatusData.error()),
+              span ->
+                  span.hasParent(trace.getSpan(0))
+                      .hasName("HelloEndpoint." + methodName)
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasStatus(StatusData.error())
+                      .hasEventsSatisfyingExactly(event ->
+                          event
+                              .hasName("exception")
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(
+                                      EXCEPTION_TYPE,
+                                      expectedException.getClass().getCanonicalName()),
+                                  equalTo(EXCEPTION_MESSAGE, expectedException.getMessage()),
+                                  satisfies(
+                                      EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(
+                              CODE_FUNCTION_NAME,
+                              "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint."
+                                  + methodName))));
     } else {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasNoParent()
-                          .hasName("POST /xyz/ws/*")
-                          .hasKind(SpanKind.SERVER)
-                          .hasStatus(StatusData.error())));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(span ->
+              span.hasNoParent()
+                  .hasName("POST /xyz/ws/*")
+                  .hasKind(SpanKind.SERVER)
+                  .hasStatus(StatusData.error())));
     }
   }
 }

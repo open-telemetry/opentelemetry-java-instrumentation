@@ -21,14 +21,13 @@ class Netty41ClientTest extends AbstractNetty41ClientTest {
 
   @RegisterExtension
   static final Netty41ClientExtension clientExtension =
-      new Netty41ClientExtension(
-          channelPipeline ->
-              channelPipeline.addLast(
-                  NettyClientTelemetry.builder(testing.getOpenTelemetry())
-                      .setRequestHeaders(TEST_HEADERS)
-                      .setResponseHeaders(TEST_HEADERS)
-                      .build()
-                      .createCombinedHandler()));
+      new Netty41ClientExtension(channelPipeline ->
+          channelPipeline.addLast(
+              NettyClientTelemetry.builder(testing.getOpenTelemetry())
+                  .setRequestHeaders(TEST_HEADERS)
+                  .setResponseHeaders(TEST_HEADERS)
+                  .build()
+                  .createCombinedHandler()));
 
   @Override
   protected Netty41ClientExtension clientExtension() {

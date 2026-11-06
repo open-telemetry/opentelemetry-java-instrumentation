@@ -94,27 +94,24 @@ class AwsLambdaApiGatewayHandlerTest {
     assertThat(result.getBody()).isEqualTo("hello world");
     assertThat(result.getStatusCode()).isEqualTo(201);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("PUT /hello/{param}")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                        .hasKind(SpanKind.SERVER)
-                        .hasTraceId("ee13e7026227ebf4c74278ae29691d7a")
-                        .hasParentSpanId("0000000000000456")
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("faas.invocation.id"), "1-22-2024"),
-                            equalTo(FAAS_TRIGGER, "http"),
-                            equalTo(HTTP_REQUEST_METHOD, "PUT"),
-                            equalTo(URL_PATH, "/hello/world"),
-                            equalTo(URL_SCHEME, "http"),
-                            equalTo(HTTP_ROUTE, "/hello/{param}"),
-                            equalTo(USER_AGENT_ORIGINAL, "Clever Client"),
-                            equalTo(
-                                URL_FULL, "http://localhost:2024/hello/world?q=value&sig=REDACTED"),
-                            equalTo(URL_QUERY, "q=value&sig=REDACTED"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("PUT /hello/{param}")
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                .hasKind(SpanKind.SERVER)
+                .hasTraceId("ee13e7026227ebf4c74278ae29691d7a")
+                .hasParentSpanId("0000000000000456")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("faas.invocation.id"), "1-22-2024"),
+                    equalTo(FAAS_TRIGGER, "http"),
+                    equalTo(HTTP_REQUEST_METHOD, "PUT"),
+                    equalTo(URL_PATH, "/hello/world"),
+                    equalTo(URL_SCHEME, "http"),
+                    equalTo(HTTP_ROUTE, "/hello/{param}"),
+                    equalTo(USER_AGENT_ORIGINAL, "Clever Client"),
+                    equalTo(URL_FULL, "http://localhost:2024/hello/world?q=value&sig=REDACTED"),
+                    equalTo(URL_QUERY, "q=value&sig=REDACTED"),
+                    equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
   }
 
   @ParameterizedTest
@@ -126,50 +123,42 @@ class AwsLambdaApiGatewayHandlerTest {
         new TestRequestHandlerApiGateway().handleRequest(input, context);
     assertThat(result.getStatusCode()).isEqualTo(statusCode);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.SERVER)
-                        .hasStatus(statusCode >= 500 ? StatusData.error() : StatusData.unset())
-                        .hasEventsSatisfyingExactly()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("faas.invocation.id"), "1-22-2024"),
-                            equalTo(FAAS_TRIGGER, "http"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, statusCode),
-                            equalTo(
-                                ERROR_TYPE,
-                                statusCode >= 500 ? Integer.toString(statusCode) : null))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(SpanKind.SERVER)
+                .hasStatus(statusCode >= 500 ? StatusData.error() : StatusData.unset())
+                .hasEventsSatisfyingExactly()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("faas.invocation.id"), "1-22-2024"),
+                    equalTo(FAAS_TRIGGER, "http"),
+                    equalTo(HTTP_RESPONSE_STATUS_CODE, statusCode),
+                    equalTo(ERROR_TYPE, statusCode >= 500 ? Integer.toString(statusCode) : null))));
   }
 
   @Test
   void classifiesHttpException() {
     Throwable thrown =
-        catchThrowable(
-            () ->
-                new TestRequestHandlerApiGateway()
-                    .handleRequest(new APIGatewayProxyRequestEvent().withBody("error"), context));
+        catchThrowable(() ->
+            new TestRequestHandlerApiGateway()
+                .handleRequest(new APIGatewayProxyRequestEvent().withBody("error"), context));
     assertThat(thrown).isInstanceOf(IllegalStateException.class);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.error())
-                        .hasException(emitExceptionAsSpanEvents() ? thrown : null)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("faas.invocation.id"), "1-22-2024"),
-                            equalTo(FAAS_TRIGGER, "http"),
-                            equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(SpanKind.SERVER)
+                .hasStatus(StatusData.error())
+                .hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("faas.invocation.id"), "1-22-2024"),
+                    equalTo(FAAS_TRIGGER, "http"),
+                    equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
     if (emitExceptionAsLogs()) {
-      testing.waitAndAssertLogRecords(
-          logRecord ->
-              logRecord
-                  .hasSeverity(Severity.ERROR)
-                  .hasEventName("faas.invocation.exception")
-                  .hasException(thrown)
-                  .hasTotalAttributeCount(3));
+      testing.waitAndAssertLogRecords(logRecord ->
+          logRecord
+              .hasSeverity(Severity.ERROR)
+              .hasEventName("faas.invocation.exception")
+              .hasException(thrown)
+              .hasTotalAttributeCount(3));
     }
   }
 

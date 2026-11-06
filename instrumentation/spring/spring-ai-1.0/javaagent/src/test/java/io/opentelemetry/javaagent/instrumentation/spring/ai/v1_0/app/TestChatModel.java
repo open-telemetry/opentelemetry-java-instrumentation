@@ -71,11 +71,10 @@ public class TestChatModel implements ChatModel {
     if (deferredStreamDelegate != null) {
       return Flux.defer(() -> deferredStreamDelegate.stream(prompt));
     }
-    return Flux.defer(
-        () -> {
-          lastSpanContext = Span.current().getSpanContext();
-          return streamPublisher;
-        });
+    return Flux.defer(() -> {
+      lastSpanContext = Span.current().getSpanContext();
+      return streamPublisher;
+    });
   }
 
   // getDefaultOptions() is deprecated for removal in spring-ai 2, but the instrumentation calls it

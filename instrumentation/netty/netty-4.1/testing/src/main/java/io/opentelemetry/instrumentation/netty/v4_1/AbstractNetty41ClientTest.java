@@ -107,13 +107,9 @@ public abstract class AbstractNetty41ClientTest
     optionsBuilder.setHttpAttributes(AbstractNetty41ClientTest::getHttpAttributes);
     optionsBuilder.setExpectedClientSpanNameMapper(
         AbstractNetty41ClientTest::getExpectedClientSpanName);
-    optionsBuilder.setSingleConnectionFactory(
-        (host, port) ->
-            new SingleNettyConnection(
-                clientExtension().buildBootstrap(false, false),
-                host,
-                port,
-                this::configureChannel));
+    optionsBuilder.setSingleConnectionFactory((host, port) ->
+        new SingleNettyConnection(
+            clientExtension().buildBootstrap(false, false), host, port, this::configureChannel));
 
     optionsBuilder.disableTestRedirects();
     optionsBuilder.spanEndsAfterBody();
@@ -174,10 +170,9 @@ public abstract class AbstractNetty41ClientTest
     Thread.sleep(1_000);
     channel.close();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasNoParent(),
-                span -> span.hasName("test-http-server").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasNoParent(),
+            span -> span.hasName("test-http-server").hasParent(trace.getSpan(0))));
   }
 }

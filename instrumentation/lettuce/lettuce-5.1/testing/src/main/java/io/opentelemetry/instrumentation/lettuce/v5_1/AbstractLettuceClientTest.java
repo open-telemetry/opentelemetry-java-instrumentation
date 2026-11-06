@@ -106,18 +106,15 @@ public abstract class AbstractLettuceClientTest {
             "io.opentelemetry.lettuce-5.1",
             "db.client.operation.duration",
             metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.containsPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasCount(1)
-                                                .hasAttributesSatisfying(
-                                                    equalTo(DB_OPERATION_NAME, operation),
-                                                    equalTo(ERROR_TYPE, errorType))))));
+                metrics.anySatisfy(metric ->
+                    assertThat(metric)
+                        .hasHistogramSatisfying(histogram ->
+                            histogram.containsPointsSatisfying(point ->
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfying(
+                                        equalTo(DB_OPERATION_NAME, operation),
+                                        equalTo(ERROR_TYPE, errorType))))));
   }
 
   protected String spanName(String operation) {

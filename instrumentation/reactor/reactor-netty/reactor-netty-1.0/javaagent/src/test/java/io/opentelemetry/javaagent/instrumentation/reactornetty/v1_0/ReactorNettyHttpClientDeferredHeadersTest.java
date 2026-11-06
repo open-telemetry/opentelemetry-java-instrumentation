@@ -31,11 +31,10 @@ class ReactorNettyHttpClientDeferredHeadersTest extends AbstractReactorNettyHttp
     HttpClient client =
         createHttpClient()
             .followRedirect(true)
-            .headersWhen(
-                h -> {
-                  headers.forEach(h::add);
-                  return Mono.just(h);
-                })
+            .headersWhen(h -> {
+              headers.forEach(h::add);
+              return Mono.just(h);
+            })
             .baseUrl(resolveAddress("").toString());
     if (uri.getPath().endsWith("/read-timeout")) {
       client = client.responseTimeout(READ_TIMEOUT);

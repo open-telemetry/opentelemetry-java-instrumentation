@@ -44,20 +44,18 @@ public final class MessagingMetricsAssertions {
   public static void assertNoMetric(
       InstrumentationExtension testing, String instrumentationName, String metricName) {
     assertThat(testing.metrics())
-        .noneMatch(
-            metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(instrumentationName)
-                    && metric.getName().equals(metricName));
+        .noneMatch(metric ->
+            metric.getInstrumentationScopeInfo().getName().equals(instrumentationName)
+                && metric.getName().equals(metricName));
   }
 
   private static void verifyCounter(MetricData metric, long value, Attributes attributes) {
     assertThat(metric.getLongSumData().getPoints())
         .singleElement()
-        .satisfies(
-            point -> {
-              assertThat(point.getValue()).isEqualTo(value);
-              assertThat(point.getAttributes()).isEqualTo(attributes);
-            });
+        .satisfies(point -> {
+          assertThat(point.getValue()).isEqualTo(value);
+          assertThat(point.getAttributes()).isEqualTo(attributes);
+        });
   }
 
   private static void verifyHistogram(MetricData metric, Attributes... attributes) {

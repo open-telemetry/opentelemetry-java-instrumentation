@@ -15,7 +15,7 @@ class PortAllocatorTest {
 
   @Test
   void testSimple() {
-    PortAllocator portAllocator = getPortAllocator((port) -> true);
+    PortAllocator portAllocator = getPortAllocator(port -> true);
     int next = PortAllocator.RANGE_MIN + 1;
     for (int i = 0; i < 1000; i++) {
       assertThat(portAllocator.getPort()).isEqualTo(next);
@@ -32,7 +32,7 @@ class PortAllocatorTest {
 
   @Test
   void testEven() {
-    PortAllocator portAllocator = getPortAllocator((port) -> port % 2 == 0);
+    PortAllocator portAllocator = getPortAllocator(port -> port % 2 == 0);
     int next = PortAllocator.RANGE_MIN + 2;
     for (int i = 0; i < 1000; i++) {
       assertThat(portAllocator.getPort()).isEqualTo(next);

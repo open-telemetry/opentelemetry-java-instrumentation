@@ -97,14 +97,13 @@ abstract class AbstractArquillianJaxWsTest {
     assertThat(doc.selectFirst("message").text()).isEqualTo("Hello Test");
 
     String methodName = "hello";
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertServerSpan(span, serverSpanName(service, methodName)).hasNoParent(),
-                span -> assertHandlerSpan(span, service, methodName).hasParent(trace.getSpan(0)),
-                span ->
-                    assertAnnotationHandlerSpan(span, service, methodName)
-                        .hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> assertServerSpan(span, serverSpanName(service, methodName)).hasNoParent(),
+            span -> assertHandlerSpan(span, service, methodName).hasParent(trace.getSpan(0)),
+            span ->
+                assertAnnotationHandlerSpan(span, service, methodName)
+                    .hasParent(trace.getSpan(1))));
   }
 
   private String serverSpanName(String service, String operation) {

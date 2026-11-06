@@ -51,13 +51,12 @@ final class TracingStreamedResponse<T> implements StreamResponse<T> {
       boolean chunkReceived;
       try {
         chunkReceived =
-            delegateSpliterator.tryAdvance(
-                chunk -> {
-                  listener.onChunk(chunk);
-                  inAction[0] = true;
-                  action.accept(chunk);
-                  inAction[0] = false;
-                });
+            delegateSpliterator.tryAdvance(chunk -> {
+              listener.onChunk(chunk);
+              inAction[0] = true;
+              action.accept(chunk);
+              inAction[0] = false;
+            });
       } catch (Throwable t) {
         // Reading or parsing a later chunk failed: record it on the span rather than leaving
         // close() to end it without an error. A failure thrown by the caller's own action is

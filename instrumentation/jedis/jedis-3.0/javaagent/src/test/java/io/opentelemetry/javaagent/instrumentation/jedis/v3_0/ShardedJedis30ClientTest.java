@@ -96,31 +96,29 @@ class ShardedJedis30ClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + configuredTarget)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(SERVER_ADDRESS, configuredTarget),
-                            equalTo(NETWORK_PEER_ADDRESS, shardIp),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SET " + configuredTarget)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                        equalTo(DB_OPERATION_NAME, "SET"),
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(SERVER_ADDRESS, configuredTarget),
+                        equalTo(NETWORK_PEER_ADDRESS, shardIp),
+                        satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + configuredTarget)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "GET foo"),
-                            equalTo(DB_OPERATION_NAME, "GET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(SERVER_ADDRESS, configuredTarget),
-                            equalTo(NETWORK_PEER_ADDRESS, shardIp),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("GET " + configuredTarget)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "GET foo"),
+                        equalTo(DB_OPERATION_NAME, "GET"),
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(SERVER_ADDRESS, configuredTarget),
+                        equalTo(NETWORK_PEER_ADDRESS, shardIp),
+                        satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
   }
 
   @Test
@@ -129,20 +127,18 @@ class ShardedJedis30ClientTest {
 
     shard.set("all-shards", "bar");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + configuredTarget)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET all-shards ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(SERVER_ADDRESS, configuredTarget),
-                            equalTo(NETWORK_PEER_ADDRESS, shardIp),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SET " + configuredTarget)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_QUERY_TEXT, "SET all-shards ?"),
+                    equalTo(DB_OPERATION_NAME, "SET"),
+                    equalTo(DB_NAMESPACE, "0"),
+                    equalTo(SERVER_ADDRESS, configuredTarget),
+                    equalTo(NETWORK_PEER_ADDRESS, shardIp),
+                    satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
 
     assertDurationMetric(
         testing,
@@ -158,15 +154,11 @@ class ShardedJedis30ClientTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasAttribute(SERVER_ADDRESS, configuredTarget)
-                                    .hasAttributesSatisfying(
-                                        attributes ->
-                                            assertThat(attributes.asMap())
-                                                .doesNotContainKey(SERVER_PORT)))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasAttribute(SERVER_ADDRESS, configuredTarget)
+                            .hasAttributesSatisfying(attributes ->
+                                assertThat(attributes.asMap()).doesNotContainKey(SERVER_PORT)))));
   }
 }

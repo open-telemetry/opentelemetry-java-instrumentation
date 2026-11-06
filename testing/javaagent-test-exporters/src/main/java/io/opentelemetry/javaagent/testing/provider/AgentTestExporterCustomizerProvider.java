@@ -41,19 +41,18 @@ public class AgentTestExporterCustomizerProvider
   public void customize(DeclarativeConfigurationCustomizer customizer) {
     TestExportersUtil.initTestExporters();
 
-    customizer.addModelCustomizer(
-        model -> {
-          if (model.getTracerProvider() == null) {
-            addTracerProvider(model);
-          }
-          if (model.getLoggerProvider() == null) {
-            addLoggerProvider(model);
-          }
-          if (model.getMeterProvider() == null) {
-            addMeterProvider(model);
-          }
-          return model;
-        });
+    customizer.addModelCustomizer(model -> {
+      if (model.getTracerProvider() == null) {
+        addTracerProvider(model);
+      }
+      if (model.getLoggerProvider() == null) {
+        addLoggerProvider(model);
+      }
+      if (model.getMeterProvider() == null) {
+        addMeterProvider(model);
+      }
+      return model;
+    });
   }
 
   private static void addTracerProvider(OpenTelemetryConfigurationModel model) {

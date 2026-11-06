@@ -78,14 +78,13 @@ final class ChatCompletionEventsHelper {
         }
         assistantMsg
             .toolCalls()
-            .ifPresent(
-                toolCalls -> {
-                  List<Value<?>> toolCallsJson =
-                      toolCalls.stream()
-                          .map(call -> buildToolCallEventObject(call, captureMessageContent))
-                          .collect(toList());
-                  body.put("tool_calls", Value.of(toolCallsJson));
-                });
+            .ifPresent(toolCalls -> {
+              List<Value<?>> toolCallsJson =
+                  toolCalls.stream()
+                      .map(call -> buildToolCallEventObject(call, captureMessageContent))
+                      .collect(toList());
+              body.put("tool_calls", Value.of(toolCallsJson));
+            });
       } else if (msg.isTool()) {
         ChatCompletionToolMessageParam toolMsg = msg.asTool();
         eventType = "gen_ai.tool.message";
@@ -119,16 +118,15 @@ final class ChatCompletionEventsHelper {
       return content.asText();
     } else if (content.isArrayOfContentParts()) {
       return content.asArrayOfContentParts().stream()
-          .map(
-              part -> {
-                if (part.isText()) {
-                  return part.asText().text();
-                }
-                if (part.isRefusal()) {
-                  return part.asRefusal().refusal();
-                }
-                return null;
-              })
+          .map(part -> {
+            if (part.isText()) {
+              return part.asText().text();
+            }
+            if (part.isRefusal()) {
+              return part.asRefusal().refusal();
+            }
+            return null;
+          })
           .filter(Objects::nonNull)
           .collect(joining());
     } else {
@@ -186,15 +184,14 @@ final class ChatCompletionEventsHelper {
       }
       choiceMsg
           .toolCalls()
-          .ifPresent(
-              toolCalls -> {
-                message.put(
-                    "tool_calls",
-                    Value.of(
-                        toolCalls.stream()
-                            .map(call -> buildToolCallEventObject(call, captureMessageContent))
-                            .collect(toList())));
-              });
+          .ifPresent(toolCalls -> {
+            message.put(
+                "tool_calls",
+                Value.of(
+                    toolCalls.stream()
+                        .map(call -> buildToolCallEventObject(call, captureMessageContent))
+                        .collect(toList())));
+          });
       emitCompletionLogEvent(
           context,
           eventLogger,

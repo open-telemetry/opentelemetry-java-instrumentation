@@ -80,15 +80,13 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             builder.operationListenerAttributesExtractors.add(
                 requireNonNull(
                     operationListenerAttributesExtractor, "operationListenerAttributesExtractor")));
-    Experimental.internalSetExceptionEventExtractor(
-        (builder, exceptionEventExtractor) ->
-            builder.exceptionEventExtractor =
-                requireNonNull(exceptionEventExtractor, "exceptionEventExtractor"));
-    Experimental.internalSetSpanSuppressionStrategy(
-        (builder, strategy) ->
-            builder.spanSuppressionStrategy =
-                SpanSuppressionStrategy.fromProgrammatic(
-                    requireNonNull(strategy, "spanSuppressionStrategy")));
+    Experimental.internalSetExceptionEventExtractor((builder, exceptionEventExtractor) ->
+        builder.exceptionEventExtractor =
+            requireNonNull(exceptionEventExtractor, "exceptionEventExtractor"));
+    Experimental.internalSetSpanSuppressionStrategy((builder, strategy) ->
+        builder.spanSuppressionStrategy =
+            SpanSuppressionStrategy.fromProgrammatic(
+                requireNonNull(strategy, "spanSuppressionStrategy")));
   }
 
   InstrumenterBuilder(
@@ -392,11 +390,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     return attributesExtractors.stream()
         .filter(SpanKeyProvider.class::isInstance)
         .map(SpanKeyProvider.class::cast)
-        .flatMap(
-            provider -> {
-              SpanKey spanKey = provider.internalGetSpanKey();
-              return spanKey == null ? Stream.of() : Stream.of(spanKey);
-            })
+        .flatMap(provider -> {
+          SpanKey spanKey = provider.internalGetSpanKey();
+          return spanKey == null ? Stream.of() : Stream.of(spanKey);
+        })
         .collect(toSet());
   }
 

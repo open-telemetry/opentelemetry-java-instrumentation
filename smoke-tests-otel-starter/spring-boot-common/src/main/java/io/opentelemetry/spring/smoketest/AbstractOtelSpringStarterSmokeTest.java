@@ -108,37 +108,32 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
     @Order(1)
     AutoConfigurationCustomizerProvider hiddenPropagatorCustomizer() {
       return customizer ->
-          customizer.addResourceCustomizer(
-              (resource, config) ->
-                  resource.merge(
-                      Resource.create(
-                          Attributes.of(booleanKey("keyFromResourceCustomizer"), false))));
+          customizer.addResourceCustomizer((resource, config) ->
+              resource.merge(
+                  Resource.create(Attributes.of(booleanKey("keyFromResourceCustomizer"), false))));
     }
 
     @Bean
     @Order(2)
     AutoConfigurationCustomizerProvider propagatorCustomizer() {
       return customizer ->
-          customizer.addResourceCustomizer(
-              (resource, config) ->
-                  resource.merge(
-                      Resource.create(
-                          Attributes.of(booleanKey("keyFromResourceCustomizer"), true))));
+          customizer.addResourceCustomizer((resource, config) ->
+              resource.merge(
+                  Resource.create(Attributes.of(booleanKey("keyFromResourceCustomizer"), true))));
     }
 
     @Bean
     AutoConfigurationCustomizerProvider customizerUsingPropertyDefinedInaSpringFile() {
       return customizer ->
-          customizer.addResourceCustomizer(
-              (resource, config) -> {
-                String valueForKeyDeclaredZsEnvVariable = config.getString("APPLICATION_PROP");
-                assertThat(valueForKeyDeclaredZsEnvVariable).isNotEmpty();
+          customizer.addResourceCustomizer((resource, config) -> {
+            String valueForKeyDeclaredZsEnvVariable = config.getString("APPLICATION_PROP");
+            assertThat(valueForKeyDeclaredZsEnvVariable).isNotEmpty();
 
-                String valueForKeyWithDash = config.getString("application.prop-with-dash");
-                assertThat(valueForKeyWithDash).isNotEmpty();
+            String valueForKeyWithDash = config.getString("application.prop-with-dash");
+            assertThat(valueForKeyWithDash).isNotEmpty();
 
-                return resource;
-              });
+            return resource;
+          });
     }
   }
 
@@ -184,13 +179,12 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
     testing.waitAndAssertTraces(
         traceAssert ->
-            traceAssert.hasSpansSatisfyingExactly(
-                spanDataAssert ->
-                    spanDataAssert
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttribute(
-                            DB_QUERY_TEXT,
-                            "create table customer (id bigint not null, name varchar not null, primary key (id))")),
+            traceAssert.hasSpansSatisfyingExactly(spanDataAssert ->
+                spanDataAssert
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttribute(
+                        DB_QUERY_TEXT,
+                        "create table customer (id bigint not null, name varchar not null, primary key (id))")),
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
                 clientSpan ->
@@ -203,12 +197,11 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                 serverSpan ->
                     HttpSpanDataAssert.create(serverSpan)
                         .assertServerGetRequest("/ping")
-                        .hasResourceSatisfying(
-                            r ->
-                                r.hasAttribute(booleanKey("keyFromResourceCustomizer"), true)
-                                    .hasAttribute(stringKey("attributeFromYaml"), "true")
-                                    .hasAttribute(
-                                        satisfies(SERVICE_INSTANCE_ID, val -> val.isNotBlank())))
+                        .hasResourceSatisfying(r ->
+                            r.hasAttribute(booleanKey("keyFromResourceCustomizer"), true)
+                                .hasAttribute(stringKey("attributeFromYaml"), "true")
+                                .hasAttribute(
+                                    satisfies(SERVICE_INSTANCE_ID, val -> val.isNotBlank())))
                         .hasAttributesSatisfying(
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
@@ -242,12 +235,9 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
       // GraalVM native image does not support buffer pools - have to investigate why
       runtimeMetrics.add("jvm.buffer.memory.used");
     }
-    runtimeMetrics.forEach(
-        metricName ->
-            testing.waitAndAssertMetrics(
-                "io.opentelemetry.runtime-telemetry",
-                metricName,
-                AbstractIterableAssert::isNotEmpty));
+    runtimeMetrics.forEach(metricName ->
+        testing.waitAndAssertMetrics(
+            "io.opentelemetry.runtime-telemetry", metricName, AbstractIterableAssert::isNotEmpty));
 
     assertAdditionalMetrics();
 
@@ -325,37 +315,34 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
         });
 
     // 1 is not replaced by ?, otel.instrumentation.common.db.query-sanitization.enabled=false
-    testing.waitAndAssertTraces(
-        traceAssert ->
-            traceAssert.hasSpansSatisfyingExactly(
-                span -> span.hasName("server"),
-                span ->
-                    span.hasKind(SpanKind.CLIENT)
-                        .hasAttribute(DB_QUERY_TEXT, "select name from customer where id = 1")));
+    testing.waitAndAssertTraces(traceAssert ->
+        traceAssert.hasSpansSatisfyingExactly(
+            span -> span.hasName("server"),
+            span ->
+                span.hasKind(SpanKind.CLIENT)
+                    .hasAttribute(DB_QUERY_TEXT, "select name from customer where id = 1")));
   }
 
   @Test
   void restTemplate() {
     restTemplateCall(OtelSpringStarterSmokeTestController.PING);
 
-    testing.waitAndAssertTraces(
-        traceAssert ->
-            traceAssert.hasSpansSatisfyingExactly(
-                span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/ping"),
-                span -> span.hasKind(SpanKind.SERVER).hasAttribute(HTTP_ROUTE, "/ping"),
-                span -> withSpanAssert(span)));
+    testing.waitAndAssertTraces(traceAssert ->
+        traceAssert.hasSpansSatisfyingExactly(
+            span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/ping"),
+            span -> span.hasKind(SpanKind.SERVER).hasAttribute(HTTP_ROUTE, "/ping"),
+            span -> withSpanAssert(span)));
   }
 
   @Test
   void shouldRedactSomeUrlParameters() {
     restTemplateCall("/test?X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0");
 
-    testing.waitAndAssertTraces(
-        traceAssert ->
-            traceAssert.hasSpansSatisfyingExactly(
-                span ->
-                    HttpSpanDataAssert.create(span)
-                        .assertClientGetRequest("/test?X-Goog-Signature=REDACTED"),
-                span -> span.hasKind(SpanKind.SERVER).hasAttribute(HTTP_ROUTE, "/test")));
+    testing.waitAndAssertTraces(traceAssert ->
+        traceAssert.hasSpansSatisfyingExactly(
+            span ->
+                HttpSpanDataAssert.create(span)
+                    .assertClientGetRequest("/test?X-Goog-Signature=REDACTED"),
+            span -> span.hasKind(SpanKind.SERVER).hasAttribute(HTTP_ROUTE, "/test")));
   }
 }

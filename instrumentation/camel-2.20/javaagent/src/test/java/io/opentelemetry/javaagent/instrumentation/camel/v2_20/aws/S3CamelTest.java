@@ -58,9 +58,8 @@ class S3CamelTest {
             trace.hasSpansSatisfyingExactly(
                 span -> AwsSpanAssertions.sqs(span, "SQS.ListQueues").hasNoParent()),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    AwsSpanAssertions.s3(span, "S3.ListObjects", bucketName, "GET").hasNoParent()),
+            trace.hasSpansSatisfyingExactly(span ->
+                AwsSpanAssertions.s3(span, "S3.ListObjects", bucketName, "GET").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> CamelSpanAssertions.direct(span, "input"),
@@ -77,10 +76,9 @@ class S3CamelTest {
                         .hasParent(trace.getSpan(2))),
         // camel cleaning received msg
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl, queueName)
-                        .hasNoParent()));
+            trace.hasSpansSatisfyingExactly(span ->
+                AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl, queueName)
+                    .hasNoParent()));
 
     camelApp.stop();
     awsConnector.deleteBucket(bucketName);
@@ -109,34 +107,26 @@ class S3CamelTest {
       String queueUrl, String queueName, String bucketName) {
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    AwsSpanAssertions.sqs(span, "SQS.CreateQueue", queueUrl, queueName)
-                        .hasNoParent()),
+            trace.hasSpansSatisfyingExactly(span ->
+                AwsSpanAssertions.sqs(span, "SQS.CreateQueue", queueUrl, queueName).hasNoParent()),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    AwsSpanAssertions.s3(span, "S3.CreateBucket", bucketName, "PUT").hasNoParent()),
+            trace.hasSpansSatisfyingExactly(span ->
+                AwsSpanAssertions.s3(span, "S3.CreateBucket", bucketName, "PUT").hasNoParent()),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    AwsSpanAssertions.sqs(span, "SQS.GetQueueAttributes", queueUrl).hasNoParent()),
+            trace.hasSpansSatisfyingExactly(span ->
+                AwsSpanAssertions.sqs(span, "SQS.GetQueueAttributes", queueUrl).hasNoParent()),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    AwsSpanAssertions.sqs(span, "SQS.SetQueueAttributes", queueUrl).hasNoParent()),
+            trace.hasSpansSatisfyingExactly(span ->
+                AwsSpanAssertions.sqs(span, "SQS.SetQueueAttributes", queueUrl).hasNoParent()),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    AwsSpanAssertions.s3(
-                            span, "S3.SetBucketNotificationConfiguration", bucketName, "PUT")
-                        .hasNoParent()),
+            trace.hasSpansSatisfyingExactly(span ->
+                AwsSpanAssertions.s3(
+                        span, "S3.SetBucketNotificationConfiguration", bucketName, "PUT")
+                    .hasNoParent()),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    AwsSpanAssertions.sqs(
-                            span, "s3SqsCamelTest process", queueUrl, queueName, CONSUMER)
-                        .hasNoParent()));
+            trace.hasSpansSatisfyingExactly(span ->
+                AwsSpanAssertions.sqs(span, "s3SqsCamelTest process", queueUrl, queueName, CONSUMER)
+                    .hasNoParent()));
     testing.clearData();
   }
 }

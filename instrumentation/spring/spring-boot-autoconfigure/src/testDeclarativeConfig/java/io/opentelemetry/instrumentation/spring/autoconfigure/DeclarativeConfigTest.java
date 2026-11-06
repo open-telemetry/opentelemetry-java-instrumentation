@@ -56,15 +56,14 @@ class DeclarativeConfigTest {
     this.contextRunner
         .withUserConfiguration(CustomTracerConfiguration.class)
         .withPropertyValues("otel.file_format=1.1")
-        .run(
-            context ->
-                assertThat(context)
-                    .hasBean("customOpenTelemetry")
-                    .doesNotHaveBean("openTelemetry")
-                    .doesNotHaveBean("otelProperties")
-                    .doesNotHaveBean(ConfigProperties.class)
-                    .getBean("configProvider")
-                    .isEqualTo(ConfigProvider.noop()));
+        .run(context ->
+            assertThat(context)
+                .hasBean("customOpenTelemetry")
+                .doesNotHaveBean("openTelemetry")
+                .doesNotHaveBean("otelProperties")
+                .doesNotHaveBean(ConfigProperties.class)
+                .getBean("configProvider")
+                .isEqualTo(ConfigProvider.noop()));
   }
 
   @Test
@@ -72,29 +71,25 @@ class DeclarativeConfigTest {
       "when Application Context DOES NOT contain OpenTelemetry bean should initialize"
           + " openTelemetry")
   void initializeProvidersAndOpenTelemetry() {
-    this.contextRunner.run(
-        context -> {
-          assertThat(context)
-              .doesNotHaveBean("otelProperties")
-              .doesNotHaveBean(ConfigProperties.class);
-          ConfigProvider configProvider = context.getBean(ConfigProvider.class);
-          DeclarativeConfigProperties config =
-              configProvider.getInstrumentationConfig().getStructured("java").getStructured("foo");
-          assertThat(config.getString("string_key")).isEqualTo("string_value");
-          assertThat(config.getBoolean("bool_key")).isTrue();
-          assertThat(config.getDouble("double_key")).isEqualTo(3.14);
-          assertThat(config.getLong("int_key")).isEqualTo(42);
-        });
+    this.contextRunner.run(context -> {
+      assertThat(context).doesNotHaveBean("otelProperties").doesNotHaveBean(ConfigProperties.class);
+      ConfigProvider configProvider = context.getBean(ConfigProvider.class);
+      DeclarativeConfigProperties config =
+          configProvider.getInstrumentationConfig().getStructured("java").getStructured("foo");
+      assertThat(config.getString("string_key")).isEqualTo("string_value");
+      assertThat(config.getBoolean("bool_key")).isTrue();
+      assertThat(config.getDouble("double_key")).isEqualTo(3.14);
+      assertThat(config.getLong("int_key")).isEqualTo(42);
+    });
   }
 
   @Test
   void configuresDeclarativeSampler() {
-    this.contextRunner.run(
-        context -> {
-          OpenTelemetrySdk sdk = context.getBean("openTelemetry", OpenTelemetrySdk.class);
-          assertThat(sdk.getSdkTracerProvider().getSampler().getDescription())
-              .isEqualTo(Sampler.alwaysOff().getDescription());
-        });
+    this.contextRunner.run(context -> {
+      OpenTelemetrySdk sdk = context.getBean("openTelemetry", OpenTelemetrySdk.class);
+      assertThat(sdk.getSdkTracerProvider().getSampler().getDescription())
+          .isEqualTo(Sampler.alwaysOff().getDescription());
+    });
   }
 
   @Test
@@ -104,34 +99,30 @@ class DeclarativeConfigTest {
   void configProviderReflectsModelCustomizer() {
     this.contextRunner
         .withUserConfiguration(InstrumentationConfigCustomizerConfiguration.class)
-        .run(
-            context ->
-                assertThat(context)
-                    .getBean("configProvider", ConfigProvider.class)
-                    .satisfies(
-                        configProvider -> {
-                          DeclarativeConfigProperties fooConfig =
-                              configProvider
-                                  .getInstrumentationConfig()
-                                  .getStructured("java")
-                                  .getStructured("foo");
-                          assertThat(fooConfig.getString("string_key")).isEqualTo("string_value");
-                          assertThat(
-                                  fooConfig.getString(
-                                      TestInstrumentationConfigCustomizerProvider.CUSTOMIZER_KEY))
-                              .isEqualTo(
-                                  TestInstrumentationConfigCustomizerProvider.CUSTOMIZED_VALUE);
-                        }));
+        .run(context ->
+            assertThat(context)
+                .getBean("configProvider", ConfigProvider.class)
+                .satisfies(configProvider -> {
+                  DeclarativeConfigProperties fooConfig =
+                      configProvider
+                          .getInstrumentationConfig()
+                          .getStructured("java")
+                          .getStructured("foo");
+                  assertThat(fooConfig.getString("string_key")).isEqualTo("string_value");
+                  assertThat(
+                          fooConfig.getString(
+                              TestInstrumentationConfigCustomizerProvider.CUSTOMIZER_KEY))
+                      .isEqualTo(TestInstrumentationConfigCustomizerProvider.CUSTOMIZED_VALUE);
+                }));
   }
 
   @Test
   void configProviderMatchesOpenTelemetryConfigProvider() {
-    this.contextRunner.run(
-        context -> {
-          OpenTelemetry openTelemetry = context.getBean(OpenTelemetry.class);
-          assertThat(context.getBean(ConfigProvider.class))
-              .isSameAs(((ExtendedOpenTelemetry) openTelemetry).getConfigProvider());
-        });
+    this.contextRunner.run(context -> {
+      OpenTelemetry openTelemetry = context.getBean(OpenTelemetry.class);
+      assertThat(context.getBean(ConfigProvider.class))
+          .isSameAs(((ExtendedOpenTelemetry) openTelemetry).getConfigProvider());
+    });
   }
 
   @Test
@@ -149,23 +140,21 @@ class DeclarativeConfigTest {
       key = "OTEL_TRACER_PROVIDER_PROCESSORS_0_BATCH_EXPORTER_OTLP_HTTP_ENDPOINT",
       value = "http://custom:4318/v1/traces")
   void envVarOverrideSpringStyle() {
-    this.contextRunner.run(
-        context ->
-            assertThat(context)
-                .getBean(OpenTelemetry.class)
-                .isNotNull()
-                .satisfies(
-                    o -> {
-                      DeclarativeConfigProperties config =
-                          DeclarativeConfigUtil.getInstrumentationConfig(o, "foo");
-                      assertThat(config.getString("string_key")).isEqualTo("new_value");
-                      assertThat(config.getBoolean("bool_key")).isFalse();
-                      assertThat(config.getDouble("double_key")).isEqualTo(4.14);
-                      assertThat(config.getLong("int_key")).isEqualTo(43);
+    this.contextRunner.run(context ->
+        assertThat(context)
+            .getBean(OpenTelemetry.class)
+            .isNotNull()
+            .satisfies(o -> {
+              DeclarativeConfigProperties config =
+                  DeclarativeConfigUtil.getInstrumentationConfig(o, "foo");
+              assertThat(config.getString("string_key")).isEqualTo("new_value");
+              assertThat(config.getBoolean("bool_key")).isFalse();
+              assertThat(config.getDouble("double_key")).isEqualTo(4.14);
+              assertThat(config.getLong("int_key")).isEqualTo(43);
 
-                      assertThat(o.toString())
-                          .contains("OtlpHttpSpanExporter{endpoint=http://custom:4318/v1/traces");
-                    }));
+              assertThat(o.toString())
+                  .contains("OtlpHttpSpanExporter{endpoint=http://custom:4318/v1/traces");
+            }));
   }
 
   @Test
@@ -175,54 +164,50 @@ class DeclarativeConfigTest {
   @SetEnvironmentVariable(key = "DOUBLE_ENV", value = "3.14")
   @SetEnvironmentVariable(key = "OTEL_EXPORTER_OTLP_ENDPOINT", value = "http://custom:4318")
   void envVarOverrideOtelStyle() {
-    this.contextRunner.run(
-        context ->
-            assertThat(context)
-                .getBean(OpenTelemetry.class)
-                .isNotNull()
-                .satisfies(
-                    o -> {
-                      DeclarativeConfigProperties config =
-                          DeclarativeConfigUtil.getInstrumentationConfig(o, "foo");
-                      assertThat(config.getString("string_key")).isEqualTo("string_value");
-                      assertThat(config.getString("string_key_with_env")).isEqualTo("string_value");
-                      assertThat(config.getString("string_key_with_env_quoted"))
-                          .isEqualTo("string_value");
+    this.contextRunner.run(context ->
+        assertThat(context)
+            .getBean(OpenTelemetry.class)
+            .isNotNull()
+            .satisfies(o -> {
+              DeclarativeConfigProperties config =
+                  DeclarativeConfigUtil.getInstrumentationConfig(o, "foo");
+              assertThat(config.getString("string_key")).isEqualTo("string_value");
+              assertThat(config.getString("string_key_with_env")).isEqualTo("string_value");
+              assertThat(config.getString("string_key_with_env_quoted")).isEqualTo("string_value");
 
-                      assertThat(config.getBoolean("bool_key")).isTrue();
-                      assertThat(config.getBoolean("bool_key_with_env")).isTrue();
-                      assertThat(config.getBoolean("bool_key_with_env_quoted"))
-                          .isTrue(); // quoted "true" works because of coercion
-                      assertThat(config.getString("bool_key_with_env_quoted")).isEqualTo("true");
+              assertThat(config.getBoolean("bool_key")).isTrue();
+              assertThat(config.getBoolean("bool_key_with_env")).isTrue();
+              assertThat(config.getBoolean("bool_key_with_env_quoted"))
+                  .isTrue(); // quoted "true" works because of coercion
+              assertThat(config.getString("bool_key_with_env_quoted")).isEqualTo("true");
 
-                      assertThat(config.getDouble("double_key")).isEqualTo(3.14);
-                      assertThat(config.getDouble("double_key_with_env")).isEqualTo(3.14);
-                      assertThat(config.getDouble("double_key_with_env_quoted"))
-                          .isEqualTo(3.14); // quoted "3.14" works because of coercion
-                      assertThat(config.getString("double_key_with_env_quoted")).isEqualTo("3.14");
-                      assertThat(config.isDouble("double_key_with_env_quoted")).isTrue();
+              assertThat(config.getDouble("double_key")).isEqualTo(3.14);
+              assertThat(config.getDouble("double_key_with_env")).isEqualTo(3.14);
+              assertThat(config.getDouble("double_key_with_env_quoted"))
+                  .isEqualTo(3.14); // quoted "3.14" works because of coercion
+              assertThat(config.getString("double_key_with_env_quoted")).isEqualTo("3.14");
+              assertThat(config.isDouble("double_key_with_env_quoted")).isTrue();
 
-                      assertThat(config.getLong("int_key")).isEqualTo(42);
-                      assertThat(config.getLong("int_key_with_env")).isEqualTo(42);
-                      assertThat(config.getLong("int_key_with_env_quoted"))
-                          .isEqualTo(42); // quoted "42" works because of coercion
-                      assertThat(config.getString("int_key_with_env_quoted")).isEqualTo("42");
-                      assertThat(config.isLong("int_key_with_env_quoted")).isTrue();
-                      assertThat(config.isInt("int_key_with_env_quoted")).isTrue();
+              assertThat(config.getLong("int_key")).isEqualTo(42);
+              assertThat(config.getLong("int_key_with_env")).isEqualTo(42);
+              assertThat(config.getLong("int_key_with_env_quoted"))
+                  .isEqualTo(42); // quoted "42" works because of coercion
+              assertThat(config.getString("int_key_with_env_quoted")).isEqualTo("42");
+              assertThat(config.isLong("int_key_with_env_quoted")).isTrue();
+              assertThat(config.isInt("int_key_with_env_quoted")).isTrue();
 
-                      assertThat(config.isString("int_key_with_env_quoted")).isTrue();
-                      assertThat(config.isBoolean("bool_key_with_env_quoted")).isTrue();
-                      assertThat(config.isBoolean("string_key_with_env_quoted")).isTrue();
-                    }));
+              assertThat(config.isString("int_key_with_env_quoted")).isTrue();
+              assertThat(config.isBoolean("bool_key_with_env_quoted")).isTrue();
+              assertThat(config.isBoolean("string_key_with_env_quoted")).isTrue();
+            }));
   }
 
   @Test
   void shouldInitializeSdkWhenNotDisabled() {
     this.contextRunner
         .withPropertyValues("otel.file_format=1.1", "otel.disabled=false")
-        .run(
-            context ->
-                assertThat(context).getBean("openTelemetry").isInstanceOf(OpenTelemetrySdk.class));
+        .run(context ->
+            assertThat(context).getBean("openTelemetry").isInstanceOf(OpenTelemetrySdk.class));
   }
 
   @Test
@@ -232,14 +217,13 @@ class DeclarativeConfigTest {
             "otel.file_format=1.1",
             "otel.disabled=true",
             "otel.resource.attributes=service.name=workflow-backend-dev,service.version=3c8f9ce9")
-        .run(
-            context -> {
-              assertThat(context)
-                  .doesNotHaveBean("otelProperties")
-                  .doesNotHaveBean(ConfigProperties.class);
-              assertThat(context.getBean(OpenTelemetry.class)).isEqualTo(OpenTelemetry.noop());
-              assertThat(context.getBean(ConfigProvider.class)).isEqualTo(ConfigProvider.noop());
-            });
+        .run(context -> {
+          assertThat(context)
+              .doesNotHaveBean("otelProperties")
+              .doesNotHaveBean(ConfigProperties.class);
+          assertThat(context.getBean(OpenTelemetry.class)).isEqualTo(OpenTelemetry.noop());
+          assertThat(context.getBean(ConfigProvider.class)).isEqualTo(ConfigProvider.noop());
+        });
   }
 
   @Test

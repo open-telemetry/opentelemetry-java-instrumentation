@@ -16,13 +16,12 @@ class ResourceProviderRegistrationTest {
   @Test
   void resourceProvidersAreRegistered() {
     assertThat(ServiceLoader.load(ResourceProvider.class))
-        .filteredOn(
-            provider ->
-                provider
-                    .getClass()
-                    .getPackage()
-                    .getName()
-                    .equals("io.opentelemetry.javaagent.tooling.resources"))
+        .filteredOn(provider ->
+            provider
+                .getClass()
+                .getPackage()
+                .getName()
+                .equals("io.opentelemetry.javaagent.tooling.resources"))
         .extracting(provider -> provider.getClass().getSimpleName())
         .containsExactlyInAnyOrder("DistroResourceProvider");
   }

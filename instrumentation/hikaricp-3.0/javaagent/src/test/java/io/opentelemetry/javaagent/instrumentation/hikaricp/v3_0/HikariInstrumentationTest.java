@@ -74,11 +74,10 @@ class HikariInstrumentationTest extends AbstractHikariInstrumentationTest {
     AtomicReference<String> userMetricsPoolName = new AtomicReference<>();
     HikariDataSource dataSource = newDataSource();
     dataSource.setJdbcUrl("jdbc:postgresql://db.example:5432/orders");
-    dataSource.setMetricsTrackerFactory(
-        (poolName, poolStats) -> {
-          userMetricsPoolName.set(poolName);
-          return new IMetricsTracker() {};
-        });
+    dataSource.setMetricsTrackerFactory((poolName, poolStats) -> {
+      userMetricsPoolName.set(poolName);
+      return new IMetricsTracker() {};
+    });
     startDataSource(dataSource);
 
     try {

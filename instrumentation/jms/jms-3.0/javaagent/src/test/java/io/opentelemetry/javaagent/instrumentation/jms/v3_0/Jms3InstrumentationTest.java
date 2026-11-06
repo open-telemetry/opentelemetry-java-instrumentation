@@ -202,44 +202,40 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
       String spanName,
       boolean hasParentSpan,
       String messageId) {
-    testing.waitAndAssertTraces(
-        trace -> {
-          if (hasParentSpan) {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(spanName)
-                        .hasKind(PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-                            equalTo(MESSAGING_DESTINATION_TEMPORARY, true),
-                            equalTo(MESSAGING_MESSAGE_ID, messageId),
-                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                            equalTo(
-                                ERROR_TYPE,
-                                failure == null ? null : failure.getClass().getName())));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName(spanName)
-                      .hasKind(PRODUCER)
-                      .hasNoParent()
-                      .hasAttributesSatisfying(
-                          equalTo(stringKey("messaging.system.name"), "jms"),
-                          equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-                          equalTo(MESSAGING_OPERATION_NAME, "send"),
-                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                          equalTo(
-                              ERROR_TYPE, failure == null ? null : failure.getClass().getName()));
-                  if (failure != null) {
-                    span.hasStatusSatisfying(status -> status.hasCode(ERROR));
-                  }
-                });
+    testing.waitAndAssertTraces(trace -> {
+      if (hasParentSpan) {
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span ->
+                span.hasName(spanName)
+                    .hasKind(PRODUCER)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "jms"),
+                        equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                        equalTo(MESSAGING_DESTINATION_TEMPORARY, true),
+                        equalTo(MESSAGING_MESSAGE_ID, messageId),
+                        equalTo(MESSAGING_OPERATION_NAME, "send"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                        equalTo(
+                            ERROR_TYPE, failure == null ? null : failure.getClass().getName())));
+      } else {
+        trace.hasSpansSatisfyingExactly(span -> {
+          span.hasName(spanName)
+              .hasKind(PRODUCER)
+              .hasNoParent()
+              .hasAttributesSatisfying(
+                  equalTo(stringKey("messaging.system.name"), "jms"),
+                  equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                  equalTo(MESSAGING_OPERATION_NAME, "send"),
+                  equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                  equalTo(ERROR_TYPE, failure == null ? null : failure.getClass().getName()));
+          if (failure != null) {
+            span.hasStatusSatisfying(status -> status.hasCode(ERROR));
           }
         });
+      }
+    });
 
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
@@ -247,36 +243,30 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
             metric
                 .hasName("messaging.client.operation.duration")
                 .hasUnit("s")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("messaging.system.name"), "jms"),
-                                    equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                    equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                                    equalTo(
-                                        ERROR_TYPE,
-                                        failure == null ? null : failure.getClass().getName())))),
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point.hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "jms"),
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                            equalTo(
+                                ERROR_TYPE,
+                                failure == null ? null : failure.getClass().getName())))),
         metric ->
             metric
                 .hasName("messaging.client.sent.messages")
                 .hasUnit("{message}")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("messaging.system.name"), "jms"),
-                                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                            equalTo(
-                                                ERROR_TYPE,
-                                                failure == null
-                                                    ? null
-                                                    : failure.getClass().getName())))));
+                .hasLongSumSatisfying(sum ->
+                    sum.isMonotonic()
+                        .hasPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("messaging.system.name"), "jms"),
+                                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                    equalTo(
+                                        ERROR_TYPE,
+                                        failure == null ? null : failure.getClass().getName())))));
   }
 
   public static class TestProducer implements MessageProducer {
@@ -402,32 +392,30 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
     assertThat(consumer.getMessageListener()).isSameAs(listener);
 
     String messageId = receivedMessage.get(10, SECONDS).getJMSMessageID();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("producer parent").hasNoParent(),
-                span ->
-                    span.hasKind(PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "durable-topic"),
-                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                            equalTo(MESSAGING_MESSAGE_ID, messageId),
-                            messagingTempDestination(false)),
-                span ->
-                    span.hasKind(CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "durable-topic"),
-                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                            equalTo(MESSAGING_MESSAGE_ID, messageId),
-                            messagingTempDestination(false),
-                            equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("producer parent").hasNoParent(),
+            span ->
+                span.hasKind(PRODUCER)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "jms"),
+                        equalTo(MESSAGING_DESTINATION_NAME, "durable-topic"),
+                        equalTo(MESSAGING_OPERATION_NAME, "send"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                        equalTo(MESSAGING_MESSAGE_ID, messageId),
+                        messagingTempDestination(false)),
+            span ->
+                span.hasKind(CONSUMER)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "jms"),
+                        equalTo(MESSAGING_DESTINATION_NAME, "durable-topic"),
+                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                        equalTo(MESSAGING_MESSAGE_ID, messageId),
+                        messagingTempDestination(false),
+                        equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription"))));
   }
 
   @Test
@@ -459,21 +447,18 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
     registrationSession.createDurableConsumer(topic, "early-listener-subscription");
     consumer.setMessageListener(listener);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, topicName),
-                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                            messagingTempDestination(false),
-                            equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                "early-listener-subscription"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(CONSUMER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("messaging.system.name"), "jms"),
+                    equalTo(MESSAGING_DESTINATION_NAME, topicName),
+                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                    messagingTempDestination(false),
+                    equalTo(
+                        MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "early-listener-subscription"))));
   }
 
   @Test
@@ -495,18 +480,16 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
 
     listener.onMessage(message);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, topicName),
-                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                            messagingTempDestination(false))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(CONSUMER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("messaging.system.name"), "jms"),
+                    equalTo(MESSAGING_DESTINATION_NAME, topicName),
+                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                    messagingTempDestination(false))));
   }
 
   @Test
@@ -532,30 +515,28 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, topicName),
-                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                            messagingTempDestination(false),
-                            equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                "redelivered-message-subscription"))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasKind(CONSUMER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "jms"),
+                        equalTo(MESSAGING_DESTINATION_NAME, topicName),
+                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                        messagingTempDestination(false),
+                        equalTo(
+                            MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                            "redelivered-message-subscription"))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, topicName),
-                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                            messagingTempDestination(false))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasKind(CONSUMER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "jms"),
+                        equalTo(MESSAGING_DESTINATION_NAME, topicName),
+                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                        messagingTempDestination(false))));
   }
 
   @Test
@@ -579,21 +560,19 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
     consumer.setMessageListener(listener);
     consumer.getMessageListener().onMessage(message);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, topicName),
-                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                            messagingTempDestination(false),
-                            equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                "child-classloader-subscription"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(CONSUMER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("messaging.system.name"), "jms"),
+                    equalTo(MESSAGING_DESTINATION_NAME, topicName),
+                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                    messagingTempDestination(false),
+                    equalTo(
+                        MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                        "child-classloader-subscription"))));
   }
 
   private static URLClassLoader childFirstClassLoader(String childClassName) {
@@ -745,20 +724,18 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
     assertThat(providerListener).isSameAs(listener);
     providerListener.onMessage(message);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process shared-listener-topic")
-                        .hasKind(CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "shared-listener-topic"),
-                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                            messagingTempDestination(false),
-                            equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, subscriptionName))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("process shared-listener-topic")
+                .hasKind(CONSUMER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("messaging.system.name"), "jms"),
+                    equalTo(MESSAGING_DESTINATION_NAME, "shared-listener-topic"),
+                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                    messagingTempDestination(false),
+                    equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, subscriptionName))));
   }
 
   @Test
@@ -779,21 +756,18 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
 
     sharedConsumer.getMessageListener().onMessage(message);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "reused-listener-topic"),
-                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                            messagingTempDestination(false),
-                            equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                "reused-listener-subscription"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(CONSUMER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("messaging.system.name"), "jms"),
+                    equalTo(MESSAGING_DESTINATION_NAME, "reused-listener-topic"),
+                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                    messagingTempDestination(false),
+                    equalTo(
+                        MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "reused-listener-subscription"))));
   }
 
   @ParameterizedTest

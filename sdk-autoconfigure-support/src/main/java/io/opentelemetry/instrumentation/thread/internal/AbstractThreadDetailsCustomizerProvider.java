@@ -28,11 +28,10 @@ public abstract class AbstractThreadDetailsCustomizerProvider
 
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
-    customizer.addModelCustomizer(
-        model -> {
-          maybeAddThreadDetailsProcessor(model);
-          return model;
-        });
+    customizer.addModelCustomizer(model -> {
+      maybeAddThreadDetailsProcessor(model);
+      return model;
+    });
   }
 
   private void maybeAddThreadDetailsProcessor(OpenTelemetryConfigurationModel model) {

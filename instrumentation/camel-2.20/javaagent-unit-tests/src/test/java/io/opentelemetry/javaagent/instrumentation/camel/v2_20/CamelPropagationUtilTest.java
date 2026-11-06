@@ -15,6 +15,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.DecoratorRegistry;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -25,6 +26,7 @@ import org.apache.camel.component.aws.sqs.SqsConfiguration;
 import org.apache.camel.component.aws.sqs.SqsEndpoint;
 import org.apache.camel.component.http.HttpComponent;
 import org.apache.camel.component.http.HttpEndpoint;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -32,9 +34,16 @@ class CamelPropagationUtilTest {
 
   @BeforeAll
   static void setUp() {
+    new DecoratorRegistry().forComponent("jms");
+    GlobalOpenTelemetry.resetForTest();
     GlobalOpenTelemetry.set(
         OpenTelemetry.propagating(
             ContextPropagators.create(W3CTraceContextPropagator.getInstance())));
+  }
+
+  @AfterAll
+  static void tearDown() {
+    GlobalOpenTelemetry.resetForTest();
   }
 
   @Test

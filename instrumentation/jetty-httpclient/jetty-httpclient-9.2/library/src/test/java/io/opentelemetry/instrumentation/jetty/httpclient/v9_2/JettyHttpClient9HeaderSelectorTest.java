@@ -101,42 +101,31 @@ class JettyHttpClient9HeaderSelectorTest {
   }
 
   private static void assertCapturedHeaders() {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasAttribute(
-                            stringArrayKey("http.request.header.x-test-request"),
-                            singletonList("request-value"))
-                        .hasAttribute(
-                            stringArrayKey("http.response.header.x-test-response"),
-                            singletonList("response-value"))
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getAttributes().asMap())
-                                    .doesNotContainKey(
-                                        stringArrayKey("http.request.header.x-ignored-request"))
-                                    .doesNotContainKey(
-                                        stringArrayKey(
-                                            "http.response.header.x-ignored-response")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasAttribute(
+                    stringArrayKey("http.request.header.x-test-request"),
+                    singletonList("request-value"))
+                .hasAttribute(
+                    stringArrayKey("http.response.header.x-test-response"),
+                    singletonList("response-value"))
+                .satisfies(spanData ->
+                    assertThat(spanData.getAttributes().asMap())
+                        .doesNotContainKey(stringArrayKey("http.request.header.x-ignored-request"))
+                        .doesNotContainKey(
+                            stringArrayKey("http.response.header.x-ignored-response")))));
   }
 
   private static void assertNoCapturedHeaders() {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasAttributesSatisfying(
-                            attributes ->
-                                attributes.forEach(
-                                    (key, value) ->
-                                        assertThat(key.getKey())
-                                            .doesNotStartWith("http.request.header.")
-                                            .doesNotStartWith("http.response.header.")))
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getAttributes().asMap())
-                                    .doesNotContainKey(
-                                        stringArrayKey("http.request.header.authorization")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasAttributesSatisfying(attributes ->
+                    attributes.forEach((key, value) ->
+                        assertThat(key.getKey())
+                            .doesNotStartWith("http.request.header.")
+                            .doesNotStartWith("http.response.header.")))
+                .satisfies(spanData ->
+                    assertThat(spanData.getAttributes().asMap())
+                        .doesNotContainKey(stringArrayKey("http.request.header.authorization")))));
   }
 }

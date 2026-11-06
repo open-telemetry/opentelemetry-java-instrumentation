@@ -23,18 +23,15 @@ class SchedulingInstrumentationAutoConfigurationTest {
   void instrumentationEnabled() {
     runner
         .withPropertyValues("otel.instrumentation.spring-scheduling.enabled=true")
-        .run(
-            context ->
-                assertThat(context.containsBean("springSchedulingInstrumentationAspect")).isTrue());
+        .run(context ->
+            assertThat(context.containsBean("springSchedulingInstrumentationAspect")).isTrue());
   }
 
   @Test
   void instrumentationDisabled() {
     runner
         .withPropertyValues("otel.instrumentation.spring-scheduling.enabled=false")
-        .run(
-            context ->
-                assertThat(context.containsBean("springSchedulingInstrumentationAspect"))
-                    .isFalse());
+        .run(context ->
+            assertThat(context.containsBean("springSchedulingInstrumentationAspect")).isFalse());
   }
 }

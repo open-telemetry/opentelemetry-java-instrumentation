@@ -78,11 +78,10 @@ class Aws2SqsW3cPropagatorTest extends Aws2SqsTracingTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("Sqs.CreateQueue").hasKind(SpanKind.CLIENT)),
             trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("send testSdkSqs")
-                            .hasKind(SpanKind.PRODUCER)
-                            .hasTotalRecordedLinks(0)));
+                trace.hasSpansSatisfyingExactly(span ->
+                    span.hasName("send testSdkSqs")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasTotalRecordedLinks(0)));
   }
 
   @Test
@@ -122,29 +121,25 @@ class Aws2SqsW3cPropagatorTest extends Aws2SqsTracingTest {
                   span -> span.hasName("create testSdkSqs").hasKind(SpanKind.PRODUCER));
             },
             trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("send testSdkSqs")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasLinksSatisfying(
-                                links ->
-                                    assertThat(links)
-                                        .singleElement()
-                                        .satisfies(
-                                            link ->
-                                                assertThat(link.getSpanContext().getSpanId())
-                                                    .isEqualTo(createSpan.get().getSpanId())))));
+                trace.hasSpansSatisfyingExactly(span ->
+                    span.hasName("send testSdkSqs")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasLinksSatisfying(links ->
+                            assertThat(links)
+                                .singleElement()
+                                .satisfies(link ->
+                                    assertThat(link.getSpanContext().getSpanId())
+                                        .isEqualTo(createSpan.get().getSpanId())))));
 
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageBatchRequest);
     assertThat(response.messages()).hasSize(1);
     // iterate the whole list so that the process scope opened for each message is closed
     response
         .messages()
-        .forEach(
-            message -> {
-              assertThat(message.messageAttributes()).hasSize(10).containsKey("traceparent");
-              assertThat(message.messageAttributes().get("baggage").stringValue())
-                  .isEqualTo("existing=value");
-            });
+        .forEach(message -> {
+          assertThat(message.messageAttributes()).hasSize(10).containsKey("traceparent");
+          assertThat(message.messageAttributes().get("baggage").stringValue())
+              .isEqualTo("existing=value");
+        });
   }
 }

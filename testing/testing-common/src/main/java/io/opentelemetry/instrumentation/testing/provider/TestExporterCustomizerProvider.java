@@ -39,19 +39,18 @@ public class TestExporterCustomizerProvider implements DeclarativeConfigurationC
       // library test runner is not used, so we should not add the test exporters
       return;
     }
-    customizer.addModelCustomizer(
-        model -> {
-          if (model.getTracerProvider() == null) {
-            addTracerProvider(model);
-          }
-          if (model.getLoggerProvider() == null) {
-            addLoggerProvider(model);
-          }
-          if (model.getMeterProvider() == null) {
-            addMeterProvider(model);
-          }
-          return model;
-        });
+    customizer.addModelCustomizer(model -> {
+      if (model.getTracerProvider() == null) {
+        addTracerProvider(model);
+      }
+      if (model.getLoggerProvider() == null) {
+        addLoggerProvider(model);
+      }
+      if (model.getMeterProvider() == null) {
+        addMeterProvider(model);
+      }
+      return model;
+    });
   }
 
   private static void addTracerProvider(OpenTelemetryConfigurationModel model) {

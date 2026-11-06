@@ -131,20 +131,18 @@ class JedisCluster40ClientTest {
   void commandUsesConfiguredClusterNodesAsServerTarget() {
     jedis.ping();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("PING " + configuredTarget)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "PING"),
-                            equalTo(DB_OPERATION_NAME, "PING"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(SERVER_ADDRESS, configuredTarget),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("PING " + configuredTarget)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_QUERY_TEXT, "PING"),
+                    equalTo(DB_OPERATION_NAME, "PING"),
+                    equalTo(DB_NAMESPACE, "0"),
+                    equalTo(SERVER_ADDRESS, configuredTarget),
+                    equalTo(NETWORK_PEER_PORT, port),
+                    equalTo(NETWORK_PEER_ADDRESS, ip))));
   }
 
   @ParameterizedTest
@@ -179,55 +177,45 @@ class JedisCluster40ClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("EVAL " + host + ":" + port)
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getAttributes().get(ERROR_TYPE))
-                                    .isEqualTo(fail ? "WRONGTYPE" : null))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("EVAL " + host + ":" + port)
+                    .satisfies(spanData ->
+                        assertThat(spanData.getAttributes().get(ERROR_TYPE))
+                            .isEqualTo(fail ? "WRONGTYPE" : null))),
         trace ->
             trace.hasSpansSatisfyingExactly(span -> span.hasName("CLUSTER " + host + ":" + port)),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("EVAL " + host + ":" + port)
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getAttributes().get(ERROR_TYPE)).isNull())));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("EVAL " + host + ":" + port)
+                    .satisfies(spanData ->
+                        assertThat(spanData.getAttributes().get(ERROR_TYPE)).isNull())));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jedis-4.0",
         "db.client.operation.duration",
         metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .filteredOn(
-                            point -> "EVAL".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                        .anySatisfy(
-                            point ->
-                                assertThat(point.getAttributes().get(ERROR_TYPE))
-                                    .isEqualTo(fail ? "WRONGTYPE" : null))));
+            metrics.anySatisfy(metric ->
+                assertThat(metric.getHistogramData().getPoints())
+                    .filteredOn(
+                        point -> "EVAL".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                    .anySatisfy(point ->
+                        assertThat(point.getAttributes().get(ERROR_TYPE))
+                            .isEqualTo(fail ? "WRONGTYPE" : null))));
 
     testing.clearData();
     assertThat(cluster.get(key)).isEqualTo("attempted");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + host + ":" + port)
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getAttributes().get(ERROR_TYPE)).isNull())));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("GET " + host + ":" + port)
+                .satisfies(
+                    spanData -> assertThat(spanData.getAttributes().get(ERROR_TYPE)).isNull())));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jedis-4.0",
         "db.client.operation.duration",
         metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .allSatisfy(
-                            point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull())));
+            metrics.anySatisfy(metric ->
+                assertThat(metric.getHistogramData().getPoints())
+                    .allSatisfy(
+                        point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull())));
   }
 
   @Test
@@ -248,17 +236,14 @@ class JedisCluster40ClientTest {
     testing.clearData();
 
     await()
-        .untilAsserted(
-            () ->
-                assertThat(testing.spans())
-                    .filteredOn(span -> span.getName().startsWith("CLUSTER"))
-                    .isNotEmpty()
-                    .allSatisfy(
-                        span -> {
-                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                              .isEqualTo(configuredTarget);
-                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                        }));
+        .untilAsserted(() ->
+            assertThat(testing.spans())
+                .filteredOn(span -> span.getName().startsWith("CLUSTER"))
+                .isNotEmpty()
+                .allSatisfy(span -> {
+                  assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo(configuredTarget);
+                  assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+                }));
   }
 
   private static Connection getConnection() {
@@ -270,22 +255,21 @@ class JedisCluster40ClientTest {
   }
 
   private static void assertPingTrace(TraceAssert trace) {
-    trace.hasSpansSatisfyingExactly(
-        span ->
-            span.hasName("PING " + configuredTarget)
-                .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM_NAME, REDIS),
-                    equalTo(DB_QUERY_TEXT, "PING"),
-                    equalTo(DB_OPERATION_NAME, "PING"),
-                    equalTo(DB_NAMESPACE, "0"),
-                    satisfies(
-                        SERVER_ADDRESS,
-                        val -> {
-                          val.isEqualTo(configuredTarget);
-                        }),
-                    equalTo(NETWORK_PEER_PORT, port),
-                    equalTo(NETWORK_PEER_ADDRESS, ip)));
+    trace.hasSpansSatisfyingExactly(span ->
+        span.hasName("PING " + configuredTarget)
+            .hasKind(SpanKind.CLIENT)
+            .hasAttributesSatisfyingExactly(
+                equalTo(DB_SYSTEM_NAME, REDIS),
+                equalTo(DB_QUERY_TEXT, "PING"),
+                equalTo(DB_OPERATION_NAME, "PING"),
+                equalTo(DB_NAMESPACE, "0"),
+                satisfies(
+                    SERVER_ADDRESS,
+                    val -> {
+                      val.isEqualTo(configuredTarget);
+                    }),
+                equalTo(NETWORK_PEER_PORT, port),
+                equalTo(NETWORK_PEER_ADDRESS, ip)));
   }
 
   private static JedisClientConfig clientConfig() throws ReflectiveOperationException {

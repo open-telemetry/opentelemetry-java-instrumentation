@@ -54,11 +54,10 @@ abstract class AbstractElasticsearchClientTest {
         .atMost(Duration.ofSeconds(10))
         .ignoreExceptionsMatching(
             it -> it instanceof BindHttpException || it instanceof BindTransportException)
-        .until(
-            () -> {
-              node.start();
-              return true;
-            });
+        .until(() -> {
+          node.start();
+          return true;
+        });
   }
 
   protected ClusterHealthStatus clusterHealthSync() throws Exception {

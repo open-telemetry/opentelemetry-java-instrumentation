@@ -57,13 +57,12 @@ public final class AgentTooling {
   private static List<ClassFileLocator> getLocators() {
     List<ClassFileLocator> locators = new ArrayList<>();
     ServiceLoader.load(ClassFileLocatorProvider.class, AgentTooling.class.getClassLoader())
-        .forEach(
-            provider -> {
-              ClassFileLocator locator = provider.getClassFileLocator();
-              if (locator != null) {
-                locators.add(locator);
-              }
-            });
+        .forEach(provider -> {
+          ClassFileLocator locator = provider.getClassFileLocator();
+          if (locator != null) {
+            locators.add(locator);
+          }
+        });
 
     return locators;
   }

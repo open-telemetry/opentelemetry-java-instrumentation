@@ -136,10 +136,9 @@ class OpenTelemetryDriverQuerySanitizationTest {
     assertThat(resultSet.getString(1)).isEqualTo("test-value");
     assertThat(otelTesting.getSpans())
         .singleElement()
-        .satisfies(
-            span ->
-                assertThat(span)
-                    .hasAttribute(
-                        equalTo(DB_QUERY_TEXT, expected ? "SELECT ?" : "SELECT 'test-value'")));
+        .satisfies(span ->
+            assertThat(span)
+                .hasAttribute(
+                    equalTo(DB_QUERY_TEXT, expected ? "SELECT ?" : "SELECT 'test-value'")));
   }
 }

@@ -47,11 +47,10 @@ class OpenSearchBodyExtractorTest extends AbstractOpenSearchQueryTest {
     JacksonJsonpMapper mapper = new JacksonJsonpMapper(new ObjectMapper(jsonFactory));
 
     return ApacheHttpClient5TransportBuilder.builder(host)
-        .setHttpClientConfigCallback(
-            httpClientBuilder ->
-                httpClientBuilder
-                    .setConnectionManager(connectionManager)
-                    .setDefaultCredentialsProvider(credentialsProvider))
+        .setHttpClientConfigCallback(httpClientBuilder ->
+            httpClientBuilder
+                .setConnectionManager(connectionManager)
+                .setDefaultCredentialsProvider(credentialsProvider))
         .setMapper(mapper)
         .build();
   }
@@ -61,57 +60,52 @@ class OpenSearchBodyExtractorTest extends AbstractOpenSearchQueryTest {
   void shouldUseJacksonMapperJsonFactory() throws IOException {
     String accentedCharacter = String.valueOf((char) 0xe9);
     SearchRequest searchRequest =
-        SearchRequest.of(
-            request ->
-                request
-                    .index(INDEX_NAME)
-                    .query(
-                        Query.of(
-                            query ->
-                                query.match(
-                                    match ->
-                                        match
-                                            .field("m" + accentedCharacter + "ssage")
-                                            .query(value -> value.stringValue("secret"))))));
+        SearchRequest.of(request ->
+            request
+                .index(INDEX_NAME)
+                .query(
+                    Query.of(query ->
+                        query.match(match ->
+                            match
+                                .field("m" + accentedCharacter + "ssage")
+                                .query(value -> value.stringValue("secret"))))));
 
     assertThat(openSearchClient.search(searchRequest, TestDocument.class)).isNotNull();
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("POST " + httpHost.getHost() + ":" + httpHost.getPort())
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM_NAME, "opensearch"),
-                                equalTo(DB_OPERATION_NAME, "POST"),
-                                satisfies(
-                                    DB_QUERY_TEXT,
-                                    val ->
-                                        val.asString()
-                                            .doesNotContain(accentedCharacter)
-                                            .containsPattern("\\\\u00[eE]9")
-                                            .contains("\"?\"")),
-                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
-                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
-                    span ->
-                        span.hasName("POST")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
-                                equalTo(SERVER_PORT, httpHost.getPort()),
-                                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                satisfies(
-                                    URL_FULL,
-                                    val ->
-                                        val.asString()
-                                            .startsWith(httpHost + "/" + INDEX_NAME + "/_search")),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(
-                                    stringKey("server.service.name"),
-                                    expectedMappedServiceName()))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("POST " + httpHost.getHost() + ":" + httpHost.getPort())
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, "opensearch"),
+                            equalTo(DB_OPERATION_NAME, "POST"),
+                            satisfies(
+                                DB_QUERY_TEXT,
+                                val ->
+                                    val.asString()
+                                        .doesNotContain(accentedCharacter)
+                                        .containsPattern("\\\\u00[eE]9")
+                                        .contains("\"?\"")),
+                            equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                            equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
+                span ->
+                    span.hasName("POST")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(HTTP_REQUEST_METHOD, "POST"),
+                            satisfies(
+                                URL_FULL,
+                                val ->
+                                    val.asString()
+                                        .startsWith(httpHost + "/" + INDEX_NAME + "/_search")),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                            equalTo(
+                                stringKey("server.service.name"), expectedMappedServiceName()))));
   }
 }

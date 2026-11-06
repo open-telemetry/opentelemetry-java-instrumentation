@@ -67,13 +67,12 @@ class GrizzlyFilterchainServerTest extends AbstractHttpServerTest<Transport> {
 
   @Override
   protected void configure(HttpServerTestOptions options) {
-    options.setHttpAttributes(
-        serverEndpoint -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(HTTP_ROUTE);
-          return attributes;
-        });
+    options.setHttpAttributes(serverEndpoint -> {
+      Set<AttributeKey<?>> attributes =
+          new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+      attributes.remove(HTTP_ROUTE);
+      return attributes;
+    });
 
     // justification: grizzly async closes the channel which
     // looks like a ConnectException to the client when this happens

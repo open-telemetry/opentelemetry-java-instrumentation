@@ -29,9 +29,8 @@ public class HttpUrlConnectionSingletons {
                     .addAttributesExtractor(
                         HttpMethodAttributeExtractor.create(
                             AgentCommonConfig.get().getKnownHttpRequestMethods()))
-                    .addContextCustomizer(
-                        (context, httpRequestPacket, startAttributes) ->
-                            GetOutputStreamContext.init(context)));
+                    .addContextCustomizer((context, httpRequestPacket, startAttributes) ->
+                        GetOutputStreamContext.init(context)));
   }
 
   public static Instrumenter<HttpURLConnection, Integer> instrumenter() {

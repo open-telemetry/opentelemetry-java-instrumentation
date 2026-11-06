@@ -108,12 +108,11 @@ public class YamlHelper {
       List<InstrumentationModule> list, DefinitionCatalog catalog) {
     List<InstrumentationModule> libraryInstrumentations =
         list.stream()
-            .filter(
-                module ->
-                    module
-                        .getMetadata()
-                        .getClassification()
-                        .equals(InstrumentationClassification.LIBRARY))
+            .filter(module ->
+                module
+                    .getMetadata()
+                    .getClassification()
+                    .equals(InstrumentationClassification.LIBRARY))
             .sorted(InstrumentationNameComparator.BY_NAME_AND_VERSION)
             .toList();
 
@@ -135,12 +134,11 @@ public class YamlHelper {
       List<InstrumentationModule> list, DefinitionCatalog catalog) {
     List<InstrumentationModule> filtered =
         list.stream()
-            .filter(
-                module ->
-                    module
-                        .getMetadata()
-                        .getClassification()
-                        .equals(InstrumentationClassification.CUSTOM))
+            .filter(module ->
+                module
+                    .getMetadata()
+                    .getClassification()
+                    .equals(InstrumentationClassification.CUSTOM))
             .sorted(InstrumentationNameComparator.BY_NAME_AND_VERSION)
             .toList();
 
@@ -350,21 +348,20 @@ public class YamlHelper {
     Map<String, Object> properties = new LinkedHashMap<>();
     schema
         .properties()
-        .forEach(
-            (key, property) -> {
-              Map<String, Object> propertyMap = new LinkedHashMap<>();
-              propertyMap.put("type", property.type());
-              if (property.description() != null) {
-                propertyMap.put("description", property.description());
-              }
-              if (property.defaultValue() != null) {
-                propertyMap.put("default", property.defaultValue());
-              }
-              if (property.example() != null) {
-                propertyMap.put("example", property.example());
-              }
-              properties.put(key, propertyMap);
-            });
+        .forEach((key, property) -> {
+          Map<String, Object> propertyMap = new LinkedHashMap<>();
+          propertyMap.put("type", property.type());
+          if (property.description() != null) {
+            propertyMap.put("description", property.description());
+          }
+          if (property.defaultValue() != null) {
+            propertyMap.put("default", property.defaultValue());
+          }
+          if (property.example() != null) {
+            propertyMap.put("example", property.example());
+          }
+          properties.put(key, propertyMap);
+        });
     schemaMap.put("properties", properties);
     return schemaMap;
   }
@@ -456,13 +453,12 @@ public class YamlHelper {
 
     List<InstrumentationModule> emitted =
         list.stream()
-            .filter(
-                module -> {
-                  InstrumentationClassification classification =
-                      module.getMetadata().getClassification();
-                  return classification.equals(InstrumentationClassification.LIBRARY)
-                      || classification.equals(InstrumentationClassification.CUSTOM);
-                })
+            .filter(module -> {
+              InstrumentationClassification classification =
+                  module.getMetadata().getClassification();
+              return classification.equals(InstrumentationClassification.LIBRARY)
+                  || classification.equals(InstrumentationClassification.CUSTOM);
+            })
             .toList();
 
     for (InstrumentationModule module : emitted) {
@@ -514,19 +510,18 @@ public class YamlHelper {
         }
       }
     }
-    nonRegistryNameToCanonicals.forEach(
-        (name, canonicals) -> {
-          boolean unique = canonicals.size() == 1;
-          for (String canonical : canonicals) {
-            // Skip content already cataloged via a registry ref
-            if (catalog.configCanonicalToId.containsKey(canonical)) {
-              continue;
-            }
-            String id = unique ? name : name + "-" + shortHash(canonical);
-            catalog.configDefs.put(id, canonicalToDef.get(canonical));
-            catalog.configCanonicalToId.put(canonical, id);
-          }
-        });
+    nonRegistryNameToCanonicals.forEach((name, canonicals) -> {
+      boolean unique = canonicals.size() == 1;
+      for (String canonical : canonicals) {
+        // Skip content already cataloged via a registry ref
+        if (catalog.configCanonicalToId.containsKey(canonical)) {
+          continue;
+        }
+        String id = unique ? name : name + "-" + shortHash(canonical);
+        catalog.configDefs.put(id, canonicalToDef.get(canonical));
+        catalog.configCanonicalToId.put(canonical, id);
+      }
+    });
 
     return catalog;
   }
@@ -553,12 +548,11 @@ public class YamlHelper {
       TreeMap<String, Object> sorted = new TreeMap<>();
       map.forEach((k, v) -> sorted.put(String.valueOf(k), v));
       sb.append('{');
-      sorted.forEach(
-          (k, v) -> {
-            sb.append(k).append('=');
-            canonicalize(v, sb);
-            sb.append(';');
-          });
+      sorted.forEach((k, v) -> {
+        sb.append(k).append('=');
+        canonicalize(v, sb);
+        sb.append(';');
+      });
       sb.append('}');
     } else if (value instanceof List<?> list) {
       sb.append('[');

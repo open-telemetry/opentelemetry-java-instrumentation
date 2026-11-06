@@ -388,11 +388,10 @@ class ReferenceCollectorTest {
     ReferenceCollector collector = new ReferenceCollector(s -> false);
 
     assertThatExceptionOfType(MuzzleCompilationException.class)
-        .isThrownBy(
-            () -> {
-              collector.collectReferencesFromAdvice(adviceClassName);
-              collector.prune();
-            });
+        .isThrownBy(() -> {
+          collector.collectReferencesFromAdvice(adviceClassName);
+          collector.prune();
+        });
   }
 
   @SuppressWarnings("unused")

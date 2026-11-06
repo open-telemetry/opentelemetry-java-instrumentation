@@ -141,17 +141,16 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
             producerSpan.set(trace.getSpan(1));
           },
           trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      assertConsumerSpan(
-                          span,
-                          producerSpan.get(),
-                          null,
-                          DESTINATION_NAME,
-                          "receive",
-                          false,
-                          null,
-                          SUBSCRIPTION_NAME)));
+              trace.hasSpansSatisfyingExactly(span ->
+                  assertConsumerSpan(
+                      span,
+                      producerSpan.get(),
+                      null,
+                      DESTINATION_NAME,
+                      "receive",
+                      false,
+                      null,
+                      SUBSCRIPTION_NAME)));
     } else {
       testing.waitAndAssertTraces(parentTraceAssertion);
     }

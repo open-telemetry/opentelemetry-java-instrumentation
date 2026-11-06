@@ -56,14 +56,12 @@ public final class FileDescriptor {
                 .upDownCounterBuilder("jvm.file_descriptor.count")
                 .setDescription("Number of open file descriptors as reported by the JVM.")
                 .setUnit("{file_descriptor}")
-                .buildWithCallback(
-                    observableMeasurement -> {
-                      long value =
-                          ((UnixOperatingSystemMXBean) osBean).getOpenFileDescriptorCount();
-                      if (value >= 0) {
-                        observableMeasurement.record(value);
-                      }
-                    }));
+                .buildWithCallback(observableMeasurement -> {
+                  long value = ((UnixOperatingSystemMXBean) osBean).getOpenFileDescriptorCount();
+                  if (value >= 0) {
+                    observableMeasurement.record(value);
+                  }
+                }));
       }
       if (metricNamePredicate.test("jvm.file_descriptor.limit")) {
         observables.add(
@@ -71,13 +69,12 @@ public final class FileDescriptor {
                 .upDownCounterBuilder("jvm.file_descriptor.limit")
                 .setDescription("Measure of max open file descriptors as reported by the JVM.")
                 .setUnit("{file_descriptor}")
-                .buildWithCallback(
-                    observableMeasurement -> {
-                      long value = ((UnixOperatingSystemMXBean) osBean).getMaxFileDescriptorCount();
-                      if (value >= 0) {
-                        observableMeasurement.record(value);
-                      }
-                    }));
+                .buildWithCallback(observableMeasurement -> {
+                  long value = ((UnixOperatingSystemMXBean) osBean).getMaxFileDescriptorCount();
+                  if (value >= 0) {
+                    observableMeasurement.record(value);
+                  }
+                }));
       }
     }
 

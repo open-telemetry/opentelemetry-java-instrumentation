@@ -17,20 +17,19 @@ public class RedissonPromiseWrapper<T> extends RedissonPromise<T> implements Pro
 
   private RedissonPromiseWrapper(RPromise<T> delegate) {
     Context context = Context.current();
-    this.whenComplete(
-        (result, error) -> {
-          EndOperationListener<T> endOperationListener = this.endOperationListener;
-          if (endOperationListener != null) {
-            endOperationListener.accept(result, error);
-          }
-          try (Scope ignored = context.makeCurrent()) {
-            if (error != null) {
-              delegate.tryFailure(error);
-            } else {
-              delegate.trySuccess(result);
-            }
-          }
-        });
+    this.whenComplete((result, error) -> {
+      EndOperationListener<T> endOperationListener = this.endOperationListener;
+      if (endOperationListener != null) {
+        endOperationListener.accept(result, error);
+      }
+      try (Scope ignored = context.makeCurrent()) {
+        if (error != null) {
+          delegate.tryFailure(error);
+        } else {
+          delegate.trySuccess(result);
+        }
+      }
+    });
   }
 
   /**

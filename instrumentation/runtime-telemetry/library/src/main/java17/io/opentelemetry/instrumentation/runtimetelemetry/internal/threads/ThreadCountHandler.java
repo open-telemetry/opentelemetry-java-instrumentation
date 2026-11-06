@@ -47,12 +47,11 @@ public final class ThreadCountHandler implements RecordedEventHandler {
             .upDownCounterBuilder(METRIC_NAME)
             .setDescription(METRIC_DESCRIPTION)
             .setUnit(Constants.UNIT_THREADS)
-            .buildWithCallback(
-                measurement -> {
-                  long d = daemonCount;
-                  measurement.record(d, ATTR_DAEMON_TRUE);
-                  measurement.record(activeCount - d, ATTR_DAEMON_FALSE);
-                }));
+            .buildWithCallback(measurement -> {
+              long d = daemonCount;
+              measurement.record(d, ATTR_DAEMON_TRUE);
+              measurement.record(activeCount - d, ATTR_DAEMON_FALSE);
+            }));
   }
 
   @Override

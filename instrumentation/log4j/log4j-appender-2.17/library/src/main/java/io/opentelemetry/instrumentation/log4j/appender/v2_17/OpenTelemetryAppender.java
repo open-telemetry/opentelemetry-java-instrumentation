@@ -89,12 +89,11 @@ public class OpenTelemetryAppender extends AbstractAppender {
     config
         .getAppenders()
         .values()
-        .forEach(
-            appender -> {
-              if (appender instanceof OpenTelemetryAppender) {
-                consumer.accept((OpenTelemetryAppender) appender);
-              }
-            });
+        .forEach(appender -> {
+          if (appender instanceof OpenTelemetryAppender) {
+            consumer.accept((OpenTelemetryAppender) appender);
+          }
+        });
   }
 
   @PluginBuilderFactory
@@ -578,13 +577,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     @Override
     public void forEach(ReadOnlyStringMap contextData, BiConsumer<String, Object> action) {
-      contextData.forEach(
-          (key, value) -> {
-            // the carried Context is internal state, not a context data attribute
-            if (!(OTEL_CONTEXT_DATA_KEY.equals(key) && value instanceof Context)) {
-              action.accept(key, value);
-            }
-          });
+      contextData.forEach((key, value) -> {
+        // the carried Context is internal state, not a context data attribute
+        if (!(OTEL_CONTEXT_DATA_KEY.equals(key) && value instanceof Context)) {
+          action.accept(key, value);
+        }
+      });
     }
   }
 }

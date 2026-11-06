@@ -87,17 +87,16 @@ public class TelemetryRetriever implements AutoCloseable {
       return OBJECT_MAPPER
           .readTree(waitForContent(path))
           .valueStream()
-          .map(
-              jsonNode -> {
-                B builder = builderConstructor.get();
-                // TODO: Register parser into object mapper to avoid de -> re -> deserialize.
-                try {
-                  JsonFormat.parser().merge(OBJECT_MAPPER.writeValueAsString(jsonNode), builder);
-                  return (T) builder.build();
-                } catch (InvalidProtocolBufferException | JsonProcessingException e) {
-                  throw new IllegalStateException(e);
-                }
-              })
+          .map(jsonNode -> {
+            B builder = builderConstructor.get();
+            // TODO: Register parser into object mapper to avoid de -> re -> deserialize.
+            try {
+              JsonFormat.parser().merge(OBJECT_MAPPER.writeValueAsString(jsonNode), builder);
+              return (T) builder.build();
+            } catch (InvalidProtocolBufferException | JsonProcessingException e) {
+              throw new IllegalStateException(e);
+            }
+          })
           .collect(toList());
     } catch (InterruptedException | JsonProcessingException e) {
       throw new IllegalStateException(e);

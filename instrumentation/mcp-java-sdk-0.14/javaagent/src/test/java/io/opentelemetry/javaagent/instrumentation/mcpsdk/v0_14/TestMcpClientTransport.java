@@ -57,30 +57,28 @@ final class TestMcpClientTransport implements McpClientTransport {
     }
 
     toolRequest.set(request);
-    return Mono.defer(
-        () -> {
-          toolRequestContext.set(Context.current());
-          return switch (toolResponse) {
-            case SUCCESS ->
-                respond(
-                    successResponse(
-                        request.id(),
-                        McpSchema.CallToolResult.builder().addTextContent("secret").build()));
-            case TOOL_ERROR ->
-                respond(
-                    successResponse(
-                        request.id(), McpSchema.CallToolResult.builder().isError(true).build()));
-            case JSON_RPC_ERROR ->
-                respond(
-                    new McpSchema.JSONRPCResponse(
-                        McpSchema.JSONRPC_VERSION,
-                        request.id(),
-                        null,
-                        new McpSchema.JSONRPCResponse.JSONRPCError(
-                            -32601, "Method not found", null)));
-            case NONE -> Mono.empty();
-          };
-        });
+    return Mono.defer(() -> {
+      toolRequestContext.set(Context.current());
+      return switch (toolResponse) {
+        case SUCCESS ->
+            respond(
+                successResponse(
+                    request.id(),
+                    McpSchema.CallToolResult.builder().addTextContent("secret").build()));
+        case TOOL_ERROR ->
+            respond(
+                successResponse(
+                    request.id(), McpSchema.CallToolResult.builder().isError(true).build()));
+        case JSON_RPC_ERROR ->
+            respond(
+                new McpSchema.JSONRPCResponse(
+                    McpSchema.JSONRPC_VERSION,
+                    request.id(),
+                    null,
+                    new McpSchema.JSONRPCResponse.JSONRPCError(-32601, "Method not found", null)));
+        case NONE -> Mono.empty();
+      };
+    });
   }
 
   private static McpSchema.JSONRPCResponse successResponse(Object id, Object result) {

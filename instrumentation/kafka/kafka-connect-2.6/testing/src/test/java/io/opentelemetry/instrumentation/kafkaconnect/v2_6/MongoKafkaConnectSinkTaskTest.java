@@ -116,11 +116,10 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     waitAndAssertRelevantTraces(
         trace ->
             // producer is in a separate trace, linked to consumer with a span link
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName("send " + testTopicName).hasKind(SpanKind.PRODUCER).hasNoParent();
-                  producerSpanContext.set(span.actual().getSpanContext());
-                }),
+            trace.hasSpansSatisfyingExactly(span -> {
+              span.hasName("send " + testTopicName).hasKind(SpanKind.PRODUCER).hasNoParent();
+              producerSpanContext.set(span.actual().getSpanContext());
+            }),
         trace ->
             // kafka connect consumer trace, linked to producer span via a span link
             trace.hasSpansSatisfyingExactly(

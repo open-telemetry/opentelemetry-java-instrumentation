@@ -234,11 +234,10 @@ public final class ReferenceCollector {
         // to help implement an abstract library method
         reference
             .getMethods()
-            .removeIf(
-                method ->
-                    method.getName().equals(MethodDescription.CONSTRUCTOR_INTERNAL_NAME)
-                        || method.getFlags().contains(Flag.VisibilityFlag.PRIVATE)
-                        || method.getFlags().contains(Flag.OwnershipFlag.STATIC));
+            .removeIf(method ->
+                method.getName().equals(MethodDescription.CONSTRUCTOR_INTERNAL_NAME)
+                    || method.getFlags().contains(Flag.VisibilityFlag.PRIVATE)
+                    || method.getFlags().contains(Flag.OwnershipFlag.STATIC));
         continue;
       }
       i.remove();

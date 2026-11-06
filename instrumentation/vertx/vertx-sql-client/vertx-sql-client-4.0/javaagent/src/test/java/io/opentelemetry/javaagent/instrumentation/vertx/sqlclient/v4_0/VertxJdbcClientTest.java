@@ -80,11 +80,10 @@ class VertxJdbcClientTest {
         .runWithSpan(
             "parent",
             () ->
-                pool.withConnection(
-                    connection ->
-                        connection
-                            .prepare(query)
-                            .compose(statement -> statement.query().execute(Tuple.of(1)))))
+                pool.withConnection(connection ->
+                    connection
+                        .prepare(query)
+                        .compose(statement -> statement.query().execute(Tuple.of(1)))))
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
@@ -93,18 +92,17 @@ class VertxJdbcClientTest {
   }
 
   private static void assertSelect(String query) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-                span ->
-                    span.hasName("select test")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "hsqldb"),
-                            equalTo(DB_NAMESPACE, DB),
-                            equalTo(DB_QUERY_TEXT, query),
-                            equalTo(DB_QUERY_SUMMARY, "select test"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+            span ->
+                span.hasName("select test")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, "hsqldb"),
+                        equalTo(DB_NAMESPACE, DB),
+                        equalTo(DB_QUERY_TEXT, query),
+                        equalTo(DB_QUERY_SUMMARY, "select test"))));
   }
 }

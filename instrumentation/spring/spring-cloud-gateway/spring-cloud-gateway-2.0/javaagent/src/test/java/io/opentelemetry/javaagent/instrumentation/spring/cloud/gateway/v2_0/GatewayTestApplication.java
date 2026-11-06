@@ -27,9 +27,8 @@ class GatewayTestApplication {
                     .filters(GatewayTestApplication::echoFunc)
                     .uri("h1c://mock.response"))
         // The routeID should be a random UUID.
-        .route(
-            r ->
-                r.path("/uuid/**").filters(GatewayTestApplication::echoFunc).uri("h1c://mock.uuid"))
+        .route(r ->
+            r.path("/uuid/**").filters(GatewayTestApplication::echoFunc).uri("h1c://mock.uuid"))
         // Seems like an uuid but not.
         .route(
             "ffffffff-ffff-ffff-ffff-ffff",

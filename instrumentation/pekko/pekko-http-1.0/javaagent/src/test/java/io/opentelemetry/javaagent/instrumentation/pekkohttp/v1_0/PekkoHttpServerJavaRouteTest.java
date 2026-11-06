@@ -42,7 +42,7 @@ class PekkoHttpServerJavaRouteTest extends AllDirectives {
                 () ->
                     concat(
                         pathSingleSlash(() -> complete("test")),
-                        path(integerSegment(), (i) -> complete("ok")))));
+                        path(integerSegment(), i -> complete("ok")))));
 
     CompletionStage<ServerBinding> binding = http.newServerAt("localhost", 0).bind(route);
     try {

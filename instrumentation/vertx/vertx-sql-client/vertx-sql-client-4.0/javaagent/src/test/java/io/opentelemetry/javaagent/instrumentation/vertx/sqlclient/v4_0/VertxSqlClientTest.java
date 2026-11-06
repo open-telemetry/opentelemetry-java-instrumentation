@@ -115,10 +115,9 @@ class VertxSqlClientTest {
     cleanup.deferAfterAll(pool::close);
     pool.query("create table test(id int primary key, name varchar(255))")
         .execute()
-        .compose(
-            r ->
-                // insert some test data
-                pool.query("insert into test values (1, 'Hello'), (2, 'World')").execute())
+        .compose(r ->
+            // insert some test data
+            pool.query("insert into test values (1, 'Hello'), (2, 'World')").execute())
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
@@ -133,36 +132,32 @@ class VertxSqlClientTest {
         "parent",
         () ->
             pool.query("select * from test")
-                .execute(
-                    rowSetAsyncResult -> {
-                      if (rowSetAsyncResult.succeeded()) {
-                        future.complete(rowSetAsyncResult.result());
-                      } else {
-                        future.completeExceptionally(rowSetAsyncResult.cause());
-                      }
-                    }));
+                .execute(rowSetAsyncResult -> {
+                  if (rowSetAsyncResult.succeeded()) {
+                    future.complete(rowSetAsyncResult.result());
+                  } else {
+                    future.completeExceptionally(rowSetAsyncResult.cause());
+                  }
+                }));
     result.get(30, SECONDS);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-                span ->
-                    span.hasName("select test")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                            equalTo(DB_NAMESPACE, DB),
-                            equalTo(DB_QUERY_TEXT, "select * from test"),
-                            equalTo(DB_QUERY_SUMMARY, "select test"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port)),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+            span ->
+                span.hasName("select test")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                        equalTo(DB_NAMESPACE, DB),
+                        equalTo(DB_QUERY_TEXT, "select * from test"),
+                        equalTo(DB_QUERY_SUMMARY, "select test"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port)),
+            span ->
+                span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -175,50 +170,44 @@ class VertxSqlClientTest {
         "parent",
         () ->
             pool.query("invalid")
-                .execute(
-                    rowSetAsyncResult -> {
-                      if (rowSetAsyncResult.succeeded()) {
-                        result.complete(rowSetAsyncResult.result());
-                      } else {
-                        result.completeExceptionally(rowSetAsyncResult.cause());
-                      }
-                    }));
+                .execute(rowSetAsyncResult -> {
+                  if (rowSetAsyncResult.succeeded()) {
+                    result.complete(rowSetAsyncResult.result());
+                  } else {
+                    result.completeExceptionally(rowSetAsyncResult.cause());
+                  }
+                }));
 
     assertThat(latch.await(30, SECONDS)).isTrue();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-                span ->
-                    span.hasName("tempdb")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(EXCEPTION_TYPE, PgException.class.getName()),
-                                        satisfies(
-                                            EXCEPTION_MESSAGE,
-                                            val -> val.contains("syntax error at or near")),
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class))))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                            equalTo(DB_NAMESPACE, DB),
-                            equalTo(DB_QUERY_TEXT, "invalid"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(ERROR_TYPE, "42601")),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+            span ->
+                span.hasName("tempdb")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasEventsSatisfyingExactly(event ->
+                        event
+                            .hasName("exception")
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(EXCEPTION_TYPE, PgException.class.getName()),
+                                satisfies(
+                                    EXCEPTION_MESSAGE,
+                                    val -> val.contains("syntax error at or near")),
+                                satisfies(
+                                    EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                        equalTo(DB_NAMESPACE, DB),
+                        equalTo(DB_QUERY_TEXT, "invalid"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(ERROR_TYPE, "42601")),
+            span ->
+                span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -248,22 +237,21 @@ class VertxSqlClientTest {
   }
 
   private static void assertPreparedSelect(String query) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-                span ->
-                    span.hasName("select test")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                            equalTo(DB_NAMESPACE, DB),
-                            equalTo(DB_QUERY_TEXT, query),
-                            equalTo(DB_QUERY_SUMMARY, "select test"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+            span ->
+                span.hasName("select test")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                        equalTo(DB_NAMESPACE, DB),
+                        equalTo(DB_QUERY_TEXT, query),
+                        equalTo(DB_QUERY_SUMMARY, "select test"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port))));
   }
 
   @Test
@@ -334,36 +322,32 @@ class VertxSqlClientTest {
       // the failure is recorded on the client span
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-                span ->
-                    span.hasName("select test")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(EXCEPTION_TYPE, PgException.class.getName()),
-                                        satisfies(
-                                            EXCEPTION_MESSAGE,
-                                            val -> val.contains("division by zero")),
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class))))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                            equalTo(DB_NAMESPACE, DB),
-                            equalTo(DB_QUERY_TEXT, query),
-                            equalTo(DB_QUERY_SUMMARY, "select test"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(ERROR_TYPE, "22012"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+            span ->
+                span.hasName("select test")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasEventsSatisfyingExactly(event ->
+                        event
+                            .hasName("exception")
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(EXCEPTION_TYPE, PgException.class.getName()),
+                                satisfies(
+                                    EXCEPTION_MESSAGE, val -> val.contains("division by zero")),
+                                satisfies(
+                                    EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                        equalTo(DB_NAMESPACE, DB),
+                        equalTo(DB_QUERY_TEXT, query),
+                        equalTo(DB_QUERY_SUMMARY, "select test"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(ERROR_TYPE, "22012"))));
   }
 
   private static Future<?> executePreparedStatement(String query, Tuple tuple) {
@@ -374,21 +358,17 @@ class VertxSqlClientTest {
       String query,
       Tuple tuple,
       Function<PreparedStatement, PreparedQuery<?>> preparedQueryFactory) {
-    return pool.withConnection(
-        connection ->
-            connection
-                .prepare(query)
-                .compose(
-                    statement ->
-                        preparedQueryFactory
-                            .apply(statement)
-                            .execute(tuple)
-                            .compose(
-                                rows -> statement.close().map(rows),
-                                error ->
-                                    statement
-                                        .close()
-                                        .compose(ignored -> Future.failedFuture(error)))));
+    return pool.withConnection(connection ->
+        connection
+            .prepare(query)
+            .compose(statement ->
+                preparedQueryFactory
+                    .apply(statement)
+                    .execute(tuple)
+                    .compose(
+                        rows -> statement.close().map(rows),
+                        error ->
+                            statement.close().compose(ignored -> Future.failedFuture(error)))));
   }
 
   @ParameterizedTest
@@ -413,24 +393,23 @@ class VertxSqlClientTest {
       // an empty batch fails to execute; the failure is recorded on the client span
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-                span ->
-                    span.hasName(scenario.stableSpanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                            equalTo(DB_NAMESPACE, DB),
-                            equalTo(DB_QUERY_TEXT, scenario.preparedQuery),
-                            equalTo(DB_QUERY_SUMMARY, scenario.querySummary),
-                            equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                            equalTo(ERROR_TYPE, scenario.errorType),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+            span ->
+                span.hasName(scenario.stableSpanName)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                        equalTo(DB_NAMESPACE, DB),
+                        equalTo(DB_QUERY_TEXT, scenario.preparedQuery),
+                        equalTo(DB_QUERY_SUMMARY, scenario.querySummary),
+                        equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                        equalTo(ERROR_TYPE, scenario.errorType),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port))));
   }
 
   private static void recreateBatchTestTable() throws Exception {
@@ -479,10 +458,8 @@ class VertxSqlClientTest {
         .runWithSpan(
             "parent",
             () ->
-                pool.withTransaction(
-                    conn ->
-                        conn.preparedQuery("select * from test where id = $1")
-                            .execute(Tuple.of(1))))
+                pool.withTransaction(conn ->
+                    conn.preparedQuery("select * from test where id = $1").execute(Tuple.of(1))))
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
@@ -496,10 +473,8 @@ class VertxSqlClientTest {
         .runWithSpan(
             "parent",
             () ->
-                pool.withConnection(
-                    conn ->
-                        conn.preparedQuery("select * from test where id = $1")
-                            .execute(Tuple.of(1))))
+                pool.withConnection(conn ->
+                    conn.preparedQuery("select * from test where id = $1").execute(Tuple.of(1))))
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
@@ -524,15 +499,14 @@ class VertxSqlClientTest {
           "parent",
           () ->
               pool.query("select * from test")
-                  .execute(
-                      rowSetAsyncResult -> {
-                        if (rowSetAsyncResult.succeeded()) {
-                          future.complete(rowSetAsyncResult.result());
-                        } else {
-                          future.completeExceptionally(rowSetAsyncResult.cause());
-                        }
-                        latch.countDown();
-                      }));
+                  .execute(rowSetAsyncResult -> {
+                    if (rowSetAsyncResult.succeeded()) {
+                      future.complete(rowSetAsyncResult.result());
+                    } else {
+                      future.completeExceptionally(rowSetAsyncResult.cause());
+                    }
+                    latch.countDown();
+                  }));
     }
     assertThat(latch.await(30, SECONDS)).isTrue();
     for (CompletableFuture<Object> result : resultList) {
@@ -580,25 +554,21 @@ class VertxSqlClientTest {
     ExecutorService executorService = Executors.newFixedThreadPool(4);
     cleanup.deferCleanup(() -> executorService.shutdown());
     for (CompletableFuture<Object> future : futureList) {
-      executorService.submit(
-          () -> {
-            testing.runWithSpan(
-                "parent",
-                () ->
-                    pool.withConnection(
-                            conn ->
-                                conn.preparedQuery("select * from test where id = $1")
-                                    .execute(Tuple.of(1)))
-                        .onComplete(
-                            rowSetAsyncResult -> {
-                              if (rowSetAsyncResult.succeeded()) {
-                                future.complete(rowSetAsyncResult.result());
-                              } else {
-                                future.completeExceptionally(rowSetAsyncResult.cause());
-                              }
-                              latch.countDown();
-                            }));
-          });
+      executorService.submit(() -> {
+        testing.runWithSpan(
+            "parent",
+            () ->
+                pool.withConnection(conn ->
+                        conn.preparedQuery("select * from test where id = $1").execute(Tuple.of(1)))
+                    .onComplete(rowSetAsyncResult -> {
+                      if (rowSetAsyncResult.succeeded()) {
+                        future.complete(rowSetAsyncResult.result());
+                      } else {
+                        future.completeExceptionally(rowSetAsyncResult.cause());
+                      }
+                      latch.countDown();
+                    }));
+      });
     }
     assertThat(latch.await(30, SECONDS)).isTrue();
     for (CompletableFuture<Object> result : resultList) {

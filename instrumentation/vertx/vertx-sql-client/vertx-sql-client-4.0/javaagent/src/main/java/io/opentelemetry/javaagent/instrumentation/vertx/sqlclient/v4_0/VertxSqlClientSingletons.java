@@ -81,11 +81,10 @@ public class VertxSqlClientSingletons {
 
   public static Future<PreparedStatement> attachPreparedStatementInfoReference(
       Future<PreparedStatement> future, VertxSqlClientInfoReference infoReference) {
-    return future.map(
-        preparedStatement -> {
-          PREPARED_STATEMENT_INFO_REFERENCE.set(preparedStatement, infoReference);
-          return preparedStatement;
-        });
+    return future.map(preparedStatement -> {
+      PREPARED_STATEMENT_INFO_REFERENCE.set(preparedStatement, infoReference);
+      return preparedStatement;
+    });
   }
 
   @Nullable
@@ -101,13 +100,12 @@ public class VertxSqlClientSingletons {
 
   public static Future<SqlConnection> attachClientInfoReference(
       Future<SqlConnection> future, @Nullable VertxSqlClientInfoReference infoReference) {
-    return future.map(
-        sqlConnection -> {
-          if (sqlConnection instanceof SqlClientBase) {
-            attachClientInfoReference((SqlClientBase<?>) sqlConnection, infoReference);
-          }
-          return sqlConnection;
-        });
+    return future.map(sqlConnection -> {
+      if (sqlConnection instanceof SqlClientBase) {
+        attachClientInfoReference((SqlClientBase<?>) sqlConnection, infoReference);
+      }
+      return sqlConnection;
+    });
   }
 
   private VertxSqlClientSingletons() {}

@@ -33,51 +33,50 @@ class AsyncServlet extends HttpServlet {
     if (endpoint == EXCEPTION) {
       context.setTimeout(5000);
     }
-    context.start(
-        () -> {
-          try {
-            AbstractHttpServerTest.controller(
-                endpoint,
-                () -> {
-                  resp.setContentType("text/plain");
-                  if (endpoint.equals(SUCCESS) || endpoint.equals(ERROR)) {
-                    resp.setStatus(endpoint.getStatus());
-                    resp.getWriter().print(endpoint.getBody());
-                  } else if (endpoint.equals(INDEXED_CHILD)) {
-                    endpoint.collectSpanAttributes(req::getParameter);
-                    resp.setStatus(endpoint.getStatus());
-                    resp.getWriter().print(endpoint.getBody());
-                  } else if (endpoint.equals(QUERY_PARAM)) {
-                    resp.setStatus(endpoint.getStatus());
-                    resp.getWriter().print(req.getQueryString());
-                  } else if (endpoint.equals(REDIRECT)) {
-                    resp.sendRedirect(endpoint.getBody());
-                  } else if (endpoint.equals(CAPTURE_HEADERS)) {
-                    resp.setHeader("X-Test-Response", req.getHeader("X-Test-Request"));
-                    resp.setStatus(endpoint.getStatus());
-                    resp.getWriter().print(endpoint.getBody());
-                  } else if (endpoint.equals(EXCEPTION)) {
-                    resp.setStatus(endpoint.getStatus());
-                    PrintWriter writer = resp.getWriter();
-                    writer.print(endpoint.getBody());
-                    writer.close();
-                    throw new IllegalStateException(endpoint.getBody());
-                  }
-                  return null;
-                });
-          } catch (Exception e) {
-            if (e instanceof RuntimeException) {
-              throw (RuntimeException) e;
-            }
-            throw new IllegalStateException(e);
-          } finally {
-            // complete at the end so the server span will end after the controller span
-            if (endpoint != EXCEPTION) {
-              context.complete();
-            }
-            latch.countDown();
-          }
-        });
+    context.start(() -> {
+      try {
+        AbstractHttpServerTest.controller(
+            endpoint,
+            () -> {
+              resp.setContentType("text/plain");
+              if (endpoint.equals(SUCCESS) || endpoint.equals(ERROR)) {
+                resp.setStatus(endpoint.getStatus());
+                resp.getWriter().print(endpoint.getBody());
+              } else if (endpoint.equals(INDEXED_CHILD)) {
+                endpoint.collectSpanAttributes(req::getParameter);
+                resp.setStatus(endpoint.getStatus());
+                resp.getWriter().print(endpoint.getBody());
+              } else if (endpoint.equals(QUERY_PARAM)) {
+                resp.setStatus(endpoint.getStatus());
+                resp.getWriter().print(req.getQueryString());
+              } else if (endpoint.equals(REDIRECT)) {
+                resp.sendRedirect(endpoint.getBody());
+              } else if (endpoint.equals(CAPTURE_HEADERS)) {
+                resp.setHeader("X-Test-Response", req.getHeader("X-Test-Request"));
+                resp.setStatus(endpoint.getStatus());
+                resp.getWriter().print(endpoint.getBody());
+              } else if (endpoint.equals(EXCEPTION)) {
+                resp.setStatus(endpoint.getStatus());
+                PrintWriter writer = resp.getWriter();
+                writer.print(endpoint.getBody());
+                writer.close();
+                throw new IllegalStateException(endpoint.getBody());
+              }
+              return null;
+            });
+      } catch (Exception e) {
+        if (e instanceof RuntimeException) {
+          throw (RuntimeException) e;
+        }
+        throw new IllegalStateException(e);
+      } finally {
+        // complete at the end so the server span will end after the controller span
+        if (endpoint != EXCEPTION) {
+          context.complete();
+        }
+        latch.countDown();
+      }
+    });
     try {
       latch.await();
     } catch (InterruptedException e) {

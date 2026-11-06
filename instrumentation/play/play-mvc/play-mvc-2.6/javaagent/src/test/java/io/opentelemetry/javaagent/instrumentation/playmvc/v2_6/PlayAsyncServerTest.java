@@ -39,86 +39,77 @@ class PlayAsyncServerTest extends PlayServerTest {
         components ->
             RoutingDsl.fromComponents(components)
                 .GET(SUCCESS.getPath())
-                .routeAsync(
-                    () ->
-                        CompletableFuture.supplyAsync(
-                            () ->
-                                controller(
-                                    SUCCESS,
-                                    () -> Results.status(SUCCESS.getStatus(), SUCCESS.getBody())),
-                            executionContextExecutor))
+                .routeAsync(() ->
+                    CompletableFuture.supplyAsync(
+                        () ->
+                            controller(
+                                SUCCESS,
+                                () -> Results.status(SUCCESS.getStatus(), SUCCESS.getBody())),
+                        executionContextExecutor))
                 .GET(QUERY_PARAM.getPath())
-                .routeAsync(
-                    () ->
-                        CompletableFuture.supplyAsync(
-                            () ->
-                                controller(
-                                    QUERY_PARAM,
-                                    () ->
-                                        Results.status(
-                                            QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())),
-                            executionContextExecutor))
+                .routeAsync(() ->
+                    CompletableFuture.supplyAsync(
+                        () ->
+                            controller(
+                                QUERY_PARAM,
+                                () ->
+                                    Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())),
+                        executionContextExecutor))
                 .GET(REDIRECT.getPath())
-                .routeAsync(
-                    () ->
-                        CompletableFuture.supplyAsync(
-                            () -> controller(REDIRECT, () -> Results.found(REDIRECT.getBody())),
-                            executionContextExecutor))
+                .routeAsync(() ->
+                    CompletableFuture.supplyAsync(
+                        () -> controller(REDIRECT, () -> Results.found(REDIRECT.getBody())),
+                        executionContextExecutor))
                 .GET(ERROR.getPath())
-                .routeAsync(
-                    () ->
-                        CompletableFuture.supplyAsync(
-                            () ->
-                                controller(
-                                    ERROR,
-                                    () -> Results.status(ERROR.getStatus(), ERROR.getBody())),
-                            executionContextExecutor))
+                .routeAsync(() ->
+                    CompletableFuture.supplyAsync(
+                        () ->
+                            controller(
+                                ERROR, () -> Results.status(ERROR.getStatus(), ERROR.getBody())),
+                        executionContextExecutor))
                 .GET(EXCEPTION.getPath())
-                .routeAsync(
-                    () ->
-                        CompletableFuture.supplyAsync(
-                            () ->
-                                controller(
-                                    EXCEPTION,
-                                    () -> {
-                                      throw new IllegalArgumentException(EXCEPTION.getBody());
-                                    }),
-                            executionContextExecutor))
+                .routeAsync(() ->
+                    CompletableFuture.supplyAsync(
+                        () ->
+                            controller(
+                                EXCEPTION,
+                                () -> {
+                                  throw new IllegalArgumentException(EXCEPTION.getBody());
+                                }),
+                        executionContextExecutor))
                 .GET(CAPTURE_HEADERS.getPath())
-                .routeAsync(
-                    () -> {
-                      Http.Request request = Controller.request();
-                      Http.Response response = Controller.response();
-                      return CompletableFuture.supplyAsync(
-                          () ->
-                              controller(
-                                  CAPTURE_HEADERS,
-                                  () -> {
-                                    request
-                                        .header("X-Test-Request")
-                                        .ifPresent(
-                                            value -> response.setHeader("X-Test-Response", value));
-                                    return Results.status(
-                                        CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody());
-                                  }),
-                          executionContextExecutor);
-                    })
+                .routeAsync(() -> {
+                  Http.Request request = Controller.request();
+                  Http.Response response = Controller.response();
+                  return CompletableFuture.supplyAsync(
+                      () ->
+                          controller(
+                              CAPTURE_HEADERS,
+                              () -> {
+                                request
+                                    .header("X-Test-Request")
+                                    .ifPresent(
+                                        value -> response.setHeader("X-Test-Response", value));
+                                return Results.status(
+                                    CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody());
+                              }),
+                      executionContextExecutor);
+                })
                 .GET(INDEXED_CHILD.getPath())
-                .routeAsync(
-                    () -> {
-                      String id = Controller.request().getQueryString("id");
-                      return CompletableFuture.supplyAsync(
-                          () ->
-                              controller(
-                                  INDEXED_CHILD,
-                                  () -> {
-                                    INDEXED_CHILD.collectSpanAttributes(
-                                        name -> "id".equals(name) ? id : null);
-                                    return Results.status(
-                                        INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
-                                  }),
-                          executionContextExecutor);
-                    })
+                .routeAsync(() -> {
+                  String id = Controller.request().getQueryString("id");
+                  return CompletableFuture.supplyAsync(
+                      () ->
+                          controller(
+                              INDEXED_CHILD,
+                              () -> {
+                                INDEXED_CHILD.collectSpanAttributes(
+                                    name -> "id".equals(name) ? id : null);
+                                return Results.status(
+                                    INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
+                              }),
+                      executionContextExecutor);
+                })
                 .build());
   }
 

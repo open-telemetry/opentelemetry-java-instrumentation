@@ -147,41 +147,39 @@ public abstract class AbstractLogbackTest {
 
     if (expectedSeverity != null) {
       testing()
-          .waitAndAssertLogRecords(
-              logRecord -> {
-                logRecord
-                    .hasBody("xyz: 123")
-                    .hasInstrumentationScope(
-                        InstrumentationScopeInfo.builder(expectedLoggerName).build())
-                    .hasSeverity(expectedSeverity)
-                    .hasSeverityText(expectedSeverityText)
-                    .hasSpanContext(
-                        withParent
-                            ? testing().spans().get(0).getSpanContext()
-                            : SpanContext.getInvalid());
+          .waitAndAssertLogRecords(logRecord -> {
+            logRecord
+                .hasBody("xyz: 123")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(expectedLoggerName).build())
+                .hasSeverity(expectedSeverity)
+                .hasSeverityText(expectedSeverityText)
+                .hasSpanContext(
+                    withParent
+                        ? testing().spans().get(0).getSpanContext()
+                        : SpanContext.getInvalid());
 
-                List<AttributeAssertion> attributeAsserts = new ArrayList<>();
-                if (expectThreadAttributes()) {
-                  attributeAsserts.addAll(threadAssertions());
-                }
-                attributeAsserts.add(
-                    equalTo(
-                        CODE_FUNCTION_NAME,
-                        AbstractLogbackTest.class.getName() + ".performLogging"));
-                attributeAsserts.add(
-                    equalTo(CODE_FILE_PATH, AbstractLogbackTest.class.getSimpleName() + ".java"));
-                attributeAsserts.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
-                if (logException) {
-                  attributeAsserts.addAll(
-                      asList(
-                          equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                          equalTo(EXCEPTION_MESSAGE, "hello"),
-                          satisfies(
-                              EXCEPTION_STACKTRACE,
-                              val -> val.contains(AbstractLogbackTest.class.getName()))));
-                }
-                logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
-              });
+            List<AttributeAssertion> attributeAsserts = new ArrayList<>();
+            if (expectThreadAttributes()) {
+              attributeAsserts.addAll(threadAssertions());
+            }
+            attributeAsserts.add(
+                equalTo(
+                    CODE_FUNCTION_NAME, AbstractLogbackTest.class.getName() + ".performLogging"));
+            attributeAsserts.add(
+                equalTo(CODE_FILE_PATH, AbstractLogbackTest.class.getSimpleName() + ".java"));
+            attributeAsserts.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
+            if (logException) {
+              attributeAsserts.addAll(
+                  asList(
+                      equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                      equalTo(EXCEPTION_MESSAGE, "hello"),
+                      satisfies(
+                          EXCEPTION_STACKTRACE,
+                          val -> val.contains(AbstractLogbackTest.class.getName()))));
+            }
+            logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
+          });
     } else {
       Thread.sleep(500); // sleep a bit just to make sure no log is captured
       assertThat(testing().logRecords()).isEmpty();
@@ -209,14 +207,13 @@ public abstract class AbstractLogbackTest {
     assertions.add(equalTo(stringKey("key2"), "val2"));
 
     testing()
-        .waitAndAssertLogRecords(
-            logRecord ->
-                logRecord
-                    .hasBody("xyz: 123")
-                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-                    .hasSeverity(Severity.INFO)
-                    .hasSeverityText("INFO")
-                    .hasAttributesSatisfyingExactly(assertions));
+        .waitAndAssertLogRecords(logRecord ->
+            logRecord
+                .hasBody("xyz: 123")
+                .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                .hasSeverity(Severity.INFO)
+                .hasSeverityText("INFO")
+                .hasAttributesSatisfyingExactly(assertions));
   }
 
   @Test
@@ -240,15 +237,14 @@ public abstract class AbstractLogbackTest {
     assertions.add(equalTo(stringKey("key1"), "val1"));
 
     testing()
-        .waitAndAssertLogRecords(
-            logRecord ->
-                logRecord
-                    .hasBody("xyz: 123")
-                    .hasEventName("MyEventName")
-                    .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-                    .hasSeverity(Severity.INFO)
-                    .hasSeverityText("INFO")
-                    .hasAttributesSatisfyingExactly(assertions));
+        .waitAndAssertLogRecords(logRecord ->
+            logRecord
+                .hasBody("xyz: 123")
+                .hasEventName("MyEventName")
+                .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                .hasSeverity(Severity.INFO)
+                .hasSeverityText("INFO")
+                .hasAttributesSatisfyingExactly(assertions));
   }
 
   @Test

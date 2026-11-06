@@ -21,9 +21,8 @@ public class LibertySingletons {
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
       instrumenter =
           AgentServletInstrumenterBuilder.<HttpServletRequest, HttpServletResponse>create()
-              .addContextCustomizer(
-                  (context, request, attributes) ->
-                      new AppServerBridge.Builder().recordException().init(context))
+              .addContextCustomizer((context, request, attributes) ->
+                  new AppServerBridge.Builder().recordException().init(context))
               .propagateOperationListenersToOnEnd()
               .build(INSTRUMENTATION_NAME, Servlet3Accessor.INSTANCE);
 

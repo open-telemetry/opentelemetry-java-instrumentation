@@ -63,16 +63,13 @@ abstract class AbstractOpenSearchQueryTest {
     String documentId = "test-doc-1";
 
     CreateIndexRequest createIndexRequest =
-        CreateIndexRequest.of(
-            c ->
-                c.index(INDEX_NAME)
-                    .mappings(
-                        TypeMapping.of(
-                            t ->
-                                t.properties(
-                                    "message",
-                                    p ->
-                                        p.text(txt -> txt.fielddata(true).analyzer("standard"))))));
+        CreateIndexRequest.of(c ->
+            c.index(INDEX_NAME)
+                .mappings(
+                    TypeMapping.of(t ->
+                        t.properties(
+                            "message",
+                            p -> p.text(txt -> txt.fielddata(true).analyzer("standard"))))));
 
     openSearchClient.indices().create(createIndexRequest);
 
@@ -113,11 +110,10 @@ abstract class AbstractOpenSearchQueryTest {
       PoolingAsyncClientConnectionManager connectionManager,
       BasicCredentialsProvider credentialsProvider) {
     return ApacheHttpClient5TransportBuilder.builder(host)
-        .setHttpClientConfigCallback(
-            httpClientBuilder ->
-                httpClientBuilder
-                    .setConnectionManager(connectionManager)
-                    .setDefaultCredentialsProvider(credentialsProvider))
+        .setHttpClientConfigCallback(httpClientBuilder ->
+            httpClientBuilder
+                .setConnectionManager(connectionManager)
+                .setDefaultCredentialsProvider(credentialsProvider))
         .build();
   }
 

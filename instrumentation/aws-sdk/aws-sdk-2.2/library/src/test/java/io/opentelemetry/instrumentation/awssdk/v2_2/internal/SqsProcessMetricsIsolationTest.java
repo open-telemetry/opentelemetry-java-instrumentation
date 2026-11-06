@@ -93,22 +93,20 @@ class SqsProcessMetricsIsolationTest {
         metrics ->
             metrics
                 .singleElement()
-                .satisfies(
-                    metric ->
-                        assertThat(metric.getLongSumData().getPoints())
-                            .singleElement()
-                            .satisfies(point -> assertThat(point.getValue()).isEqualTo(1))));
+                .satisfies(metric ->
+                    assertThat(metric.getLongSumData().getPoints())
+                        .singleElement()
+                        .satisfies(point -> assertThat(point.getValue()).isEqualTo(1))));
     testing.waitAndAssertMetrics(
         AWS_INSTRUMENTATION_NAME,
         "messaging.process.duration",
         metrics ->
             metrics
                 .singleElement()
-                .satisfies(
-                    metric ->
-                        assertThat(metric.getHistogramData().getPoints())
-                            .singleElement()
-                            .satisfies(point -> assertThat(point.getCount()).isEqualTo(2))));
+                .satisfies(metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .singleElement()
+                        .satisfies(point -> assertThat(point.getCount()).isEqualTo(2))));
   }
 
   private static void assertProcessDurationIsolated(boolean receiveTelemetryEnabled) {
@@ -125,11 +123,10 @@ class SqsProcessMetricsIsolationTest {
 
       response
           .messages()
-          .forEach(
-              message -> {
-                assertThat(contains(Context.current(), PROCESS, PROCESS_DURATION)).isTrue();
-                processSpanContext.set(Span.current().getSpanContext());
-              });
+          .forEach(message -> {
+            assertThat(contains(Context.current(), PROCESS, PROCESS_DURATION)).isTrue();
+            processSpanContext.set(Span.current().getSpanContext());
+          });
 
       assertThat(processSpanContext.get()).isNotNull();
       assertThat(Context.current()).isSameAs(outerContext);
@@ -142,11 +139,10 @@ class SqsProcessMetricsIsolationTest {
     assertThat(testing.spans())
         .filteredOn(span -> span.getSpanId().equals(processSpanContext.get().getSpanId()))
         .singleElement()
-        .satisfies(
-            span -> {
-              assertThat(span.getTraceId()).isEqualTo(outerSpanContext.getTraceId());
-              assertThat(span.getParentSpanId()).isEqualTo(outerSpanContext.getSpanId());
-            });
+        .satisfies(span -> {
+          assertThat(span.getTraceId()).isEqualTo(outerSpanContext.getTraceId());
+          assertThat(span.getParentSpanId()).isEqualTo(outerSpanContext.getSpanId());
+        });
 
     testing.waitAndAssertMetrics(
         AWS_INSTRUMENTATION_NAME,
@@ -154,33 +150,30 @@ class SqsProcessMetricsIsolationTest {
         metrics ->
             metrics
                 .singleElement()
-                .satisfies(
-                    metric ->
-                        assertThat(metric.getLongSumData().getPoints())
-                            .singleElement()
-                            .satisfies(point -> assertThat(point.getValue()).isEqualTo(1))));
+                .satisfies(metric ->
+                    assertThat(metric.getLongSumData().getPoints())
+                        .singleElement()
+                        .satisfies(point -> assertThat(point.getValue()).isEqualTo(1))));
     testing.waitAndAssertMetrics(
         AWS_INSTRUMENTATION_NAME,
         "messaging.process.duration",
         metrics ->
             metrics
                 .singleElement()
-                .satisfies(
-                    metric ->
-                        assertThat(metric.getHistogramData().getPoints())
-                            .singleElement()
-                            .satisfies(point -> assertThat(point.getCount()).isEqualTo(1))));
+                .satisfies(metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .singleElement()
+                        .satisfies(point -> assertThat(point.getCount()).isEqualTo(1))));
     testing.waitAndAssertMetrics(
         OUTER_INSTRUMENTATION_NAME,
         "messaging.process.duration",
         metrics ->
             metrics
                 .singleElement()
-                .satisfies(
-                    metric ->
-                        assertThat(metric.getHistogramData().getPoints())
-                            .singleElement()
-                            .satisfies(point -> assertThat(point.getCount()).isEqualTo(1))));
+                .satisfies(metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .singleElement()
+                        .satisfies(point -> assertThat(point.getCount()).isEqualTo(1))));
   }
 
   private static Instrumenter<String, Void> newOuterProcessInstrumenter() {
@@ -199,10 +192,8 @@ class SqsProcessMetricsIsolationTest {
     ExecutionInterceptor interceptor = telemetry.createExecutionInterceptor();
     SqsClient sdkClient = mock(SqsClient.class);
     when(sdkClient.receiveMessage(any(ReceiveMessageRequest.class)))
-        .thenAnswer(
-            invocation ->
-                executeReceive(
-                    interceptor, invocation.getArgument(0, ReceiveMessageRequest.class)));
+        .thenAnswer(invocation ->
+            executeReceive(interceptor, invocation.getArgument(0, ReceiveMessageRequest.class)));
 
     SqsClient client = telemetry.instrument(sdkClient);
     return client.receiveMessage(ReceiveMessageRequest.builder().queueUrl(QUEUE_URL).build());

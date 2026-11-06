@@ -25,11 +25,10 @@ class SamplerAutoConfigurationTest {
   void configuresFlatSampler() {
     contextRunner
         .withPropertyValues("otel.traces.sampler=always_off")
-        .run(
-            context -> {
-              OpenTelemetrySdk sdk = context.getBean("openTelemetry", OpenTelemetrySdk.class);
-              assertThat(sdk.getSdkTracerProvider().getSampler().getDescription())
-                  .isEqualTo(Sampler.alwaysOff().getDescription());
-            });
+        .run(context -> {
+          OpenTelemetrySdk sdk = context.getBean("openTelemetry", OpenTelemetrySdk.class);
+          assertThat(sdk.getSdkTracerProvider().getSampler().getDescription())
+              .isEqualTo(Sampler.alwaysOff().getDescription());
+        });
   }
 }

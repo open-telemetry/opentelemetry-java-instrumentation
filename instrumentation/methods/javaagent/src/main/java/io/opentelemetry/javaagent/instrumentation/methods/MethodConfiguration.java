@@ -106,10 +106,8 @@ class MethodConfiguration {
     Map<String, Set<String>> classMethodsToTrace = MethodsConfigurationParser.parse(include);
     return classMethodsToTrace.entrySet().stream()
         .filter(e -> !e.getValue().isEmpty())
-        .map(
-            e ->
-                new MethodInstrumentation(
-                    e.getKey(), singletonMap(SpanKind.INTERNAL, e.getValue())))
+        .map(e ->
+            new MethodInstrumentation(e.getKey(), singletonMap(SpanKind.INTERNAL, e.getValue())))
         .collect(toList());
   }
 }

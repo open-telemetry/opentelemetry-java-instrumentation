@@ -88,11 +88,10 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
     ClusterIdCapture clusterIdCapture = new ClusterIdCapture();
     MongoClientSettings settings =
         MongoClientSettings.builder()
-            .applyToClusterSettings(
-                builder -> {
-                  applySrvHost(builder, "cluster0.example.invalid");
-                  builder.addClusterListener(clusterIdCapture);
-                })
+            .applyToClusterSettings(builder -> {
+              applySrvHost(builder, "cluster0.example.invalid");
+              builder.addClusterListener(clusterIdCapture);
+            })
             .build();
 
     // closing an SRV client races the resolver thread and can report an uncaught exception

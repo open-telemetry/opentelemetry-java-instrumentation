@@ -64,14 +64,13 @@ class Serializer {
     }
     Optional<ContentStreamProvider> optional = marshaller.marshall(sdkPojo).contentStreamProvider();
     return optional
-        .map(
-            csp -> {
-              try (InputStream cspIs = csp.newStream()) {
-                return IoUtils.toUtf8String(cspIs);
-              } catch (IOException e) {
-                return null;
-              }
-            })
+        .map(csp -> {
+          try (InputStream cspIs = csp.newStream()) {
+            return IoUtils.toUtf8String(cspIs);
+          } catch (IOException e) {
+            return null;
+          }
+        })
         .orElse(null);
   }
 

@@ -100,11 +100,10 @@ class CamelSingletons {
     }
     if (operationType == PROCESS) {
       builder.addOperationMetrics(MessagingProcessMetrics.get());
-      builder.addContextCustomizer(
-          (context, request, startAttributes) ->
-              messageTelemetry().contains(request.getExchange().getIn(), RECEIVE, CONSUMED_MESSAGES)
-                  ? add(context, RECEIVE, CONSUMED_MESSAGES)
-                  : context);
+      builder.addContextCustomizer((context, request, startAttributes) ->
+          messageTelemetry().contains(request.getExchange().getIn(), RECEIVE, CONSUMED_MESSAGES)
+              ? add(context, RECEIVE, CONSUMED_MESSAGES)
+              : context);
       builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
       return MessagingProcessInstrumenterFactory.create(
           builder,

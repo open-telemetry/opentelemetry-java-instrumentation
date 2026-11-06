@@ -67,15 +67,13 @@ class KafkaConnectTest extends TargetSystemTest {
     JmxConfig config = loadKafkaConnectConfig();
 
     assertThat(config.getRules())
-        .allSatisfy(
-            rule -> {
-              assertThat(rule.getMetricType()).isNotEqualTo(MetricInfo.Type.STATE);
-              rule.getMapping()
-                  .values()
-                  .forEach(
-                      metric ->
-                          assertThat(metric.getMetricType()).isNotEqualTo(MetricInfo.Type.STATE));
-            });
+        .allSatisfy(rule -> {
+          assertThat(rule.getMetricType()).isNotEqualTo(MetricInfo.Type.STATE);
+          rule.getMapping()
+              .values()
+              .forEach(
+                  metric -> assertThat(metric.getMetricType()).isNotEqualTo(MetricInfo.Type.STATE));
+        });
   }
 
   @Test
@@ -689,16 +687,13 @@ class KafkaConnectTest extends TargetSystemTest {
     await()
         .atMost(Duration.ofMinutes(2))
         .pollInterval(Duration.ofSeconds(1))
-        .untilAsserted(
-            () -> {
-              AggregatedHttpResponse response =
-                  sendRequest(
-                      HttpMethod.GET,
-                      connectUrl + "/connectors/" + connectorName + "/status",
-                      null);
-              assertThat(response.status().code()).isEqualTo(200);
-              assertThat(response.contentUtf8()).contains("\"state\":\"RUNNING\"");
-            });
+        .untilAsserted(() -> {
+          AggregatedHttpResponse response =
+              sendRequest(
+                  HttpMethod.GET, connectUrl + "/connectors/" + connectorName + "/status", null);
+          assertThat(response.status().code()).isEqualTo(200);
+          assertThat(response.contentUtf8()).contains("\"state\":\"RUNNING\"");
+        });
   }
 
   private static AggregatedHttpResponse sendRequest(HttpMethod method, String url, String body) {

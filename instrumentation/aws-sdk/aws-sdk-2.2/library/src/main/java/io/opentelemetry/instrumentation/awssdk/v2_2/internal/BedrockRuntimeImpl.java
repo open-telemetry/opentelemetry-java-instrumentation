@@ -1066,16 +1066,15 @@ public final class BedrockRuntimeImpl {
         if (toolResultContent != null && toolResultContent.isList()) {
           List<ToolResultContentBlock> toolResultContentBlocks =
               toolResultContent.asList().stream()
-                  .map(
-                      toolResultContentBlockDoc -> {
-                        if (toolResultContentBlockDoc.isMap()) {
-                          Document json = toolResultContentBlockDoc.asMap().get("json");
-                          if (json != null) {
-                            return ToolResultContentBlock.builder().json(json).build();
-                          }
-                        }
-                        return null;
-                      })
+                  .map(toolResultContentBlockDoc -> {
+                    if (toolResultContentBlockDoc.isMap()) {
+                      Document json = toolResultContentBlockDoc.asMap().get("json");
+                      if (json != null) {
+                        return ToolResultContentBlock.builder().json(json).build();
+                      }
+                    }
+                    return null;
+                  })
                   .filter(Objects::nonNull)
                   .collect(toList());
           resultBlockBuilder.content(toolResultContentBlocks);
@@ -1232,11 +1231,10 @@ public final class BedrockRuntimeImpl {
     @Override
     public final void onEventStream(SdkPublisher<S> sdkPublisher) {
       delegate.onEventStream(
-          sdkPublisher.map(
-              event -> {
-                handleEventSafely(event);
-                return event;
-              }));
+          sdkPublisher.map(event -> {
+            handleEventSafely(event);
+            return event;
+          }));
     }
 
     // Telemetry parsing must never change the behavior of the application's stream.

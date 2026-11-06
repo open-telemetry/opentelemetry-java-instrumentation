@@ -263,12 +263,9 @@ class SqsTracingListTest {
             })
         .isSameAs(failure);
     assertThat(Context.current()).isSameAs(previous);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process")
-                        .hasException(emitExceptionAsSpanEvents() ? failure : null)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("process").hasException(emitExceptionAsSpanEvents() ? failure : null)));
   }
 
   @Test
@@ -279,18 +276,16 @@ class SqsTracingListTest {
         () -> {
           Context parent = Context.current().with(APPLICATION_KEY, "application");
           List<Message> outer = tracingMessages(parent, instrumenter);
-          outer.forEach(
-              message -> {
-                Context outerContext = Context.current();
-                List<Message> inner = tracingMessages(parent, instrumenter);
-                inner.forEach(
-                    nested -> {
-                      assertThat(Span.current().getSpanContext())
-                          .isNotEqualTo(Span.fromContext(outerContext).getSpanContext());
-                      assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("application");
-                    });
-                assertThat(Context.current()).isSameAs(outerContext);
-              });
+          outer.forEach(message -> {
+            Context outerContext = Context.current();
+            List<Message> inner = tracingMessages(parent, instrumenter);
+            inner.forEach(nested -> {
+              assertThat(Span.current().getSpanContext())
+                  .isNotEqualTo(Span.fromContext(outerContext).getSpanContext());
+              assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("application");
+            });
+            assertThat(Context.current()).isSameAs(outerContext);
+          });
         });
     assertThat(testing.spans()).hasSize(7);
     SpanData parent =
@@ -306,14 +301,13 @@ class SqsTracingListTest {
     List<Message> messages = tracingMessages(Context.root(), instrumenter);
     Context previous = Context.current();
 
-    messages.forEach(
-        message -> {
-          Context processContext = Context.current();
-          assertThat(SpanKey.CONSUMER_PROCESS.fromContextOrNull(processContext)).isNotNull();
-          tracingMessages(processContext, instrumenter)
-              .forEach(nested -> assertThat(Context.current()).isSameAs(processContext));
-          assertThat(Context.current()).isSameAs(processContext);
-        });
+    messages.forEach(message -> {
+      Context processContext = Context.current();
+      assertThat(SpanKey.CONSUMER_PROCESS.fromContextOrNull(processContext)).isNotNull();
+      tracingMessages(processContext, instrumenter)
+          .forEach(nested -> assertThat(Context.current()).isSameAs(processContext));
+      assertThat(Context.current()).isSameAs(processContext);
+    });
 
     assertThat(Context.current()).isSameAs(previous);
     assertThat(testing.spans()).hasSize(2);
@@ -329,12 +323,11 @@ class SqsTracingListTest {
     Context ambient = Context.current();
     assertThat(SpanKey.CONSUMER_PROCESS.fromContextOrNull(ambient)).isNotNull();
 
-    unrelated.forEach(
-        message -> {
-          assertThat(Span.current().getSpanContext())
-              .isNotEqualTo(Span.fromContext(ambient).getSpanContext());
-          assertThat(Span.current().getSpanContext().isValid()).isTrue();
-        });
+    unrelated.forEach(message -> {
+      assertThat(Span.current().getSpanContext())
+          .isNotEqualTo(Span.fromContext(ambient).getSpanContext());
+      assertThat(Span.current().getSpanContext().isValid()).isTrue();
+    });
 
     assertThat(Context.current()).isSameAs(ambient);
     assertThat(abandoned.hasNext()).isTrue();
@@ -435,11 +428,10 @@ class SqsTracingListTest {
   void disabledInstrumenterPreservesCallbacks(boolean enabled) {
     List<Message> messages = tracingMessages(Context.root(), enabled);
     List<Message> visited = new ArrayList<>();
-    messages.forEach(
-        message -> {
-          visited.add(message);
-          assertThat(Span.current().getSpanContext().isValid()).isEqualTo(enabled);
-        });
+    messages.forEach(message -> {
+      visited.add(message);
+      assertThat(Span.current().getSpanContext().isValid()).isEqualTo(enabled);
+    });
     assertThat(visited.toArray()).containsExactly(messages.toArray());
     assertThat(testing.spans()).hasSize(enabled ? 2 : 0);
   }

@@ -93,47 +93,44 @@ class ElasticJobTest {
     testing.waitAndAssertSortedTraces(
         comparingRootSpanAttribute(longKey("scheduling.apache-elasticjob.sharding.item.index")),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.INTERNAL)
-                        .hasName("HttpJobExecutor.process")
-                        .hasAttributesSatisfyingExactly(
-                            elasticJobAttributes(
-                                "javaHttpJob",
-                                0L,
-                                3L,
-                                "Beijing",
-                                "process",
-                                "org.apache.shardingsphere.elasticjob.http.executor.HttpJobExecutor",
-                                "HTTP"))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasKind(SpanKind.INTERNAL)
+                    .hasName("HttpJobExecutor.process")
+                    .hasAttributesSatisfyingExactly(
+                        elasticJobAttributes(
+                            "javaHttpJob",
+                            0L,
+                            3L,
+                            "Beijing",
+                            "process",
+                            "org.apache.shardingsphere.elasticjob.http.executor.HttpJobExecutor",
+                            "HTTP"))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.INTERNAL)
-                        .hasName("HttpJobExecutor.process")
-                        .hasAttributesSatisfyingExactly(
-                            elasticJobAttributes(
-                                "javaHttpJob",
-                                1L,
-                                3L,
-                                "Shanghai",
-                                "process",
-                                "org.apache.shardingsphere.elasticjob.http.executor.HttpJobExecutor",
-                                "HTTP"))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasKind(SpanKind.INTERNAL)
+                    .hasName("HttpJobExecutor.process")
+                    .hasAttributesSatisfyingExactly(
+                        elasticJobAttributes(
+                            "javaHttpJob",
+                            1L,
+                            3L,
+                            "Shanghai",
+                            "process",
+                            "org.apache.shardingsphere.elasticjob.http.executor.HttpJobExecutor",
+                            "HTTP"))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.INTERNAL)
-                        .hasName("HttpJobExecutor.process")
-                        .hasAttributesSatisfyingExactly(
-                            elasticJobAttributes(
-                                "javaHttpJob",
-                                2L,
-                                3L,
-                                "Guangzhou",
-                                "process",
-                                "org.apache.shardingsphere.elasticjob.http.executor.HttpJobExecutor",
-                                "HTTP"))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasKind(SpanKind.INTERNAL)
+                    .hasName("HttpJobExecutor.process")
+                    .hasAttributesSatisfyingExactly(
+                        elasticJobAttributes(
+                            "javaHttpJob",
+                            2L,
+                            3L,
+                            "Guangzhou",
+                            "process",
+                            "org.apache.shardingsphere.elasticjob.http.executor.HttpJobExecutor",
+                            "HTTP"))));
   }
 
   @Test
@@ -154,33 +151,31 @@ class ElasticJobTest {
     testing.waitAndAssertSortedTraces(
         comparingRootSpanAttribute(longKey("scheduling.apache-elasticjob.sharding.item.index")),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.INTERNAL)
-                        .hasName("TestSimpleJob.execute")
-                        .hasAttributesSatisfyingExactly(
-                            elasticJobAttributes(
-                                "simpleElasticJob",
-                                0L,
-                                2L,
-                                "A",
-                                "execute",
-                                TestSimpleJob.class.getName(),
-                                "SIMPLE"))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasKind(SpanKind.INTERNAL)
+                    .hasName("TestSimpleJob.execute")
+                    .hasAttributesSatisfyingExactly(
+                        elasticJobAttributes(
+                            "simpleElasticJob",
+                            0L,
+                            2L,
+                            "A",
+                            "execute",
+                            TestSimpleJob.class.getName(),
+                            "SIMPLE"))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.INTERNAL)
-                        .hasName("TestSimpleJob.execute")
-                        .hasAttributesSatisfyingExactly(
-                            elasticJobAttributes(
-                                "simpleElasticJob",
-                                1L,
-                                2L,
-                                "B",
-                                "execute",
-                                TestSimpleJob.class.getName(),
-                                "SIMPLE"))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasKind(SpanKind.INTERNAL)
+                    .hasName("TestSimpleJob.execute")
+                    .hasAttributesSatisfyingExactly(
+                        elasticJobAttributes(
+                            "simpleElasticJob",
+                            1L,
+                            2L,
+                            "B",
+                            "execute",
+                            TestSimpleJob.class.getName(),
+                            "SIMPLE"))));
   }
 
   @Test
@@ -201,54 +196,50 @@ class ElasticJobTest {
     testing.waitAndAssertSortedTraces(
         comparingRootSpanAttribute(longKey("scheduling.apache-elasticjob.sharding.item.index")),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.INTERNAL)
-                        .hasName("TestDataflowJob.processData")
-                        .hasAttributesSatisfyingExactly(
-                            elasticJobAttributes(
-                                "dataflowElasticJob",
-                                0L,
-                                2L,
-                                "X",
-                                "processData",
-                                TestDataflowJob.class.getName(),
-                                "DATAFLOW"))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasKind(SpanKind.INTERNAL)
+                    .hasName("TestDataflowJob.processData")
+                    .hasAttributesSatisfyingExactly(
+                        elasticJobAttributes(
+                            "dataflowElasticJob",
+                            0L,
+                            2L,
+                            "X",
+                            "processData",
+                            TestDataflowJob.class.getName(),
+                            "DATAFLOW"))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.INTERNAL)
-                        .hasName("TestDataflowJob.processData")
-                        .hasAttributesSatisfyingExactly(
-                            elasticJobAttributes(
-                                "dataflowElasticJob",
-                                1L,
-                                2L,
-                                "Y",
-                                "processData",
-                                TestDataflowJob.class.getName(),
-                                "DATAFLOW"))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasKind(SpanKind.INTERNAL)
+                    .hasName("TestDataflowJob.processData")
+                    .hasAttributesSatisfyingExactly(
+                        elasticJobAttributes(
+                            "dataflowElasticJob",
+                            1L,
+                            2L,
+                            "Y",
+                            "processData",
+                            TestDataflowJob.class.getName(),
+                            "DATAFLOW"))));
   }
 
   @Test
   void testScriptJob() throws IOException {
     ScheduleJobBootstrap bootstrap = setUpScriptJob(regCenter);
     cleanup.deferCleanup(bootstrap::shutdown);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.INTERNAL)
-                        .hasName("ScriptJobExecutor.process")
-                        .hasAttributesSatisfyingExactly(
-                            elasticJobAttributes(
-                                "scriptElasticJob",
-                                0L,
-                                1L,
-                                null,
-                                "process",
-                                "org.apache.shardingsphere.elasticjob.script.executor.ScriptJobExecutor",
-                                "SCRIPT"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(SpanKind.INTERNAL)
+                .hasName("ScriptJobExecutor.process")
+                .hasAttributesSatisfyingExactly(
+                    elasticJobAttributes(
+                        "scriptElasticJob",
+                        0L,
+                        1L,
+                        null,
+                        "process",
+                        "org.apache.shardingsphere.elasticjob.script.executor.ScriptJobExecutor",
+                        "SCRIPT"))));
   }
 
   @Test
@@ -266,23 +257,21 @@ class ElasticJobTest {
     cleanup.deferCleanup(bootstrap::shutdown);
     bootstrap.schedule();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.INTERNAL)
-                        .hasName("TestFailedJob.execute")
-                        .hasStatus(StatusData.error())
-                        .hasException(new RuntimeException("Simulated job failure for testing"))
-                        .hasAttributesSatisfyingExactly(
-                            elasticJobAttributes(
-                                "failedElasticJob",
-                                0L,
-                                1L,
-                                "failed",
-                                "execute",
-                                TestFailedJob.class.getName(),
-                                "SIMPLE"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(SpanKind.INTERNAL)
+                .hasName("TestFailedJob.execute")
+                .hasStatus(StatusData.error())
+                .hasException(new RuntimeException("Simulated job failure for testing"))
+                .hasAttributesSatisfyingExactly(
+                    elasticJobAttributes(
+                        "failedElasticJob",
+                        0L,
+                        1L,
+                        "failed",
+                        "execute",
+                        TestFailedJob.class.getName(),
+                        "SIMPLE"))));
   }
 
   private static CoordinatorRegistryCenter setUpRegistryCenter() {

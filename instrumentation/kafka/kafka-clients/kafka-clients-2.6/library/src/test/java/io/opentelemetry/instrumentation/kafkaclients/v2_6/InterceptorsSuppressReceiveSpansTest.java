@@ -69,9 +69,8 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
         // ideally we'd want producer callback to be part of the main trace, we just aren't able to
         // instrument that
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   private static List<AttributeAssertion> sendAttributes() {

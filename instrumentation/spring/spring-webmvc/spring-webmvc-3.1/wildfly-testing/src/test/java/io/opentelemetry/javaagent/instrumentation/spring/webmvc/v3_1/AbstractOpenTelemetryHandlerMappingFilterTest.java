@@ -46,14 +46,13 @@ abstract class AbstractOpenTelemetryHandlerMappingFilterTest {
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo("hello world");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET /hello/{name}").hasKind(SpanKind.SERVER).hasNoParent(),
-                span ->
-                    span.hasName("HelloController.hello")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("GET /hello/{name}").hasKind(SpanKind.SERVER).hasNoParent(),
+            span ->
+                span.hasName("HelloController.hello")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -62,14 +61,12 @@ abstract class AbstractOpenTelemetryHandlerMappingFilterTest {
 
     assertThat(response.status().code()).isEqualTo(500);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET /hello/{name}")
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.error())
-                        .hasNoParent()
-                        .hasException(new ServletException("exception"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("GET /hello/{name}")
+                .hasKind(SpanKind.SERVER)
+                .hasStatus(StatusData.error())
+                .hasNoParent()
+                .hasException(new ServletException("exception"))));
   }
 }

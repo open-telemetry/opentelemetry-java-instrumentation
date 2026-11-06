@@ -99,25 +99,23 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8().trim()).isEqualTo("Hello");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(getContextPath() + "/hello.xhtml")
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(URL_SCHEME, "http"),
-                            equalTo(URL_PATH, getContextPath() + "/" + path),
-                            equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(HTTP_ROUTE, getContextPath() + "/" + route),
-                            satisfies(CLIENT_ADDRESS, val -> val.isIn(TEST_CLIENT_IP, null)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(getContextPath() + "/hello.xhtml")
+                .hasKind(SpanKind.SERVER)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                    equalTo(SERVER_ADDRESS, "localhost"),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                    satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(URL_SCHEME, "http"),
+                    equalTo(URL_PATH, getContextPath() + "/" + path),
+                    equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT),
+                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                    equalTo(HTTP_ROUTE, getContextPath() + "/" + route),
+                    satisfies(CLIENT_ADDRESS, val -> val.isIn(TEST_CLIENT_IP, null)))));
   }
 
   @Test
@@ -129,13 +127,11 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(doc.selectFirst("title").text()).isEqualTo("Hello, World!");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(getContextPath() + "/greeting.xhtml")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(getContextPath() + "/greeting.xhtml")
+                .hasKind(SpanKind.SERVER)
+                .hasNoParent()));
 
     testing.clearData();
 
@@ -174,17 +170,16 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
     assertThat(response2.status().code()).isEqualTo(200);
     assertThat(doc2.getElementById("app-form:output-message").text()).isEqualTo("Hello test");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(getContextPath() + "/greeting.xhtml")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent(),
-                span ->
-                    span.hasName("#{greetingForm.submit()}")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName(getContextPath() + "/greeting.xhtml")
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent(),
+            span ->
+                span.hasName("#{greetingForm.submit()}")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -197,13 +192,11 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(doc.selectFirst("title").text()).isEqualTo("Hello, World!");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(getContextPath() + "/greeting.xhtml")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(getContextPath() + "/greeting.xhtml")
+                .hasKind(SpanKind.SERVER)
+                .hasNoParent()));
 
     testing.clearData();
 
@@ -241,20 +234,19 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
 
     IllegalStateException expectedException = new IllegalStateException("submit exception");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(getContextPath() + "/greeting.xhtml")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(expectedException),
-                span ->
-                    span.hasName("#{greetingForm.submit()}")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasException(expectedException)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName(getContextPath() + "/greeting.xhtml")
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(expectedException),
+            span ->
+                span.hasName("#{greetingForm.submit()}")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasException(expectedException)));
   }
 }

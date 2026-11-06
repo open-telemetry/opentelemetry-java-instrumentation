@@ -214,9 +214,8 @@ public final class KafkaMessagingMetricsAssertions {
         instrumentationName,
         PROCESS_DURATION,
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints()).hasSize(durationPointCount)));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric.getHistogramData().getPoints()).hasSize(durationPointCount)));
   }
 
   /**
@@ -231,13 +230,12 @@ public final class KafkaMessagingMetricsAssertions {
         instrumentationName,
         CONSUMED_MESSAGES,
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(
-                            metric.getLongSumData().getPoints().stream()
-                                .mapToLong(LongPointData::getValue)
-                                .sum())
-                        .isEqualTo(total)));
+            metrics.satisfiesExactly(metric ->
+                assertThat(
+                        metric.getLongSumData().getPoints().stream()
+                            .mapToLong(LongPointData::getValue)
+                            .sum())
+                    .isEqualTo(total)));
   }
 
   private static void assertDuration(
@@ -257,27 +255,25 @@ public final class KafkaMessagingMetricsAssertions {
         metricName,
         metrics ->
             metrics
-                .filteredOn(
-                    metric ->
-                        metric.getUnit().equals("s")
-                            && metric.getDescription().equals(description)
-                            && metric.getHistogramData().getPoints().stream()
-                                .anyMatch(
-                                    point ->
-                                        point.getCount() == count
-                                            && point.getSum() > 0.0
-                                            && point
-                                                .getAttributes()
-                                                .asMap()
-                                                .equals(
-                                                    attributes(
-                                                            operation,
-                                                            operationType,
-                                                            destination,
-                                                            group,
-                                                            partition,
-                                                            errorType)
-                                                        .asMap())))
+                .filteredOn(metric ->
+                    metric.getUnit().equals("s")
+                        && metric.getDescription().equals(description)
+                        && metric.getHistogramData().getPoints().stream()
+                            .anyMatch(point ->
+                                point.getCount() == count
+                                    && point.getSum() > 0.0
+                                    && point
+                                        .getAttributes()
+                                        .asMap()
+                                        .equals(
+                                            attributes(
+                                                    operation,
+                                                    operationType,
+                                                    destination,
+                                                    group,
+                                                    partition,
+                                                    errorType)
+                                                .asMap())))
                 .isNotEmpty());
   }
 
@@ -297,26 +293,24 @@ public final class KafkaMessagingMetricsAssertions {
         metricName,
         metrics ->
             metrics
-                .filteredOn(
-                    metric ->
-                        metric.getUnit().equals("{message}")
-                            && metric.getDescription().equals(description)
-                            && metric.getLongSumData().getPoints().stream()
-                                .anyMatch(
-                                    point ->
-                                        point.getValue() == count
-                                            && point
-                                                .getAttributes()
-                                                .asMap()
-                                                .equals(
-                                                    attributes(
-                                                            operation,
-                                                            null,
-                                                            destination,
-                                                            group,
-                                                            partition,
-                                                            errorType)
-                                                        .asMap())))
+                .filteredOn(metric ->
+                    metric.getUnit().equals("{message}")
+                        && metric.getDescription().equals(description)
+                        && metric.getLongSumData().getPoints().stream()
+                            .anyMatch(point ->
+                                point.getValue() == count
+                                    && point
+                                        .getAttributes()
+                                        .asMap()
+                                        .equals(
+                                            attributes(
+                                                    operation,
+                                                    null,
+                                                    destination,
+                                                    group,
+                                                    partition,
+                                                    errorType)
+                                                .asMap())))
                 .isNotEmpty());
   }
 
@@ -350,15 +344,13 @@ public final class KafkaMessagingMetricsAssertions {
   private static void assertNoProcessConsumedMessages(
       InstrumentationExtension testing, String instrumentationName) {
     assertThat(testing.metrics())
-        .filteredOn(
-            metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(instrumentationName)
-                    && metric.getName().equals(CONSUMED_MESSAGES))
+        .filteredOn(metric ->
+            metric.getInstrumentationScopeInfo().getName().equals(instrumentationName)
+                && metric.getName().equals(CONSUMED_MESSAGES))
         .flatExtracting(metric -> metric.getLongSumData().getPoints())
-        .allSatisfy(
-            point ->
-                assertThat(point.getAttributes().get(stringKey("messaging.operation.name")))
-                    .isNotEqualTo("process"));
+        .allSatisfy(point ->
+            assertThat(point.getAttributes().get(stringKey("messaging.operation.name")))
+                .isNotEqualTo("process"));
   }
 
   private KafkaMessagingMetricsAssertions() {}

@@ -56,48 +56,44 @@ class SpringJpaTest {
 
     assertThat(result).isFalse();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("select Customer")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                stringKey("hibernate.session_id"),
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("select Customer")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            satisfies(
-                                DB_QUERY_TEXT,
-                                val ->
-                                    val.matches(
-                                        Pattern.compile(
-                                            "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName(.*)from Customer(.*)"))),
-                            equalTo(DB_QUERY_SUMMARY, "select Customer")),
-                span ->
-                    span.hasName("Transaction.commit")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("hibernate.session_id"),
-                                experimental(
-                                    trace
-                                        .getSpan(1)
-                                        .getAttributes()
-                                        .get(stringKey("hibernate.session_id")))))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("select Customer")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            stringKey("hibernate.session_id"),
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("select Customer")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        satisfies(
+                            DB_QUERY_TEXT,
+                            val ->
+                                val.matches(
+                                    Pattern.compile(
+                                        "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName(.*)from Customer(.*)"))),
+                        equalTo(DB_QUERY_SUMMARY, "select Customer")),
+            span ->
+                span.hasName("Transaction.commit")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            stringKey("hibernate.session_id"),
+                            experimental(
+                                trace
+                                    .getSpan(1)
+                                    .getAttributes()
+                                    .get(stringKey("hibernate.session_id")))))));
     testing.clearData();
 
     testing.runWithSpan(
@@ -108,101 +104,94 @@ class SpringJpaTest {
 
     assertThat(customer.getId()).isNotNull();
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          if (isHibernate4) {
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("Session.persist spring.jpa.Customer")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                stringKey("hibernate.session_id"),
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("insert Customer")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            satisfies(
-                                DB_QUERY_TEXT,
-                                val ->
-                                    val.matches(
-                                        Pattern.compile(
-                                            "insert into Customer (.*) values \\(.*, \\?, \\?\\)"))),
-                            equalTo(DB_QUERY_SUMMARY, "insert Customer")),
-                span ->
-                    span.hasName("Transaction.commit")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("hibernate.session_id"),
-                                experimental(
-                                    trace
-                                        .getSpan(1)
-                                        .getAttributes()
-                                        .get(stringKey("hibernate.session_id"))))));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("Session.persist spring.jpa.Customer")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                stringKey("hibernate.session_id"),
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("call hibernate_sequence")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            equalTo(DB_QUERY_TEXT, "call next value for hibernate_sequence"),
-                            equalTo(DB_QUERY_SUMMARY, "call hibernate_sequence")),
-                span ->
-                    span.hasName("Transaction.commit")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("hibernate.session_id"),
-                                experimental(
-                                    trace
-                                        .getSpan(1)
-                                        .getAttributes()
-                                        .get(stringKey("hibernate.session_id"))))),
-                span ->
-                    span.hasName("insert Customer")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(3))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            satisfies(
-                                DB_QUERY_TEXT,
-                                val ->
-                                    val.matches(
-                                        Pattern.compile(
-                                            "insert into Customer (.*) values \\(.* \\?, \\?\\)"))),
-                            equalTo(DB_QUERY_SUMMARY, "insert Customer")));
-          }
-        });
+    testing.waitAndAssertTraces(trace -> {
+      if (isHibernate4) {
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("Session.persist spring.jpa.Customer")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            stringKey("hibernate.session_id"),
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("insert Customer")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        satisfies(
+                            DB_QUERY_TEXT,
+                            val ->
+                                val.matches(
+                                    Pattern.compile(
+                                        "insert into Customer (.*) values \\(.*, \\?, \\?\\)"))),
+                        equalTo(DB_QUERY_SUMMARY, "insert Customer")),
+            span ->
+                span.hasName("Transaction.commit")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            stringKey("hibernate.session_id"),
+                            experimental(
+                                trace
+                                    .getSpan(1)
+                                    .getAttributes()
+                                    .get(stringKey("hibernate.session_id"))))));
+      } else {
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("Session.persist spring.jpa.Customer")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            stringKey("hibernate.session_id"),
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("call hibernate_sequence")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        equalTo(DB_QUERY_TEXT, "call next value for hibernate_sequence"),
+                        equalTo(DB_QUERY_SUMMARY, "call hibernate_sequence")),
+            span ->
+                span.hasName("Transaction.commit")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            stringKey("hibernate.session_id"),
+                            experimental(
+                                trace
+                                    .getSpan(1)
+                                    .getAttributes()
+                                    .get(stringKey("hibernate.session_id"))))),
+            span ->
+                span.hasName("insert Customer")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(3))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        satisfies(
+                            DB_QUERY_TEXT,
+                            val ->
+                                val.matches(
+                                    Pattern.compile(
+                                        "insert into Customer (.*) values \\(.* \\?, \\?\\)"))),
+                        equalTo(DB_QUERY_SUMMARY, "insert Customer")));
+      }
+    });
     testing.clearData();
 
     customer.setFirstName("Bill");
@@ -215,59 +204,55 @@ class SpringJpaTest {
 
     Long savedId = customer.getId();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("Session.merge spring.jpa.Customer")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                stringKey("hibernate.session_id"),
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("select Customer")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            satisfies(
-                                DB_QUERY_TEXT,
-                                val ->
-                                    val.matches(
-                                        Pattern.compile(
-                                            "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
-                            equalTo(DB_QUERY_SUMMARY, "select Customer")),
-                span ->
-                    span.hasName("Transaction.commit")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("hibernate.session_id"),
-                                experimental(
-                                    trace
-                                        .getSpan(1)
-                                        .getAttributes()
-                                        .get(stringKey("hibernate.session_id"))))),
-                span ->
-                    span.hasName("update Customer")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(3))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            equalTo(
-                                DB_QUERY_TEXT,
-                                "update Customer set firstName=?, lastName=? where id=?"),
-                            equalTo(DB_QUERY_SUMMARY, "update Customer"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("Session.merge spring.jpa.Customer")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            stringKey("hibernate.session_id"),
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("select Customer")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        satisfies(
+                            DB_QUERY_TEXT,
+                            val ->
+                                val.matches(
+                                    Pattern.compile(
+                                        "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
+                        equalTo(DB_QUERY_SUMMARY, "select Customer")),
+            span ->
+                span.hasName("Transaction.commit")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            stringKey("hibernate.session_id"),
+                            experimental(
+                                trace
+                                    .getSpan(1)
+                                    .getAttributes()
+                                    .get(stringKey("hibernate.session_id"))))),
+            span ->
+                span.hasName("update Customer")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(3))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        equalTo(
+                            DB_QUERY_TEXT,
+                            "update Customer set firstName=?, lastName=? where id=?"),
+                        equalTo(DB_QUERY_SUMMARY, "update Customer"))));
     testing.clearData();
 
     Customer foundCustomer =
@@ -276,161 +261,153 @@ class SpringJpaTest {
     assertThat(foundCustomer.getId()).isEqualTo(savedId);
     assertThat(foundCustomer.getFirstName()).isEqualTo("Bill");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("select Customer")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                stringKey("hibernate.session_id"),
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("select Customer")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            satisfies(
-                                DB_QUERY_TEXT,
-                                val ->
-                                    val.matches(
-                                        Pattern.compile(
-                                            "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)(where ([^.]+).lastName=\\?)"))),
-                            equalTo(DB_QUERY_SUMMARY, "select Customer"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("select Customer")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            stringKey("hibernate.session_id"),
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("select Customer")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        satisfies(
+                            DB_QUERY_TEXT,
+                            val ->
+                                val.matches(
+                                    Pattern.compile(
+                                        "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)(where ([^.]+).lastName=\\?)"))),
+                        equalTo(DB_QUERY_SUMMARY, "select Customer"))));
     testing.clearData();
 
     testing.runWithSpan("parent", () -> repo.delete(foundCustomer));
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          if (isHibernate4) {
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("Session.merge spring.jpa.Customer")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                stringKey("hibernate.session_id"),
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("select Customer")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            satisfies(
-                                DB_QUERY_TEXT,
-                                val ->
-                                    val.matches(
-                                        Pattern.compile(
-                                            "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
-                            equalTo(DB_QUERY_SUMMARY, "select Customer")),
-                span ->
-                    span.hasName("Session.delete spring.jpa.Customer")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                stringKey("hibernate.session_id"),
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("Transaction.commit")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                stringKey("hibernate.session_id"),
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("delete Customer")
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            equalTo(DB_QUERY_TEXT, "delete from Customer where id=?"),
-                            equalTo(DB_QUERY_SUMMARY, "delete Customer")));
+    testing.waitAndAssertTraces(trace -> {
+      if (isHibernate4) {
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("Session.merge spring.jpa.Customer")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            stringKey("hibernate.session_id"),
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("select Customer")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        satisfies(
+                            DB_QUERY_TEXT,
+                            val ->
+                                val.matches(
+                                    Pattern.compile(
+                                        "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
+                        equalTo(DB_QUERY_SUMMARY, "select Customer")),
+            span ->
+                span.hasName("Session.delete spring.jpa.Customer")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            stringKey("hibernate.session_id"),
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("Transaction.commit")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            stringKey("hibernate.session_id"),
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("delete Customer")
+                    .hasKind(CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        equalTo(DB_QUERY_TEXT, "delete from Customer where id=?"),
+                        equalTo(DB_QUERY_SUMMARY, "delete Customer")));
 
-          } else {
-            String findAction;
-            if (isLatestDep) {
-              findAction = "get";
-            } else {
-              findAction = "find";
-            }
+      } else {
+        String findAction;
+        if (isLatestDep) {
+          findAction = "get";
+        } else {
+          findAction = "find";
+        }
 
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("Session." + findAction + " spring.jpa.Customer")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                stringKey("hibernate.session_id"),
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("select Customer")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            satisfies(
-                                DB_QUERY_TEXT,
-                                val ->
-                                    val.matches(
-                                        Pattern.compile(
-                                            "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
-                            equalTo(DB_QUERY_SUMMARY, "select Customer")),
-                span ->
-                    span.hasName("Session.merge spring.jpa.Customer")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                stringKey("hibernate.session_id"),
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("Session.delete spring.jpa.Customer")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                stringKey("hibernate.session_id"),
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("Transaction.commit")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                stringKey("hibernate.session_id"),
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("delete Customer")
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            equalTo(DB_QUERY_TEXT, "delete from Customer where id=?"),
-                            equalTo(DB_QUERY_SUMMARY, "delete Customer")));
-          }
-        });
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("Session." + findAction + " spring.jpa.Customer")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            stringKey("hibernate.session_id"),
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("select Customer")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        satisfies(
+                            DB_QUERY_TEXT,
+                            val ->
+                                val.matches(
+                                    Pattern.compile(
+                                        "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
+                        equalTo(DB_QUERY_SUMMARY, "select Customer")),
+            span ->
+                span.hasName("Session.merge spring.jpa.Customer")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            stringKey("hibernate.session_id"),
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("Session.delete spring.jpa.Customer")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            stringKey("hibernate.session_id"),
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("Transaction.commit")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            stringKey("hibernate.session_id"),
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("delete Customer")
+                    .hasKind(CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        equalTo(DB_QUERY_TEXT, "delete from Customer where id=?"),
+                        equalTo(DB_QUERY_SUMMARY, "delete Customer")));
+      }
+    });
   }
 }

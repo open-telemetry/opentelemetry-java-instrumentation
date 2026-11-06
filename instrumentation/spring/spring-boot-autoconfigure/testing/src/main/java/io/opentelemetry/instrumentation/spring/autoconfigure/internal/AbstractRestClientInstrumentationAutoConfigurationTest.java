@@ -42,24 +42,19 @@ public abstract class AbstractRestClientInstrumentationAutoConfigurationTest {
   void instrumentationEnabled() {
     contextRunner
         .withPropertyValues("otel.instrumentation.spring-web.enabled=true")
-        .run(
-            context -> {
-              assertThat(context.getBean("otelRestClientBeanPostProcessor", postProcessorClass()))
-                  .isNotNull();
+        .run(context -> {
+          assertThat(context.getBean("otelRestClientBeanPostProcessor", postProcessorClass()))
+              .isNotNull();
 
-              context
-                  .getBean(RestClient.class)
-                  .mutate()
-                  .requestInterceptors(
-                      interceptors ->
-                          assertThat(interceptors)
-                              .filteredOn(
-                                  rti ->
-                                      rti.getClass()
-                                          .getName()
-                                          .startsWith("io.opentelemetry.instrumentation"))
-                              .hasSize(1));
-            });
+          context
+              .getBean(RestClient.class)
+              .mutate()
+              .requestInterceptors(interceptors ->
+                  assertThat(interceptors)
+                      .filteredOn(rti ->
+                          rti.getClass().getName().startsWith("io.opentelemetry.instrumentation"))
+                      .hasSize(1));
+        });
   }
 
   @Test
@@ -71,46 +66,40 @@ public abstract class AbstractRestClientInstrumentationAutoConfigurationTest {
 
   @Test
   void defaultConfiguration() {
-    contextRunner.run(
-        context ->
-            assertThat(context.getBean("otelRestClientBeanPostProcessor", postProcessorClass()))
-                .isNotNull());
+    contextRunner.run(context ->
+        assertThat(context.getBean("otelRestClientBeanPostProcessor", postProcessorClass()))
+            .isNotNull());
   }
 
   @Test
   void shouldNotCreateNewBeanWhenInterceptorAlreadyPresent() {
     contextRunner
         .withPropertyValues("otel.instrumentation.spring-web.enabled=true")
-        .run(
-            context -> {
-              BeanPostProcessor beanPostProcessor =
-                  context.getBean("otelRestClientBeanPostProcessor", postProcessorClass());
+        .run(context -> {
+          BeanPostProcessor beanPostProcessor =
+              context.getBean("otelRestClientBeanPostProcessor", postProcessorClass());
 
-              RestClient restClientWithInterceptor =
-                  RestClient.builder()
-                      .requestInterceptor(getInterceptor(context.getBean(OpenTelemetry.class)))
-                      .build();
+          RestClient restClientWithInterceptor =
+              RestClient.builder()
+                  .requestInterceptor(getInterceptor(context.getBean(OpenTelemetry.class)))
+                  .build();
 
-              RestClient processed =
-                  (RestClient)
-                      beanPostProcessor.postProcessAfterInitialization(
-                          restClientWithInterceptor, "testBean");
+          RestClient processed =
+              (RestClient)
+                  beanPostProcessor.postProcessAfterInitialization(
+                      restClientWithInterceptor, "testBean");
 
-              // Should return the same instance when interceptor is already present
-              assertThat(processed).isSameAs(restClientWithInterceptor);
+          // Should return the same instance when interceptor is already present
+          assertThat(processed).isSameAs(restClientWithInterceptor);
 
-              // Verify only one interceptor exists
-              processed
-                  .mutate()
-                  .requestInterceptors(
-                      interceptors ->
-                          assertThat(interceptors)
-                              .filteredOn(
-                                  rti ->
-                                      rti.getClass()
-                                          .getName()
-                                          .startsWith("io.opentelemetry.instrumentation"))
-                              .hasSize(1));
-            });
+          // Verify only one interceptor exists
+          processed
+              .mutate()
+              .requestInterceptors(interceptors ->
+                  assertThat(interceptors)
+                      .filteredOn(rti ->
+                          rti.getClass().getName().startsWith("io.opentelemetry.instrumentation"))
+                      .hasSize(1));
+        });
   }
 }

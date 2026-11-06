@@ -19,13 +19,12 @@ public abstract class JaxRsJettyHttpServerTest extends JaxRsHttpServerTest<Serve
     super.configure(options);
 
     options.setContextPath("/rest-app");
-    options.setExpectedHttpRoute(
-        (endpoint, method) -> {
-          if (HttpConstants._OTHER.equals(method)) {
-            return getContextPath() + "/*";
-          }
-          return expectedHttpRoute(endpoint, method);
-        });
+    options.setExpectedHttpRoute((endpoint, method) -> {
+      if (HttpConstants._OTHER.equals(method)) {
+        return getContextPath() + "/*";
+      }
+      return expectedHttpRoute(endpoint, method);
+    });
   }
 
   @Override

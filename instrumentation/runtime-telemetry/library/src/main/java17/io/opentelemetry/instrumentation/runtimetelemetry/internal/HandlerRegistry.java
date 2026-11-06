@@ -81,11 +81,10 @@ final class HandlerRegistry {
     List<RecordedEventHandler> handlers = new ArrayList<>();
     Predicate<String> effectiveMetricNamePredicate =
         requireCompleteJmxReplacement
-            ? metricNamePredicate.and(
-                name ->
-                    !INCOMPLETE_JMX_REPLACEMENTS.contains(name)
-                        && !(emitExperimentalJmxMetrics
-                            && INCOMPLETE_EXPERIMENTAL_JMX_REPLACEMENTS.contains(name)))
+            ? metricNamePredicate.and(name ->
+                !INCOMPLETE_JMX_REPLACEMENTS.contains(name)
+                    && !(emitExperimentalJmxMetrics
+                        && INCOMPLETE_EXPERIMENTAL_JMX_REPLACEMENTS.contains(name)))
             : metricNamePredicate;
     for (GarbageCollectorMXBean bean : ManagementFactory.getGarbageCollectorMXBeans()) {
       String name = bean.getName();

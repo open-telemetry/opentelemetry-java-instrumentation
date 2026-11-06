@@ -37,15 +37,14 @@ public abstract class Jetty12Servlet5Test
     Server jettyServer = new Server(new InetSocketAddress("localhost", port));
 
     ServletContextHandler servletContext = new ServletContextHandler(getContextPath());
-    servletContext.setErrorHandler(
-        (request, response, callback) -> {
-          String message = (String) request.getAttribute("org.eclipse.jetty.server.error_message");
-          if (message != null) {
-            response.write(true, UTF_8.encode(message), Callback.NOOP);
-          }
-          callback.succeeded();
-          return true;
-        });
+    servletContext.setErrorHandler((request, response, callback) -> {
+      String message = (String) request.getAttribute("org.eclipse.jetty.server.error_message");
+      if (message != null) {
+        response.write(true, UTF_8.encode(message), Callback.NOOP);
+      }
+      callback.succeeded();
+      return true;
+    });
     setupServlets(servletContext);
     jettyServer.setHandler(servletContext);
 

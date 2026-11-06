@@ -133,17 +133,16 @@ public class Bridging {
   public static Attributes toAgent(
       application.io.opentelemetry.api.common.Attributes applicationAttributes) {
     AttributesBuilder agentAttributes = Attributes.builder();
-    applicationAttributes.forEach(
-        (key, value) -> {
-          AttributeKey agentKey = toAgent(key);
-          if (agentKey != null) {
-            if (key.getType().name().equals("VALUE")) {
-              agentAttributes.put(agentKey, ValueBridging.toAgent(value));
-            } else {
-              agentAttributes.put(agentKey, value);
-            }
-          }
-        });
+    applicationAttributes.forEach((key, value) -> {
+      AttributeKey agentKey = toAgent(key);
+      if (agentKey != null) {
+        if (key.getType().name().equals("VALUE")) {
+          agentAttributes.put(agentKey, ValueBridging.toAgent(value));
+        } else {
+          agentAttributes.put(agentKey, value);
+        }
+      }
+    });
     return agentAttributes.build();
   }
 
