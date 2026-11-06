@@ -137,7 +137,7 @@ val targets = mapOf(
       listOf("10.1.48"),
       listOf("hotspot", "openj9"),
       listOf("11", "17", "21", "25", latestJava),
-      "servlet-5.0"
+      war = "servlet-5.0"
     ),
   ),
   "tomee" to listOf(
