@@ -130,7 +130,7 @@ testing.suites {
     }
 
     dependencies {
-      implementation("org.apache.pekko:pekko-http_2.13:${baseVersion("2.0.0-M2").orLatest()}")
+      implementation("org.apache.pekko:pekko-http_2.13:${baseVersion("2.0.0-M2").orLatest("2.+")}")
       implementation("org.apache.pekko:pekko-stream_2.13:${baseVersion("2.0.0-M4").orLatest()}")
     }
   }
