@@ -65,7 +65,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:pekko:pekko-actor-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:executors:javaagent"))
 
-  // pekko 2 support has not been backported yet
+  // later versions are tested in pekko2Test suite
   latestDepTestLibrary("org.apache.pekko:pekko-http_2.13:1.+") // documented limitation
   latestDepTestLibrary("org.apache.pekko:pekko-stream_2.13:1.+") // documented limitation
 }
@@ -114,7 +114,7 @@ testing.suites {
   register<JvmTestSuite>("pekko2Test") {
     dependencies {
       implementation("org.apache.pekko:pekko-http_2.13:${baseVersion("2.0.0-M2").orLatest("2.+")}")
-      implementation("org.apache.pekko:pekko-stream_2.13:${baseVersion("2.0.0-M4").orLatest("2.+")}")
+      implementation("org.apache.pekko:pekko-stream_2.13:${baseVersion("2.0.0-M4").orLatest()}")
     }
   }
 
@@ -122,14 +122,14 @@ testing.suites {
     dependencies {
       implementation("org.scala-lang:scala3-library_3:3.3.8")
       implementation("org.apache.pekko:pekko-http_3:${baseVersion("2.0.0-M2").orLatest("2.+")}")
-      implementation("org.apache.pekko:pekko-stream_3:${baseVersion("2.0.0-M4").orLatest("2.+")}")
+      implementation("org.apache.pekko:pekko-stream_3:${baseVersion("2.0.0-M4").orLatest()}")
     }
   }
 
   register<JvmTestSuite>("tapirTest") {
     dependencies {
       val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.12"
-      implementation("org.apache.pekko:pekko-http_$scalaVersion:${baseVersion("1.0.0").orLatest()}")
+      implementation("org.apache.pekko:pekko-http_$scalaVersion:${baseVersion("1.0.0").orLatest("2.+")}")
       implementation("org.apache.pekko:pekko-stream_$scalaVersion:${baseVersion("1.0.1").orLatest()}")
       implementation(
         "com.softwaremill.sttp.tapir:tapir-pekko-http-server_$scalaVersion:${
@@ -151,7 +151,7 @@ testing.suites {
 sourceSets.named("pekko11Test") {
   java.srcDir("src/test/java")
   resources.srcDir("src/test/resources")
-  extensions.getByType(org.gradle.api.tasks.ScalaSourceDirectorySet::class.java).srcDir("src/test/scala")
+  extensions.getByType(ScalaSourceDirectorySet::class.java).srcDir("src/test/scala")
 }
 
 // the scala 3 and pekko 2 suites run the same tests as the scala 2 suite, against other artifacts
@@ -159,7 +159,7 @@ listOf("scala3Test", "pekko2Test", "pekko2Scala3Test").forEach {
   sourceSets.named(it) {
     java.srcDir("src/test/java")
     resources.srcDir("src/test/resources")
-    extensions.getByType(org.gradle.api.tasks.ScalaSourceDirectorySet::class.java).srcDir("src/test/scala")
+    extensions.getByType(ScalaSourceDirectorySet::class.java).srcDir("src/test/scala")
   }
 }
 
@@ -167,12 +167,12 @@ listOf("scala3Test", "pekko2Test", "pekko2Scala3Test").forEach {
 // shim for the pekko-http line it runs against
 listOf("test", "pekko11Test", "scala3Test").forEach {
   sourceSets.named(it) {
-    extensions.getByType(org.gradle.api.tasks.ScalaSourceDirectorySet::class.java).srcDir("src/pekko1TestShim/scala")
+    extensions.getByType(ScalaSourceDirectorySet::class.java).srcDir("src/pekko1TestShim/scala")
   }
 }
 listOf("pekko2Test", "pekko2Scala3Test").forEach {
   sourceSets.named(it) {
-    extensions.getByType(org.gradle.api.tasks.ScalaSourceDirectorySet::class.java).srcDir("src/pekko2TestShim/scala")
+    extensions.getByType(ScalaSourceDirectorySet::class.java).srcDir("src/pekko2TestShim/scala")
   }
 }
 

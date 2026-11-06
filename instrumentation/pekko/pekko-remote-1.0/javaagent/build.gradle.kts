@@ -38,7 +38,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:pekko:pekko-actor-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:executors:javaagent"))
 
-  // pekko 2 support has not been backported yet
+  // later versions are tested in pekko2Test suite
   latestDepTestLibrary("org.apache.pekko:pekko-remote_2.13:1.+") // documented limitation
 }
 
@@ -62,7 +62,7 @@ testing.suites {
   // against them explicitly, pekko 2.x requires java 17 and has no scala 2.12 artifacts
   register<JvmTestSuite>("pekko2Test") {
     dependencies {
-      implementation("org.apache.pekko:pekko-remote_2.13:${baseVersion("2.0.0-M4").orLatest("2.+")}")
+      implementation("org.apache.pekko:pekko-remote_2.13:${baseVersion("2.0.0-M4").orLatest()}")
       implementation("io.netty:netty-transport:4.2.17.Final")
       implementation("io.netty:netty-handler:4.2.17.Final")
     }
@@ -78,7 +78,7 @@ testing.suites {
   register<JvmTestSuite>("pekko2Scala3Test") {
     dependencies {
       implementation("org.scala-lang:scala3-library_3:3.3.8")
-      implementation("org.apache.pekko:pekko-remote_3:${baseVersion("2.0.0-M4").orLatest("2.+")}")
+      implementation("org.apache.pekko:pekko-remote_3:${baseVersion("2.0.0-M4").orLatest()}")
       implementation("io.netty:netty-transport:4.2.17.Final")
       implementation("io.netty:netty-handler:4.2.17.Final")
     }
