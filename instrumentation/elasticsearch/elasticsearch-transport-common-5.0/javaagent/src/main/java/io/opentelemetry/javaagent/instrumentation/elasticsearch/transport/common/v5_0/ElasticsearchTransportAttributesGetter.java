@@ -51,7 +51,7 @@ public class ElasticsearchTransportAttributesGetter
     // generic wrapper such as RemoteTransportException. unwrapCause() peels off the classes that
     // Elasticsearch itself marks as wrappers, leaving the exception that identifies the failure.
     Throwable cause = ((ElasticsearchException) error).unwrapCause();
-    return cause == null ? null : cause.getClass().getName();
+    return cause.getClass().getName();
   }
 
   @Override
