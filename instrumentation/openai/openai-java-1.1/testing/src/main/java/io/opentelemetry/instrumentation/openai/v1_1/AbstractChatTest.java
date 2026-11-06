@@ -35,6 +35,7 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -76,10 +77,14 @@ import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -1046,6 +1051,77 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                           KeyValue.of(
                               "message", Value.of(KeyValue.of("content", Value.of(content))))));
             });
+  }
+
+  @Test
+  void streamClosedBeforeFinishReason() throws InterruptedException {
+    ChatCompletionCreateParams params =
+        ChatCompletionCreateParams.builder()
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .model(TEST_CHAT_MODEL)
+            .seed(20725)
+            .build();
+
+    Throwable thrown;
+    switch (testType) {
+      case SYNC:
+      case SYNC_FROM_ASYNC:
+        {
+          OpenAIClient client = testType == TestType.SYNC ? getClient() : getClientAsync().sync();
+          StreamResponse<ChatCompletionChunk> result =
+              client.chat().completions().createStreaming(params);
+          Iterator<ChatCompletionChunk> chunks = result.stream().iterator();
+          chunks.next();
+          chunks.next();
+          thrown = catchThrowable(result::close);
+          break;
+        }
+      case ASYNC:
+      case ASYNC_FROM_SYNC:
+        {
+          OpenAIClientAsync client =
+              testType == TestType.ASYNC ? getClientAsync() : getClient().async();
+          AsyncStreamResponse<ChatCompletionChunk> stream =
+              client.chat().completions().createStreaming(params);
+          AtomicReference<Throwable> closeError = new AtomicReference<>();
+          CountDownLatch closed = new CountDownLatch(1);
+          AtomicInteger count = new AtomicInteger();
+          stream.subscribe(
+              chunk -> {
+                if (count.incrementAndGet() == 2) {
+                  closeError.set(catchThrowable(stream::close));
+                  closed.countDown();
+                }
+              });
+          assertThat(closed.await(30, SECONDS)).isTrue();
+          thrown = closeError.get();
+          break;
+        }
+      default:
+        throw new AssertionError();
+    }
+
+    assertThat(thrown).isNull();
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    maybeWithTransportSpan(
+                        span ->
+                            assertChatSpan(span)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                    equalTo(GEN_AI_REQUEST_STREAM, true),
+                                    equalTo(GEN_AI_REQUEST_SEED, 20725),
+                                    satisfies(
+                                        GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
+                                    satisfies(
+                                        GEN_AI_RESPONSE_FINISH_REASONS,
+                                        val -> val.containsExactly("error"))))));
   }
 
   @Test
