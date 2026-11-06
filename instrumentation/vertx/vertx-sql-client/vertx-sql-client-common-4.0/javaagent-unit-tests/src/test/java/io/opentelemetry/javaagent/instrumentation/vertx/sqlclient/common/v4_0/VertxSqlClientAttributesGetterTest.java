@@ -22,7 +22,7 @@ class VertxSqlClientAttributesGetterTest {
       new VertxSqlClientRequest("select 1", VertxSqlClientInfo.createUnknown(MYSQL), false, null);
 
   @Test
-  void prefersMysqlVendorCodeForErrorType() {
+  void prefersMysqlVendorCode() {
     MySQLException error = new MySQLException("Syntax error", 1064, "42000");
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
@@ -58,7 +58,7 @@ class VertxSqlClientAttributesGetterTest {
   }
 
   @Test
-  void extractsLegacyMssqlErrorCodeForErrorType() {
+  void extractsLegacyMssqlErrorCode() {
     VertxSqlClientRequest request =
         new VertxSqlClientRequest(
             "select 1", VertxSqlClientInfo.createUnknown(MICROSOFT_SQL_SERVER), false, null);

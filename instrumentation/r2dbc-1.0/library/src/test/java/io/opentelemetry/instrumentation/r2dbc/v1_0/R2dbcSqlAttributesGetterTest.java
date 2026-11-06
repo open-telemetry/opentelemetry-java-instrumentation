@@ -63,7 +63,7 @@ class R2dbcSqlAttributesGetterTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"mysql", "mariadb", "oracle", "mssql", "db2"})
-  void prefersVendorCodeForErrorType(String dbSystemName) {
+  void prefersVendorCode(String dbSystemName) {
     DbExecution request = request(dbSystemName);
     Throwable error = new R2dbcBadGrammarException("test", "42000", 1064);
 

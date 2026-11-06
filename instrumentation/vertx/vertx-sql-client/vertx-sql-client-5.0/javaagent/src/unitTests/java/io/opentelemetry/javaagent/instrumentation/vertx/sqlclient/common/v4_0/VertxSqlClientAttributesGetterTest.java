@@ -23,7 +23,7 @@ class VertxSqlClientAttributesGetterTest {
   private final VertxSqlClientRequest request = request(ORACLE_DB);
 
   @Test
-  void capturesOracleConnectionStatusForErrorType() {
+  void capturesOracleConnectionStatus() {
     DatabaseException error = new DatabaseException("No listener", 12541, "66000") {};
 
     assertThat(getter.getErrorType(request, null, error)).isEqualTo("12541");
@@ -31,7 +31,7 @@ class VertxSqlClientAttributesGetterTest {
   }
 
   @Test
-  void prefersMysqlVendorCodeForErrorType() {
+  void prefersMysqlVendorCode() {
     VertxSqlClientRequest mysqlRequest = request(MYSQL);
     DatabaseException error = new DatabaseException("Syntax error", 1064, "42000") {};
 
@@ -82,7 +82,7 @@ class VertxSqlClientAttributesGetterTest {
 
   @ParameterizedTest
   @ValueSource(strings = {MICROSOFT_SQL_SERVER, IBM_DB2})
-  void prefersVendorCodeForErrorType(String dbSystemName) {
+  void prefersVendorCode(String dbSystemName) {
     VertxSqlClientRequest request = request(dbSystemName);
     DatabaseException error = new DatabaseException("Syntax error", 208, "42000") {};
 
@@ -91,7 +91,7 @@ class VertxSqlClientAttributesGetterTest {
   }
 
   @Test
-  void omitsNullSqlStateFromErrorType() {
+  void omitsUnavailableCodes() {
     DatabaseException error = new DatabaseException("Unknown SQLSTATE", 0, null) {};
 
     assertThat(getter.getErrorType(request, null, error)).isNull();

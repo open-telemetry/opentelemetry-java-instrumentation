@@ -43,7 +43,7 @@ final class LettuceDbAttributesGetter
   @Override
   public String getDbResponseStatusCode(
       LettuceRequest request, @Nullable LettuceResponse response, @Nullable Throwable error) {
-    return response == null ? null : response.getRedisErrorCode();
+    return response == null ? null : response.getErrorCode();
   }
 
   @Nullable
@@ -53,7 +53,7 @@ final class LettuceDbAttributesGetter
     if (response == null) {
       return null;
     }
-    String errorCode = response.getRedisErrorCode();
+    String errorCode = response.getErrorCode();
     if (errorCode != null) {
       return errorCode;
     }

@@ -477,8 +477,7 @@ public abstract class AbstractJdbcInstrumentationTest {
 
     assertThat(error).isInstanceOf(SQLException.class);
     SQLException sqlException = (SQLException) error;
-    String expectedResponseStatusCode =
-        sqlException.getSQLState() + "/" + sqlException.getErrorCode();
+    String expectedErrorCode = sqlException.getSQLState() + "/" + sqlException.getErrorCode();
 
     testing()
         .waitAndAssertTraces(
@@ -490,8 +489,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfying(
-                                equalTo(DB_RESPONSE_STATUS_CODE, expectedResponseStatusCode),
-                                equalTo(ERROR_TYPE, expectedResponseStatusCode))
+                                equalTo(DB_RESPONSE_STATUS_CODE, expectedErrorCode),
+                                equalTo(ERROR_TYPE, expectedErrorCode))
                             .hasException(emitExceptionAsSpanEvents() ? error : null)));
 
     if (emitExceptionAsLogs()) {

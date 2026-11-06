@@ -74,7 +74,7 @@ class JdbcAttributesGetterTest {
 
   @ParameterizedTest
   @MethodSource("errorCodes")
-  void getErrorTypeNormalizesVendorCode(
+  void extractsPostgresqlCodes(
       int errorCode, String sqlState, String expectedErrorType, String expectedStatusCode) {
     DbRequest request =
         DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);
