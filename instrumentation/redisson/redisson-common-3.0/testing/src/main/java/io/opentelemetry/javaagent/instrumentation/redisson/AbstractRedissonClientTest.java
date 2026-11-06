@@ -83,6 +83,7 @@ import org.redisson.client.RedisOutOfMemoryException;
 import org.redisson.client.codec.StringCodec;
 import org.redisson.client.protocol.Decoder;
 import org.redisson.config.Config;
+import org.redisson.config.MasterSlaveServersConfig;
 import org.redisson.config.SingleServerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,16 +149,20 @@ public abstract class AbstractRedissonClientTest {
     if (connectionMinimumIdleSize != null) {
       singleServerConfig.setConnectionMinimumIdleSize(connectionMinimumIdleSize);
     }
+    disableConnectionPing(singleServerConfig);
+    return config;
+  }
+
+  private static void disableConnectionPing(Object serverConfig)
+      throws InvocationTargetException, IllegalAccessException {
     try {
-      // disable connection ping if it exists
-      singleServerConfig
+      serverConfig
           .getClass()
           .getMethod("setPingConnectionInterval", int.class)
-          .invoke(singleServerConfig, 0);
+          .invoke(serverConfig, 0);
     } catch (NoSuchMethodException ignored) {
       // ignored
     }
-    return config;
   }
 
   private String redisAddressForHost(String serverHost) {
@@ -740,20 +745,19 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
-  void configuredMasterSlaveServerTarget() {
+  void configuredMasterSlaveServerTarget()
+      throws InvocationTargetException, IllegalAccessException {
     String aliasHost = host.equals(ip) ? "localhost" : ip;
     String configuredServerAddress = host + ":" + port + "," + aliasHost + ":" + port;
 
     Config config = new Config();
-    config
-        .useMasterSlaveServers()
+    MasterSlaveServersConfig serversConfig = config.useMasterSlaveServers();
+    serversConfig
         .setMasterAddress(redisAddressForHost(host))
         .addSlaveAddress(redisAddressForHost(aliasHost));
+    disableConnectionPing(serversConfig);
     RedissonClient configuredClient = Redisson.create(config);
     try {
-      if (hasDatabaseIndex()) {
-        testing.waitForTraces(2);
-      }
       assertConfiguredTarget(
           configuredClient, "SET " + configuredServerAddress, configuredServerAddress, null);
     } finally {
@@ -762,15 +766,14 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
-  void configuredSingleServerTarget() {
+  void configuredSingleServerTarget() throws InvocationTargetException, IllegalAccessException {
     String configuredHost = host.equals(ip) ? "localhost" : ip;
     Config config = new Config();
-    config.useSingleServer().setAddress(redisAddressForHost(configuredHost));
+    SingleServerConfig serverConfig =
+        config.useSingleServer().setAddress(redisAddressForHost(configuredHost));
+    disableConnectionPing(serverConfig);
     RedissonClient configuredClient = Redisson.create(config);
     try {
-      if (hasDatabaseIndex()) {
-        testing.waitForTraces(1);
-      }
       assertConfiguredTarget(
           configuredClient, "SET " + configuredHost + ":" + port, configuredHost, port);
     } finally {

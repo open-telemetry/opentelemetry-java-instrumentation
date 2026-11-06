@@ -5,8 +5,8 @@ plugins {
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.67.0"
-val otelContribVersion = "1.62.0-alpha"
+val otelSdkVersion = "1.68.0"
+val otelContribVersion = "1.62.1-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars

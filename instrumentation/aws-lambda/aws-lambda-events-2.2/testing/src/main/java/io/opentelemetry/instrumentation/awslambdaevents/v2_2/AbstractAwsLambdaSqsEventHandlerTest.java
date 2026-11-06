@@ -109,7 +109,9 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                                 .satisfiesExactly(
                                     link(
                                         "53995c3f42cd8ad8",
-                                        Attributes.of(MESSAGING_MESSAGE_ID, "message1"))))));
+                                        Attributes.of(MESSAGING_MESSAGE_ID, "message1")),
+                                    invalidLink(
+                                        Attributes.of(MESSAGING_MESSAGE_ID, "message2"))))));
     assertMetrics(testing(), instrumentationName(), "queue1", 1, 2, null);
   }
 
@@ -171,8 +173,16 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
 
   private static Consumer<LinkData> link(String spanId, Attributes attributes) {
     return linkData -> {
+      assertThat(linkData.getSpanContext().isValid()).isTrue();
       assertThat(linkData.getSpanContext().getTraceId()).isEqualTo(TRACE_ID);
       assertThat(linkData.getSpanContext().getSpanId()).isEqualTo(spanId);
+      assertThat(linkData.getAttributes()).isEqualTo(attributes);
+    };
+  }
+
+  private static Consumer<LinkData> invalidLink(Attributes attributes) {
+    return linkData -> {
+      assertThat(linkData.getSpanContext().isValid()).isFalse();
       assertThat(linkData.getAttributes()).isEqualTo(attributes);
     };
   }

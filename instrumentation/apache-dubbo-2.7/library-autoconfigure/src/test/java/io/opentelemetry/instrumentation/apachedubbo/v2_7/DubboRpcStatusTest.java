@@ -49,13 +49,17 @@ class DubboRpcStatusTest {
     assertThat(DubboRpcStatus.getStatusCode(null, exception)).isEqualTo(statusCode);
 
     DubboRequest request =
-        DubboRequest.createForUnknownService(mock(RpcInvocation.class), "service/method", null);
+        DubboRequest.createForUnknownService(
+            mock(RpcInvocation.class, withSettings().mockMaker(MockMakers.SUBCLASS)),
+            "service/method",
+            null);
     Result response = null;
     for (boolean isClient : new boolean[] {true, false}) {
       assertThat(new DubboRpcAttributesGetter(isClient).getErrorType(request, response, exception))
           .isEqualTo(isClient || "INTERNAL".equals(statusCode) ? statusCode : null);
 
-      SpanStatusBuilder spanStatusBuilder = mock(SpanStatusBuilder.class);
+      SpanStatusBuilder spanStatusBuilder =
+          mock(SpanStatusBuilder.class, withSettings().mockMaker(MockMakers.SUBCLASS));
       new DubboRpcSpanStatusExtractor(isClient)
           .extract(spanStatusBuilder, request, response, exception);
       if (isClient || "INTERNAL".equals(statusCode)) {
