@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -33,17 +35,19 @@ testing.suites {
       implementation("software.amazon.awssdk:rdsdata:$version")
     }
   }
+
+  executions {
+    configureEach {
+      systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
+      systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", true)
+      systemProperty("otel.instrumentation.common.messaging.headers.included", "Test-Message-*")
+      systemProperty("otel.instrumentation.common.messaging.headers.excluded", "*-Excluded-Header")
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+  }
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
-    systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", true)
-    systemProperty("otel.instrumentation.common.messaging.headers.included", "Test-Message-*")
-    systemProperty("otel.instrumentation.common.messaging.headers.excluded", "*-Excluded-Header")
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
   check {
     dependsOn(testing.suites)
   }
