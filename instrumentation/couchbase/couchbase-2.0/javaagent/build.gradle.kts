@@ -85,26 +85,15 @@ testing.suites {
     }
   }
 
-  val common = Action<Test> {
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    if (otelProps.denyUnsafe) {
-      enabled = false
+  executions("test", "version26Test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
     }
   }
-  val experimental = Action<Test> {
-    telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
-  }
-
-  executions("test", "version26Test") {
-    configureEach(common)
-    register("Experimental", experimental)
-  }
   executions("version25Test") {
-    configureEach(common)
-    register("Experimental", experimental)
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
+    }
     register("QuerySanitizationDisabled") {
       filter {
         includeTestsMatching("CouchbaseQuerySanitizationTest")
@@ -112,6 +101,16 @@ testing.suites {
       jvmArgs("-Dotel.instrumentation.couchbase.query-sanitization.enabled=false")
       systemProperty("testQuerySanitizationEnabled", "false")
     }
+  }
+}
+
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  if (otelProps.denyUnsafe) {
+    enabled = false
   }
 }
 

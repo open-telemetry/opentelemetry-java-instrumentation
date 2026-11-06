@@ -14,10 +14,6 @@ muzzle {
   }
 }
 
-tasks.check {
-  dependsOn(testing.suites)
-}
-
 dependencies {
   bootstrap(project(":instrumentation:executors:bootstrap"))
 
@@ -47,6 +43,7 @@ testing.suites {
         setSrcDirs(listOf("src/test/java"))
       }
     }
+
     dependencies {
       implementation("com.squareup.okhttp3:okhttp:4.12.0")
       implementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
@@ -58,4 +55,8 @@ testing.suites {
       telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
   }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }

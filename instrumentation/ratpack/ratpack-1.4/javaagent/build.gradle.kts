@@ -72,10 +72,6 @@ tasks {
       enabled = false
     }
   }
-
-  check {
-    dependsOn(testing.suites)
-  }
 }
 
 testing.suites {
@@ -108,4 +104,8 @@ testing.suites {
   executions("version17Test") {
     register("ControllerTelemetryDisabled", controllerTelemetryDisabled)
   }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }
