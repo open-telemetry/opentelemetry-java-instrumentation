@@ -85,7 +85,9 @@ class VertxSqlClientAttributesGetter
       return null;
     }
     return SqlResponseStatusCodeUtil.getResponseStatusCode(
-        request.getDbSystemName(), sqlStateExtractor.apply(error), vendorCodeExtractor.apply(error));
+        request.getDbSystemName(),
+        sqlStateExtractor.apply(error),
+        vendorCodeExtractor.apply(error));
   }
 
   @Override
@@ -158,7 +160,8 @@ class VertxSqlClientAttributesGetter
     };
   }
 
-  private static Function<Throwable, String> sqlStateExtractor(String className, String methodName) {
+  private static Function<Throwable, String> sqlStateExtractor(
+      String className, String methodName) {
     Function<Throwable, Object> extractor = exceptionValueExtractor(className, methodName);
     return error -> {
       Object sqlState = extractor.apply(error);
