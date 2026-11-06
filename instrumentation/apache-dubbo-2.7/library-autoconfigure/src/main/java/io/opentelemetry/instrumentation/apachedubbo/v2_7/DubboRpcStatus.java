@@ -63,13 +63,10 @@ final class DubboRpcStatus {
 
   @Nullable
   private static String getStatusCodeFromException(@Nullable Throwable error) {
-    if (error == null || !STATUS_RPC_EXCEPTION.equals(error.getClass().getName())) {
+    if (error == null || GET_STATUS == null || !GET_STATUS.getDeclaringClass().isInstance(error)) {
       return null;
     }
     try {
-      if (GET_STATUS == null) {
-        return null;
-      }
       Object status = GET_STATUS.invoke(error);
       if (status == null || STATUS_CODE == null) {
         return null;
