@@ -43,21 +43,21 @@ testing.suites {
       implementation("com.xuxueli:xxl-job-core:$version")
       implementation(project(":instrumentation:xxl-job:xxl-job-common-1.9.2:testing"))
     }
-
-    executions {
-      configureEach {
-        if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
-          enabled = false
-        }
-      }
-
-      register("Experimental") {
-        telemetryConfig("otel.instrumentation.xxl-job.experimental-span-attributes", "true")
-      }
-    }
   }
 
   executions("test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.xxl-job.experimental-span-attributes", "true")
+    }
+  }
+
+  executions("xxlJob33Test") {
+    configureEach {
+      if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+        enabled = false
+      }
+    }
+
     register("Experimental") {
       telemetryConfig("otel.instrumentation.xxl-job.experimental-span-attributes", "true")
     }

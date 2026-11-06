@@ -66,47 +66,6 @@ testing.suites {
       targetCompatibility = "17"
       options.release.set(17)
     }
-
-    executions {
-      configureEach {
-        systemProperty("metadataConfig", "Java17")
-        if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
-          enabled = false
-        }
-      }
-
-      configureDefault {
-        filter {
-          excludeTestsMatching("*G1GcMemoryMetricTest")
-          excludeTestsMatching("*SerialGcMemoryMetricTest")
-          excludeTestsMatching("*PsGcMemoryMetricTest")
-        }
-      }
-
-      register("G1") {
-        filter {
-          includeTestsMatching("*G1GcMemoryMetricTest*")
-        }
-        include("**/*G1GcMemoryMetricTest.*")
-        jvmArgs("-XX:+UseG1GC")
-      }
-
-      register("PS") {
-        filter {
-          includeTestsMatching("*PsGcMemoryMetricTest*")
-        }
-        include("**/*PsGcMemoryMetricTest.*")
-        jvmArgs("-XX:+UseParallelGC")
-      }
-
-      register("Serial") {
-        filter {
-          includeTestsMatching("*SerialGcMemoryMetricTest*")
-        }
-        include("**/*SerialGcMemoryMetricTest.*")
-        jvmArgs("-XX:+UseSerialGC")
-      }
-    }
   }
 
   register<JvmTestSuite>("testJava21") {
@@ -128,13 +87,54 @@ testing.suites {
       targetCompatibility = "21"
       options.release.set(21)
     }
+  }
 
-    executions {
-      configureEach {
-        systemProperty("metadataConfig", "Java21")
-        if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_21)) {
-          enabled = false
-        }
+  executions("testJava17") {
+    configureEach {
+      systemProperty("metadataConfig", "Java17")
+      if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+        enabled = false
+      }
+    }
+
+    configureDefault {
+      filter {
+        excludeTestsMatching("*G1GcMemoryMetricTest")
+        excludeTestsMatching("*SerialGcMemoryMetricTest")
+        excludeTestsMatching("*PsGcMemoryMetricTest")
+      }
+    }
+
+    register("G1") {
+      filter {
+        includeTestsMatching("*G1GcMemoryMetricTest*")
+      }
+      include("**/*G1GcMemoryMetricTest.*")
+      jvmArgs("-XX:+UseG1GC")
+    }
+
+    register("PS") {
+      filter {
+        includeTestsMatching("*PsGcMemoryMetricTest*")
+      }
+      include("**/*PsGcMemoryMetricTest.*")
+      jvmArgs("-XX:+UseParallelGC")
+    }
+
+    register("Serial") {
+      filter {
+        includeTestsMatching("*SerialGcMemoryMetricTest*")
+      }
+      include("**/*SerialGcMemoryMetricTest.*")
+      jvmArgs("-XX:+UseSerialGC")
+    }
+  }
+
+  executions("testJava21") {
+    configureEach {
+      systemProperty("metadataConfig", "Java21")
+      if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_21)) {
+        enabled = false
       }
     }
   }
