@@ -19,7 +19,9 @@ subprojects {
     // relying on predictable ordering of subprojects
     // (see https://docs.gradle.org/current/dsl/org.gradle.api.Project.html#N14CB4)
     // since we are splitting these muzzleX tasks across different github action jobs
-    instrumentationProjectMuzzle[counter++ % instrumentationProjectMuzzle.size].configure {
+    val sliceIndex = counter++ % instrumentationProjectMuzzle.size
+    subProj.extensions.extraProperties["otelMuzzleSlice"] = sliceIndex + 1
+    instrumentationProjectMuzzle[sliceIndex].configure {
       dependsOn(subProj.tasks.named("muzzle"))
     }
   }
