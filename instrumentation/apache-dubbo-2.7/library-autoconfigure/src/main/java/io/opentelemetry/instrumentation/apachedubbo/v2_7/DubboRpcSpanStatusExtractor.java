@@ -30,8 +30,6 @@ final class DubboRpcSpanStatusExtractor implements SpanStatusExtractor<DubboRequ
       SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, response, error);
     } else if (DubboRpcStatus.isError(statusCode, isClient)) {
       spanStatusBuilder.setStatus(StatusCode.ERROR);
-    } else {
-      spanStatusBuilder.setStatus(StatusCode.UNSET);
     }
   }
 }

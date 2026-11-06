@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testL
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
@@ -57,9 +58,11 @@ class DubboRpcStatusTest {
       SpanStatusBuilder spanStatusBuilder = mock(SpanStatusBuilder.class);
       new DubboRpcSpanStatusExtractor(isClient)
           .extract(spanStatusBuilder, request, response, exception);
-      verify(spanStatusBuilder)
-          .setStatus(
-              isClient || "INTERNAL".equals(statusCode) ? StatusCode.ERROR : StatusCode.UNSET);
+      if (isClient || "INTERNAL".equals(statusCode)) {
+        verify(spanStatusBuilder).setStatus(StatusCode.ERROR);
+      } else {
+        verifyNoInteractions(spanStatusBuilder);
+      }
     }
   }
 }
