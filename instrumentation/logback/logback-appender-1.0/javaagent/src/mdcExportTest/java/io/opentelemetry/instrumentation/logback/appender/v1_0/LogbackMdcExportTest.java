@@ -180,6 +180,11 @@ class LogbackMdcExportTest {
         "parent",
         () -> {
           try (Scope ignored = Baggage.builder().put("foo", "synthetic").build().makeCurrent()) {
+            logger.callAppenders(event);
+            testing.waitAndAssertLogRecords(record -> record.hasBody("processor outer"));
+            testing.clearData();
+            appender.mdc.clear();
+
             setProcessorCallback(
                 () -> {
                   processorMdc.add(new HashMap<>(event.getMDCPropertyMap()));
