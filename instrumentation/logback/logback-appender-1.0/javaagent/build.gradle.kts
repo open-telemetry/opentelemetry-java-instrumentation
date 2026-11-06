@@ -130,6 +130,10 @@ testing.suites {
       jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=key?")
       jvmArgs("-Dotel.instrumentation.logback-appender.experimental.logger-context-attributes.included=key?")
     }
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
+    }
 
     register("MdcAttributeExclusionsOnly") {
       filter.includeTestsMatching("*LogbackMdcSelectorTest")
@@ -171,6 +175,10 @@ testing.suites {
         "-Dotel.instrumentation.common.logging.structured-attributes.excluded=*2",
       )
     }
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
+    }
 
     register("StructuredAttributesExcludedAll") {
       filter.includeTestsMatching("*LogbackKeyValuePairSelectorTest")
@@ -182,6 +190,10 @@ testing.suites {
   executions("logstashMarkerTest") {
     configureDefault {
       jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.included=key?")
+    }
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
     }
 
     register("AttributeExclusionsOnly") {
@@ -200,6 +212,10 @@ testing.suites {
   executions("logstashStructuredArgsTest") {
     configureDefault {
       jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.included=key?")
+    }
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
     }
 
     register("AttributeExclusionsOnly") {
@@ -239,11 +255,6 @@ testing.suites {
 }
 
 tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental log attributes
-  if (!name.startsWith("mdcExportTest")) {
-    jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
-    jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
-  }
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-marker-attribute=true")
 }
 
