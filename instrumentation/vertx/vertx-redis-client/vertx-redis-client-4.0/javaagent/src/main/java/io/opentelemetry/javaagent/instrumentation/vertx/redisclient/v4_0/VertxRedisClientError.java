@@ -48,13 +48,8 @@ public final class VertxRedisClientError {
     if (error == null) {
       return null;
     }
-    if (error instanceof ErrorType) {
-      String errorPrefix = SERVER_ERROR.get((ErrorType) error);
-      if (errorPrefix != null) {
-        return errorPrefix;
-      }
-    }
-    return error.getClass().getName();
+    String errorPrefix = getErrorCode(error);
+    return errorPrefix != null ? errorPrefix : error.getClass().getName();
   }
 
   // Vert.x can complete successfully with errors inside a collection reply, such as EXEC results.

@@ -33,9 +33,12 @@ class VertxRedisClientAttributesGetterTest {
     when(error.getMessage()).thenReturn("WRONGTYPE detail");
     VertxRedisClientError.captureServerError(error);
     assertThat(getter.getDbResponseStatusCode(null, null, error)).isEqualTo("WRONGTYPE");
+    assertThat(getter.getErrorType(null, null, error)).isEqualTo("WRONGTYPE");
     ErrorType localError = mock(ErrorType.class);
     when(localError.getMessage()).thenReturn("WRONGTYPE detail");
     assertThat(getter.getDbResponseStatusCode(null, null, localError)).isNull();
+    assertThat(getter.getErrorType(null, null, localError))
+        .isEqualTo(localError.getClass().getName());
     assertThat(
             getter.getDbResponseStatusCode(
                 null, null, new IllegalStateException("WRONGTYPE detail")))
