@@ -79,7 +79,13 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
     }
 
     public void exit(MessageConsumer consumer, @Nullable Message message) {
-      if (callDepth.decrementAndGet() > 0 || timer == null) {
+      boolean nested = callDepth.decrementAndGet() > 0;
+      if (message != null) {
+        // also when nested: a JMSConsumer delegates its receive to this consumer, and the
+        // JMSConsumer receive advice that creates the span reads the name from the message
+        JmsSubscriptionNames.set(message, JmsSubscriptionNames.get(consumer));
+      }
+      if (nested || timer == null) {
         return;
       }
       if (message == null) {
@@ -87,8 +93,7 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      String subscriptionName = JmsSubscriptionNames.get(consumer);
-      JmsSubscriptionNames.set(message, subscriptionName);
+      String subscriptionName = JmsSubscriptionNames.get(message);
       MessageWithDestination request =
           MessageWithDestination.create(
               JavaxMessageAdapter.create(message), null, subscriptionName);

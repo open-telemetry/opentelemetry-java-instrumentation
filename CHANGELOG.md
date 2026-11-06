@@ -4,6 +4,8 @@
 
 ### ⚠️ Breaking changes
 
+- Rename `io.opentelemetry.javaagent:opentelemetry-agent-for-testing` to
+  `io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing`.
 - Default RPC duration histogram boundaries now follow semantic conventions 1.45.0.
 - OSHI disk and network packet metrics now use `system.device.name` instead of `system.device`;
   memory metrics use `system.memory.state="available"` instead of `"free"`.

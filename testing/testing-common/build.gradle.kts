@@ -3,15 +3,15 @@ plugins {
   id("otel.publish-conventions")
 }
 
-description = "OpenTelemetry Javaagent testing commons"
+description = "OpenTelemetry instrumentation testing support"
 group = "io.opentelemetry.javaagent"
 
 sourceSets {
   main {
-    val shadedDeps = project(":testing:dependencies-shaded-for-testing")
+    val shadedDeps = project(":testing:shaded-dependencies")
     output.dir(
       shadedDeps.file("build/extracted/shadow"),
-      "builtBy" to ":testing:dependencies-shaded-for-testing:extractShadowJar"
+      "builtBy" to ":testing:shaded-dependencies:extractShadowJar"
     )
   }
 }
@@ -32,7 +32,7 @@ dependencies {
   api("org.slf4j:slf4j-api")
   api("com.google.code.findbugs:annotations")
 
-  compileOnly(project(":testing:dependencies-shaded-for-testing", configuration = "shadow"))
+  compileOnly(project(":testing:shaded-dependencies", configuration = "shadow"))
   compileOnly(project(":javaagent-bootstrap"))
 
   compileOnly("com.google.auto.value:auto-value-annotations")

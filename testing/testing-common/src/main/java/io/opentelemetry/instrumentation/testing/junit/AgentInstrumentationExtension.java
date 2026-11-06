@@ -28,7 +28,7 @@ import io.opentelemetry.instrumentation.testing.AgentTestRunner;
  * </pre>
  *
  * <p>Note that {@link AgentInstrumentationExtension} will not work by itself, you have to run the
- * tests process with the {@code agent-for-testing} javaagent.
+ * tests process with the {@code javaagent-for-testing} javaagent.
  */
 public class AgentInstrumentationExtension extends InstrumentationExtension {
   public static AgentInstrumentationExtension create() {

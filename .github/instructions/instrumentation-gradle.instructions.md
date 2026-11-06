@@ -31,7 +31,7 @@ to shared infrastructure and other projects using the same conventions.
 - Versioned javaagent modules for the same component must load their sibling `:javaagent`
   modules via `testInstrumentation` so tests exercise Muzzle selection together. Match the
   component prefix before the trailing version, not just the grouping directory. Omit
-  siblings already bundled into `agent-for-testing` through `baseJavaagentLibs` in
+  siblings already bundled into `javaagent-for-testing` through `baseJavaagentLibs` in
   `javaagent/build.gradle.kts`. The convention plugin also supplies `javaagent-bootstrap`;
   an explicit `compileOnly` dependency on it is redundant.
 - Every explicitly registered custom `Test` task must set `testClassesDirs` and `classpath`;
