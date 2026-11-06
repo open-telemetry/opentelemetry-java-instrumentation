@@ -45,9 +45,27 @@ dependencies {
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
 
   testImplementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
+  testInstrumentation(project(":instrumentation:logback:logback-mdc-1.0:javaagent"))
 }
 
 testing.suites {
+  register<JvmTestSuite>("mdcExportTest") {
+    dependencies {
+      implementation("ch.qos.logback:logback-classic") {
+        version {
+          strictly(baseVersion("1.0.0").orLatest())
+        }
+      }
+      if (!otelProps.testLatestDeps) {
+        implementation("org.slf4j:slf4j-api") {
+          version {
+            strictly("1.7.36")
+          }
+        }
+      }
+    }
+  }
+
   executions("test") {
     configureDefault {
       jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=key?")
@@ -164,6 +182,29 @@ testing.suites {
       implementation("ch.qos.logback:logback-classic") {
         version {
           strictly(baseVersion("1.3.0").orLatest())
+        }
+
+        executions("mdcExportTest") {
+          configureEach {
+            jvmArgs("-Dotel.instrumentation.logback-mdc.add-baggage=true")
+            jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name")
+            jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=*")
+            jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.excluded=secret")
+            jvmArgs("-Dotel.service.name=mdc-export-test")
+          }
+
+          register("LoggingKeys") {
+            jvmArgs("-Dotel.instrumentation.common.logging.trace-id-key=custom_trace_id")
+            jvmArgs("-Dotel.instrumentation.common.logging.span-id-key=custom_span_id")
+            jvmArgs("-Dotel.instrumentation.common.logging.trace-flags-key=custom_trace_flags")
+          }
+
+          register("BaggageProcessor") {
+            filter.includeTestsMatching("*exportsBaggageIndependently")
+            systemProperty("test.baggageProcessor", "true")
+            jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.excluded=*")
+            jvmArgs("-Dotel.java.experimental.log-attributes.copy-from-baggage.include=tenant")
+          }
         }
       }
       implementation("org.slf4j:slf4j-api") {

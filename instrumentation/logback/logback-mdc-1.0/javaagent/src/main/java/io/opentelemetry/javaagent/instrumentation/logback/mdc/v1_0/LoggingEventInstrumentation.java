@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0;
 
+import static io.opentelemetry.javaagent.bootstrap.internal.LogbackMdcState.currentExportRead;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.ADD_BAGGAGE;
@@ -12,6 +13,7 @@ import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.Logbac
 import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.SPAN_ID_KEY;
 import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.TRACE_FLAGS_KEY;
 import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.TRACE_ID_KEY;
+import static java.util.Collections.emptyMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -60,6 +62,10 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
     public static Map<String, String> onExit(
         @Advice.This ILoggingEvent event,
         @Advice.Return(typing = Typing.DYNAMIC) Map<String, String> contextData) {
+
+      if (Boolean.TRUE.equals(currentExportRead().get())) {
+        return contextData == null ? emptyMap() : contextData;
+      }
 
       if (contextData != null && contextData.containsKey(AgentCommonConfig.get().getTraceIdKey())) {
         // Assume already instrumented event if traceId is present.
