@@ -119,7 +119,7 @@ class JdbcAttributesGetterTest {
         DbRequest.create(DbInfo.builder().dbSystemName(H2DATABASE).build(), "SELECT 1", false);
     SQLException error = new SQLException("The object is already closed", "90007", 90007);
 
-    assertThat(attributesGetter.getErrorType(request, null, error)).isEqualTo("90007");
+    assertThat(attributesGetter.getErrorType(request, null, error)).isEqualTo("90007/90007");
     assertThat(attributesGetter.getDbResponseStatusCode(request, null, error))
         .isEqualTo("90007/90007");
   }
@@ -149,7 +149,7 @@ class JdbcAttributesGetterTest {
 
   private static Stream<Arguments> otherSqlResponseStatuses() {
     return Stream.of(
-        argumentSet("both codes", "42000", 1071, "42000/1071", "1071"),
+        argumentSet("both codes", "42000", 1071, "42000/1071", "42000/1071"),
         argumentSet("SQLSTATE only", "42000", 0, "42000", "42000"),
         argumentSet("success SQLSTATE", "00000", 0, "00000", null),
         argumentSet("vendor code only", null, 1071, "1071", "1071"),
@@ -197,8 +197,7 @@ class JdbcAttributesGetterTest {
 
   private static Stream<Arguments> errorCodes() {
     return Stream.of(
-        argumentSet(
-            "positive vendor code takes precedence for error type", 42, "42601", "42", "42601"),
+        argumentSet("PostgreSQL SQLSTATE takes precedence", 42, "42601", "42601", "42601"),
         argumentSet("negative vendor code", -42, null, "-42", "-42"),
         argumentSet("SQLSTATE with zero vendor code", 0, "42601", "42601", "42601"),
         argumentSet("null SQLSTATE is unavailable", 0, null, null, null),

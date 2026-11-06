@@ -208,7 +208,7 @@ class JdbcTelemetryTest {
 
   private static Stream<Arguments> errorCodes() {
     return Stream.of(
-        argumentSet("positive vendor code", 42, "42601", "42", "42601"),
+        argumentSet("positive vendor code", 42, "42601", "42601", "42601"),
         argumentSet("negative vendor code", -42, null, "-42", "-42"),
         argumentSet("SQLSTATE with zero vendor code", 0, "42601", "42601", "42601"),
         argumentSet(
@@ -224,7 +224,7 @@ class JdbcTelemetryTest {
             SQLException.class.getName(),
             null),
         argumentSet(
-            "successful completion SQLSTATE is captured independently of error type",
+            "successful completion SQLSTATE falls back to exception type",
             0,
             "00000",
             SQLException.class.getName(),

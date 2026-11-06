@@ -22,11 +22,11 @@ class VertxSqlClientAttributesGetterTest {
       new VertxSqlClientRequest("select 1", VertxSqlClientInfo.createUnknown(MYSQL), false, null);
 
   @Test
-  void prefersMysqlVendorCodeWithoutChangingErrorType() {
+  void prefersMysqlVendorCodeForErrorType() {
     MySQLException error = new MySQLException("Syntax error", 1064, "42000");
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("1064");
   }
 
   @Test
@@ -34,7 +34,7 @@ class VertxSqlClientAttributesGetterTest {
     MySQLException error = new MySQLException("Syntax error", 0, "42000");
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("42000");
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("42000");
   }
 
   @Test
@@ -42,6 +42,7 @@ class VertxSqlClientAttributesGetterTest {
     MySQLException error = new MySQLException("Syntax error", 1064, null);
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("1064");
   }
 
   @Test
@@ -53,10 +54,11 @@ class VertxSqlClientAttributesGetterTest {
 
     assertThat(getter.getDbResponseStatusCode(unknownRequest, null, unknown))
         .isEqualTo("42000/1064");
+    assertThat(getter.getErrorType(unknownRequest, null, unknown)).isEqualTo("42000/1064");
   }
 
   @Test
-  void extractsLegacyMssqlErrorCodeWithoutChangingErrorType() {
+  void extractsLegacyMssqlErrorCodeForErrorType() {
     VertxSqlClientRequest request =
         new VertxSqlClientRequest(
             "select 1", VertxSqlClientInfo.createUnknown(MICROSOFT_SQL_SERVER), false, null);
@@ -64,7 +66,7 @@ class VertxSqlClientAttributesGetterTest {
         new MSSQLException(208, (byte) 1, (byte) 16, "Invalid object", null, null, 1);
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("208");
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("208");
   }
 
   @Test
@@ -77,6 +79,6 @@ class VertxSqlClientAttributesGetterTest {
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("-204");
     assertThat(getter.getDbResponseStatusCode(request, null, errorWithoutCode)).isEqualTo("42704");
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("-204");
   }
 }

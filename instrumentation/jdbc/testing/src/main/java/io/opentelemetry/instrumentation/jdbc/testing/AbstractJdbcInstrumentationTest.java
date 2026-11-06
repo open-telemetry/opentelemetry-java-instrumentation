@@ -491,7 +491,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfying(
                                 equalTo(DB_RESPONSE_STATUS_CODE, expectedResponseStatusCode),
-                                equalTo(ERROR_TYPE, Integer.toString(sqlException.getErrorCode())))
+                                equalTo(ERROR_TYPE, expectedResponseStatusCode))
                             .hasException(emitExceptionAsSpanEvents() ? error : null)));
 
     if (emitExceptionAsLogs()) {
@@ -2162,7 +2162,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(DB_SYSTEM_NAME, "h2database"),
                                 equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
                                 equalTo(DB_OPERATION_NAME, operation),
-                                equalTo(ERROR_TYPE, Integer.toString(error.getErrorCode())),
+                                equalTo(
+                                    ERROR_TYPE, error.getSQLState() + "/" + error.getErrorCode()),
                                 equalTo(
                                     DB_RESPONSE_STATUS_CODE,
                                     error.getSQLState() + "/" + error.getErrorCode()))));

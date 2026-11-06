@@ -52,14 +52,23 @@ public final class R2dbcSqlAttributesGetter
   @Override
   public String getErrorType(
       DbExecution request, @Nullable Void response, @Nullable Throwable error) {
-    return getSqlState(error);
+    String sqlState = getSqlState(error);
+    if (getErrorCode(error) == 0 && "00000".equals(sqlState)) {
+      return null;
+    }
+    return getResponseStatusCode(request, error);
   }
 
   @Nullable
   @Override
   public String getDbResponseStatusCode(
       DbExecution request, @Nullable Void response, @Nullable Throwable error) {
-    String dbSystemName = getDbSystemName(request);
+    return getResponseStatusCode(request, error);
+  }
+
+  @Nullable
+  private static String getResponseStatusCode(DbExecution request, @Nullable Throwable error) {
+    String dbSystemName = request.getSystemName();
     int errorCode = getErrorCode(error);
     String sqlState = getSqlState(error);
     String vendorCode = errorCode == 0 ? null : Integer.toString(errorCode);

@@ -63,12 +63,12 @@ class R2dbcSqlAttributesGetterTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"mysql", "mariadb", "oracle", "mssql", "db2"})
-  void prefersVendorCodeWithoutChangingErrorType(String dbSystemName) {
+  void prefersVendorCodeForErrorType(String dbSystemName) {
     DbExecution request = request(dbSystemName);
     Throwable error = new R2dbcBadGrammarException("test", "42000", 1064);
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo("42000");
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("1064");
   }
 
   @ParameterizedTest
@@ -78,7 +78,7 @@ class R2dbcSqlAttributesGetterTest {
     Throwable error = new R2dbcBadGrammarException("test", null, 1064);
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("1064");
   }
 
   @ParameterizedTest
@@ -97,11 +97,11 @@ class R2dbcSqlAttributesGetterTest {
             "both codes",
             new R2dbcBadGrammarException("test", "42000", 1071),
             "42000/1071",
-            "42000"),
+            "42000/1071"),
         argumentSet(
             "SQLSTATE only", new R2dbcBadGrammarException("test", "42000", 0), "42000", "42000"),
         argumentSet(
-            "vendor code only", new R2dbcBadGrammarException("test", null, 1071), "1071", null),
+            "vendor code only", new R2dbcBadGrammarException("test", null, 1071), "1071", "1071"),
         argumentSet("neither code", new R2dbcBadGrammarException("test"), null, null));
   }
 
@@ -111,7 +111,7 @@ class R2dbcSqlAttributesGetterTest {
     Throwable error = new R2dbcBadGrammarException("test", null, 1071);
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1071");
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("1071");
   }
 
   @Test
@@ -120,7 +120,7 @@ class R2dbcSqlAttributesGetterTest {
     Throwable error = new R2dbcBadGrammarException("test", "42000", 1071);
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("42000/1071");
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo("42000");
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("42000/1071");
   }
 
   @ParameterizedTest
@@ -134,12 +134,12 @@ class R2dbcSqlAttributesGetterTest {
   }
 
   @Test
-  void capturesSuccessfulSqlStateWithoutChangingErrorType() {
+  void keepsSuccessfulSqlStateOutOfErrorType() {
     DbExecution request = request("mysql");
     Throwable error = new R2dbcBadGrammarException("test", "00000", 0);
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("00000");
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo("00000");
+    assertThat(getter.getErrorType(request, null, error)).isNull();
   }
 
   @Test

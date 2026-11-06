@@ -1334,6 +1334,20 @@ class VertxSqlClientTest {
     Throwable error = thrown.getCause();
     assertThat(error).isNotNull();
     testing.waitAndAssertTraces(trace -> assertOracleConnectFailure(trace, error));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.vertx-sql-client-5.0",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributesSatisfying(
+                                    attributes ->
+                                        assertThat(attributes.asMap())
+                                            .containsEntry(DB_RESPONSE_STATUS_CODE, "12541")
+                                            .containsEntry(ERROR_TYPE, "12541")))));
   }
 
   @ParameterizedTest
@@ -1883,7 +1897,7 @@ class VertxSqlClientTest {
                     equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                     equalTo(SERVER_ADDRESS, "127.0.0.1"),
                     equalTo(SERVER_PORT, 1),
-                    equalTo(ERROR_TYPE, "66000"),
+                    equalTo(ERROR_TYPE, "12541"),
                     equalTo(DB_RESPONSE_STATUS_CODE, "12541")));
   }
 

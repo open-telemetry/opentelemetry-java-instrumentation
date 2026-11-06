@@ -20,14 +20,11 @@ import javax.annotation.Nullable;
 class VertxSqlClientAttributesGetter
     implements SqlClientAttributesGetter<VertxSqlClientRequest, Void> {
 
-  private static final Function<Throwable, String> errorTypeExtractor =
-      createSqlStateExtractor(false);
-  private static final Function<Throwable, String> sqlStateExtractor =
-      createSqlStateExtractor(true);
+  private static final Function<Throwable, String> sqlStateExtractor = createSqlStateExtractor();
   private static final Function<Throwable, String> mysqlSqlStateExtractor =
-      sqlStateExtractor("io.vertx.mysqlclient.MySQLException", "getSqlState", true);
+      sqlStateExtractor("io.vertx.mysqlclient.MySQLException", "getSqlState");
   private static final Function<Throwable, String> db2SqlStateExtractor =
-      sqlStateExtractor("io.vertx.db2client.DB2Exception", "getSqlState", true);
+      sqlStateExtractor("io.vertx.db2client.DB2Exception", "getSqlState");
   private static final Function<Throwable, String> vendorCodeExtractor =
       createNonZeroErrorCodeExtractor();
 
@@ -74,17 +71,29 @@ class VertxSqlClientAttributesGetter
   @Override
   public String getErrorType(
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
-    return errorTypeExtractor.apply(error);
+    String sqlState = getAvailableSqlState(error);
+    String vendorCode = vendorCodeExtractor.apply(error);
+    String responseStatusCode = getResponseStatusCode(request, sqlState, vendorCode);
+    if ("00000".equals(sqlState) && vendorCode == null) {
+      return null;
+    }
+    return responseStatusCode;
   }
 
   @Nullable
   @Override
   public String getDbResponseStatusCode(
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
-    String dbSystemName = request.getDbSystemName();
     String sqlState = getAvailableSqlState(error);
     String vendorCode = vendorCodeExtractor.apply(error);
-    return SqlResponseStatusCodeUtil.getResponseStatusCode(dbSystemName, sqlState, vendorCode);
+    return getResponseStatusCode(request, sqlState, vendorCode);
+  }
+
+  @Nullable
+  private static String getResponseStatusCode(
+      VertxSqlClientRequest request, @Nullable String sqlState, @Nullable String vendorCode) {
+    return SqlResponseStatusCodeUtil.getResponseStatusCode(
+        request.getDbSystemName(), sqlState, vendorCode);
   }
 
   @Nullable
@@ -105,12 +114,12 @@ class VertxSqlClientAttributesGetter
     return request.isParameterizedQuery();
   }
 
-  private static Function<Throwable, String> createSqlStateExtractor(boolean preserveNull) {
+  private static Function<Throwable, String> createSqlStateExtractor() {
     Function<Throwable, String> extractor =
-        sqlStateExtractor("io.vertx.sqlclient.DatabaseException", "getSqlState", preserveNull);
+        sqlStateExtractor("io.vertx.sqlclient.DatabaseException", "getSqlState");
     // older versions only have this method
     Function<Throwable, String> fallback =
-        sqlStateExtractor("io.vertx.pgclient.PgException", "getCode", preserveNull);
+        sqlStateExtractor("io.vertx.pgclient.PgException", "getCode");
     return error -> {
       String status = extractor.apply(error);
       return status != null ? status : fallback.apply(error);
@@ -170,7 +179,7 @@ class VertxSqlClientAttributesGetter
   }
 
   private static Function<Throwable, String> sqlStateExtractor(
-      String className, String methodName, boolean preserveNull) {
+      String className, String methodName) {
     try {
       // loaded via reflection, because this class is not available in all versions that we support
       Class<?> exClass = Class.forName(className);
@@ -180,7 +189,7 @@ class VertxSqlClientAttributesGetter
         if (exClass.isInstance(error)) {
           try {
             Object status = method.invoke(error); // can be String or int
-            return status == null && preserveNull ? null : String.valueOf(status);
+            return status == null ? null : String.valueOf(status);
           } catch (IllegalAccessException | InvocationTargetException ignored) {
             return null;
           }

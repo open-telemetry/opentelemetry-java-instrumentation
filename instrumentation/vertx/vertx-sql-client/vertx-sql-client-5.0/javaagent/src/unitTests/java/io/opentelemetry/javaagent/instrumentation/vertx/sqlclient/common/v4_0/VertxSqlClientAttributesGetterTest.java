@@ -23,19 +23,19 @@ class VertxSqlClientAttributesGetterTest {
   private final VertxSqlClientRequest request = request(ORACLE_DB);
 
   @Test
-  void capturesOracleConnectionStatusWithoutChangingErrorType() {
+  void capturesOracleConnectionStatusForErrorType() {
     DatabaseException error = new DatabaseException("No listener", 12541, "66000") {};
 
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo("66000");
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("12541");
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("12541");
   }
 
   @Test
-  void prefersMysqlVendorCodeWithoutChangingErrorType() {
+  void prefersMysqlVendorCodeForErrorType() {
     VertxSqlClientRequest mysqlRequest = request(MYSQL);
     DatabaseException error = new DatabaseException("Syntax error", 1064, "42000") {};
 
-    assertThat(getter.getErrorType(mysqlRequest, null, error)).isEqualTo("42000");
+    assertThat(getter.getErrorType(mysqlRequest, null, error)).isEqualTo("1064");
     assertThat(getter.getDbResponseStatusCode(mysqlRequest, null, error)).isEqualTo("1064");
   }
 
@@ -44,7 +44,7 @@ class VertxSqlClientAttributesGetterTest {
     VertxSqlClientRequest mysqlRequest = request(MYSQL);
     DatabaseException error = new DatabaseException("Syntax error", 1064, null) {};
 
-    assertThat(getter.getErrorType(mysqlRequest, null, error)).isEqualTo("null");
+    assertThat(getter.getErrorType(mysqlRequest, null, error)).isEqualTo("1064");
     assertThat(getter.getDbResponseStatusCode(mysqlRequest, null, error)).isEqualTo("1064");
   }
 
@@ -65,8 +65,10 @@ class VertxSqlClientAttributesGetterTest {
     DatabaseException postgresError = new DatabaseException("Syntax error", 42, "42601") {};
 
     assertThat(getter.getDbResponseStatusCode(mysqlRequest, null, successful)).isEqualTo("00000");
+    assertThat(getter.getErrorType(mysqlRequest, null, successful)).isNull();
     assertThat(getter.getDbResponseStatusCode(postgresRequest, null, postgresError))
         .isEqualTo("42601");
+    assertThat(getter.getErrorType(postgresRequest, null, postgresError)).isEqualTo("42601");
   }
 
   @Test
@@ -75,23 +77,24 @@ class VertxSqlClientAttributesGetterTest {
     DatabaseException error = new DatabaseException("Syntax error", 208, "42000") {};
 
     assertThat(getter.getDbResponseStatusCode(unknownRequest, null, error)).isEqualTo("42000/208");
+    assertThat(getter.getErrorType(unknownRequest, null, error)).isEqualTo("42000/208");
   }
 
   @ParameterizedTest
   @ValueSource(strings = {MICROSOFT_SQL_SERVER, IBM_DB2})
-  void prefersVendorCodeWithoutChangingErrorType(String dbSystemName) {
+  void prefersVendorCodeForErrorType(String dbSystemName) {
     VertxSqlClientRequest request = request(dbSystemName);
     DatabaseException error = new DatabaseException("Syntax error", 208, "42000") {};
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("208");
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo("42000");
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("208");
   }
 
   @Test
-  void omitsNullSqlStateWithoutChangingErrorType() {
+  void omitsNullSqlStateFromErrorType() {
     DatabaseException error = new DatabaseException("Unknown SQLSTATE", 0, null) {};
 
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo("null");
+    assertThat(getter.getErrorType(request, null, error)).isNull();
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isNull();
   }
 
