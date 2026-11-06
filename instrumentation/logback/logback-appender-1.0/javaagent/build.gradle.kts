@@ -183,29 +183,6 @@ testing.suites {
         version {
           strictly(baseVersion("1.3.0").orLatest())
         }
-
-        executions("mdcExportTest") {
-          configureEach {
-            jvmArgs("-Dotel.instrumentation.logback-mdc.add-baggage=true")
-            jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name")
-            jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=*")
-            jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.excluded=secret")
-            jvmArgs("-Dotel.service.name=mdc-export-test")
-          }
-
-          register("LoggingKeys") {
-            jvmArgs("-Dotel.instrumentation.common.logging.trace-id-key=custom_trace_id")
-            jvmArgs("-Dotel.instrumentation.common.logging.span-id-key=custom_span_id")
-            jvmArgs("-Dotel.instrumentation.common.logging.trace-flags-key=custom_trace_flags")
-          }
-
-          register("BaggageProcessor") {
-            filter.includeTestsMatching("*exportsBaggageIndependently")
-            systemProperty("test.baggageProcessor", "true")
-            jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.excluded=*")
-            jvmArgs("-Dotel.java.experimental.log-attributes.copy-from-baggage.include=tenant")
-          }
-        }
       }
       implementation("org.slf4j:slf4j-api") {
         version {
@@ -235,6 +212,28 @@ testing.suites {
         jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.excluded=*")
         systemProperty("testLogstashStructuredArgsConfiguration", "none")
       }
+    }
+  }
+  executions("mdcExportTest") {
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.logback-mdc.add-baggage=true")
+      jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name")
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=*")
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.excluded=secret")
+      jvmArgs("-Dotel.service.name=mdc-export-test")
+    }
+
+    register("LoggingKeys") {
+      jvmArgs("-Dotel.instrumentation.common.logging.trace-id-key=custom_trace_id")
+      jvmArgs("-Dotel.instrumentation.common.logging.span-id-key=custom_span_id")
+      jvmArgs("-Dotel.instrumentation.common.logging.trace-flags-key=custom_trace_flags")
+    }
+
+    register("BaggageProcessor") {
+      filter.includeTestsMatching("*exportsBaggageIndependently")
+      systemProperty("test.baggageProcessor", "true")
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.excluded=*")
+      jvmArgs("-Dotel.java.experimental.log-attributes.copy-from-baggage.include=tenant")
     }
   }
 }

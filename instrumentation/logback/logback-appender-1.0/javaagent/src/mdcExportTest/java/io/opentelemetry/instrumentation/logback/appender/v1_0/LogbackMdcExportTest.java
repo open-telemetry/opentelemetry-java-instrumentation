@@ -79,7 +79,7 @@ class LogbackMdcExportTest {
           }
         };
     if (withSpan) {
-      testing.runWithSpan("parent", log);
+      testing.runWithSpan("parent", log::run);
     } else {
       log.run();
     }
@@ -153,6 +153,7 @@ class LogbackMdcExportTest {
     LoggingEvent event =
         new LoggingEvent(getClass().getName(), logger, Level.INFO, "null MDC", null, null) {
           @Override
+          @SuppressWarnings("ReturnsNullCollection")
           public Map<String, String> getMDCPropertyMap() {
             return null;
           }
