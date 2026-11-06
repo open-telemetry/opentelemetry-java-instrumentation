@@ -33,6 +33,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.parser.LindormUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.MysqlUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.OceanbaseUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.OracleUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.ParseContext;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.PolardbUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.PostgresqlUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.SapUrlParser;
@@ -2185,13 +2186,45 @@ class JdbcConnectionUrlParserTest {
   }
 
   @ParameterizedTest
-  @MethodSource("parserAuthorityBoundaries")
-  void parserExtractsAuthorityUsingItsPropertyBoundaries(
-      JdbcUrlParser parser, String url, String authority) {
-    assertThat(parser.extractAuthority(url)).isEqualTo(authority);
+  @ValueSource(
+      strings = {
+        "sqlserver://h1,h2",
+        "jtds:sybase://h1,h2",
+        "derby://h1,h2/db",
+        "datadirect:sqlserver://h1,h2",
+        "tibcosoftware:sqlserver://h1,h2",
+        "db2://h1:50000,h2:50001",
+        "as400://h1:50000,h2:50001",
+        "h2:tcp://h1,h2/db",
+        "h2:ssl://h1,h2/db",
+        "hsqldb:hsql://h1,h2",
+        "hsqldb:hsqls://h1,h2",
+        "hsqldb:http://h1,h2",
+        "hsqldb:https://h1,h2",
+        "informix-sqli://h1,h2/db",
+        "oceanbase:oracle://h1,h2/db"
+      })
+  void semicolonMultiTargetDoesNotFallBackToFirstServer(String connection) {
+    String url = "jdbc:" + connection + ";property=a,b";
+    assertThat(parse(url, null).getConfiguredServerTarget()).isNull();
   }
 
-  private static Stream<Arguments> parserAuthorityBoundaries() {
+  @ParameterizedTest
+  @MethodSource("parserUrlForms")
+  void multipleTargetsDisableFallbackDuringParserExecution(
+      JdbcUrlParser parser, String url, String expectedAuthority) {
+    ParseContext ctx = ParseContext.of("other", null);
+    parser.parse(url, ctx);
+    ctx.host("fallback.host");
+
+    assertThat(ctx.system()).isNotNull();
+    if (expectedAuthority != null && hasMultipleTargets(expectedAuthority)) {
+      assertThat(ctx.toDbInfo().getConfiguredServerTarget())
+          .isNotEqualTo(DbServerTarget.create("fallback.host", null));
+    }
+  }
+
+  private static Stream<Arguments> parserUrlForms() {
     return Stream.of(
         arguments(GenericUrlParser.INSTANCE, "other://h1,h2/db", "h1,h2"),
         arguments(ClickhouseUrlParser.INSTANCE, "clickhouse:http://h1,h2/db", "h1,h2"),
@@ -2220,7 +2253,6 @@ class JdbcConnectionUrlParserTest {
     String userInfo = "user:pw;extra@";
     String url = "jdbc:mariadb:failover://" + userInfo + "h1,unexpected=value/db";
 
-    assertThat(hasMultipleTargets(MysqlUrlParser.INSTANCE.extractAuthority(url))).isTrue();
     assertThat(parse(url, null).getConfiguredServerTarget()).isNull();
   }
 

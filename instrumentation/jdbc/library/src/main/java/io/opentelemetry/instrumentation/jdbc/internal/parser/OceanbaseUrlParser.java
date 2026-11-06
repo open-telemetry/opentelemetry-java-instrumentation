@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractSubtype;
 
-import javax.annotation.Nullable;
-
 /**
  * Parser for OceanBase JDBC URLs.
  *
@@ -33,14 +31,6 @@ public final class OceanbaseUrlParser implements JdbcUrlParser {
   public static final OceanbaseUrlParser INSTANCE = new OceanbaseUrlParser();
 
   private OceanbaseUrlParser() {}
-
-  @Override
-  @Nullable
-  public String extractAuthority(String jdbcUrl) {
-    return extractSubtype(jdbcUrl) == null
-        ? UrlParsingUtils.extractAuthority(jdbcUrl)
-        : UrlParsingUtils.extractSemicolonAuthority(jdbcUrl);
-  }
 
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {

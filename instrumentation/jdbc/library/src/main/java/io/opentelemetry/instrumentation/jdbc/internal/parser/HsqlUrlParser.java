@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.Nullable;
 
 /**
  * Parser for HyperSQL (HSQLDB) JDBC URLs.
@@ -50,12 +49,6 @@ public final class HsqlUrlParser implements JdbcUrlParser {
   public static final HsqlUrlParser INSTANCE = new HsqlUrlParser();
 
   private HsqlUrlParser() {}
-
-  @Override
-  @Nullable
-  public String extractAuthority(String jdbcUrl) {
-    return UrlParsingUtils.extractSemicolonAuthority(jdbcUrl);
-  }
 
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {

@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.splitQuery;
 
 import java.util.Map;
-import javax.annotation.Nullable;
 
 /**
  * Parser for jTDS SQL Server JDBC URLs.
@@ -37,12 +36,6 @@ public final class JtdsUrlParser implements JdbcUrlParser {
   private static final int DEFAULT_PORT = 1433;
 
   private JtdsUrlParser() {}
-
-  @Override
-  @Nullable
-  public String extractAuthority(String jdbcUrl) {
-    return UrlParsingUtils.extractSemicolonAuthority(jdbcUrl);
-  }
 
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {

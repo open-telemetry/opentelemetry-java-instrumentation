@@ -59,12 +59,6 @@ public final class MysqlUrlParser implements JdbcUrlParser {
   private MysqlUrlParser() {}
 
   @Override
-  @Nullable
-  public String extractAuthority(String jdbcUrl) {
-    return UrlParsingUtils.extractAuthority(jdbcUrl);
-  }
-
-  @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
     String system = ctx.type();
     if (!MYSQL.equals(system) && !MARIADB.equals(system)) {

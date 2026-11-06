@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
-import javax.annotation.Nullable;
-
 /**
  * Parser for Alibaba PolarDB JDBC URLs.
  *
@@ -23,12 +21,6 @@ public final class PolardbUrlParser implements JdbcUrlParser {
   public static final PolardbUrlParser INSTANCE = new PolardbUrlParser();
 
   private PolardbUrlParser() {}
-
-  @Override
-  @Nullable
-  public String extractAuthority(String jdbcUrl) {
-    return UrlParsingUtils.extractAuthority(jdbcUrl);
-  }
 
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {

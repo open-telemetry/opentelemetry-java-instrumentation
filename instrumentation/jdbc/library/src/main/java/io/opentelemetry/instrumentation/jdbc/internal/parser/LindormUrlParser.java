@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
-import javax.annotation.Nullable;
-
 /**
  * Parser for Alibaba Lindorm JDBC URLs.
  *
@@ -28,12 +26,6 @@ public final class LindormUrlParser implements JdbcUrlParser {
   public static final LindormUrlParser INSTANCE = new LindormUrlParser();
 
   private LindormUrlParser() {}
-
-  @Override
-  @Nullable
-  public String extractAuthority(String jdbcUrl) {
-    return UrlParsingUtils.extractAuthority(jdbcUrl);
-  }
 
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {

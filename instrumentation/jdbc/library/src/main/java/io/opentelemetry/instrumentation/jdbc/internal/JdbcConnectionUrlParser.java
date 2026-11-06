@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo.DEFAULT;
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.hasMultipleTargets;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -31,7 +30,6 @@ import io.opentelemetry.instrumentation.jdbc.internal.parser.PolardbUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.PostgresqlUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.SapUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.SqliteUrlParser;
-import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -144,14 +142,6 @@ public final class JdbcConnectionUrlParser {
       ctx.system("other_sql");
       ctx.applyDataSourceProperties();
       return ctx.toDbInfo();
-    }
-
-    String authority =
-        parser == null
-            ? UrlParsingUtils.extractAuthority(jdbcUrl)
-            : parser.extractAuthority(jdbcUrl);
-    if (parser != MysqlUrlParser.INSTANCE && authority != null && hasMultipleTargets(authority)) {
-      ctx.disableSingleServerFallback();
     }
 
     try {

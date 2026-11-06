@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
-import javax.annotation.Nullable;
-
 /**
  * Parser for IBM Informix SQLI JDBC URLs.
  *
@@ -30,12 +28,6 @@ public final class InformixSqliUrlParser implements JdbcUrlParser {
   public static final InformixSqliUrlParser INSTANCE = new InformixSqliUrlParser();
 
   private InformixSqliUrlParser() {}
-
-  @Override
-  @Nullable
-  public String extractAuthority(String jdbcUrl) {
-    return UrlParsingUtils.extractSemicolonAuthority(jdbcUrl);
-  }
 
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {

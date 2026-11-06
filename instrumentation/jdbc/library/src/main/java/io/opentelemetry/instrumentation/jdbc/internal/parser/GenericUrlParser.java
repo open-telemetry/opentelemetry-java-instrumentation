@@ -41,12 +41,6 @@ public final class GenericUrlParser implements JdbcUrlParser {
   private GenericUrlParser() {}
 
   @Override
-  @Nullable
-  public String extractAuthority(String jdbcUrl) {
-    return UrlParsingUtils.extractAuthority(jdbcUrl);
-  }
-
-  @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
     parse(jdbcUrl, ctx, null);
   }
@@ -56,7 +50,7 @@ public final class GenericUrlParser implements JdbcUrlParser {
       ctx.system(OTHER_SQL);
     }
 
-    applyHostGroup(extractAuthority(jdbcUrl), ctx, defaultPort);
+    applyHostGroup(UrlParsingUtils.extractAuthority(jdbcUrl), ctx, defaultPort);
 
     URI uri;
     try {

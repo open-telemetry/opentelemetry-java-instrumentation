@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
-import javax.annotation.Nullable;
-
 /**
  * Parser for SAP HANA JDBC URLs.
  *
@@ -30,12 +28,6 @@ public final class SapUrlParser implements JdbcUrlParser {
   public static final SapUrlParser INSTANCE = new SapUrlParser();
 
   private SapUrlParser() {}
-
-  @Override
-  @Nullable
-  public String extractAuthority(String jdbcUrl) {
-    return UrlParsingUtils.extractAuthority(jdbcUrl);
-  }
 
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {

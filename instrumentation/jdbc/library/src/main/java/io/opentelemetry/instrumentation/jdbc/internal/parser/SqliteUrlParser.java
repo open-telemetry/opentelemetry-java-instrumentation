@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
-import javax.annotation.Nullable;
-
 /**
  * Parser for SQLite Database JDBC URLs.
  *
@@ -31,12 +29,6 @@ public final class SqliteUrlParser implements JdbcUrlParser {
   public static final SqliteUrlParser INSTANCE = new SqliteUrlParser();
 
   private SqliteUrlParser() {}
-
-  @Override
-  @Nullable
-  public String extractAuthority(String jdbcUrl) {
-    return null;
-  }
 
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {

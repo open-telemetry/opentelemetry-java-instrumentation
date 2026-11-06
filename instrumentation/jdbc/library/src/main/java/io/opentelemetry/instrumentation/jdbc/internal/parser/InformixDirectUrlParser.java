@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.indexOfAny;
 
-import javax.annotation.Nullable;
-
 /**
  * Parser for IBM Informix Direct JDBC URLs.
  *
@@ -31,12 +29,6 @@ public final class InformixDirectUrlParser implements JdbcUrlParser {
   public static final InformixDirectUrlParser INSTANCE = new InformixDirectUrlParser();
 
   private InformixDirectUrlParser() {}
-
-  @Override
-  @Nullable
-  public String extractAuthority(String jdbcUrl) {
-    return UrlParsingUtils.extractSemicolonAuthority(jdbcUrl);
-  }
 
   @Override
   public void parse(String jdbcUrl, ParseContext ctx) {
