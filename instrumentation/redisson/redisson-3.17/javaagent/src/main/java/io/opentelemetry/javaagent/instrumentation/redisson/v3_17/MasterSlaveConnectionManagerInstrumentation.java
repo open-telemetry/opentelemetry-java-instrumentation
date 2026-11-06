@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonDatabaseIndex;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonServerTargets;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -55,6 +56,7 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
         @Advice.This MasterSlaveConnectionManager manager,
         @Advice.Argument(0) @Nullable Config config) {
       RedissonServerTargets.capture(manager, ConfigServerTargetUtil317.of(config));
+      RedissonDatabaseIndex.capture(manager, ConfigServerTargetUtil317.databaseIndex(config));
     }
   }
 
@@ -66,6 +68,7 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
         @Advice.This MasterSlaveConnectionManager manager,
         @Advice.Argument(1) @Nullable Config config) {
       RedissonServerTargets.capture(manager, ConfigServerTargetUtil317.of(config));
+      RedissonDatabaseIndex.capture(manager, ConfigServerTargetUtil317.databaseIndex(config));
     }
   }
 
@@ -78,6 +81,8 @@ class MasterSlaveConnectionManagerInstrumentation implements TypeInstrumentation
         @Advice.Argument(1) @Nullable Object serviceManager) {
       RedissonServerTargets.capture(
           manager, ConfigServerTargetUtil317.ofServiceManager(serviceManager));
+      RedissonDatabaseIndex.capture(
+          manager, ConfigServerTargetUtil317.databaseIndexOfServiceManager(serviceManager));
     }
   }
 

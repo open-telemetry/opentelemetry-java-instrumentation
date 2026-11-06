@@ -4,6 +4,8 @@
 
 ### ⚠️ Breaking changes
 
+- Redisson atomic batches now emit one logical span instead of separate MULTI, command, and EXEC
+  spans. Atomic batch spans and their operation-duration metrics no longer include server or network-peer attributes.
 - Default RPC duration histogram boundaries now follow semantic conventions 1.45.0.
 - OSHI disk and network packet metrics now use `system.device.name` instead of `system.device`;
   memory metrics use `system.memory.state="available"` instead of `"free"`.

@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.CompletableFutureWrapper;
+import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonBatchContext;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonErrorCapture;
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
@@ -34,6 +35,7 @@ class RedisCommandDataInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$MarkCommandAdvice");
     // before 3.16.8
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(0, named("org.redisson.misc.RPromise"))),
@@ -45,6 +47,14 @@ class RedisCommandDataInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("tryFailure").and(takesArgument(0, Throwable.class)),
         getClass().getName() + "$CaptureErrorAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class MarkCommandAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Object command) {
+      RedissonBatchContext.markCommand(command);
+    }
   }
 
   @SuppressWarnings("unused")
