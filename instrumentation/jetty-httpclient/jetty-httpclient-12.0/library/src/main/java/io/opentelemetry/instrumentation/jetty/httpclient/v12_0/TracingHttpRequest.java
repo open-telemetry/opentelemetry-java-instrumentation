@@ -38,7 +38,7 @@ class TracingHttpRequest extends HttpRequest {
   };
 
   private final Instrumenter<Request, Response> instrumenter;
-  @Nullable private Context callerContext;
+  @Nullable private Context parentContext;
 
   TracingHttpRequest(
       HttpClient client,
@@ -51,15 +51,15 @@ class TracingHttpRequest extends HttpRequest {
 
   @Override
   public void send(Response.CompleteListener listener) {
-    callerContext = Context.current();
+    parentContext = Context.current();
     // start span and attach listeners - must handle all listeners, not just CompleteListener.
-    JettyClientTracingListener.handleRequest(callerContext, this, instrumenter);
+    JettyClientTracingListener.handleRequest(parentContext, this, instrumenter);
     super.send(wrapResponseListener(listener));
   }
 
   @Nullable
   private Scope openScope() {
-    return callerContext != null ? callerContext.makeCurrent() : null;
+    return parentContext != null ? parentContext.makeCurrent() : null;
   }
 
   @Nullable
@@ -88,7 +88,7 @@ class TracingHttpRequest extends HttpRequest {
             (proxy, method, args) -> {
               // read at invocation because listeners can be registered before send() captures the
               // caller context
-              Context context = callerContext != null ? callerContext : Context.current();
+              Context context = parentContext != null ? parentContext : Context.current();
               try (Scope ignored = context.makeCurrent()) {
                 return method.invoke(listener, args);
               } catch (InvocationTargetException e) {
