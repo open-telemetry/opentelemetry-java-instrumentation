@@ -27,8 +27,7 @@ final class DubboRpcSpanStatusExtractor implements SpanStatusExtractor<DubboRequ
       @Nullable Throwable error) {
     String statusCode = DubboRpcStatus.getStatusCode(response, error);
     if (statusCode == null || "OK".equals(statusCode)) {
-      SpanStatusExtractor.<DubboRequest, Result>getDefault()
-          .extract(spanStatusBuilder, request, response, error);
+      SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, response, error);
     } else if (DubboRpcStatus.isError(statusCode, isClient)) {
       spanStatusBuilder.setStatus(StatusCode.ERROR);
     } else {

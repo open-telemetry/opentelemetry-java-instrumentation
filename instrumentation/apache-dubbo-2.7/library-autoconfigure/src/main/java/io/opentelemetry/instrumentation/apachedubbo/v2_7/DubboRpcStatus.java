@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
+import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.concurrent.CompletionException;
@@ -52,10 +53,9 @@ final class DubboRpcStatus {
 
   @Nullable
   private static Throwable unwrap(@Nullable Throwable error) {
-    while (error instanceof CompletionException && error.getCause() != null) {
-      error = error.getCause();
-    }
-    return error;
+    return error == null
+        ? null
+        : CauseUnwrapper.unwrap(error, e -> e instanceof CompletionException);
   }
 
   @Nullable

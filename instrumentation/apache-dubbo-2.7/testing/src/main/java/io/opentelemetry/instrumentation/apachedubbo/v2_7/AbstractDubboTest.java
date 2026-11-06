@@ -29,6 +29,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl;
+import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -462,38 +463,14 @@ public abstract class AbstractDubboTest {
       assertThat(serverCallStarted.await(10, SECONDS)).isTrue();
       Throwable clientError = response.handle((value, error) -> error).get(10, SECONDS);
       assertThat(clientError).isNotNull();
-      while (clientError instanceof CompletionException && clientError.getCause() != null) {
-        clientError = clientError.getCause();
-      }
+      clientError = CauseUnwrapper.unwrap(clientError, e -> e instanceof CompletionException);
       clientErrorType = clientError.getClass().getName();
     } finally {
       continueServerCall.countDown();
     }
 
-    String clientMethod = "org.apache.dubbo.rpc.service.GenericService/$invokeAsync";
-    String serverMethod =
-        "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello";
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(clientMethod)
-                            .hasKind(SpanKind.CLIENT)
-                            .hasStatus(StatusData.error())
-                            .hasAttributesSatisfying(
-                                equalTo(ERROR_TYPE, clientErrorType),
-                                equalTo(stringKey("rpc.status_code"), null)),
-                    span ->
-                        span.hasName(serverMethod)
-                            .hasKind(SpanKind.SERVER)
-                            .hasStatus(StatusData.unset())
-                            .hasAttributesSatisfying(
-                                equalTo(ERROR_TYPE, null),
-                                equalTo(stringKey("rpc.status_code"), null))));
-
-    assertErrorMetric("rpc.client.call.duration", clientMethod, clientErrorType);
-    assertErrorMetric("rpc.server.call.duration", serverMethod, null);
+    assertFailureTelemetry(
+        "org.apache.dubbo.rpc.service.GenericService/$invokeAsync", clientErrorType, null);
   }
 
   private void assertFailure(RuntimeException failure, boolean asynchronous, String serverErrorType)
@@ -548,15 +525,11 @@ public abstract class AbstractDubboTest {
         testLatestDeps()
             ? "com.alibaba.dubbo.rpc.service.GenericException"
             : GenericException.class.getName(),
-        serverErrorType,
-        true);
+        serverErrorType);
   }
 
   private void assertFailureTelemetry(
-      String clientMethod,
-      String clientErrorType,
-      String serverErrorType,
-      boolean serverStatusIsError) {
+      String clientMethod, String clientErrorType, String serverErrorType) {
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -573,7 +546,7 @@ public abstract class AbstractDubboTest {
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
                             .hasKind(SpanKind.SERVER)
                             .hasStatus(
-                                serverStatusIsError ? StatusData.error() : StatusData.unset())
+                                serverErrorType != null ? StatusData.error() : StatusData.unset())
                             .hasAttributesSatisfying(
                                 equalTo(ERROR_TYPE, serverErrorType),
                                 equalTo(stringKey("rpc.status_code"), null))));
@@ -587,7 +560,7 @@ public abstract class AbstractDubboTest {
 
   @Test
   void testTripleInternalStatusFailure() throws ReflectiveOperationException {
-    assertTripleStatusFailure("INTERNAL", "INTERNAL", true);
+    assertTripleStatusFailure("INTERNAL", "INTERNAL");
   }
 
   @Test
@@ -641,11 +614,10 @@ public abstract class AbstractDubboTest {
 
   @Test
   void testTripleInvalidArgumentStatus() throws ReflectiveOperationException {
-    assertTripleStatusFailure("INVALID_ARGUMENT", null, false);
+    assertTripleStatusFailure("INVALID_ARGUMENT", null);
   }
 
-  private void assertTripleStatusFailure(
-      String statusCode, String serverErrorType, boolean serverStatusIsError)
+  private void assertTripleStatusFailure(String statusCode, String serverErrorType)
       throws ReflectiveOperationException {
     Assumptions.assumeTrue(testLatestDeps(), "Triple protocol requires Dubbo 3.x");
 
@@ -667,8 +639,7 @@ public abstract class AbstractDubboTest {
         // STRICT serialization rejects the business exception's TriRpcStatus. Triple sends UNKNOWN
         // instead, while the original status is still observable in the server filter.
         "UNKNOWN",
-        serverErrorType,
-        serverStatusIsError);
+        serverErrorType);
   }
 
   private <T> ReferenceConfig<T> configureTripleClient(
