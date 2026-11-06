@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -49,17 +51,19 @@ testing.suites {
       implementation("com.typesafe.akka:akka-stream_$scalaVersion:${baseVersion("2.6.21").orLatest()}")
     }
   }
+
+  executions {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+  }
 }
 
 tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
   check {
     dependsOn(testing.suites)
   }

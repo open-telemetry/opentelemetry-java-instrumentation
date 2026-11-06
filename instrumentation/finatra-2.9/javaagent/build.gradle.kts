@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -84,9 +86,7 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-
-    systemProperty("metadataConfig", "otel.instrumentation.common.controller-telemetry.enabled=true")
+    telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
   }
 
   if (otelProps.denyUnsafe) {

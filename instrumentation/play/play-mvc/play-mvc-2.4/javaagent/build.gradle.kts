@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -56,17 +59,15 @@ testing.suites {
       implementation("com.typesafe.play:play-test_2.11:$version")
     }
   }
+
+  executions {
+    configureEach {
+      telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+    }
+  }
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.controller-telemetry.enabled=true"
-    )
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-  }
-
   check {
     dependsOn(testing.suites)
   }

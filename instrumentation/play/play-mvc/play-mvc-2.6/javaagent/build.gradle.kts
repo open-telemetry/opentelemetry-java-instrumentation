@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -103,11 +104,7 @@ testing.suites {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.controller-telemetry.enabled=true"
-    )
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+    telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
   }
 
   // Play doesn't work with Java 9+ until 2.6.12
