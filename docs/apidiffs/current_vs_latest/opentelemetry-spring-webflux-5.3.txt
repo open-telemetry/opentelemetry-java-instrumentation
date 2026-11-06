@@ -2,10 +2,10 @@ Comparing source compatibility of opentelemetry-spring-webflux-5.3-3.0.0-SNAPSHO
 +++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetry  (not serializable)
 	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
 	+++  NEW SUPERCLASS: java.lang.Object
-	+++  NEW METHOD: PUBLIC(+) void addFilter(java.util.List<org.springframework.web.reactive.function.client.ExchangeFilterFunction>)
-	+++  NEW METHOD: PUBLIC(+) void addFilterAndRegisterReactorHook(java.util.List<org.springframework.web.reactive.function.client.ExchangeFilterFunction>)
 	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetryBuilder builder(io.opentelemetry.api.OpenTelemetry)
 	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetry create(io.opentelemetry.api.OpenTelemetry)
+	+++  NEW METHOD: PUBLIC(+) org.springframework.web.reactive.function.client.ExchangeFilterFunction createFilter()
+	+++  NEW METHOD: PUBLIC(+) org.springframework.web.reactive.function.client.ExchangeFilterFunction createFilterAndRegisterReactorHook()
 +++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetryBuilder  (not serializable)
 	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
 	+++  NEW SUPERCLASS: java.lang.Object
