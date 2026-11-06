@@ -152,8 +152,7 @@ class ProducerImplInstrumentation implements TypeInstrumentation {
       }
       PulsarRequest request = PulsarRequest.create(message, VirtualFieldStore.extract(producer));
       if (directSend) {
-        Context parent =
-            data == null ? SendCallbackData.callerContext(Context.current()) : data.parentContext();
+        Context parent = SendCallbackData.callerContext(Context.current());
         if (!producerInstrumenter().shouldStart(parent, request)) {
           return null;
         }

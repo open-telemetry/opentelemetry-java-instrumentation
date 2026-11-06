@@ -326,6 +326,7 @@ abstract class AbstractPulsarClientTest {
           successfulParent.set(caller);
           try (Scope ignored = caller.makeCurrent()) {
             sendDirect(
+                producer,
                 "success",
                 successfulCallbackContext,
                 successfulCallbackError,
@@ -363,7 +364,12 @@ abstract class AbstractPulsarClientTest {
           failedParent.set(caller);
           try (Scope ignored = caller.makeCurrent()) {
             sendDirect(
-                "failure", failedCallbackContext, failedCallbackError, failedSend, failedMessage);
+                producer,
+                "failure",
+                failedCallbackContext,
+                failedCallbackError,
+                failedSend,
+                failedMessage);
           }
         });
     assertThat(failedSend.await(1, MINUTES)).isTrue();
@@ -396,13 +402,13 @@ abstract class AbstractPulsarClientTest {
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
-                        .hasAttribute(
-                            ERROR_TYPE, failedCallbackError.get().getClass().getName())));
+                        .hasAttribute(ERROR_TYPE, failedCallbackError.get().getClass().getName())));
     assertThat(Span.fromContext(successfulParent.get()).getSpanContext().isValid()).isTrue();
     assertThat(Span.fromContext(failedParent.get()).getSpanContext().isValid()).isTrue();
   }
 
   private static void sendDirect(
+      Producer<String> target,
       String value,
       AtomicReference<Context> callbackContext,
       AtomicReference<Throwable> callbackError,
@@ -455,9 +461,9 @@ abstract class AbstractPulsarClientTest {
       throw new IllegalStateException(e);
     }
     Message<?> message =
-        ((TypedMessageBuilderImpl<String>) producer.newMessage().value(value)).getMessage();
+        ((TypedMessageBuilderImpl<String>) target.newMessage().value(value)).getMessage();
     outgoingMessage.set(message);
-    ((ProducerImpl<String>) producer).sendAsync(message, callback);
+    ((ProducerImpl<String>) target).sendAsync(message, callback);
   }
 
   @ParameterizedTest
@@ -1237,13 +1243,19 @@ abstract class AbstractPulsarClientTest {
                 span -> span.hasName("send " + nestedTopic).hasParent(trace.getSpan(0))));
   }
 
-  @Test
-  void customBatcherUsesCallerContext() throws Exception {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void customBatcherUsesCallerContext(boolean directSend) throws Exception {
     String topic = "persistent://public/default/customBatcherUsesCallerContext";
     String nestedTopic = topic + "-nested";
     ContextKey<String> key = ContextKey.named("pulsar-batcher-caller");
     List<Context> hookContexts = new ArrayList<>();
     AtomicReference<CompletableFuture<MessageId>> nestedFuture = new AtomicReference<>();
+    AtomicReference<Context> nestedCaller = new AtomicReference<>();
+    AtomicReference<Context> callbackContext = new AtomicReference<>();
+    AtomicReference<Throwable> callbackError = new AtomicReference<>();
+    AtomicReference<Message<?>> outgoingMessage = new AtomicReference<>();
+    CountDownLatch directSendCompleted = new CountDownLatch(1);
     producer2 = client.newProducer(Schema.STRING).topic(nestedTopic).enableBatching(false).create();
     producer =
         client
@@ -1263,8 +1275,32 @@ abstract class AbstractPulsarClientTest {
                               hookContexts.add(Context.current());
                             }
                             if (method.getName().equals("add")) {
+                              Context hookContext = Context.current();
                               testing.runWithSpan(
-                                  "batcher", () -> nestedFuture.set(producer2.sendAsync("nested")));
+                                  "batcher",
+                                  () -> {
+                                    Context nestedContext =
+                                        Baggage.builder()
+                                            .put("pulsar-test", "nested")
+                                            .build()
+                                            .storeInContext(Context.current().with(key, "nested"));
+                                    nestedCaller.set(nestedContext);
+                                    try (Scope ignored = nestedContext.makeCurrent()) {
+                                      if (directSend) {
+                                        sendDirect(
+                                            producer2,
+                                            "nested",
+                                            callbackContext,
+                                            callbackError,
+                                            directSendCompleted,
+                                            outgoingMessage);
+                                      } else {
+                                        nestedFuture.set(producer2.sendAsync("nested"));
+                                      }
+                                      assertCurrentContext(nestedContext, key);
+                                    }
+                                  });
+                              assertCurrentContext(hookContext, key);
                             }
                             return method.invoke(delegate, arguments);
                           });
@@ -1276,6 +1312,7 @@ abstract class AbstractPulsarClientTest {
             .put("pulsar-test", "caller")
             .build()
             .storeInContext(Context.current().with(key, "caller"));
+    Context originalContext = Context.current();
     CompletableFuture<MessageId> future;
     try (Scope ignored = context.makeCurrent()) {
       future =
@@ -1290,7 +1327,9 @@ abstract class AbstractPulsarClientTest {
                 assertThat(Baggage.current().getEntryValue("pulsar-test")).isEqualTo("caller");
                 return send;
               });
+      assertCurrentContext(context, key);
     }
+    assertCurrentContext(originalContext, key);
     assertThat(hookContexts).hasSize(2);
     for (Context hookContext : hookContexts) {
       assertThat(Span.fromContext(hookContext).getSpanContext())
@@ -1300,7 +1339,24 @@ abstract class AbstractPulsarClientTest {
     }
     producer.flush();
     future.get(1, MINUTES);
-    nestedFuture.get().get(1, MINUTES);
+    if (directSend) {
+      assertThat(directSendCompleted.await(1, MINUTES)).isTrue();
+      assertThat(callbackError.get()).isNull();
+      assertThat(callbackContext.get().get(key)).isEqualTo("nested");
+      assertThat(Baggage.fromContext(callbackContext.get()).getEntryValue("pulsar-test"))
+          .isEqualTo("nested");
+      assertThat(outgoingMessage.get().getProperty("baggage")).isEqualTo("pulsar-test=nested");
+      assertThat(outgoingMessage.get().getProperty("traceparent"))
+          .startsWith(
+              "00-"
+                  + Span.fromContext(nestedCaller.get()).getSpanContext().getTraceId()
+                  + "-"
+                  + Span.fromContext(callbackContext.get()).getSpanContext().getSpanId()
+                  + "-")
+          .matches("00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}");
+    } else {
+      nestedFuture.get().get(1, MINUTES);
+    }
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -1310,7 +1366,25 @@ abstract class AbstractPulsarClientTest {
                 span ->
                     span.hasName("send " + nestedTopic)
                         .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(2))));
+                        .hasParent(trace.getSpan(2))
+                        .satisfies(
+                            spanData -> {
+                              if (directSend) {
+                                assertThat(
+                                        Span.fromContext(callbackContext.get())
+                                            .getSpanContext()
+                                            .getSpanId())
+                                    .isEqualTo(spanData.getSpanId());
+                              }
+                            })));
+  }
+
+  private static void assertCurrentContext(Context expected, ContextKey<String> key) {
+    assertThat(Span.current().getSpanContext())
+        .isEqualTo(Span.fromContext(expected).getSpanContext());
+    assertThat(Context.current().get(key)).isEqualTo(expected.get(key));
+    assertThat(Baggage.current().getEntryValue("pulsar-test"))
+        .isEqualTo(Baggage.fromContext(expected).getEntryValue("pulsar-test"));
   }
 
   @Test
