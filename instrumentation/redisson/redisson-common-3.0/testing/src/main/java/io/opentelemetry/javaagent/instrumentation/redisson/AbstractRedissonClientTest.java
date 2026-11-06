@@ -505,29 +505,20 @@ public abstract class AbstractRedissonClientTest {
   void batchRedirectIsRetriedAndPreservesBatchResult()
       throws IOException, InterruptedException, ReflectiveOperationException {
     Assumptions.assumeTrue(isClassAvailable("org.redisson.api.BatchOptions"));
-    GenericContainer<?> redirectServer =
-        new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
-    redirectServer.start();
-    try {
-      String key = "batch-redirect-" + UUID.randomUUID();
-      assertThat(redirectServer.execInContainer("redis-cli", "incr", key).getExitCode()).isZero();
-      String script =
-          "local count = redis.call('INCR', '"
-              + key
-              + "'); if count == 1 then return redis.error_reply('MOVED 1234 "
-              + redirectServer.getHost()
-              + ":"
-              + redirectServer.getMappedPort(6379)
-              + "'); end; return count";
-      RBatch batch = createBatch(redisson);
-      batch.getScript().evalAsync(RScript.Mode.READ_WRITE, script, RScript.ReturnType.VALUE);
+    String key = "batch-redirect-" + UUID.randomUUID();
+    // Older clients can only redirect to nodes already known to their connection manager.
+    String script =
+        "local count = redis.call('INCR', '"
+            + key
+            + "'); if count == 1 then return redis.error_reply('MOVED 1234 "
+            + address
+            + "'); end; return count";
+    RBatch batch = createBatch(redisson);
+    batch.getScript().evalAsync(RScript.Mode.READ_WRITE, script, RScript.ReturnType.VALUE);
 
-      assertThat(batchResponses(invokeExecute(batch))).isEqualTo(asList(2L));
-      assertRedirectErrorTypeOnAttempts();
-      assertFollowingOperationsHaveNoLeakedServerError();
-    } finally {
-      redirectServer.stop();
-    }
+    assertThat(batchResponses(invokeExecute(batch))).singleElement().isEqualTo(2L);
+    assertRedirectErrorTypeOnAttempts();
+    assertFollowingOperationsHaveNoLeakedServerError();
   }
 
   @Test

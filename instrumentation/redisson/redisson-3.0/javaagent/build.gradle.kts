@@ -32,7 +32,7 @@ dependencies {
 testing {
   suites {
     // 3.6.5 is the last version where atomic mode is the seventh executeAsync argument.
-    register<JvmTestSuite>("testRedisson365") {
+    register<JvmTestSuite>("redisson365Test") {
       sources {
         java {
           setSrcDirs(listOf("src/test/java"))
@@ -47,7 +47,7 @@ testing {
 
     // 3.7.1 is the last version where atomic mode is passed to executeAsync. It requires Java 8
     // because URIBuilder reflects on Field.modifiers during startup.
-    register<JvmTestSuite>("testRedisson371") {
+    register<JvmTestSuite>("redisson371Test") {
       sources {
         java {
           setSrcDirs(listOf("src/test/java"))
@@ -61,7 +61,7 @@ testing {
     }
 
     // Reactive and Rx batches supply options at execution time through 3.10.4.
-    register<JvmTestSuite>("testRedisson3104") {
+    register<JvmTestSuite>("redisson3104Test") {
       dependencies {
         implementation("org.redisson:redisson:3.10.4")
         implementation("org.testcontainers:testcontainers")
@@ -72,7 +72,7 @@ testing {
     // Java 21 because URIBuilder reflects on Field.modifiers. 3.11.1 is the earliest runnable
     // version that exercises RedissonPromiseWrapper; the latest version covered by this module uses
     // BatchPromise and bypasses the wrapper.
-    register<JvmTestSuite>("testRedisson3111") {
+    register<JvmTestSuite>("redisson3111Test") {
       sources {
         java {
           setSrcDirs(listOf("src/test/java"))
@@ -91,7 +91,7 @@ testing {
       }
     }
 
-    executions("testRedisson365", "testRedisson371") {
+    executions("redisson365Test", "redisson371Test") {
       configureEach {
         enabled = otelProps.testJavaVersion == null || otelProps.testJavaVersion!!.isJava8
         systemProperty("testLatestDeps", true)
@@ -103,7 +103,7 @@ testing {
       }
     }
 
-    executions("testRedisson3104") {
+    executions("redisson3104Test") {
       configureEach {
         enabled = otelProps.testJavaVersion == null || otelProps.testJavaVersion!!.isJava8
         javaLauncher.set(
@@ -114,7 +114,7 @@ testing {
       }
     }
 
-    executions("testRedisson3111") {
+    executions("redisson3111Test") {
       configureEach {
         systemProperty("testLatestDeps", true)
       }
