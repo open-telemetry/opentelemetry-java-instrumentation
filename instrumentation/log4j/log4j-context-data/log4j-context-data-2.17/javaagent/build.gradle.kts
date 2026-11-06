@@ -25,19 +25,6 @@ dependencies {
 }
 
 testing.suites {
-  // Very different codepaths when threadlocals are enabled or not so we check both.
-  // Regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2403
-  register<JvmTestSuite>("testDisableThreadLocals") {
-    sources {
-      java {
-        setSrcDirs(listOf("src/test/java"))
-      }
-    }
-    dependencies {
-      implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
-    }
-  }
-
   register<JvmTestSuite>("testAddBaggage") {
     dependencies {
       implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
@@ -52,17 +39,19 @@ testing.suites {
 
   executions("test") {
     configureEach {
+      jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
+    }
+
+    configureDefault {
       // Threadlocals are always false if is.webapp is true, so we make sure to override it because as of
       // now testing-common includes jetty / servlet.
       jvmArgs("-Dlog4j2.enable.threadlocals=true")
-      jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
     }
-  }
 
-  executions("testDisableThreadLocals") {
-    configureEach {
+    // Very different codepaths when threadlocals are enabled or not so we check both.
+    // Regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2403
+    register("DisableThreadLocals") {
       jvmArgs("-Dlog4j2.enable.threadlocals=false")
-      jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
     }
   }
 
