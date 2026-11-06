@@ -238,6 +238,18 @@ testing.suites {
   }
 }
 
+val mdcExportTestAgent = sourceSets.create("mdcExportTestAgent") {
+  compileClasspath += configurations.getByName("mdcExportTestCompileClasspath")
+}
+
+dependencies {
+  add(
+    mdcExportTestAgent.compileOnlyConfigurationName,
+    "io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi",
+  )
+  add("testInstrumentation", files(mdcExportTestAgent.output))
+}
+
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental log attributes
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")

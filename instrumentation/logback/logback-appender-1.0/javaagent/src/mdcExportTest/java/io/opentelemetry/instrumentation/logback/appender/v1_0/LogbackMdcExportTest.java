@@ -21,9 +21,15 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.testing.common.AgentClassLoaderAccess;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +42,22 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 class LogbackMdcExportTest {
+
+  private static final MethodHandle SET_PROCESSOR_CALLBACK;
+
+  static {
+    try {
+      SET_PROCESSOR_CALLBACK =
+          MethodHandles.lookup()
+              .findStatic(
+                  AgentClassLoaderAccess.loadClass(
+                      "io.opentelemetry.javaagent.shaded.instrumentation.logback.appender.v1_0.SynchronousLogRecordProcessorCustomizerProvider"),
+                  "setCallback",
+                  MethodType.methodType(void.class, Runnable.class));
+    } catch (Exception e) {
+      throw new AssertionError("Could not access test log record processor.", e);
+    }
+  }
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -149,6 +171,54 @@ class LogbackMdcExportTest {
   }
 
   @Test
+  void nestedLoggingFromSynchronousProcessorKeepsExportSuppressionUntilEmissionCompletes() {
+    MDC.put("request", "application");
+    LoggingEvent event =
+        new LoggingEvent(getClass().getName(), logger, Level.INFO, "processor outer", null, null);
+    List<Map<String, String>> processorMdc = new ArrayList<>();
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          try (Scope ignored = Baggage.builder().put("foo", "synthetic").build().makeCurrent()) {
+            setProcessorCallback(
+                () -> {
+                  processorMdc.add(new HashMap<>(event.getMDCPropertyMap()));
+                  logger.info("nested from processor");
+                  processorMdc.add(new HashMap<>(event.getMDCPropertyMap()));
+                });
+            try {
+              logger.callAppenders(event);
+            } finally {
+              setProcessorCallback(null);
+            }
+
+            assertThat(processorMdc).hasSize(2);
+            SpanContext spanContext = Span.current().getSpanContext();
+            assertEnrichment("processor outer", spanContext);
+            assertEnrichment("nested from processor", spanContext);
+
+            logger.info("after processor");
+            assertEnrichment("after processor", spanContext);
+          }
+        });
+
+    assertThat(processorMdc)
+        .containsExactly(
+            singletonMap("request", "application"), singletonMap("request", "application"));
+    testing.waitAndAssertLogRecords(
+        record -> {
+          record.hasBody("processor outer");
+          assertMdcAttributes(
+              record.actual().getAttributes(), singletonMap("request", "application"));
+        },
+        record -> {
+          record.hasBody("after processor");
+          assertMdcAttributes(
+              record.actual().getAttributes(), singletonMap("request", "application"));
+        });
+  }
+
+  @Test
   void nullMdcCanBeExportedAndNormalReadsStillEnrich() {
     LoggingEvent event =
         new LoggingEvent(getClass().getName(), logger, Level.INFO, "null MDC", null, null) {
@@ -232,20 +302,31 @@ class LogbackMdcExportTest {
     }
   }
 
+  private static void setProcessorCallback(Runnable callback) {
+    try {
+      SET_PROCESSOR_CALLBACK.invokeExact(callback);
+    } catch (Throwable t) {
+      throw new AssertionError("Could not set test log record processor callback.", t);
+    }
+  }
+
   private static void assertExportedMdc(String message, Map<String, String> expected) {
     testing.waitAndAssertLogRecords(
         record -> {
           record.hasBody(message);
-          Attributes attributes = record.actual().getAttributes();
-          Map<String, String> mdc = new HashMap<>();
-          attributes.forEach(
-              (key, value) -> {
-                if (!key.getKey().startsWith("thread.") && !key.getKey().startsWith("code.")) {
-                  mdc.put(key.getKey(), (String) value);
-                }
-              });
-          assertThat(mdc).containsExactlyInAnyOrderEntriesOf(expected);
+          assertMdcAttributes(record.actual().getAttributes(), expected);
         });
+  }
+
+  private static void assertMdcAttributes(Attributes attributes, Map<String, String> expected) {
+    Map<String, String> mdc = new HashMap<>();
+    attributes.forEach(
+        (key, value) -> {
+          if (!key.getKey().startsWith("thread.") && !key.getKey().startsWith("code.")) {
+            mdc.put(key.getKey(), (String) value);
+          }
+        });
+    assertThat(mdc).containsExactlyInAnyOrderEntriesOf(expected);
   }
 
   private static class MdcAppender extends AppenderBase<ILoggingEvent> {
