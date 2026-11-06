@@ -14,6 +14,10 @@ muzzle {
   }
 }
 
+tasks.check {
+  dependsOn(testing.suites)
+}
+
 dependencies {
   bootstrap(project(":instrumentation:executors:bootstrap"))
 

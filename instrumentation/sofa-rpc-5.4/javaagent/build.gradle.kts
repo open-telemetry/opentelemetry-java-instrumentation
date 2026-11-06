@@ -14,6 +14,10 @@ muzzle {
   }
 }
 
+tasks.check {
+  dependsOn(testing.suites)
+}
+
 dependencies {
   implementation(project(":instrumentation:sofa-rpc-5.4:library"))
 

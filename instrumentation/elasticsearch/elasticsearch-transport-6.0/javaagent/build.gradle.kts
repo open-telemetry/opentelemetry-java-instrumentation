@@ -24,6 +24,10 @@ muzzle {
   }
 }
 
+tasks.check {
+  dependsOn(testing.suites)
+}
+
 dependencies {
   library("org.elasticsearch.client:transport:6.0.0")
 
