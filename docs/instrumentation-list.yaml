@@ -9306,6 +9306,8 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033
@@ -9385,6 +9387,8 @@ libraries:
         type: LONG
       - name: server.address
         type: STRING
+      - name: server.port
+        type: LONG
   - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
     metric_refs:
     - db.client.operation.duration-55295033

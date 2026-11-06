@@ -13,6 +13,9 @@ The remaining sections apply to test code and shared testing modules.
   API, use a real service when relevant, and assert emitted telemetry. For javaagent changes, use
   the installed agent against the required library versions to exercise class transformation and
   library compatibility.
+- Keep library and javaagent instrumentation tests separate. Do not activate both for the same
+  library in one JVM. Cross-process tests may use different forms in different processes to verify
+  context propagation.
 - Use focused unit tests for nontrivial standalone logic and shared infrastructure when they add
   coverage beyond integration tests. Choose cases for distinct behavior and important edge cases,
   not to enumerate every implementation branch or combination of mocked responses.

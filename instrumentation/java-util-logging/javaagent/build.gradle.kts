@@ -12,20 +12,16 @@ dependencies {
   testInstrumentation(project(":instrumentation:jboss-logmanager:jboss-logmanager-appender-1.1:javaagent"))
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("Experimental") {
-          jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")
-        }
-        register("CaptureTemplateAndArguments") {
-          jvmArgs(
-            "-Dotel.instrumentation.java-util-logging.experimental.capture-template=true",
-            "-Dotel.instrumentation.java-util-logging.experimental.capture-arguments=true",
-          )
-        }
-      }
+testing.suites {
+  executions("test") {
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")
+    }
+    register("CaptureTemplateAndArguments") {
+      jvmArgs(
+        "-Dotel.instrumentation.java-util-logging.experimental.capture-template=true",
+        "-Dotel.instrumentation.java-util-logging.experimental.capture-arguments=true",
+      )
     }
   }
 }
