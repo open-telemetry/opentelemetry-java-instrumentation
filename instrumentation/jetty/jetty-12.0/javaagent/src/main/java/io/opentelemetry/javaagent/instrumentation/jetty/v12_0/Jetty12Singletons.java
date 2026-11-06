@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jetty.v12_0;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.ServletConfig;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 
@@ -22,13 +23,19 @@ class Jetty12Singletons {
             INSTRUMENTATION_NAME,
             new Jetty12HttpAttributesGetter(),
             new Jetty12TextMapGetter(),
-            builder ->
-                builder.addContextCustomizer(
-                    (context, request, attributes) ->
-                        new AppServerBridge.Builder()
-                            .captureServletAttributes()
-                            .recordException()
-                            .init(context)));
+            builder -> {
+              builder.addContextCustomizer(
+                  (context, request, attributes) ->
+                      new AppServerBridge.Builder()
+                          .captureServletAttributes()
+                          .recordException()
+                          .init(context));
+              if (ServletConfig.get().getCaptureRequestBodyEnabled()) {
+                // with jetty 12, the request body can be read after the servlet service has
+                // returned.
+                builder.addAttributesExtractor(new Jetty12RequestBodyExtractor());
+              }
+            });
   }
 
   private static final Jetty12Helper helper = new Jetty12Helper(instrumenter);

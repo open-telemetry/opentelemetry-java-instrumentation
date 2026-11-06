@@ -22,8 +22,9 @@ otelJava {
 
 testing.suites {
   executions("test") {
-    register("RequestParameterCapture") {
+    register("Experimental") {
       telemetryConfig("otel.instrumentation.servlet.experimental.request-parameters.included", "test-parameter")
+      telemetryConfig("otel.instrumentation.servlet.experimental.capture-request-body.enabled", "true")
     }
   }
 }

@@ -31,6 +31,15 @@ public class ServerEndpoint {
       new ServerEndpoint("CAPTURE_HEADERS", "captureHeaders", 200, "headers captured");
   public static final ServerEndpoint CAPTURE_PARAMETERS =
       new ServerEndpoint("CAPTURE_PARAMETERS", "captureParameters", 200, "parameters captured");
+  public static final ServerEndpoint CAPTURE_BODY =
+      new ServerEndpoint("CAPTURE_BODY", "captureBody", 200, "response body");
+  // request body is read after the servlet has returned
+  public static final ServerEndpoint CAPTURE_BODY_LATE_READ =
+      new ServerEndpoint("CAPTURE_BODY_LATE_READ", "captureBodyLateRead", 200, "response body");
+  // request is dispatched, request body is read by the dispatched servlet
+  public static final ServerEndpoint CAPTURE_BODY_DISPATCH_READ =
+      new ServerEndpoint(
+          "CAPTURE_BODY_DISPATCH_READ", "captureBodyDispatchRead", 200, "response body");
 
   // TODO: add tests for the following cases:
   public static final ServerEndpoint QUERY_PARAM =
