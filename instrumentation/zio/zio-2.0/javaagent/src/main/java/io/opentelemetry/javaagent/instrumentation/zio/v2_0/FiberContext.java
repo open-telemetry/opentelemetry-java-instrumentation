@@ -8,13 +8,16 @@ package io.opentelemetry.javaagent.instrumentation.zio.v2_0;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.bootstrap.FiberContextStorageHolder;
+import io.opentelemetry.javaagent.bootstrap.FiberContextStorageHolder.Activation;
+import io.opentelemetry.javaagent.bootstrap.FiberContextStorageHolder.ContextState;
 import javax.annotation.Nullable;
 
-class FiberContext {
+class FiberContext implements ContextState {
   private Context context;
-  @Nullable private Context initialContext;
-  @Nullable private Scope scope;
+  @Nullable private Object scope;
+  @Nullable private Activation activation;
+  private boolean ended;
 
   private FiberContext(Context context) {
     this.context = context;
@@ -24,23 +27,45 @@ class FiberContext {
     return new FiberContext(Context.current());
   }
 
-  void onSuspend() {
-    context = Context.current();
-
-    // First we try closing the scope that was opened in onResume. This may fail if user code has
-    // left an open scope because only the latest scope can be closed.
-    // See https://github.com/open-telemetry/opentelemetry-java/issues/5303
-    requireNonNull(scope).close();
-
-    // If the current context doesn't match the initial context then there must be an open scope,
-    // reset the state to the initial context.
-    if (Context.current() != initialContext) {
-      requireNonNull(initialContext).makeCurrent();
+  boolean onSuspend() {
+    if (ended) {
+      while (activation != null) {
+        activation = FiberContextStorageHolder.deactivate(activation);
+      }
+      return true;
     }
+    if (activation != null) {
+      activation = FiberContextStorageHolder.deactivate(activation);
+    }
+    return false;
   }
 
   void onResume() {
-    initialContext = Context.current();
-    scope = context.makeCurrent();
+    activation = FiberContextStorageHolder.activate(this, activation);
+  }
+
+  void onEnd() {
+    ended = true;
+  }
+
+  @Override
+  public Object getContext() {
+    return context;
+  }
+
+  @Override
+  public void setContext(Object context) {
+    this.context = (Context) requireNonNull(context);
+  }
+
+  @Nullable
+  @Override
+  public Object getScope() {
+    return scope;
+  }
+
+  @Override
+  public void setScope(@Nullable Object scope) {
+    this.scope = scope;
   }
 }

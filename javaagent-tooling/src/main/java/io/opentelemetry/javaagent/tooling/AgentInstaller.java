@@ -96,6 +96,7 @@ public class AgentInstaller {
       ContextStorage.addWrapper(
           storage -> new StrictContextStressor(storage, strictContextStressorMillis));
     }
+    ContextStorage.addWrapper(FiberContextStorage::new);
 
     logVersionInfo();
     if (EarlyInitAgentConfig.get().isEnabled()) {
