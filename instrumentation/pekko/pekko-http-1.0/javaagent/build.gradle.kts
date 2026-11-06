@@ -168,8 +168,6 @@ testing.suites {
     }
   }
 
-  executions("scala3Test") {}
-
   val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
   executions("pekko2Test", "pekko2Scala3Test") {
     configureEach {
@@ -178,8 +176,6 @@ testing.suites {
       }
     }
   }
-
-  executions("tapirTest") {}
 
   executions("test") {
     register("NewServerAt") {

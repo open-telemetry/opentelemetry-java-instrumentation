@@ -1,5 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -77,8 +75,6 @@ testing.suites {
       implementation(project(":instrumentation:executors:testing"))
     }
   }
-
-  executions("test", "version25Test") {}
 }
 
 tasks {

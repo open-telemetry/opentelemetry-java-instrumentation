@@ -117,8 +117,6 @@ testing.suites {
     }
   }
 
-  executions("test", "scala3Test") {}
-
   val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
   executions("pekko2Test", "pekko2Scala3Test") {
     configureEach {

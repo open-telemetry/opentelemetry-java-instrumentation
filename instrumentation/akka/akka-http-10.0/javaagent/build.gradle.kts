@@ -1,5 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -51,8 +49,6 @@ testing.suites {
       implementation("com.typesafe.akka:akka-stream_$scalaVersion:${baseVersion("2.6.21").orLatest()}")
     }
   }
-
-  executions("test", "javaRouteTest") {}
 }
 
 tasks {

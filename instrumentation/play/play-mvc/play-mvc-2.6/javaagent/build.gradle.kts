@@ -92,7 +92,6 @@ testing.suites {
       }
     }
   }
-  executions("play28Test") {}
   executions("play3Test") {
     configureEach {
       if (testJavaVersion.isJava8) {

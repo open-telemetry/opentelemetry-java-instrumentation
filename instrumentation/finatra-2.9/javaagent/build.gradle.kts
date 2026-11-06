@@ -1,5 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -57,11 +55,6 @@ testing.suites {
       // finatra is included via finatraLatest configuration
       implementation("io.netty:netty-transport-native-epoll:4.1.51.Final:linux-x86_64")
     }
-  }
-
-  executions("test") {}
-  if (otelProps.testLatestDeps) {
-    executions("latestDepTest") {}
   }
 }
 

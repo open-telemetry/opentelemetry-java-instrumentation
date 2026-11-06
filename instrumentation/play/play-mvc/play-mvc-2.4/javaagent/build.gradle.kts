@@ -1,5 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -58,8 +56,6 @@ testing.suites {
       implementation("com.typesafe.play:play-test_2.11:$version")
     }
   }
-
-  executions("test", "play24Test") {}
 }
 
 tasks {
