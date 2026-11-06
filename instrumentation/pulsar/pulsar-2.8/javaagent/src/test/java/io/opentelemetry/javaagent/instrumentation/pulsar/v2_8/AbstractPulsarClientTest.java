@@ -306,107 +306,75 @@ abstract class AbstractPulsarClientTest {
                 span -> span.hasName("send " + topic).hasKind(SpanKind.PRODUCER).hasNoParent()));
   }
 
-  @Test
-  void directProducerSendAsyncIsInstrumentedOnSuccessAndFailure() throws Exception {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void directProducerSendAsyncIsInstrumented(boolean failure) throws Exception {
     String topic = "persistent://public/default/directProducerSendAsync";
     ContextKey<String> key = ContextKey.named("pulsar-direct-send-caller");
     producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
+    if (failure) {
+      producer.close();
+    }
 
-    CountDownLatch successfulSend = new CountDownLatch(1);
-    AtomicReference<Context> successfulCallbackContext = new AtomicReference<>();
-    AtomicReference<Throwable> successfulCallbackError = new AtomicReference<>();
-    AtomicReference<Context> successfulParent = new AtomicReference<>();
-    AtomicReference<Message<?>> successfulMessage = new AtomicReference<>();
+    CountDownLatch completed = new CountDownLatch(1);
+    AtomicReference<Context> callbackContext = new AtomicReference<>();
+    AtomicReference<Throwable> callbackError = new AtomicReference<>();
+    AtomicReference<Context> parent = new AtomicReference<>();
+    AtomicReference<Message<?>> message = new AtomicReference<>();
     testing.runWithSpan(
-        "direct-send-success-parent",
+        "direct-send-" + (failure ? "failure" : "success") + "-parent",
         () -> {
           Context caller =
               Baggage.builder()
-                  .put("pulsar-test", "success")
+                  .put("pulsar-test", failure ? "failure" : "success")
                   .build()
-                  .storeInContext(Context.current().with(key, "success"));
-          successfulParent.set(caller);
+                  .storeInContext(
+                      Context.current().with(key, failure ? "failure" : "success"));
+          parent.set(caller);
           try (Scope ignored = caller.makeCurrent()) {
             sendDirect(
                 producer,
-                "success",
-                successfulCallbackContext,
-                successfulCallbackError,
-                successfulSend,
-                successfulMessage);
+                failure ? "failure" : "success",
+                callbackContext,
+                callbackError,
+                completed,
+                message);
           }
         });
-    assertThat(successfulSend.await(1, MINUTES)).isTrue();
-    assertThat(successfulCallbackError.get()).isNull();
-    assertThat(successfulCallbackContext.get().get(key)).isEqualTo("success");
-    assertThat(Baggage.fromContext(successfulCallbackContext.get()).getEntryValue("pulsar-test"))
-        .isEqualTo("success");
-    assertThat(successfulMessage.get().getProperty("traceparent"))
+    assertThat(completed.await(1, MINUTES)).isTrue();
+    if (failure) {
+      assertThat(callbackError.get()).isInstanceOf(PulsarClientException.class);
+    } else {
+      assertThat(callbackError.get()).isNull();
+    }
+    assertThat(callbackContext.get().get(key)).isEqualTo(failure ? "failure" : "success");
+    assertThat(Baggage.fromContext(callbackContext.get()).getEntryValue("pulsar-test"))
+        .isEqualTo(failure ? "failure" : "success");
+    assertThat(message.get().getProperty("traceparent"))
         .startsWith(
-            "00-" + Span.fromContext(successfulParent.get()).getSpanContext().getTraceId() + "-")
+            "00-" + Span.fromContext(parent.get()).getSpanContext().getTraceId() + "-")
         .matches("00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}");
-    assertThat(successfulMessage.get().getProperty("traceparent").substring(36, 52))
-        .isEqualTo(Span.fromContext(successfulCallbackContext.get()).getSpanContext().getSpanId());
-    assertThat(successfulMessage.get().getProperty("baggage")).isEqualTo("pulsar-test=success");
-
-    producer.close();
-    CountDownLatch failedSend = new CountDownLatch(1);
-    AtomicReference<Context> failedCallbackContext = new AtomicReference<>();
-    AtomicReference<Throwable> failedCallbackError = new AtomicReference<>();
-    AtomicReference<Context> failedParent = new AtomicReference<>();
-    AtomicReference<Message<?>> failedMessage = new AtomicReference<>();
-    testing.runWithSpan(
-        "direct-send-failure-parent",
-        () -> {
-          Context caller =
-              Baggage.builder()
-                  .put("pulsar-test", "failure")
-                  .build()
-                  .storeInContext(Context.current().with(key, "failure"));
-          failedParent.set(caller);
-          try (Scope ignored = caller.makeCurrent()) {
-            sendDirect(
-                producer,
-                "failure",
-                failedCallbackContext,
-                failedCallbackError,
-                failedSend,
-                failedMessage);
-          }
-        });
-    assertThat(failedSend.await(1, MINUTES)).isTrue();
-    assertThat(failedCallbackError.get()).isInstanceOf(PulsarClientException.class);
-    assertThat(failedCallbackContext.get().get(key)).isEqualTo("failure");
-    assertThat(Baggage.fromContext(failedCallbackContext.get()).getEntryValue("pulsar-test"))
-        .isEqualTo("failure");
-    assertThat(failedMessage.get().getProperty("traceparent"))
-        .startsWith(
-            "00-" + Span.fromContext(failedParent.get()).getSpanContext().getTraceId() + "-")
-        .matches("00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}");
-    assertThat(failedMessage.get().getProperty("traceparent").substring(36, 52))
-        .isEqualTo(Span.fromContext(failedCallbackContext.get()).getSpanContext().getSpanId());
-    assertThat(failedMessage.get().getProperty("baggage")).isEqualTo("pulsar-test=failure");
+    assertThat(message.get().getProperty("traceparent").substring(36, 52))
+        .isEqualTo(Span.fromContext(callbackContext.get()).getSpanContext().getSpanId());
+    assertThat(message.get().getProperty("baggage"))
+        .isEqualTo("pulsar-test=" + (failure ? "failure" : "success"));
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("direct-send-success-parent"),
                 span ->
-                    span.hasName("send " + topic)
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.unset())),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("direct-send-failure-parent"),
-                span ->
-                    span.hasName("send " + topic)
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasAttribute(ERROR_TYPE, failedCallbackError.get().getClass().getName())));
-    assertThat(Span.fromContext(successfulParent.get()).getSpanContext().isValid()).isTrue();
-    assertThat(Span.fromContext(failedParent.get()).getSpanContext().isValid()).isTrue();
+                    span.hasName(
+                        "direct-send-" + (failure ? "failure" : "success") + "-parent"),
+                span -> {
+                  span.hasName("send " + topic)
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasStatus(failure ? StatusData.error() : StatusData.unset());
+                  if (failure) {
+                    span.hasAttribute(ERROR_TYPE, callbackError.get().getClass().getName());
+                  }
+                }));
+    assertThat(Span.fromContext(parent.get()).getSpanContext().isValid()).isTrue();
   }
 
   private static void sendDirect(
