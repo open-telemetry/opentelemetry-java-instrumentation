@@ -11,9 +11,6 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIn
 import java.net.InetSocketAddress;
 import java.util.concurrent.Future;
 import javax.annotation.Nullable;
-import net.spy.memcached.internal.BulkFuture;
-import net.spy.memcached.internal.GetFuture;
-import net.spy.memcached.internal.OperationFuture;
 import net.spy.memcached.ops.OperationException;
 import net.spy.memcached.ops.OperationStatus;
 import net.spy.memcached.ops.StatusCode;
@@ -46,7 +43,7 @@ class SpymemcachedAttributesGetter
   @Nullable
   public String getDbResponseStatusCode(
       SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
-    OperationStatus status = getOperationStatus(response);
+    OperationStatus status = SpymemcachedSingletons.getResponseStatus(response);
     if (status == null) {
       return null;
     }
@@ -78,20 +75,6 @@ class SpymemcachedAttributesGetter
       return null;
     }
     return getDbResponseStatusCode(request, response, error);
-  }
-
-  @Nullable
-  private static OperationStatus getOperationStatus(@Nullable Object response) {
-    if (response instanceof OperationFuture) {
-      return ((OperationFuture<?>) response).getStatus();
-    }
-    if (response instanceof GetFuture) {
-      return ((GetFuture<?>) response).getStatus();
-    }
-    if (response instanceof BulkFuture) {
-      return ((BulkFuture<?>) response).getStatus();
-    }
-    return null;
   }
 
   @Override
