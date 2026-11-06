@@ -7,27 +7,36 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v12_0;
 
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import org.eclipse.jetty.client.ContentResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.client.Result;
 import org.eclipse.jetty.http.HttpField;
+import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -392,6 +401,195 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
               responseFuture.completeExceptionally(result.getFailure());
             }
           });
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "sync, false",
+    "sync, true",
+    "async, false",
+    "async, true",
+    "aggregate, false",
+    "aggregate, true"
+  })
+  void deferredResponseContentRetainsCallerContext(String listenerType, boolean withParent)
+      throws ReflectiveOperationException,
+          ExecutionException,
+          InterruptedException,
+          TimeoutException {
+    assumeTrue(!listenerType.equals("aggregate") || testLatestDeps());
+
+    ContextKey<String> key = ContextKey.named("jetty-test");
+    CompletableFuture<Context> lateContentContext = new CompletableFuture<>();
+    AtomicReference<Context> contextAfterDemand = new AtomicReference<>();
+    CompletableFuture<Result> completed = new CompletableFuture<>();
+    Request request = client.newRequest(resolveAddress("/long-request")).method("GET");
+    request.headers(headers -> headers.put(new HttpField("delay", "500")));
+    Consumer<ByteBuffer> processContent =
+        content -> {
+          String chunk = UTF_8.decode(content.duplicate()).toString();
+          if (chunk.contains("World")) {
+            Context callbackContext = Context.current();
+            testing.runWithSpan("response-body", () -> {});
+            lateContentContext.complete(callbackContext);
+          }
+        };
+    if (listenerType.equals("aggregate")) {
+      Request.class
+          .getMethod("onResponseListener", Response.Listener.class)
+          .invoke(
+              request,
+              new Response.Listener() {
+                @Override
+                public void onContent(Response response, ByteBuffer content) {
+                  processContent.accept(content);
+                }
+              });
+    } else if (listenerType.equals("async")) {
+      request.onResponseContentAsync(
+          new Response.AsyncContentListener() {
+            @Override
+            public void onContent(Response response, Content.Chunk chunk, Runnable demander) {
+              processContent.accept(chunk.getByteBuffer());
+              Context deliveryContext = Context.current().with(key, "delivery");
+              try (Scope ignored = deliveryContext.makeCurrent()) {
+                demander.run();
+                contextAfterDemand.set(Context.current());
+              }
+            }
+          });
+    } else {
+      request.onResponseContent(
+          new Response.ContentListener() {
+            @Override
+            public void onContent(Response response, ByteBuffer content) {
+              processContent.accept(content);
+            }
+          });
+    }
+
+    Runnable send =
+        () -> {
+          Context caller =
+              Baggage.builder()
+                  .put("jetty-test", "caller")
+                  .build()
+                  .storeInContext(Context.current().with(key, "caller"));
+          try (Scope ignored = caller.makeCurrent()) {
+            request.send(completed::complete);
+          }
+        };
+    if (withParent) {
+      testing.runWithSpan("parent", send::run);
+    } else {
+      send.run();
+    }
+
+    Result result = completed.get(10, SECONDS);
+    assertThat(result.isSucceeded()).isTrue();
+    Context observedContext = lateContentContext.get(10, SECONDS);
+    assertThat(observedContext.get(key)).isEqualTo("caller");
+    assertThat(Baggage.fromContext(observedContext).getEntryValue("jetty-test"))
+        .isEqualTo("caller");
+    if (listenerType.equals("async")) {
+      assertThat(contextAfterDemand.get().get(key)).isEqualTo("delivery");
+    }
+
+    if (withParent) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent").hasNoParent(),
+                  span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                  span ->
+                      span.hasName("test-http-server")
+                          .hasKind(SpanKind.SERVER)
+                          .hasParent(trace.getSpan(1)),
+                  span -> span.hasName("response-body").hasParent(trace.getSpan(0))));
+    } else {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasNoParent(),
+                  span ->
+                      span.hasName("test-http-server")
+                          .hasKind(SpanKind.SERVER)
+                          .hasParent(trace.getSpan(0))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(span -> span.hasName("response-body").hasNoParent()));
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void pendingContentDemandFailureRetainsCallerContext(boolean withParent)
+      throws ExecutionException, InterruptedException, TimeoutException {
+    ContextKey<String> key = ContextKey.named("jetty-test");
+    CompletableFuture<Content.Source> pendingSource = new CompletableFuture<>();
+    CompletableFuture<Content.Source> idleSource = new CompletableFuture<>();
+    CompletableFuture<Void> demandCalled = new CompletableFuture<>();
+    CompletableFuture<Result> completed = new CompletableFuture<>();
+    IOException failure = new IOException("content failed");
+    Request request = client.newRequest(resolveAddress("/success"));
+    request.onResponseContentSource(
+        (response, source) -> {
+          assertThat(source.read()).isNull();
+          source.demand(
+              () -> {
+                Content.Chunk chunk = source.read();
+                try {
+                  assertThat(chunk.getFailure()).isSameAs(failure);
+                  testing.runWithSpan("response-body", () -> {});
+                  demandCalled.complete(null);
+                } finally {
+                  chunk.release();
+                }
+              });
+          pendingSource.complete(source);
+        });
+    // Withhold this listener's demand so no content can satisfy the other listener's demand.
+    request.onResponseContentSource((response, source) -> idleSource.complete(source));
+
+    Runnable send = () -> request.send(completed::complete);
+    if (withParent) {
+      testing.runWithSpan("parent", send::run);
+    } else {
+      send.run();
+    }
+
+    Content.Source pending = pendingSource.get(10, SECONDS);
+    Content.Source idle = idleSource.get(10, SECONDS);
+    assertThat(demandCalled).isNotDone();
+    Context unrelatedContext = Context.root().with(key, "unrelated");
+    try (Scope ignored = unrelatedContext.makeCurrent()) {
+      pending.fail(failure);
+      assertThat(demandCalled).isCompleted();
+      assertThat(Context.current().get(key)).isEqualTo(unrelatedContext.get(key));
+    }
+    try (Scope ignored = unrelatedContext.makeCurrent()) {
+      idle.fail(failure);
+      assertThat(Context.current().get(key)).isEqualTo(unrelatedContext.get(key));
+    }
+
+    assertThat(completed.get(10, SECONDS).getFailure()).isSameAs(failure);
+
+    if (withParent) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactlyInAnyOrder(
+                  span -> span.hasName("parent").hasNoParent(),
+                  span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                  span -> span.hasName("test-http-server").hasParent(trace.getSpan(1)),
+                  span -> span.hasName("response-body").hasParent(trace.getSpan(0))));
+    } else {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasNoParent(),
+                  span -> span.hasName("test-http-server").hasParent(trace.getSpan(0))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(span -> span.hasName("response-body").hasNoParent()));
     }
   }
 

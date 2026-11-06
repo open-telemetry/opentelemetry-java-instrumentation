@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v12_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.ContextAwareContentSource;
 import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyClientTracingListener;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
@@ -21,6 +22,7 @@ import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.client.transport.HttpConversation;
 import org.eclipse.jetty.client.transport.HttpRequest;
+import org.eclipse.jetty.io.Content.Source;
 
 class TracingHttpRequest extends HttpRequest {
 
@@ -89,6 +91,9 @@ class TracingHttpRequest extends HttpRequest {
               // read at invocation because listeners can be registered before send() captures the
               // caller context
               Context context = parentContext != null ? parentContext : Context.current();
+              if (method.getName().equals("onContentSource")) {
+                args[1] = ContextAwareContentSource.wrap((Source) args[1], context);
+              }
               try (Scope ignored = context.makeCurrent()) {
                 return method.invoke(listener, args);
               } catch (InvocationTargetException e) {
