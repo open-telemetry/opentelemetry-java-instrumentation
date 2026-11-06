@@ -43,6 +43,10 @@ testing.suites {
       implementation("com.xuxueli:xxl-job-core:$version")
       implementation(project(":instrumentation:xxl-job:xxl-job-common-1.9.2:testing"))
     }
+
+    project.tasks.named<JavaCompile>(sources.compileJavaTaskName) {
+      options.release.set(17)
+    }
   }
 
   executions("test") {
@@ -69,10 +73,6 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  }
-
-  named("compileXxlJob33TestJava", JavaCompile::class).configure {
-    options.release.set(17)
   }
 
   check {
