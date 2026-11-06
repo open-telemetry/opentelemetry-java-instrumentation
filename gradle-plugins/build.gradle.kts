@@ -48,6 +48,7 @@ dependencies {
   }
 
   testImplementation("org.assertj:assertj-core:3.27.7")
+  testImplementation(gradleTestKit())
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.4"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
