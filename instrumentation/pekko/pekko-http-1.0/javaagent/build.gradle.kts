@@ -159,7 +159,7 @@ testing.suites {
   register<JvmTestSuite>("tapirTest") {
     dependencies {
       val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.12"
-      implementation("org.apache.pekko:pekko-http_$scalaVersion:${baseVersion("1.0.0").orLatest()}")
+      implementation("org.apache.pekko:pekko-http_$scalaVersion:${baseVersion("1.0.0").orLatest("2.+")}")
       implementation("org.apache.pekko:pekko-stream_$scalaVersion:${baseVersion("1.0.1").orLatest()}")
       implementation("com.softwaremill.sttp.tapir:tapir-pekko-http-server_$scalaVersion:${baseVersion("1.7.0").orLatest()}")
       if (otelProps.testLatestDeps) {
