@@ -1,0 +1,7 @@
+display_name: Apache Storm
+description: >
+  This instrumentation enables messaging spans for Apache Storm spouts and bolts. Producer spans
+  are created when tuples are emitted and consumer spans when they are processed.
+semantic_conventions:
+  - MESSAGING_SPANS
+library_link: https://storm.apache.org/
