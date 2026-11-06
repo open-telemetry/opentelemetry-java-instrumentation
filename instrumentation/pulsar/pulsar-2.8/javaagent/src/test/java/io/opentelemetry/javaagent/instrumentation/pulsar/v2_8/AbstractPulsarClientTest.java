@@ -328,8 +328,7 @@ abstract class AbstractPulsarClientTest {
               Baggage.builder()
                   .put("pulsar-test", failure ? "failure" : "success")
                   .build()
-                  .storeInContext(
-                      Context.current().with(key, failure ? "failure" : "success"));
+                  .storeInContext(Context.current().with(key, failure ? "failure" : "success"));
           parent.set(caller);
           try (Scope ignored = caller.makeCurrent()) {
             sendDirect(
@@ -351,8 +350,7 @@ abstract class AbstractPulsarClientTest {
     assertThat(Baggage.fromContext(callbackContext.get()).getEntryValue("pulsar-test"))
         .isEqualTo(failure ? "failure" : "success");
     assertThat(message.get().getProperty("traceparent"))
-        .startsWith(
-            "00-" + Span.fromContext(parent.get()).getSpanContext().getTraceId() + "-")
+        .startsWith("00-" + Span.fromContext(parent.get()).getSpanContext().getTraceId() + "-")
         .matches("00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}");
     assertThat(message.get().getProperty("traceparent").substring(36, 52))
         .isEqualTo(Span.fromContext(callbackContext.get()).getSpanContext().getSpanId());
@@ -363,8 +361,7 @@ abstract class AbstractPulsarClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName(
-                        "direct-send-" + (failure ? "failure" : "success") + "-parent"),
+                    span.hasName("direct-send-" + (failure ? "failure" : "success") + "-parent"),
                 span -> {
                   span.hasName("send " + topic)
                       .hasKind(SpanKind.PRODUCER)
