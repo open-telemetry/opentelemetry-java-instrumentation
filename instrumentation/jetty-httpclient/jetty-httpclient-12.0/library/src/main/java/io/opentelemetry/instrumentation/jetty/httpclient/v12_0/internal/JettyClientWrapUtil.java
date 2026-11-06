@@ -11,6 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.Response;
 
@@ -28,22 +29,18 @@ public final class JettyClientWrapUtil {
     Response.ContentListener.class,
     Response.HeadersListener.class,
     Response.HeaderListener.class,
-    Response.BeginListener.class
+    Response.BeginListener.class,
+    Response.Listener.class
   };
 
   private JettyClientWrapUtil() {}
 
-  /**
-   * Utility to wrap the response listeners only, this includes the important CompleteListener.
-   *
-   * @param context top level context that is above the Jetty client span context
-   * @param listener listener passed to Jetty client send() method
-   * @return wrapped listener
-   */
   @Nullable
-  public static Response.CompleteListener wrapTheListener(
-      @Nullable Response.CompleteListener listener, Context context) {
-    if (listener == null) {
+  // The proxy implements the listener's interfaces, so it remains assignable to T.
+  @SuppressWarnings("unchecked")
+  public static <T extends Response.ResponseListener> T wrapListener(
+      @Nullable T listener, Supplier<Context> contextSupplier) {
+    if (listener == null || listener instanceof JettyClientTracingListener) {
       return listener;
     }
 
@@ -58,11 +55,12 @@ public final class JettyClientWrapUtil {
       return listener;
     }
 
-    return (Response.CompleteListener)
+    return (T)
         Proxy.newProxyInstance(
             listenerClass.getClassLoader(),
             interfaces.toArray(new Class<?>[0]),
             (proxy, method, args) -> {
+              Context context = contextSupplier.get();
               try (Scope ignored = context.makeCurrent()) {
                 return method.invoke(listener, args);
               } catch (InvocationTargetException e) {

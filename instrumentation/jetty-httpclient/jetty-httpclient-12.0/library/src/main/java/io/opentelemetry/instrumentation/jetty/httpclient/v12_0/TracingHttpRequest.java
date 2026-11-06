@@ -38,12 +38,76 @@ class TracingHttpRequest extends HttpRequest {
     parentContext = Context.current();
     // start span and attach listeners - must handle all listeners, not just CompleteListener.
     JettyClientTracingListener.handleRequest(parentContext, this, instrumenter);
-    super.send(JettyClientWrapUtil.wrapTheListener(listener, parentContext));
+    super.send(JettyClientWrapUtil.wrapListener(listener, this::responseContext));
   }
 
   @Nullable
   private Scope openScope() {
     return parentContext != null ? parentContext.makeCurrent() : null;
+  }
+
+  private Context responseContext() {
+    return parentContext != null ? parentContext : Context.current();
+  }
+
+  // Added in Jetty 12.0.20.
+  public Request onResponseListener(Response.Listener listener) {
+    getResponseListeners()
+        .addCompleteListener(
+            JettyClientWrapUtil.wrapListener(listener, this::responseContext), true);
+    return this;
+  }
+
+  @Override
+  public Request onResponseBegin(Response.BeginListener listener) {
+    return super.onResponseBegin(JettyClientWrapUtil.wrapListener(listener, this::responseContext));
+  }
+
+  @Override
+  public Request onResponseHeader(Response.HeaderListener listener) {
+    return super.onResponseHeader(
+        JettyClientWrapUtil.wrapListener(listener, this::responseContext));
+  }
+
+  @Override
+  public Request onResponseHeaders(Response.HeadersListener listener) {
+    return super.onResponseHeaders(
+        JettyClientWrapUtil.wrapListener(listener, this::responseContext));
+  }
+
+  @Override
+  public Request onResponseContent(Response.ContentListener listener) {
+    return super.onResponseContent(
+        JettyClientWrapUtil.wrapListener(listener, this::responseContext));
+  }
+
+  @Override
+  public Request onResponseContentAsync(Response.AsyncContentListener listener) {
+    return super.onResponseContentAsync(
+        JettyClientWrapUtil.wrapListener(listener, this::responseContext));
+  }
+
+  @Override
+  public Request onResponseContentSource(Response.ContentSourceListener listener) {
+    return super.onResponseContentSource(
+        JettyClientWrapUtil.wrapListener(listener, this::responseContext));
+  }
+
+  @Override
+  public Request onResponseSuccess(Response.SuccessListener listener) {
+    return super.onResponseSuccess(
+        JettyClientWrapUtil.wrapListener(listener, this::responseContext));
+  }
+
+  @Override
+  public Request onResponseFailure(Response.FailureListener listener) {
+    return super.onResponseFailure(
+        JettyClientWrapUtil.wrapListener(listener, this::responseContext));
+  }
+
+  @Override
+  public Request onComplete(Response.CompleteListener listener) {
+    return super.onComplete(JettyClientWrapUtil.wrapListener(listener, this::responseContext));
   }
 
   @Override

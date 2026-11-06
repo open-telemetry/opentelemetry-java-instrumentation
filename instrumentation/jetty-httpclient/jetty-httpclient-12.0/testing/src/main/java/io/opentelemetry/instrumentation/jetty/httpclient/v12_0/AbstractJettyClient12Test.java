@@ -5,14 +5,18 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v12_0;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -28,6 +32,9 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<Request> {
 
@@ -146,6 +153,213 @@ public abstract class AbstractJettyClient12Test extends AbstractHttpClientTest<R
                     span.hasName("onComplete")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "true, success, false",
+    "false, success, true",
+    "true, asyncFailure, true",
+    "false, asyncFailure, false",
+    "true, inlineFailure, true",
+    "false, inlineFailure, true"
+  })
+  void responseLifecycleContexts(boolean withParent, String outcome, boolean throwingListeners)
+      throws ExecutionException, InterruptedException, TimeoutException {
+    CompletableFuture<Result> completed = new CompletableFuture<>();
+    IOException failure = new IOException("request failed");
+    Request request = client.newRequest(resolveAddress("/success")).method("POST");
+    if (outcome.equals("inlineFailure")) {
+      request.onRequestQueued(queued -> queued.abort(failure));
+    } else if (outcome.equals("asyncFailure")) {
+      request.onRequestBegin(begun -> begun.abort(failure));
+    }
+    class LifecycleListener
+        implements Response.HeadersListener,
+            Response.SuccessListener,
+            Response.FailureListener,
+            Response.CompleteListener {
+      private void record(String name) {
+        testing.runWithSpan(name, () -> {});
+        if (throwingListeners) {
+          throw new IllegalStateException("response listener");
+        }
+      }
+
+      @Override
+      public void onHeaders(Response response) {
+        record("listener-headers");
+      }
+
+      @Override
+      public void onSuccess(Response response) {
+        record("listener-success");
+      }
+
+      @Override
+      public void onFailure(Response response, Throwable cause) {
+        record("listener-failure");
+      }
+
+      @Override
+      public void onComplete(Result result) {
+        try {
+          record("listener-complete");
+        } finally {
+          completed.complete(result);
+        }
+      }
+    }
+
+    LifecycleListener listener = new LifecycleListener();
+    request.onResponseHeaders(response -> testing.runWithSpan("registered-headers", () -> {}));
+    request.onResponseSuccess(response -> testing.runWithSpan("registered-success", () -> {}));
+    request.onResponseFailure(
+        (response, cause) -> testing.runWithSpan("registered-failure", () -> {}));
+    request.onComplete(result -> testing.runWithSpan("registered-complete", () -> {}));
+
+    Runnable send =
+        () -> {
+          request.send(listener);
+          if (outcome.equals("inlineFailure")) {
+            assertThat(completed).isCompleted();
+          }
+        };
+    if (withParent) {
+      testing.runWithSpan("parent", send::run);
+    } else {
+      send.run();
+    }
+    Result result = completed.get(10, SECONDS);
+    assertThat(result.isSucceeded()).isEqualTo(outcome.equals("success"));
+    if (outcome.equals("success")) {
+      assertThat(result.getResponse().getStatus()).isEqualTo(200);
+    }
+    if (!outcome.equals("success")) {
+      assertThat(result.getFailure()).isSameAs(failure);
+    }
+    if (withParent && outcome.equals("success")) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactlyInAnyOrder(
+                  span -> span.hasName("parent").hasNoParent(),
+                  span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                  span -> span.hasName("test-http-server").hasParent(trace.getSpan(1)),
+                  span -> span.hasName("listener-headers").hasParent(trace.getSpan(0)),
+                  span -> span.hasName("listener-success").hasParent(trace.getSpan(0)),
+                  span -> span.hasName("listener-complete").hasParent(trace.getSpan(0)),
+                  span -> span.hasName("registered-headers").hasParent(trace.getSpan(0)),
+                  span -> span.hasName("registered-success").hasParent(trace.getSpan(0)),
+                  span -> span.hasName("registered-complete").hasParent(trace.getSpan(0))));
+    } else if (withParent) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactlyInAnyOrder(
+                  span -> span.hasName("parent").hasNoParent(),
+                  span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                  span -> span.hasName("listener-failure").hasParent(trace.getSpan(0)),
+                  span -> span.hasName("listener-complete").hasParent(trace.getSpan(0)),
+                  span -> span.hasName("registered-failure").hasParent(trace.getSpan(0)),
+                  span -> span.hasName("registered-complete").hasParent(trace.getSpan(0))));
+    } else if (outcome.equals("success")) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasNoParent(),
+                  span -> span.hasName("test-http-server").hasParent(trace.getSpan(0))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("registered-headers").hasNoParent()),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("listener-headers").hasNoParent()),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("registered-success").hasNoParent()),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("listener-success").hasNoParent()),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("registered-complete").hasNoParent()),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("listener-complete").hasNoParent()));
+    } else {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasNoParent()),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("registered-failure").hasNoParent()),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("listener-failure").hasNoParent()),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("registered-complete").hasNoParent()),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("listener-complete").hasNoParent()));
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void aggregateResponseListenerContext(boolean withParent)
+      throws ReflectiveOperationException,
+          ExecutionException,
+          InterruptedException,
+          TimeoutException {
+    assumeTrue(testLatestDeps());
+
+    CompletableFuture<Result> completed = new CompletableFuture<>();
+    CompletableFuture<Result> aggregateCompleted = new CompletableFuture<>();
+    Request request = client.newRequest(resolveAddress("/success")).method("POST");
+    Request.class
+        .getMethod("onResponseListener", Response.Listener.class)
+        .invoke(
+            request,
+            new Response.Listener() {
+              @Override
+              public void onComplete(Result result) {
+                try {
+                  testing.runWithSpan("aggregate-complete", () -> {});
+                } finally {
+                  aggregateCompleted.complete(result);
+                }
+              }
+            });
+
+    Runnable send = () -> request.send(completed::complete);
+    if (withParent) {
+      testing.runWithSpan("parent", send::run);
+    } else {
+      send.run();
+    }
+    Result result = completed.get(10, SECONDS);
+    assertThat(aggregateCompleted.get(10, SECONDS)).isSameAs(result);
+    assertThat(result.isSucceeded()).isTrue();
+    assertThat(result.getResponse().getStatus()).isEqualTo(200);
+    if (withParent) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactlyInAnyOrder(
+                  span -> span.hasName("parent").hasNoParent(),
+                  span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                  span -> span.hasName("test-http-server").hasParent(trace.getSpan(1)),
+                  span -> span.hasName("aggregate-complete").hasParent(trace.getSpan(0))));
+    } else {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("POST").hasKind(SpanKind.CLIENT).hasNoParent(),
+                  span -> span.hasName("test-http-server").hasParent(trace.getSpan(0))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("aggregate-complete").hasNoParent()));
+    }
   }
 
   private class TracingResponseListener
