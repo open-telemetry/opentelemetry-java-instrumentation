@@ -46,7 +46,6 @@ testing.suites {
         includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
       }
     }
-    register("ServerTarget") {}
   }
 }
 
