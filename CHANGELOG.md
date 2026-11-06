@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes
 
+- Apache HttpAsyncClient instrumentation no longer emits `network.peer.address`
+  or `network.peer.port` inferred from request targets, including pipelined
+  requests. `server.address` and `server.port` continue to identify the logical
+  destination.
 - Default RPC duration histogram boundaries now follow semantic conventions 1.45.0.
 - OSHI disk and network packet metrics now use `system.device.name` instead of `system.device`;
   memory metrics use `system.memory.state="available"` instead of `"free"`.
