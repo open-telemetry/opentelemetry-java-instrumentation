@@ -354,7 +354,7 @@ fun configureImage(
 
   if (server == "tomcat" && isWindows) {
     extraArgs["tomcatDownloadUrl"] = if (version == "7.0.109") {
-      "https://archive.apache.org/dist/tomcat/tomcat-7/v7.0.109/bin/apache-tomcat-7.0.109-windows-x64.zip"
+      "https://dist.apache.org/repos/dist/release/tomcat/tomcat-7/v7.0.109/bin/apache-tomcat-7.0.109-windows-x64.zip?p=47421"
     } else {
       "https://repo.maven.apache.org/maven2/org/apache/tomcat/tomcat/$version/tomcat-$version-windows-x64.zip"
     }
