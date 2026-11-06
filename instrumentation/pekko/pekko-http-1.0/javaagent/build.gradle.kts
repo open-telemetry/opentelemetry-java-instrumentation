@@ -145,7 +145,7 @@ testing.suites {
 
     dependencies {
       implementation("org.scala-lang:scala3-library_3:3.3.8")
-      implementation("org.apache.pekko:pekko-http_3:${baseVersion("2.0.0-M2").orLatest()}")
+      implementation("org.apache.pekko:pekko-http_3:${baseVersion("2.0.0-M2").orLatest("2.+")}")
       implementation("org.apache.pekko:pekko-stream_3:${baseVersion("2.0.0-M4").orLatest()}")
     }
 
