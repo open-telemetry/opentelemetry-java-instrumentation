@@ -34,12 +34,6 @@ dependencies {
 
 testing.suites {
   register<JvmTestSuite>("version310Test") {
-    sources {
-      java {
-        setSrcDirs(listOf("src/version310Test/java"))
-      }
-    }
-
     dependencies {
       implementation(project())
       implementation(
