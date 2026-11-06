@@ -20,6 +20,7 @@ import io.r2dbc.proxy.test.MockQueryExecutionInfo;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import io.r2dbc.spi.R2dbcBadGrammarException;
 import io.r2dbc.spi.R2dbcException;
+import io.r2dbc.spi.R2dbcTimeoutException;
 import java.util.Collection;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -135,11 +136,21 @@ class R2dbcSqlAttributesGetterTest {
 
   @Test
   void keepsSuccessfulSqlStateOutOfErrorType() {
-    DbExecution request = request("mysql");
-    Throwable error = new R2dbcBadGrammarException("test", "00000", 0);
+    DbExecution request = request("postgresql");
+    Throwable error = new R2dbcBadGrammarException("test", "00000", 42);
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("00000");
     assertThat(getter.getErrorType(request, null, error)).isNull();
+  }
+
+  @Test
+  void prefersR2dbcTimeoutExceptionOverDatabaseCodes() {
+    DbExecution request = request("mysql");
+    R2dbcTimeoutException error = new TestR2dbcTimeoutException();
+
+    assertThat(getter.getErrorType(request, null, error))
+        .isEqualTo(TestR2dbcTimeoutException.class.getName());
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
   }
 
   @Test
@@ -354,5 +365,14 @@ class R2dbcSqlAttributesGetterTest {
     return new DbExecution(
         queryExecutionInfo(),
         ConnectionFactoryOptions.parse("r2dbc:" + dbSystemName + "://localhost/db"));
+  }
+
+  private static final class TestR2dbcTimeoutException extends R2dbcTimeoutException {
+
+    private static final long serialVersionUID = 1L;
+
+    TestR2dbcTimeoutException() {
+      super("test", "SELECT 1", 1064, "HYT00");
+    }
   }
 }

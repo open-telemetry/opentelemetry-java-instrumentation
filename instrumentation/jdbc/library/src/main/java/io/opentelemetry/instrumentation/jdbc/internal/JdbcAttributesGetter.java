@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServ
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlResponseStatusCodeUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
 import java.util.Collection;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -53,14 +54,14 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public String getErrorType(
       DbRequest request, @Nullable Void response, @Nullable Throwable error) {
+    if (error instanceof SQLTimeoutException) {
+      return error.getClass().getName();
+    }
     if (!(error instanceof SQLException)) {
       return null;
     }
-    SQLException sqlException = (SQLException) error;
-    if (sqlException.getErrorCode() == 0 && "00000".equals(sqlException.getSQLState())) {
-      return null;
-    }
-    return getDbResponseStatusCode(request, sqlException);
+    String responseStatusCode = getDbResponseStatusCode(request, (SQLException) error);
+    return "00000".equals(responseStatusCode) ? null : responseStatusCode;
   }
 
   @Nullable

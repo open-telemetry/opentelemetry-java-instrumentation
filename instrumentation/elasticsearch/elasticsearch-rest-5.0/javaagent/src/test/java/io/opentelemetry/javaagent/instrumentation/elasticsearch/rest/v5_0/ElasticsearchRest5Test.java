@@ -138,7 +138,7 @@ class ElasticsearchRest5Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
                             equalTo(DB_RESPONSE_STATUS_CODE, "404"),
-                            equalTo(ERROR_TYPE, ResponseException.class.getName()),
+                            equalTo(ERROR_TYPE, "404"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort())),
@@ -179,7 +179,7 @@ class ElasticsearchRest5Test {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
                             equalTo(DB_RESPONSE_STATUS_CODE, "404"),
-                            equalTo(ERROR_TYPE, ResponseException.class.getName()),
+                            equalTo(ERROR_TYPE, "404"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort())),

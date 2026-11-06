@@ -49,12 +49,9 @@ final class OpenSearchRestAttributesGetter
       OpenSearchRestRequest request,
       @Nullable OpenSearchRestResponse response,
       @Nullable Throwable error) {
-
-    if (response != null) {
-      int statusCode = response.getStatusCode();
-      if (statusCode >= 400 || statusCode < 100) {
-        return Integer.toString(statusCode);
-      }
+    Integer statusCode = getResponseStatusCode(response, error);
+    if (statusCode != null && statusCode >= 400) {
+      return Integer.toString(statusCode);
     }
     return null;
   }
@@ -65,13 +62,20 @@ final class OpenSearchRestAttributesGetter
       OpenSearchRestRequest request,
       @Nullable OpenSearchRestResponse response,
       @Nullable Throwable error) {
+    Integer statusCode = getResponseStatusCode(response, error);
+    return statusCode == null ? null : Integer.toString(statusCode);
+  }
+
+  @Nullable
+  private Integer getResponseStatusCode(
+      @Nullable OpenSearchRestResponse response, @Nullable Throwable error) {
     Integer statusCode = null;
     if (response != null) {
       statusCode = response.getStatusCode();
     } else if (error != null) {
       statusCode = exceptionStatusCodeExtractor.getStatusCode(error);
     }
-    return statusCode == null ? null : Integer.toString(statusCode);
+    return statusCode == null || statusCode < 100 ? null : statusCode;
   }
 
   @Override

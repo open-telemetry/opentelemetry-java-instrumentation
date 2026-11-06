@@ -74,10 +74,7 @@ class VertxSqlClientAttributesGetter
     String sqlState = getAvailableSqlState(error);
     String vendorCode = vendorCodeExtractor.apply(error);
     String responseStatusCode = getResponseStatusCode(request, sqlState, vendorCode);
-    if ("00000".equals(sqlState) && vendorCode == null) {
-      return null;
-    }
-    return responseStatusCode;
+    return "00000".equals(responseStatusCode) ? null : responseStatusCode;
   }
 
   @Nullable

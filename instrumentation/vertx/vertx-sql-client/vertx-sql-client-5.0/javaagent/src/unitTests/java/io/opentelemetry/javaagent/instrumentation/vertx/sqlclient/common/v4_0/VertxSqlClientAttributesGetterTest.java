@@ -63,12 +63,16 @@ class VertxSqlClientAttributesGetterTest {
     DatabaseException successful = new DatabaseException("Success", 0, "00000") {};
     VertxSqlClientRequest postgresRequest = request(POSTGRESQL);
     DatabaseException postgresError = new DatabaseException("Syntax error", 42, "42601") {};
+    DatabaseException postgresSuccess = new DatabaseException("Success", 42, "00000") {};
 
     assertThat(getter.getDbResponseStatusCode(mysqlRequest, null, successful)).isEqualTo("00000");
     assertThat(getter.getErrorType(mysqlRequest, null, successful)).isNull();
     assertThat(getter.getDbResponseStatusCode(postgresRequest, null, postgresError))
         .isEqualTo("42601");
     assertThat(getter.getErrorType(postgresRequest, null, postgresError)).isEqualTo("42601");
+    assertThat(getter.getDbResponseStatusCode(postgresRequest, null, postgresSuccess))
+        .isEqualTo("00000");
+    assertThat(getter.getErrorType(postgresRequest, null, postgresSuccess)).isNull();
   }
 
   @Test

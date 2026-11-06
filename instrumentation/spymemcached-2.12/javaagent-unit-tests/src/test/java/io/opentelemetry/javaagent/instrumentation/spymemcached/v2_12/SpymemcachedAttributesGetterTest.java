@@ -30,6 +30,7 @@ import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.internal.BulkGetFuture;
 import net.spy.memcached.internal.GetFuture;
 import net.spy.memcached.internal.OperationFuture;
+import net.spy.memcached.ops.OperationException;
 import net.spy.memcached.ops.OperationStatus;
 import net.spy.memcached.ops.StatusCode;
 import org.junit.jupiter.api.Test;
@@ -72,6 +73,16 @@ class SpymemcachedAttributesGetterTest {
   }
 
   @Test
+  void usesOperationStatusForGenericProtocolException() {
+    OperationFuture<?> future = mock(OperationFuture.class);
+    when(future.getStatus())
+        .thenReturn(new OperationStatus(false, "too large", StatusCode.ERR_INTERNAL));
+
+    assertThat(getter.getErrorType(null, future, new OperationException()))
+        .isEqualTo("ERR_INTERNAL");
+  }
+
+  @Test
   void operationFutureStatusIsAvailableWhenResultRetrievalFails() {
     OperationFuture<?> future = mock(OperationFuture.class);
     when(future.getStatus())
@@ -91,7 +102,7 @@ class SpymemcachedAttributesGetterTest {
 
     assertThat(getter.getDbResponseStatusCode(null, future, error)).isEqualTo("ERR_2BIG");
     assertThat(getter.getErrorType(null, future, error)).isNull();
-    assertThat(getter.getErrorType(null, future, null)).isNull();
+    assertThat(getter.getErrorType(null, future, null)).isEqualTo("ERR_2BIG");
   }
 
   @ParameterizedTest
@@ -124,6 +135,18 @@ class SpymemcachedAttributesGetterTest {
         .thenReturn(new OperationStatus(false, "too large", StatusCode.ERR_2BIG));
 
     assertThat(getter.getDbResponseStatusCode(null, future, null)).isEqualTo("ERR_2BIG");
+    assertThat(getter.getErrorType(null, future, null)).isEqualTo("ERR_2BIG");
+  }
+
+  @Test
+  void bulkFutureStatusDoesNotOverrideClientProcessingFailure() {
+    BulkGetFuture<?> future = mock(BulkGetFuture.class);
+    when(future.getStatus())
+        .thenReturn(new OperationStatus(false, "too large", StatusCode.ERR_2BIG));
+    IllegalArgumentException error = new IllegalArgumentException("decode failed");
+
+    assertThat(getter.getDbResponseStatusCode(null, future, error)).isEqualTo("ERR_2BIG");
+    assertThat(getter.getErrorType(null, future, error)).isNull();
   }
 
   @Test

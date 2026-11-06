@@ -50,9 +50,9 @@ class ElasticsearchDbAttributesGetterTest {
     when(response.getStatusLine()).thenReturn(statusLine);
 
     assertThat(getter.getDbResponseStatusCode(request, response, null))
-        .isEqualTo(Integer.toString(statusCode));
+        .isEqualTo(statusCode >= 100 ? Integer.toString(statusCode) : null);
     assertThat(getter.getErrorType(request, response, null))
-        .isEqualTo(statusCode >= 400 || statusCode < 100 ? Integer.toString(statusCode) : null);
+        .isEqualTo(statusCode >= 400 ? Integer.toString(statusCode) : null);
   }
 
   @Test
@@ -76,7 +76,7 @@ class ElasticsearchDbAttributesGetterTest {
     when(error.getResponse()).thenReturn(response);
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("404");
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo("404");
   }
 
   /** Records the bodies it is given and returns whatever it was configured to return. */

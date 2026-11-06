@@ -9,10 +9,12 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
+import java.util.concurrent.Future;
 import javax.annotation.Nullable;
 import net.spy.memcached.internal.BulkFuture;
 import net.spy.memcached.internal.GetFuture;
 import net.spy.memcached.internal.OperationFuture;
+import net.spy.memcached.ops.OperationException;
 import net.spy.memcached.ops.OperationStatus;
 import net.spy.memcached.ops.StatusCode;
 
@@ -69,37 +71,13 @@ class SpymemcachedAttributesGetter
   @Nullable
   public String getErrorType(
       SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
-    OperationStatus status = getOperationStatus(response, error);
-    if (status == null || status.isSuccess()) {
+    if (error != null && !(error instanceof OperationException)) {
       return null;
     }
-    StatusCode code = status.getStatusCode();
-    if (code == null) {
+    if (response instanceof Future && ((Future<?>) response).isCancelled()) {
       return null;
     }
-    switch (code) {
-      case SUCCESS:
-      case ERR_NOT_FOUND:
-      case ERR_EXISTS:
-      case ERR_NOT_STORED:
-      case CANCELLED:
-        return null;
-      default:
-        return code.name();
-    }
-  }
-
-  @Nullable
-  private static OperationStatus getOperationStatus(
-      @Nullable Object response, @Nullable Throwable error) {
-    if (error != null || !(response instanceof OperationFuture)) {
-      return null;
-    }
-    OperationFuture<?> future = (OperationFuture<?>) response;
-    if (future.isCancelled()) {
-      return null;
-    }
-    return future.getStatus();
+    return getDbResponseStatusCode(request, response, error);
   }
 
   @Nullable

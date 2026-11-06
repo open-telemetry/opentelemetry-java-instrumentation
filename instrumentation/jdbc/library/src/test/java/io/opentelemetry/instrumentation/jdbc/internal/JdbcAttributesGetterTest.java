@@ -25,6 +25,7 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -100,6 +101,17 @@ class JdbcAttributesGetterTest {
         .isEqualTo(Integer.toString(errorCode));
     assertThat(attributesGetter.getDbResponseStatusCode(request, null, error))
         .isEqualTo(Integer.toString(errorCode));
+  }
+
+  @Test
+  void prefersSqlTimeoutExceptionOverDatabaseCodes() {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(MYSQL).build(), "SELECT 1", false);
+    SQLTimeoutException error = new TestSqlTimeoutException("test", "HYT00", 1064);
+
+    assertThat(attributesGetter.getErrorType(request, null, error))
+        .isEqualTo(TestSqlTimeoutException.class.getName());
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
   }
 
   @ParameterizedTest
@@ -203,7 +215,16 @@ class JdbcAttributesGetterTest {
         argumentSet("null SQLSTATE is unavailable", 0, null, null, null),
         argumentSet("empty SQLSTATE is unavailable", 0, "", null, null),
         argumentSet(
-            "successful completion SQLSTATE is available for status", 0, "00000", null, "00000"));
+            "successful completion SQLSTATE is available for status", 42, "00000", null, "00000"));
+  }
+
+  private static final class TestSqlTimeoutException extends SQLTimeoutException {
+
+    private static final long serialVersionUID = 1L;
+
+    TestSqlTimeoutException(String reason, String sqlState, int vendorCode) {
+      super(reason, sqlState, vendorCode);
+    }
   }
 
   @Test

@@ -129,7 +129,7 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(DB_SYSTEM_NAME, OPENSEARCH),
                                 equalTo(DB_OPERATION_NAME, "GET"),
                                 equalTo(DB_RESPONSE_STATUS_CODE, "404"),
-                                equalTo(ERROR_TYPE, ResponseException.class.getName()),
+                                equalTo(ERROR_TYPE, "404"),
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
                     span ->
@@ -170,7 +170,7 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(DB_SYSTEM_NAME, OPENSEARCH),
                                 equalTo(DB_OPERATION_NAME, "GET"),
                                 equalTo(DB_RESPONSE_STATUS_CODE, "404"),
-                                equalTo(ERROR_TYPE, ResponseException.class.getName()),
+                                equalTo(ERROR_TYPE, "404"),
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
                     span ->

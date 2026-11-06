@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlResponseStatusCodeUtil;
 import io.r2dbc.spi.R2dbcException;
+import io.r2dbc.spi.R2dbcTimeoutException;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -52,11 +53,11 @@ public final class R2dbcSqlAttributesGetter
   @Override
   public String getErrorType(
       DbExecution request, @Nullable Void response, @Nullable Throwable error) {
-    String sqlState = getSqlState(error);
-    if (getErrorCode(error) == 0 && "00000".equals(sqlState)) {
-      return null;
+    if (error instanceof R2dbcTimeoutException) {
+      return error.getClass().getName();
     }
-    return getResponseStatusCode(request, error);
+    String responseStatusCode = getResponseStatusCode(request, error);
+    return "00000".equals(responseStatusCode) ? null : responseStatusCode;
   }
 
   @Nullable

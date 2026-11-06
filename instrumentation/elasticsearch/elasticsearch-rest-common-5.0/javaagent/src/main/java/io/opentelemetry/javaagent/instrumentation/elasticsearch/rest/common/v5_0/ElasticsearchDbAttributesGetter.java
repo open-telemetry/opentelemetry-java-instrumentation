@@ -140,11 +140,9 @@ final class ElasticsearchDbAttributesGetter
   @Nullable
   public String getErrorType(
       ElasticsearchRestRequest request, @Nullable Response response, @Nullable Throwable error) {
-    if (response != null) {
-      int statusCode = response.getStatusLine().getStatusCode();
-      if (statusCode >= 400 || statusCode < 100) {
-        return Integer.toString(statusCode);
-      }
+    Integer statusCode = getResponseStatusCode(response, error);
+    if (statusCode != null && statusCode >= 400) {
+      return Integer.toString(statusCode);
     }
     return null;
   }
@@ -153,6 +151,13 @@ final class ElasticsearchDbAttributesGetter
   @Nullable
   public String getDbResponseStatusCode(
       ElasticsearchRestRequest request, @Nullable Response response, @Nullable Throwable error) {
+    Integer statusCode = getResponseStatusCode(response, error);
+    return statusCode == null ? null : Integer.toString(statusCode);
+  }
+
+  @Nullable
+  private static Integer getResponseStatusCode(
+      @Nullable Response response, @Nullable Throwable error) {
     if (response == null && error instanceof ResponseException) {
       response = ((ResponseException) error).getResponse();
     }
@@ -160,7 +165,7 @@ final class ElasticsearchDbAttributesGetter
       return null;
     }
     int statusCode = response.getStatusLine().getStatusCode();
-    return Integer.toString(statusCode);
+    return statusCode < 100 ? null : statusCode;
   }
 
   @Override
