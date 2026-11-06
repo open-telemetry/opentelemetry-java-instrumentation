@@ -38,10 +38,6 @@ testing.suites {
     configureDefault {
       jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
     }
-
-    register("Experimental") {
-      jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-    }
   }
 
   executions("test") {

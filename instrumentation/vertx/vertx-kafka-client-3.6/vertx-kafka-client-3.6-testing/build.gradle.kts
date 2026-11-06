@@ -31,12 +31,6 @@ testing.suites {
     }
   }
 
-  executions("testNoReceiveTelemetry") {
-    register("Experimental") {
-      telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
-    }
-  }
-
   executions("test") {
     configureEach {
       telemetryConfig(
