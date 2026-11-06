@@ -81,6 +81,9 @@ class VertxSqlClientAttributesGetter
   @Nullable
   private static String getResponseStatusCode(
       VertxSqlClientRequest request, @Nullable Throwable error) {
+    if (error == null) {
+      return null;
+    }
     return SqlResponseStatusCodeUtil.getResponseStatusCode(
         request.getDbSystemName(), sqlStateExtractor.apply(error), vendorCodeExtractor.apply(error));
   }
