@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -51,22 +52,17 @@ testing.suites {
 
   executions("testReceiveSpansDisabled") {
     configureEach {
-      jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
       jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.pulsar.experimental-span-attributes=true",
-      )
+      telemetryConfig("otel.instrumentation.pulsar.experimental-span-attributes", "true")
     }
   }
 
   executions("test") {
     configureDefault {
       jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=false")
-      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
+      telemetryConfig(
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+        "true",
       )
     }
   }
