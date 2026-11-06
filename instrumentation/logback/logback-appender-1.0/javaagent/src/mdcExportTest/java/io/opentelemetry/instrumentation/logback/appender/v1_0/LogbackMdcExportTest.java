@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
-import static java.util.Collections.emptyMap;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -84,7 +84,7 @@ class LogbackMdcExportTest {
       log.run();
     }
 
-    assertExportedMdc("message", singletonMap("request", "application"));
+    assertExportedMdc("message", Attributes.of(stringKey("request"), "application"));
   }
 
   @ParameterizedTest
@@ -109,7 +109,7 @@ class LogbackMdcExportTest {
           }
         });
 
-    assertExportedMdc("collision", singletonMap(key, "application"));
+    assertExportedMdc("collision", Attributes.of(stringKey(key), "application"));
     if (key.equals(TRACE_ID_KEY)) {
       // Normal reads retain the already-instrumented-event shortcut.
       assertThat(appender.mdc.get("collision"))
@@ -145,7 +145,7 @@ class LogbackMdcExportTest {
 
     assertThat(appender.mdc).containsOnlyKeys("nested", "outer");
     // Nested capture is suppressed by logging call depth, but its application appender still runs.
-    assertExportedMdc("outer", singletonMap("request", "application"));
+    assertExportedMdc("outer", Attributes.of(stringKey("request"), "application"));
   }
 
   @Test
@@ -167,7 +167,7 @@ class LogbackMdcExportTest {
           }
         });
 
-    assertExportedMdc("null MDC", emptyMap());
+    assertExportedMdc("null MDC", Attributes.empty());
   }
 
   @Test
@@ -198,7 +198,7 @@ class LogbackMdcExportTest {
           }
         });
 
-    assertExportedMdc("after failure", singletonMap("request", "application"));
+    assertExportedMdc("after failure", Attributes.of(stringKey("request"), "application"));
   }
 
   @Test
@@ -214,7 +214,7 @@ class LogbackMdcExportTest {
         .containsEntry("request", "excluded")
         .containsEntry("baggage.tenant", "selected")
         .containsEntry("baggage.foo", "synthetic");
-    assertExportedMdc("baggage", singletonMap("tenant", "selected"));
+    assertExportedMdc("baggage", Attributes.of(stringKey("tenant"), "selected"));
   }
 
   private void assertEnrichment(String message, SpanContext spanContext) {
@@ -232,23 +232,12 @@ class LogbackMdcExportTest {
     }
   }
 
-  private static void assertExportedMdc(String message, Map<String, String> expected) {
+  private static void assertExportedMdc(String message, Attributes expected) {
     testing.waitAndAssertLogRecords(
         record -> {
           record.hasBody(message);
-          assertMdcAttributes(record.actual().getAttributes(), expected);
+          record.hasAttributes(expected);
         });
-  }
-
-  private static void assertMdcAttributes(Attributes attributes, Map<String, String> expected) {
-    Map<String, String> mdc = new HashMap<>();
-    attributes.forEach(
-        (key, value) -> {
-          if (!key.getKey().startsWith("thread.") && !key.getKey().startsWith("code.")) {
-            mdc.put(key.getKey(), (String) value);
-          }
-        });
-    assertThat(mdc).containsExactlyInAnyOrderEntriesOf(expected);
   }
 
   private static class MdcAppender extends AppenderBase<ILoggingEvent> {

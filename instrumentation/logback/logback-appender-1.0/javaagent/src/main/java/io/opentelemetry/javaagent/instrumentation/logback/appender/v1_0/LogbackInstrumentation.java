@@ -46,19 +46,17 @@ class LogbackInstrumentation implements TypeInstrumentation {
       // need to track call depth across all loggers in order to avoid double capture when one
       // logging framework delegates to another
       CallDepth callDepth = CallDepth.forClass(LoggerProvider.class);
-      int depth = callDepth.getAndIncrement();
+      if (callDepth.getAndIncrement() != 0) {
+        return callDepth;
+      }
       try {
-        if (depth == 0) {
-          Boolean previous = currentExportRead().set(true);
-          try {
-            mapper()
-                .emit(
-                    GlobalOpenTelemetry.get().getLogsBridge(),
-                    event,
-                    Thread.currentThread().getId());
-          } finally {
-            currentExportRead().restore(previous);
-          }
+        Boolean previous = currentExportRead().set(true);
+        try {
+          mapper()
+              .emit(
+                  GlobalOpenTelemetry.get().getLogsBridge(), event, Thread.currentThread().getId());
+        } finally {
+          currentExportRead().restore(previous);
         }
       } catch (Throwable t) {
         callDepth.decrementAndGet();
