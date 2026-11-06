@@ -67,8 +67,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:pekko:pekko-actor-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:executors:javaagent"))
 
-  latestDepTestLibrary("org.apache.pekko:pekko-http_2.13:latest.release")
-  latestDepTestLibrary("org.apache.pekko:pekko-stream_2.13:latest.release")
+  latestDepTestLibrary("org.apache.pekko:pekko-http_2.13:1.+")
+  latestDepTestLibrary("org.apache.pekko:pekko-stream_2.13:1.+")
 }
 
 testing.suites {
@@ -85,8 +85,8 @@ testing.suites {
   register<JvmTestSuite>("scala3Test") {
     dependencies {
       implementation("org.scala-lang:scala3-library_3:3.3.6")
-      implementation("org.apache.pekko:pekko-http_3:${baseVersion("1.0.0").orLatest()}")
-      implementation("org.apache.pekko:pekko-stream_3:${baseVersion("1.0.1").orLatest()}")
+      implementation("org.apache.pekko:pekko-http_3:${baseVersion("1.0.0").orLatest("1.+")}")
+      implementation("org.apache.pekko:pekko-stream_3:${baseVersion("1.0.1").orLatest("1.+")}")
     }
   }
 
@@ -94,16 +94,16 @@ testing.suites {
   // against them explicitly, pekko 2.x requires java 17 and has no scala 2.12 artifacts
   register<JvmTestSuite>("pekko2Test") {
     dependencies {
-      implementation("org.apache.pekko:pekko-http_2.13:${baseVersion("2.0.0-M2").orLatest("2.+")}")
-      implementation("org.apache.pekko:pekko-stream_2.13:${baseVersion("2.0.0-M4").orLatest("2.+")}")
+      implementation("org.apache.pekko:pekko-http_2.13:${baseVersion("2.0.0-M2").orLatest()}")
+      implementation("org.apache.pekko:pekko-stream_2.13:${baseVersion("2.0.0-M4").orLatest()}")
     }
   }
 
   register<JvmTestSuite>("pekko2Scala3Test") {
     dependencies {
       implementation("org.scala-lang:scala3-library_3:3.3.8")
-      implementation("org.apache.pekko:pekko-http_3:${baseVersion("2.0.0-M2").orLatest("2.+")}")
-      implementation("org.apache.pekko:pekko-stream_3:${baseVersion("2.0.0-M4").orLatest("2.+")}")
+      implementation("org.apache.pekko:pekko-http_3:${baseVersion("2.0.0-M2").orLatest()}")
+      implementation("org.apache.pekko:pekko-stream_3:${baseVersion("2.0.0-M4").orLatest()}")
     }
   }
 

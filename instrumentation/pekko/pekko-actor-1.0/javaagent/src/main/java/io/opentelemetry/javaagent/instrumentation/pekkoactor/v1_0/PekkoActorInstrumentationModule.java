@@ -27,6 +27,7 @@ public class PekkoActorInstrumentationModule extends InstrumentationModule {
         new PekkoDefaultSystemMessageQueueInstrumentation(),
         new PekkoScheduleInstrumentation(),
         new PekkoStashSupportInstrumentation(),
-        new PekkoUnstartedCellInstrumentation());
+        new PekkoUnstartedCellInstrumentation(),
+        new PekkoMailboxInstrumentation());
   }
 }

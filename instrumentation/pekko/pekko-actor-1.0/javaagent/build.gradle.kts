@@ -54,8 +54,8 @@ dependencies {
   library("org.apache.pekko:pekko-actor_2.12:1.0.1")
   library("org.apache.pekko:pekko-actor-typed_2.12:1.0.1")
 
-  latestDepTestLibrary("org.apache.pekko:pekko-actor_2.13:latest.release")
-  latestDepTestLibrary("org.apache.pekko:pekko-actor-typed_2.13:latest.release")
+  latestDepTestLibrary("org.apache.pekko:pekko-actor_2.13:1.+")
+  latestDepTestLibrary("org.apache.pekko:pekko-actor-typed_2.13:1.+")
 
   testImplementation(project(":instrumentation:executors:testing"))
 }
@@ -68,8 +68,8 @@ testing {
     register<JvmTestSuite>("scala3Test") {
       dependencies {
         implementation("org.scala-lang:scala3-library_3:3.3.6")
-        implementation("org.apache.pekko:pekko-actor_3:${baseVersion("1.0.1").orLatest()}")
-        implementation("org.apache.pekko:pekko-actor-typed_3:${baseVersion("1.0.1").orLatest()}")
+        implementation("org.apache.pekko:pekko-actor_3:${baseVersion("1.0.1").orLatest("1.+")}")
+        implementation("org.apache.pekko:pekko-actor-typed_3:${baseVersion("1.0.1").orLatest("1.+")}")
         implementation(project(":instrumentation:executors:testing"))
       }
     }
@@ -78,8 +78,8 @@ testing {
     // against them explicitly, pekko 2.x requires java 17 and has no scala 2.12 artifacts
     register<JvmTestSuite>("pekko2Test") {
       dependencies {
-        implementation("org.apache.pekko:pekko-actor_2.13:${baseVersion("2.0.0-M4").orLatest("2.+")}")
-        implementation("org.apache.pekko:pekko-actor-typed_2.13:${baseVersion("2.0.0-M4").orLatest("2.+")}")
+        implementation("org.apache.pekko:pekko-actor_2.13:${baseVersion("2.0.0-M4").orLatest()}")
+        implementation("org.apache.pekko:pekko-actor-typed_2.13:${baseVersion("2.0.0-M4").orLatest()}")
         implementation(project(":instrumentation:executors:testing"))
       }
     }
@@ -87,8 +87,8 @@ testing {
     register<JvmTestSuite>("pekko2Scala3Test") {
       dependencies {
         implementation("org.scala-lang:scala3-library_3:3.3.8")
-        implementation("org.apache.pekko:pekko-actor_3:${baseVersion("2.0.0-M4").orLatest("2.+")}")
-        implementation("org.apache.pekko:pekko-actor-typed_3:${baseVersion("2.0.0-M4").orLatest("2.+")}")
+        implementation("org.apache.pekko:pekko-actor_3:${baseVersion("2.0.0-M4").orLatest()}")
+        implementation("org.apache.pekko:pekko-actor-typed_3:${baseVersion("2.0.0-M4").orLatest()}")
         implementation(project(":instrumentation:executors:testing"))
       }
     }
@@ -100,7 +100,7 @@ listOf("scala3Test", "pekko2Test", "pekko2Scala3Test").forEach {
   sourceSets.named(it) {
     java.srcDir("src/test/java")
     resources.srcDir("src/test/resources")
-    extensions.getByType(org.gradle.api.tasks.ScalaSourceDirectorySet::class.java).srcDir("src/test/scala")
+    extensions.getByType(ScalaSourceDirectorySet::class.java).srcDir("src/test/scala")
   }
 }
 

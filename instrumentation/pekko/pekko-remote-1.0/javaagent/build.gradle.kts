@@ -40,7 +40,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:pekko:pekko-actor-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:executors:javaagent"))
 
-  latestDepTestLibrary("org.apache.pekko:pekko-remote_2.13:latest.release")
+  latestDepTestLibrary("org.apache.pekko:pekko-remote_2.13:1.+")
 }
 
 testing {
@@ -50,7 +50,7 @@ testing {
     register<JvmTestSuite>("scala3Test") {
       dependencies {
         implementation("org.scala-lang:scala3-library_3:3.3.6")
-        implementation("org.apache.pekko:pekko-remote_3:${baseVersion("1.0.1").orLatest()}")
+        implementation("org.apache.pekko:pekko-remote_3:${baseVersion("1.0.1").orLatest("1.+")}")
         if (otelProps.testLatestDeps) {
           implementation("io.netty:netty-transport:4.2.17.Final")
           implementation("io.netty:netty-handler:4.2.17.Final")
@@ -70,7 +70,7 @@ testing {
         }
       }
       dependencies {
-        implementation("org.apache.pekko:pekko-remote_2.13:${baseVersion("2.0.0-M4").orLatest("2.+")}")
+        implementation("org.apache.pekko:pekko-remote_2.13:${baseVersion("2.0.0-M4").orLatest()}")
         implementation("io.netty:netty-transport:4.2.17.Final")
         implementation("io.netty:netty-handler:4.2.17.Final")
       }
@@ -85,7 +85,7 @@ testing {
       }
       dependencies {
         implementation("org.scala-lang:scala3-library_3:3.3.8")
-        implementation("org.apache.pekko:pekko-remote_3:${baseVersion("2.0.0-M4").orLatest("2.+")}")
+        implementation("org.apache.pekko:pekko-remote_3:${baseVersion("2.0.0-M4").orLatest()}")
         implementation("io.netty:netty-transport:4.2.17.Final")
         implementation("io.netty:netty-handler:4.2.17.Final")
       }
