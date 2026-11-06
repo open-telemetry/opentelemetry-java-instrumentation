@@ -120,6 +120,9 @@ class JdbcAttributesGetterTest {
     assertThat(attributesGetter.getDbResponseStatusCode(request, null, null)).isNull();
     assertThat(attributesGetter.getDbResponseStatusCode(request, null, new IllegalStateException()))
         .isNull();
+    assertThat(attributesGetter.getErrorType(request, null, null)).isNull();
+    assertThat(attributesGetter.getErrorType(request, null, new IllegalStateException()))
+        .isEqualTo(IllegalStateException.class.getName());
   }
 
   private static Stream<Arguments> errorCodes() {

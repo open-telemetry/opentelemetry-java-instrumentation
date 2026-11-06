@@ -86,10 +86,7 @@ public final class R2dbcSqlAttributesGetter
   @Nullable
   private static String getSqlState(@Nullable Throwable error) {
     if (error instanceof R2dbcException) {
-      String sqlState = ((R2dbcException) error).getSqlState();
-      if (sqlState != null) {
-        return sqlState;
-      }
+      return ((R2dbcException) error).getSqlState();
     }
     return null;
   }

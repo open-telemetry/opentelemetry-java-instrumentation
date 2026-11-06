@@ -44,20 +44,22 @@ class VertxSqlClientAttributesGetterTest {
     DatabaseException postgresSuccess = new DatabaseException("Success", 42, "00000") {};
 
     assertThat(getter.getDbResponseStatusCode(mysqlRequest, null, successful)).isEqualTo("00000");
-    assertThat(getter.getErrorType(mysqlRequest, null, successful)).isNull();
+    assertThat(getter.getErrorType(mysqlRequest, null, successful))
+        .isEqualTo(successful.getClass().getName());
     assertThat(getter.getDbResponseStatusCode(postgresRequest, null, postgresError))
         .isEqualTo("42601");
     assertThat(getter.getErrorType(postgresRequest, null, postgresError)).isEqualTo("42601");
     assertThat(getter.getDbResponseStatusCode(postgresRequest, null, postgresSuccess))
         .isEqualTo("00000");
-    assertThat(getter.getErrorType(postgresRequest, null, postgresSuccess)).isNull();
+    assertThat(getter.getErrorType(postgresRequest, null, postgresSuccess))
+        .isEqualTo(postgresSuccess.getClass().getName());
   }
 
   @Test
   void omitsUnavailableCodes() {
     DatabaseException error = new DatabaseException("Unknown SQLSTATE", 0, null) {};
 
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo(error.getClass().getName());
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isNull();
   }
 
