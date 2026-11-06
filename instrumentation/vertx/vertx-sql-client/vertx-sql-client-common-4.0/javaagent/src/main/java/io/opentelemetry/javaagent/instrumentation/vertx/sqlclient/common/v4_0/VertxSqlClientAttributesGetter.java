@@ -21,10 +21,6 @@ class VertxSqlClientAttributesGetter
     implements SqlClientAttributesGetter<VertxSqlClientRequest, Void> {
 
   private static final Function<Throwable, String> sqlStateExtractor = createSqlStateExtractor();
-  private static final Function<Throwable, String> mysqlSqlStateExtractor =
-      sqlStateExtractor("io.vertx.mysqlclient.MySQLException", "getSqlState");
-  private static final Function<Throwable, String> db2SqlStateExtractor =
-      sqlStateExtractor("io.vertx.db2client.DB2Exception", "getSqlState");
   private static final Function<Throwable, String> vendorCodeExtractor =
       createNonZeroErrorCodeExtractor();
 
@@ -71,9 +67,7 @@ class VertxSqlClientAttributesGetter
   @Override
   public String getErrorType(
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
-    String sqlState = getAvailableSqlState(error);
-    String vendorCode = vendorCodeExtractor.apply(error);
-    String responseStatusCode = getResponseStatusCode(request, sqlState, vendorCode);
+    String responseStatusCode = getResponseStatusCode(request, error);
     return "00000".equals(responseStatusCode) ? null : responseStatusCode;
   }
 
@@ -81,28 +75,14 @@ class VertxSqlClientAttributesGetter
   @Override
   public String getDbResponseStatusCode(
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
-    String sqlState = getAvailableSqlState(error);
-    String vendorCode = vendorCodeExtractor.apply(error);
-    return getResponseStatusCode(request, sqlState, vendorCode);
+    return getResponseStatusCode(request, error);
   }
 
   @Nullable
   private static String getResponseStatusCode(
-      VertxSqlClientRequest request, @Nullable String sqlState, @Nullable String vendorCode) {
+      VertxSqlClientRequest request, @Nullable Throwable error) {
     return SqlResponseStatusCodeUtil.getResponseStatusCode(
-        request.getDbSystemName(), sqlState, vendorCode);
-  }
-
-  @Nullable
-  private static String getAvailableSqlState(@Nullable Throwable error) {
-    String sqlState = sqlStateExtractor.apply(error);
-    if (sqlState == null || sqlState.isEmpty()) {
-      sqlState = mysqlSqlStateExtractor.apply(error);
-    }
-    if (sqlState == null || sqlState.isEmpty()) {
-      sqlState = db2SqlStateExtractor.apply(error);
-    }
-    return sqlState == null || sqlState.isEmpty() ? null : sqlState;
+        request.getDbSystemName(), sqlStateExtractor.apply(error), vendorCodeExtractor.apply(error));
   }
 
   @Override
@@ -112,14 +92,27 @@ class VertxSqlClientAttributesGetter
   }
 
   private static Function<Throwable, String> createSqlStateExtractor() {
-    Function<Throwable, String> extractor =
+    Function<Throwable, String> databaseExceptionExtractor =
         sqlStateExtractor("io.vertx.sqlclient.DatabaseException", "getSqlState");
     // older versions only have this method
-    Function<Throwable, String> fallback =
+    Function<Throwable, String> pgExceptionExtractor =
         sqlStateExtractor("io.vertx.pgclient.PgException", "getCode");
+    Function<Throwable, String> mysqlExceptionExtractor =
+        sqlStateExtractor("io.vertx.mysqlclient.MySQLException", "getSqlState");
+    Function<Throwable, String> db2ExceptionExtractor =
+        sqlStateExtractor("io.vertx.db2client.DB2Exception", "getSqlState");
     return error -> {
-      String status = extractor.apply(error);
-      return status != null ? status : fallback.apply(error);
+      String sqlState = databaseExceptionExtractor.apply(error);
+      if (sqlState == null) {
+        sqlState = pgExceptionExtractor.apply(error);
+      }
+      if (sqlState == null || sqlState.isEmpty()) {
+        sqlState = mysqlExceptionExtractor.apply(error);
+      }
+      if (sqlState == null || sqlState.isEmpty()) {
+        sqlState = db2ExceptionExtractor.apply(error);
+      }
+      return sqlState == null || sqlState.isEmpty() ? null : sqlState;
     };
   }
 
@@ -153,17 +146,34 @@ class VertxSqlClientAttributesGetter
 
   private static Function<Throwable, String> nonZeroErrorCodeExtractor(
       String className, String methodName) {
+    Function<Throwable, Object> extractor = exceptionValueExtractor(className, methodName);
+    return error -> {
+      Object errorCode = extractor.apply(error);
+      return errorCode instanceof Number && ((Number) errorCode).intValue() != 0
+          ? String.valueOf(errorCode)
+          : null;
+    };
+  }
+
+  private static Function<Throwable, String> sqlStateExtractor(String className, String methodName) {
+    Function<Throwable, Object> extractor = exceptionValueExtractor(className, methodName);
+    return error -> {
+      Object sqlState = extractor.apply(error);
+      return sqlState == null ? null : String.valueOf(sqlState);
+    };
+  }
+
+  private static Function<Throwable, Object> exceptionValueExtractor(
+      String className, String methodName) {
     try {
+      // loaded via reflection, because this class is not available in all versions that we support
       Class<?> exClass = Class.forName(className);
       Method method = exClass.getDeclaredMethod(methodName);
 
       return error -> {
         if (exClass.isInstance(error)) {
           try {
-            Object errorCode = method.invoke(error);
-            if (errorCode instanceof Number && ((Number) errorCode).intValue() != 0) {
-              return String.valueOf(errorCode);
-            }
+            return method.invoke(error);
           } catch (IllegalAccessException | InvocationTargetException ignored) {
             return null;
           }
@@ -172,29 +182,6 @@ class VertxSqlClientAttributesGetter
       };
     } catch (ClassNotFoundException | NoSuchMethodException ignored) {
       return error -> null;
-    }
-  }
-
-  private static Function<Throwable, String> sqlStateExtractor(
-      String className, String methodName) {
-    try {
-      // loaded via reflection, because this class is not available in all versions that we support
-      Class<?> exClass = Class.forName(className);
-      Method method = exClass.getDeclaredMethod(methodName);
-
-      return (error) -> {
-        if (exClass.isInstance(error)) {
-          try {
-            Object status = method.invoke(error); // can be String or int
-            return status == null ? null : String.valueOf(status);
-          } catch (IllegalAccessException | InvocationTargetException ignored) {
-            return null;
-          }
-        }
-        return null;
-      };
-    } catch (ClassNotFoundException | NoSuchMethodException ignored) {
-      return (error) -> null;
     }
   }
 }
