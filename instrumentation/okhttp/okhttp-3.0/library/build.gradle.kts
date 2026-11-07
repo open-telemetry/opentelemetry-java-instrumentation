@@ -17,17 +17,15 @@ dependencies {
   testImplementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("http2Test") {
-      dependencies {
-        implementation(project())
-        implementation("com.squareup.okhttp3:okhttp:${baseVersion("3.11.0").orLatest()}")
-        if (otelProps.testLatestDeps) {
-          compileOnly("com.google.android:annotations:4.1.1.4")
-        }
-        implementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
+testing.suites {
+  register<JvmTestSuite>("http2Test") {
+    dependencies {
+      implementation(project())
+      implementation("com.squareup.okhttp3:okhttp:${baseVersion("3.11.0").orLatest()}")
+      if (otelProps.testLatestDeps) {
+        compileOnly("com.google.android:annotations:4.1.1.4")
       }
+      implementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
     }
   }
 }

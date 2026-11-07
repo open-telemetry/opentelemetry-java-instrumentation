@@ -13,23 +13,19 @@ dependencies {
   latestDepTestLibrary("com.graphql-java:graphql-java:19.+") // see graphql-java-20.0 module
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("ExceptionLogs") {
-          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-          systemProperty(
-            "metadataConfig",
-            "otel.instrumentation.graphql.operation-name-in-span-name.enabled=true,otel.semconv.exception.signal.preview=logs",
-          )
-          filter {
-            includeTestsMatching("*.GraphqlTest.parseError")
-            includeTestsMatching("*.GraphqlTest.validationError")
-            includeTestsMatching("*.GraphqlTest.dataFetcherException")
-            includeTestsMatching("*.GraphqlTest.dataFetcherError")
-          }
-        }
+testing.suites {
+  executions("test") {
+    register("ExceptionLogs") {
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+      systemProperty(
+        "metadataConfig",
+        "otel.instrumentation.graphql.operation-name-in-span-name.enabled=true,otel.semconv.exception.signal.preview=logs",
+      )
+      filter {
+        includeTestsMatching("*.GraphqlTest.parseError")
+        includeTestsMatching("*.GraphqlTest.validationError")
+        includeTestsMatching("*.GraphqlTest.dataFetcherException")
+        includeTestsMatching("*.GraphqlTest.dataFetcherError")
       }
     }
   }

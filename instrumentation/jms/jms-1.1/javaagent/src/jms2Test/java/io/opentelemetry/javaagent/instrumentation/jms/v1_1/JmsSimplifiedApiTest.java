@@ -5,8 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -23,8 +33,11 @@ import javax.jms.JMSConsumer;
 import javax.jms.JMSContext;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageListener;
 import javax.jms.Session;
 import javax.jms.TextMessage;
+import javax.jms.Topic;
+import org.assertj.core.api.AbstractAssert;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientSession;
 import org.hornetq.api.core.client.ClientSessionFactory;
@@ -55,6 +68,9 @@ import org.junit.jupiter.params.provider.MethodSource;
  * <p>The point of these tests is the span *count*. HornetQ implements the simplified API on top of
  * the classic one, so without a shared call depth between the two instrumentations every send and
  * receive would produce two spans.
+ *
+ * <p>The same delegation is how subscription names reach the simplified API: HornetQ creates a
+ * durable or shared {@code JMSConsumer} through the classic {@code Session} methods.
  */
 class JmsSimplifiedApiTest {
 
@@ -162,6 +178,112 @@ class JmsSimplifiedApiTest {
     testing.waitForTraces(0);
   }
 
+  @ParameterizedTest
+  @MethodSource("subscriptionConsumerArguments")
+  void receiveCapturesSubscriptionName(
+      String subscriptionName, JmsContextConsumerFactory consumerFactory) throws JMSException {
+    Topic topic = session.createTopic("someTopic");
+    TextMessage sentMessage = session.createTextMessage("hello there");
+
+    JMSContext context = connectionFactory.createContext();
+    cleanup.deferCleanup(context);
+    // durable subscriptions are scoped to a client id
+    context.setClientID(subscriptionName + "-client");
+    JMSConsumer consumer = consumerFactory.create(context, topic, subscriptionName);
+    cleanup.deferCleanup(consumer);
+
+    testing.runWithSpan("producer parent", () -> context.createProducer().send(topic, sentMessage));
+
+    Message received = testing.runWithSpan("consumer parent", () -> consumer.receive(10_000));
+    assertThat(received).isNotNull();
+    String messageId = received.getJMSMessageID();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer parent").hasNoParent(),
+                span ->
+                    span.hasName("send someTopic")
+                        .hasKind(PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "someTopic"),
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
+                            satisfies(MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("consumer parent").hasNoParent(),
+                span ->
+                    span.hasName("receive someTopic")
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "someTopic"),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, subscriptionName))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("subscriptionConsumerArguments")
+  void listenerCapturesSubscriptionName(
+      String subscriptionName, JmsContextConsumerFactory consumerFactory) throws JMSException {
+    Topic topic = session.createTopic("someTopic");
+    TextMessage message = session.createTextMessage("hello there");
+    message.setJMSDestination(topic);
+
+    JMSContext context = connectionFactory.createContext();
+    cleanup.deferCleanup(context);
+    context.setClientID(subscriptionName + "-listener-client");
+    JMSConsumer consumer = consumerFactory.create(context, topic, subscriptionName + "-listener");
+    cleanup.deferCleanup(consumer);
+    consumer.setMessageListener(ignored -> {});
+
+    // HornetQ wraps the listener and registers the wrapper with its classic MessageConsumer;
+    // calling the wrapper directly is what the provider does on delivery
+    MessageListener providerListener = consumer.getMessageListener();
+    providerListener.onMessage(message);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("process someTopic")
+                        .hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "someTopic"),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                            satisfies(MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull),
+                            equalTo(
+                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
+                                subscriptionName + "-listener"))));
+  }
+
+  // durable subscriptions outlive the consumer that created them, so each case gets its own name
+  private static Stream<Arguments> subscriptionConsumerArguments() {
+    return Stream.of(
+        argumentSet(
+            "durable",
+            "simplified-durable-subscription",
+            (JmsContextConsumerFactory) JMSContext::createDurableConsumer),
+        argumentSet(
+            "shared",
+            "simplified-shared-subscription",
+            (JmsContextConsumerFactory) JMSContext::createSharedConsumer),
+        argumentSet(
+            "shared durable",
+            "simplified-shared-durable-subscription",
+            (JmsContextConsumerFactory) JMSContext::createSharedDurableConsumer));
+  }
+
   // each case gets its own queue so the runs can't see each other's messages
   private static Stream<Arguments> consumerReceiveArguments() {
     JmsConsumerReceiver receiveWithTimeout = consumer -> consumer.receive(10_000);
@@ -176,5 +298,11 @@ class JmsSimplifiedApiTest {
   interface JmsConsumerReceiver {
 
     Message receive(JMSConsumer consumer);
+  }
+
+  @FunctionalInterface
+  interface JmsContextConsumerFactory {
+
+    JMSConsumer create(JMSContext context, Topic topic, String subscriptionName);
   }
 }

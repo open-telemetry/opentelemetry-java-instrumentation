@@ -98,11 +98,6 @@ kotlin {
 
 testing.suites {
   register<JvmTestSuite>("version13Test") {
-    executions {
-      configureDefault {
-        jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
-      }
-    }
     dependencies {
       implementation("io.opentelemetry:opentelemetry-extension-kotlin")
       implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -119,14 +114,6 @@ testing.suites {
 
   // @WithSpan on suspend functions needs kotlinx-coroutines 1.4.3 or later
   register<JvmTestSuite>("suspendWithSpanTest") {
-    executions {
-      configureDefault {
-        jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
-      }
-      register("Disabled") {
-        filter { includeTestsMatching("*DefaultEnablementTest") }
-      }
-    }
     dependencies {
       implementation("io.opentelemetry:opentelemetry-extension-kotlin")
       implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -134,6 +121,21 @@ testing.suites {
         "org.jetbrains.kotlinx:kotlinx-coroutines-core:${baseVersion("1.4.3").orLatest()}",
       )
       implementation(project(":instrumentation-annotations"))
+    }
+  }
+
+  executions("version13Test") {
+    configureDefault {
+      jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
+    }
+  }
+
+  executions("suspendWithSpanTest") {
+    configureDefault {
+      jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
+    }
+    register("Disabled") {
+      filter { includeTestsMatching("*DefaultEnablementTest") }
     }
   }
 }

@@ -4,7 +4,6 @@
  */
 
 import io.opentelemetry.instrumentation.gradle.executions
-import org.gradle.api.plugins.jvm.JvmTestSuite
 
 plugins {
   id("com.gradleup.shadow")
@@ -69,8 +68,8 @@ tasks {
   }
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
       jvmArgs("-Dotel.instrumentation.jdbc.experimental.transaction.enabled=true")

@@ -27,14 +27,12 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation:servlet:servlet-common:bootstrap"))
-        implementation("javax.servlet:javax.servlet-api:3.0.1")
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:servlet:servlet-common:bootstrap"))
+      implementation("javax.servlet:javax.servlet-api:3.0.1")
     }
   }
 }

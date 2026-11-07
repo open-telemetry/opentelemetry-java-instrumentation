@@ -75,18 +75,14 @@ For example, suite-owned executions bind the variant to its source suite and wir
 ```kotlin
 import io.opentelemetry.instrumentation.gradle.executions
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("ExperimentalAttributes") {
-          systemProperty("test.captureExperimentalSpanAttributes", "true")
-          systemProperty(
-            "metadataConfig",
-            "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
-          )
-        }
-      }
+testing.suites {
+  executions("test") {
+    register("ExperimentalAttributes") {
+      systemProperty("test.captureExperimentalSpanAttributes", "true")
+      systemProperty(
+        "metadataConfig",
+        "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
+      )
     }
   }
 }

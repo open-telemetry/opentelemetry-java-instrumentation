@@ -24,28 +24,26 @@ dependencies {
   testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
-        implementation(project(":instrumentation-api-incubator"))
-        implementation("redis.clients:jedis:4.0.0")
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
+      implementation(project(":instrumentation-api-incubator"))
+      implementation("redis.clients:jedis:4.0.0")
+    }
+  }
+
+  register<JvmTestSuite>("jedis51Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
     }
 
-    register<JvmTestSuite>("jedis51Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
-      }
-
-      dependencies {
-        implementation("redis.clients:jedis:5.1.0")
-        implementation("org.testcontainers:testcontainers")
-      }
+    dependencies {
+      implementation("redis.clients:jedis:5.1.0")
+      implementation("org.testcontainers:testcontainers")
     }
   }
 }

@@ -44,8 +44,8 @@ dependencies {
   latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+") // documented limitation
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       // skip jar scanning using environment variables:
       // http://tomcat.apache.org/tomcat-7.0-doc/config/systemprops.html#JAR_Scanning

@@ -45,13 +45,13 @@ targets:
       target: ':sdk-autoconfigure-support'
     - type: gradle
       path: ./
-      target: ':testing-common'
-    - type: gradle
-      path: ./
       target: ':javaagent-tooling:javaagent-tooling-java9'
     - type: gradle
       path: ./
-      target: ':testing:agent-for-testing'
+      target: ':testing:javaagent-for-testing'
+    - type: gradle
+      path: ./
+      target: ':testing:testing-common'
     - type: gradle
       path: ./
       target: ':instrumentation:activej-http-6.0:javaagent'
@@ -217,6 +217,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:kubernetes-client-7.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:mcp-java-sdk-0.14:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:methods:javaagent'

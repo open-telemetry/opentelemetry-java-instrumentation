@@ -1,5 +1,4 @@
 import io.opentelemetry.instrumentation.gradle.executions
-import org.gradle.api.plugins.jvm.JvmTestSuite
 
 plugins {
   id("otel.library-instrumentation")
@@ -20,8 +19,8 @@ dependencies {
   testAnnotationProcessor("com.google.auto.value:auto-value")
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
     }

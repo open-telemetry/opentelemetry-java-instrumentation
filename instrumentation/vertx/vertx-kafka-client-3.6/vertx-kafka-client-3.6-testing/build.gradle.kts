@@ -29,12 +29,6 @@ testing.suites {
       implementation("io.vertx:vertx-kafka-client:$version")
       implementation("io.vertx:vertx-codegen:$version")
     }
-
-    executions {
-      register("Experimental") {
-        telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
-      }
-    }
   }
 
   executions("test") {

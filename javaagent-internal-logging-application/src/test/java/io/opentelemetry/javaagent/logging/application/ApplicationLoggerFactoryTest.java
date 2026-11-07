@@ -11,15 +11,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import io.opentelemetry.javaagent.bootstrap.logging.ApplicationLoggerBridge;
+import io.opentelemetry.javaagent.tooling.internal.AgentCircularityLock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,8 +63,11 @@ class ApplicationLoggerFactoryTest {
     underTest.install(applicationLoggerBridge);
 
     verify(logStore, times(3)).currentSize();
-    verify(logStore).flush(applicationLoggerBridge);
-    verify(logStore).setApplicationLoggerFactory(applicationLoggerBridge);
+    // the agent must not call into the application logging system while a class file
+    // transformation is in progress, so install() wraps the bridge before handing it to the
+    // log store - see TransformSafeApplicationLoggerFactory
+    verify(logStore).flush(isA(TransformSafeApplicationLoggerFactory.class));
+    verify(logStore).setApplicationLoggerFactory(isA(TransformSafeApplicationLoggerFactory.class));
     verify(logStore).freeMemory();
 
     underTest.install(applicationLoggerBridge);
@@ -83,11 +90,71 @@ class ApplicationLoggerFactoryTest {
     when(applicationLoggerBridge.create("logger")).thenReturn(applicationLogger);
     underTest.install(applicationLoggerBridge);
 
+    // the logger created after install is no longer an in-memory one, it logs through the
+    // application logging system - wrapped, see TransformSafeApplicationLoggerFactory
     InternalLogger afterInstall = underTest.create("logger");
-    assertThat(afterInstall).isSameAs(applicationLogger);
+    assertThat(afterInstall).isNotInstanceOf(ApplicationLogger.class);
+
+    afterInstall.log(INFO, "direct", null);
+    verify(applicationLogger).log(INFO, "direct", null);
 
     beforeInstall.log(INFO, "after", null);
     verify(applicationLogger).log(INFO, "after", null);
     verify(logStore, never()).write(InMemoryLog.create("logger", INFO, "after", null));
+  }
+
+  @Test
+  void shouldNotCallApplicationLoggerWhenInstalledUnderLock() {
+    InMemoryLogStore inMemoryLogStore = new InMemoryLogStore(10);
+    ApplicationLoggerFactory factory = new ApplicationLoggerFactory(inMemoryLogStore);
+    InternalLogger beforeInstall = factory.create("logger");
+    beforeInstall.log(INFO, "buffered", null);
+    assertThat(inMemoryLogStore.currentSize()).isOne();
+
+    assertThat(AgentCircularityLock.INSTANCE.acquire()).isTrue();
+    try {
+      factory.install(applicationLoggerBridge);
+      assertThat(beforeInstall.isLoggable(INFO)).isFalse();
+      beforeInstall.log(INFO, "during transformation", null);
+      verifyNoInteractions(applicationLoggerBridge, applicationLogger);
+    } finally {
+      AgentCircularityLock.INSTANCE.release();
+    }
+
+    assertThat(inMemoryLogStore.currentSize()).isZero();
+    when(applicationLoggerBridge.create("logger")).thenReturn(applicationLogger);
+    beforeInstall.log(INFO, "after", null);
+    factory.create("logger").log(INFO, "direct", null);
+
+    verify(applicationLoggerBridge, times(2)).create("logger");
+    verify(applicationLogger).log(INFO, "after", null);
+    verify(applicationLogger).log(INFO, "direct", null);
+    verifyNoMoreInteractions(applicationLoggerBridge, applicationLogger);
+  }
+
+  @Test
+  void shouldSuppressDuplicateInstallWarningUnderLock() {
+    InternalLogger.Factory anotherBridge = mock(InternalLogger.Factory.class);
+    underTest.install(applicationLoggerBridge);
+
+    assertThat(AgentCircularityLock.INSTANCE.acquire()).isTrue();
+    try {
+      underTest.install(anotherBridge);
+      verifyNoInteractions(applicationLoggerBridge, anotherBridge, applicationLogger);
+    } finally {
+      AgentCircularityLock.INSTANCE.release();
+    }
+
+    when(anotherBridge.create(ApplicationLoggerBridge.class.getName()))
+        .thenReturn(applicationLogger);
+    underTest.install(anotherBridge);
+    verify(anotherBridge).create(ApplicationLoggerBridge.class.getName());
+    verify(applicationLogger).log(eq(WARN), anyString(), isNull());
+
+    when(applicationLoggerBridge.create("logger")).thenReturn(applicationLogger);
+    underTest.create("logger").log(INFO, "first bridge", null);
+    verify(applicationLoggerBridge).create("logger");
+    verify(applicationLogger).log(INFO, "first bridge", null);
+    verifyNoMoreInteractions(applicationLoggerBridge, anotherBridge, applicationLogger);
   }
 }

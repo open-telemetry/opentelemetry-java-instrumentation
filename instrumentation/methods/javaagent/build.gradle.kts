@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -12,24 +14,22 @@ dependencies {
   compileOnly(project(":instrumentation-annotations-support"))
 }
 
-tasks.test {
-  jvmArgs(
-    "-Dotel.instrumentation.methods.include=io.opentelemetry.javaagent.instrumentation.methods.MethodTest\$ConfigTracedCallable[call];io.opentelemetry.javaagent.instrumentation.methods.MethodTest\$ConfigTracedCompletableFuture[getResult];javax.naming.directory.InitialDirContext[search]"
-  )
-}
+testing.suites {
+  register<JvmTestSuite>("declarativeConfigTest") {
+  }
 
-testing {
-  suites {
-    register<JvmTestSuite>("declarativeConfigTest") {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs(
-              "-Dotel.config.file=$projectDir/src/declarativeConfigTest/resources/declarative-config.yaml"
-            )
-          }
-        }
-      }
+  executions("test") {
+    configureDefault {
+      jvmArgs(
+        "-Dotel.instrumentation.methods.include=io.opentelemetry.javaagent.instrumentation.methods.MethodTest\$ConfigTracedCallable[call];io.opentelemetry.javaagent.instrumentation.methods.MethodTest\$ConfigTracedCompletableFuture[getResult];javax.naming.directory.InitialDirContext[search]"
+      )
+    }
+  }
+  executions("declarativeConfigTest") {
+    configureEach {
+      jvmArgs(
+        "-Dotel.config.file=$projectDir/src/declarativeConfigTest/resources/declarative-config.yaml"
+      )
     }
   }
 }
