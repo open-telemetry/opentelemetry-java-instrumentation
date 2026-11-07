@@ -88,85 +88,74 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
     ProducerTemplate template = camelContext.createProducerTemplate();
 
     // run client and server in separate threads to simulate "real" rest client/server call
-    new Thread(
-            () ->
-                template.sendBodyAndHeaders(
-                    "direct:start",
-                    null,
-                    ImmutableMap.of("module", "firstModule", "unitId", "unitOne")))
+    new Thread(() ->
+        template.sendBodyAndHeaders(
+            "direct:start", null, ImmutableMap.of("module", "firstModule", "unitId", "unitOne")))
         .start();
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          int nested = nestedHttpClientSpans();
-          List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-          assertions.add(
-              span ->
-                  span.hasName("start")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(stringKey("camel.uri"), experimental("direct://start")))
-                      .satisfies(hasScopeSchemaUrl(null)));
-          assertions.add(
-              span ->
-                  span.hasName("GET")
-                      .hasKind(SpanKind.CLIENT)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              stringKey("camel.uri"),
-                              experimental("rest://get:api/%7Bmodule%7D/unit/%7BunitId%7D")),
-                          equalTo(HTTP_REQUEST_METHOD, "GET"),
-                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))
-                      .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_41_0)));
-          addNestedHttpClientSpan(
-              assertions,
-              "GET",
-              "http://localhost:" + port + "/api/firstModule/unit/unitOne",
-              "localhost",
-              port,
-              expectedMappedServiceName(),
-              trace.getSpan(1));
-          assertions.add(
-              span ->
-                  span.hasName("GET /api/{module}/unit/{unitId}")
-                      .hasKind(SpanKind.SERVER)
-                      .hasParent(trace.getSpan(1 + nested))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(URL_SCHEME, "http"),
-                          equalTo(URL_PATH, "/api/firstModule/unit/unitOne"),
-                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                          equalTo(HTTP_REQUEST_METHOD, "GET"),
-                          equalTo(HTTP_ROUTE, "/api/{module}/unit/{unitId}"),
-                          equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                          equalTo(SERVER_ADDRESS, "localhost"),
-                          equalTo(SERVER_PORT, Long.valueOf(port)),
-                          equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                          equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                          satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                          satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))));
-          assertions.add(
-              span ->
-                  span.hasName("GET /api/{module}/unit/{unitId}")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(2 + nested))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(HTTP_REQUEST_METHOD, "GET"),
-                          equalTo(
-                              URL_FULL,
-                              "http://localhost:" + port + "/api/firstModule/unit/unitOne"),
-                          experimentalSatisfies(
-                              stringKey("camel.uri"), val -> val.isInstanceOf(String.class)))
-                      .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_41_0)));
-          assertions.add(
-              span ->
-                  span.hasName("moduleUnit")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(3 + nested))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(stringKey("camel.uri"), experimental("direct://moduleUnit")))
-                      .satisfies(hasScopeSchemaUrl(null)));
-          trace.hasSpansSatisfyingExactly(assertions);
-        });
+    testing.waitAndAssertTraces(trace -> {
+      int nested = nestedHttpClientSpans();
+      List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+      assertions.add(span ->
+          span.hasName("start")
+              .hasKind(SpanKind.INTERNAL)
+              .hasAttributesSatisfyingExactly(
+                  equalTo(stringKey("camel.uri"), experimental("direct://start")))
+              .satisfies(hasScopeSchemaUrl(null)));
+      assertions.add(span ->
+          span.hasName("GET")
+              .hasKind(SpanKind.CLIENT)
+              .hasParent(trace.getSpan(0))
+              .hasAttributesSatisfyingExactly(
+                  equalTo(
+                      stringKey("camel.uri"),
+                      experimental("rest://get:api/%7Bmodule%7D/unit/%7BunitId%7D")),
+                  equalTo(HTTP_REQUEST_METHOD, "GET"),
+                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))
+              .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_41_0)));
+      addNestedHttpClientSpan(
+          assertions,
+          "GET",
+          "http://localhost:" + port + "/api/firstModule/unit/unitOne",
+          "localhost",
+          port,
+          expectedMappedServiceName(),
+          trace.getSpan(1));
+      assertions.add(span ->
+          span.hasName("GET /api/{module}/unit/{unitId}")
+              .hasKind(SpanKind.SERVER)
+              .hasParent(trace.getSpan(1 + nested))
+              .hasAttributesSatisfyingExactly(
+                  equalTo(URL_SCHEME, "http"),
+                  equalTo(URL_PATH, "/api/firstModule/unit/unitOne"),
+                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                  equalTo(HTTP_REQUEST_METHOD, "GET"),
+                  equalTo(HTTP_ROUTE, "/api/{module}/unit/{unitId}"),
+                  equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                  equalTo(SERVER_ADDRESS, "localhost"),
+                  equalTo(SERVER_PORT, Long.valueOf(port)),
+                  equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                  equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                  satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                  satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))));
+      assertions.add(span ->
+          span.hasName("GET /api/{module}/unit/{unitId}")
+              .hasKind(SpanKind.INTERNAL)
+              .hasParent(trace.getSpan(2 + nested))
+              .hasAttributesSatisfyingExactly(
+                  equalTo(HTTP_REQUEST_METHOD, "GET"),
+                  equalTo(URL_FULL, "http://localhost:" + port + "/api/firstModule/unit/unitOne"),
+                  experimentalSatisfies(
+                      stringKey("camel.uri"), val -> val.isInstanceOf(String.class)))
+              .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_41_0)));
+      assertions.add(span ->
+          span.hasName("moduleUnit")
+              .hasKind(SpanKind.INTERNAL)
+              .hasParent(trace.getSpan(3 + nested))
+              .hasAttributesSatisfyingExactly(
+                  equalTo(stringKey("camel.uri"), experimental("direct://moduleUnit")))
+              .satisfies(hasScopeSchemaUrl(null)));
+      trace.hasSpansSatisfyingExactly(assertions);
+    });
   }
 }

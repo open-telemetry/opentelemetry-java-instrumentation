@@ -40,11 +40,10 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
                 .body(String.class))
         .isEqualTo("pong");
 
-    testing.waitAndAssertTraces(
-        traceAssert ->
-            traceAssert.hasSpansSatisfyingExactly(
-                span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/ping"),
-                span -> span.hasKind(SpanKind.SERVER).hasAttribute(HTTP_ROUTE, "/ping"),
-                span -> withSpanAssert(span)));
+    testing.waitAndAssertTraces(traceAssert ->
+        traceAssert.hasSpansSatisfyingExactly(
+            span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/ping"),
+            span -> span.hasKind(SpanKind.SERVER).hasAttribute(HTTP_ROUTE, "/ping"),
+            span -> withSpanAssert(span)));
   }
 }

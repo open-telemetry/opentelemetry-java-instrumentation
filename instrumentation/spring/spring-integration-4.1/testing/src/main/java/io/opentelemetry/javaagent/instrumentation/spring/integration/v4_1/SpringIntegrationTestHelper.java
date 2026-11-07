@@ -62,49 +62,38 @@ final class SpringIntegrationTestHelper {
         INSTRUMENTATION_NAME,
         "messaging.process.duration",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasDescription("Duration of processing operation.")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasCount(expectedCount)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(
-                                                    stringKey("messaging.system.name"),
-                                                    "spring_integration"),
-                                                equalTo(
-                                                    MESSAGING_DESTINATION_NAME, destinationName),
-                                                errorType)))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasUnit("s")
+                    .hasDescription("Duration of processing operation.")
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasCount(expectedCount)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(
+                                        stringKey("messaging.system.name"), "spring_integration"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                                    errorType)))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.client.consumed.messages",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("{message}")
-                        .hasDescription(
-                            "Number of messages that were delivered to the application.")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(expectedCount)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(
-                                                    stringKey("messaging.system.name"),
-                                                    "spring_integration"),
-                                                equalTo(
-                                                    MESSAGING_DESTINATION_NAME, destinationName),
-                                                errorType)))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasUnit("{message}")
+                    .hasDescription("Number of messages that were delivered to the application.")
+                    .hasLongSumSatisfying(sum ->
+                        sum.hasPointsSatisfying(point ->
+                            point
+                                .hasValue(expectedCount)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(
+                                        stringKey("messaging.system.name"), "spring_integration"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                                    errorType)))));
   }
 
   static void assertSendMetrics(InstrumentationExtension testing, String destinationName) {
@@ -112,50 +101,38 @@ final class SpringIntegrationTestHelper {
         INSTRUMENTATION_NAME,
         "messaging.client.operation.duration",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasDescription(
-                            "Duration of messaging operation initiated by a producer or consumer client.")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasCount(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                                equalTo(
-                                                    stringKey("messaging.system.name"),
-                                                    "spring_integration"),
-                                                equalTo(
-                                                    MESSAGING_DESTINATION_NAME, destinationName),
-                                                equalTo(MESSAGING_OPERATION_TYPE, "send"))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasUnit("s")
+                    .hasDescription(
+                        "Duration of messaging operation initiated by a producer or consumer client.")
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasCount(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                    equalTo(
+                                        stringKey("messaging.system.name"), "spring_integration"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                                    equalTo(MESSAGING_OPERATION_TYPE, "send"))))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.client.sent.messages",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("{message}")
-                        .hasDescription(
-                            "Number of messages producer attempted to send to the broker.")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                                equalTo(
-                                                    stringKey("messaging.system.name"),
-                                                    "spring_integration"),
-                                                equalTo(
-                                                    MESSAGING_DESTINATION_NAME,
-                                                    destinationName))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasUnit("{message}")
+                    .hasDescription("Number of messages producer attempted to send to the broker.")
+                    .hasLongSumSatisfying(sum ->
+                        sum.hasPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                    equalTo(
+                                        stringKey("messaging.system.name"), "spring_integration"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, destinationName))))));
   }
 
   static void assertNoMetrics(InstrumentationExtension testing) {

@@ -253,13 +253,12 @@ class AotStartupBenchmark {
         .withEnv("OTEL_TRACES_EXPORTER", "none")
         .withEnv("OTEL_METRICS_EXPORTER", "none")
         .withEnv("OTEL_LOGS_EXPORTER", "none")
-        .withCreateContainerCmdModifier(
-            cmd ->
-                cmd.getHostConfig()
-                    .withBinds(new Bind(volume, new Volume("/benchmark")))
-                    .withMemory(MEMORY_BYTES)
-                    .withMemorySwap(MEMORY_BYTES)
-                    .withNanoCPUs(NANO_CPUS));
+        .withCreateContainerCmdModifier(cmd ->
+            cmd.getHostConfig()
+                .withBinds(new Bind(volume, new Volume("/benchmark")))
+                .withMemory(MEMORY_BYTES)
+                .withMemorySwap(MEMORY_BYTES)
+                .withNanoCPUs(NANO_CPUS));
   }
 
   static List<String> arguments(Variant variant, boolean preflight) {

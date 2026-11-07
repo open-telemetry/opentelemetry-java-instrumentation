@@ -165,7 +165,7 @@ public class AbstractRestletServerTest extends AbstractHttpServerTest<Component>
                       (Form)
                           response
                               .getAttributes()
-                              .computeIfAbsent("org.restlet.http.headers", (key) -> new Form());
+                              .computeIfAbsent("org.restlet.http.headers", key -> new Form());
                   responseHeaders.add(
                       "X-Test-Response", requestHeaders.getValues("X-Test-Request"));
 
@@ -207,19 +207,18 @@ public class AbstractRestletServerTest extends AbstractHttpServerTest<Component>
     options.setTestPathParam(true);
     options.setTestErrorBody(false);
     options.setTestHttpPipelining(false);
-    options.setExpectedHttpRoute(
-        (endpoint, method) -> {
-          if (HttpConstants._OTHER.equals(method)) {
-            return getContextPath() + endpoint.getPath();
-          }
+    options.setExpectedHttpRoute((endpoint, method) -> {
+      if (HttpConstants._OTHER.equals(method)) {
+        return getContextPath() + endpoint.getPath();
+      }
 
-          if (PATH_PARAM.equals(endpoint)) {
-            return getContextPath() + "/path/{id}/param";
-          } else if (NOT_FOUND.equals(endpoint)) {
-            return getContextPath() + notFoundRoute();
-          }
+      if (PATH_PARAM.equals(endpoint)) {
+        return getContextPath() + "/path/{id}/param";
+      } else if (NOT_FOUND.equals(endpoint)) {
+        return getContextPath() + notFoundRoute();
+      }
 
-          return expectedHttpRoute(endpoint, method);
-        });
+      return expectedHttpRoute(endpoint, method);
+    });
   }
 }

@@ -224,12 +224,9 @@ public abstract class AbstractMongoConfiguredTargetTest {
     }
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("listDatabases db1.example:27018,db2.example:27018")
-                            .hasKind(CLIENT)));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("listDatabases db1.example:27018,db2.example:27018").hasKind(CLIENT)));
   }
 
   protected static void runCommand(ConfiguredClient client) {
@@ -253,27 +250,23 @@ public abstract class AbstractMongoConfiguredTargetTest {
   // TODO DB_CONNECTION_STRING deprecation
   protected void assertFindSpan(String configuredAddress, Long configuredPort) {
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("find " + COLLECTION_NAME)
-                            .hasKind(CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(SERVER_ADDRESS, configuredAddress),
-                                equalTo(SERVER_PORT, configuredPort),
-                                satisfies(
-                                    DB_QUERY_TEXT,
-                                    val ->
-                                        val.satisfies(
-                                            v ->
-                                                assertThat(v.replaceAll(" ", ""))
-                                                    .isEqualTo(
-                                                        "{\"find\":\"" + COLLECTION_NAME + "\"}"))),
-                                equalTo(DB_SYSTEM_NAME, MONGODB),
-                                equalTo(DB_NAMESPACE, DATABASE_NAME),
-                                equalTo(DB_OPERATION_NAME, "find"),
-                                equalTo(DB_COLLECTION_NAME, COLLECTION_NAME))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("find " + COLLECTION_NAME)
+                    .hasKind(CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(SERVER_ADDRESS, configuredAddress),
+                        equalTo(SERVER_PORT, configuredPort),
+                        satisfies(
+                            DB_QUERY_TEXT,
+                            val ->
+                                val.satisfies(v ->
+                                    assertThat(v.replaceAll(" ", ""))
+                                        .isEqualTo("{\"find\":\"" + COLLECTION_NAME + "\"}"))),
+                        equalTo(DB_SYSTEM_NAME, MONGODB),
+                        equalTo(DB_NAMESPACE, DATABASE_NAME),
+                        equalTo(DB_OPERATION_NAME, "find"),
+                        equalTo(DB_COLLECTION_NAME, COLLECTION_NAME))));
   }
 
   private static CommandStartedEvent commandStartedEvent(

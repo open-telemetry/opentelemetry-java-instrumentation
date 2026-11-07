@@ -93,9 +93,8 @@ class HooksTest {
         };
 
     Disposable disposable =
-        Mono.defer(
-                () ->
-                    Mono.fromCallable(callable).publishOn(Schedulers.single()).flatMap(Mono::just))
+        Mono.defer(() ->
+                Mono.fromCallable(callable).publishOn(Schedulers.single()).flatMap(Mono::just))
             .subscribeOn(Schedulers.single())
             .subscribe();
 
@@ -120,11 +119,10 @@ class HooksTest {
     AtomicBoolean currentSpanValid = new AtomicBoolean(false);
     try (Scope ignored = Context.root().with(PARENT_SPAN).makeCurrent()) {
       Schedulers.single()
-          .schedule(
-              () -> {
-                currentSpanValid.set(Span.current().getSpanContext().isValid());
-                latch.countDown();
-              });
+          .schedule(() -> {
+            currentSpanValid.set(Span.current().getSpanContext().isValid());
+            latch.countDown();
+          });
     }
     assertThat(latch.await(5, SECONDS)).isTrue();
     return currentSpanValid.get();

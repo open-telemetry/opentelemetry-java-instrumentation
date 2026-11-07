@@ -62,7 +62,7 @@ public class GreetingAction extends ActionSupport {
             ServerEndpoint.INDEXED_CHILD,
             () -> {
               ServerEndpoint.INDEXED_CHILD.collectSpanAttributes(
-                  (name) -> ServletActionContext.getRequest().getParameter(name));
+                  name -> ServletActionContext.getRequest().getParameter(name));
               return ServerEndpoint.INDEXED_CHILD.getBody();
             });
     return "greeting";

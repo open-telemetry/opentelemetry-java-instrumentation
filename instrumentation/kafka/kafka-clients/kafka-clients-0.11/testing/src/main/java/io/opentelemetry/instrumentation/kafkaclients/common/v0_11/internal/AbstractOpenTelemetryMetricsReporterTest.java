@@ -366,39 +366,35 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     assertThat(
             metrics.stream()
                 .flatMap(m -> m.getData().getPoints().stream())
-                .anyMatch(
-                    p -> {
-                      String id = p.getAttributes().get(stringKey("kafka.cluster.id"));
-                      return id != null && !id.isEmpty();
-                    }))
+                .anyMatch(p -> {
+                  String id = p.getAttributes().get(stringKey("kafka.cluster.id"));
+                  return id != null && !id.isEmpty();
+                }))
         .isTrue();
 
     // All data points for a given metric must carry the same set of attribute keys, with the
     // exception of kafka.cluster.id which may be absent on points emitted before
     // onUpdate() fires (lazy metadata fetch on first broker contact).
     assertThat(metrics.stream().filter(metric -> metric.getName().startsWith("kafka.")))
-        .allSatisfy(
-            metricData -> {
-              Set<String> expectedKeys =
-                  metricData.getData().getPoints().stream()
-                      .findFirst()
-                      .map(
-                          point ->
-                              point.getAttributes().asMap().keySet().stream()
-                                  .map(AttributeKey::getKey)
-                                  .filter(k -> !k.equals("kafka.cluster.id"))
-                                  .collect(toSet()))
-                      .orElse(emptySet());
-              assertThat(metricData.getData().getPoints())
-                  .extracting(PointData::getAttributes)
-                  .extracting(
-                      attributes ->
-                          attributes.asMap().keySet().stream()
-                              .map(AttributeKey::getKey)
-                              .filter(k -> !k.equals("kafka.cluster.id"))
-                              .collect(toSet()))
-                  .allSatisfy(attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
-            });
+        .allSatisfy(metricData -> {
+          Set<String> expectedKeys =
+              metricData.getData().getPoints().stream()
+                  .findFirst()
+                  .map(point ->
+                      point.getAttributes().asMap().keySet().stream()
+                          .map(AttributeKey::getKey)
+                          .filter(k -> !k.equals("kafka.cluster.id"))
+                          .collect(toSet()))
+                  .orElse(emptySet());
+          assertThat(metricData.getData().getPoints())
+              .extracting(PointData::getAttributes)
+              .extracting(attributes ->
+                  attributes.asMap().keySet().stream()
+                      .map(AttributeKey::getKey)
+                      .filter(k -> !k.equals("kafka.cluster.id"))
+                      .collect(toSet()))
+              .allSatisfy(attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
+        });
 
     // Print mapping table
     printMappingTable();
@@ -455,10 +451,9 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
         // Find first (there may be multiple) registered instrument that matches the kafkaMetricId
         Optional<InstrumentDescriptor> descriptor =
             registeredObservables.stream()
-                .filter(
-                    registeredObservable ->
-                        KafkaMetricId.create(registeredObservable.getKafkaMetricName())
-                            .equals(kafkaMetricId))
+                .filter(registeredObservable ->
+                    KafkaMetricId.create(registeredObservable.getKafkaMetricName())
+                        .equals(kafkaMetricId))
                 .findFirst()
                 .map(RegisteredObservable::getInstrumentDescriptor);
         if (!descriptor.isPresent()) {

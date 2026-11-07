@@ -138,37 +138,34 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
 
     template.requestBody("direct:input", (Object) null);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), experimental("direct://input"))),
-                span ->
-                    span.hasName("select test.users")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, cassandraPort),
-                            satisfies(NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
-                            equalTo(NETWORK_PEER_PORT, cassandraPort),
-                            equalTo(DB_SYSTEM_NAME, CASSANDRA),
-                            equalTo(DB_NAMESPACE, "test"),
-                            equalTo(DB_OPERATION_NAME, "select"),
-                            equalTo(DB_COLLECTION_NAME, "test.users"),
-                            equalTo(
-                                DB_QUERY_TEXT,
-                                "select * from test.users where id=1 ALLOW FILTERING"),
-                            equalTo(DB_QUERY_SUMMARY, "select test.users"),
-                            equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
-                            equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
-                            satisfies(
-                                CASSANDRA_COORDINATOR_ID, val -> val.isInstanceOf(String.class)),
-                            equalTo(CASSANDRA_PAGE_SIZE, 5000),
-                            equalTo(CASSANDRA_QUERY_IDEMPOTENT, false),
-                            equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("camel.uri"), experimental("direct://input"))),
+            span ->
+                span.hasName("select test.users")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, cassandraPort),
+                        satisfies(NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
+                        equalTo(NETWORK_PEER_PORT, cassandraPort),
+                        equalTo(DB_SYSTEM_NAME, CASSANDRA),
+                        equalTo(DB_NAMESPACE, "test"),
+                        equalTo(DB_OPERATION_NAME, "select"),
+                        equalTo(DB_COLLECTION_NAME, "test.users"),
+                        equalTo(
+                            DB_QUERY_TEXT, "select * from test.users where id=1 ALLOW FILTERING"),
+                        equalTo(DB_QUERY_SUMMARY, "select test.users"),
+                        equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
+                        equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
+                        satisfies(CASSANDRA_COORDINATOR_ID, val -> val.isInstanceOf(String.class)),
+                        equalTo(CASSANDRA_PAGE_SIZE, 5000),
+                        equalTo(CASSANDRA_QUERY_IDEMPOTENT, false),
+                        equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0))));
   }
 }

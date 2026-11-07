@@ -39,20 +39,19 @@ class JettyServlet5AsyncTest extends JettyServlet5Test {
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("GET " + getContextPath() + "/success")
-                            .hasKind(SpanKind.SERVER)
-                            .hasNoParent(),
-                    span ->
-                        span.hasName("startAsync")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName("controller")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET " + getContextPath() + "/success")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent(),
+                span ->
+                    span.hasName("startAsync")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("controller")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 }

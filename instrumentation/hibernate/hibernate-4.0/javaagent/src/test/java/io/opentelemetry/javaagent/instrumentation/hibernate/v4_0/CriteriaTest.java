@@ -50,40 +50,36 @@ class CriteriaTest extends AbstractHibernateTest {
           session.close();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("Criteria." + methodName + " " + Value.class.getName())
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                HIBERNATE_SESSION_ID,
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("select Value")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "h2database"),
-                            equalTo(DB_NAMESPACE, "db1"),
-                            satisfies(DB_QUERY_TEXT, val -> val.startsWith("select")),
-                            equalTo(DB_QUERY_SUMMARY, "select Value")),
-                span ->
-                    span.hasName("Transaction.commit")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                HIBERNATE_SESSION_ID,
-                                experimental(
-                                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("Criteria." + methodName + " " + Value.class.getName())
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            HIBERNATE_SESSION_ID,
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("select Value")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, "h2database"),
+                        equalTo(DB_NAMESPACE, "db1"),
+                        satisfies(DB_QUERY_TEXT, val -> val.startsWith("select")),
+                        equalTo(DB_QUERY_SUMMARY, "select Value")),
+            span ->
+                span.hasName("Transaction.commit")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            HIBERNATE_SESSION_ID,
+                            experimental(
+                                trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))))));
   }
 
   private static Stream<Arguments> provideArguments() {

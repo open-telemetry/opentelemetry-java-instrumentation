@@ -63,14 +63,12 @@ class ContextPropagationOperatorInstrumentationTest {
           Span.fromContext(otelContext).setAttribute("foo", "bar");
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(equalTo(stringKey("foo"), "bar"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("parent")
+                .hasKind(SpanKind.INTERNAL)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("foo"), "bar"))));
   }
 
   @Test
@@ -88,107 +86,94 @@ class ContextPropagationOperatorInstrumentationTest {
           Span.fromContext(otelContext).setAttribute("foo", "bar");
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(equalTo(stringKey("foo"), "bar"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("parent")
+                .hasKind(SpanKind.INTERNAL)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("foo"), "bar"))));
   }
 
   @Test
   void runMonoWithContextMakesItCurrent() {
     Mono<String> result =
-        Mono.defer(
-            () -> {
-              Span span =
-                  testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
-              Mono<String> outer =
-                  Mono.defer(
-                      () -> new ExtensionAnnotationsTracedWithSpan().mono(Mono.just("Value")));
-              return ContextPropagationOperator.runWithContext(outer, Context.current().with(span))
-                  .doFinally(unused -> span.end());
-            });
+        Mono.defer(() -> {
+          Span span =
+              testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
+          Mono<String> outer =
+              Mono.defer(() -> new ExtensionAnnotationsTracedWithSpan().mono(Mono.just("Value")));
+          return ContextPropagationOperator.runWithContext(outer, Context.current().with(span))
+              .doFinally(unused -> span.end());
+        });
 
     StepVerifier.create(result).expectNext("Value").verifyComplete();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("TracedWithSpan.mono")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("TracedWithSpan.mono")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))));
   }
 
   @Test
   void runFluxWithContextMakesItCurrent() {
     Flux<String> result =
-        Flux.defer(
-            () -> {
-              Span span =
-                  testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
-              Flux<String> outer =
-                  Flux.defer(
-                      () -> new ExtensionAnnotationsTracedWithSpan().flux(Flux.just("Value")));
-              return ContextPropagationOperator.runWithContext(outer, Context.current().with(span))
-                  .doFinally(unused -> span.end());
-            });
+        Flux.defer(() -> {
+          Span span =
+              testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
+          Flux<String> outer =
+              Flux.defer(() -> new ExtensionAnnotationsTracedWithSpan().flux(Flux.just("Value")));
+          return ContextPropagationOperator.runWithContext(outer, Context.current().with(span))
+              .doFinally(unused -> span.end());
+        });
 
     StepVerifier.create(result).expectNext("Value").verifyComplete();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("TracedWithSpan.flux")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("TracedWithSpan.flux")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))));
   }
 
   @Test
   void storeContextForcesItToBecomeCurrent() {
     Mono<String> result =
-        Mono.defer(
-            () -> {
-              Span span =
-                  testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
+        Mono.defer(() -> {
+          Span span =
+              testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
 
-              Mono<String> interim =
-                  Mono.delay(Duration.ofMillis(1))
-                      .flatMap(
-                          unused -> {
-                            // usual trick to force this to run under new TracingSubscriber with
-                            // context
-                            // written in the next call
-                            return new ExtensionAnnotationsTracedWithSpan()
-                                .mono(Mono.just("Value"));
-                          });
-              try {
-                interim =
-                    (Mono<String>)
-                        MONO_CONTEXT_WRITE_METHOD.invoke(
-                            interim, new StoreOpenTelemetryContext(span));
-              } catch (Throwable t) {
-                throw new RuntimeException(t);
-              }
-              return interim.doFinally(unused -> span.end());
-            });
+          Mono<String> interim =
+              Mono.delay(Duration.ofMillis(1))
+                  .flatMap(unused -> {
+                    // usual trick to force this to run under new TracingSubscriber with
+                    // context
+                    // written in the next call
+                    return new ExtensionAnnotationsTracedWithSpan().mono(Mono.just("Value"));
+                  });
+          try {
+            interim =
+                (Mono<String>)
+                    MONO_CONTEXT_WRITE_METHOD.invoke(interim, new StoreOpenTelemetryContext(span));
+          } catch (Throwable t) {
+            throw new RuntimeException(t);
+          }
+          return interim.doFinally(unused -> span.end());
+        });
 
     StepVerifier.create(result).expectNext("Value").verifyComplete();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("TracedWithSpan.mono")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("TracedWithSpan.mono")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))));
   }
 
   private static class StoreOpenTelemetryContext

@@ -165,27 +165,23 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
   protected final void waitAndAssertRelevantTraces(Consumer<TraceAssert>... assertions) {
     await()
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(
-            () -> {
-              List<List<SpanData>> traces = groupTraces(testing.spans());
-              // Receive spans are separate traces, and Kafka Connect writes status records
-              // on its own schedule. Neither is relevant to the sink-task assertions.
-              traces.removeIf(
-                  trace ->
-                      trace.size() == 1
-                          && trace.get(0).getKind() == SpanKind.CLIENT
-                          && (trace.get(0).getName().equals("poll")
-                              || trace.get(0).getName().startsWith("poll ")));
-              traces.removeIf(
-                  trace ->
-                      trace.stream()
-                          .anyMatch(span -> span.getName().contains("kafka-connect-status")));
-              // Kafka Connect polls its own REST API on a schedule that is not deterministic
-              // relative to the test, so these traces are not relevant to the assertions here.
-              traces.removeIf(
-                  trace -> trace.size() == 1 && trace.get(0).getName().equals("GET /connectors"));
-              TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(asList(assertions));
-            });
+        .untilAsserted(() -> {
+          List<List<SpanData>> traces = groupTraces(testing.spans());
+          // Receive spans are separate traces, and Kafka Connect writes status records
+          // on its own schedule. Neither is relevant to the sink-task assertions.
+          traces.removeIf(trace ->
+              trace.size() == 1
+                  && trace.get(0).getKind() == SpanKind.CLIENT
+                  && (trace.get(0).getName().equals("poll")
+                      || trace.get(0).getName().startsWith("poll ")));
+          traces.removeIf(trace ->
+              trace.stream().anyMatch(span -> span.getName().contains("kafka-connect-status")));
+          // Kafka Connect polls its own REST API on a schedule that is not deterministic
+          // relative to the test, so these traces are not relevant to the assertions here.
+          traces.removeIf(
+              trace -> trace.size() == 1 && trace.get(0).getName().equals("GET /connectors"));
+          TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(asList(assertions));
+        });
   }
 
   protected final void waitAndAssertMultiTopicTraces(
@@ -193,83 +189,82 @@ abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvide
       Consumer<List<List<SpanData>>> processTraceAssertions) {
     await()
         .atMost(Duration.ofSeconds(60))
-        .untilAsserted(
-            () -> {
-              List<List<SpanData>> traces = groupTraces(testing.spans());
-              List<List<SpanData>> producerTraces = new ArrayList<>();
-              for (List<SpanData> trace : traces) {
-                if (trace.get(0).getName().equals("parent")) {
-                  producerTraces.add(trace);
-                }
-              }
-              assertThat(producerTraces).hasSize(1);
+        .untilAsserted(() -> {
+          List<List<SpanData>> traces = groupTraces(testing.spans());
+          List<List<SpanData>> producerTraces = new ArrayList<>();
+          for (List<SpanData> trace : traces) {
+            if (trace.get(0).getName().equals("parent")) {
+              producerTraces.add(trace);
+            }
+          }
+          assertThat(producerTraces).hasSize(1);
 
-              List<SpanData> producerTrace = producerTraces.get(0);
-              assertThat(producerTrace).hasSize(expectedKeysByDestination.size() + 1);
-              Map<String, Attributes> expectedRecordAttributesBySpan = new HashMap<>();
-              for (Map.Entry<String, String> expected : expectedKeysByDestination.entrySet()) {
-                List<SpanData> matchingProducers = new ArrayList<>();
-                for (SpanData span : producerTrace) {
-                  if (span.getKind() == SpanKind.PRODUCER
-                      && expected
-                          .getKey()
-                          .equals(span.getAttributes().get(MESSAGING_DESTINATION_NAME))) {
-                    matchingProducers.add(span);
-                  }
-                }
-                assertThat(matchingProducers).hasSize(1);
-                SpanData producer = matchingProducers.get(0);
-                assertThat(producer.getAttributes().get(stringKey("kafka.message.key")))
-                    .isEqualTo(expected.getValue());
-                expectedRecordAttributesBySpan.put(
-                    spanId(producer.getSpanContext()),
-                    recordAttributes(expected.getKey(), expected.getValue()));
+          List<SpanData> producerTrace = producerTraces.get(0);
+          assertThat(producerTrace).hasSize(expectedKeysByDestination.size() + 1);
+          Map<String, Attributes> expectedRecordAttributesBySpan = new HashMap<>();
+          for (Map.Entry<String, String> expected : expectedKeysByDestination.entrySet()) {
+            List<SpanData> matchingProducers = new ArrayList<>();
+            for (SpanData span : producerTrace) {
+              if (span.getKind() == SpanKind.PRODUCER
+                  && expected
+                      .getKey()
+                      .equals(span.getAttributes().get(MESSAGING_DESTINATION_NAME))) {
+                matchingProducers.add(span);
               }
+            }
+            assertThat(matchingProducers).hasSize(1);
+            SpanData producer = matchingProducers.get(0);
+            assertThat(producer.getAttributes().get(stringKey("kafka.message.key")))
+                .isEqualTo(expected.getValue());
+            expectedRecordAttributesBySpan.put(
+                spanId(producer.getSpanContext()),
+                recordAttributes(expected.getKey(), expected.getValue()));
+          }
 
-              List<List<SpanData>> processTraces = new ArrayList<>();
-              for (List<SpanData> trace : traces) {
-                SpanData root = trace.get(0);
-                if (root.getKind() != SpanKind.CONSUMER
-                    || !root.getInstrumentationScopeInfo()
-                        .getName()
-                        .equals("io.opentelemetry.kafka-connect-2.6")) {
-                  continue;
-                }
-                for (LinkData link : root.getLinks()) {
-                  if (expectedRecordAttributesBySpan.containsKey(spanId(link.getSpanContext()))) {
-                    processTraces.add(trace);
-                    break;
-                  }
-                }
+          List<List<SpanData>> processTraces = new ArrayList<>();
+          for (List<SpanData> trace : traces) {
+            SpanData root = trace.get(0);
+            if (root.getKind() != SpanKind.CONSUMER
+                || !root.getInstrumentationScopeInfo()
+                    .getName()
+                    .equals("io.opentelemetry.kafka-connect-2.6")) {
+              continue;
+            }
+            for (LinkData link : root.getLinks()) {
+              if (expectedRecordAttributesBySpan.containsKey(spanId(link.getSpanContext()))) {
+                processTraces.add(trace);
+                break;
               }
-              assertThat(processTraces).isNotEmpty();
+            }
+          }
+          assertThat(processTraces).isNotEmpty();
 
-              List<String> linkedSpanIds = new ArrayList<>();
-              List<Attributes> actualRecordAttributes = new ArrayList<>();
-              for (List<SpanData> trace : processTraces) {
-                SpanData process = trace.get(0);
-                assertThat(process.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT))
-                    .isEqualTo((long) process.getLinks().size());
-                for (LinkData link : process.getLinks()) {
-                  String linkedSpanId = spanId(link.getSpanContext());
-                  assertThat(expectedRecordAttributesBySpan).containsKey(linkedSpanId);
-                  linkedSpanIds.add(linkedSpanId);
-                  assertThat(link.getAttributes().asMap().keySet())
-                      .isSubsetOf(
-                          MESSAGING_DESTINATION_NAME,
-                          MESSAGING_DESTINATION_PARTITION_ID,
-                          longKey("kafka.offset"),
-                          stringKey("kafka.message.key"));
-                  actualRecordAttributes.add(effectiveRecordAttributes(process, link));
-                }
-              }
+          List<String> linkedSpanIds = new ArrayList<>();
+          List<Attributes> actualRecordAttributes = new ArrayList<>();
+          for (List<SpanData> trace : processTraces) {
+            SpanData process = trace.get(0);
+            assertThat(process.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT))
+                .isEqualTo((long) process.getLinks().size());
+            for (LinkData link : process.getLinks()) {
+              String linkedSpanId = spanId(link.getSpanContext());
+              assertThat(expectedRecordAttributesBySpan).containsKey(linkedSpanId);
+              linkedSpanIds.add(linkedSpanId);
+              assertThat(link.getAttributes().asMap().keySet())
+                  .isSubsetOf(
+                      MESSAGING_DESTINATION_NAME,
+                      MESSAGING_DESTINATION_PARTITION_ID,
+                      longKey("kafka.offset"),
+                      stringKey("kafka.message.key"));
+              actualRecordAttributes.add(effectiveRecordAttributes(process, link));
+            }
+          }
 
-              assertThat(linkedSpanIds)
-                  .containsExactlyInAnyOrderElementsOf(expectedRecordAttributesBySpan.keySet());
-              assertThat(actualRecordAttributes)
-                  .containsExactlyInAnyOrderElementsOf(expectedRecordAttributesBySpan.values());
-              processTraceAssertions.accept(processTraces);
-            });
+          assertThat(linkedSpanIds)
+              .containsExactlyInAnyOrderElementsOf(expectedRecordAttributesBySpan.keySet());
+          assertThat(actualRecordAttributes)
+              .containsExactlyInAnyOrderElementsOf(expectedRecordAttributesBySpan.values());
+          processTraceAssertions.accept(processTraces);
+        });
   }
 
   private static Attributes effectiveRecordAttributes(SpanData process, LinkData link) {

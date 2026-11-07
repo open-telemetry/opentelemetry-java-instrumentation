@@ -30,16 +30,14 @@ public class KubernetesClientSingletons {
                 GlobalOpenTelemetry.get(),
                 new KubernetesHttpAttributesGetter())
             .configure(AgentCommonConfig.get())
-            .setBuilderCustomizer(
-                instrumenterBuilder -> {
-                  if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-                    instrumenterBuilder.addAttributesExtractor(
-                        new KubernetesExperimentalAttributesExtractor());
-                  }
-                })
-            .setSpanNameExtractorCustomizer(
-                requestSpanNameExtractor ->
-                    request -> KubernetesRequestDigest.parse(request).toString())
+            .setBuilderCustomizer(instrumenterBuilder -> {
+              if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+                instrumenterBuilder.addAttributesExtractor(
+                    new KubernetesExperimentalAttributesExtractor());
+              }
+            })
+            .setSpanNameExtractorCustomizer(requestSpanNameExtractor ->
+                request -> KubernetesRequestDigest.parse(request).toString())
             .build();
 
     contextPropagators = GlobalOpenTelemetry.getPropagators();

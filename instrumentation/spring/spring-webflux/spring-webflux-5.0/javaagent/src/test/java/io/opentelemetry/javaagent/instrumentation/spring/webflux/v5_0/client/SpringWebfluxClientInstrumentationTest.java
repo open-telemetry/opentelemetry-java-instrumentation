@@ -43,15 +43,14 @@ class SpringWebfluxClientInstrumentationTest
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     super.configure(optionsBuilder);
 
-    optionsBuilder.setHttpAttributes(
-        uri -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          if (uri.getPort() == PortUtils.UNUSABLE_PORT || uri.getHost().equals("192.0.2.1")) {
-            attributes.remove(NETWORK_PROTOCOL_VERSION);
-          }
-          return attributes;
-        });
+    optionsBuilder.setHttpAttributes(uri -> {
+      Set<AttributeKey<?>> attributes =
+          new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+      if (uri.getPort() == PortUtils.UNUSABLE_PORT || uri.getHost().equals("192.0.2.1")) {
+        attributes.remove(NETWORK_PROTOCOL_VERSION);
+      }
+      return attributes;
+    });
 
     // Disable remote connection tests on Windows due to reactor-netty creating extra spans
     if (OS.WINDOWS.isCurrentOs()) {
@@ -71,15 +70,13 @@ class SpringWebfluxClientInstrumentationTest
         metric ->
             metric
                 .hasName("http.client.request.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfyingExactly(
-                                    equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                    equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                    equalTo(SERVER_ADDRESS, uri.getHost()),
-                                    equalTo(SERVER_PORT, uri.getPort())))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point.hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SERVER_ADDRESS, uri.getHost()),
+                            equalTo(SERVER_PORT, uri.getPort())))));
   }
 }

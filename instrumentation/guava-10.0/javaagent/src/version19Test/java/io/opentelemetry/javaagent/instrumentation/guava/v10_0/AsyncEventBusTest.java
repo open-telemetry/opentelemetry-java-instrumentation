@@ -42,9 +42,8 @@ class AsyncEventBusTest {
 
     testing.runWithSpan("parent", () -> asyncEventBus.post("test"));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"), span -> span.hasName("listener")));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"), span -> span.hasName("listener")));
   }
 }

@@ -109,19 +109,16 @@ class SjmsRegisteredListenerTest {
         instrumentationName,
         "messaging.process.duration",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .singleElement()
-                        .satisfies(
-                            point -> assertThat(point.getCount()).isEqualTo(expectedCount))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric.getHistogramData().getPoints())
+                    .singleElement()
+                    .satisfies(point -> assertThat(point.getCount()).isEqualTo(expectedCount))));
   }
 
   private static void assertNoProcessDuration(String instrumentationName) {
     assertThat(testing.metrics())
-        .noneMatch(
-            metric ->
-                instrumentationName.equals(metric.getInstrumentationScopeInfo().getName())
-                    && metric.getName().equals("messaging.process.duration"));
+        .noneMatch(metric ->
+            instrumentationName.equals(metric.getInstrumentationScopeInfo().getName())
+                && metric.getName().equals("messaging.process.duration"));
   }
 }

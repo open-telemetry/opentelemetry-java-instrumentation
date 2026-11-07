@@ -180,11 +180,10 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
     collection.updateOne(
         new BsonDocument("password", new BsonString("OLDPW")),
         new BsonDocument("$set", new BsonDocument("password", new BsonString("NEWPW"))),
-        toCallback(
-            res -> {
-              result.complete(((UpdateResult) res));
-              collection.count(toCallback(o -> count.complete(((Long) o))));
-            }));
+        toCallback(res -> {
+          result.complete(((UpdateResult) res));
+          collection.count(toCallback(o -> count.complete(((Long) o))));
+        }));
     return result.join().getModifiedCount();
   }
 
@@ -217,11 +216,10 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
     CompletableFuture<Long> count = new CompletableFuture<>();
     collection.deleteOne(
         new BsonDocument("password", new BsonString("SECRET")),
-        toCallback(
-            res -> {
-              result.complete((DeleteResult) res);
-              collection.count(toCallback(value -> count.complete(((Long) value))));
-            }));
+        toCallback(res -> {
+          result.complete((DeleteResult) res);
+          collection.count(toCallback(value -> count.complete(((Long) value))));
+        }));
     return result.join().getDeletedCount();
   }
 

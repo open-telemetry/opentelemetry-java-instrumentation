@@ -28,20 +28,19 @@ public class CompletableFutureWrapper<T> extends CompletableFuture<T> implements
 
   private CompletableFutureWrapper(CompletableFuture<T> delegate) {
     Context context = Context.current();
-    this.whenComplete(
-        (result, error) -> {
-          EndOperationListener<T> endOperationListener = this.endOperationListener;
-          if (endOperationListener != null) {
-            endOperationListener.accept(result, error);
-          }
-          try (Scope ignored = context.makeCurrent()) {
-            if (error != null) {
-              delegate.completeExceptionally(error);
-            } else {
-              delegate.complete(result);
-            }
-          }
-        });
+    this.whenComplete((result, error) -> {
+      EndOperationListener<T> endOperationListener = this.endOperationListener;
+      if (endOperationListener != null) {
+        endOperationListener.accept(result, error);
+      }
+      try (Scope ignored = context.makeCurrent()) {
+        if (error != null) {
+          delegate.completeExceptionally(error);
+        } else {
+          delegate.complete(result);
+        }
+      }
+    });
   }
 
   /**

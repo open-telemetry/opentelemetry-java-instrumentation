@@ -167,15 +167,13 @@ class ApiGatewayProxyAttributesExtractorTest {
     Context context = instrumenter.start(Context.root(), request);
     instrumenter.end(context, request, response, error);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("test_function")
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(error == null ? StatusData.unset() : StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("faas.invocation.id"), "request-id"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("test_function")
+                .hasKind(SpanKind.SERVER)
+                .hasStatus(error == null ? StatusData.unset() : StatusData.error())
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("faas.invocation.id"), "request-id"))));
   }
 
   private static AwsLambdaRequest awsRequest(Object input) {

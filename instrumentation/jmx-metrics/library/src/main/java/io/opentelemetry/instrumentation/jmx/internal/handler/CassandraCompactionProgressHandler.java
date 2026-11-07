@@ -109,9 +109,8 @@ public class CassandraCompactionProgressHandler implements ExperimentalJmxMetric
     MBeanServerConnection connection = detector.getConnection();
     for (ObjectName objectName : detector.getObjectNames()) {
       queryCompactions(connection, objectName)
-          .forEach(
-              (attrs, values) ->
-                  groups.merge(attrs, values, (a, b) -> new long[] {a[0] + b[0], a[1] + b[1]}));
+          .forEach((attrs, values) ->
+              groups.merge(attrs, values, (a, b) -> new long[] {a[0] + b[0], a[1] + b[1]}));
     }
     return groups;
   }

@@ -62,64 +62,61 @@ public abstract class AbstractVaadin14Test extends AbstractVaadinTest {
   @Override
   void assertFirstRequest() {
     await()
-        .untilAsserted(
-            () -> {
-              List<List<SpanData>> traces = testing.waitForTraces(1);
-              assertThat(traces.get(0))
-                  .satisfies(
-                      spans -> {
-                        assertThat(spans.get(0))
-                            .hasName("GET " + getContextPath() + "/main")
-                            .hasNoParent()
-                            .hasKind(SpanKind.SERVER);
-                        if (controllerTelemetryEnabled()) {
-                          assertThat(spans.get(1))
-                              .hasName("SpringVaadinServletService.handleRequest")
-                              .hasParent(spans.get(0))
-                              .hasKind(SpanKind.INTERNAL);
-                          // we don't assert all the handler spans as these vary between
-                          // vaadin versions
-                          assertThat(spans.get(spans.size() - 1))
-                              .hasName("BootstrapHandler.handleRequest")
-                              .hasParent(spans.get(1))
-                              .hasKind(SpanKind.INTERNAL);
-                        } else {
-                          assertNoControllerSpans(spans);
-                        }
-                      });
-            });
+        .untilAsserted(() -> {
+          List<List<SpanData>> traces = testing.waitForTraces(1);
+          assertThat(traces.get(0))
+              .satisfies(spans -> {
+                assertThat(spans.get(0))
+                    .hasName("GET " + getContextPath() + "/main")
+                    .hasNoParent()
+                    .hasKind(SpanKind.SERVER);
+                if (controllerTelemetryEnabled()) {
+                  assertThat(spans.get(1))
+                      .hasName("SpringVaadinServletService.handleRequest")
+                      .hasParent(spans.get(0))
+                      .hasKind(SpanKind.INTERNAL);
+                  // we don't assert all the handler spans as these vary between
+                  // vaadin versions
+                  assertThat(spans.get(spans.size() - 1))
+                      .hasName("BootstrapHandler.handleRequest")
+                      .hasParent(spans.get(1))
+                      .hasKind(SpanKind.INTERNAL);
+                } else {
+                  assertNoControllerSpans(spans);
+                }
+              });
+        });
   }
 
   private void assertClientEvent() {
     await()
-        .untilAsserted(
-            () -> {
-              List<List<SpanData>> traces = testing.waitForTraces(1);
-              List<SpanData> spans = traces.get(0);
-              assertThat(spans.get(0))
-                  .hasName("POST " + getContextPath() + "/main")
-                  .hasNoParent()
-                  .hasKind(SpanKind.SERVER);
-              if (controllerTelemetryEnabled()) {
-                assertThat(spans.get(1))
-                    .hasName("SpringVaadinServletService.handleRequest")
-                    .hasParent(spans.get(0))
-                    .hasKind(SpanKind.INTERNAL);
-                assertThat(spans.get(spans.size() - 2))
-                    .hasName("UidlRequestHandler.handleRequest")
-                    .hasParent(spans.get(1))
-                    .hasKind(SpanKind.INTERNAL);
-                assertThat(spans.get(spans.size() - 1))
-                    .hasName("EventRpcHandler.handle/click")
-                    .hasParent(spans.get(spans.size() - 2))
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            CODE_FUNCTION_NAME,
-                            "com.vaadin.flow.server.communication.rpc.EventRpcHandler.handle"));
-              } else {
-                assertNoControllerSpans(spans);
-              }
-            });
+        .untilAsserted(() -> {
+          List<List<SpanData>> traces = testing.waitForTraces(1);
+          List<SpanData> spans = traces.get(0);
+          assertThat(spans.get(0))
+              .hasName("POST " + getContextPath() + "/main")
+              .hasNoParent()
+              .hasKind(SpanKind.SERVER);
+          if (controllerTelemetryEnabled()) {
+            assertThat(spans.get(1))
+                .hasName("SpringVaadinServletService.handleRequest")
+                .hasParent(spans.get(0))
+                .hasKind(SpanKind.INTERNAL);
+            assertThat(spans.get(spans.size() - 2))
+                .hasName("UidlRequestHandler.handleRequest")
+                .hasParent(spans.get(1))
+                .hasKind(SpanKind.INTERNAL);
+            assertThat(spans.get(spans.size() - 1))
+                .hasName("EventRpcHandler.handle/click")
+                .hasParent(spans.get(spans.size() - 2))
+                .hasKind(SpanKind.INTERNAL)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CODE_FUNCTION_NAME,
+                        "com.vaadin.flow.server.communication.rpc.EventRpcHandler.handle"));
+          } else {
+            assertNoControllerSpans(spans);
+          }
+        });
   }
 }

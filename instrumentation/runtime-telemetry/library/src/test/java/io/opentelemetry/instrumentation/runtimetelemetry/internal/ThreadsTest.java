@@ -58,20 +58,19 @@ class ThreadsTest {
                 .hasName("jvm.thread.count")
                 .hasDescription("Number of executing platform threads.")
                 .hasUnit("{thread}")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(2)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(JVM_THREAD_DAEMON, true)),
-                                point ->
-                                    point
-                                        .hasValue(5)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(JVM_THREAD_DAEMON, false)))));
+                .hasLongSumSatisfying(sum ->
+                    sum.isNotMonotonic()
+                        .hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(2)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(JVM_THREAD_DAEMON, true)),
+                            point ->
+                                point
+                                    .hasValue(5)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(JVM_THREAD_DAEMON, false)))));
   }
 
   @Test
@@ -92,22 +91,21 @@ class ThreadsTest {
                 .hasName("jvm.thread.count")
                 .hasDescription("Number of executing platform threads.")
                 .hasUnit("{thread}")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(JVM_THREAD_DAEMON, false),
-                                            equalTo(JVM_THREAD_STATE, "runnable")),
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(JVM_THREAD_DAEMON, true),
-                                            equalTo(JVM_THREAD_STATE, "waiting")))));
+                .hasLongSumSatisfying(sum ->
+                    sum.isNotMonotonic()
+                        .hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(JVM_THREAD_DAEMON, false),
+                                        equalTo(JVM_THREAD_STATE, "runnable")),
+                            point ->
+                                point
+                                    .hasValue(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(JVM_THREAD_DAEMON, true),
+                                        equalTo(JVM_THREAD_STATE, "waiting")))));
   }
 
   @Test
@@ -134,22 +132,21 @@ class ThreadsTest {
                 .hasName("jvm.thread.count")
                 .hasDescription("Number of executing platform threads.")
                 .hasUnit("{thread}")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(JVM_THREAD_DAEMON, false),
-                                            equalTo(JVM_THREAD_STATE, "runnable")),
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(JVM_THREAD_DAEMON, true),
-                                            equalTo(JVM_THREAD_STATE, "waiting")))));
+                .hasLongSumSatisfying(sum ->
+                    sum.isNotMonotonic()
+                        .hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(JVM_THREAD_DAEMON, false),
+                                        equalTo(JVM_THREAD_STATE, "runnable")),
+                            point ->
+                                point
+                                    .hasValue(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(JVM_THREAD_DAEMON, true),
+                                        equalTo(JVM_THREAD_STATE, "waiting")))));
   }
 
   @Test

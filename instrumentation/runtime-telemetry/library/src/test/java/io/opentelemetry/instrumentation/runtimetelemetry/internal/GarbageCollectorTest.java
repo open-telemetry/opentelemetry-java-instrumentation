@@ -76,27 +76,26 @@ class GarbageCollectorTest {
                 .hasName("jvm.gc.duration")
                 .hasDescription("Duration of JVM garbage collection actions.")
                 .hasUnit("s")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasCount(2)
-                                    .hasSum(0.022)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(JVM_GC_NAME, "G1 Young Generation"),
-                                        equalTo(JVM_GC_ACTION, "end of minor GC"),
-                                        equalTo(JVM_GC_CAUSE, "Allocation Failure"))
-                                    .hasBucketBoundaries(GC_DURATION_BUCKETS),
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasSum(0.011)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(JVM_GC_NAME, "G1 Old Generation"),
-                                        equalTo(JVM_GC_ACTION, "end of major GC"),
-                                        equalTo(JVM_GC_CAUSE, "System.gc()"))
-                                    .hasBucketBoundaries(GC_DURATION_BUCKETS))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(
+                        point ->
+                            point
+                                .hasCount(2)
+                                .hasSum(0.022)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(JVM_GC_NAME, "G1 Young Generation"),
+                                    equalTo(JVM_GC_ACTION, "end of minor GC"),
+                                    equalTo(JVM_GC_CAUSE, "Allocation Failure"))
+                                .hasBucketBoundaries(GC_DURATION_BUCKETS),
+                        point ->
+                            point
+                                .hasCount(1)
+                                .hasSum(0.011)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(JVM_GC_NAME, "G1 Old Generation"),
+                                    equalTo(JVM_GC_ACTION, "end of major GC"),
+                                    equalTo(JVM_GC_CAUSE, "System.gc()"))
+                                .hasBucketBoundaries(GC_DURATION_BUCKETS))));
   }
 
   private static Notification createTestNotification(

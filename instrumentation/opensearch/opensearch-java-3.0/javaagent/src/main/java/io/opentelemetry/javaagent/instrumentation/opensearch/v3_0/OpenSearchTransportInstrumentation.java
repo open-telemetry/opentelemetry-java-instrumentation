@@ -103,16 +103,15 @@ class OpenSearchTransportInstrumentation implements TypeInstrumentation {
     private static <T> CompletableFuture<T> wrapFuture(
         CompletableFuture<T> future, Context context) {
       CompletableFuture<T> result = new CompletableFuture<>();
-      future.whenComplete(
-          (T value, Throwable throwable) -> {
-            try (Scope ignored = context.makeCurrent()) {
-              if (throwable != null) {
-                result.completeExceptionally(throwable);
-              } else {
-                result.complete(value);
-              }
-            }
-          });
+      future.whenComplete((T value, Throwable throwable) -> {
+        try (Scope ignored = context.makeCurrent()) {
+          if (throwable != null) {
+            result.completeExceptionally(throwable);
+          } else {
+            result.complete(value);
+          }
+        }
+      });
 
       return result;
     }

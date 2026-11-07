@@ -53,10 +53,9 @@ class DefaultEnablementTest {
 
     assertThat(message.getBody()).isEqualTo("Hello, World!");
     if (INSTRUMENTATION_ENABLED) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent"), span -> span.hasName("MessageCreator.create")));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent"), span -> span.hasName("MessageCreator.create")));
     } else {
       testing.waitAndAssertTraces(
           trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));

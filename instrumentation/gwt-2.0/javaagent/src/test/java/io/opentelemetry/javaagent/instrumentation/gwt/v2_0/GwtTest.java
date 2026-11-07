@@ -118,27 +118,24 @@ class GwtTest {
         orderByRootSpanName("GET " + getContextPath() + "/*", "GET"),
         trace -> {
           // /xyz/greeting.html
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("GET " + getContextPath() + "/*")
-                      .hasKind(SpanKind.SERVER)
-                      .hasNoParent());
+          trace.hasSpansSatisfyingExactly(span ->
+              span.hasName("GET " + getContextPath() + "/*")
+                  .hasKind(SpanKind.SERVER)
+                  .hasNoParent());
         },
         trace -> {
           // /xyz/greeting/greeting.nocache.js
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("GET " + getContextPath() + "/*")
-                      .hasKind(SpanKind.SERVER)
-                      .hasNoParent());
+          trace.hasSpansSatisfyingExactly(span ->
+              span.hasName("GET " + getContextPath() + "/*")
+                  .hasKind(SpanKind.SERVER)
+                  .hasNoParent());
         },
         trace -> {
           // /xyz/greeting/1B105441581A8F41E49D5DF3FB5B55BA.cache.html
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("GET " + getContextPath() + "/*")
-                      .hasKind(SpanKind.SERVER)
-                      .hasNoParent());
+          trace.hasSpansSatisfyingExactly(span ->
+              span.hasName("GET " + getContextPath() + "/*")
+                  .hasKind(SpanKind.SERVER)
+                  .hasNoParent());
         },
         trace -> {
           // /favicon.ico
@@ -153,21 +150,20 @@ class GwtTest {
     assertThat(driver.findElement(By.className("message.received")).getText())
         .isEqualTo("Hello, Otel");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("POST " + getContextPath() + "/greeting/greet")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent(),
-                span ->
-                    span.hasName("test.gwt.shared.MessageService/sendMessage")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM_NAME, "gwt"),
-                            equalTo(RPC_METHOD, "test.gwt.shared.MessageService/sendMessage"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("POST " + getContextPath() + "/greeting/greet")
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent(),
+            span ->
+                span.hasName("test.gwt.shared.MessageService/sendMessage")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasKind(SpanKind.SERVER)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(RPC_SYSTEM_NAME, "gwt"),
+                        equalTo(RPC_METHOD, "test.gwt.shared.MessageService/sendMessage"))));
 
     assertDurationMetrics(null);
     testing.clearData();
@@ -176,24 +172,23 @@ class GwtTest {
     driver.findElement(By.className("error.button")).click();
     assertThat(driver.findElement(By.className("error.received")).getText()).isEqualTo("Error");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("POST " + getContextPath() + "/greeting/greet")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent(),
-                span ->
-                    span.hasName("test.gwt.shared.MessageService/sendMessage")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasException(emitExceptionAsSpanEvents() ? new IOException() : null)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM_NAME, "gwt"),
-                            equalTo(RPC_METHOD, "test.gwt.shared.MessageService/sendMessage"),
-                            equalTo(ERROR_TYPE, IOException.class.getName()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("POST " + getContextPath() + "/greeting/greet")
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent(),
+            span ->
+                span.hasName("test.gwt.shared.MessageService/sendMessage")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasKind(SpanKind.SERVER)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasException(emitExceptionAsSpanEvents() ? new IOException() : null)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(RPC_SYSTEM_NAME, "gwt"),
+                        equalTo(RPC_METHOD, "test.gwt.shared.MessageService/sendMessage"),
+                        equalTo(ERROR_TYPE, IOException.class.getName()))));
 
     assertDurationMetrics(IOException.class.getName());
     if (emitExceptionAsLogs()) {
@@ -202,13 +197,12 @@ class GwtTest {
               .filter(span -> span.getName().equals("test.gwt.shared.MessageService/sendMessage"))
               .findFirst()
               .get();
-      testing.waitAndAssertLogRecords(
-          logRecord ->
-              logRecord
-                  .hasSeverity(Severity.ERROR)
-                  .hasEventName("rpc.server.call.exception")
-                  .hasSpanContext(rpcSpan.getSpanContext())
-                  .hasException(new IOException()));
+      testing.waitAndAssertLogRecords(logRecord ->
+          logRecord
+              .hasSeverity(Severity.ERROR)
+              .hasEventName("rpc.server.call.exception")
+              .hasSpanContext(rpcSpan.getSpanContext())
+              .hasException(new IOException()));
     }
   }
 
@@ -220,21 +214,17 @@ class GwtTest {
                 .hasName("rpc.server.call.duration")
                 .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                 .hasUnit("s")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasSumGreaterThan(0)
-                                    .hasBucketBoundaries(
-                                        0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
-                                        0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(RPC_SYSTEM_NAME, "gwt"),
-                                        equalTo(
-                                            RPC_METHOD,
-                                            "test.gwt.shared.MessageService/sendMessage"),
-                                        equalTo(ERROR_TYPE, errorType)))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasSumGreaterThan(0)
+                            .hasBucketBoundaries(
+                                0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05,
+                                0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM_NAME, "gwt"),
+                                equalTo(RPC_METHOD, "test.gwt.shared.MessageService/sendMessage"),
+                                equalTo(ERROR_TYPE, errorType)))));
   }
 }

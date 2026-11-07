@@ -23,7 +23,7 @@ public class DefineClassHandler implements Handler {
   private final ThreadLocal<DefineClassContextImpl> defineClassContext =
       ThreadLocal.withInitial(() -> rootContext);
 
-  private static Predicate<ClassLoader> ignoredClassLoaders = (classLoader) -> false;
+  private static Predicate<ClassLoader> ignoredClassLoaders = classLoader -> false;
 
   // visible for testing
   DefineClassHandler() {}

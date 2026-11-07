@@ -120,9 +120,8 @@ public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<E
                 HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
       } else if (INDEXED_CHILD.equals(endpoint)) {
         content = Unpooled.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
-        endpoint.collectSpanAttributes(
-            name ->
-                new QueryStringDecoder(uri).parameters().get(name).stream().findFirst().orElse(""));
+        endpoint.collectSpanAttributes(name ->
+            new QueryStringDecoder(uri).parameters().get(name).stream().findFirst().orElse(""));
         response =
             new DefaultFullHttpResponse(
                 HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);

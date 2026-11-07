@@ -206,12 +206,11 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
         Double.parseDouble(System.getProperty("java.specification.version")) >= 21);
     options.setTestHttpBodyPipelining(
         Double.parseDouble(System.getProperty("java.specification.version")) >= 21);
-    options.setExpectedHttpRoute(
-        (endpoint, method) -> {
-          if (NOT_FOUND.equals(endpoint)) {
-            return "/";
-          }
-          return expectedHttpRoute(endpoint, method);
-        });
+    options.setExpectedHttpRoute((endpoint, method) -> {
+      if (NOT_FOUND.equals(endpoint)) {
+        return "/";
+      }
+      return expectedHttpRoute(endpoint, method);
+    });
   }
 }

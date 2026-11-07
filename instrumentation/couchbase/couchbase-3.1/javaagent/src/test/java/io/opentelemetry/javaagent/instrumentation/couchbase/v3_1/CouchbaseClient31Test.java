@@ -137,55 +137,48 @@ class CouchbaseClient31Test {
     dispatchAttributes.add(
         equalTo(NETWORK_PEER_ADDRESS, InetAddress.getByName(couchbase.getHost()).getHostAddress()));
     dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, kvPort));
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace -> {
-          if (EXPERIMENTAL_TELEMETRY) {
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  assertGetSpan(span, testLatestDeps() ? 0L : null);
-                  span.hasNoParent();
-                },
-                span ->
-                    span.hasName("dispatch_to_server")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(dispatchAttributes));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  assertGetSpan(span, testLatestDeps() ? 0L : null);
-                  span.hasNoParent();
-                });
-          }
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace -> {
+      if (EXPERIMENTAL_TELEMETRY) {
+        trace.hasSpansSatisfyingExactly(
+            span -> {
+              assertGetSpan(span, testLatestDeps() ? 0L : null);
+              span.hasNoParent();
+            },
+            span ->
+                span.hasName("dispatch_to_server")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(dispatchAttributes));
+      } else {
+        trace.hasSpansSatisfyingExactly(span -> {
+          assertGetSpan(span, testLatestDeps() ? 0L : null);
+          span.hasNoParent();
         });
+      }
+    });
   }
 
   @Test
   void asyncWriteEmitsLifecycleSpans() {
     collection.async().upsert("async-id", JsonObject.create().put("value", "test")).join();
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace -> {
-          if (EXPERIMENTAL_TELEMETRY) {
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  assertOperationSpan(span, "upsert", testLatestDeps() ? 0L : null);
-                  span.hasNoParent();
-                },
-                span ->
-                    span.hasName("request_encoding").hasKind(INTERNAL).hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("dispatch_to_server")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0)));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  assertOperationSpan(span, "upsert", testLatestDeps() ? 0L : null);
-                  span.hasNoParent();
-                });
-          }
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace -> {
+      if (EXPERIMENTAL_TELEMETRY) {
+        trace.hasSpansSatisfyingExactly(
+            span -> {
+              assertOperationSpan(span, "upsert", testLatestDeps() ? 0L : null);
+              span.hasNoParent();
+            },
+            span -> span.hasName("request_encoding").hasKind(INTERNAL).hasParent(trace.getSpan(0)),
+            span ->
+                span.hasName("dispatch_to_server").hasKind(INTERNAL).hasParent(trace.getSpan(0)));
+      } else {
+        trace.hasSpansSatisfyingExactly(span -> {
+          assertOperationSpan(span, "upsert", testLatestDeps() ? 0L : null);
+          span.hasNoParent();
         });
+      }
+    });
   }
 
   @Test
@@ -204,21 +197,20 @@ class CouchbaseClient31Test {
     dispatchAttributes.add(equalTo(NETWORK_PEER_ADDRESS, hostAddress));
     dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, queryPort));
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace -> {
-          if (EXPERIMENTAL_TELEMETRY) {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("query " + serverAddress()).hasNoParent(),
-                span ->
-                    span.hasName("dispatch_to_server")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(dispatchAttributes));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasKind(CLIENT).hasName("query " + serverAddress()).hasNoParent());
-          }
-        });
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace -> {
+      if (EXPERIMENTAL_TELEMETRY) {
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("query " + serverAddress()).hasNoParent(),
+            span ->
+                span.hasName("dispatch_to_server")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(dispatchAttributes));
+      } else {
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasKind(CLIENT).hasName("query " + serverAddress()).hasNoParent());
+      }
+    });
   }
 
   private static void assertGetSpan(SpanDataAssert span, Long retries) {

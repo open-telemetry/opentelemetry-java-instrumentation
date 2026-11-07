@@ -106,29 +106,28 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
     builder.setSpanNameExtractorCustomizer(e -> spanNameExtractor);
 
-    builder.setBuilderCustomizer(
-        builder -> {
-          if (requestParameters != null && !requestParameters.isEmpty()) {
-            AttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
-                requestParametersExtractor =
-                    new ServletRequestParametersExtractor<>(accessor, requestParameters);
-            builder.addAttributesExtractor(requestParametersExtractor);
-          }
-          for (ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer :
-              contextCustomizers) {
-            builder.addContextCustomizer(contextCustomizer);
-          }
+    builder.setBuilderCustomizer(builder -> {
+      if (requestParameters != null && !requestParameters.isEmpty()) {
+        AttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
+            requestParametersExtractor =
+                new ServletRequestParametersExtractor<>(accessor, requestParameters);
+        builder.addAttributesExtractor(requestParametersExtractor);
+      }
+      for (ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer :
+          contextCustomizers) {
+        builder.addContextCustomizer(contextCustomizer);
+      }
 
-          if (propagateOperationListenersToOnEnd) {
-            InstrumenterUtil.propagateOperationListenersToOnEnd(builder);
-          }
+      if (propagateOperationListenersToOnEnd) {
+        InstrumenterUtil.propagateOperationListenersToOnEnd(builder);
+      }
 
-          builder
-              .addAttributesExtractor(
-                  new ServletAdditionalAttributesExtractor<>(
-                      accessor, captureExperimentalAttributes, captureUserName))
-              .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor));
-        });
+      builder
+          .addAttributesExtractor(
+              new ServletAdditionalAttributesExtractor<>(
+                  accessor, captureExperimentalAttributes, captureUserName))
+          .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor));
+    });
 
     return builder.build();
   }

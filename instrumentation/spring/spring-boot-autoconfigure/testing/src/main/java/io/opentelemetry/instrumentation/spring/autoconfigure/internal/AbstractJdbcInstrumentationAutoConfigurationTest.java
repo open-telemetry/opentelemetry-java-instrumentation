@@ -33,28 +33,26 @@ public abstract class AbstractJdbcInstrumentationAutoConfigurationTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void querySanitizerEnabledByDefault() {
-    contextRunner.run(
-        context -> {
-          DataSource dataSource = context.getBean(DataSource.class);
+    contextRunner.run(context -> {
+      DataSource dataSource = context.getBean(DataSource.class);
 
-          assertThat(AopUtils.isAopProxy(dataSource)).isTrue();
-          assertThat(dataSource.getClass().getSimpleName()).isNotEqualTo("HikariDataSource");
-          // unwrap the instrumented data source to get the original data source
-          Object original = ((Advised) dataSource).getTargetSource().getTarget();
-          assertThat(AopUtils.isAopProxy(original)).isFalse();
-          assertThat(original.getClass().getSimpleName()).isEqualTo("HikariDataSource");
+      assertThat(AopUtils.isAopProxy(dataSource)).isTrue();
+      assertThat(dataSource.getClass().getSimpleName()).isNotEqualTo("HikariDataSource");
+      // unwrap the instrumented data source to get the original data source
+      Object original = ((Advised) dataSource).getTargetSource().getTarget();
+      assertThat(AopUtils.isAopProxy(original)).isFalse();
+      assertThat(original.getClass().getSimpleName()).isEqualTo("HikariDataSource");
 
-          try (Connection connection = dataSource.getConnection()) {
-            try (Statement statement = connection.createStatement()) {
-              statement.execute("SELECT 1");
-            }
-          }
+      try (Connection connection = dataSource.getConnection()) {
+        try (Statement statement = connection.createStatement()) {
+          statement.execute("SELECT 1");
+        }
+      }
 
-          testing()
-              .waitAndAssertTraces(
-                  trace ->
-                      trace.hasSpansSatisfyingExactly(
-                          span -> span.hasAttribute(DB_QUERY_TEXT, "SELECT ?")));
-        });
+      testing()
+          .waitAndAssertTraces(trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasAttribute(DB_QUERY_TEXT, "SELECT ?")));
+    });
   }
 }

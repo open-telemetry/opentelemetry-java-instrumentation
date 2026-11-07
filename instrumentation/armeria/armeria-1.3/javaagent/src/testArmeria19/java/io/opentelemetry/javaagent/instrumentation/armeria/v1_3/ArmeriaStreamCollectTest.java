@@ -69,27 +69,24 @@ class ArmeriaStreamCollectTest {
           // propagating context here since SubscriberWrapper skips NoopSubscriber.
           response
               .collect()
-              .thenAccept(
-                  objects -> {
-                    testing.runWithSpan("child", () -> {});
-                    collectFuture.complete(objects);
-                  })
-              .exceptionally(
-                  t -> {
-                    collectFuture.completeExceptionally(t);
-                    return null;
-                  });
+              .thenAccept(objects -> {
+                testing.runWithSpan("child", () -> {});
+                collectFuture.complete(objects);
+              })
+              .exceptionally(t -> {
+                collectFuture.completeExceptionally(t);
+                return null;
+              });
         });
 
     List<HttpObject> collected = collectFuture.get(10, SECONDS);
     assertThat(collected).isNotEmpty();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("GET").hasParent(trace.getSpan(0)),
-                span -> span.hasName("GET /stream").hasParent(trace.getSpan(1)),
-                span -> span.hasName("child").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("GET").hasParent(trace.getSpan(0)),
+            span -> span.hasName("GET /stream").hasParent(trace.getSpan(1)),
+            span -> span.hasName("child").hasParent(trace.getSpan(0))));
   }
 }

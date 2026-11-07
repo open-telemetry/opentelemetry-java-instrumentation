@@ -51,14 +51,12 @@ public abstract class AbstractFunctionCounterTest {
                     .hasName("testFunctionCounter")
                     .hasDescription("This is a test function counter")
                     .hasUnit("items")
-                    .hasDoubleSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(12)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleSumSatisfying(sum ->
+                        sum.hasPointsSatisfying(point ->
+                            point
+                                .hasValue(12)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("tag"), "value")))));
 
     // when
     Metrics.globalRegistry.remove(counter);
@@ -105,14 +103,12 @@ public abstract class AbstractFunctionCounterTest {
                     .hasName("testFunctionCounter")
                     .hasDescription("This is a test function counter")
                     .hasUnit("items")
-                    .hasDoubleSumSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(12)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleSumSatisfying(sum ->
+                        sum.hasPointsSatisfying(point ->
+                            point
+                                .hasValue(12)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("tag"), "value")))));
 
     // when
     Metrics.globalRegistry.remove(counter);
@@ -147,19 +143,18 @@ public abstract class AbstractFunctionCounterTest {
                     .hasName("testFunctionCounterWithTags")
                     .hasDescription("First description")
                     .hasUnit("items")
-                    .hasDoubleSumSatisfying(
-                        sum ->
-                            sum.isMonotonic()
-                                .hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(12)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(stringKey("tag"), "1")),
-                                    point ->
-                                        point
-                                            .hasValue(13)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(stringKey("tag"), "2")))));
+                    .hasDoubleSumSatisfying(sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(12)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "1")),
+                                point ->
+                                    point
+                                        .hasValue(13)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "2")))));
   }
 }

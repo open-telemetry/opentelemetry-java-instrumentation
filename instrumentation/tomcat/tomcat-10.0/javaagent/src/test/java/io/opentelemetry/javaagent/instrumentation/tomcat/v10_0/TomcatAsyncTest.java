@@ -98,16 +98,15 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
   protected void configure(HttpServerTestOptions options) {
     options.setContextPath("/tomcat-context");
 
-    options.setExpectedHttpRoute(
-        (ServerEndpoint endpoint, String method) -> {
-          if (method.equals(HttpConstants._OTHER)) {
-            return getContextPath() + endpoint.getPath();
-          }
-          if (endpoint.equals(NOT_FOUND)) {
-            return getContextPath() + "/*";
-          }
-          return super.expectedHttpRoute(endpoint, method);
-        });
+    options.setExpectedHttpRoute((ServerEndpoint endpoint, String method) -> {
+      if (method.equals(HttpConstants._OTHER)) {
+        return getContextPath() + endpoint.getPath();
+      }
+      if (endpoint.equals(NOT_FOUND)) {
+        return getContextPath() + "/*";
+      }
+      return super.expectedHttpRoute(endpoint, method);
+    });
 
     options.setHasResponseSpan(endpoint -> endpoint == NOT_FOUND || endpoint == REDIRECT);
   }

@@ -190,38 +190,37 @@ public class MetricAssert extends AbstractAssert<MetricAssert, Metric> {
   @CanIgnoreReturnValue
   private final <T extends AbstractAssert<?, ?>> MetricAssert hasTypedDataPointsWithValues(
       Function<NumberDataPoint, T> valueAssertFactory, Consumer<T>... dataPointAssertions) {
-    return checkDataPoints(
-        dataPoints -> {
-          dataPointsCommonCheck(dataPoints);
+    return checkDataPoints(dataPoints -> {
+      dataPointsCommonCheck(dataPoints);
 
-          boolean[] matchedAssertions = new boolean[dataPointAssertions.length];
+      boolean[] matchedAssertions = new boolean[dataPointAssertions.length];
 
-          for (NumberDataPoint dataPoint : dataPoints) {
-            int matchCount = 0;
-            for (int i = 0; i < dataPointAssertions.length; i++) {
-              try {
-                dataPointAssertions[i].accept(valueAssertFactory.apply(dataPoint));
-                matchedAssertions[i] = true;
-                matchCount++;
-              } catch (AssertionError ignored) {
-                // Ignore assertion mismatch; keep checking next assertions
-              }
-            }
-
-            info.description(
-                "for metric '%s' exactly one value assertion must be satisfied by the data point:\n%s",
-                actual.getName(), dataPoint);
-            integers.assertEqual(info, matchCount, 1);
+      for (NumberDataPoint dataPoint : dataPoints) {
+        int matchCount = 0;
+        for (int i = 0; i < dataPointAssertions.length; i++) {
+          try {
+            dataPointAssertions[i].accept(valueAssertFactory.apply(dataPoint));
+            matchedAssertions[i] = true;
+            matchCount++;
+          } catch (AssertionError ignored) {
+            // Ignore assertion mismatch; keep checking next assertions
           }
+        }
 
-          // check each assertion was matched at least once
-          for (int i = 0; i < matchedAssertions.length; i++) {
-            info.description(
-                "no data point for metric '%s' satisfied value assertion at index %d",
-                actual.getName(), i);
-            objects.assertEqual(info, matchedAssertions[i], true);
-          }
-        });
+        info.description(
+            "for metric '%s' exactly one value assertion must be satisfied by the data point:\n%s",
+            actual.getName(), dataPoint);
+        integers.assertEqual(info, matchCount, 1);
+      }
+
+      // check each assertion was matched at least once
+      for (int i = 0; i < matchedAssertions.length; i++) {
+        info.description(
+            "no data point for metric '%s' satisfied value assertion at index %d",
+            actual.getName(), i);
+        objects.assertEqual(info, matchedAssertions[i], true);
+      }
+    });
   }
 
   private static AbstractLongAssert<?> asIntAssert(NumberDataPoint dataPoint) {
@@ -248,17 +247,16 @@ public class MetricAssert extends AbstractAssert<MetricAssert, Metric> {
     isNotNull();
 
     return markAttributesChecked()
-        .checkDataPoints(
-            dataPoints -> {
-              dataPointsCommonCheck(dataPoints);
+        .checkDataPoints(dataPoints -> {
+          dataPointsCommonCheck(dataPoints);
 
-              // all data points must not have any attribute
-              for (NumberDataPoint dataPoint : dataPoints) {
-                info.description(
-                    "no attribute expected on data point for metric '%s'", actual.getName());
-                iterables.assertEmpty(info, dataPoint.getAttributesList());
-              }
-            });
+          // all data points must not have any attribute
+          for (NumberDataPoint dataPoint : dataPoints) {
+            info.description(
+                "no attribute expected on data point for metric '%s'", actual.getName());
+            iterables.assertEmpty(info, dataPoint.getAttributesList());
+          }
+        });
   }
 
   @CanIgnoreReturnValue
@@ -321,42 +319,38 @@ public class MetricAssert extends AbstractAssert<MetricAssert, Metric> {
   @CanIgnoreReturnValue
   public MetricAssert hasDataPointsWithAttributes(AttributeMatcherGroup... matcherGroups) {
     return markAttributesChecked()
-        .checkDataPoints(
-            dataPoints -> {
-              dataPointsCommonCheck(dataPoints);
+        .checkDataPoints(dataPoints -> {
+          dataPointsCommonCheck(dataPoints);
 
-              boolean[] matchedSets = new boolean[matcherGroups.length];
+          boolean[] matchedSets = new boolean[matcherGroups.length];
 
-              // validate each datapoint attributes match exactly one of the provided attributes
-              // sets
-              for (NumberDataPoint dataPoint : dataPoints) {
-                Map<String, String> dataPointAttributes =
-                    dataPoint.getAttributesList().stream()
-                        .collect(toMap(KeyValue::getKey, kv -> kv.getValue().getStringValue()));
-                int matchCount = 0;
-                for (int i = 0; i < matcherGroups.length; i++) {
-                  if (matcherGroups[i].matches(dataPointAttributes)) {
-                    matchedSets[i] = true;
-                    matchCount++;
-                  }
-                }
-
-                info.description(
-                    "data point attributes '%s' for metric '%s' must match exactly one of the attribute sets '%s'.\nActual data points: %s",
-                    dataPointAttributes,
-                    actual.getName(),
-                    Arrays.asList(matcherGroups),
-                    dataPoints);
-                integers.assertEqual(info, matchCount, 1);
+          // validate each datapoint attributes match exactly one of the provided attributes
+          // sets
+          for (NumberDataPoint dataPoint : dataPoints) {
+            Map<String, String> dataPointAttributes =
+                dataPoint.getAttributesList().stream()
+                    .collect(toMap(KeyValue::getKey, kv -> kv.getValue().getStringValue()));
+            int matchCount = 0;
+            for (int i = 0; i < matcherGroups.length; i++) {
+              if (matcherGroups[i].matches(dataPointAttributes)) {
+                matchedSets[i] = true;
+                matchCount++;
               }
+            }
 
-              // check that all attribute sets matched at least once
-              for (int i = 0; i < matchedSets.length; i++) {
-                info.description(
-                    "no data point matched attribute set '%s' for metric '%s'",
-                    matcherGroups[i], actual.getName());
-                objects.assertEqual(info, matchedSets[i], true);
-              }
-            });
+            info.description(
+                "data point attributes '%s' for metric '%s' must match exactly one of the attribute sets '%s'.\nActual data points: %s",
+                dataPointAttributes, actual.getName(), Arrays.asList(matcherGroups), dataPoints);
+            integers.assertEqual(info, matchCount, 1);
+          }
+
+          // check that all attribute sets matched at least once
+          for (int i = 0; i < matchedSets.length; i++) {
+            info.description(
+                "no data point matched attribute set '%s' for metric '%s'",
+                matcherGroups[i], actual.getName());
+            objects.assertEqual(info, matchedSets[i], true);
+          }
+        });
   }
 }

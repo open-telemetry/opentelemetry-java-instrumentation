@@ -21,16 +21,14 @@ class MetaspaceMemoryCommittedMetricTest {
   @Test
   void shouldHaveMemoryCommittedMetrics() {
     System.gc();
-    jfrExtension.waitAndAssertMetrics(
-        metric ->
-            metric
-                .hasName(METRIC_NAME_COMMITTED)
-                .hasUnit(BYTES)
-                .hasDescription(METRIC_DESCRIPTION_COMMITTED)
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.containsPointsSatisfying(
-                            point -> point.hasAttributes(ATTR_COMPRESSED_CLASS_SPACE),
-                            point -> point.hasAttributes(ATTR_METASPACE))));
+    jfrExtension.waitAndAssertMetrics(metric ->
+        metric
+            .hasName(METRIC_NAME_COMMITTED)
+            .hasUnit(BYTES)
+            .hasDescription(METRIC_DESCRIPTION_COMMITTED)
+            .hasLongSumSatisfying(sum ->
+                sum.containsPointsSatisfying(
+                    point -> point.hasAttributes(ATTR_COMPRESSED_CLASS_SPACE),
+                    point -> point.hasAttributes(ATTR_METASPACE))));
   }
 }

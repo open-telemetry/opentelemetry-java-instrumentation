@@ -35,13 +35,12 @@ class AsyncHttpClientCompletableFutureTest extends AsyncHttpClientTest {
     getClient(uri)
         .executeRequest(request)
         .toCompletableFuture()
-        .whenComplete(
-            (response, throwable) -> {
-              if (throwable == null) {
-                requestResult.complete(response.getStatusCode());
-              } else {
-                requestResult.complete(throwable);
-              }
-            });
+        .whenComplete((response, throwable) -> {
+          if (throwable == null) {
+            requestResult.complete(response.getStatusCode());
+          } else {
+            requestResult.complete(throwable);
+          }
+        });
   }
 }

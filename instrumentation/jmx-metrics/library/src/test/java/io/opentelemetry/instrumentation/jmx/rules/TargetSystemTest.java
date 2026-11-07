@@ -302,30 +302,28 @@ public class TargetSystemTest {
     await()
         .atMost(timeout)
         .pollInterval(Duration.ofSeconds(1))
-        .untilAsserted(
-            () -> {
-              List<ExportMetricsServiceRequest> receivedMetrics = otlpServer.getMetrics();
-              assertThat(receivedMetrics).isNotEmpty();
+        .untilAsserted(() -> {
+          List<ExportMetricsServiceRequest> receivedMetrics = otlpServer.getMetrics();
+          assertThat(receivedMetrics).isNotEmpty();
 
-              assertThat(receivedMetrics)
-                  .anySatisfy(
-                      request -> {
-                        List<Metric> metrics =
-                            request.getResourceMetricsList().stream()
-                                .map(ResourceMetrics::getScopeMetricsList)
-                                .flatMap(Collection::stream)
-                                .filter(
-                                    // TODO: disabling batch span exporter might help remove
-                                    // unwanted metrics
-                                    sm -> sm.getScope().getName().equals("io.opentelemetry.jmx"))
-                                .flatMap(sm -> sm.getMetricsList().stream())
-                                .collect(toList());
+          assertThat(receivedMetrics)
+              .anySatisfy(request -> {
+                List<Metric> metrics =
+                    request.getResourceMetricsList().stream()
+                        .map(ResourceMetrics::getScopeMetricsList)
+                        .flatMap(Collection::stream)
+                        .filter(
+                            // TODO: disabling batch span exporter might help remove
+                            // unwanted metrics
+                            sm -> sm.getScope().getName().equals("io.opentelemetry.jmx"))
+                        .flatMap(sm -> sm.getMetricsList().stream())
+                        .collect(toList());
 
-                        assertThat(metrics).isNotEmpty();
+                assertThat(metrics).isNotEmpty();
 
-                        metricsVerifier.verify(metrics);
-                      });
-            });
+                metricsVerifier.verify(metrics);
+              });
+        });
   }
 
   protected static Set<String> getAllRulesForSystem(String system) {

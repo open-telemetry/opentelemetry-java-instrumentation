@@ -252,28 +252,22 @@ class OracleUcpPoolNameTest {
         INSTRUMENTATION_NAME,
         CONNECTION_USAGE_METRIC_NAME,
         metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(
-                            metric.getLongSumData().getPoints().stream()
-                                .map(point -> point.getAttributes().get(POOL_NAME_KEY))
-                                .collect(toSet()))
-                        .containsExactlyInAnyOrder(poolNames)));
+            metrics.anySatisfy(metric ->
+                assertThat(
+                        metric.getLongSumData().getPoints().stream()
+                            .map(point -> point.getAttributes().get(POOL_NAME_KEY))
+                            .collect(toSet()))
+                    .containsExactlyInAnyOrder(poolNames)));
   }
 
   private static void assertNoConnectionPoolMetrics() {
     testing.clearData();
 
     await()
-        .untilAsserted(
-            () ->
-                assertThat(testing.metrics())
-                    .filteredOn(
-                        metric ->
-                            metric
-                                .getInstrumentationScopeInfo()
-                                .getName()
-                                .equals(INSTRUMENTATION_NAME))
-                    .isEmpty());
+        .untilAsserted(() ->
+            assertThat(testing.metrics())
+                .filteredOn(metric ->
+                    metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
+                .isEmpty());
   }
 }

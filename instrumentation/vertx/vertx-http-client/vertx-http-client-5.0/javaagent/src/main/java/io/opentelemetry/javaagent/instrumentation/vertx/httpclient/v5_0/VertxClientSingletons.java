@@ -62,16 +62,15 @@ public class VertxClientSingletons {
     CompletableFuture<T> result = new CompletableFuture<>();
     future
         .toCompletionStage()
-        .whenComplete(
-            (value, throwable) -> {
-              try (Scope ignore = context.makeCurrent()) {
-                if (throwable != null) {
-                  result.completeExceptionally(throwable);
-                } else {
-                  result.complete(value);
-                }
-              }
-            });
+        .whenComplete((value, throwable) -> {
+          try (Scope ignore = context.makeCurrent()) {
+            if (throwable != null) {
+              result.completeExceptionally(throwable);
+            } else {
+              result.complete(value);
+            }
+          }
+        });
     return Future.fromCompletionStage(result);
   }
 

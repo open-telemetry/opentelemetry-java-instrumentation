@@ -27,17 +27,15 @@ class JwsAnnotationsTest {
     new WebServiceClass().doSomethingPackagePrivate();
     new WebServiceClass().doSomethingProtected();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("WebServiceClass.doSomethingPublic")
-                        .hasNoParent()
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                WebServiceClass.class.getName() + ".doSomethingPublic"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("WebServiceClass.doSomethingPublic")
+                .hasNoParent()
+                .hasKind(SpanKind.INTERNAL)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CODE_FUNCTION_NAME,
+                        WebServiceClass.class.getName() + ".doSomethingPublic"))));
   }
 
   @Test
@@ -47,35 +45,30 @@ class JwsAnnotationsTest {
     new WebServiceFromInterface().notPartOfPublicInterface();
     new WebServiceFromInterface().notPartOfAnything();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("WebServiceFromInterface.partOfPublicInterface")
-                        .hasNoParent()
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                WebServiceFromInterface.class.getName()
-                                    + ".partOfPublicInterface"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("WebServiceFromInterface.partOfPublicInterface")
+                .hasNoParent()
+                .hasKind(SpanKind.INTERNAL)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CODE_FUNCTION_NAME,
+                        WebServiceFromInterface.class.getName() + ".partOfPublicInterface"))));
   }
 
   @Test
   void covariantInterfaceMethod() {
     new WebServiceFromInterface().covariantMethod();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("WebServiceFromInterface.covariantMethod")
-                        .hasNoParent()
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                WebServiceFromInterface.class.getName() + ".covariantMethod"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("WebServiceFromInterface.covariantMethod")
+                .hasNoParent()
+                .hasKind(SpanKind.INTERNAL)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CODE_FUNCTION_NAME,
+                        WebServiceFromInterface.class.getName() + ".covariantMethod"))));
   }
 
   @Test
@@ -89,17 +82,14 @@ class JwsAnnotationsTest {
                 new ProxyInvocationHandler(new WebServiceFromInterface()));
     proxy.partOfPublicInterface();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("WebServiceFromInterface.partOfPublicInterface")
-                        .hasNoParent()
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                WebServiceFromInterface.class.getName()
-                                    + ".partOfPublicInterface"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("WebServiceFromInterface.partOfPublicInterface")
+                .hasNoParent()
+                .hasKind(SpanKind.INTERNAL)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CODE_FUNCTION_NAME,
+                        WebServiceFromInterface.class.getName() + ".partOfPublicInterface"))));
   }
 }

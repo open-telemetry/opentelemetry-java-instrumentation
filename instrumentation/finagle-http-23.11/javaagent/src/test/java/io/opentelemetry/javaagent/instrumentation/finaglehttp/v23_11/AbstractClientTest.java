@@ -70,66 +70,64 @@ abstract class AbstractClientTest extends AbstractHttpClientTest<Request> {
 
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-    optionsBuilder.setSingleConnectionFactory(
-        (host, port) -> {
-          URI uri = URI.create(String.format(Locale.ROOT, "http://%s:%d", host, port));
-          Service<Request, Response> svc = getClient(uri, ClientType.SINGLE_CONN);
-          return (path, headers) -> {
-            // this is synchronized bc so is the Netty one;
-            // seems like the use of a "single" (presumably-queueing) connection would do this
-            // automatically, but apparently not
-            synchronized (svc) {
-              Request get = buildRequest("GET", URI.create(uri + path), headers);
-              return Await.result(svc.apply(get), Duration.fromSeconds(20)).statusCode();
-            }
-          };
-        });
+    optionsBuilder.setSingleConnectionFactory((host, port) -> {
+      URI uri = URI.create(String.format(Locale.ROOT, "http://%s:%d", host, port));
+      Service<Request, Response> svc = getClient(uri, ClientType.SINGLE_CONN);
+      return (path, headers) -> {
+        // this is synchronized bc so is the Netty one;
+        // seems like the use of a "single" (presumably-queueing) connection would do this
+        // automatically, but apparently not
+        synchronized (svc) {
+          Request get = buildRequest("GET", URI.create(uri + path), headers);
+          return Await.result(svc.apply(get), Duration.fromSeconds(20)).statusCode();
+        }
+      };
+    });
 
     optionsBuilder.setHttpAttributes(AbstractClientTest::getHttpAttributes);
     optionsBuilder.setExpectedClientSpanNameMapper(AbstractClientTest::getExpectedClientSpanName);
     optionsBuilder.disableTestRedirects();
     optionsBuilder.spanEndsAfterBody();
-    optionsBuilder.setClientSpanErrorMapper(
-        (uri, error) -> {
-          if (("http://localhost:" + PortUtils.UNUSABLE_PORT + "/").equals(uri.toString())) {
-            assertThat(error)
-                .isInstanceOf(Failure.class)
-                .cause()
-                .isInstanceOf(ConnectionFailedException.class)
-                .cause()
-                // this is a private class
-                // .isInstanceOf(io.netty.channel.AbstractChannel.AnnotatedConnectException.class)
-                .cause()
-                // On Linux: ConnectException, On Windows: ClosedChannelException
-                .isInstanceOfAny(ConnectException.class, ClosedChannelException.class);
-            error = error.getCause().getCause();
-          } else if ("https://192.0.2.1/".equals(uri.toString())
-              || "http://192.0.2.1/".equals(uri.toString())) {
-            // finagle handles all these in com.twitter.finagle.netty4.ConnectionBuilder.build();
-            // all errors emitted by the netty Bootstrap.connect() call are mapped to
-            // twitter/finagle exceptions and handled accordingly;
-            // namely, this means wrapping the root exception in a finagle
-            // ConnectionFailedException
-            // and then with a twitter Failure.rejected() call, resulting in the multiple nestings
-            // of the root exception
-            assertThat(error)
-                .isInstanceOf(Failure.class)
-                .cause()
-                .isInstanceOf(ConnectionFailedException.class)
-                .cause()
-                // On Linux: ConnectException, On Windows: ClosedChannelException
-                .isInstanceOfAny(ConnectException.class, ClosedChannelException.class);
-            error = error.getCause().getCause();
-          } else if (uri.getPath().endsWith("/read-timeout")) {
-            // not a connect() exception like the above, so is not wrapped as above;
-            assertThat(error).isInstanceOf(ReadTimedOutException.class);
-            // however, this specific case results in a mapping from netty's ReadTimeoutException
-            // to finagle's ReadTimedOutException in the finagle client code, losing all trace of
-            // the original exception; so we must construct it manually here
-            error = new ReadTimeoutException();
-          }
-          return error;
-        });
+    optionsBuilder.setClientSpanErrorMapper((uri, error) -> {
+      if (("http://localhost:" + PortUtils.UNUSABLE_PORT + "/").equals(uri.toString())) {
+        assertThat(error)
+            .isInstanceOf(Failure.class)
+            .cause()
+            .isInstanceOf(ConnectionFailedException.class)
+            .cause()
+            // this is a private class
+            // .isInstanceOf(io.netty.channel.AbstractChannel.AnnotatedConnectException.class)
+            .cause()
+            // On Linux: ConnectException, On Windows: ClosedChannelException
+            .isInstanceOfAny(ConnectException.class, ClosedChannelException.class);
+        error = error.getCause().getCause();
+      } else if ("https://192.0.2.1/".equals(uri.toString())
+          || "http://192.0.2.1/".equals(uri.toString())) {
+        // finagle handles all these in com.twitter.finagle.netty4.ConnectionBuilder.build();
+        // all errors emitted by the netty Bootstrap.connect() call are mapped to
+        // twitter/finagle exceptions and handled accordingly;
+        // namely, this means wrapping the root exception in a finagle
+        // ConnectionFailedException
+        // and then with a twitter Failure.rejected() call, resulting in the multiple nestings
+        // of the root exception
+        assertThat(error)
+            .isInstanceOf(Failure.class)
+            .cause()
+            .isInstanceOf(ConnectionFailedException.class)
+            .cause()
+            // On Linux: ConnectException, On Windows: ClosedChannelException
+            .isInstanceOfAny(ConnectException.class, ClosedChannelException.class);
+        error = error.getCause().getCause();
+      } else if (uri.getPath().endsWith("/read-timeout")) {
+        // not a connect() exception like the above, so is not wrapped as above;
+        assertThat(error).isInstanceOf(ReadTimedOutException.class);
+        // however, this specific case results in a mapping from netty's ReadTimeoutException
+        // to finagle's ReadTimedOutException in the finagle client code, losing all trace of
+        // the original exception; so we must construct it manually here
+        error = new ReadTimeoutException();
+      }
+      return error;
+    });
   }
 
   @Override
@@ -152,16 +150,14 @@ abstract class AbstractClientTest extends AbstractHttpClientTest<Request> {
       HttpClientResult httpClientResult)
       throws Exception {
     Await.ready(doSendRequest(request, uri), Duration.fromSeconds(30))
-        .onSuccess(
-            r -> {
-              httpClientResult.complete(r.statusCode());
-              return null;
-            })
-        .onFailure(
-            t -> {
-              httpClientResult.complete(t);
-              return null;
-            });
+        .onSuccess(r -> {
+          httpClientResult.complete(r.statusCode());
+          return null;
+        })
+        .onFailure(t -> {
+          httpClientResult.complete(t);
+          return null;
+        });
   }
 
   private static Set<AttributeKey<?>> getHttpAttributes(URI uri) {

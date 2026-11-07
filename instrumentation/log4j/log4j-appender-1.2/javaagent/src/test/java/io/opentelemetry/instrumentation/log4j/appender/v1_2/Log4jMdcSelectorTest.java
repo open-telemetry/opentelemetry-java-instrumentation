@@ -46,14 +46,13 @@ class Log4jMdcSelectorTest {
       MDC.remove("otel.event.name");
     }
 
-    testing.waitAndAssertLogRecords(
-        logRecord -> {
-          logRecord.hasEventName("MyEventName");
-          Attributes attributes = logRecord.actual().getAttributes();
-          assertThat(attributes.get(OTEL_EVENT_NAME)).isNull();
-          assertThat(capturedMdcAttributes(attributes))
-              .containsExactlyInAnyOrderEntriesOf(expectedMdcAttributes());
-        });
+    testing.waitAndAssertLogRecords(logRecord -> {
+      logRecord.hasEventName("MyEventName");
+      Attributes attributes = logRecord.actual().getAttributes();
+      assertThat(attributes.get(OTEL_EVENT_NAME)).isNull();
+      assertThat(capturedMdcAttributes(attributes))
+          .containsExactlyInAnyOrderEntriesOf(expectedMdcAttributes());
+    });
   }
 
   private static Map<String, String> mdcEntries() {
@@ -70,13 +69,12 @@ class Log4jMdcSelectorTest {
 
   private static Map<String, String> capturedMdcAttributes(Attributes attributes) {
     Map<String, String> captured = new HashMap<>();
-    MDC_ENTRIES.forEach(
-        (key, value) -> {
-          String attributeValue = attributes.get(stringKey(key));
-          if (attributeValue != null) {
-            captured.put(key, attributeValue);
-          }
-        });
+    MDC_ENTRIES.forEach((key, value) -> {
+      String attributeValue = attributes.get(stringKey(key));
+      if (attributeValue != null) {
+        captured.put(key, attributeValue);
+      }
+    });
     return captured;
   }
 

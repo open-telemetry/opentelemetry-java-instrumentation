@@ -265,18 +265,16 @@ class SpringRabbitMqTest {
                 span -> span.hasKind(SpanKind.PRODUCER),
                 span ->
                     span.hasName("process " + outerQueue)
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getInstrumentationScopeInfo().getName())
-                                    .isEqualTo("io.opentelemetry.spring-rabbit-1.1")),
+                        .satisfies(spanData ->
+                            assertThat(spanData.getInstrumentationScopeInfo().getName())
+                                .isEqualTo("io.opentelemetry.spring-rabbit-1.1")),
                 span -> span.hasName("basic.consume"),
                 span -> span.hasKind(SpanKind.PRODUCER),
                 span ->
                     span.hasName("process " + nestedQueue)
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getInstrumentationScopeInfo().getName())
-                                    .isEqualTo("io.opentelemetry.rabbitmq-2.7"))),
+                        .satisfies(spanData ->
+                            assertThat(spanData.getInstrumentationScopeInfo().getName())
+                                .isEqualTo("io.opentelemetry.rabbitmq-2.7"))),
         trace -> trace.hasSpansSatisfyingExactly(SpringRabbitMqTest::verifyAckSpan));
     assertRabbitProcessDuration(testing, nestedQueue);
   }
@@ -638,15 +636,13 @@ class SpringRabbitMqTest {
             org.springframework.amqp.rabbit.connection.ConnectionFactory.class));
     container.setQueueNames(queue);
     container.setDefaultRequeueRejected(false);
-    container.setMessageListener(
-        message -> {
-          throw new IllegalStateException("test");
-        });
-    container.setErrorHandler(
-        error -> {
-          errorHandlerSpanContext.set(Span.current().getSpanContext());
-          errorHandled.countDown();
-        });
+    container.setMessageListener(message -> {
+      throw new IllegalStateException("test");
+    });
+    container.setErrorHandler(error -> {
+      errorHandlerSpanContext.set(Span.current().getSpanContext());
+      errorHandled.countDown();
+    });
     cleanup.deferCleanup(container::stop);
     container.start();
     testing.waitForTraces(3);

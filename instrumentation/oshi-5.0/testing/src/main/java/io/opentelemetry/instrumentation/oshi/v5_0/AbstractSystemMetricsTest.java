@@ -42,48 +42,44 @@ public abstract class AbstractSystemMetricsTest {
             scopeName(),
             "system.memory.usage",
             metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("Reports memory by state.")
-                            .hasUnit("By")
-                            .hasLongSumSatisfying(
-                                sum ->
-                                    sum.isNotMonotonic()
-                                        .hasPointsSatisfying(
-                                            point ->
-                                                point
-                                                    .hasAttributesSatisfyingExactly(
-                                                        equalTo(SYSTEM_MEMORY_STATE, "used"))
-                                                    .hasValueSatisfying(v -> v.isNotNegative()),
-                                            point ->
-                                                point
-                                                    .hasAttributesSatisfyingExactly(
-                                                        equalTo(SYSTEM_MEMORY_STATE, "available"))
-                                                    .hasValueSatisfying(v -> v.isNotNegative())))));
+                metrics.anySatisfy(metric ->
+                    assertThat(metric)
+                        .hasDescription("Reports memory by state.")
+                        .hasUnit("By")
+                        .hasLongSumSatisfying(sum ->
+                            sum.isNotMonotonic()
+                                .hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(SYSTEM_MEMORY_STATE, "used"))
+                                            .hasValueSatisfying(v -> v.isNotNegative()),
+                                    point ->
+                                        point
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(SYSTEM_MEMORY_STATE, "available"))
+                                            .hasValueSatisfying(v -> v.isNotNegative())))));
     testing()
         .waitAndAssertMetrics(
             scopeName(),
             "system.memory.utilization",
             metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasDescription("Fraction of memory bytes by state.")
-                            .hasUnit("1")
-                            .hasDoubleGaugeSatisfying(
-                                gauge ->
-                                    gauge.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(SYSTEM_MEMORY_STATE, "used"))
-                                                .hasValueSatisfying(v -> v.isNotNegative()),
-                                        point ->
-                                            point
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(SYSTEM_MEMORY_STATE, "available"))
-                                                .hasValueSatisfying(v -> v.isNotNegative())))));
+                metrics.anySatisfy(metric ->
+                    assertThat(metric)
+                        .hasDescription("Fraction of memory bytes by state.")
+                        .hasUnit("1")
+                        .hasDoubleGaugeSatisfying(gauge ->
+                            gauge.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SYSTEM_MEMORY_STATE, "used"))
+                                        .hasValueSatisfying(v -> v.isNotNegative()),
+                                point ->
+                                    point
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(SYSTEM_MEMORY_STATE, "available"))
+                                        .hasValueSatisfying(v -> v.isNotNegative())))));
   }
 
   @Test
@@ -95,68 +91,61 @@ public abstract class AbstractSystemMetricsTest {
             scopeName(),
             "system.network.io",
             metrics ->
-                metrics.anySatisfy(
-                    metric -> {
-                      assertThat(metric)
-                          .hasDescription("The number of bytes transmitted and received.")
-                          .hasUnit("By")
-                          .hasLongSumSatisfying(sum -> sum.isMonotonic());
-                      assertNetworkPoints(
-                          metric.getLongSumData().getPoints(), NETWORK_INTERFACE_NAME);
-                    }));
+                metrics.anySatisfy(metric -> {
+                  assertThat(metric)
+                      .hasDescription("The number of bytes transmitted and received.")
+                      .hasUnit("By")
+                      .hasLongSumSatisfying(sum -> sum.isMonotonic());
+                  assertNetworkPoints(metric.getLongSumData().getPoints(), NETWORK_INTERFACE_NAME);
+                }));
     testing()
         .waitAndAssertMetrics(
             scopeName(),
             "system.network.packet.count",
             metrics ->
-                metrics.anySatisfy(
-                    metric -> {
-                      assertThat(metric)
-                          .hasDescription("The number of packets transferred.")
-                          .hasUnit("{packet}")
-                          .hasLongSumSatisfying(sum -> sum.isMonotonic());
-                      assertNetworkPoints(metric.getLongSumData().getPoints(), SYSTEM_DEVICE_NAME);
-                    }));
+                metrics.anySatisfy(metric -> {
+                  assertThat(metric)
+                      .hasDescription("The number of packets transferred.")
+                      .hasUnit("{packet}")
+                      .hasLongSumSatisfying(sum -> sum.isMonotonic());
+                  assertNetworkPoints(metric.getLongSumData().getPoints(), SYSTEM_DEVICE_NAME);
+                }));
     testing()
         .waitAndAssertMetrics(
             scopeName(),
             "system.network.errors",
             metrics ->
-                metrics.anySatisfy(
-                    metric -> {
-                      assertThat(metric)
-                          .hasDescription("Count of network errors detected.")
-                          .hasUnit("{error}")
-                          .hasLongSumSatisfying(sum -> sum.isMonotonic());
-                      assertNetworkPoints(
-                          metric.getLongSumData().getPoints(), NETWORK_INTERFACE_NAME);
-                    }));
+                metrics.anySatisfy(metric -> {
+                  assertThat(metric)
+                      .hasDescription("Count of network errors detected.")
+                      .hasUnit("{error}")
+                      .hasLongSumSatisfying(sum -> sum.isMonotonic());
+                  assertNetworkPoints(metric.getLongSumData().getPoints(), NETWORK_INTERFACE_NAME);
+                }));
     testing()
         .waitAndAssertMetrics(
             scopeName(),
             "system.disk.io",
             metrics ->
-                metrics.anySatisfy(
-                    metric -> {
-                      assertThat(metric)
-                          .hasDescription("Disk bytes transferred.")
-                          .hasUnit("By")
-                          .hasLongSumSatisfying(sum -> sum.isMonotonic());
-                      assertDiskPoints(metric.getLongSumData().getPoints());
-                    }));
+                metrics.anySatisfy(metric -> {
+                  assertThat(metric)
+                      .hasDescription("Disk bytes transferred.")
+                      .hasUnit("By")
+                      .hasLongSumSatisfying(sum -> sum.isMonotonic());
+                  assertDiskPoints(metric.getLongSumData().getPoints());
+                }));
     testing()
         .waitAndAssertMetrics(
             scopeName(),
             "system.disk.operations",
             metrics ->
-                metrics.anySatisfy(
-                    metric -> {
-                      assertThat(metric)
-                          .hasDescription("Disk operations count.")
-                          .hasUnit("{operation}")
-                          .hasLongSumSatisfying(sum -> sum.isMonotonic());
-                      assertDiskPoints(metric.getLongSumData().getPoints());
-                    }));
+                metrics.anySatisfy(metric -> {
+                  assertThat(metric)
+                      .hasDescription("Disk operations count.")
+                      .hasUnit("{operation}")
+                      .hasLongSumSatisfying(sum -> sum.isMonotonic());
+                  assertDiskPoints(metric.getLongSumData().getPoints());
+                }));
   }
 
   @Test
@@ -168,11 +157,10 @@ public abstract class AbstractSystemMetricsTest {
             scopeName(),
             "system.memory.usage",
             metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                            .satisfies(hasScopeVersion(version))));
+                metrics.anySatisfy(metric ->
+                    assertThat(metric)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                        .satisfies(hasScopeVersion(version))));
   }
 
   @Test
@@ -182,13 +170,11 @@ public abstract class AbstractSystemMetricsTest {
             scopeName(), "system.network.packet.count", metrics -> metrics.isNotEmpty());
     assertThat(testing().metrics())
         .filteredOn(metric -> metric.getInstrumentationScopeInfo().getName().equals(scopeName()))
-        .allSatisfy(
-            metric ->
-                assertThat(metric)
-                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                    .satisfies(
-                        hasScopeVersion(
-                            EmbeddedInstrumentationProperties.findVersion(scopeName()))))
+        .allSatisfy(metric ->
+            assertThat(metric)
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                .satisfies(
+                    hasScopeVersion(EmbeddedInstrumentationProperties.findVersion(scopeName()))))
         .extracting(MetricData::getName)
         .containsOnly(
             "system.memory.usage",
@@ -203,24 +189,20 @@ public abstract class AbstractSystemMetricsTest {
   private static void assertNetworkPoints(
       Collection<LongPointData> points, AttributeKey<String> device) {
     assertThat(points)
-        .allSatisfy(
-            point -> {
-              assertThat(point.getAttributes().asMap())
-                  .containsOnlyKeys(device, NETWORK_IO_DIRECTION);
-              assertThat(point.getAttributes().get(device)).isNotBlank();
-              assertThat(point.getAttributes().get(NETWORK_IO_DIRECTION))
-                  .isIn("receive", "transmit");
-            });
+        .allSatisfy(point -> {
+          assertThat(point.getAttributes().asMap()).containsOnlyKeys(device, NETWORK_IO_DIRECTION);
+          assertThat(point.getAttributes().get(device)).isNotBlank();
+          assertThat(point.getAttributes().get(NETWORK_IO_DIRECTION)).isIn("receive", "transmit");
+        });
   }
 
   private static void assertDiskPoints(Collection<LongPointData> points) {
     assertThat(points)
-        .allSatisfy(
-            point -> {
-              assertThat(point.getAttributes().asMap())
-                  .containsOnlyKeys(SYSTEM_DEVICE_NAME, DISK_IO_DIRECTION);
-              assertThat(point.getAttributes().get(SYSTEM_DEVICE_NAME)).isNotBlank();
-              assertThat(point.getAttributes().get(DISK_IO_DIRECTION)).isIn("read", "write");
-            });
+        .allSatisfy(point -> {
+          assertThat(point.getAttributes().asMap())
+              .containsOnlyKeys(SYSTEM_DEVICE_NAME, DISK_IO_DIRECTION);
+          assertThat(point.getAttributes().get(SYSTEM_DEVICE_NAME)).isNotBlank();
+          assertThat(point.getAttributes().get(DISK_IO_DIRECTION)).isIn("read", "write");
+        });
   }
 }

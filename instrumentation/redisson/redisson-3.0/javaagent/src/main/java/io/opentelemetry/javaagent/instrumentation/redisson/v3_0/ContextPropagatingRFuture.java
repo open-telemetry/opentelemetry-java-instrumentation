@@ -16,18 +16,17 @@ public class ContextPropagatingRFuture<T> extends RedissonPromise<T> {
 
   private ContextPropagatingRFuture(RFuture<T> delegate, Context context) {
     this.delegate = delegate;
-    delegate.whenComplete(
-        (result, error) -> {
-          try (Scope ignored = context.makeCurrent()) {
-            if (delegate.isCancelled()) {
-              cancelFromDelegate();
-            } else if (error != null) {
-              tryFailure(error);
-            } else {
-              trySuccess(result);
-            }
-          }
-        });
+    delegate.whenComplete((result, error) -> {
+      try (Scope ignored = context.makeCurrent()) {
+        if (delegate.isCancelled()) {
+          cancelFromDelegate();
+        } else if (error != null) {
+          tryFailure(error);
+        } else {
+          trySuccess(result);
+        }
+      }
+    });
   }
 
   public static <T> RFuture<T> wrap(RFuture<T> delegate, Context context) {

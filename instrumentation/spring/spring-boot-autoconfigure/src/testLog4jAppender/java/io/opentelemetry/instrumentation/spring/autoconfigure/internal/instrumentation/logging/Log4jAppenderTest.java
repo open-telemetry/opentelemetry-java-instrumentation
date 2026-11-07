@@ -50,12 +50,11 @@ class Log4jAppenderTest {
 
     logger.info(new StringMapMessage().with("included", "captured").with("excluded", "captured"));
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            assertThat(logRecord.actual().getAttributes().asMap())
-                .containsOnly(
-                    entry(stringKey("included"), "captured"),
-                    entry(stringKey("excluded"), "captured")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        assertThat(logRecord.actual().getAttributes().asMap())
+            .containsOnly(
+                entry(stringKey("included"), "captured"),
+                entry(stringKey("excluded"), "captured")));
   }
 
   @Test
@@ -70,10 +69,9 @@ class Log4jAppenderTest {
                 .with("request-secret", "not captured")
                 .with("other", "not captured"));
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            assertThat(logRecord.actual().getAttributes().asMap())
-                .containsOnly(entry(stringKey("request-id"), "captured")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        assertThat(logRecord.actual().getAttributes().asMap())
+            .containsOnly(entry(stringKey("request-id"), "captured")));
   }
 
   private static void startSpringApplication() {

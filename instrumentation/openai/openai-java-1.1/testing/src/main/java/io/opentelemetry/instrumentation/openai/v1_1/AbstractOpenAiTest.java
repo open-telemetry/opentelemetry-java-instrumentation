@@ -113,14 +113,13 @@ abstract class AbstractOpenAiTest {
       return emptyList();
     }
     List<Consumer<LogRecordDataAssert>> logs = new ArrayList<>(transportExceptionLogs());
-    logs.add(
-        logRecord ->
-            logRecord
-                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
-                .hasSeverity(Severity.WARN)
-                .hasEventName("gen_ai.client.operation.exception")
-                .hasException(thrown)
-                .hasTotalAttributeCount(3));
+    logs.add(logRecord ->
+        logRecord
+            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
+            .hasSeverity(Severity.WARN)
+            .hasEventName("gen_ai.client.operation.exception")
+            .hasException(thrown)
+            .hasTotalAttributeCount(3));
     return logs;
   }
 
@@ -150,11 +149,10 @@ abstract class AbstractOpenAiTest {
             testType == TestType.ASYNC ? getClientAsync() : getClient().async();
         return async
             .apply(client)
-            .thenApply(
-                res -> {
-                  assertThat(Span.fromContextOrNull(Context.current())).isNull();
-                  return res;
-                })
+            .thenApply(res -> {
+              assertThat(Span.fromContextOrNull(Context.current())).isNull();
+              return res;
+            })
             .join();
     }
     throw new AssertionError();

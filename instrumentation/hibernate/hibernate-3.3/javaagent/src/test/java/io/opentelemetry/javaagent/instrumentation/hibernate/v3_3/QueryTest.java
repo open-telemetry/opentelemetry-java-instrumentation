@@ -45,28 +45,27 @@ class QueryTest extends AbstractHibernateTest {
           });
     }
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          if (parameters.requiresTransaction) {
-            // With Transaction
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertSessionSpan(span, trace.getSpan(0), parameters.expectedSpanName),
-                span -> assertClientSpan(span, trace.getSpan(1)),
-                span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Transaction.commit",
-                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)));
-          } else {
-            // Without Transaction
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertSessionSpan(span, trace.getSpan(0), parameters.expectedSpanName),
-                span -> assertClientSpan(span, trace.getSpan(1), "select"));
-          }
-        });
+    testing.waitAndAssertTraces(trace -> {
+      if (parameters.requiresTransaction) {
+        // With Transaction
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> assertSessionSpan(span, trace.getSpan(0), parameters.expectedSpanName),
+            span -> assertClientSpan(span, trace.getSpan(1)),
+            span ->
+                assertSpanWithSessionId(
+                    span,
+                    trace.getSpan(0),
+                    "Transaction.commit",
+                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)));
+      } else {
+        // Without Transaction
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> assertSessionSpan(span, trace.getSpan(0), parameters.expectedSpanName),
+            span -> assertClientSpan(span, trace.getSpan(1), "select"));
+      }
+    });
   }
 
   private static Stream<Arguments> provideArguments() {

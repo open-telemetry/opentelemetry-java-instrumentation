@@ -82,26 +82,25 @@ abstract class AbstractOpenAiChatModelTest {
     assertThat(requests.get(0).getBodyAsString()).contains(MODEL, PROMPT);
 
     SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("chat " + MODEL)
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                            equalTo(GEN_AI_RESPONSE_FINISH_REASONS, singletonList(FINISH_REASON)),
-                            equalTo(GEN_AI_RESPONSE_ID, "chatcmpl-test"),
-                            equalTo(GEN_AI_RESPONSE_MODEL, RESPONSE_MODEL),
-                            equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
-                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L)),
-                // http client span
-                span -> span.hasName("POST").hasKind(CLIENT).hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("chat " + MODEL)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                        equalTo(GEN_AI_RESPONSE_FINISH_REASONS, singletonList(FINISH_REASON)),
+                        equalTo(GEN_AI_RESPONSE_ID, "chatcmpl-test"),
+                        equalTo(GEN_AI_RESPONSE_MODEL, RESPONSE_MODEL),
+                        equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
+                        equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L)),
+            // http client span
+            span -> span.hasName("POST").hasKind(CLIENT).hasParent(trace.getSpan(1))));
     assertMetrics();
     assertMessageEvents(spanContext);
   }
@@ -113,42 +112,39 @@ abstract class AbstractOpenAiChatModelTest {
             metric
                 .hasName("gen_ai.client.operation.duration")
                 .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasSumGreaterThan(0.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, RESPONSE_MODEL)))),
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasSumGreaterThan(0.0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                equalTo(GEN_AI_RESPONSE_MODEL, RESPONSE_MODEL)))),
         metric ->
             metric
                 .hasName("gen_ai.client.token.usage")
                 .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasSum(22.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, RESPONSE_MODEL),
-                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT)),
-                            point ->
-                                point
-                                    .hasSum(2.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, RESPONSE_MODEL),
-                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT)))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(
+                        point ->
+                            point
+                                .hasSum(22.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, RESPONSE_MODEL),
+                                    equalTo(GEN_AI_TOKEN_TYPE, INPUT)),
+                        point ->
+                            point
+                                .hasSum(2.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, RESPONSE_MODEL),
+                                    equalTo(GEN_AI_TOKEN_TYPE, OUTPUT)))));
   }
 
   private static void assertMessageEvents(SpanContext spanContext) {

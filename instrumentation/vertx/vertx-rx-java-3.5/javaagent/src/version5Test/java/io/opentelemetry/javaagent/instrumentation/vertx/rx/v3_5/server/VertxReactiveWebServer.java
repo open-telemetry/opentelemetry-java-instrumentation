@@ -66,16 +66,15 @@ public class VertxReactiveWebServer extends AbstractVerticle {
         .deployVerticle(
             VertxReactiveWebServer.class.getName(),
             new DeploymentOptions().setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port)))
-        .onComplete(
-            res -> {
-              if (!res.succeeded()) {
-                RuntimeException exception =
-                    new RuntimeException("Cannot deploy server Verticle", res.cause());
-                future.completeExceptionally(exception);
-                return;
-              }
-              future.complete(null);
-            });
+        .onComplete(res -> {
+          if (!res.succeeded()) {
+            RuntimeException exception =
+                new RuntimeException("Cannot deploy server Verticle", res.cause());
+            future.completeExceptionally(exception);
+            return;
+          }
+          future.complete(null);
+        });
 
     // block until vertx server is up
     future.get(30, SECONDS);
@@ -101,14 +100,13 @@ public class VertxReactiveWebServer extends AbstractVerticle {
               .createHttpServer()
               .requestHandler(router)
               .listen(port)
-              .onComplete(
-                  httpServerAsyncResult -> {
-                    if (httpServerAsyncResult.failed()) {
-                      startPromise.fail(httpServerAsyncResult.cause());
-                      return;
-                    }
-                    startPromise.complete();
-                  });
+              .onComplete(httpServerAsyncResult -> {
+                if (httpServerAsyncResult.failed()) {
+                  startPromise.fail(httpServerAsyncResult.cause());
+                  return;
+                }
+                startPromise.complete();
+              });
         },
         throwable -> startPromise.fail(throwable));
   }
@@ -141,19 +139,17 @@ public class VertxReactiveWebServer extends AbstractVerticle {
       return client
           .query("SELECT id" + queryInfix + ", name, price, weight FROM products")
           .rxExecute()
-          .flatMap(
-              result -> {
-                JsonArray arr = new JsonArray();
-                result.forEach(
-                    row -> {
-                      JsonArray values = new JsonArray();
-                      for (int i = 0; i < 4; i++) {
-                        values.add(row.getValue(i));
-                      }
-                      arr.add(values);
-                    });
-                return Single.just(arr);
-              });
+          .flatMap(result -> {
+            JsonArray arr = new JsonArray();
+            result.forEach(row -> {
+              JsonArray values = new JsonArray();
+              for (int i = 0; i < 4; i++) {
+                values.add(row.getValue(i));
+              }
+              arr.add(values);
+            });
+            return Single.just(arr);
+          });
     } finally {
       span.end();
     }
@@ -173,38 +169,35 @@ public class VertxReactiveWebServer extends AbstractVerticle {
   private static void setUpInitialData(Handler<Void> done, Handler<Throwable> onError) {
     client
         .getConnection()
-        .onComplete(
-            res -> {
-              if (res.failed()) {
-                onError.handle(res.cause());
-                return;
-              }
+        .onComplete(res -> {
+          if (res.failed()) {
+            onError.handle(res.cause());
+            return;
+          }
 
-              SqlConnection conn = res.result();
+          SqlConnection conn = res.result();
 
-              conn.query(
-                      "CREATE TABLE IF NOT EXISTS products(id INT IDENTITY, name VARCHAR(255), price FLOAT, weight INT)")
-                  .execute()
-                  .onComplete(
-                      ddl -> {
-                        if (ddl.failed()) {
-                          onError.handle(ddl.cause());
-                          return;
-                        }
+          conn.query(
+                  "CREATE TABLE IF NOT EXISTS products(id INT IDENTITY, name VARCHAR(255), price FLOAT, weight INT)")
+              .execute()
+              .onComplete(ddl -> {
+                if (ddl.failed()) {
+                  onError.handle(ddl.cause());
+                  return;
+                }
 
-                        conn.query(
-                                "INSERT INTO products (name, price, weight) VALUES ('Egg Whisk', 3.99, 150), ('Tea Cosy', 5.99, 100), ('Spatula', 1.00, 80)")
-                            .execute()
-                            .onComplete(
-                                fixtures -> {
-                                  if (fixtures.failed()) {
-                                    onError.handle(fixtures.cause());
-                                    return;
-                                  }
+                conn.query(
+                        "INSERT INTO products (name, price, weight) VALUES ('Egg Whisk', 3.99, 150), ('Tea Cosy', 5.99, 100), ('Spatula', 1.00, 80)")
+                    .execute()
+                    .onComplete(fixtures -> {
+                      if (fixtures.failed()) {
+                        onError.handle(fixtures.cause());
+                        return;
+                      }
 
-                                  done.handle(null);
-                                });
-                      });
-            });
+                      done.handle(null);
+                    });
+              });
+        });
   }
 }

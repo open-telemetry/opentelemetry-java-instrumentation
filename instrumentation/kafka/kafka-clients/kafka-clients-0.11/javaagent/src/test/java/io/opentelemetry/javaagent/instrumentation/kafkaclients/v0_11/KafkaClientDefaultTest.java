@@ -116,13 +116,12 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("poll " + SHARED_TOPIC)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasLinks(receiveRecordLink(producerSpan.get()))
-                        .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("poll " + SHARED_TOPIC)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasLinks(receiveRecordLink(producerSpan.get()))
+                    .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
     assertMessagingMetrics();
   }
 
@@ -167,9 +166,8 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasParent(trace.getSpan(0)),
                 span -> span.hasName("processing").hasParent(trace.getSpan(1))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("poll " + SHARED_TOPIC).hasKind(SpanKind.CLIENT).hasNoParent()));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("poll " + SHARED_TOPIC).hasKind(SpanKind.CLIENT).hasNoParent()));
   }
 
   @Test
@@ -258,12 +256,11 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasAttributesSatisfyingExactly(
                             processAttributes(null, null, testHeaders, false))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("poll " + SHARED_TOPIC)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("poll " + SHARED_TOPIC)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
   }
 
   @ParameterizedTest
@@ -315,12 +312,11 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasAttributesSatisfyingExactly(
                             processAttributes(null, greeting, false, false))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("poll " + SHARED_TOPIC)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(receiveAttributes(false))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("poll " + SHARED_TOPIC)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(receiveAttributes(false))));
   }
 
   @DisplayName("test kafka null header")
@@ -384,12 +380,11 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("poll " + SHARED_TOPIC)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(receiveAttributes(false))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("poll " + SHARED_TOPIC)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(receiveAttributes(false))));
   }
 
   private static void waitAndAssertTraces(

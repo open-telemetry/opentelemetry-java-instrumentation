@@ -61,11 +61,10 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
         KafkaStreamsReflectionUtil.createBuilder();
     KStream<Integer, String> textLines = streamBuilder.stream(STREAM_PENDING);
     KStream<Integer, String> values =
-        textLines.mapValues(
-            textLine -> {
-              Span.current().setAttribute("asdf", "testing");
-              return textLine.toLowerCase(Locale.ROOT);
-            });
+        textLines.mapValues(textLine -> {
+          Span.current().setAttribute("asdf", "testing");
+          return textLine.toLowerCase(Locale.ROOT);
+        });
 
     KafkaStreams streams = streamBuilder.createStreams(values, config, STREAM_PROCESSED);
     cleanup.deferCleanup(() -> streams.close());
@@ -91,64 +90,62 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
     assertThat(receivedHeaders).isNotEmpty();
     SpanContext receivedContext = Span.fromContext(getContext(receivedHeaders)).getSpanContext();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                // kafka-clients PRODUCER
-                span -> {
-                  List<AttributeAssertion> pendingProducerAttrs =
-                      new ArrayList<>(
-                          producerAttributes(
-                              STREAM_PENDING, val -> val.isEqualTo("producer-1"), true));
-                  pendingProducerAttrs.add(
-                      satisfies(stringKey("kafka.cluster.id"), val -> val.isNotEmpty()));
-                  span.hasName("send " + STREAM_PENDING)
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasNoParent()
-                      .hasAttributesSatisfyingExactly(pendingProducerAttrs);
-                },
-                // kafka-stream CONSUMER
-                span ->
-                    span.hasName("process " + STREAM_PENDING)
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(asRemote(trace.getSpan(0).getSpanContext())))
-                        .hasAttributesSatisfyingExactly(
-                            processAttributes(
-                                STREAM_PENDING,
-                                "test-application",
-                                val -> val.endsWith("consumer"),
-                                equalTo(stringKey("asdf"), "testing"))),
-                // kafka-clients PRODUCER
-                span -> {
-                  List<AttributeAssertion> processedProducerAttrs =
-                      new ArrayList<>(
-                          producerAttributes(
-                              STREAM_PROCESSED, val -> val.isInstanceOf(String.class), false));
-                  // cluster.id: best-effort; Streams internal producer may lack it on first send.
-                  if (trace.getSpan(2).getAttributes().get(stringKey("kafka.cluster.id")) != null) {
-                    processedProducerAttrs.add(
-                        satisfies(stringKey("kafka.cluster.id"), val -> val.isNotEmpty()));
-                  }
-                  span.hasName("send " + STREAM_PROCESSED)
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(1))
-                      .hasTraceId(receivedContext.getTraceId())
-                      .hasSpanId(receivedContext.getSpanId())
-                      .hasAttributesSatisfyingExactly(processedProducerAttrs);
-                },
-                // kafka-clients CONSUMER process
-                span ->
-                    span.hasName("process " + STREAM_PROCESSED)
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(2))
-                        .hasLinks(LinkData.create(asRemote(trace.getSpan(2).getSpanContext())))
-                        .hasAttributesSatisfyingExactly(
-                            processAttributes(
-                                STREAM_PROCESSED,
-                                "test",
-                                val -> val.startsWith("consumer"),
-                                equalTo(longKey("testing"), 123)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            // kafka-clients PRODUCER
+            span -> {
+              List<AttributeAssertion> pendingProducerAttrs =
+                  new ArrayList<>(
+                      producerAttributes(STREAM_PENDING, val -> val.isEqualTo("producer-1"), true));
+              pendingProducerAttrs.add(
+                  satisfies(stringKey("kafka.cluster.id"), val -> val.isNotEmpty()));
+              span.hasName("send " + STREAM_PENDING)
+                  .hasKind(SpanKind.PRODUCER)
+                  .hasNoParent()
+                  .hasAttributesSatisfyingExactly(pendingProducerAttrs);
+            },
+            // kafka-stream CONSUMER
+            span ->
+                span.hasName("process " + STREAM_PENDING)
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasParent(trace.getSpan(0))
+                    .hasLinks(LinkData.create(asRemote(trace.getSpan(0).getSpanContext())))
+                    .hasAttributesSatisfyingExactly(
+                        processAttributes(
+                            STREAM_PENDING,
+                            "test-application",
+                            val -> val.endsWith("consumer"),
+                            equalTo(stringKey("asdf"), "testing"))),
+            // kafka-clients PRODUCER
+            span -> {
+              List<AttributeAssertion> processedProducerAttrs =
+                  new ArrayList<>(
+                      producerAttributes(
+                          STREAM_PROCESSED, val -> val.isInstanceOf(String.class), false));
+              // cluster.id: best-effort; Streams internal producer may lack it on first send.
+              if (trace.getSpan(2).getAttributes().get(stringKey("kafka.cluster.id")) != null) {
+                processedProducerAttrs.add(
+                    satisfies(stringKey("kafka.cluster.id"), val -> val.isNotEmpty()));
+              }
+              span.hasName("send " + STREAM_PROCESSED)
+                  .hasKind(SpanKind.PRODUCER)
+                  .hasParent(trace.getSpan(1))
+                  .hasTraceId(receivedContext.getTraceId())
+                  .hasSpanId(receivedContext.getSpanId())
+                  .hasAttributesSatisfyingExactly(processedProducerAttrs);
+            },
+            // kafka-clients CONSUMER process
+            span ->
+                span.hasName("process " + STREAM_PROCESSED)
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasParent(trace.getSpan(2))
+                    .hasLinks(LinkData.create(asRemote(trace.getSpan(2).getSpanContext())))
+                    .hasAttributesSatisfyingExactly(
+                        processAttributes(
+                            STREAM_PROCESSED,
+                            "test",
+                            val -> val.startsWith("consumer"),
+                            equalTo(longKey("testing"), 123)))));
     assertProcessMetricsWithConsumedMessages(
         testing,
         "io.opentelemetry.kafka-streams-0.11",

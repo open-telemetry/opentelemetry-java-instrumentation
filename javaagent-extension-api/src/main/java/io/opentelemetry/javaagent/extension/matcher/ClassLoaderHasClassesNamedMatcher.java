@@ -74,7 +74,7 @@ class ClassLoaderHasClassesNamedMatcher extends ElementMatcher.Junction.Abstract
     }
 
     boolean match(ClassLoaderHasClassesNamedMatcher matcher, ClassLoader cl) {
-      BitSet set = enabled.computeIfAbsent(cl, (unused) -> new BitSet(counter.get() * 2));
+      BitSet set = enabled.computeIfAbsent(cl, unused -> new BitSet(counter.get() * 2));
       int matcherRunBit = 2 * matcher.index;
       int matchedBit = matcherRunBit + 1;
       readLock.lock();

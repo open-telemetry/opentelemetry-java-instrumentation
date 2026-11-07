@@ -151,16 +151,13 @@ public class DbConnectionPoolMetricsAssertions {
         .hasUnit("{connection}")
         .hasDescription(
             "The number of connections that are currently in state described by the `state` attribute.")
-        .hasLongSumSatisfying(
-            sum ->
-                sum.isNotMonotonic()
-                    .hasPointsSatisfying(
-                        point ->
-                            verifyPointAttributes(
-                                point, equalTo(DB_CLIENT_CONNECTION_STATE, "idle")),
-                        point ->
-                            verifyPointAttributes(
-                                point, equalTo(DB_CLIENT_CONNECTION_STATE, "used"))));
+        .hasLongSumSatisfying(sum ->
+            sum.isNotMonotonic()
+                .hasPointsSatisfying(
+                    point ->
+                        verifyPointAttributes(point, equalTo(DB_CLIENT_CONNECTION_STATE, "idle")),
+                    point ->
+                        verifyPointAttributes(point, equalTo(DB_CLIENT_CONNECTION_STATE, "used"))));
   }
 
   private void verifyMaxConnections() {

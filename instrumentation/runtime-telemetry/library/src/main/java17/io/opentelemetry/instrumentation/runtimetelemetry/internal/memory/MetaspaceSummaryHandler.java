@@ -73,11 +73,10 @@ public final class MetaspaceSummaryHandler implements RecordedEventHandler {
               .upDownCounterBuilder(Constants.METRIC_NAME_MEMORY)
               .setDescription(Constants.METRIC_DESCRIPTION_MEMORY)
               .setUnit(Constants.BYTES)
-              .buildWithCallback(
-                  measurement -> {
-                    measurement.record(classUsage, ATTR_MEMORY_COMPRESSED_CLASS_SPACE);
-                    measurement.record(totalUsage, ATTR_MEMORY_METASPACE);
-                  }));
+              .buildWithCallback(measurement -> {
+                measurement.record(classUsage, ATTR_MEMORY_COMPRESSED_CLASS_SPACE);
+                measurement.record(totalUsage, ATTR_MEMORY_METASPACE);
+              }));
     }
     if (committedSelected) {
       observables.add(
@@ -85,11 +84,10 @@ public final class MetaspaceSummaryHandler implements RecordedEventHandler {
               .upDownCounterBuilder(Constants.METRIC_NAME_COMMITTED)
               .setDescription(Constants.METRIC_DESCRIPTION_COMMITTED)
               .setUnit(Constants.BYTES)
-              .buildWithCallback(
-                  measurement -> {
-                    measurement.record(classCommitted, ATTR_MEMORY_COMPRESSED_CLASS_SPACE);
-                    measurement.record(totalCommitted, ATTR_MEMORY_METASPACE);
-                  }));
+              .buildWithCallback(measurement -> {
+                measurement.record(classCommitted, ATTR_MEMORY_COMPRESSED_CLASS_SPACE);
+                measurement.record(totalCommitted, ATTR_MEMORY_METASPACE);
+              }));
     }
     if (limitSelected) {
       observables.add(
@@ -97,11 +95,10 @@ public final class MetaspaceSummaryHandler implements RecordedEventHandler {
               .upDownCounterBuilder(Constants.METRIC_NAME_MEMORY_LIMIT)
               .setDescription(Constants.METRIC_DESCRIPTION_MEMORY_LIMIT)
               .setUnit(Constants.BYTES)
-              .buildWithCallback(
-                  measurement -> {
-                    measurement.record(classLimit, ATTR_MEMORY_COMPRESSED_CLASS_SPACE);
-                    measurement.record(totalLimit, ATTR_MEMORY_METASPACE);
-                  }));
+              .buildWithCallback(measurement -> {
+                measurement.record(classLimit, ATTR_MEMORY_COMPRESSED_CLASS_SPACE);
+                measurement.record(totalLimit, ATTR_MEMORY_METASPACE);
+              }));
     }
   }
 

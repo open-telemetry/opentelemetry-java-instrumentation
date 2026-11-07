@@ -68,24 +68,23 @@ public class VertxRedisClientSingletons {
     CompletableFuture<T> result = new CompletableFuture<>();
     future
         .toCompletionStage()
-        .whenComplete(
-            (value, throwable) -> {
-              try {
-                Throwable error =
-                    throwable != null ? throwable : VertxRedisClientError.findResponseError(value);
-                instrumenter().end(context, request, null, error);
-              } catch (Throwable t) {
-                logger.log(WARNING, "Failed to end the Vert.x Redis span", t);
-              } finally {
-                try (Scope ignore = parentContext.makeCurrent()) {
-                  if (throwable != null) {
-                    result.completeExceptionally(throwable);
-                  } else {
-                    result.complete(value);
-                  }
-                }
+        .whenComplete((value, throwable) -> {
+          try {
+            Throwable error =
+                throwable != null ? throwable : VertxRedisClientError.findResponseError(value);
+            instrumenter().end(context, request, null, error);
+          } catch (Throwable t) {
+            logger.log(WARNING, "Failed to end the Vert.x Redis span", t);
+          } finally {
+            try (Scope ignore = parentContext.makeCurrent()) {
+              if (throwable != null) {
+                result.completeExceptionally(throwable);
+              } else {
+                result.complete(value);
               }
-            });
+            }
+          }
+        });
     return Future.fromCompletionStage(result);
   }
 

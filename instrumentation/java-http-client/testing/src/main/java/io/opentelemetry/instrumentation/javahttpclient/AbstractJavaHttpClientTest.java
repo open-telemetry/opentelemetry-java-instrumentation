@@ -84,17 +84,16 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
       HttpClientResult httpClientResult) {
     client
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
-        .whenComplete(
-            (response, throwable) -> {
-              if (throwable == null) {
-                httpClientResult.complete(response.statusCode());
-              } else if (throwable.getCause() != null) {
-                httpClientResult.complete(throwable.getCause());
-              } else {
-                httpClientResult.complete(
-                    new IllegalStateException("throwable.getCause() returned null", throwable));
-              }
-            });
+        .whenComplete((response, throwable) -> {
+          if (throwable == null) {
+            httpClientResult.complete(response.statusCode());
+          } else if (throwable.getCause() != null) {
+            httpClientResult.complete(throwable.getCause());
+          } else {
+            httpClientResult.complete(
+                new IllegalStateException("throwable.getCause() returned null", throwable));
+          }
+        });
   }
 
   @Override
@@ -126,17 +125,16 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
               return client
                   .sendAsync(request, HttpResponse.BodyHandlers.ofString())
                   .thenApply(HttpResponse::body)
-                  .whenComplete(
-                      (response, throwable) ->
-                          testing.runWithSpan(
-                              "child",
-                              () -> {
-                                if (throwable != null && throwable.getCause() != null) {
-                                  Span.current()
-                                      .setAttribute(
-                                          "throwable", throwable.getCause().getClass().getName());
-                                }
-                              }))
+                  .whenComplete((response, throwable) ->
+                      testing.runWithSpan(
+                          "child",
+                          () -> {
+                            if (throwable != null && throwable.getCause() != null) {
+                              Span.current()
+                                  .setAttribute(
+                                      "throwable", throwable.getCause().getClass().getName());
+                            }
+                          }))
                   // this stage is only added to trigger the whenComplete stage when this stage gets
                   // cancelled
                   .exceptionally(ex -> "cancelled");
@@ -147,34 +145,32 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
     future.cancel(true);
     assertThatThrownBy(future::get).isInstanceOf(CancellationException.class);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(URL_FULL, uri.toString()),
-                            equalTo(SERVER_ADDRESS, uri.getHost()),
-                            equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(HTTP_REQUEST_METHOD, method),
-                            equalTo(ERROR_TYPE, CancellationException.class.getName()),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
-                span ->
-                    span.hasName("test-http-server")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(1))
-                        // jdk 11 does not cancel the request on the server side so the request
-                        // succeeds
-                        .hasStatus(isJdk11 ? StatusData.unset() : StatusData.error()),
-                span ->
-                    span.hasName("child")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("throwable"), CancellationException.class.getName()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span ->
+                span.hasName("GET")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(URL_FULL, uri.toString()),
+                        equalTo(SERVER_ADDRESS, uri.getHost()),
+                        equalTo(SERVER_PORT, uri.getPort()),
+                        equalTo(HTTP_REQUEST_METHOD, method),
+                        equalTo(ERROR_TYPE, CancellationException.class.getName()),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
+            span ->
+                span.hasName("test-http-server")
+                    .hasKind(SpanKind.SERVER)
+                    .hasParent(trace.getSpan(1))
+                    // jdk 11 does not cancel the request on the server side so the request
+                    // succeeds
+                    .hasStatus(isJdk11 ? StatusData.unset() : StatusData.error()),
+            span ->
+                span.hasName("child")
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("throwable"), CancellationException.class.getName()))));
   }
 }

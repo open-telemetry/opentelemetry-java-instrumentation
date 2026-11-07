@@ -94,13 +94,11 @@ public abstract class AbstractServletFilterTest
   protected List<Consumer<SpanDataAssert>> errorPageSpanAssertions(
       String method, ServerEndpoint endpoint) {
     List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
-    spanAssertions.add(
-        span ->
-            span.hasName("BasicErrorController.error")
-                .hasKind(SpanKind.INTERNAL)
-                .hasAttributesSatisfyingExactly(
-                    satisfies(
-                        CODE_FUNCTION_NAME, val -> val.endsWith(".BasicErrorController.error"))));
+    spanAssertions.add(span ->
+        span.hasName("BasicErrorController.error")
+            .hasKind(SpanKind.INTERNAL)
+            .hasAttributesSatisfyingExactly(
+                satisfies(CODE_FUNCTION_NAME, val -> val.endsWith(".BasicErrorController.error"))));
     return spanAssertions;
   }
 

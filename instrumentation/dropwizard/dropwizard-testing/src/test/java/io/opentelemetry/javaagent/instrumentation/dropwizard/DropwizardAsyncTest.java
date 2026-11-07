@@ -73,80 +73,72 @@ class DropwizardAsyncTest extends DropwizardTest {
     @GET
     @Path("success")
     public void success(@Suspended AsyncResponse asyncResponse) {
-      executor.execute(
-          () ->
-              controller(
-                  SUCCESS,
-                  () ->
-                      asyncResponse.resume(
-                          Response.status(SUCCESS.getStatus()).entity(SUCCESS.getBody()).build())));
+      executor.execute(() ->
+          controller(
+              SUCCESS,
+              () ->
+                  asyncResponse.resume(
+                      Response.status(SUCCESS.getStatus()).entity(SUCCESS.getBody()).build())));
     }
 
     @GET
     @Path("query")
     public void queryParam(
         @QueryParam("some") String param, @Suspended AsyncResponse asyncResponse) {
-      executor.execute(
-          () ->
-              controller(
-                  QUERY_PARAM,
-                  () ->
-                      asyncResponse.resume(
-                          Response.status(QUERY_PARAM.getStatus())
-                              .entity("some=" + param)
-                              .build())));
+      executor.execute(() ->
+          controller(
+              QUERY_PARAM,
+              () ->
+                  asyncResponse.resume(
+                      Response.status(QUERY_PARAM.getStatus()).entity("some=" + param).build())));
     }
 
     @GET
     @Path("redirect")
     public void redirect(@Suspended AsyncResponse asyncResponse) {
-      executor.execute(
-          () ->
-              controller(
-                  REDIRECT,
-                  () ->
-                      asyncResponse.resume(
-                          Response.status(REDIRECT.getStatus())
-                              .location(URI.create(REDIRECT.getBody()))
-                              .build())));
+      executor.execute(() ->
+          controller(
+              REDIRECT,
+              () ->
+                  asyncResponse.resume(
+                      Response.status(REDIRECT.getStatus())
+                          .location(URI.create(REDIRECT.getBody()))
+                          .build())));
     }
 
     @GET
     @Path("error-status")
     public void error(@Suspended AsyncResponse asyncResponse) {
-      executor.execute(
-          () ->
-              controller(
-                  ERROR,
-                  () ->
-                      asyncResponse.resume(
-                          Response.status(ERROR.getStatus()).entity(ERROR.getBody()).build())));
+      executor.execute(() ->
+          controller(
+              ERROR,
+              () ->
+                  asyncResponse.resume(
+                      Response.status(ERROR.getStatus()).entity(ERROR.getBody()).build())));
     }
 
     @GET
     @Path("exception")
     public void exception(@Suspended AsyncResponse asyncResponse) {
-      executor.execute(
-          () ->
-              controller(
-                  EXCEPTION,
-                  () -> {
-                    IllegalStateException ex = new IllegalStateException(EXCEPTION.getBody());
-                    asyncResponse.resume(ex);
-                    throw ex;
-                  }));
+      executor.execute(() ->
+          controller(
+              EXCEPTION,
+              () -> {
+                IllegalStateException ex = new IllegalStateException(EXCEPTION.getBody());
+                asyncResponse.resume(ex);
+                throw ex;
+              }));
     }
 
     @GET
     @Path("path/{id}/param")
     public void pathParam(@PathParam("id") int param, @Suspended AsyncResponse asyncResponse) {
-      executor.execute(
-          () ->
-              controller(
-                  PATH_PARAM,
-                  () ->
-                      asyncResponse.resume(
-                          Response.status(PATH_PARAM.getStatus()).entity(param).build())));
+      executor.execute(() ->
+          controller(
+              PATH_PARAM,
+              () ->
+                  asyncResponse.resume(
+                      Response.status(PATH_PARAM.getStatus()).entity(param).build())));
     }
 
     @GET

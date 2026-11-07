@@ -40,15 +40,14 @@ abstract class AbstractVertxRxHttpServerTest extends AbstractHttpServerTest<Vert
             new DeploymentOptions()
                 .setConfig(new JsonObject().put(CONFIG_HTTP_SERVER_PORT, port))
                 .setInstances(3))
-        .onComplete(
-            result -> {
-              if (!result.succeeded()) {
-                future.completeExceptionally(
-                    new IllegalStateException("Cannot deploy server Verticle", result.cause()));
-                return;
-              }
-              future.complete(null);
-            });
+        .onComplete(result -> {
+          if (!result.succeeded()) {
+            future.completeExceptionally(
+                new IllegalStateException("Cannot deploy server Verticle", result.cause()));
+            return;
+          }
+          future.complete(null);
+        });
 
     future.get(30, SECONDS);
     return server;
@@ -66,13 +65,12 @@ abstract class AbstractVertxRxHttpServerTest extends AbstractHttpServerTest<Vert
     options.setTestPathParam(true);
     // server spans are ended inside the controller spans
     options.setVerifyServerSpanEndTime(false);
-    options.setExpectedHttpRoute(
-        (endpoint, method) -> {
-          if (HttpConstants._OTHER.equals(method)) {
-            return getContextPath() + endpoint.getPath();
-          }
-          return expectedHttpRoute(endpoint, method);
-        });
+    options.setExpectedHttpRoute((endpoint, method) -> {
+      if (HttpConstants._OTHER.equals(method)) {
+        return getContextPath() + endpoint.getPath();
+      }
+      return expectedHttpRoute(endpoint, method);
+    });
   }
 
   protected Class<? extends AbstractVerticle> verticle() {
@@ -93,27 +91,25 @@ abstract class AbstractVertxRxHttpServerTest extends AbstractHttpServerTest<Vert
       configure(router);
       router
           .route(EXCEPTION.getPath())
-          .handler(
-              ctx ->
-                  handle(
-                      ctx,
-                      EXCEPTION,
-                      () -> {
-                        throw new IllegalStateException(EXCEPTION.getBody());
-                      }));
+          .handler(ctx ->
+              handle(
+                  ctx,
+                  EXCEPTION,
+                  () -> {
+                    throw new IllegalStateException(EXCEPTION.getBody());
+                  }));
 
       vertx
           .createHttpServer()
           .requestHandler(router)
           .listen(port)
-          .onComplete(
-              httpServerAsyncResult -> {
-                if (httpServerAsyncResult.failed()) {
-                  startFuture.fail(httpServerAsyncResult.cause());
-                  return;
-                }
-                startFuture.complete();
-              });
+          .onComplete(httpServerAsyncResult -> {
+            if (httpServerAsyncResult.failed()) {
+              startFuture.fail(httpServerAsyncResult.cause());
+              return;
+            }
+            startFuture.complete();
+          });
     }
   }
 }

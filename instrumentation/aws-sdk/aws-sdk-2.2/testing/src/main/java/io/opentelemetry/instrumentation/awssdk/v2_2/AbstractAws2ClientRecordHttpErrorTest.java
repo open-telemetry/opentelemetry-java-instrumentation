@@ -164,52 +164,50 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest extends AbstractAwsS
     client.putItem(PutItemRequest.builder().tableName("sometable").build());
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasKind(SpanKind.CLIENT);
-                      span.hasNoParent();
-                      List<AttributeAssertion> attrs =
-                          new ArrayList<>(
-                              asList(
-                                  equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                  equalTo(SERVER_PORT, server.httpPort()),
-                                  equalTo(HTTP_REQUEST_METHOD, method),
-                                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                  equalTo(URL_FULL, "http://127.0.0.1:" + server.httpPort() + "/"),
-                                  equalTo(RPC_SYSTEM, "aws-api"),
-                                  equalTo(RPC_SERVICE, service),
-                                  equalTo(RPC_METHOD, operation),
-                                  equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
-                                  equalTo(AWS_REQUEST_ID, requestId),
-                                  equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
-                                  equalTo(DB_SYSTEM_NAME, "aws.dynamodb"),
-                                  equalTo(DB_OPERATION_NAME, operation)));
-                      attrs.add(equalTo(DB_COLLECTION_NAME, "sometable"));
-                      span.hasAttributesSatisfyingExactly(attrs);
-                      if (isRecordIndividualHttpErrorEnabled()) {
-                        span.hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("HTTP request failure")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
-                                        equalTo(
-                                            stringKey("aws.http.error_message"),
-                                            "DynamoDB could not process your request")),
-                            event ->
-                                event
-                                    .hasName("HTTP request failure")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(HTTP_RESPONSE_STATUS_CODE, 503),
-                                        equalTo(
-                                            stringKey("aws.http.error_message"),
-                                            "DynamoDB is currently unavailable")));
-                      } else {
-                        span.hasEventsSatisfyingExactly();
-                      }
-                    }));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span -> {
+              span.hasKind(SpanKind.CLIENT);
+              span.hasNoParent();
+              List<AttributeAssertion> attrs =
+                  new ArrayList<>(
+                      asList(
+                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                          equalTo(SERVER_PORT, server.httpPort()),
+                          equalTo(HTTP_REQUEST_METHOD, method),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                          equalTo(URL_FULL, "http://127.0.0.1:" + server.httpPort() + "/"),
+                          equalTo(RPC_SYSTEM, "aws-api"),
+                          equalTo(RPC_SERVICE, service),
+                          equalTo(RPC_METHOD, operation),
+                          equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                          equalTo(AWS_REQUEST_ID, requestId),
+                          equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
+                          equalTo(DB_SYSTEM_NAME, "aws.dynamodb"),
+                          equalTo(DB_OPERATION_NAME, operation)));
+              attrs.add(equalTo(DB_COLLECTION_NAME, "sometable"));
+              span.hasAttributesSatisfyingExactly(attrs);
+              if (isRecordIndividualHttpErrorEnabled()) {
+                span.hasEventsSatisfyingExactly(
+                    event ->
+                        event
+                            .hasName("HTTP request failure")
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
+                                equalTo(
+                                    stringKey("aws.http.error_message"),
+                                    "DynamoDB could not process your request")),
+                    event ->
+                        event
+                            .hasName("HTTP request failure")
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 503),
+                                equalTo(
+                                    stringKey("aws.http.error_message"),
+                                    "DynamoDB is currently unavailable")));
+              } else {
+                span.hasEventsSatisfyingExactly();
+              }
+            }));
 
     // make sure the response body input stream is still available and check its content to be
     // expected

@@ -333,15 +333,14 @@ final class OpenTelemetryConnection implements InvocationHandler {
       throw t;
     }
 
-    return future.whenComplete(
-        (result, exception) -> {
-          if (result != null) {
-            NatsRequest response = NatsRequest.create(delegate, result);
-            instrumenter.end(context, notNullNatsRequest, response, exception);
-          } else {
-            instrumenter.end(context, notNullNatsRequest, null, exception);
-          }
-        });
+    return future.whenComplete((result, exception) -> {
+      if (result != null) {
+        NatsRequest response = NatsRequest.create(delegate, result);
+        instrumenter.end(context, notNullNatsRequest, response, exception);
+      } else {
+        instrumenter.end(context, notNullNatsRequest, null, exception);
+      }
+    });
   }
 
   private Instrumenter<NatsRequest, NatsRequest> instrumenterFor(

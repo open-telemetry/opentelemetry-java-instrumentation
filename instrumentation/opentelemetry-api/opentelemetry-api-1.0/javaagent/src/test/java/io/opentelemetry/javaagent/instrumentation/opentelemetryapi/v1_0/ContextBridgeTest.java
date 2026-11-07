@@ -81,15 +81,13 @@ class ContextBridgeTest {
     // When
     runnable.run();
     // Then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("test")
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, runnable.getClass().getName() + ".run"),
-                            equalTo(stringKey("cat"), "yes"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("test")
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(CODE_FUNCTION_NAME, runnable.getClass().getName() + ".run"),
+                    equalTo(stringKey("cat"), "yes"))));
   }
 
   @Test
@@ -109,13 +107,11 @@ class ContextBridgeTest {
     }
     testSpan.end();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("test")
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(equalTo(stringKey("cat"), "yes"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("test")
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("cat"), "yes"))));
   }
 
   @Test
@@ -143,15 +139,13 @@ class ContextBridgeTest {
     runnable.run();
 
     // Then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("test")
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, runnable.getClass().getName() + ".run"),
-                            equalTo(stringKey("cat"), "yes"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("test")
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(CODE_FUNCTION_NAME, runnable.getClass().getName() + ".run"),
+                    equalTo(stringKey("cat"), "yes"))));
   }
 
   @Test

@@ -101,42 +101,38 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
 
     assertThat(result).isNotNull();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("Bucket.upsert " + template.getCouchbaseBucket().name())
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
-                            equalTo(DB_NAMESPACE, template.getCouchbaseBucket().name()),
-                            equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
-                            satisfies(SERVER_ADDRESS, serverAddress()),
-                            satisfies(SERVER_PORT, serverPort()),
-                            satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
-                            satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId())),
-                span ->
-                    span.hasName("Bucket.get " + template.getCouchbaseBucket().name())
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
-                            equalTo(DB_NAMESPACE, template.getCouchbaseBucket().name()),
-                            equalTo(DB_OPERATION_NAME, "Bucket.get"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
-                            satisfies(SERVER_ADDRESS, serverAddress()),
-                            satisfies(SERVER_PORT, serverPort()),
-                            satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
-                            satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("Bucket.upsert " + template.getCouchbaseBucket().name())
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                        equalTo(DB_NAMESPACE, template.getCouchbaseBucket().name()),
+                        equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
+                        equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
+                        satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                        satisfies(SERVER_ADDRESS, serverAddress()),
+                        satisfies(SERVER_PORT, serverPort()),
+                        satisfies(stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                        satisfies(stringKey("couchbase.operation_id"), experimentalOperationId())),
+            span ->
+                span.hasName("Bucket.get " + template.getCouchbaseBucket().name())
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                        equalTo(DB_NAMESPACE, template.getCouchbaseBucket().name()),
+                        equalTo(DB_OPERATION_NAME, "Bucket.get"),
+                        equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
+                        satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                        satisfies(SERVER_ADDRESS, serverAddress()),
+                        satisfies(SERVER_PORT, serverPort()),
+                        satisfies(stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                        satisfies(
+                            stringKey("couchbase.operation_id"), experimentalOperationId()))));
   }
 
   @ParameterizedTest
@@ -150,66 +146,58 @@ public abstract class AbstractCouchbaseSpringTemplateTest extends AbstractCouchb
           template.remove(document);
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("Bucket.upsert " + template.getCouchbaseBucket().name())
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
-                            equalTo(DB_NAMESPACE, template.getCouchbaseBucket().name()),
-                            equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
-                            satisfies(SERVER_ADDRESS, serverAddress()),
-                            satisfies(SERVER_PORT, serverPort()),
-                            satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
-                            satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId())),
-                span ->
-                    span.hasName("Bucket.remove " + template.getCouchbaseBucket().name())
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
-                            equalTo(DB_NAMESPACE, template.getCouchbaseBucket().name()),
-                            equalTo(DB_OPERATION_NAME, "Bucket.remove"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
-                            satisfies(SERVER_ADDRESS, serverAddress()),
-                            satisfies(SERVER_PORT, serverPort()),
-                            satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
-                            satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("Bucket.upsert " + template.getCouchbaseBucket().name())
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                        equalTo(DB_NAMESPACE, template.getCouchbaseBucket().name()),
+                        equalTo(DB_OPERATION_NAME, "Bucket.upsert"),
+                        equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
+                        satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                        satisfies(SERVER_ADDRESS, serverAddress()),
+                        satisfies(SERVER_PORT, serverPort()),
+                        satisfies(stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                        satisfies(stringKey("couchbase.operation_id"), experimentalOperationId())),
+            span ->
+                span.hasName("Bucket.remove " + template.getCouchbaseBucket().name())
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                        equalTo(DB_NAMESPACE, template.getCouchbaseBucket().name()),
+                        equalTo(DB_OPERATION_NAME, "Bucket.remove"),
+                        equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
+                        satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                        satisfies(SERVER_ADDRESS, serverAddress()),
+                        satisfies(SERVER_PORT, serverPort()),
+                        satisfies(stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                        satisfies(
+                            stringKey("couchbase.operation_id"), experimentalOperationId()))));
 
     testing.clearData();
 
     TestDocument result = template.findById("1", TestDocument.class);
     assertThat(result).isNull();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("Bucket.get " + template.getCouchbaseBucket().name())
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
-                            equalTo(DB_NAMESPACE, template.getCouchbaseBucket().name()),
-                            equalTo(DB_OPERATION_NAME, "Bucket.get"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
-                            satisfies(SERVER_ADDRESS, serverAddress()),
-                            satisfies(SERVER_PORT, serverPort()),
-                            satisfies(
-                                stringKey("couchbase.local.address"), experimentalLocalAddress()),
-                            satisfies(
-                                stringKey("couchbase.operation_id"), experimentalOperationId()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("Bucket.get " + template.getCouchbaseBucket().name())
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                    equalTo(DB_NAMESPACE, template.getCouchbaseBucket().name()),
+                    equalTo(DB_OPERATION_NAME, "Bucket.get"),
+                    equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
+                    satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                    satisfies(SERVER_ADDRESS, serverAddress()),
+                    satisfies(SERVER_PORT, serverPort()),
+                    satisfies(stringKey("couchbase.local.address"), experimentalLocalAddress()),
+                    satisfies(stringKey("couchbase.operation_id"), experimentalOperationId()))));
   }
 }

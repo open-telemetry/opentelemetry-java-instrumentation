@@ -44,9 +44,8 @@ public class SecurityConfig {
   SecurityFilterChain formLoginWebSecurity(
       HttpSecurity http, SavingAuthenticationProvider savingAuthenticationProvider)
       throws Exception {
-    return http.authorizeHttpRequests(
-            auth ->
-                auth.requestMatchers("/formsecured/**").authenticated().anyRequest().permitAll())
+    return http.authorizeHttpRequests(auth ->
+            auth.requestMatchers("/formsecured/**").authenticated().anyRequest().permitAll())
         .authenticationProvider(savingAuthenticationProvider)
         .formLogin(Customizer.withDefaults())
         .build();

@@ -57,20 +57,18 @@ class ClassLoaderMatcherTest {
   @Test
   void rejectsUnknownClassEvenWhenEveryModuleIsExcludedByName() {
     assertThatIllegalArgumentException()
-        .isThrownBy(
-            () ->
-                ClassLoaderMatcher.selectModules(
-                    asList(core, companion), singleton("example"), singleton("missing.Module")))
+        .isThrownBy(() ->
+            ClassLoaderMatcher.selectModules(
+                asList(core, companion), singleton("example"), singleton("missing.Module")))
         .withMessage("Excluded InstrumentationModule classes were not found: [missing.Module]");
   }
 
   @Test
   void rejectsSimpleClassNames() {
     assertThatIllegalArgumentException()
-        .isThrownBy(
-            () ->
-                ClassLoaderMatcher.selectModules(
-                    asList(core, companion), emptySet(), singleton("CompanionModule")))
+        .isThrownBy(() ->
+            ClassLoaderMatcher.selectModules(
+                asList(core, companion), emptySet(), singleton("CompanionModule")))
         .withMessage("Excluded InstrumentationModule classes were not found: [CompanionModule]");
   }
 

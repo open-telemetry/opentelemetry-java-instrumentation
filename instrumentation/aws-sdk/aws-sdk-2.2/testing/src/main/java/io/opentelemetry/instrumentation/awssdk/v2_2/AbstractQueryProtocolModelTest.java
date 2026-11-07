@@ -94,30 +94,27 @@ public abstract class AbstractQueryProtocolModelTest extends AbstractAwsSdkTest 
     ses.sendEmail(emailRequest);
 
     getTesting()
-        .waitAndAssertTraces(
-            trace -> {
-              trace.hasSpansSatisfyingExactly(
-                  span -> {
-                    span.hasKind(SpanKind.CLIENT);
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                        equalTo(SERVER_PORT, server.httpPort()),
-                        equalTo(HTTP_REQUEST_METHOD, "POST"),
-                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                        equalTo(RPC_SYSTEM, "aws-api"),
-                        equalTo(RPC_SERVICE, "Ses"),
-                        equalTo(RPC_METHOD, "SendEmail"),
-                        equalTo(AWS_REQUEST_ID, "UNKNOWN"),
-                        equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
-                        satisfies(
-                            URL_FULL,
-                            val ->
-                                val.satisfies(
-                                    value -> {
-                                      URI uri = URI.create(value);
-                                      assertThat(uri.getQuery()).isNull();
-                                    })));
-                  });
-            });
+        .waitAndAssertTraces(trace -> {
+          trace.hasSpansSatisfyingExactly(span -> {
+            span.hasKind(SpanKind.CLIENT);
+            span.hasAttributesSatisfyingExactly(
+                equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                equalTo(SERVER_PORT, server.httpPort()),
+                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                equalTo(RPC_SYSTEM, "aws-api"),
+                equalTo(RPC_SERVICE, "Ses"),
+                equalTo(RPC_METHOD, "SendEmail"),
+                equalTo(AWS_REQUEST_ID, "UNKNOWN"),
+                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                satisfies(
+                    URL_FULL,
+                    val ->
+                        val.satisfies(value -> {
+                          URI uri = URI.create(value);
+                          assertThat(uri.getQuery()).isNull();
+                        })));
+          });
+        });
   }
 }

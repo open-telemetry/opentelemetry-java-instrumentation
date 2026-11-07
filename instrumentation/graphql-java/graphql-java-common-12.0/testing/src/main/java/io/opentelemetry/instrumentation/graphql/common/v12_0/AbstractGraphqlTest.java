@@ -190,39 +190,33 @@ public abstract class AbstractGraphqlTest {
     assertThat(result.getErrors()).isEmpty();
 
     getTesting()
-        .waitAndAssertTraces(
-            trace -> {
-              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-              assertions.add(
-                  span ->
-                      span.hasName("query findBookById")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasNoParent()
-                          .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
-                              equalTo(GRAPHQL_OPERATION_TYPE, "query"),
-                              normalizedQueryEqualsTo(
-                                  GRAPHQL_DOCUMENT,
-                                  "query findBookById { bookById(id: ?) { name } }")));
-              if (includeDataFetcher()) {
-                assertions.add(
-                    span ->
-                        span.hasName("bookById")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .satisfies(hasScopeSchemaUrl(null))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("graphql.field.path"), "/bookById"),
-                                equalTo(stringKey("graphql.field.name"), "bookById")));
-              }
-              assertions.add(
-                  span ->
-                      span.hasName("fetchBookById")
-                          .hasParent(trace.getSpan(includeDataFetcher() ? 1 : 0)));
+        .waitAndAssertTraces(trace -> {
+          List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+          assertions.add(span ->
+              span.hasName("query findBookById")
+                  .hasKind(SpanKind.INTERNAL)
+                  .hasNoParent()
+                  .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
+                      equalTo(GRAPHQL_OPERATION_TYPE, "query"),
+                      normalizedQueryEqualsTo(
+                          GRAPHQL_DOCUMENT, "query findBookById { bookById(id: ?) { name } }")));
+          if (includeDataFetcher()) {
+            assertions.add(span ->
+                span.hasName("bookById")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .satisfies(hasScopeSchemaUrl(null))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("graphql.field.path"), "/bookById"),
+                        equalTo(stringKey("graphql.field.name"), "bookById")));
+          }
+          assertions.add(span ->
+              span.hasName("fetchBookById").hasParent(trace.getSpan(includeDataFetcher() ? 1 : 0)));
 
-              trace.hasSpansSatisfyingExactly(assertions);
-            });
+          trace.hasSpansSatisfyingExactly(assertions);
+        });
   }
 
   @Test
@@ -239,34 +233,28 @@ public abstract class AbstractGraphqlTest {
     assertThat(result.getErrors()).isEmpty();
 
     getTesting()
-        .waitAndAssertTraces(
-            trace -> {
-              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-              assertions.add(
-                  span ->
-                      span.hasName("query")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(GRAPHQL_OPERATION_TYPE, "query"),
-                              normalizedQueryEqualsTo(
-                                  GRAPHQL_DOCUMENT, "{ bookById(id: ?) { name } }")));
-              if (includeDataFetcher()) {
-                assertions.add(
-                    span ->
-                        span.hasName("bookById")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("graphql.field.path"), "/bookById"),
-                                equalTo(stringKey("graphql.field.name"), "bookById")));
-              }
-              assertions.add(
-                  span ->
-                      span.hasName("fetchBookById")
-                          .hasParent(trace.getSpan(includeDataFetcher() ? 1 : 0)));
-              trace.hasSpansSatisfyingExactly(assertions);
-            });
+        .waitAndAssertTraces(trace -> {
+          List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+          assertions.add(span ->
+              span.hasName("query")
+                  .hasKind(SpanKind.INTERNAL)
+                  .hasNoParent()
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(GRAPHQL_OPERATION_TYPE, "query"),
+                      normalizedQueryEqualsTo(GRAPHQL_DOCUMENT, "{ bookById(id: ?) { name } }")));
+          if (includeDataFetcher()) {
+            assertions.add(span ->
+                span.hasName("bookById")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("graphql.field.path"), "/bookById"),
+                        equalTo(stringKey("graphql.field.name"), "bookById")));
+          }
+          assertions.add(span ->
+              span.hasName("fetchBookById").hasParent(trace.getSpan(includeDataFetcher() ? 1 : 0)));
+          trace.hasSpansSatisfyingExactly(assertions);
+        });
   }
 
   @Test
@@ -278,18 +266,15 @@ public abstract class AbstractGraphqlTest {
         .satisfies(error -> assertThat(error.getErrorType().toString()).isEqualTo("InvalidSyntax"));
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("GraphQL Operation")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasNoParent()
-                          .hasTotalAttributeCount(0)
-                          .hasStatus(StatusData.error());
-                      assertStructuredError(
-                          span, "InvalidSyntax", result.getErrors().get(0).getMessage());
-                    }));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span -> {
+              span.hasName("GraphQL Operation")
+                  .hasKind(SpanKind.INTERNAL)
+                  .hasNoParent()
+                  .hasTotalAttributeCount(0)
+                  .hasStatus(StatusData.error());
+              assertStructuredError(span, "InvalidSyntax", result.getErrors().get(0).getMessage());
+            }));
     assertStructuredErrorLogs("InvalidSyntax", result.getErrors().get(0).getMessage());
   }
 
@@ -313,18 +298,16 @@ public abstract class AbstractGraphqlTest {
             error -> assertThat(error.getErrorType().toString()).isEqualTo("ValidationError"));
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("GraphQL Operation")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasNoParent()
-                          .hasTotalAttributeCount(0)
-                          .hasStatus(StatusData.error());
-                      assertStructuredError(
-                          span, "ValidationError", result.getErrors().get(0).getMessage());
-                    }));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span -> {
+              span.hasName("GraphQL Operation")
+                  .hasKind(SpanKind.INTERNAL)
+                  .hasNoParent()
+                  .hasTotalAttributeCount(0)
+                  .hasStatus(StatusData.error());
+              assertStructuredError(
+                  span, "ValidationError", result.getErrors().get(0).getMessage());
+            }));
     assertStructuredErrorLogs("ValidationError", result.getErrors().get(0).getMessage());
   }
 
@@ -380,55 +363,51 @@ public abstract class AbstractGraphqlTest {
         .satisfies(error -> assertThat(error.getMessage()).isEqualTo(message));
 
     getTesting()
-        .waitAndAssertTraces(
-            trace -> {
-              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-              assertions.add(
-                  span -> {
-                    span.hasName("query findBookById")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
-                            equalTo(GRAPHQL_OPERATION_TYPE, "query"),
-                            normalizedQueryEqualsTo(
-                                GRAPHQL_DOCUMENT,
-                                "query findBookById { bookById(id: ?) { name author { name } } }"));
-                    assertStructuredError(span, "DataFetchingException", message);
-                  });
-              if (includeDataFetcher()) {
-                assertions.add(
-                    span -> {
-                      span.hasName("bookById")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(0))
-                          .hasStatus(StatusData.error())
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(stringKey("graphql.field.name"), "bookById"),
-                              equalTo(stringKey("graphql.field.path"), "/bookById"));
-                      if (exception) {
-                        span.hasException(emitExceptionAsSpanEvents() ? failure : null);
-                      } else {
-                        assertStructuredError(span, "DataFetchingException", message);
-                      }
-                    });
+        .waitAndAssertTraces(trace -> {
+          List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+          assertions.add(span -> {
+            span.hasName("query findBookById")
+                .hasKind(SpanKind.INTERNAL)
+                .hasNoParent()
+                .hasStatus(StatusData.error())
+                .hasAttributesSatisfyingExactly(
+                    equalTo(GRAPHQL_OPERATION_NAME, "findBookById"),
+                    equalTo(GRAPHQL_OPERATION_TYPE, "query"),
+                    normalizedQueryEqualsTo(
+                        GRAPHQL_DOCUMENT,
+                        "query findBookById { bookById(id: ?) { name author { name } } }"));
+            assertStructuredError(span, "DataFetchingException", message);
+          });
+          if (includeDataFetcher()) {
+            assertions.add(span -> {
+              span.hasName("bookById")
+                  .hasKind(SpanKind.INTERNAL)
+                  .hasParent(trace.getSpan(0))
+                  .hasStatus(StatusData.error())
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(stringKey("graphql.field.name"), "bookById"),
+                      equalTo(stringKey("graphql.field.path"), "/bookById"));
+              if (exception) {
+                span.hasException(emitExceptionAsSpanEvents() ? failure : null);
+              } else {
+                assertStructuredError(span, "DataFetchingException", message);
               }
-              assertions.add(
-                  span -> {
-                    span.hasName("fetchBookById")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(includeDataFetcher() ? 1 : 0))
-                        .hasTotalAttributeCount(0);
-                    if (exception && !asynchronous) {
-                      span.hasStatus(StatusData.error())
-                          .hasException(emitExceptionAsSpanEvents() ? failure : null);
-                    } else {
-                      span.hasStatus(StatusData.unset()).hasEventsSatisfyingExactly();
-                    }
-                  });
-              trace.hasSpansSatisfyingExactly(assertions);
             });
+          }
+          assertions.add(span -> {
+            span.hasName("fetchBookById")
+                .hasKind(SpanKind.INTERNAL)
+                .hasParent(trace.getSpan(includeDataFetcher() ? 1 : 0))
+                .hasTotalAttributeCount(0);
+            if (exception && !asynchronous) {
+              span.hasStatus(StatusData.error())
+                  .hasException(emitExceptionAsSpanEvents() ? failure : null);
+            } else {
+              span.hasStatus(StatusData.unset()).hasEventsSatisfyingExactly();
+            }
+          });
+          trace.hasSpansSatisfyingExactly(assertions);
+        });
     if (emitExceptionAsLogs()) {
       List<Consumer<LogRecordDataAssert>> assertions = new ArrayList<>();
       if (exception && !asynchronous) {
@@ -451,12 +430,11 @@ public abstract class AbstractGraphqlTest {
 
   private static void assertStructuredError(SpanDataAssert span, String type, String message) {
     if (emitExceptionAsSpanEvents()) {
-      span.hasEventsSatisfyingExactly(
-          event ->
-              event
-                  .hasName("exception")
-                  .hasAttributesSatisfyingExactly(
-                      equalTo(EXCEPTION_TYPE, type), equalTo(EXCEPTION_MESSAGE, message)));
+      span.hasEventsSatisfyingExactly(event ->
+          event
+              .hasName("exception")
+              .hasAttributesSatisfyingExactly(
+                  equalTo(EXCEPTION_TYPE, type), equalTo(EXCEPTION_MESSAGE, message)));
     } else {
       span.hasEventsSatisfyingExactly();
     }
@@ -478,10 +456,9 @@ public abstract class AbstractGraphqlTest {
         log.hasEventName("exception")
             .hasSeverity(Severity.WARN)
             .hasSpanContext(span.getSpanContext())
-            .satisfies(
-                logData ->
-                    assertThat(logData.getInstrumentationScopeInfo())
-                        .isEqualTo(span.getInstrumentationScopeInfo()))
+            .satisfies(logData ->
+                assertThat(logData.getInstrumentationScopeInfo())
+                    .isEqualTo(span.getInstrumentationScopeInfo()))
             .hasAttributesSatisfyingExactly(
                 equalTo(EXCEPTION_TYPE, type), equalTo(EXCEPTION_MESSAGE, message));
   }
@@ -516,19 +493,17 @@ public abstract class AbstractGraphqlTest {
     assertThat(result.getErrors()).isEmpty();
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("mutation addNewBook")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(GRAPHQL_OPERATION_NAME, "addNewBook"),
-                                equalTo(GRAPHQL_OPERATION_TYPE, "mutation"),
-                                normalizedQueryEqualsTo(
-                                    GRAPHQL_DOCUMENT,
-                                    "mutation addNewBook { addBook(id: ?, name: ?, author: ?) { id } }"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("mutation addNewBook")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(GRAPHQL_OPERATION_NAME, "addNewBook"),
+                        equalTo(GRAPHQL_OPERATION_TYPE, "mutation"),
+                        normalizedQueryEqualsTo(
+                            GRAPHQL_DOCUMENT,
+                            "mutation addNewBook { addBook(id: ?, name: ?, author: ?) { id } }"))));
   }
 
   protected static AttributeAssertion normalizedQueryEqualsTo(
@@ -536,12 +511,11 @@ public abstract class AbstractGraphqlTest {
     return satisfies(
         key,
         val ->
-            val.satisfies(
-                v -> {
-                  String normalized = normalizeQuery(v);
-                  String valueNormalized = normalizeQuery(value);
-                  assertThat(normalized).isEqualTo(valueNormalized);
-                }));
+            val.satisfies(v -> {
+              String normalized = normalizeQuery(v);
+              String valueNormalized = normalizeQuery(value);
+              assertThat(normalized).isEqualTo(valueNormalized);
+            }));
   }
 
   private static String normalizeQuery(String query) {

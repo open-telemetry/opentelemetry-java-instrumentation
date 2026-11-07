@@ -19,18 +19,16 @@ class ReactorNettyHttpClientUsingFromTest extends AbstractReactorNettyHttpClient
   @Override
   HttpClient createHttpClient(boolean readTimeout) {
     return HttpClient.from(TcpClient.create())
-        .tcpConfiguration(
-            tcpClient -> {
-              if (readTimeout) {
-                tcpClient =
-                    tcpClient.doOnConnected(
-                        connection ->
-                            connection.addHandlerLast(
-                                new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), MILLISECONDS)));
-              }
-              return tcpClient.option(
-                  ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) CONNECTION_TIMEOUT.toMillis());
-            });
+        .tcpConfiguration(tcpClient -> {
+          if (readTimeout) {
+            tcpClient =
+                tcpClient.doOnConnected(connection ->
+                    connection.addHandlerLast(
+                        new ReadTimeoutHandler(READ_TIMEOUT.toMillis(), MILLISECONDS)));
+          }
+          return tcpClient.option(
+              ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) CONNECTION_TIMEOUT.toMillis());
+        });
   }
 
   @Override

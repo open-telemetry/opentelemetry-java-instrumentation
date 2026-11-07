@@ -28,38 +28,34 @@ class LoggingExporterAutoConfigurationTest {
   void debugEnabled() {
     runner
         .withPropertyValues("otel.spring-starter.debug=true", "otel.traces.exporter=none")
-        .run(
-            context ->
-                assertThat(context.getBean(OpenTelemetry.class).toString())
-                    .containsOnlyOnce("LoggingSpanExporter"));
+        .run(context ->
+            assertThat(context.getBean(OpenTelemetry.class).toString())
+                .containsOnlyOnce("LoggingSpanExporter"));
   }
 
   @Test
   void alreadyAdded() {
     runner
         .withPropertyValues("otel.spring-starter.debug=true", "otel.traces.exporter=logging")
-        .run(
-            context ->
-                assertThat(context.getBean(OpenTelemetry.class).toString())
-                    .containsOnlyOnce("LoggingSpanExporter"));
+        .run(context ->
+            assertThat(context.getBean(OpenTelemetry.class).toString())
+                .containsOnlyOnce("LoggingSpanExporter"));
   }
 
   @Test
   void debugUnset() {
-    runner.run(
-        context ->
-            assertThat(context.getBean(OpenTelemetry.class).toString())
-                .doesNotContain("LoggingSpanExporter"));
+    runner.run(context ->
+        assertThat(context.getBean(OpenTelemetry.class).toString())
+            .doesNotContain("LoggingSpanExporter"));
   }
 
   @Test
   void debugDisabled() {
     runner
         .withPropertyValues("otel.spring-starter.debug=false", "otel.traces.exporter=none")
-        .run(
-            context ->
-                assertThat(context.getBean(OpenTelemetry.class).toString())
-                    .doesNotContain("LoggingSpanExporter"));
+        .run(context ->
+            assertThat(context.getBean(OpenTelemetry.class).toString())
+                .doesNotContain("LoggingSpanExporter"));
   }
 
   // the tests above register this class explicitly, so they pass even when Spring Boot never

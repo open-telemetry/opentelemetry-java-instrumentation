@@ -95,29 +95,27 @@ class DynamoDbErrorsTest {
         }
       }
       String errorType = missingItem ? null : "ResourceNotFoundException";
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("DynamoDb.GetItem")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasNoParent()
-                          .hasStatus(missingItem ? StatusData.unset() : StatusData.error())
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(DB_SYSTEM_NAME, "aws.dynamodb"),
-                              equalTo(DB_COLLECTION_NAME, "items"),
-                              equalTo(DB_OPERATION_NAME, "GetItem"),
-                              equalTo(HTTP_RESPONSE_STATUS_CODE, missingItem ? 200L : null),
-                              equalTo(ERROR_TYPE, errorType),
-                              equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                              equalTo(SERVER_PORT, server.httpPort()),
-                              equalTo(HTTP_REQUEST_METHOD, "POST"),
-                              equalTo(URL_FULL, server.httpUri() + "/"),
-                              equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("items")),
-                              equalTo(AWS_REQUEST_ID, missingItem ? "UNKNOWN" : null),
-                              equalTo(RPC_SYSTEM, "aws-api"),
-                              equalTo(RPC_SERVICE, "DynamoDb"),
-                              equalTo(RPC_METHOD, "GetItem"))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(span ->
+              span.hasName("DynamoDb.GetItem")
+                  .hasKind(SpanKind.CLIENT)
+                  .hasNoParent()
+                  .hasStatus(missingItem ? StatusData.unset() : StatusData.error())
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(DB_SYSTEM_NAME, "aws.dynamodb"),
+                      equalTo(DB_COLLECTION_NAME, "items"),
+                      equalTo(DB_OPERATION_NAME, "GetItem"),
+                      equalTo(HTTP_RESPONSE_STATUS_CODE, missingItem ? 200L : null),
+                      equalTo(ERROR_TYPE, errorType),
+                      equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                      equalTo(SERVER_PORT, server.httpPort()),
+                      equalTo(HTTP_REQUEST_METHOD, "POST"),
+                      equalTo(URL_FULL, server.httpUri() + "/"),
+                      equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("items")),
+                      equalTo(AWS_REQUEST_ID, missingItem ? "UNKNOWN" : null),
+                      equalTo(RPC_SYSTEM, "aws-api"),
+                      equalTo(RPC_SERVICE, "DynamoDb"),
+                      equalTo(RPC_METHOD, "GetItem"))));
       assertDurationMetric(
           testing,
           "io.opentelemetry.aws-sdk-2.2",
@@ -132,23 +130,21 @@ class DynamoDbErrorsTest {
           metrics ->
               metrics
                   .singleElement()
-                  .satisfies(
-                      metric ->
-                          assertThat(metric.getHistogramData().getPoints())
-                              .singleElement()
-                              .satisfies(
-                                  point -> {
-                                    assertThat(point.getCount()).isEqualTo(1);
-                                    assertThat(point.getAttributes().asMap())
-                                        .isEqualTo(
-                                            Attributes.builder()
-                                                .put(DB_SYSTEM_NAME, "aws.dynamodb")
-                                                .put(DB_COLLECTION_NAME, "items")
-                                                .put(DB_OPERATION_NAME, "GetItem")
-                                                .put(ERROR_TYPE, errorType)
-                                                .build()
-                                                .asMap());
-                                  })));
+                  .satisfies(metric ->
+                      assertThat(metric.getHistogramData().getPoints())
+                          .singleElement()
+                          .satisfies(point -> {
+                            assertThat(point.getCount()).isEqualTo(1);
+                            assertThat(point.getAttributes().asMap())
+                                .isEqualTo(
+                                    Attributes.builder()
+                                        .put(DB_SYSTEM_NAME, "aws.dynamodb")
+                                        .put(DB_COLLECTION_NAME, "items")
+                                        .put(DB_OPERATION_NAME, "GetItem")
+                                        .put(ERROR_TYPE, errorType)
+                                        .build()
+                                        .asMap());
+                          })));
     } finally {
       server.stop();
     }

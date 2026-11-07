@@ -88,19 +88,18 @@ class StartupReportTest {
     List<StartupSample> samples = samples();
     samples =
         samples.stream()
-            .map(
-                sample ->
-                    sample.variant() == Variant.AOT_NO_AGENT && !sample.discarded()
-                        ? new StartupSample(
-                            sample.variant(),
-                            sample.round(),
-                            sample.order(),
-                            false,
-                            "ok",
-                            sample.springSeconds(),
-                            3.0,
-                            sample.httpSeconds())
-                        : sample)
+            .map(sample ->
+                sample.variant() == Variant.AOT_NO_AGENT && !sample.discarded()
+                    ? new StartupSample(
+                        sample.variant(),
+                        sample.round(),
+                        sample.order(),
+                        false,
+                        "ok",
+                        sample.springSeconds(),
+                        3.0,
+                        sample.httpSeconds())
+                    : sample)
             .toList();
 
     report.writeSummary(samples, new Properties());

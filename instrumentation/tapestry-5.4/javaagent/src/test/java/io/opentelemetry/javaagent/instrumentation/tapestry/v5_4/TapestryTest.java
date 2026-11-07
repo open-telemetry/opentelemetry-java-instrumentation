@@ -69,17 +69,16 @@ class TapestryTest extends AbstractHttpServerUsingTest<Server> {
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(doc.selectFirst("title").text()).isEqualTo("Index page");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + getContextPath() + "/Index")
-                        .hasNoParent()
-                        .hasKind(SpanKind.SERVER),
-                span ->
-                    span.hasName("activate/Index")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET " + getContextPath() + "/Index")
+                    .hasNoParent()
+                    .hasKind(SpanKind.SERVER),
+            span ->
+                span.hasName("activate/Index")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -138,22 +137,21 @@ class TapestryTest extends AbstractHttpServerUsingTest<Server> {
 
     assertThat(response.status().code()).isEqualTo(500);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + getContextPath() + "/Index")
-                        .hasStatus(StatusData.error())
-                        .hasKind(SpanKind.SERVER),
-                span ->
-                    span.hasName("activate/Index")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("action/Index:exception")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasException(new IllegalStateException("expected"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET " + getContextPath() + "/Index")
+                    .hasStatus(StatusData.error())
+                    .hasKind(SpanKind.SERVER),
+            span ->
+                span.hasName("activate/Index")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0)),
+            span ->
+                span.hasName("action/Index:exception")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasException(new IllegalStateException("expected"))));
   }
 }

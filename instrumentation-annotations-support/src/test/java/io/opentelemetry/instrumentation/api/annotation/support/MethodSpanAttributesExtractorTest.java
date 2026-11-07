@@ -42,12 +42,11 @@ class MethodSpanAttributesExtractorTest {
   void setup() {
     lenient()
         .when(cache.computeIfAbsent(any(), any()))
-        .thenAnswer(
-            invocation -> {
-              Method m = invocation.getArgument(0);
-              Function<Method, AttributeBindings> fn = invocation.getArgument(1);
-              return fn.apply(m);
-            });
+        .thenAnswer(invocation -> {
+          Method m = invocation.getArgument(0);
+          Function<Method, AttributeBindings> fn = invocation.getArgument(1);
+          return fn.apply(m);
+        });
   }
 
   @Test

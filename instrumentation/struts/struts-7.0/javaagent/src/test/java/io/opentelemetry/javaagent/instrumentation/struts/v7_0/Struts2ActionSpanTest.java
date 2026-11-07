@@ -69,26 +69,24 @@ class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
     options.setContextPath("/context");
     options.setTestErrorBody(false);
     options.setHasHandlerSpan(endpoint -> !endpoint.equals(NOT_FOUND));
-    options.setHasResponseSpan(
-        endpoint ->
-            endpoint == REDIRECT
-                || endpoint == ERROR
-                || endpoint == EXCEPTION
-                || endpoint == NOT_FOUND);
+    options.setHasResponseSpan(endpoint ->
+        endpoint == REDIRECT
+            || endpoint == ERROR
+            || endpoint == EXCEPTION
+            || endpoint == NOT_FOUND);
 
-    options.setExpectedHttpRoute(
-        (ServerEndpoint endpoint, String method) -> {
-          if (method.equals(HttpConstants._OTHER)) {
-            return getContextPath() + endpoint.getPath();
-          }
-          if (endpoint.equals(PATH_PARAM)) {
-            return getContextPath() + "/path/{id}/param";
-          } else if (endpoint.equals(NOT_FOUND)) {
-            return getContextPath() + "/*";
-          } else {
-            return super.expectedHttpRoute(endpoint, method);
-          }
-        });
+    options.setExpectedHttpRoute((ServerEndpoint endpoint, String method) -> {
+      if (method.equals(HttpConstants._OTHER)) {
+        return getContextPath() + endpoint.getPath();
+      }
+      if (endpoint.equals(PATH_PARAM)) {
+        return getContextPath() + "/path/{id}/param";
+      } else if (endpoint.equals(NOT_FOUND)) {
+        return getContextPath() + "/*";
+      } else {
+        return super.expectedHttpRoute(endpoint, method);
+      }
+    });
   }
 
   @Override
@@ -133,16 +131,15 @@ class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo("greeting");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + getContextPath() + "/dispatch")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent(),
-                span ->
-                    span.hasName("GreetingAction.dispatch_servlet")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET " + getContextPath() + "/dispatch")
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent(),
+            span ->
+                span.hasName("GreetingAction.dispatch_servlet")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))));
   }
 }

@@ -59,35 +59,31 @@ class RpcInstrumenterTest {
 
     assertThat(instance.spanExporter.getFinishedSpanItems())
         .singleElement()
-        .satisfies(
-            span -> {
-              assertThat(span)
-                  .hasName("Service/Method")
-                  .hasAttributesSatisfyingExactly(
-                      equalTo(RPC_SYSTEM_NAME, "test"), equalTo(RPC_METHOD, "Service/Method"));
-              assertThat(span.getInstrumentationScopeInfo().getSchemaUrl())
-                  .isEqualTo(SchemaUrls.V1_45_0);
-            });
+        .satisfies(span -> {
+          assertThat(span)
+              .hasName("Service/Method")
+              .hasAttributesSatisfyingExactly(
+                  equalTo(RPC_SYSTEM_NAME, "test"), equalTo(RPC_METHOD, "Service/Method"));
+          assertThat(span.getInstrumentationScopeInfo().getSchemaUrl())
+              .isEqualTo(SchemaUrls.V1_45_0);
+        });
     assertThat(instance.metricReader.collectAllMetrics())
         .singleElement()
-        .satisfies(
-            metric -> {
-              assertThat(metric)
-                  .hasName(client ? "rpc.client.call.duration" : "rpc.server.call.duration")
-                  .hasUnit("s")
-                  .hasHistogramSatisfying(
-                      histogram ->
-                          histogram.hasPointsSatisfying(
-                              point ->
-                                  point
-                                      .hasCount(1)
-                                      .hasBucketBoundaries(DURATION_BUCKETS)
-                                      .hasAttributesSatisfyingExactly(
-                                          equalTo(RPC_SYSTEM_NAME, "test"),
-                                          equalTo(RPC_METHOD, "Service/Method"))));
-              assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
-                  .isEqualTo(SchemaUrls.V1_45_0);
-            });
+        .satisfies(metric -> {
+          assertThat(metric)
+              .hasName(client ? "rpc.client.call.duration" : "rpc.server.call.duration")
+              .hasUnit("s")
+              .hasHistogramSatisfying(histogram ->
+                  histogram.hasPointsSatisfying(point ->
+                      point
+                          .hasCount(1)
+                          .hasBucketBoundaries(DURATION_BUCKETS)
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(RPC_SYSTEM_NAME, "test"),
+                              equalTo(RPC_METHOD, "Service/Method"))));
+          assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
+              .isEqualTo(SchemaUrls.V1_45_0);
+        });
   }
 
   @ParameterizedTest
@@ -100,17 +96,16 @@ class RpcInstrumenterTest {
 
     assertThat(instance.spanExporter.getFinishedSpanItems())
         .singleElement()
-        .satisfies(
-            span ->
-                assertThat(span)
-                    .hasName("Service/Method")
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(RPC_SYSTEM_NAME, "test"),
-                        equalTo(RPC_METHOD, "Service/Method"),
-                        equalTo(stringKey("server.service.name"), "payments"),
-                        equalTo(stringKey("server.service.namespace"), "checkout"),
-                        equalTo(stringKey("rpc.status_code"), "CANCELLED"),
-                        equalTo(ERROR_TYPE, "java.lang.IllegalStateException")));
+        .satisfies(span ->
+            assertThat(span)
+                .hasName("Service/Method")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(RPC_SYSTEM_NAME, "test"),
+                    equalTo(RPC_METHOD, "Service/Method"),
+                    equalTo(stringKey("server.service.name"), "payments"),
+                    equalTo(stringKey("server.service.namespace"), "checkout"),
+                    equalTo(stringKey("rpc.status_code"), "CANCELLED"),
+                    equalTo(ERROR_TYPE, "java.lang.IllegalStateException")));
     assertThat(instance.spanExporter.getFinishedSpanItems().get(0).getInstrumentationScopeInfo())
         .satisfies(scope -> assertThat(scope.getSchemaUrl()).isEqualTo(SchemaUrls.V1_45_0));
 
@@ -119,28 +114,24 @@ class RpcInstrumenterTest {
         .extracting(MetricData::getName)
         .containsExactly(client ? "rpc.client.call.duration" : "rpc.server.call.duration");
     assertThat(metrics)
-        .anySatisfy(
-            metric ->
-                assertThat(metric)
-                    .hasName(client ? "rpc.client.call.duration" : "rpc.server.call.duration")
-                    .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasBucketBoundaries(DURATION_BUCKETS)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(ERROR_TYPE, "java.lang.IllegalStateException"),
-                                            equalTo(stringKey("rpc.status_code"), "CANCELLED"),
-                                            equalTo(RPC_SYSTEM_NAME, "test"),
-                                            equalTo(RPC_METHOD, "Service/Method")))));
+        .anySatisfy(metric ->
+            assertThat(metric)
+                .hasName(client ? "rpc.client.call.duration" : "rpc.server.call.duration")
+                .hasUnit("s")
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasBucketBoundaries(DURATION_BUCKETS)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(ERROR_TYPE, "java.lang.IllegalStateException"),
+                                equalTo(stringKey("rpc.status_code"), "CANCELLED"),
+                                equalTo(RPC_SYSTEM_NAME, "test"),
+                                equalTo(RPC_METHOD, "Service/Method")))));
     assertThat(metrics)
-        .allSatisfy(
-            metric ->
-                assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
-                    .isEqualTo(SchemaUrls.V1_45_0));
+        .allSatisfy(metric ->
+            assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
+                .isEqualTo(SchemaUrls.V1_45_0));
   }
 
   @ParameterizedTest
@@ -155,17 +146,14 @@ class RpcInstrumenterTest {
 
     assertThat(child.metricReader.collectAllMetrics())
         .singleElement()
-        .satisfies(
-            metric ->
-                assertThat(metric)
-                    .hasName(client ? "rpc.client.call.duration" : "rpc.server.call.duration")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(RPC_SYSTEM_NAME, "test"),
-                                        equalTo(RPC_METHOD, "Service/Method")))));
+        .satisfies(metric ->
+            assertThat(metric)
+                .hasName(client ? "rpc.client.call.duration" : "rpc.server.call.duration")
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point.hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM_NAME, "test"),
+                            equalTo(RPC_METHOD, "Service/Method")))));
   }
 
   private final class ConfiguredInstrumenter {

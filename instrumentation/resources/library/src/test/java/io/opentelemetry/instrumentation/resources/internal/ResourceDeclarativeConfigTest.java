@@ -56,33 +56,31 @@ class ResourceDeclarativeConfigTest {
     assertThat(testing.spans()).hasSize(1);
     Resource exportedResource = testing.spans().get(0).getResource();
     assertThat(exportedResource)
-        .satisfies(
-            resource -> {
-              // From .resource.attributes
-              assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo("my-service");
+        .satisfies(resource -> {
+          // From .resource.attributes
+          assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo("my-service");
 
-              // From ComponentProvider SPI
-              Set<String> attributeKeys =
-                  resource.getAttributes().asMap().keySet().stream()
-                      .map(AttributeKey::getKey)
-                      .collect(toSet());
-              // ContainerResourceComponentProvider - no container attributes reliably provided
-              // HostIdResourceComponentProvider - host.id attribute not reliably provided
-              // HostResourceComponentProvider
-              assertThat(attributeKeys).contains("host.arch", "host.name");
-              // OsResourceComponentProvider
-              assertThat(attributeKeys).contains("os.description", "os.type");
-              // ProcessResourceComponentProvider
-              assertThat(attributeKeys).contains("process.executable.path", "process.pid");
-              assertThat(attributeKeys)
-                  .doesNotContain("process.command_args", "process.command_line");
-              // ProcessRuntimeResourceComponentProvider
-              assertThat(attributeKeys).contains("process.runtime.description");
-              assertThat(attributeKeys).contains("process.runtime.name", "process.runtime.version");
-              assertThat(EntityUtil.getEntities(resource))
-                  .extracting(Entity::getType)
-                  .contains("process.runtime");
-              assertResourceEntitySchemasMatchSdk(resource);
-            });
+          // From ComponentProvider SPI
+          Set<String> attributeKeys =
+              resource.getAttributes().asMap().keySet().stream()
+                  .map(AttributeKey::getKey)
+                  .collect(toSet());
+          // ContainerResourceComponentProvider - no container attributes reliably provided
+          // HostIdResourceComponentProvider - host.id not reliably provided
+          // HostResourceComponentProvider
+          assertThat(attributeKeys).contains("host.arch", "host.name");
+          // OsResourceComponentProvider
+          assertThat(attributeKeys).contains("os.description", "os.type");
+          // ProcessResourceComponentProvider
+          assertThat(attributeKeys).contains("process.executable.path", "process.pid");
+          assertThat(attributeKeys).doesNotContain("process.command_args", "process.command_line");
+          // ProcessRuntimeResourceComponentProvider
+          assertThat(attributeKeys).contains("process.runtime.description");
+          assertThat(attributeKeys).contains("process.runtime.name", "process.runtime.version");
+          assertThat(EntityUtil.getEntities(resource))
+              .extracting(Entity::getType)
+              .contains("process.runtime");
+          assertResourceEntitySchemasMatchSdk(resource);
+        });
   }
 }

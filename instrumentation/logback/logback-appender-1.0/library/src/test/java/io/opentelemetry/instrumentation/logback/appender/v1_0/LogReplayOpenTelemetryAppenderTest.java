@@ -79,19 +79,18 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
     cleanup.deferCleanup(OpenTelemetryAppender::resetForTest);
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasResource(RESOURCE)
-                .hasInstrumentationScope(INSTRUMENTATION_SCOPE_INFO)
-                .hasBody("log message 1")
-                .hasAttributesSatisfyingExactly(
-                    equalTo(
-                        CODE_FUNCTION_NAME,
-                        LogReplayOpenTelemetryAppenderTest.class.getName() + ".twoLogs"),
-                    equalTo(
-                        CODE_FILE_PATH,
-                        LogReplayOpenTelemetryAppenderTest.class.getSimpleName() + ".java"),
-                    satisfies(CODE_LINE_NUMBER, val -> val.isPositive())));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord
+            .hasResource(RESOURCE)
+            .hasInstrumentationScope(INSTRUMENTATION_SCOPE_INFO)
+            .hasBody("log message 1")
+            .hasAttributesSatisfyingExactly(
+                equalTo(
+                    CODE_FUNCTION_NAME,
+                    LogReplayOpenTelemetryAppenderTest.class.getName() + ".twoLogs"),
+                equalTo(
+                    CODE_FILE_PATH,
+                    LogReplayOpenTelemetryAppenderTest.class.getSimpleName() + ".java"),
+                satisfies(CODE_LINE_NUMBER, val -> val.isPositive())));
   }
 }

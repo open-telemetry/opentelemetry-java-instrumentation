@@ -93,7 +93,7 @@ class VertxSqlClientAttributesGetter
       Class<?> exClass = Class.forName(className);
       Method method = exClass.getDeclaredMethod(methodName);
 
-      return (error) -> {
+      return error -> {
         if (exClass.isInstance(error)) {
           try {
             return String.valueOf(method.invoke(error)); // can be String or int
@@ -104,7 +104,7 @@ class VertxSqlClientAttributesGetter
         return null;
       };
     } catch (ClassNotFoundException | NoSuchMethodException ignored) {
-      return (error) -> null;
+      return error -> null;
     }
   }
 }

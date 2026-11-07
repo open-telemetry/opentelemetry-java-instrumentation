@@ -20,11 +20,10 @@ class PlaySmokeTest extends AbstractSmokeTest<Integer> {
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
     options
-        .image(
-            jdk ->
-                String.format(
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk%s-%s",
-                    jdk, TestImageVersions.PLAY_VERSION))
+        .image(jdk ->
+            String.format(
+                "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk%s-%s",
+                jdk, TestImageVersions.PLAY_VERSION))
         .env("OTEL_INSTRUMENTATION_COMMON_CONTROLLER_TELEMETRY_ENABLED", "true")
         .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Listening for HTTP.*"));
   }
@@ -38,13 +37,12 @@ class PlaySmokeTest extends AbstractSmokeTest<Integer> {
 
     assertThat(response.contentUtf8()).isEqualTo("Welcome 1.");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET /welcome")
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttribute(HTTP_ROUTE, "/welcome"),
-                span -> span.hasName("/welcome").hasKind(SpanKind.INTERNAL)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET /welcome")
+                    .hasKind(SpanKind.SERVER)
+                    .hasAttribute(HTTP_ROUTE, "/welcome"),
+            span -> span.hasName("/welcome").hasKind(SpanKind.INTERNAL)));
   }
 }

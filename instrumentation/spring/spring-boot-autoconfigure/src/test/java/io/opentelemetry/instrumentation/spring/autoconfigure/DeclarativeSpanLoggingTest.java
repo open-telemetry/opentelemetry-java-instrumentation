@@ -30,10 +30,9 @@ class DeclarativeSpanLoggingTest {
         .withPropertyValues(
             "otel.file_format=1.1",
             "otel.instrumentation/development.java.spring_starter.debug=true")
-        .run(
-            context ->
-                assertThat(context.getBean(OpenTelemetry.class).toString())
-                    .containsOnlyOnce("LoggingSpanExporter"));
+        .run(context ->
+            assertThat(context.getBean(OpenTelemetry.class).toString())
+                .containsOnlyOnce("LoggingSpanExporter"));
   }
 
   @Test
@@ -42,42 +41,37 @@ class DeclarativeSpanLoggingTest {
         .withPropertyValues(
             "otel.file_format=1.1",
             "otel.instrumentation/development.java.spring_starter.debug=false")
-        .run(
-            context ->
-                assertThat(context.getBean(OpenTelemetry.class).toString())
-                    .doesNotContain("LoggingSpanExporter"));
+        .run(context ->
+            assertThat(context.getBean(OpenTelemetry.class).toString())
+                .doesNotContain("LoggingSpanExporter"));
   }
 
   @Test
   void debugUnset() {
     runner
         .withPropertyValues("otel.file_format=1.1")
-        .run(
-            context ->
-                assertThat(context.getBean(OpenTelemetry.class).toString())
-                    .doesNotContain("LoggingSpanExporter"));
+        .run(context ->
+            assertThat(context.getBean(OpenTelemetry.class).toString())
+                .doesNotContain("LoggingSpanExporter"));
   }
 
   @Test
   void systemPropertyOverridesDebug() {
     runner
         .withPropertyValues("otel.file_format=1.1")
-        .withInitializer(
-            context ->
-                context
-                    .getEnvironment()
-                    .getPropertySources()
-                    .addLast(
-                        new MapPropertySource(
-                            "applicationConfig",
-                            singletonMap(
-                                "otel.instrumentation/development.java.spring_starter.debug",
-                                "true"))))
+        .withInitializer(context ->
+            context
+                .getEnvironment()
+                .getPropertySources()
+                .addLast(
+                    new MapPropertySource(
+                        "applicationConfig",
+                        singletonMap(
+                            "otel.instrumentation/development.java.spring_starter.debug", "true"))))
         .withSystemProperties("otel.instrumentation/development.java.spring_starter.debug=false")
-        .run(
-            context ->
-                assertThat(context.getBean(OpenTelemetry.class).toString())
-                    .doesNotContain("LoggingSpanExporter"));
+        .run(context ->
+            assertThat(context.getBean(OpenTelemetry.class).toString())
+                .doesNotContain("LoggingSpanExporter"));
   }
 
   @Test
@@ -87,11 +81,10 @@ class DeclarativeSpanLoggingTest {
         .withPropertyValues(
             "otel.file_format=1.1",
             "otel.instrumentation/development.java.spring_starter.debug=true")
-        .run(
-            context -> {
-              assertThat(context).hasNotFailed().doesNotHaveBean("spanLoggingCustomizerProvider");
-              assertThat(context.getBean(OpenTelemetry.class).toString())
-                  .doesNotContain("LoggingSpanExporter");
-            });
+        .run(context -> {
+          assertThat(context).hasNotFailed().doesNotHaveBean("spanLoggingCustomizerProvider");
+          assertThat(context.getBean(OpenTelemetry.class).toString())
+              .doesNotContain("LoggingSpanExporter");
+        });
   }
 }

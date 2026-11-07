@@ -76,19 +76,17 @@ class InfluxDbClient24Test {
             username,
             password,
             new OkHttpClient.Builder()
-                .addInterceptor(
-                    chain -> {
-                      Request request = chain.request();
-                      HttpUrl url = request.url();
-                      String encodedQuery = url.encodedQuery();
-                      if (encodedQuery != null && encodedQuery.contains(";")) {
-                        // Retrofit leaves semicolons raw, so InfluxDB's Go form parser truncates q.
-                        url =
-                            url.newBuilder().encodedQuery(encodedQuery.replace(";", "%3B")).build();
-                        request = request.newBuilder().url(url).build();
-                      }
-                      return chain.proceed(request);
-                    }));
+                .addInterceptor(chain -> {
+                  Request request = chain.request();
+                  HttpUrl url = request.url();
+                  String encodedQuery = url.encodedQuery();
+                  if (encodedQuery != null && encodedQuery.contains(";")) {
+                    // Retrofit leaves semicolons raw, so InfluxDB's Go form parser truncates q.
+                    url = url.newBuilder().encodedQuery(encodedQuery.replace(";", "%3B")).build();
+                    request = request.newBuilder().url(url).build();
+                  }
+                  return chain.proceed(request);
+                }));
     influxDb.createDatabase(DATABASE_NAME);
     cleanup.deferAfterAll(() -> influxDb.deleteDatabase(DATABASE_NAME));
   }
@@ -121,50 +119,46 @@ class InfluxDbClient24Test {
     influxDb.deleteDatabase(dbName);
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("CREATE DATABASE " + dbName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                            equalTo(DB_NAMESPACE, dbName),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_OPERATION_NAME, "CREATE DATABASE"))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("CREATE DATABASE " + dbName)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                        equalTo(DB_NAMESPACE, dbName),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_OPERATION_NAME, "CREATE DATABASE"))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("write " + dbName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                            equalTo(DB_NAMESPACE, dbName),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_OPERATION_NAME, "write"))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("write " + dbName)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                        equalTo(DB_NAMESPACE, dbName),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_OPERATION_NAME, "write"))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SELECT cpu")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                            equalTo(DB_NAMESPACE, dbName),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu GROUP BY *"),
-                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu"))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SELECT cpu")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                        equalTo(DB_NAMESPACE, dbName),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu GROUP BY *"),
+                        equalTo(DB_QUERY_SUMMARY, "SELECT cpu"))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("DROP DATABASE " + dbName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                            equalTo(DB_NAMESPACE, dbName),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_OPERATION_NAME, "DROP DATABASE"))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("DROP DATABASE " + dbName)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                        equalTo(DB_NAMESPACE, dbName),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_OPERATION_NAME, "DROP DATABASE"))));
   }
 
   @Test
@@ -172,19 +166,17 @@ class InfluxDbClient24Test {
     Query query = new Query("SELECT * FROM cpu_load where test1 = 'influxDb'", DATABASE_NAME);
     influxDb.query(query, MILLISECONDS);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SELECT cpu_load")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load where test1 = ?"),
-                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SELECT cpu_load")
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                    equalTo(DB_NAMESPACE, DATABASE_NAME),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load where test1 = ?"),
+                    equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"))));
   }
 
   @Test
@@ -198,28 +190,21 @@ class InfluxDbClient24Test {
     assertThat(result.getResults().get(0).getError()).isNull();
     assertThat(result.getResults().get(1).getError()).isNotEmpty();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.CLIENT)
-                        .hasStatus(StatusData.error())
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getAttributes().get(ERROR_TYPE))
-                                    .isEqualTo("_OTHER"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(SpanKind.CLIENT)
+                .hasStatus(StatusData.error())
+                .satisfies(spanData ->
+                    assertThat(spanData.getAttributes().get(ERROR_TYPE)).isEqualTo("_OTHER"))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.influxdb-2.4",
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point.satisfies(
-                                    pointData ->
-                                        assertThat(pointData.getAttributes().get(ERROR_TYPE))
-                                            .isEqualTo("_OTHER")))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point.satisfies(pointData ->
+                            assertThat(pointData.getAttributes().get(ERROR_TYPE))
+                                .isEqualTo("_OTHER")))));
   }
 }

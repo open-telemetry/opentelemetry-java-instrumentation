@@ -37,11 +37,10 @@ public class SmokeTestOptions<T> {
   /** Configure test for spring boot test app. */
   @CanIgnoreReturnValue
   public SmokeTestOptions<T> springBoot() {
-    image(
-        jdk ->
-            String.format(
-                "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk%s-%s",
-                jdk, TestImageVersions.SPRING_BOOT_VERSION));
+    image(jdk ->
+        String.format(
+            "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk%s-%s",
+            jdk, TestImageVersions.SPRING_BOOT_VERSION));
     waitStrategy(
         new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Started SpringbootApplication in.*"));
     return this;

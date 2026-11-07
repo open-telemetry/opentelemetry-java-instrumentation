@@ -27,6 +27,6 @@ public class EntityNameUtil {
   }
 
   public static Function<Object, String> bestGuessEntityName(Object session) {
-    return (entity) -> bestGuessEntityName(session, entity);
+    return entity -> bestGuessEntityName(session, entity);
   }
 }

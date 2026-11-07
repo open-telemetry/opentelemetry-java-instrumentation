@@ -56,18 +56,17 @@ class SpringRabbitTemplateTest {
     RabbitTemplate template = new RabbitTemplate(connectionFactory);
     template.setReceiveTimeout(10000);
     Future<?> delivery =
-        executor.submit(
-            () -> {
-              channel
-                  .registeredConsumer
-                  .get()
-                  .handleDelivery(
-                      "template-consumer",
-                      new Envelope(1, false, "", "template"),
-                      new AMQP.BasicProperties.Builder().contentType("text/plain").build(),
-                      "message".getBytes(UTF_8));
-              return null;
-            });
+        executor.submit(() -> {
+          channel
+              .registeredConsumer
+              .get()
+              .handleDelivery(
+                  "template-consumer",
+                  new Envelope(1, false, "", "template"),
+                  new AMQP.BasicProperties.Builder().contentType("text/plain").build(),
+                  "message".getBytes(UTF_8));
+          return null;
+        });
 
     Object message = template.receiveAndConvert("template");
     delivery.get();
@@ -85,11 +84,10 @@ class SpringRabbitTemplateTest {
         "io.opentelemetry.rabbitmq-2.7",
         "messaging.client.consumed.messages",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum -> sum.hasPointsSatisfying(point -> point.hasValue(1)))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasLongSumSatisfying(
+                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(1)))));
   }
 
   private static class StubChannel extends ChannelN {

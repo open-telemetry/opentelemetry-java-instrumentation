@@ -53,11 +53,10 @@ public final class MethodsConfigurationParser {
     List<DeclarativeConfigProperties> excludeList = config.getStructuredList("exclude_methods");
     if (excludeList != null) {
       return excludeList.stream()
-          .filter(
-              entry -> {
-                String className = entry.getString("class");
-                return className != null && !className.isEmpty();
-              })
+          .filter(entry -> {
+            String className = entry.getString("class");
+            return className != null && !className.isEmpty();
+          })
           .collect(
               toMap(
                   entry -> entry.getString("class"),

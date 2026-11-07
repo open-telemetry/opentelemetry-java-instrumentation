@@ -71,12 +71,11 @@ class MicrometerBridgeAutoConfigurationTest extends AbstractMicrometerBridgeAuto
             "otel.traces.exporter=none",
             "otel.metrics.exporter=none",
             "otel.logs.exporter=none")
-        .run(
-            context -> {
-              assertThat(context).hasNotFailed().hasSingleBean(OpenTelemetry.class);
-              assertThat(context.getBean("otelMeterRegistry", MeterRegistry.class))
-                  .isInstanceOf(OpenTelemetryMeterRegistry.class);
-            });
+        .run(context -> {
+          assertThat(context).hasNotFailed().hasSingleBean(OpenTelemetry.class);
+          assertThat(context.getBean("otelMeterRegistry", MeterRegistry.class))
+              .isInstanceOf(OpenTelemetryMeterRegistry.class);
+        });
   }
 
   // repeated because the composite registry keeps its members in an identity hash set, so a reader
@@ -84,23 +83,22 @@ class MicrometerBridgeAutoConfigurationTest extends AbstractMicrometerBridgeAuto
   @RepeatedTest(5)
   void actuatorMetricsEndpointReturnsMeasurements() {
     actuatorContextRunner(OpenTelemetry.noop())
-        .run(
-            context -> {
-              MeterRegistry meterRegistry = context.getBean(MeterRegistry.class);
-              meterRegistry.counter("test.counter").increment(2);
+        .run(context -> {
+          MeterRegistry meterRegistry = context.getBean(MeterRegistry.class);
+          meterRegistry.counter("test.counter").increment(2);
 
-              // the return type of MetricsEndpoint.metric() differs between Spring Boot 2 and 3
-              MetricsEndpoint metricsEndpoint = new MetricsEndpoint(meterRegistry);
-              var metric = metricsEndpoint.metric("test.counter", null);
-              assertThat(metric).isNotNull();
-              assertThat(metric.getMeasurements())
-                  .singleElement()
-                  .extracting(MetricsEndpoint.Sample::getValue)
-                  .isEqualTo(2.0);
+          // the return type of MetricsEndpoint.metric() differs between Spring Boot 2 and 3
+          MetricsEndpoint metricsEndpoint = new MetricsEndpoint(meterRegistry);
+          var metric = metricsEndpoint.metric("test.counter", null);
+          assertThat(metric).isNotNull();
+          assertThat(metric.getMeasurements())
+              .singleElement()
+              .extracting(MetricsEndpoint.Sample::getValue)
+              .isEqualTo(2.0);
 
-              // hiding the OTel registry's meters must not hide them from the name listing, which
-              // reads the meters of every composite member
-              assertThat(metricsEndpoint.listNames().getNames()).contains("test.counter");
-            });
+          // hiding the OTel registry's meters must not hide them from the name listing, which
+          // reads the meters of every composite member
+          assertThat(metricsEndpoint.listNames().getNames()).contains("test.counter");
+        });
   }
 }

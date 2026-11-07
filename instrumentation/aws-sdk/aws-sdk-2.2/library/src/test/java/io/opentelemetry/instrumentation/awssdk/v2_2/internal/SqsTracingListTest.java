@@ -98,11 +98,10 @@ class SqsTracingListTest {
         unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
     assertThat(
             tracingList.stream()
-                .mapToInt(
-                    unused -> {
-                      assertThat(Span.current().getSpanContext().isValid()).isFalse();
-                      return 1;
-                    })
+                .mapToInt(unused -> {
+                  assertThat(Span.current().getSpanContext().isValid()).isFalse();
+                  return 1;
+                })
                 .sum())
         .isEqualTo(2);
     assertThat(testing.spans()).isEmpty();
@@ -187,13 +186,11 @@ class SqsTracingListTest {
     Spliterator<Message> split = requireNonNull(tracingList.spliterator().trySplit());
     IllegalStateException failure = new IllegalStateException("processing failed");
 
-    assertThatThrownBy(
-            () ->
-                split.tryAdvance(
-                    unused -> {
-                      assertThat(Span.current().getSpanContext().isValid()).isFalse();
-                      throw failure;
-                    }))
+    assertThatThrownBy(() ->
+            split.tryAdvance(unused -> {
+              assertThat(Span.current().getSpanContext().isValid()).isFalse();
+              throw failure;
+            }))
         .isSameAs(failure);
     assertThat(Span.current().getSpanContext().isValid()).isFalse();
     assertThat(testing.spans()).isEmpty();
@@ -224,11 +221,10 @@ class SqsTracingListTest {
     testing.waitForTraces(1);
     assertThat(testing.spans())
         .singleElement()
-        .satisfies(
-            span -> {
-              assertThat(span.getAttributes().get(MESSAGING_MESSAGE_ID)).isEqualTo("message-0");
-              assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
-            });
+        .satisfies(span -> {
+          assertThat(span.getAttributes().get(MESSAGING_MESSAGE_ID)).isEqualTo("message-0");
+          assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
+        });
   }
 
   @Test
@@ -289,10 +285,8 @@ class SqsTracingListTest {
     testing.waitForTraces(1);
     assertThat(testing.spans())
         .singleElement()
-        .satisfies(
-            span ->
-                assertThat(span.getAttributes().get(MESSAGING_MESSAGE_ID))
-                    .isEqualTo("replacement"));
+        .satisfies(span ->
+            assertThat(span.getAttributes().get(MESSAGING_MESSAGE_ID)).isEqualTo("replacement"));
   }
 
   @Test
@@ -324,13 +318,11 @@ class SqsTracingListTest {
     assertThat(testing.spans())
         .filteredOn(span -> "message-0".equals(span.getAttributes().get(MESSAGING_MESSAGE_ID)))
         .singleElement()
-        .satisfies(
-            span -> {
-              assertThat(span.getSpanId()).isEqualTo(callbackContext.getSpanId());
-              assertThat(span.getTraceId()).isEqualTo(capturedParent.getSpanContext().getTraceId());
-              assertThat(span.getParentSpanId())
-                  .isEqualTo(capturedParent.getSpanContext().getSpanId());
-            });
+        .satisfies(span -> {
+          assertThat(span.getSpanId()).isEqualTo(callbackContext.getSpanId());
+          assertThat(span.getTraceId()).isEqualTo(capturedParent.getSpanContext().getTraceId());
+          assertThat(span.getParentSpanId()).isEqualTo(capturedParent.getSpanContext().getSpanId());
+        });
   }
 
   @Test
@@ -366,10 +358,8 @@ class SqsTracingListTest {
     testing.waitForTraces(1);
     assertThat(testing.spans())
         .singleElement()
-        .satisfies(
-            span ->
-                assertThat(span.getAttributes().get(MESSAGING_MESSAGE_ID))
-                    .isEqualTo("outer-message"));
+        .satisfies(span ->
+            assertThat(span.getAttributes().get(MESSAGING_MESSAGE_ID)).isEqualTo("outer-message"));
   }
 
   @Test
@@ -383,11 +373,10 @@ class SqsTracingListTest {
       SpanContext firstSpan = Span.current().getSpanContext();
       assertThat(firstSpan.isValid()).isTrue();
 
-      unrelated.forEach(
-          unused -> {
-            assertThat(Span.current().getSpanContext().isValid()).isTrue();
-            assertThat(Span.current().getSpanContext()).isNotEqualTo(firstSpan);
-          });
+      unrelated.forEach(unused -> {
+        assertThat(Span.current().getSpanContext().isValid()).isTrue();
+        assertThat(Span.current().getSpanContext()).isNotEqualTo(firstSpan);
+      });
       assertThat(Span.current().getSpanContext()).isEqualTo(firstSpan);
     } finally {
       assertThat(iterator.hasNext()).isFalse();
@@ -416,32 +405,28 @@ class SqsTracingListTest {
       firstSpanContext = Span.current().getSpanContext();
       assertThat(firstSpanContext.isValid()).isTrue();
 
-      assertThatThrownBy(
-              () ->
-                  iterator.forEachRemaining(
-                      message -> {
-                        assertThat(message.messageId()).isEqualTo("message-1");
-                        callbackSpanContext.set(Span.current().getSpanContext());
-                        throw failure;
-                      }))
+      assertThatThrownBy(() ->
+              iterator.forEachRemaining(message -> {
+                assertThat(message.messageId()).isEqualTo("message-1");
+                callbackSpanContext.set(Span.current().getSpanContext());
+                throw failure;
+              }))
           .isSameAs(failure);
       assertThat(Context.current()).isSameAs(expectedContext);
     }
     testing.waitForTraces(2);
     SpanContext callbackContext = requireNonNull(callbackSpanContext.get());
     assertThat(testing.spans())
-        .anySatisfy(
-            span -> {
-              assertThat(span.getAttributes().get(MESSAGING_MESSAGE_ID)).isEqualTo("message-0");
-              assertThat(span.getSpanId()).isEqualTo(firstSpanContext.getSpanId());
-              assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.UNSET);
-            })
-        .anySatisfy(
-            span -> {
-              assertThat(span.getAttributes().get(MESSAGING_MESSAGE_ID)).isEqualTo("message-1");
-              assertThat(span.getSpanId()).isEqualTo(callbackContext.getSpanId());
-              assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
-            });
+        .anySatisfy(span -> {
+          assertThat(span.getAttributes().get(MESSAGING_MESSAGE_ID)).isEqualTo("message-0");
+          assertThat(span.getSpanId()).isEqualTo(firstSpanContext.getSpanId());
+          assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.UNSET);
+        })
+        .anySatisfy(span -> {
+          assertThat(span.getAttributes().get(MESSAGING_MESSAGE_ID)).isEqualTo("message-1");
+          assertThat(span.getSpanId()).isEqualTo(callbackContext.getSpanId());
+          assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
+        });
   }
 
   private static void assertForEachFailure() {
@@ -451,12 +436,10 @@ class SqsTracingListTest {
     Context expectedContext = Context.root().with(markerKey, "present");
 
     try (Scope ignored = expectedContext.makeCurrent()) {
-      assertThatThrownBy(
-              () ->
-                  tracingList.forEach(
-                      unused -> {
-                        throw failure;
-                      }))
+      assertThatThrownBy(() ->
+              tracingList.forEach(unused -> {
+                throw failure;
+              }))
           .isSameAs(failure);
       assertThat(Context.current()).isSameAs(expectedContext);
     }
@@ -464,11 +447,10 @@ class SqsTracingListTest {
     testing.waitForTraces(1);
     assertThat(testing.spans())
         .singleElement()
-        .satisfies(
-            span -> {
-              assertThat(span.getAttributes().get(MESSAGING_MESSAGE_ID)).isEqualTo("message-0");
-              assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
-            });
+        .satisfies(span -> {
+          assertThat(span.getAttributes().get(MESSAGING_MESSAGE_ID)).isEqualTo("message-0");
+          assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
+        });
   }
 
   private static TracingList tracingMessages(int messageCount, List<SqsMessage> tracingMessages) {

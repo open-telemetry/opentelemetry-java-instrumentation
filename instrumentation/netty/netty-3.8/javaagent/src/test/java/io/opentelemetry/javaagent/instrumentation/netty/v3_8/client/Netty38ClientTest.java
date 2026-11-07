@@ -145,41 +145,38 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
       optionsBuilder.disableTestRemoteConnection();
     }
 
-    optionsBuilder.setExpectedClientSpanNameMapper(
-        (uri, method) -> {
-          // unopened port or non routable address
-          if ("http://localhost:61/".equals(uri.toString())
-              || "http://192.0.2.1/".equals(uri.toString())) {
-            return "CONNECT";
-          }
-          return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
-        });
+    optionsBuilder.setExpectedClientSpanNameMapper((uri, method) -> {
+      // unopened port or non routable address
+      if ("http://localhost:61/".equals(uri.toString())
+          || "http://192.0.2.1/".equals(uri.toString())) {
+        return "CONNECT";
+      }
+      return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
+    });
 
-    optionsBuilder.setClientSpanErrorMapper(
-        (uri, error) -> {
-          if ("http://localhost:61/".equals(uri.toString())) { // unopened port
-            error =
-                error.getCause() != null
-                    ? error.getCause()
-                    : new ConnectException("Connection refused: localhost/127.0.0.1:61");
-          } else if ("http://192.0.2.1/".equals(uri.toString())) { // non routable address
-            error = error.getCause() != null ? error.getCause() : new ClosedChannelException();
-          }
-          return error;
-        });
+    optionsBuilder.setClientSpanErrorMapper((uri, error) -> {
+      if ("http://localhost:61/".equals(uri.toString())) { // unopened port
+        error =
+            error.getCause() != null
+                ? error.getCause()
+                : new ConnectException("Connection refused: localhost/127.0.0.1:61");
+      } else if ("http://192.0.2.1/".equals(uri.toString())) { // non routable address
+        error = error.getCause() != null ? error.getCause() : new ClosedChannelException();
+      }
+      return error;
+    });
 
-    optionsBuilder.setHttpAttributes(
-        uri -> {
-          // unopened port or non routable address
-          if ("http://localhost:61/".equals(uri.toString())
-              || "http://192.0.2.1/".equals(uri.toString())) {
-            return emptySet();
-          }
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SERVER_ADDRESS);
-          attributes.remove(SERVER_PORT);
-          return attributes;
-        });
+    optionsBuilder.setHttpAttributes(uri -> {
+      // unopened port or non routable address
+      if ("http://localhost:61/".equals(uri.toString())
+          || "http://192.0.2.1/".equals(uri.toString())) {
+        return emptySet();
+      }
+      Set<AttributeKey<?>> attributes =
+          new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+      attributes.remove(SERVER_ADDRESS);
+      attributes.remove(SERVER_PORT);
+      return attributes;
+    });
   }
 }

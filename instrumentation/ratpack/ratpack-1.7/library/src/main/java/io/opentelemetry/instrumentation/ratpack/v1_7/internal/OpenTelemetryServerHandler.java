@@ -40,17 +40,15 @@ public final class OpenTelemetryServerHandler implements Handler {
 
     io.opentelemetry.context.Context otelCtx = instrumenter.start(parentOtelCtx, request);
     context.getExecution().add(io.opentelemetry.context.Context.class, otelCtx);
-    context.onClose(
-        outcome -> {
-          // Route not available in beginning of request so handle it manually here.
-          HttpServerRoute.update(
-              otelCtx, CONTROLLER, OpenTelemetryServerHandler::getRoute, context);
+    context.onClose(outcome -> {
+      // Route not available in beginning of request so handle it manually here.
+      HttpServerRoute.update(otelCtx, CONTROLLER, OpenTelemetryServerHandler::getRoute, context);
 
-          Throwable error =
-              context.getExecution().maybeGet(ErrorHolder.class).map(ErrorHolder::get).orElse(null);
+      Throwable error =
+          context.getExecution().maybeGet(ErrorHolder.class).map(ErrorHolder::get).orElse(null);
 
-          instrumenter.end(otelCtx, outcome.getRequest(), context.getResponse(), error);
-        });
+      instrumenter.end(otelCtx, outcome.getRequest(), context.getResponse(), error);
+    });
 
     // An execution continues to execute synchronously until it is unbound from a thread. We need
     // to make the context current here to make it available to the next handler (possibly user

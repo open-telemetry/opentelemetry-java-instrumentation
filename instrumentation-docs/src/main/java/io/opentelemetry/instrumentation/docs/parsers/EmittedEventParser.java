@@ -48,23 +48,22 @@ public class EmittedEventParser {
       try (Stream<Path> files = Files.list(telemetryDir)) {
         files
             .filter(path -> path.getFileName().toString().startsWith("events-"))
-            .forEach(
-                path -> {
-                  String content = FileManager.readFileToString(path);
-                  if (content != null) {
-                    String whenKey = normalizeWhenCondition(content);
+            .forEach(path -> {
+              String content = FileManager.readFileToString(path);
+              if (content != null) {
+                String whenKey = normalizeWhenCondition(content);
 
-                    eventsByScope.putIfAbsent(whenKey, new StringBuilder("events_by_scope:\n"));
+                eventsByScope.putIfAbsent(whenKey, new StringBuilder("events_by_scope:\n"));
 
-                    // Skip the events_by_scope line so we can aggregate into one list
-                    int eventIndex = content.indexOf("events_by_scope:\n");
-                    if (eventIndex != -1) {
-                      String contentAfter =
-                          content.substring(eventIndex + "events_by_scope:\n".length());
-                      eventsByScope.get(whenKey).append(contentAfter);
-                    }
-                  }
-                });
+                // Skip the events_by_scope line so we can aggregate into one list
+                int eventIndex = content.indexOf("events_by_scope:\n");
+                if (eventIndex != -1) {
+                  String contentAfter =
+                      content.substring(eventIndex + "events_by_scope:\n".length());
+                  eventsByScope.get(whenKey).append(contentAfter);
+                }
+              }
+            });
       } catch (IOException e) {
         logger.severe(
             "Error reading event files from " + instrumentationDirectory + ": " + e.getMessage());

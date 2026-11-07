@@ -46,15 +46,13 @@ class ActuatorTest {
             metric
                 .hasName("test-counter")
                 .hasUnit("thingies")
-                .hasDoubleSumSatisfying(
-                    sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+                .hasDoubleSumSatisfying(sum ->
+                    sum.isMonotonic()
+                        .hasPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("tag"), "value")))));
 
     MeterRegistry meterRegistry = context.getBean(MeterRegistry.class);
     // the composite registry bean must be the one spring created, not a wrapper; beans that were

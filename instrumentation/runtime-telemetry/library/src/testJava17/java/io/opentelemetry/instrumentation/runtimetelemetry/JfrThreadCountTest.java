@@ -40,16 +40,14 @@ class JfrThreadCountTest {
     userThread.join();
     daemonThread.join();
 
-    jfrExtension.waitAndAssertMetrics(
-        metric ->
-            metric
-                .hasName("jvm.thread.count")
-                .hasUnit(UNIT_THREADS)
-                .satisfies(
-                    data ->
-                        assertThat(data.getLongSumData().getPoints())
-                            .anyMatch(point -> point.getValue() > 0 && !isDaemon(point))
-                            .anyMatch(point -> point.getValue() > 0 && isDaemon(point))));
+    jfrExtension.waitAndAssertMetrics(metric ->
+        metric
+            .hasName("jvm.thread.count")
+            .hasUnit(UNIT_THREADS)
+            .satisfies(data ->
+                assertThat(data.getLongSumData().getPoints())
+                    .anyMatch(point -> point.getValue() > 0 && !isDaemon(point))
+                    .anyMatch(point -> point.getValue() > 0 && isDaemon(point))));
   }
 
   private static boolean isDaemon(LongPointData point) {

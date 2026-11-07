@@ -458,14 +458,12 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     }
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(evaluatedOperation)
-                            .hasKind(operationKind)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(attributes)));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(evaluatedOperation)
+                    .hasKind(operationKind)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(attributes)));
   }
 
   private static Stream<Arguments> provideS3Arguments() {
@@ -529,9 +527,8 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                 + "</Error>"));
 
     Throwable caught =
-        catchThrowable(
-            () ->
-                client.listObjectsV2(ListObjectsV2Request.builder().bucket("somebucket").build()));
+        catchThrowable(() ->
+            client.listObjectsV2(ListObjectsV2Request.builder().bucket("somebucket").build()));
     assertThat(caught).isInstanceOf(S3Exception.class);
     S3Exception error = (S3Exception) caught;
     assertThat(error.awsErrorDetails()).isNotNull();
@@ -542,54 +539,50 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     }
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("S3.ListObjectsV2")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasStatus(StatusData.error())
-                            .hasException(emitExceptionAsSpanEvents() ? error : null)
-                            .hasNoParent()
-                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    SERVER_ADDRESS,
-                                    value -> value.matches("somebucket.localhost|localhost")),
-                                satisfies(
-                                    URL_FULL,
-                                    value ->
-                                        value.satisfiesAnyOf(
-                                            v ->
-                                                assertThat(v)
-                                                    .startsWith(
-                                                        "http://somebucket.localhost:"
-                                                            + server.httpPort()),
-                                            v ->
-                                                assertThat(v)
-                                                    .startsWith(
-                                                        "http://localhost:"
-                                                            + server.httpPort()
-                                                            + "/somebucket"))),
-                                equalTo(SERVER_PORT, server.httpPort()),
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, null),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "S3"),
-                                equalTo(RPC_METHOD, "ListObjectsV2"),
-                                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
-                                equalTo(AWS_S3_BUCKET, "somebucket"),
-                                equalTo(AWS_REQUEST_ID, null))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("S3.ListObjectsV2")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasStatus(StatusData.error())
+                    .hasException(emitExceptionAsSpanEvents() ? error : null)
+                    .hasNoParent()
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            SERVER_ADDRESS,
+                            value -> value.matches("somebucket.localhost|localhost")),
+                        satisfies(
+                            URL_FULL,
+                            value ->
+                                value.satisfiesAnyOf(
+                                    v ->
+                                        assertThat(v)
+                                            .startsWith(
+                                                "http://somebucket.localhost:" + server.httpPort()),
+                                    v ->
+                                        assertThat(v)
+                                            .startsWith(
+                                                "http://localhost:"
+                                                    + server.httpPort()
+                                                    + "/somebucket"))),
+                        equalTo(SERVER_PORT, server.httpPort()),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, null),
+                        equalTo(RPC_SYSTEM, "aws-api"),
+                        equalTo(RPC_SERVICE, "S3"),
+                        equalTo(RPC_METHOD, "ListObjectsV2"),
+                        equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                        equalTo(AWS_S3_BUCKET, "somebucket"),
+                        equalTo(AWS_REQUEST_ID, null))));
 
     if (emitExceptionAsLogs()) {
       getTesting()
-          .waitAndAssertLogRecords(
-              logRecord ->
-                  logRecord
-                      .hasSeverity(Severity.WARN)
-                      .hasEventName("exception")
-                      .hasException(error)
-                      .hasTotalAttributeCount(3));
+          .waitAndAssertLogRecords(logRecord ->
+              logRecord
+                  .hasSeverity(Severity.WARN)
+                  .hasEventName("exception")
+                  .hasException(error)
+                  .hasTotalAttributeCount(3));
     }
   }
 
@@ -974,60 +967,53 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     S3Client client = builder.build();
 
     Throwable thrown =
-        catchThrowable(
-            () ->
-                client.getObject(
-                    GetObjectRequest.builder().bucket("somebucket").key("somekey").build()));
+        catchThrowable(() ->
+            client.getObject(
+                GetObjectRequest.builder().bucket("somebucket").key("somekey").build()));
 
     assertThat(thrown).isInstanceOf(SdkClientException.class);
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("S3.GetObject")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasStatus(StatusData.error())
-                            .hasException(emitExceptionAsSpanEvents() ? thrown : null)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                // Starting with AWS SDK V2 2.18.0, the s3 sdk will prefix the
-                                // hostname with the bucket name in case the bucket name is a valid
-                                // DNS label, even in the case that we are using an endpoint
-                                // override. Previously the sdk was only doing that if endpoint had
-                                // "s3" as label in the FQDN. Our test assert both cases so that we
-                                // don't need to know what version is being tested.
-                                satisfies(
-                                    SERVER_ADDRESS,
-                                    val -> val.matches("somebucket.localhost|localhost")),
-                                satisfies(
-                                    URL_FULL,
-                                    val ->
-                                        val.isIn(
-                                            "http://somebucket.localhost:"
-                                                + server.httpPort()
-                                                + "/somekey",
-                                            "http://localhost:"
-                                                + server.httpPort()
-                                                + "/somebucket/somekey")),
-                                equalTo(SERVER_PORT, server.httpPort()),
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "S3"),
-                                equalTo(RPC_METHOD, "GetObject"),
-                                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
-                                equalTo(AWS_S3_BUCKET, "somebucket"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("S3.GetObject")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasStatus(StatusData.error())
+                    .hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        // Starting with AWS SDK V2 2.18.0, the s3 sdk will prefix the
+                        // hostname with the bucket name in case the bucket name is a valid
+                        // DNS label, even in the case that we are using an endpoint
+                        // override. Previously the sdk was only doing that if endpoint had
+                        // "s3" as label in the FQDN. Our test assert both cases so that we
+                        // don't need to know what version is being tested.
+                        satisfies(
+                            SERVER_ADDRESS, val -> val.matches("somebucket.localhost|localhost")),
+                        satisfies(
+                            URL_FULL,
+                            val ->
+                                val.isIn(
+                                    "http://somebucket.localhost:" + server.httpPort() + "/somekey",
+                                    "http://localhost:"
+                                        + server.httpPort()
+                                        + "/somebucket/somekey")),
+                        equalTo(SERVER_PORT, server.httpPort()),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(RPC_SYSTEM, "aws-api"),
+                        equalTo(RPC_SERVICE, "S3"),
+                        equalTo(RPC_METHOD, "GetObject"),
+                        equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                        equalTo(AWS_S3_BUCKET, "somebucket"))));
 
     if (emitExceptionAsLogs()) {
       getTesting()
-          .waitAndAssertLogRecords(
-              logRecord ->
-                  logRecord
-                      .hasSeverity(Severity.WARN)
-                      .hasEventName("exception")
-                      .hasException(thrown)
-                      .hasTotalAttributeCount(3));
+          .waitAndAssertLogRecords(logRecord ->
+              logRecord
+                  .hasSeverity(Severity.WARN)
+                  .hasEventName("exception")
+                  .hasException(thrown)
+                  .hasTotalAttributeCount(3));
     }
   }
 

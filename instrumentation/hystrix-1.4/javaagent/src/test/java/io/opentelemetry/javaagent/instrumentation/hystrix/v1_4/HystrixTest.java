@@ -57,21 +57,20 @@ class HystrixTest {
     String result = testing.runWithSpan("parent", () -> operation.apply(command));
     assertThat(result).isEqualTo("Hello!");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("ExampleGroup.TestCommand.execute")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
-                            equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
-                            equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
-                span ->
-                    span.hasName("tracedMethod")
-                        .hasParent(trace.getSpan(1))
-                        .hasTotalAttributeCount(0)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("ExampleGroup.TestCommand.execute")
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
+                        equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
+                        equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
+            span ->
+                span.hasName("tracedMethod")
+                    .hasParent(trace.getSpan(1))
+                    .hasTotalAttributeCount(0)));
   }
 
   @ParameterizedTest
@@ -98,26 +97,25 @@ class HystrixTest {
     String result = testing.runWithSpan("parent", () -> operation.apply(command));
     assertThat(result).isEqualTo("Fallback!");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("ExampleGroup.TestCommand.execute")
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasException(new IllegalArgumentException())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
-                            equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
-                            equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
-                span ->
-                    span.hasName("ExampleGroup.TestCommand.fallback")
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
-                            equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
-                            equalTo(booleanKey("hystrix.circuit_open"), experimental(false)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("ExampleGroup.TestCommand.execute")
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasException(new IllegalArgumentException())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
+                        equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
+                        equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
+            span ->
+                span.hasName("ExampleGroup.TestCommand.fallback")
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
+                        equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
+                        equalTo(booleanKey("hystrix.circuit_open"), experimental(false)))));
   }
 
   private static Stream<Arguments> provideCommandActionArguments() {
@@ -152,14 +150,13 @@ class HystrixTest {
                     cmd -> {
                       BlockingQueue<String> queue = new LinkedBlockingQueue<>();
                       cmd.observe()
-                          .subscribe(
-                              next -> {
-                                try {
-                                  queue.put(next);
-                                } catch (InterruptedException e) {
-                                  throw new RuntimeException(e);
-                                }
-                              });
+                          .subscribe(next -> {
+                            try {
+                              queue.put(next);
+                            } catch (InterruptedException e) {
+                              throw new RuntimeException(e);
+                            }
+                          });
                       String returnValue;
                       try {
                         returnValue = queue.take();

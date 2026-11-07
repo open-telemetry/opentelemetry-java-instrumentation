@@ -88,12 +88,11 @@ public final class ParallelHeapSummaryHandler implements RecordedEventHandler {
               .upDownCounterBuilder(Constants.METRIC_NAME_MEMORY)
               .setDescription(Constants.METRIC_DESCRIPTION_MEMORY)
               .setUnit(Constants.BYTES)
-              .buildWithCallback(
-                  measurement -> {
-                    measurement.record(usageEden, ATTR_MEMORY_EDEN);
-                    measurement.record(usageSurvivor, ATTR_MEMORY_SURVIVOR);
-                    measurement.record(usageOld, ATTR_MEMORY_OLD);
-                  }));
+              .buildWithCallback(measurement -> {
+                measurement.record(usageEden, ATTR_MEMORY_EDEN);
+                measurement.record(usageSurvivor, ATTR_MEMORY_SURVIVOR);
+                measurement.record(usageOld, ATTR_MEMORY_OLD);
+              }));
     }
     if (usageAfterSelected) {
       observables.add(
@@ -101,12 +100,11 @@ public final class ParallelHeapSummaryHandler implements RecordedEventHandler {
               .upDownCounterBuilder(Constants.METRIC_NAME_MEMORY_AFTER)
               .setDescription(Constants.METRIC_DESCRIPTION_MEMORY_AFTER)
               .setUnit(Constants.BYTES)
-              .buildWithCallback(
-                  measurement -> {
-                    measurement.record(usageEdenAfter, ATTR_MEMORY_EDEN);
-                    measurement.record(usageSurvivorAfter, ATTR_MEMORY_SURVIVOR);
-                    measurement.record(usageOldAfter, ATTR_MEMORY_OLD);
-                  }));
+              .buildWithCallback(measurement -> {
+                measurement.record(usageEdenAfter, ATTR_MEMORY_EDEN);
+                measurement.record(usageSurvivorAfter, ATTR_MEMORY_SURVIVOR);
+                measurement.record(usageOldAfter, ATTR_MEMORY_OLD);
+              }));
     }
     if (committedSelected) {
       observables.add(
@@ -114,12 +112,11 @@ public final class ParallelHeapSummaryHandler implements RecordedEventHandler {
               .upDownCounterBuilder(Constants.METRIC_NAME_COMMITTED)
               .setDescription(Constants.METRIC_DESCRIPTION_COMMITTED)
               .setUnit(Constants.BYTES)
-              .buildWithCallback(
-                  measurement -> {
-                    measurement.record(committedOld, ATTR_MEMORY_OLD);
-                    measurement.record(committedEden, ATTR_MEMORY_EDEN);
-                    measurement.record(committedSurvivor, ATTR_MEMORY_SURVIVOR);
-                  }));
+              .buildWithCallback(measurement -> {
+                measurement.record(committedOld, ATTR_MEMORY_OLD);
+                measurement.record(committedEden, ATTR_MEMORY_EDEN);
+                measurement.record(committedSurvivor, ATTR_MEMORY_SURVIVOR);
+              }));
     }
     if (limitSelected) {
       observables.add(
@@ -127,12 +124,11 @@ public final class ParallelHeapSummaryHandler implements RecordedEventHandler {
               .upDownCounterBuilder(Constants.METRIC_NAME_MEMORY_LIMIT)
               .setDescription(Constants.METRIC_DESCRIPTION_MEMORY_LIMIT)
               .setUnit(Constants.BYTES)
-              .buildWithCallback(
-                  measurement -> {
-                    measurement.record(limitOld, ATTR_MEMORY_OLD);
-                    measurement.record(limitYoung, ATTR_MEMORY_EDEN);
-                    measurement.record(limitYoung, ATTR_MEMORY_SURVIVOR);
-                  }));
+              .buildWithCallback(measurement -> {
+                measurement.record(limitOld, ATTR_MEMORY_OLD);
+                measurement.record(limitYoung, ATTR_MEMORY_EDEN);
+                measurement.record(limitYoung, ATTR_MEMORY_SURVIVOR);
+              }));
     }
   }
 

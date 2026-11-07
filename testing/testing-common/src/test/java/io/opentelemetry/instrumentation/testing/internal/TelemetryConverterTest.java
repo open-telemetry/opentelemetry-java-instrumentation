@@ -97,27 +97,23 @@ class TelemetryConverterTest {
                         .addScopeSpans(ScopeSpans.newBuilder().addSpans(span))
                         .build())))
         .singleElement()
-        .satisfies(
-            spanData -> {
-              assertThat(spanData.getSpanContext())
-                  .isEqualTo(
-                      SpanContext.create(
-                          TRACE_ID, SPAN_ID, TraceFlags.getSampled(), TraceState.getDefault()));
-              assertThat(spanData.getTotalRecordedLinks()).isEqualTo(4);
-              assertThat(spanData.getLinks())
-                  .containsExactly(
-                      LinkData.create(
-                          remote
-                              ? SpanContext.createFromRemoteParent(
-                                  TRACE_ID, SPAN_ID, TraceFlags.fromByte((byte) flags), TRACE_STATE)
-                              : SpanContext.create(
-                                  TRACE_ID,
-                                  SPAN_ID,
-                                  TraceFlags.fromByte((byte) flags),
-                                  TRACE_STATE),
-                          Attributes.of(stringKey("link.attribute"), "value"),
-                          3));
-            });
+        .satisfies(spanData -> {
+          assertThat(spanData.getSpanContext())
+              .isEqualTo(
+                  SpanContext.create(
+                      TRACE_ID, SPAN_ID, TraceFlags.getSampled(), TraceState.getDefault()));
+          assertThat(spanData.getTotalRecordedLinks()).isEqualTo(4);
+          assertThat(spanData.getLinks())
+              .containsExactly(
+                  LinkData.create(
+                      remote
+                          ? SpanContext.createFromRemoteParent(
+                              TRACE_ID, SPAN_ID, TraceFlags.fromByte((byte) flags), TRACE_STATE)
+                          : SpanContext.create(
+                              TRACE_ID, SPAN_ID, TraceFlags.fromByte((byte) flags), TRACE_STATE),
+                      Attributes.of(stringKey("link.attribute"), "value"),
+                      3));
+        });
   }
 
   private static Stream<Arguments> linkFlags() {
@@ -205,25 +201,23 @@ class TelemetryConverterTest {
                 converted,
                 convertedWithDifferentResourceSchema,
                 convertedWithDifferentScopeAttributes))
-        .allSatisfy(
-            metricData -> {
-              assertThat(metricData.getName()).isEqualTo("metric");
-              assertThat(metricData.getDescription()).isEqualTo("metric description");
-              assertThat(metricData.getUnit()).isEqualTo("items");
-              assertThat(metricData.getLongSumData().isMonotonic()).isTrue();
-              assertThat(metricData.getLongSumData().getAggregationTemporality())
-                  .isEqualTo(AggregationTemporality.DELTA);
-              assertThat(metricData.getLongSumData().getPoints())
-                  .singleElement()
-                  .satisfies(
-                      point -> {
-                        assertThat(point.getStartEpochNanos()).isEqualTo(3);
-                        assertThat(point.getEpochNanos()).isEqualTo(4);
-                        assertThat(point.getAttributes())
-                            .isEqualTo(Attributes.of(stringKey("point.attribute"), "point-value"));
-                        assertThat(point.getValue()).isEqualTo(42);
-                      });
-            });
+        .allSatisfy(metricData -> {
+          assertThat(metricData.getName()).isEqualTo("metric");
+          assertThat(metricData.getDescription()).isEqualTo("metric description");
+          assertThat(metricData.getUnit()).isEqualTo("items");
+          assertThat(metricData.getLongSumData().isMonotonic()).isTrue();
+          assertThat(metricData.getLongSumData().getAggregationTemporality())
+              .isEqualTo(AggregationTemporality.DELTA);
+          assertThat(metricData.getLongSumData().getPoints())
+              .singleElement()
+              .satisfies(point -> {
+                assertThat(point.getStartEpochNanos()).isEqualTo(3);
+                assertThat(point.getEpochNanos()).isEqualTo(4);
+                assertThat(point.getAttributes())
+                    .isEqualTo(Attributes.of(stringKey("point.attribute"), "point-value"));
+                assertThat(point.getValue()).isEqualTo(42);
+              });
+        });
   }
 
   @Test
@@ -301,12 +295,11 @@ class TelemetryConverterTest {
 
     assertThat(TelemetryConverter.getSpanData(request.getResourceSpansList()))
         .singleElement()
-        .satisfies(
-            spanData -> {
-              assertThat(spanData.getSpanContext()).isEqualTo(local);
-              assertThat(spanData.getLinks()).containsExactlyElementsOf(original.getLinks());
-              assertThat(spanData.getTotalRecordedLinks()).isEqualTo(4);
-            });
+        .satisfies(spanData -> {
+          assertThat(spanData.getSpanContext()).isEqualTo(local);
+          assertThat(spanData.getLinks()).containsExactlyElementsOf(original.getLinks());
+          assertThat(spanData.getTotalRecordedLinks()).isEqualTo(4);
+        });
   }
 
   @Test
@@ -345,26 +338,25 @@ class TelemetryConverterTest {
         .isEqualTo(AggregationTemporality.DELTA);
     assertThat(metric.getExponentialHistogramData().getPoints())
         .singleElement()
-        .satisfies(
-            point -> {
-              assertThat(point.getStartEpochNanos()).isEqualTo(10);
-              assertThat(point.getEpochNanos()).isEqualTo(20);
-              assertThat(point.getAttributes()).isEqualTo(Attributes.of(stringKey("key"), "value"));
-              assertThat(point.getCount()).isEqualTo(11);
-              assertThat(point.getSum()).isEqualTo(12.5);
-              assertThat(point.getScale()).isEqualTo(2);
-              assertThat(point.getZeroCount()).isEqualTo(3);
-              assertThat(point.hasMin()).isTrue();
-              assertThat(point.getMin()).isEqualTo(-1.5);
-              assertThat(point.hasMax()).isTrue();
-              assertThat(point.getMax()).isEqualTo(4.5);
-              assertThat(point.getPositiveBuckets().getScale()).isEqualTo(2);
-              assertThat(point.getPositiveBuckets().getOffset()).isEqualTo(-2);
-              assertThat(point.getPositiveBuckets().getBucketCounts()).containsExactly(0L, 2L, 0L);
-              assertThat(point.getNegativeBuckets().getScale()).isEqualTo(2);
-              assertThat(point.getNegativeBuckets().getOffset()).isEqualTo(5);
-              assertThat(point.getNegativeBuckets().getBucketCounts()).containsExactly(1L, 0L, 5L);
-            });
+        .satisfies(point -> {
+          assertThat(point.getStartEpochNanos()).isEqualTo(10);
+          assertThat(point.getEpochNanos()).isEqualTo(20);
+          assertThat(point.getAttributes()).isEqualTo(Attributes.of(stringKey("key"), "value"));
+          assertThat(point.getCount()).isEqualTo(11);
+          assertThat(point.getSum()).isEqualTo(12.5);
+          assertThat(point.getScale()).isEqualTo(2);
+          assertThat(point.getZeroCount()).isEqualTo(3);
+          assertThat(point.hasMin()).isTrue();
+          assertThat(point.getMin()).isEqualTo(-1.5);
+          assertThat(point.hasMax()).isTrue();
+          assertThat(point.getMax()).isEqualTo(4.5);
+          assertThat(point.getPositiveBuckets().getScale()).isEqualTo(2);
+          assertThat(point.getPositiveBuckets().getOffset()).isEqualTo(-2);
+          assertThat(point.getPositiveBuckets().getBucketCounts()).containsExactly(0L, 2L, 0L);
+          assertThat(point.getNegativeBuckets().getScale()).isEqualTo(2);
+          assertThat(point.getNegativeBuckets().getOffset()).isEqualTo(5);
+          assertThat(point.getNegativeBuckets().getBucketCounts()).containsExactly(1L, 0L, 5L);
+        });
   }
 
   @Test
@@ -379,15 +371,14 @@ class TelemetryConverterTest {
         .isEqualTo(AggregationTemporality.CUMULATIVE);
     assertThat(metric.getExponentialHistogramData().getPoints())
         .singleElement()
-        .satisfies(
-            point -> {
-              assertThat(point.getCount()).isEqualTo(2);
-              assertThat(point.getZeroCount()).isEqualTo(2);
-              assertThat(point.hasMin()).isFalse();
-              assertThat(point.hasMax()).isFalse();
-              assertThat(point.getPositiveBuckets().getBucketCounts()).isEmpty();
-              assertThat(point.getNegativeBuckets().getBucketCounts()).isEmpty();
-            });
+        .satisfies(point -> {
+          assertThat(point.getCount()).isEqualTo(2);
+          assertThat(point.getZeroCount()).isEqualTo(2);
+          assertThat(point.hasMin()).isFalse();
+          assertThat(point.hasMax()).isFalse();
+          assertThat(point.getPositiveBuckets().getBucketCounts()).isEmpty();
+          assertThat(point.getNegativeBuckets().getBucketCounts()).isEmpty();
+        });
   }
 
   private static MetricData convertExponentialHistogram(

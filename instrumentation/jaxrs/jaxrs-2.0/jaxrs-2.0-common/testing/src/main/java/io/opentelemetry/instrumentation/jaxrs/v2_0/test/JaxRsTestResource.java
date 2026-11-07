@@ -113,74 +113,71 @@ public class JaxRsTestResource {
   public void indexed_child(@Context UriInfo uriInfo, @Suspended AsyncResponse response) {
     MultivaluedMap<String, String> parameters = uriInfo.getQueryParameters();
 
-    CompletableFuture.runAsync(
-        () ->
-            controller(
-                INDEXED_CHILD,
-                () -> {
-                  INDEXED_CHILD.collectSpanAttributes(parameters::getFirst);
-                  response.resume(INDEXED_CHILD.getBody());
-                }));
+    CompletableFuture.runAsync(() ->
+        controller(
+            INDEXED_CHILD,
+            () -> {
+              INDEXED_CHILD.collectSpanAttributes(parameters::getFirst);
+              response.resume(INDEXED_CHILD.getBody());
+            }));
   }
 
   @Path("async")
   @GET
   public void asyncOp(@Suspended AsyncResponse response, @QueryParam("action") String action) {
-    CompletableFuture.runAsync(
-        () -> {
-          // await for the test method to verify that there are no spans yet
-          try {
-            barrier.await(10, SECONDS);
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-          } catch (BrokenBarrierException | TimeoutException e) {
-            throw new IllegalStateException(e);
-          }
+    CompletableFuture.runAsync(() -> {
+      // await for the test method to verify that there are no spans yet
+      try {
+        barrier.await(10, SECONDS);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      } catch (BrokenBarrierException | TimeoutException e) {
+        throw new IllegalStateException(e);
+      }
 
-          switch (action) {
-            case "succeed":
-              response.resume("success");
-              break;
-            case "throw":
-              response.resume(new IllegalStateException("failure"));
-              break;
-            case "cancel":
-              response.cancel();
-              break;
-            default:
-              response.resume(new AssertionError("invalid action value: " + action));
-              break;
-          }
-        });
+      switch (action) {
+        case "succeed":
+          response.resume("success");
+          break;
+        case "throw":
+          response.resume(new IllegalStateException("failure"));
+          break;
+        case "cancel":
+          response.cancel();
+          break;
+        default:
+          response.resume(new AssertionError("invalid action value: " + action));
+          break;
+      }
+    });
   }
 
   @Path("async-completion-stage")
   @GET
   public CompletionStage<String> jaxRs21Async(@QueryParam("action") String action) {
     CompletableFuture<String> result = new CompletableFuture<>();
-    CompletableFuture.runAsync(
-        () -> {
-          // await for the test method to verify that there are no spans yet
-          try {
-            barrier.await(10, SECONDS);
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-          } catch (BrokenBarrierException | TimeoutException e) {
-            throw new IllegalStateException(e);
-          }
+    CompletableFuture.runAsync(() -> {
+      // await for the test method to verify that there are no spans yet
+      try {
+        barrier.await(10, SECONDS);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      } catch (BrokenBarrierException | TimeoutException e) {
+        throw new IllegalStateException(e);
+      }
 
-          switch (action) {
-            case "succeed":
-              result.complete("success");
-              break;
-            case "throw":
-              result.completeExceptionally(new IllegalStateException("failure"));
-              break;
-            default:
-              result.completeExceptionally(new AssertionError("invalid action value: " + action));
-              break;
-          }
-        });
+      switch (action) {
+        case "succeed":
+          result.complete("success");
+          break;
+        case "throw":
+          result.completeExceptionally(new IllegalStateException("failure"));
+          break;
+        default:
+          result.completeExceptionally(new AssertionError("invalid action value: " + action));
+          break;
+      }
+    });
     return result;
   }
 }

@@ -115,10 +115,9 @@ class KafkaConsumerBatchSelectionTest {
     assertProcessSpans(1);
     assertThat(testing.spans())
         .singleElement()
-        .satisfies(
-            span ->
-                assertThat(span.getSpanId())
-                    .isEqualTo(Span.fromContext(context).getSpanContext().getSpanId()));
+        .satisfies(span ->
+            assertThat(span.getSpanId())
+                .isEqualTo(Span.fromContext(context).getSpanContext().getSpanId()));
 
     ConsumerRecords<String, String> independentRecords = records(record(2));
     KafkaProcessingOwnershipUtil.recordPoll(independentRecords, true);
@@ -127,20 +126,18 @@ class KafkaConsumerBatchSelectionTest {
     assertThat(independent.hasNext()).isFalse();
     assertProcessSpans(2);
     assertThat(testing.spans())
-        .allSatisfy(
-            span ->
-                assertThat(span.getParentSpanId())
-                    .isEqualTo(Span.getInvalid().getSpanContext().getSpanId()));
+        .allSatisfy(span ->
+            assertThat(span.getParentSpanId())
+                .isEqualTo(Span.getInvalid().getSpanContext().getSpanId()));
     assertThat(testing.metrics())
         .filteredOn(metric -> metric.getName().equals("messaging.process.duration"))
         .singleElement()
-        .satisfies(
-            metric ->
-                assertThat(
-                        metric.getHistogramData().getPoints().stream()
-                            .mapToLong(point -> point.getCount())
-                            .sum())
-                    .isEqualTo(2));
+        .satisfies(metric ->
+            assertThat(
+                    metric.getHistogramData().getPoints().stream()
+                        .mapToLong(point -> point.getCount())
+                        .sum())
+                .isEqualTo(2));
   }
 
   @Test
@@ -188,10 +185,9 @@ class KafkaConsumerBatchSelectionTest {
     assertThat(first.hasNext()).isFalse();
     assertProcessSpans(2);
     assertThat(testing.spans())
-        .allSatisfy(
-            span ->
-                assertThat(span.getParentSpanId())
-                    .isEqualTo(Span.getInvalid().getSpanContext().getSpanId()));
+        .allSatisfy(span ->
+            assertThat(span.getParentSpanId())
+                .isEqualTo(Span.getInvalid().getSpanContext().getSpanId()));
   }
 
   @Test
@@ -212,10 +208,9 @@ class KafkaConsumerBatchSelectionTest {
     assertThat(first.hasNext()).isFalse();
     assertProcessSpans(2);
     assertThat(testing.spans())
-        .allSatisfy(
-            span ->
-                assertThat(span.getParentSpanId())
-                    .isEqualTo(Span.getInvalid().getSpanContext().getSpanId()));
+        .allSatisfy(span ->
+            assertThat(span.getParentSpanId())
+                .isEqualTo(Span.getInvalid().getSpanContext().getSpanId()));
   }
 
   @Test
@@ -365,13 +360,11 @@ class KafkaConsumerBatchSelectionTest {
     KafkaProcessingOwnershipUtil.recordPoll(records, true);
     List<ConsumerRecord<String, String>> list = list(records);
 
-    assertThatThrownBy(
-            () ->
-                list.forEach(
-                    record -> {
-                      assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                      throw new IllegalStateException("callback failed");
-                    }))
+    assertThatThrownBy(() ->
+            list.forEach(record -> {
+              assertThat(Span.current().getSpanContext().isValid()).isTrue();
+              throw new IllegalStateException("callback failed");
+            }))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("callback failed");
 

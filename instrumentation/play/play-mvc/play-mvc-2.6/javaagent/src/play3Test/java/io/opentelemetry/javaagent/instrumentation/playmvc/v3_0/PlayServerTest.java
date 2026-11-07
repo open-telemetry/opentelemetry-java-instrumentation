@@ -42,56 +42,49 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
         components ->
             RoutingDsl.fromComponents(components)
                 .GET(SUCCESS.getPath())
-                .routingTo(
-                    request ->
-                        controller(
-                            SUCCESS, () -> Results.status(SUCCESS.getStatus(), SUCCESS.getBody())))
+                .routingTo(request ->
+                    controller(
+                        SUCCESS, () -> Results.status(SUCCESS.getStatus(), SUCCESS.getBody())))
                 .GET(QUERY_PARAM.getPath())
-                .routingTo(
-                    request ->
-                        controller(
-                            QUERY_PARAM,
-                            () -> Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())))
+                .routingTo(request ->
+                    controller(
+                        QUERY_PARAM,
+                        () -> Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())))
                 .GET(REDIRECT.getPath())
                 .routingTo(request -> controller(REDIRECT, () -> Results.found(REDIRECT.getBody())))
                 .GET(ERROR.getPath())
-                .routingTo(
-                    request ->
-                        controller(ERROR, () -> Results.status(ERROR.getStatus(), ERROR.getBody())))
+                .routingTo(request ->
+                    controller(ERROR, () -> Results.status(ERROR.getStatus(), ERROR.getBody())))
                 .GET(EXCEPTION.getPath())
-                .routingTo(
-                    request ->
-                        controller(
-                            EXCEPTION,
-                            () -> {
-                              throw new IllegalArgumentException(EXCEPTION.getBody());
-                            }))
+                .routingTo(request ->
+                    controller(
+                        EXCEPTION,
+                        () -> {
+                          throw new IllegalArgumentException(EXCEPTION.getBody());
+                        }))
                 .GET(CAPTURE_HEADERS.getPath())
-                .routingTo(
-                    request ->
-                        controller(
-                            CAPTURE_HEADERS,
-                            () -> {
-                              Result result =
-                                  Results.status(
-                                      CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody());
-                              result =
-                                  result.withHeader(
-                                      "X-Test-Response",
-                                      request.header("X-Test-Request").orElse("missing"));
-                              return result;
-                            }))
+                .routingTo(request ->
+                    controller(
+                        CAPTURE_HEADERS,
+                        () -> {
+                          Result result =
+                              Results.status(
+                                  CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody());
+                          result =
+                              result.withHeader(
+                                  "X-Test-Response",
+                                  request.header("X-Test-Request").orElse("missing"));
+                          return result;
+                        }))
                 .GET(INDEXED_CHILD.getPath())
-                .routingTo(
-                    request ->
-                        controller(
-                            INDEXED_CHILD,
-                            () -> {
-                              INDEXED_CHILD.collectSpanAttributes(
-                                  name -> request.queryString(name).orElse(null));
-                              return Results.status(
-                                  INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
-                            }))
+                .routingTo(request ->
+                    controller(
+                        INDEXED_CHILD,
+                        () -> {
+                          INDEXED_CHILD.collectSpanAttributes(
+                              name -> request.queryString(name).orElse(null));
+                          return Results.status(INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
+                        }))
                 .build());
   }
 

@@ -66,22 +66,21 @@ class VertxRxCircuitBreakerHttpServerTest extends AbstractVertxRxHttpServerTest 
       configure(router);
       router
           .route(EXCEPTION.getPath())
-          .handler(
-              ctx ->
-                  breaker.execute(
-                      future -> future.fail(new IllegalStateException(EXCEPTION.getBody())),
-                      result -> {
-                        try {
-                          Throwable cause = result.cause();
-                          controller(
-                              EXCEPTION,
-                              () -> {
-                                throw cause;
-                              });
-                        } catch (Throwable t) {
-                          ctx.response().setStatusCode(EXCEPTION.getStatus()).end(t.getMessage());
-                        }
-                      }));
+          .handler(ctx ->
+              breaker.execute(
+                  future -> future.fail(new IllegalStateException(EXCEPTION.getBody())),
+                  result -> {
+                    try {
+                      Throwable cause = result.cause();
+                      controller(
+                          EXCEPTION,
+                          () -> {
+                            throw cause;
+                          });
+                    } catch (Throwable t) {
+                      ctx.response().setStatusCode(EXCEPTION.getStatus()).end(t.getMessage());
+                    }
+                  }));
 
       vertx
           .createHttpServer()

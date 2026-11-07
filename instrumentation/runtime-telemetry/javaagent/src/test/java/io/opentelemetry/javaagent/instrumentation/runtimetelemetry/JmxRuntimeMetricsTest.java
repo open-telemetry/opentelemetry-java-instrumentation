@@ -36,14 +36,12 @@ class JmxRuntimeMetricsTest {
         metric ->
             metric
                 .hasName("jvm.gc.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfyingExactly(
-                                    satisfies(JVM_GC_NAME, val -> val.isNotBlank()),
-                                    satisfies(JVM_GC_ACTION, val -> val.isNotBlank()),
-                                    satisfies(JVM_GC_CAUSE, val -> val.isNotBlank())))),
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point.hasAttributesSatisfyingExactly(
+                            satisfies(JVM_GC_NAME, val -> val.isNotBlank()),
+                            satisfies(JVM_GC_ACTION, val -> val.isNotBlank()),
+                            satisfies(JVM_GC_CAUSE, val -> val.isNotBlank())))),
         metric -> metric.hasName("jvm.memory.used"),
         metric -> metric.hasName("jvm.memory.committed"),
         metric -> metric.hasName("jvm.memory.limit"),

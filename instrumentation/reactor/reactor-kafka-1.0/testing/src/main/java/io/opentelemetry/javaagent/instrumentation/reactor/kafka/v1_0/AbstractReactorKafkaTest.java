@@ -152,11 +152,10 @@ public abstract class AbstractReactorKafkaTest {
   protected void testSingleRecordProcess(
       Function<Consumer<ConsumerRecord<String, String>>, Disposable> subscriptionFunction) {
     Disposable disposable =
-        subscriptionFunction.apply(
-            record -> {
-              assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
-              testing.runWithSpan("consumer", () -> {});
-            });
+        subscriptionFunction.apply(record -> {
+          assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
+          testing.runWithSpan("consumer", () -> {});
+        });
     cleanup.deferCleanup(disposable::dispose);
 
     SenderRecord<String, String, Object> record =
@@ -175,13 +174,12 @@ public abstract class AbstractReactorKafkaTest {
   void testReceiveAutoAckAfterAsyncHandoff() {
     Scheduler scheduler = Schedulers.newSingle("kafka-handoff");
     cleanup.deferCleanup(scheduler::dispose);
-    testSingleRecordProcess(
-        recordConsumer ->
-            receiver
-                .receiveAutoAck()
-                .publishOn(scheduler)
-                .concatMap(records -> records)
-                .subscribe(recordConsumer));
+    testSingleRecordProcess(recordConsumer ->
+        receiver
+            .receiveAutoAck()
+            .publishOn(scheduler)
+            .concatMap(records -> records)
+            .subscribe(recordConsumer));
   }
 
   private static void assertWithReceiveTelemetry(SenderRecord<String, String, Object> record) {
@@ -208,34 +206,32 @@ public abstract class AbstractReactorKafkaTest {
           producerSpan.set(trace.getSpan(1));
         },
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("poll testTopic")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasLinks(receiveRecordLink(producerSpan.get()))
-                        .hasAttributesSatisfyingExactly(receiveAttributes("testTopic"))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("poll testTopic")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasLinks(receiveRecordLink(producerSpan.get()))
+                    .hasAttributesSatisfyingExactly(receiveAttributes("testTopic"))));
     assertReceiveAndProcessMetrics();
   }
 
   private static void assertWithoutReceiveTelemetry(SenderRecord<String, String, Object> record) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("producer"),
-                span ->
-                    span.hasName("send testTopic")
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(sendAttributes(record)),
-                span -> {
-                  span.hasName("process testTopic")
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasParent(trace.getSpan(1))
-                      .hasAttributesSatisfyingExactly(processAttributes(record));
-                  span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
-                },
-                span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("producer"),
+            span ->
+                span.hasName("send testTopic")
+                    .hasKind(SpanKind.PRODUCER)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(sendAttributes(record)),
+            span -> {
+              span.hasName("process testTopic")
+                  .hasKind(SpanKind.CONSUMER)
+                  .hasParent(trace.getSpan(1))
+                  .hasAttributesSatisfyingExactly(processAttributes(record));
+              span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
+            },
+            span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
     assertProcessMetricsWithConsumedMessages(
         testing,
         "io.opentelemetry.reactor-kafka-1.0",

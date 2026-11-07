@@ -211,19 +211,17 @@ final class OpenTelemetryTracing implements Tracing {
       if (command instanceof CompleteableCommand) {
         CompleteableCommand<?> completeableCommand = (CompleteableCommand<?>) command;
         AsyncCommand<?, ?, ?> asyncCommand = CommandWrapper.unwrap(command, AsyncCommand.class);
-        completeableCommand.onComplete(
-            (o, throwable) -> {
-              Throwable error = throwable != null ? throwable : this.error;
-              // CommandWrapper can report null even when its async delegate failed.
-              if (asyncCommand != null && asyncCommand.isCompletedExceptionally()) {
-                asyncCommand.whenComplete(
-                    (result, terminalError) ->
-                        finishFromOutput(
-                            command.getOutput(), terminalError != null ? terminalError : error));
-              } else {
-                finishFromOutput(command.getOutput(), error);
-              }
-            });
+        completeableCommand.onComplete((o, throwable) -> {
+          Throwable error = throwable != null ? throwable : this.error;
+          // CommandWrapper can report null even when its async delegate failed.
+          if (asyncCommand != null && asyncCommand.isCompletedExceptionally()) {
+            asyncCommand.whenComplete((result, terminalError) ->
+                finishFromOutput(
+                    command.getOutput(), terminalError != null ? terminalError : error));
+          } else {
+            finishFromOutput(command.getOutput(), error);
+          }
+        });
       }
 
       return this;

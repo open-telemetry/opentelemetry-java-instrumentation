@@ -98,11 +98,10 @@ public record FileManager(Path rootDir) {
 
     try (Stream<Path> walk = Files.walk(modulePath)) {
       return walk.filter(Files::isRegularFile)
-          .filter(
-              path ->
-                  path.getFileName().toString().equals("build.gradle.kts")
-                      && !containsElement(modulePath.relativize(path), "testing")
-                      && !isInNestedInstrumentationModule(path, modulePath))
+          .filter(path ->
+              path.getFileName().toString().equals("build.gradle.kts")
+                  && !containsElement(modulePath.relativize(path), "testing")
+                  && !isInNestedInstrumentationModule(path, modulePath))
           .collect(toList());
     } catch (IOException e) {
       logger.severe("Error traversing directory: " + e.getMessage());

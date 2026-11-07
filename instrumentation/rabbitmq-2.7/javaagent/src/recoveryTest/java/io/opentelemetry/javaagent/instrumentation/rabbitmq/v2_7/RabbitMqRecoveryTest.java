@@ -70,20 +70,15 @@ class RabbitMqRecoveryTest extends AbstractRabbitMqTest {
     recoveringChannel.queueDeclare();
     String recoveredPeerAddress = recoveringChannel.getConnection().getAddress().getHostAddress();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasAttributesSatisfyingExactly(
-                        equalTo(stringKey("messaging.system.name"), "rabbitmq"),
-                        satisfies(
-                            NETWORK_PEER_ADDRESS, val -> val.isIn(recoveredPeerAddress, null)),
-                        satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
-                        satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()),
-                        equalTo(stringKey("rabbitmq.command"), experimental("queue.declare")),
-                        equalTo(stringKey("rabbitmq.vhost.name"), experimental("otel-test")),
-                        equalTo(
-                            stringKey("rabbitmq.cluster.name"),
-                            experimental("otel-test-cluster")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("messaging.system.name"), "rabbitmq"),
+                satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(recoveredPeerAddress, null)),
+                satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
+                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()),
+                equalTo(stringKey("rabbitmq.command"), experimental("queue.declare")),
+                equalTo(stringKey("rabbitmq.vhost.name"), experimental("otel-test")),
+                equalTo(stringKey("rabbitmq.cluster.name"), experimental("otel-test-cluster")))));
   }
 }

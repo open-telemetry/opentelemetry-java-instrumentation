@@ -70,23 +70,23 @@ class EmittedMetricsParserTest {
 
     String file1Content =
         """
-    when: default
-    metrics_by_scope:
-      - scope: io.opentelemetry.MetricParserTest
-        metrics:
-          - name: metric1
-            type: counter
-    """;
+        when: default
+        metrics_by_scope:
+          - scope: io.opentelemetry.MetricParserTest
+            metrics:
+              - name: metric1
+                type: counter
+        """;
 
     String file2Content =
         """
-    when: default
-    metrics_by_scope:
-      - scope: io.opentelemetry.MetricParserTest
-        metrics:
-          - name: metric2
-            type: gauge
-    """;
+        when: default
+        metrics_by_scope:
+          - scope: io.opentelemetry.MetricParserTest
+            metrics:
+              - name: metric2
+                type: gauge
+        """;
 
     Files.writeString(telemetryDir.resolve("metrics-1.yaml"), file1Content);
     Files.writeString(telemetryDir.resolve("metrics-2.yaml"), file2Content);
@@ -123,31 +123,31 @@ class EmittedMetricsParserTest {
 
     String withState =
         """
-    when: Java17
-    metrics_by_scope:
-      - scope: io.opentelemetry.runtime-telemetry
-        metrics:
-          - name: jvm.thread.count
-            type: LONG_SUM
-            attributes:
-              - name: jvm.thread.daemon
-                type: BOOLEAN
-              - name: jvm.thread.state
-                type: STRING
-    """;
+        when: Java17
+        metrics_by_scope:
+          - scope: io.opentelemetry.runtime-telemetry
+            metrics:
+              - name: jvm.thread.count
+                type: LONG_SUM
+                attributes:
+                  - name: jvm.thread.daemon
+                    type: BOOLEAN
+                  - name: jvm.thread.state
+                    type: STRING
+        """;
 
     String withoutState =
         """
-    when: Java17
-    metrics_by_scope:
-      - scope: io.opentelemetry.runtime-telemetry
-        metrics:
-          - name: jvm.thread.count
-            type: LONG_SUM
-            attributes:
-              - name: jvm.thread.daemon
-                type: BOOLEAN
-    """;
+        when: Java17
+        metrics_by_scope:
+          - scope: io.opentelemetry.runtime-telemetry
+            metrics:
+              - name: jvm.thread.count
+                type: LONG_SUM
+                attributes:
+                  - name: jvm.thread.daemon
+                    type: BOOLEAN
+        """;
 
     Files.writeString(telemetryDir.resolve("metrics-1.yaml"), withState);
     Files.writeString(telemetryDir.resolve("metrics-2.yaml"), withoutState);

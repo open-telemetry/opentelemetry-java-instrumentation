@@ -52,10 +52,8 @@ class G1GcMemoryMetricTest {
                 .hasUnit(BYTES)
                 .hasDescription(METRIC_DESCRIPTION_COMMITTED)
                 // TODO: need JFR support for the other G1 pools
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.containsPointsSatisfying(
-                            point -> point.hasAttributes(ATTR_G1_EDEN_SPACE))),
+                .hasLongSumSatisfying(sum ->
+                    sum.containsPointsSatisfying(point -> point.hasAttributes(ATTR_G1_EDEN_SPACE))),
         metric ->
             metric
                 .hasName(METRIC_NAME_MEMORY_AFTER)
@@ -78,19 +76,16 @@ class G1GcMemoryMetricTest {
         Attributes.of(JVM_GC_NAME, "G1 Young Generation", JVM_GC_ACTION, END_OF_MINOR_GC);
     Attributes majorGcAttributes =
         Attributes.of(JVM_GC_NAME, "G1 Old Generation", JVM_GC_ACTION, END_OF_MAJOR_GC);
-    jfrExtension.waitAndAssertMetrics(
-        metric ->
-            metric
-                .hasName(METRIC_NAME_GC_DURATION)
-                .hasUnit(SECONDS)
-                .hasDescription(METRIC_DESCRIPTION_GC_DURATION)
-                .satisfies(
-                    data ->
-                        assertThat(data.getHistogramData().getPoints())
-                            .anyMatch(
-                                p ->
-                                    p.getSum() > 0
-                                        && (p.getAttributes().equals(minorGcAttributes)
-                                            || p.getAttributes().equals(majorGcAttributes)))));
+    jfrExtension.waitAndAssertMetrics(metric ->
+        metric
+            .hasName(METRIC_NAME_GC_DURATION)
+            .hasUnit(SECONDS)
+            .hasDescription(METRIC_DESCRIPTION_GC_DURATION)
+            .satisfies(data ->
+                assertThat(data.getHistogramData().getPoints())
+                    .anyMatch(p ->
+                        p.getSum() > 0
+                            && (p.getAttributes().equals(minorGcAttributes)
+                                || p.getAttributes().equals(majorGcAttributes)))));
   }
 }

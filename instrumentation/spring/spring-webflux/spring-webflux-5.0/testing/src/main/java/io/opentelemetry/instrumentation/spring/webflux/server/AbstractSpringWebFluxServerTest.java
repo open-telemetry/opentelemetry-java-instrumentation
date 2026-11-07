@@ -81,25 +81,22 @@ public abstract class AbstractSpringWebFluxServerTest
   protected static void assertHandlerExceptionLog(
       StringAssertConsumer exceptionTypeAssertion, StringAssertConsumer exceptionMessageAssertion) {
     Awaitility.await()
-        .untilAsserted(
-            () -> {
-              List<LogRecordData> logs =
-                  testing.logRecords().stream()
-                      .filter(log -> "exception".equals(log.getEventName()))
-                      .filter(
-                          log ->
-                              INSTRUMENTATION_NAME.equals(
-                                  log.getInstrumentationScopeInfo().getName()))
-                      .collect(toList());
+        .untilAsserted(() -> {
+          List<LogRecordData> logs =
+              testing.logRecords().stream()
+                  .filter(log -> "exception".equals(log.getEventName()))
+                  .filter(log ->
+                      INSTRUMENTATION_NAME.equals(log.getInstrumentationScopeInfo().getName()))
+                  .collect(toList());
 
-              assertThat(logs).hasSize(1);
-              assertThat(logs.get(0))
-                  .hasSeverity(Severity.WARN)
-                  .hasEventName("exception")
-                  .hasAttributesSatisfyingExactly(
-                      satisfies(EXCEPTION_TYPE, exceptionTypeAssertion),
-                      satisfies(EXCEPTION_MESSAGE, exceptionMessageAssertion),
-                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)));
-            });
+          assertThat(logs).hasSize(1);
+          assertThat(logs.get(0))
+              .hasSeverity(Severity.WARN)
+              .hasEventName("exception")
+              .hasAttributesSatisfyingExactly(
+                  satisfies(EXCEPTION_TYPE, exceptionTypeAssertion),
+                  satisfies(EXCEPTION_MESSAGE, exceptionMessageAssertion),
+                  satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)));
+        });
   }
 }

@@ -149,43 +149,38 @@ public abstract class AbstractDubboRegistryTest {
     String expectedServerAddress = zkAddr + "/" + expectedServiceTarget;
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
-                            .hasKind(SpanKind.CLIENT)
-                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM_NAME, "dubbo"),
-                                equalTo(
-                                    RPC_METHOD,
-                                    "org.apache.dubbo.rpc.service.GenericService/$invoke"),
-                                equalTo(SERVER_ADDRESS, expectedServerAddress),
-                                satisfies(
-                                    NETWORK_PEER_ADDRESS,
-                                    val ->
-                                        assertLatestDeps(val, v -> v.isInstanceOf(String.class))),
-                                satisfies(
-                                    NETWORK_PEER_PORT,
-                                    val -> assertLatestDeps(val, v -> v.isInstanceOf(Long.class))),
-                                satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
-                    span ->
-                        span.hasName(
-                                "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
-                            .hasKind(SpanKind.SERVER)
-                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM_NAME, "dubbo"),
-                                equalTo(
-                                    RPC_METHOD,
-                                    "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"),
-                                satisfies(
-                                    NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
-                                satisfies(
-                                    NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
+                        .hasKind(SpanKind.CLIENT)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                            equalTo(
+                                RPC_METHOD, "org.apache.dubbo.rpc.service.GenericService/$invoke"),
+                            equalTo(SERVER_ADDRESS, expectedServerAddress),
+                            satisfies(
+                                NETWORK_PEER_ADDRESS,
+                                val -> assertLatestDeps(val, v -> v.isInstanceOf(String.class))),
+                            satisfies(
+                                NETWORK_PEER_PORT,
+                                val -> assertLatestDeps(val, v -> v.isInstanceOf(Long.class))),
+                            satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
+                span ->
+                    span.hasName(
+                            "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
+                        .hasKind(SpanKind.SERVER)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                            equalTo(
+                                RPC_METHOD,
+                                "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"),
+                            satisfies(NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
   }
 }

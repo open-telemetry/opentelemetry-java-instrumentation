@@ -75,19 +75,16 @@ class SpringIntegrationAmqp41Test {
     assertThat(Context.current()).isSameAs(before);
     assertThat(captured.join().getPayload()).isEqualTo("test");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName(
-                          withRabbitProcessing
-                              ? "process input"
-                              : "process application.directChannel")
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasNoParent();
-                  assertPropagation(captured.join(), trace.getSpan(0));
-                },
-                span -> span.hasName("handler").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> {
+              span.hasName(
+                      withRabbitProcessing ? "process input" : "process application.directChannel")
+                  .hasKind(SpanKind.CONSUMER)
+                  .hasNoParent();
+              assertPropagation(captured.join(), trace.getSpan(0));
+            },
+            span -> span.hasName("handler").hasParent(trace.getSpan(0))));
     if (withRabbitProcessing) {
       assertNoMetrics(testing);
     } else {

@@ -22,16 +22,15 @@ public class CompletionStageWrapper {
 
   private static <T> CompletionStage<T> wrap(CompletionStage<T> completionStage, Context context) {
     CompletableFuture<T> result = new CompletableFuture<>();
-    completionStage.whenComplete(
-        (T value, Throwable throwable) -> {
-          try (Scope ignored = context.makeCurrent()) {
-            if (throwable != null) {
-              result.completeExceptionally(throwable);
-            } else {
-              result.complete(value);
-            }
-          }
-        });
+    completionStage.whenComplete((T value, Throwable throwable) -> {
+      try (Scope ignored = context.makeCurrent()) {
+        if (throwable != null) {
+          result.completeExceptionally(throwable);
+        } else {
+          result.complete(value);
+        }
+      }
+    });
 
     return result;
   }

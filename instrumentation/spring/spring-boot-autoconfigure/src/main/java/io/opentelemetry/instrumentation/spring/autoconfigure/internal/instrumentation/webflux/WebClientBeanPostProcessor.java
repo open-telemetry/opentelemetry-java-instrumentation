@@ -56,13 +56,12 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
     WebClient.Builder builder =
         webClient
             .mutate()
-            .filters(
-                filters -> {
-                  if (isFilterNotPresent(filters)) {
-                    filters.add(getWebfluxClientTelemetry(openTelemetry).createFilter());
-                    filterAdded.set(true);
-                  }
-                });
+            .filters(filters -> {
+              if (isFilterNotPresent(filters)) {
+                filters.add(getWebfluxClientTelemetry(openTelemetry).createFilter());
+                filterAdded.set(true);
+              }
+            });
 
     return filterAdded.get() ? builder.build() : webClient;
   }

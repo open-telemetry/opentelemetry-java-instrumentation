@@ -39,11 +39,10 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
     client =
         configureClient(
                 WebClient.builder()
-                    .decorator(
-                        (delegate, ctx, req) -> {
-                          decoratorCalled.set(true);
-                          return delegate.execute(ctx, req);
-                        })
+                    .decorator((delegate, ctx, req) -> {
+                      decoratorCalled.set(true);
+                      return delegate.execute(ctx, req);
+                    })
                     .factory(ClientFactory.builder().connectTimeout(connectTimeout()).build()))
             .build();
     clientWithReadTimeout =
@@ -91,9 +90,8 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
     getClient(uri)
         .execute(request)
         .aggregate()
-        .whenComplete(
-            (response, throwable) ->
-                httpClientResult.complete(() -> response.status().code(), throwable));
+        .whenComplete((response, throwable) ->
+            httpClientResult.complete(() -> response.status().code(), throwable));
   }
 
   private WebClient getClient(URI uri) {
@@ -113,14 +111,13 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
     optionsBuilder.disableTestNonStandardHttpMethod();
     optionsBuilder.spanEndsAfterBody();
     // armeria uses http/2
-    optionsBuilder.setHttpProtocolVersion(
-        uri -> {
-          String uriString = uri.toString();
-          if (uriString.equals("http://localhost:61/") || uriString.equals("https://192.0.2.1/")) {
-            return "1.1";
-          }
-          return "2";
-        });
+    optionsBuilder.setHttpProtocolVersion(uri -> {
+      String uriString = uri.toString();
+      if (uriString.equals("http://localhost:61/") || uriString.equals("https://192.0.2.1/")) {
+        return "1.1";
+      }
+      return "2";
+    });
   }
 
   @Test

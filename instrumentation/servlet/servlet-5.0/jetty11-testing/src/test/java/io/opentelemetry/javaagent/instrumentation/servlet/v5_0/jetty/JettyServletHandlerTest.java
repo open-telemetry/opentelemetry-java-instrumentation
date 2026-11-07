@@ -35,13 +35,12 @@ class JettyServletHandlerTest extends AbstractServlet5Test<Server, ServletHandle
     super.configure(options);
     options.setContextPath("");
     options.setTestNotFound(false);
-    options.setHttpAttributes(
-        serverEndpoint -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(HTTP_ROUTE);
-          return attributes;
-        });
+    options.setHttpAttributes(serverEndpoint -> {
+      Set<AttributeKey<?>> attributes =
+          new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+      attributes.remove(HTTP_ROUTE);
+      return attributes;
+    });
   }
 
   @Override

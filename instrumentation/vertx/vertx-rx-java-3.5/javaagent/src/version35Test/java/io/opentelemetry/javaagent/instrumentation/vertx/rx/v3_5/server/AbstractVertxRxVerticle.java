@@ -25,86 +25,78 @@ abstract class AbstractVertxRxVerticle extends AbstractVerticle {
   void configure(Router router) {
     router
         .route(SUCCESS.getPath())
-        .handler(
-            ctx ->
-                handle(
-                    ctx,
-                    SUCCESS,
-                    () ->
-                        ctx.response().setStatusCode(SUCCESS.getStatus()).end(SUCCESS.getBody())));
+        .handler(ctx ->
+            handle(
+                ctx,
+                SUCCESS,
+                () -> ctx.response().setStatusCode(SUCCESS.getStatus()).end(SUCCESS.getBody())));
 
     router
         .route(INDEXED_CHILD.getPath())
-        .handler(
-            ctx ->
-                handle(
-                    ctx,
-                    INDEXED_CHILD,
-                    () -> {
-                      INDEXED_CHILD.collectSpanAttributes(
-                          parameter -> ctx.request().params().get(parameter));
-                      ctx.response()
-                          .setStatusCode(INDEXED_CHILD.getStatus())
-                          .end(INDEXED_CHILD.getBody());
-                    }));
+        .handler(ctx ->
+            handle(
+                ctx,
+                INDEXED_CHILD,
+                () -> {
+                  INDEXED_CHILD.collectSpanAttributes(
+                      parameter -> ctx.request().params().get(parameter));
+                  ctx.response()
+                      .setStatusCode(INDEXED_CHILD.getStatus())
+                      .end(INDEXED_CHILD.getBody());
+                }));
 
     router
         .route(QUERY_PARAM.getPath())
-        .handler(
-            ctx ->
-                handle(
-                    ctx,
-                    QUERY_PARAM,
-                    () ->
-                        ctx.response()
-                            .setStatusCode(QUERY_PARAM.getStatus())
-                            .end(ctx.request().query())));
+        .handler(ctx ->
+            handle(
+                ctx,
+                QUERY_PARAM,
+                () ->
+                    ctx.response()
+                        .setStatusCode(QUERY_PARAM.getStatus())
+                        .end(ctx.request().query())));
 
     router
         .route(REDIRECT.getPath())
-        .handler(
-            ctx ->
-                handle(
-                    ctx,
-                    REDIRECT,
-                    () ->
-                        ctx.response()
-                            .setStatusCode(REDIRECT.getStatus())
-                            .putHeader("location", REDIRECT.getBody())
-                            .end()));
+        .handler(ctx ->
+            handle(
+                ctx,
+                REDIRECT,
+                () ->
+                    ctx.response()
+                        .setStatusCode(REDIRECT.getStatus())
+                        .putHeader("location", REDIRECT.getBody())
+                        .end()));
 
     router
         .route(ERROR.getPath())
-        .handler(
-            ctx ->
-                handle(
-                    ctx,
-                    ERROR,
-                    () -> ctx.response().setStatusCode(ERROR.getStatus()).end(ERROR.getBody())));
+        .handler(ctx ->
+            handle(
+                ctx,
+                ERROR,
+                () -> ctx.response().setStatusCode(ERROR.getStatus()).end(ERROR.getBody())));
 
     router
         .route("/path/:id/param")
-        .handler(
-            ctx ->
-                handle(
-                    ctx,
-                    PATH_PARAM,
-                    () ->
-                        ctx.response()
-                            .setStatusCode(PATH_PARAM.getStatus())
-                            .end(ctx.request().getParam("id"))));
+        .handler(ctx ->
+            handle(
+                ctx,
+                PATH_PARAM,
+                () ->
+                    ctx.response()
+                        .setStatusCode(PATH_PARAM.getStatus())
+                        .end(ctx.request().getParam("id"))));
 
     router
         .route(CAPTURE_HEADERS.getPath())
-        .handler(
-            ctx ->
-                handle(
-                    ctx,
-                    CAPTURE_HEADERS,
-                    () ->
-                        ctx.response()
-                            .setStatusCode(CAPTURE_HEADERS.getStatus())
-                            .putHeader("X-Test-Response", ctx.request().getHeader("X-Test-Request"))
-                            .end(CAPTURE_HEADERS.getBody())));
+        .handler(ctx ->
+            handle(
+                ctx,
+                CAPTURE_HEADERS,
+                () ->
+                    ctx.response()
+                        .setStatusCode(CAPTURE_HEADERS.getStatus())
+                        .putHeader("X-Test-Response", ctx.request().getHeader("X-Test-Request"))
+                        .end(CAPTURE_HEADERS.getBody())));
   }
 }

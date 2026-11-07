@@ -85,35 +85,31 @@ class JedisSentinel30ClientTest {
     }
 
     await()
-        .untilAsserted(
-            () -> {
-              assertThat(testing.spans())
-                  .filteredOn(span -> span.getName().startsWith("SET"))
-                  .anySatisfy(
-                      span -> {
-                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                            .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                      });
-              assertThat(testing.spans())
-                  .filteredOn(span -> span.getName().startsWith("SENTINEL"))
-                  .isNotEmpty()
-                  .allSatisfy(
-                      span -> {
-                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                            .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                      });
-              assertThat(testing.spans())
-                  .filteredOn(span -> span.getName().startsWith("SUBSCRIBE"))
-                  .isNotEmpty()
-                  .allSatisfy(
-                      span -> {
-                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                            .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                      });
-            });
+        .untilAsserted(() -> {
+          assertThat(testing.spans())
+              .filteredOn(span -> span.getName().startsWith("SET"))
+              .anySatisfy(span -> {
+                assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                    .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+              });
+          assertThat(testing.spans())
+              .filteredOn(span -> span.getName().startsWith("SENTINEL"))
+              .isNotEmpty()
+              .allSatisfy(span -> {
+                assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                    .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+              });
+          assertThat(testing.spans())
+              .filteredOn(span -> span.getName().startsWith("SUBSCRIBE"))
+              .isNotEmpty()
+              .allSatisfy(span -> {
+                assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                    .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+              });
+        });
   }
 
   @Test
@@ -132,52 +128,44 @@ class JedisSentinel30ClientTest {
     }
 
     await()
-        .untilAsserted(
-            () -> {
-              assertThat(testing.spans())
-                  .filteredOn(span -> span.getName().startsWith("SELECT"))
-                  .isNotEmpty()
-                  .allSatisfy(
-                      span -> {
-                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                            .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                      });
-              assertThat(testing.spans())
-                  .filteredOn(span -> span.getName().startsWith("SET"))
-                  .singleElement()
-                  .satisfies(
-                      span -> {
-                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                            .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                      });
-            });
+        .untilAsserted(() -> {
+          assertThat(testing.spans())
+              .filteredOn(span -> span.getName().startsWith("SELECT"))
+              .isNotEmpty()
+              .allSatisfy(span -> {
+                assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                    .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+              });
+          assertThat(testing.spans())
+              .filteredOn(span -> span.getName().startsWith("SET"))
+              .singleElement()
+              .satisfies(span -> {
+                assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                    .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+              });
+        });
   }
 
   private static void waitForSentinelSubscription() {
     await()
-        .untilAsserted(
-            () -> {
-              Container.ExecResult result =
-                  sentinelServer.execInContainer(
-                      "redis-cli", "-p", Integer.toString(sentinelPort), "--raw", "CLIENT", "LIST");
-              assertThat(result.getExitCode()).isZero();
-              assertThat(result.getStdout()).contains("cmd=subscribe");
-            });
+        .untilAsserted(() -> {
+          Container.ExecResult result =
+              sentinelServer.execInContainer(
+                  "redis-cli", "-p", Integer.toString(sentinelPort), "--raw", "CLIENT", "LIST");
+          assertThat(result.getExitCode()).isZero();
+          assertThat(result.getStdout()).contains("cmd=subscribe");
+        });
   }
 
   private static void waitForSentinelListenerToStop() {
     await()
-        .untilAsserted(
-            () ->
-                assertThat(Thread.getAllStackTraces().keySet())
-                    .noneMatch(
-                        thread ->
-                            thread.isAlive()
-                                && thread
-                                    .getName()
-                                    .startsWith("MasterListener-" + MASTER_NAME + "-")
-                                && thread.getName().endsWith(":" + sentinelPort + "]")));
+        .untilAsserted(() ->
+            assertThat(Thread.getAllStackTraces().keySet())
+                .noneMatch(thread ->
+                    thread.isAlive()
+                        && thread.getName().startsWith("MasterListener-" + MASTER_NAME + "-")
+                        && thread.getName().endsWith(":" + sentinelPort + "]")));
   }
 }

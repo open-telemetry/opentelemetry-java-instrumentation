@@ -46,15 +46,13 @@ class JavaHttpClientTest {
     protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
       super.configure(optionsBuilder);
 
-      optionsBuilder.setHttpProtocolVersion(
-          uri -> {
-            String uriString = uri.toString();
-            if (uriString.equals("http://localhost:61/")
-                || uriString.equals("https://192.0.2.1/")) {
-              return "1.1";
-            }
-            return "2";
-          });
+      optionsBuilder.setHttpProtocolVersion(uri -> {
+        String uriString = uri.toString();
+        if (uriString.equals("http://localhost:61/") || uriString.equals("https://192.0.2.1/")) {
+          return "1.1";
+        }
+        return "2";
+      });
     }
   }
 }

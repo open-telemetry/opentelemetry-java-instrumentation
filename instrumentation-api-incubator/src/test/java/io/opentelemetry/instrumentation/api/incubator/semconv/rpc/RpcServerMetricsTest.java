@@ -108,57 +108,47 @@ class RpcServerMetricsTest {
 
     assertThat(metricReader.collectAllMetrics())
         .singleElement()
-        .satisfies(
-            metric ->
-                assertThat(metric)
-                    .hasName("rpc.server.call.duration")
-                    .hasUnit("s")
-                    .hasDescription(
-                        "Measures the duration of an incoming Remote Procedure Call (RPC).")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasSum(0.15)
-                                        .hasBucketBoundaries(DURATION_BUCKETS)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                RPC_METHOD, "myservice.EchoService/exampleMethod"),
-                                            equalTo(RPC_SYSTEM_NAME, "grpc"),
-                                            equalTo(ERROR_TYPE, "INTERNAL"),
-                                            equalTo(stringKey("rpc.status_code"), "INTERNAL"),
-                                            equalTo(SERVER_ADDRESS, "example.com"),
-                                            equalTo(SERVER_PORT, 8080))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                                    .hasSpanId("090a0b0c0d0e0f00")))));
+        .satisfies(metric ->
+            assertThat(metric)
+                .hasName("rpc.server.call.duration")
+                .hasUnit("s")
+                .hasDescription("Measures the duration of an incoming Remote Procedure Call (RPC).")
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasSum(0.15)
+                            .hasBucketBoundaries(DURATION_BUCKETS)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_METHOD, "myservice.EchoService/exampleMethod"),
+                                equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                equalTo(ERROR_TYPE, "INTERNAL"),
+                                equalTo(stringKey("rpc.status_code"), "INTERNAL"),
+                                equalTo(SERVER_ADDRESS, "example.com"),
+                                equalTo(SERVER_PORT, 8080))
+                            .hasExemplarsSatisfying(exemplar ->
+                                exemplar
+                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                    .hasSpanId("090a0b0c0d0e0f00")))));
 
     listener.onEnd(context2, responseAttributes2, nanos(300));
 
     assertThat(metricReader.collectAllMetrics())
         .singleElement()
-        .satisfies(
-            metric ->
-                assertThat(metric)
-                    .hasName("rpc.server.call.duration")
-                    .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasSum(0.15)
-                                        .hasBucketBoundaries(DURATION_BUCKETS)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                RPC_METHOD, "myservice.EchoService/exampleMethod"),
-                                            equalTo(RPC_SYSTEM_NAME, "grpc"),
-                                            equalTo(SERVER_PORT, 8080)))));
+        .satisfies(metric ->
+            assertThat(metric)
+                .hasName("rpc.server.call.duration")
+                .hasUnit("s")
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasSum(0.15)
+                            .hasBucketBoundaries(DURATION_BUCKETS)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_METHOD, "myservice.EchoService/exampleMethod"),
+                                equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                equalTo(SERVER_PORT, 8080)))));
   }
 
   @Test
@@ -185,20 +175,17 @@ class RpcServerMetricsTest {
 
     assertThat(metricReader.collectAllMetrics())
         .singleElement()
-        .satisfies(
-            metric ->
-                assertThat(metric)
-                    .hasName("rpc.server.call.duration")
-                    .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasSum(0.15)
-                                        .hasBucketBoundaries(CUSTOM_BUCKETS)
-                                        .hasAttributes(Attributes.empty()))));
+        .satisfies(metric ->
+            assertThat(metric)
+                .hasName("rpc.server.call.duration")
+                .hasUnit("s")
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasSum(0.15)
+                            .hasBucketBoundaries(CUSTOM_BUCKETS)
+                            .hasAttributes(Attributes.empty()))));
   }
 
   @Test
@@ -215,20 +202,17 @@ class RpcServerMetricsTest {
 
     assertThat(metricReader.collectAllMetrics())
         .singleElement()
-        .satisfies(
-            metric ->
-                assertThat(metric)
-                    .hasName("rpc.server.call.duration")
-                    .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasSum(0.15)
-                                        .hasBucketBoundaries(CUSTOM_BUCKETS)
-                                        .hasAttributes(Attributes.empty()))));
+        .satisfies(metric ->
+            assertThat(metric)
+                .hasName("rpc.server.call.duration")
+                .hasUnit("s")
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasSum(0.15)
+                            .hasBucketBoundaries(CUSTOM_BUCKETS)
+                            .hasAttributes(Attributes.empty()))));
   }
 
   private static long nanos(int millis) {

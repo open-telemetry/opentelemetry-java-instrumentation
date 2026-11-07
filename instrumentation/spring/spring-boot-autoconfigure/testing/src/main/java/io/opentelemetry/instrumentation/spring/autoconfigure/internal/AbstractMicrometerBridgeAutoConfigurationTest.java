@@ -44,10 +44,9 @@ public abstract class AbstractMicrometerBridgeAutoConfigurationTest {
     contextRunner
         .withConfiguration(AutoConfigurations.of(getMetricsAutoConfigurationClass()))
         .withPropertyValues("otel.instrumentation.micrometer.enabled=true")
-        .run(
-            context ->
-                assertThat(context.getBean("otelMeterRegistry", getMeterRegistryClass()))
-                    .isInstanceOf(OpenTelemetryMeterRegistry.class));
+        .run(context ->
+            assertThat(context.getBean("otelMeterRegistry", getMeterRegistryClass()))
+                .isInstanceOf(OpenTelemetryMeterRegistry.class));
   }
 
   @Test
@@ -92,17 +91,16 @@ public abstract class AbstractMicrometerBridgeAutoConfigurationTest {
     contextRunner
         .withConfiguration(AutoConfigurations.of(getMetricsAutoConfigurationClass()))
         .withPropertyValues("otel.instrumentation.micrometer.enabled=true")
-        .run(
-            context -> {
-              // without a fallback registry the OTel registry is the only one, so hiding its meters
-              // would make them unreadable instead of readable from somewhere else
-              MeterRegistry meterRegistry = context.getBean(MeterRegistry.class);
-              meterRegistry.counter("test.counter").increment();
+        .run(context -> {
+          // without a fallback registry the OTel registry is the only one, so hiding its meters
+          // would make them unreadable instead of readable from somewhere else
+          MeterRegistry meterRegistry = context.getBean(MeterRegistry.class);
+          meterRegistry.counter("test.counter").increment();
 
-              assertThat(meterRegistry).isInstanceOf(OpenTelemetryMeterRegistry.class);
-              assertThat(meterRegistry.getMeters()).hasSize(1);
-              assertThat(meterRegistry.find("test.counter").counter()).isNotNull();
-            });
+          assertThat(meterRegistry).isInstanceOf(OpenTelemetryMeterRegistry.class);
+          assertThat(meterRegistry.getMeters()).hasSize(1);
+          assertThat(meterRegistry.find("test.counter").counter()).isNotNull();
+        });
   }
 
   // repeated because the composite registry keeps its members in an identity hash set, so a reader
@@ -110,29 +108,27 @@ public abstract class AbstractMicrometerBridgeAutoConfigurationTest {
   @RepeatedTest(5)
   void hidesOpenTelemetryRegistryMetersFromReaders() {
     actuatorContextRunner(OpenTelemetry.noop())
-        .run(
-            context -> {
-              context.getBean(MeterRegistry.class).counter("test.counter").increment(2);
+        .run(context -> {
+          context.getBean(MeterRegistry.class).counter("test.counter").increment(2);
 
-              MeterRegistry otelMeterRegistry =
-                  context.getBean("otelMeterRegistry", MeterRegistry.class);
-              assertThat(otelMeterRegistry).isInstanceOf(OpenTelemetryMeterRegistry.class);
-              assertThat(otelMeterRegistry.getMeters()).isEmpty();
-              assertThat(otelMeterRegistry.find("test.counter").counter()).isNull();
+          MeterRegistry otelMeterRegistry =
+              context.getBean("otelMeterRegistry", MeterRegistry.class);
+          assertThat(otelMeterRegistry).isInstanceOf(OpenTelemetryMeterRegistry.class);
+          assertThat(otelMeterRegistry.getMeters()).isEmpty();
+          assertThat(otelMeterRegistry.find("test.counter").counter()).isNull();
 
-              assertThat(context.getBean(SimpleMeterRegistry.class).find("test.counter").counter())
-                  .isNotNull();
-            });
+          assertThat(context.getBean(SimpleMeterRegistry.class).find("test.counter").counter())
+              .isNotNull();
+        });
   }
 
   @Test
   void exposesMetersAddedByMeterBinders() {
     actuatorContextRunner(OpenTelemetry.noop())
         .withBean(MeterBinder.class, () -> registry -> registry.counter("test.bound"))
-        .run(
-            context ->
-                assertThat(context.getBean(MeterRegistry.class).find("test.bound").counter())
-                    .isNotNull());
+        .run(context ->
+            assertThat(context.getBean(MeterRegistry.class).find("test.bound").counter())
+                .isNotNull());
   }
 
   @Test
@@ -144,19 +140,17 @@ public abstract class AbstractMicrometerBridgeAutoConfigurationTest {
             .build();
 
     actuatorContextRunner(openTelemetry)
-        .run(
-            context -> {
-              context.getBean(MeterRegistry.class).counter("test.counter").increment(2);
+        .run(context -> {
+          context.getBean(MeterRegistry.class).counter("test.counter").increment(2);
 
-              assertThat(metricReader.collectAllMetrics())
-                  .singleElement()
-                  .satisfies(
-                      metric ->
-                          assertThat(metric)
-                              .hasName("test.counter")
-                              .hasDoubleSumSatisfying(
-                                  sum -> sum.hasPointsSatisfying(point -> point.hasValue(2))));
-            });
+          assertThat(metricReader.collectAllMetrics())
+              .singleElement()
+              .satisfies(metric ->
+                  assertThat(metric)
+                      .hasName("test.counter")
+                      .hasDoubleSumSatisfying(
+                          sum -> sum.hasPointsSatisfying(point -> point.hasValue(2))));
+        });
   }
 
   /**

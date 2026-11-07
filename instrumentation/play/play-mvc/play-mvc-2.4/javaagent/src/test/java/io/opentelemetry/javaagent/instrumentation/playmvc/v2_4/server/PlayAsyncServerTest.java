@@ -33,78 +33,68 @@ class PlayAsyncServerTest extends PlayServerTest {
     RoutingDsl router =
         new RoutingDsl()
             .GET(SUCCESS.getPath())
-            .routeAsync(
-                () ->
-                    CompletableFuture.supplyAsync(
-                        () ->
-                            controller(
-                                SUCCESS,
-                                () -> Results.status(SUCCESS.getStatus(), SUCCESS.getBody())),
-                        HttpExecution.defaultContext()))
+            .routeAsync(() ->
+                CompletableFuture.supplyAsync(
+                    () ->
+                        controller(
+                            SUCCESS, () -> Results.status(SUCCESS.getStatus(), SUCCESS.getBody())),
+                    HttpExecution.defaultContext()))
             .GET(INDEXED_CHILD.getPath())
-            .routeAsync(
-                () ->
-                    CompletableFuture.supplyAsync(
-                        () ->
-                            controller(
-                                INDEXED_CHILD,
-                                () -> {
-                                  INDEXED_CHILD.collectSpanAttributes(
-                                      it -> Http.Context.Implicit.request().getQueryString(it));
-                                  return Results.status(
-                                      INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
-                                }),
-                        HttpExecution.defaultContext()))
+            .routeAsync(() ->
+                CompletableFuture.supplyAsync(
+                    () ->
+                        controller(
+                            INDEXED_CHILD,
+                            () -> {
+                              INDEXED_CHILD.collectSpanAttributes(
+                                  it -> Http.Context.Implicit.request().getQueryString(it));
+                              return Results.status(
+                                  INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
+                            }),
+                    HttpExecution.defaultContext()))
             .GET(QUERY_PARAM.getPath())
-            .routeAsync(
-                () ->
-                    CompletableFuture.supplyAsync(
-                        () ->
-                            controller(
-                                QUERY_PARAM,
-                                () ->
-                                    Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())),
-                        HttpExecution.defaultContext()))
+            .routeAsync(() ->
+                CompletableFuture.supplyAsync(
+                    () ->
+                        controller(
+                            QUERY_PARAM,
+                            () -> Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())),
+                    HttpExecution.defaultContext()))
             .GET(REDIRECT.getPath())
-            .routeAsync(
-                () ->
-                    CompletableFuture.supplyAsync(
-                        () -> controller(REDIRECT, () -> Results.found(REDIRECT.getBody())),
-                        HttpExecution.defaultContext()))
+            .routeAsync(() ->
+                CompletableFuture.supplyAsync(
+                    () -> controller(REDIRECT, () -> Results.found(REDIRECT.getBody())),
+                    HttpExecution.defaultContext()))
             .GET(CAPTURE_HEADERS.getPath())
-            .routeAsync(
-                () ->
-                    CompletableFuture.supplyAsync(
-                        () ->
-                            controller(
-                                CAPTURE_HEADERS,
-                                () ->
-                                    Results.status(
-                                            CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
-                                        .withHeader(
-                                            "X-Test-Response",
-                                            Http.Context.Implicit.request()
-                                                .getHeader("X-Test-Request"))),
-                        HttpExecution.defaultContext()))
+            .routeAsync(() ->
+                CompletableFuture.supplyAsync(
+                    () ->
+                        controller(
+                            CAPTURE_HEADERS,
+                            () ->
+                                Results.status(
+                                        CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
+                                    .withHeader(
+                                        "X-Test-Response",
+                                        Http.Context.Implicit.request()
+                                            .getHeader("X-Test-Request"))),
+                    HttpExecution.defaultContext()))
             .GET(ERROR.getPath())
-            .routeAsync(
-                () ->
-                    CompletableFuture.supplyAsync(
-                        () ->
-                            controller(
-                                ERROR, () -> Results.status(ERROR.getStatus(), ERROR.getBody())),
-                        HttpExecution.defaultContext()))
+            .routeAsync(() ->
+                CompletableFuture.supplyAsync(
+                    () ->
+                        controller(ERROR, () -> Results.status(ERROR.getStatus(), ERROR.getBody())),
+                    HttpExecution.defaultContext()))
             .GET(EXCEPTION.getPath())
-            .routeAsync(
-                () ->
-                    CompletableFuture.supplyAsync(
-                        () ->
-                            controller(
-                                EXCEPTION,
-                                () -> {
-                                  throw new IllegalArgumentException(EXCEPTION.getBody());
-                                }),
-                        HttpExecution.defaultContext()));
+            .routeAsync(() ->
+                CompletableFuture.supplyAsync(
+                    () ->
+                        controller(
+                            EXCEPTION,
+                            () -> {
+                              throw new IllegalArgumentException(EXCEPTION.getBody());
+                            }),
+                    HttpExecution.defaultContext()));
 
     return Server.forRouter(router.build(), port);
   }

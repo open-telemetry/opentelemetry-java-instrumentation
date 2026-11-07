@@ -26,14 +26,13 @@ public abstract class AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest
 
   @BeforeAll
   void setUpTopicAndConsumer() {
-    kafkaConsumer.handler(
-        record -> {
-          assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
-          testing().runWithSpan("consumer", () -> {});
-          if ("error".equals(record.value())) {
-            throw new IllegalArgumentException("boom");
-          }
-        });
+    kafkaConsumer.handler(record -> {
+      assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
+      testing().runWithSpan("consumer", () -> {});
+      if ("error".equals(record.value())) {
+        throw new IllegalArgumentException("boom");
+      }
+    });
 
     kafkaConsumer.partitionsAssignedHandler(partitions -> consumerReady.countDown());
     subscribe("testSingleTopic");
@@ -50,23 +49,22 @@ public abstract class AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest
     assertThat(sent.await(30, SECONDS)).isTrue();
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("producer"),
-                    span ->
-                        span.hasName("send testSingleTopic")
-                            .hasKind(SpanKind.PRODUCER)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(sendAttributes(record)),
-                    span -> {
-                      span.hasName("process testSingleTopic")
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(processAttributes(record));
-                      span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
-                    },
-                    span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer"),
+                span ->
+                    span.hasName("send testSingleTopic")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(sendAttributes(record)),
+                span -> {
+                  span.hasName("process testSingleTopic")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(1))
+                      .hasAttributesSatisfyingExactly(processAttributes(record));
+                  span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
+                },
+                span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
     assertProcessMetricsWithConsumedMessages(
         testing(),
         "io.opentelemetry.vertx-kafka-client-3.6",
@@ -89,25 +87,24 @@ public abstract class AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest
     assertThat(sent.await(30, SECONDS)).isTrue();
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("producer"),
-                    span ->
-                        span.hasName("send testSingleTopic")
-                            .hasKind(SpanKind.PRODUCER)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(sendAttributes(record)),
-                    span -> {
-                      span.hasName("process testSingleTopic")
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasParent(trace.getSpan(1))
-                          .hasStatus(StatusData.error())
-                          .hasException(new IllegalArgumentException("boom"))
-                          .hasAttributesSatisfyingExactly(withErrorType(processAttributes(record)));
-                      span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
-                    },
-                    span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer"),
+                span ->
+                    span.hasName("send testSingleTopic")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(sendAttributes(record)),
+                span -> {
+                  span.hasName("process testSingleTopic")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(1))
+                      .hasStatus(StatusData.error())
+                      .hasException(new IllegalArgumentException("boom"))
+                      .hasAttributesSatisfyingExactly(withErrorType(processAttributes(record)));
+                  span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
+                },
+                span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
     assertProcessMetricsWithConsumedMessages(
         testing(),
         "io.opentelemetry.vertx-kafka-client-3.6",

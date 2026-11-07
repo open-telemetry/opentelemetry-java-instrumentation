@@ -27,109 +27,93 @@ class JsrConfigItemLevelSpanTest {
   void shouldTraceItemReadProcessAndWriteCalls() {
     runner.runJob("itemsAndTaskletJob");
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-          assertions.add(
-              span -> span.hasName("BatchJob itemsAndTaskletJob").hasKind(SpanKind.INTERNAL));
+    testing.waitAndAssertTraces(trace -> {
+      List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+      assertions.add(
+          span -> span.hasName("BatchJob itemsAndTaskletJob").hasKind(SpanKind.INTERNAL));
 
-          // item step
-          assertions.add(
-              span ->
-                  span.hasName("BatchJob itemsAndTaskletJob.itemStep")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(0)));
+      // item step
+      assertions.add(span ->
+          span.hasName("BatchJob itemsAndTaskletJob.itemStep")
+              .hasKind(SpanKind.INTERNAL)
+              .hasParent(trace.getSpan(0)));
 
-          // chunk 1, items 0-5
-          assertions.add(
-              span ->
-                  span.hasName("BatchJob itemsAndTaskletJob.itemStep.Chunk")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(1)));
+      // chunk 1, items 0-5
+      assertions.add(span ->
+          span.hasName("BatchJob itemsAndTaskletJob.itemStep.Chunk")
+              .hasKind(SpanKind.INTERNAL)
+              .hasParent(trace.getSpan(1)));
 
-          for (int i = 3; i <= 11; i += 2) {
-            assertions.add(
-                span ->
-                    span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemRead")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(2)));
-            assertions.add(
-                span ->
-                    span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemProcess")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(2)));
-          }
+      for (int i = 3; i <= 11; i += 2) {
+        assertions.add(span ->
+            span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemRead")
+                .hasKind(SpanKind.INTERNAL)
+                .hasParent(trace.getSpan(2)));
+        assertions.add(span ->
+            span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemProcess")
+                .hasKind(SpanKind.INTERNAL)
+                .hasParent(trace.getSpan(2)));
+      }
 
-          assertions.add(
-              span ->
-                  span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemWrite")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(2)));
+      assertions.add(span ->
+          span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemWrite")
+              .hasKind(SpanKind.INTERNAL)
+              .hasParent(trace.getSpan(2)));
 
-          // chunk 2, items 6-10
-          assertions.add(
-              span ->
-                  span.hasName("BatchJob itemsAndTaskletJob.itemStep.Chunk")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(1)));
-          for (int i = 15; i <= 23; i += 2) {
-            assertions.add(
-                span ->
-                    span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemRead")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(14)));
-            assertions.add(
-                span ->
-                    span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemProcess")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(14)));
-          }
-          assertions.add(
-              span ->
-                  span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemWrite")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(14)));
+      // chunk 2, items 6-10
+      assertions.add(span ->
+          span.hasName("BatchJob itemsAndTaskletJob.itemStep.Chunk")
+              .hasKind(SpanKind.INTERNAL)
+              .hasParent(trace.getSpan(1)));
+      for (int i = 15; i <= 23; i += 2) {
+        assertions.add(span ->
+            span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemRead")
+                .hasKind(SpanKind.INTERNAL)
+                .hasParent(trace.getSpan(14)));
+        assertions.add(span ->
+            span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemProcess")
+                .hasKind(SpanKind.INTERNAL)
+                .hasParent(trace.getSpan(14)));
+      }
+      assertions.add(span ->
+          span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemWrite")
+              .hasKind(SpanKind.INTERNAL)
+              .hasParent(trace.getSpan(14)));
 
-          // chunk 3, items 11-13
-          assertions.add(
-              span ->
-                  span.hasName("BatchJob itemsAndTaskletJob.itemStep.Chunk")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(1)));
-          for (int i = 27; i <= 32; i += 2) {
-            assertions.add(
-                span ->
-                    span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemRead")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(26)));
-            assertions.add(
-                span ->
-                    span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemProcess")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(26)));
-          }
+      // chunk 3, items 11-13
+      assertions.add(span ->
+          span.hasName("BatchJob itemsAndTaskletJob.itemStep.Chunk")
+              .hasKind(SpanKind.INTERNAL)
+              .hasParent(trace.getSpan(1)));
+      for (int i = 27; i <= 32; i += 2) {
+        assertions.add(span ->
+            span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemRead")
+                .hasKind(SpanKind.INTERNAL)
+                .hasParent(trace.getSpan(26)));
+        assertions.add(span ->
+            span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemProcess")
+                .hasKind(SpanKind.INTERNAL)
+                .hasParent(trace.getSpan(26)));
+      }
 
-          // last read returning end of stream marker
-          assertions.add(span -> span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemRead"));
-          assertions.add(
-              span ->
-                  span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemWrite")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(26)));
+      // last read returning end of stream marker
+      assertions.add(span -> span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemRead"));
+      assertions.add(span ->
+          span.hasName("BatchJob itemsAndTaskletJob.itemStep.ItemWrite")
+              .hasKind(SpanKind.INTERNAL)
+              .hasParent(trace.getSpan(26)));
 
-          // tasklet step
-          assertions.add(
-              span ->
-                  span.hasName("BatchJob itemsAndTaskletJob.taskletStep")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(0)));
-          assertions.add(
-              span ->
-                  span.hasName("BatchJob itemsAndTaskletJob.taskletStep.Tasklet")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(35)));
+      // tasklet step
+      assertions.add(span ->
+          span.hasName("BatchJob itemsAndTaskletJob.taskletStep")
+              .hasKind(SpanKind.INTERNAL)
+              .hasParent(trace.getSpan(0)));
+      assertions.add(span ->
+          span.hasName("BatchJob itemsAndTaskletJob.taskletStep.Tasklet")
+              .hasKind(SpanKind.INTERNAL)
+              .hasParent(trace.getSpan(35)));
 
-          trace.hasSpansSatisfyingExactly(assertions);
-        });
+      trace.hasSpansSatisfyingExactly(assertions);
+    });
   }
 }

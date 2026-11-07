@@ -154,14 +154,12 @@ public abstract class AbstractXxlJobTest {
 
   private static void checkXxlJob(
       String spanName, StatusData statusData, List<AttributeAssertion> assertions) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.INTERNAL)
-                        .hasName(spanName)
-                        .hasStatus(statusData)
-                        .hasAttributesSatisfyingExactly(assertions)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(SpanKind.INTERNAL)
+                .hasName(spanName)
+                .hasStatus(statusData)
+                .hasAttributesSatisfyingExactly(assertions)));
   }
 
   private static void checkXxlJob(

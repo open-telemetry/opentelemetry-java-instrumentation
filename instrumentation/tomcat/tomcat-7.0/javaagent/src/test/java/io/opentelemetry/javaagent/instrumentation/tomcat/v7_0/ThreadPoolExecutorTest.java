@@ -51,36 +51,31 @@ class ThreadPoolExecutorTest {
     testing.runWithSpan(
         "parent",
         () -> {
-          pool.execute(
-              () -> {
-                try {
-                  testing.runWithSpan("child1", () -> latch.await());
-                } catch (InterruptedException e) {
-                  throw new RuntimeException(e);
-                }
-              });
+          pool.execute(() -> {
+            try {
+              testing.runWithSpan("child1", () -> latch.await());
+            } catch (InterruptedException e) {
+              throw new RuntimeException(e);
+            }
+          });
 
           reject.set(true);
-          pool.execute(
-              () -> {
-                try {
-                  testing.runWithSpan("child2", () -> latch.await());
-                } catch (InterruptedException e) {
-                  throw new RuntimeException(e);
-                }
-              });
+          pool.execute(() -> {
+            try {
+              testing.runWithSpan("child2", () -> latch.await());
+            } catch (InterruptedException e) {
+              throw new RuntimeException(e);
+            }
+          });
         });
 
     latch.countDown();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("child1").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("child2").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> span.hasName("child1").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+            span -> span.hasName("child2").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
 
     pool.shutdown();
     pool.awaitTermination(10, SECONDS);

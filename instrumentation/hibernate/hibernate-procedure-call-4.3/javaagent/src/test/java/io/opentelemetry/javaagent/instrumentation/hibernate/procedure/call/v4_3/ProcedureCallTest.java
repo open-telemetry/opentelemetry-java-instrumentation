@@ -98,41 +98,37 @@ class ProcedureCallTest {
           }
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("ProcedureCall.getOutputs TEST_PROC")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                HIBERNATE_SESSION_ID,
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("call TEST_PROC")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            equalTo(DB_QUERY_TEXT, "{call TEST_PROC()}"),
-                            equalTo(DB_QUERY_SUMMARY, "call TEST_PROC"),
-                            equalTo(DB_STORED_PROCEDURE_NAME, "TEST_PROC")),
-                span ->
-                    span.hasName("Transaction.commit")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                HIBERNATE_SESSION_ID,
-                                experimental(
-                                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("ProcedureCall.getOutputs TEST_PROC")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            HIBERNATE_SESSION_ID,
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("call TEST_PROC")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        equalTo(DB_QUERY_TEXT, "{call TEST_PROC()}"),
+                        equalTo(DB_QUERY_SUMMARY, "call TEST_PROC"),
+                        equalTo(DB_STORED_PROCEDURE_NAME, "TEST_PROC")),
+            span ->
+                span.hasName("Transaction.commit")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            HIBERNATE_SESSION_ID,
+                            experimental(
+                                trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))))));
   }
 
   @Test
@@ -162,32 +158,28 @@ class ProcedureCallTest {
               }
             });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("ProcedureCall.getOutputs TEST_PROC")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasException(exception)
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                HIBERNATE_SESSION_ID,
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("Transaction.commit")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                HIBERNATE_SESSION_ID,
-                                experimental(
-                                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("ProcedureCall.getOutputs TEST_PROC")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasException(exception)
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            HIBERNATE_SESSION_ID,
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("Transaction.commit")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            HIBERNATE_SESSION_ID,
+                            experimental(
+                                trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))))));
   }
 }

@@ -40,14 +40,13 @@ class VertxRxHttpServerTest extends AbstractVertxRxHttpServerTest {
       configure(router);
       router
           .route(EXCEPTION.getPath())
-          .handler(
-              ctx ->
-                  handle(
-                      ctx,
-                      EXCEPTION,
-                      () -> {
-                        throw new IllegalStateException(EXCEPTION.getBody());
-                      }));
+          .handler(ctx ->
+              handle(
+                  ctx,
+                  EXCEPTION,
+                  () -> {
+                    throw new IllegalStateException(EXCEPTION.getBody());
+                  }));
 
       vertx
           .createHttpServer()

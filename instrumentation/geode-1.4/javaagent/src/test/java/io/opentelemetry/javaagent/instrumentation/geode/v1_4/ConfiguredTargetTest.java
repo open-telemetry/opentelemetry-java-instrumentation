@@ -276,15 +276,14 @@ class ConfiguredTargetTest {
       Region<Object, Object> region, String serverAddress, Long serverPort) {
     String regionName = region.getName();
     return trace ->
-        trace.hasSpansSatisfyingExactly(
-            span ->
-                span.hasName("putAll " + regionName)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, GEODE),
-                        equalTo(DB_COLLECTION_NAME, regionName),
-                        equalTo(DB_OPERATION_NAME, "putAll"),
-                        equalTo(SERVER_ADDRESS, serverAddress),
-                        equalTo(SERVER_PORT, serverPort)));
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("putAll " + regionName)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, GEODE),
+                    equalTo(DB_COLLECTION_NAME, regionName),
+                    equalTo(DB_OPERATION_NAME, "putAll"),
+                    equalTo(SERVER_ADDRESS, serverAddress),
+                    equalTo(SERVER_PORT, serverPort)));
   }
 }

@@ -62,11 +62,10 @@ class JedisConnectionInitializationTest {
     testing.waitForTraces(expectedSpans);
     assertThat(testing.spans()).hasSize(expectedSpans);
     assertThat(testing.spans())
-        .filteredOn(
-            span -> {
-              String query = span.getAttributes().get(DB_QUERY_TEXT);
-              return query != null && query.contains("SETINFO");
-            })
+        .filteredOn(span -> {
+          String query = span.getAttributes().get(DB_QUERY_TEXT);
+          return query != null && query.contains("SETINFO");
+        })
         .hasSize(jedis51OrLater ? 2 : 0)
         .allSatisfy(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo("ERR"));
     assertThat(testing.spans())
@@ -77,20 +76,19 @@ class JedisConnectionInitializationTest {
         "io.opentelemetry.jedis-4.0",
         "db.client.operation.duration",
         metrics ->
-            metrics.anySatisfy(
-                metric -> {
-                  assertThat(metric.getHistogramData().getPoints())
-                      .filteredOn(
-                          point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                      .filteredOn(point -> "ERR".equals(point.getAttributes().get(ERROR_TYPE)))
-                      .hasSize(jedis51OrLater ? 1 : 0)
-                      .allSatisfy(point -> assertThat(point.getCount()).isEqualTo(2));
-                  assertThat(metric.getHistogramData().getPoints())
-                      .filteredOn(
-                          point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                      .filteredOn(point -> point.getAttributes().get(ERROR_TYPE) == null)
-                      .singleElement()
-                      .satisfies(point -> assertThat(point.getCount()).isEqualTo(1));
-                }));
+            metrics.anySatisfy(metric -> {
+              assertThat(metric.getHistogramData().getPoints())
+                  .filteredOn(
+                      point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                  .filteredOn(point -> "ERR".equals(point.getAttributes().get(ERROR_TYPE)))
+                  .hasSize(jedis51OrLater ? 1 : 0)
+                  .allSatisfy(point -> assertThat(point.getCount()).isEqualTo(2));
+              assertThat(metric.getHistogramData().getPoints())
+                  .filteredOn(
+                      point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                  .filteredOn(point -> point.getAttributes().get(ERROR_TYPE) == null)
+                  .singleElement()
+                  .satisfies(point -> assertThat(point.getCount()).isEqualTo(1));
+            }));
   }
 }

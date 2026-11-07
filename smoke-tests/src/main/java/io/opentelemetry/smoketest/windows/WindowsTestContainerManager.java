@@ -382,14 +382,13 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
 
     @Override
     public void configureLogger(ContainerLogHandler logHandler) {
-      logHandler.addListener(
-          (type, text) -> {
-            if (lineHit.getCount() > 0) {
-              if (regex.matcher(text).find()) {
-                lineHit.countDown();
-              }
-            }
-          });
+      logHandler.addListener((type, text) -> {
+        if (lineHit.getCount() > 0) {
+          if (regex.matcher(text).find()) {
+            lineHit.countDown();
+          }
+        }
+      });
     }
 
     @Override
@@ -438,15 +437,14 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             (int) timeout.toMillis(),
             MILLISECONDS,
             () -> {
-              rateLimiter.doWhenReady(
-                  () -> {
-                    AggregatedHttpResponse response = CLIENT.get(url).aggregate().join();
+              rateLimiter.doWhenReady(() -> {
+                AggregatedHttpResponse response = CLIENT.get(url).aggregate().join();
 
-                    if (response.status().code() != 200) {
-                      throw new IllegalStateException(
-                          "Received status code " + response.status().code() + " from " + url);
-                    }
-                  });
+                if (response.status().code() != 200) {
+                  throw new IllegalStateException(
+                      "Received status code " + response.status().code() + " from " + url);
+                }
+              });
 
               return true;
             });
@@ -483,17 +481,15 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             (int) timeout.toMillis(),
             MILLISECONDS,
             () -> {
-              rateLimiter.doWhenReady(
-                  () -> {
-                    int externalPort = extractMappedPort(container, internalPort);
+              rateLimiter.doWhenReady(() -> {
+                int externalPort = extractMappedPort(container, internalPort);
 
-                    try {
-                      new Socket("localhost", externalPort).close();
-                    } catch (IOException e) {
-                      throw new IllegalStateException(
-                          "Socket not listening yet: " + externalPort, e);
-                    }
-                  });
+                try {
+                  new Socket("localhost", externalPort).close();
+                } catch (IOException e) {
+                  throw new IllegalStateException("Socket not listening yet: " + externalPort, e);
+                }
+              });
 
               return true;
             });

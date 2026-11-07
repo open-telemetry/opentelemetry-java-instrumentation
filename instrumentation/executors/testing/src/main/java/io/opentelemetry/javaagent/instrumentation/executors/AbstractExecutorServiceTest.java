@@ -91,13 +91,11 @@ public abstract class AbstractExecutorServiceTest<T extends ExecutorService, U e
 
   @Test
   void submitLambdaCallable() {
-    executeTwoTasks(
-        task ->
-            executor.submit(
-                () -> {
-                  task.run();
-                  return null;
-                }));
+    executeTwoTasks(task ->
+        executor.submit(() -> {
+          task.run();
+          return null;
+        }));
   }
 
   @Test
@@ -127,14 +125,11 @@ public abstract class AbstractExecutorServiceTest<T extends ExecutorService, U e
           child1.waitForCompletion();
           child2.waitForCompletion();
         });
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("asyncChild")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("asyncChild").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   protected void executeAndCancelTasks(Function<U, Future<?>> task) {

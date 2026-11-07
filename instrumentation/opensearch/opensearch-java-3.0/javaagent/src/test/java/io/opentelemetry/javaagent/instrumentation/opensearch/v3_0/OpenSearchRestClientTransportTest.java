@@ -90,14 +90,13 @@ class OpenSearchRestClientTransportTest extends AbstractOpenSearchTest {
     HealthResponse healthResponse = client.cluster().health();
     assertThat(healthResponse).isNotNull();
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                assertThat(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, OPENSEARCH),
-                        equalTo(DB_OPERATION_NAME, "GET"),
-                        equalTo(SERVER_ADDRESS, httpHost.getHost()),
-                        equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))));
+        .waitAndAssertTraces(trace ->
+            assertThat(trace.getSpan(0))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, OPENSEARCH),
+                    equalTo(DB_OPERATION_NAME, "GET"),
+                    equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                    equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))));
   }
 
   private HttpHost configuredHost() {
@@ -132,11 +131,10 @@ class OpenSearchRestClientTransportTest extends AbstractOpenSearchTest {
             opensearch.getUsername(), opensearch.getPassword().toCharArray()));
 
     return RestClient.builder(hosts)
-        .setHttpClientConfigCallback(
-            httpClientBuilder ->
-                httpClientBuilder
-                    .setConnectionManager(connectionManager)
-                    .setDefaultCredentialsProvider(credentialsProvider))
+        .setHttpClientConfigCallback(httpClientBuilder ->
+            httpClientBuilder
+                .setConnectionManager(connectionManager)
+                .setDefaultCredentialsProvider(credentialsProvider))
         .build();
   }
 }

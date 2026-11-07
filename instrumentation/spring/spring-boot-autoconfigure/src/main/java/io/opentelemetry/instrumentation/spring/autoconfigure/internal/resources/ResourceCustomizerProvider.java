@@ -31,39 +31,38 @@ public class ResourceCustomizerProvider implements DeclarativeConfigurationCusto
 
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
-    customizer.addModelCustomizer(
-        model -> {
-          ResourceModel resource = model.getResource();
-          if (resource == null) {
-            resource = new ResourceModel();
-            model.setResource(resource);
-          }
-          ExperimentalResourceDetectionModel detectionModel =
-              ResourceModelAccessor.getDetection(resource);
-          if (detectionModel == null) {
-            detectionModel = new ExperimentalResourceDetectionModel();
-          }
-          List<ExperimentalResourceDetectorModel> detectors = detectionModel.getDetectors();
-          if (detectors == null) {
-            detectors = new ArrayList<>();
-            detectionModel.setDetectors(detectors);
-          }
-          Set<String> names =
-              detectors.stream()
-                  .flatMap(detector -> detector.getAdditionalProperties().keySet().stream())
-                  .collect(toSet());
+    customizer.addModelCustomizer(model -> {
+      ResourceModel resource = model.getResource();
+      if (resource == null) {
+        resource = new ResourceModel();
+        model.setResource(resource);
+      }
+      ExperimentalResourceDetectionModel detectionModel =
+          ResourceModelAccessor.getDetection(resource);
+      if (detectionModel == null) {
+        detectionModel = new ExperimentalResourceDetectionModel();
+      }
+      List<ExperimentalResourceDetectorModel> detectors = detectionModel.getDetectors();
+      if (detectors == null) {
+        detectors = new ArrayList<>();
+        detectionModel.setDetectors(detectors);
+      }
+      Set<String> names =
+          detectors.stream()
+              .flatMap(detector -> detector.getAdditionalProperties().keySet().stream())
+              .collect(toSet());
 
-          for (String name : REQUIRED_DETECTORS) {
-            if (!names.contains(name)) {
-              ExperimentalResourceDetectorModel detector = new ExperimentalResourceDetectorModel();
-              detector.getAdditionalProperties().put(name, null);
-              // add first (the least precedence)
-              // so that the user can add a differently named detector that takes precedence
-              detectors.add(0, detector);
-            }
-          }
-          ResourceModelAccessor.setDetection(resource, detectionModel);
-          return model;
-        });
+      for (String name : REQUIRED_DETECTORS) {
+        if (!names.contains(name)) {
+          ExperimentalResourceDetectorModel detector = new ExperimentalResourceDetectorModel();
+          detector.getAdditionalProperties().put(name, null);
+          // add first (the least precedence)
+          // so that the user can add a differently named detector that takes precedence
+          detectors.add(0, detector);
+        }
+      }
+      ResourceModelAccessor.setDetection(resource, detectionModel);
+      return model;
+    });
   }
 }

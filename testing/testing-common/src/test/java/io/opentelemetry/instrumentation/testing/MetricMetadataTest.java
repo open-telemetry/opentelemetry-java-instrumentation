@@ -144,19 +144,9 @@ class MetricMetadataTest {
         ImmutableHistogramData.create(
             AggregationTemporality.CUMULATIVE,
             points.stream()
-                .map(
-                    attributes ->
-                        ImmutableHistogramPointData.create(
-                            0,
-                            1,
-                            attributes,
-                            1,
-                            false,
-                            0,
-                            false,
-                            0,
-                            emptyList(),
-                            singletonList(1L)))
+                .map(attributes ->
+                    ImmutableHistogramPointData.create(
+                        0, 1, attributes, 1, false, 0, false, 0, emptyList(), singletonList(1L)))
                 .collect(toList())));
   }
 }

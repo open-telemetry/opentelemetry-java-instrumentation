@@ -73,10 +73,9 @@ class LettuceNativeTracingReactiveTest extends AbstractLettuceClientTest {
   void monoObservesCommandWithNativeTracing() {
     assertThat(reactiveCommands.get("NATIVE_TRACING_KEY").block()).isEqualTo("value");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET " + host + ":" + port).hasKind(SpanKind.CLIENT)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("GET " + host + ":" + port).hasKind(SpanKind.CLIENT)));
   }
 
   @Test
@@ -84,10 +83,9 @@ class LettuceNativeTracingReactiveTest extends AbstractLettuceClientTest {
     List<String> keys = reactiveCommands.keys("NATIVE_TRACING_KEY").collectList().block();
 
     assertThat(keys).containsExactly("NATIVE_TRACING_KEY");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("KEYS " + host + ":" + port).hasKind(SpanKind.CLIENT)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("KEYS " + host + ":" + port).hasKind(SpanKind.CLIENT)));
   }
 
   @Test
@@ -111,18 +109,17 @@ class LettuceNativeTracingReactiveTest extends AbstractLettuceClientTest {
     assertThat(traceContextProvider.invocationCount()).isEqualTo(2);
     assertThat(traceContextProvider.ranOnDifferentThread()).isTrue();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("GET " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("GET " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("GET " + host + ":" + port)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0)),
+            span ->
+                span.hasName("GET " + host + ":" + port)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -149,10 +146,9 @@ class LettuceNativeTracingReactiveTest extends AbstractLettuceClientTest {
             .subscribe();
     afterNativeSubscription.dispose();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("KEYS " + host + ":" + port).hasKind(SpanKind.CLIENT)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("KEYS " + host + ":" + port).hasKind(SpanKind.CLIENT)));
   }
 
   private static Tracing enabledTracing(
@@ -231,20 +227,19 @@ class LettuceNativeTracingReactiveTest extends AbstractLettuceClientTest {
     @Override
     public Mono<TraceContext> getTraceContextLater() {
       Mono<TraceContext> traceContext =
-          Mono.deferContextual(
-              context -> {
-                if (requireUserContext) {
-                  Object userContext = context.getOrDefault(USER_CONTEXT_KEY, null);
-                  assertThat(userContext).isEqualTo(USER_CONTEXT_VALUE);
-                }
-                invocationCount.incrementAndGet();
-                ranOnDifferentThread.set(Thread.currentThread() != callerThread);
-                invocations.countDown();
-                if (block) {
-                  return Mono.<TraceContext>never().doOnCancel(cancellation::countDown);
-                }
-                return Mono.just(TraceContext.EMPTY);
-              });
+          Mono.deferContextual(context -> {
+            if (requireUserContext) {
+              Object userContext = context.getOrDefault(USER_CONTEXT_KEY, null);
+              assertThat(userContext).isEqualTo(USER_CONTEXT_VALUE);
+            }
+            invocationCount.incrementAndGet();
+            ranOnDifferentThread.set(Thread.currentThread() != callerThread);
+            invocations.countDown();
+            if (block) {
+              return Mono.<TraceContext>never().doOnCancel(cancellation::countDown);
+            }
+            return Mono.just(TraceContext.EMPTY);
+          });
       return asynchronous ? traceContext.subscribeOn(Schedulers.boundedElastic()) : traceContext;
     }
 

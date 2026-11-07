@@ -63,13 +63,12 @@ class SpringWebfluxServerInstrumentationTest
     options.setContextPath(CONTEXT_PATH);
     options.setTestPathParam(true);
 
-    options.setExpectedHttpRoute(
-        (endpoint, method) -> {
-          if (endpoint == ServerEndpoint.PATH_PARAM) {
-            return CONTEXT_PATH + "/path/{id}/param";
-          }
-          return expectedHttpRoute(endpoint, method);
-        });
+    options.setExpectedHttpRoute((endpoint, method) -> {
+      if (endpoint == ServerEndpoint.PATH_PARAM) {
+        return CONTEXT_PATH + "/path/{id}/param";
+      }
+      return expectedHttpRoute(endpoint, method);
+    });
 
     options.disableTestNonStandardHttpMethod();
   }
@@ -140,36 +139,31 @@ class SpringWebfluxServerInstrumentationTest
 
   private static void assertCancellationTelemetry(String errorType, Integer responseStatusCode) {
     AtomicReference<String> instrumentationName = new AtomicReference<>();
-    testing.waitAndAssertTraces(
-        trace -> {
-          SpanData serverSpan = trace.getSpan(0);
-          assertThat(serverSpan.getKind()).isEqualTo(SpanKind.SERVER);
-          assertThat(serverSpan.getStatus()).isEqualTo(StatusData.unset());
-          assertThat(serverSpan.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType);
-          assertThat(serverSpan.getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
-              .isEqualTo(responseStatusCode == null ? null : responseStatusCode.longValue());
-          instrumentationName.set(serverSpan.getInstrumentationScopeInfo().getName());
-        });
+    testing.waitAndAssertTraces(trace -> {
+      SpanData serverSpan = trace.getSpan(0);
+      assertThat(serverSpan.getKind()).isEqualTo(SpanKind.SERVER);
+      assertThat(serverSpan.getStatus()).isEqualTo(StatusData.unset());
+      assertThat(serverSpan.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType);
+      assertThat(serverSpan.getAttributes().get(HTTP_RESPONSE_STATUS_CODE))
+          .isEqualTo(responseStatusCode == null ? null : responseStatusCode.longValue());
+      instrumentationName.set(serverSpan.getInstrumentationScopeInfo().getName());
+    });
 
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
         metric ->
             metric
                 .hasName("http.server.request.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point -> {
-                              if (errorType != null) {
-                                point.hasAttribute(ERROR_TYPE, errorType);
-                              } else {
-                                point.hasAttributesSatisfying(
-                                    attributes -> {
-                                      assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE))
-                                          .isEqualTo(200L);
-                                      assertThat(attributes.get(ERROR_TYPE)).isNull();
-                                    });
-                              }
-                            })));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point -> {
+                      if (errorType != null) {
+                        point.hasAttribute(ERROR_TYPE, errorType);
+                      } else {
+                        point.hasAttributesSatisfying(attributes -> {
+                          assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE)).isEqualTo(200L);
+                          assertThat(attributes.get(ERROR_TYPE)).isNull();
+                        });
+                      }
+                    })));
   }
 }

@@ -52,16 +52,13 @@ public abstract class AbstractTimerTest {
                     .hasName("testTimer")
                     .hasDescription("This is a test timer")
                     .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(42)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value"))
-                                        .hasBucketBoundaries(NO_BUCKETS))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSum(42)
+                                .hasCount(1)
+                                .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))
+                                .hasBucketBoundaries(NO_BUCKETS))));
 
     // micrometer gauge histogram is not emitted
     testing()
@@ -94,14 +91,9 @@ public abstract class AbstractTimerTest {
                 metric
                     .hasName("testNanoTimer")
                     .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(0.001234)
-                                        .hasCount(1)
-                                        .hasAttributes(Attributes.empty()))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point.hasSum(0.001234).hasCount(1).hasAttributes(Attributes.empty()))));
   }
 
   @Test
@@ -134,17 +126,14 @@ public abstract class AbstractTimerTest {
                     .hasName("testTimerWithCustomBuckets")
                     .hasDescription("This is a test timer")
                     .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(555.5)
-                                        .hasCount(4)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value"))
-                                        .satisfies(hasBucketBoundaries(1, 10, 100, 1_000))
-                                        .hasBucketCounts(1, 1, 1, 1, 0))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSum(555.5)
+                                .hasCount(4)
+                                .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))
+                                .satisfies(hasBucketBoundaries(1, 10, 100, 1_000))
+                                .hasBucketCounts(1, 1, 1, 1, 0))));
   }
 
   private static ThrowingConsumer<HistogramPointData> hasBucketBoundaries(double... buckets) {

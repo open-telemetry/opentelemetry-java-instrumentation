@@ -45,14 +45,13 @@ public class InfluxDbSingletons {
                         DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "influxdb"))
                     .build())
             .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
-            .setSpanStatusExtractor(
-                (status, request, response, error) -> {
-                  if (response != null && response.getErrorType() != null) {
-                    status.setStatus(StatusCode.ERROR);
-                  } else {
-                    SpanStatusExtractor.getDefault().extract(status, request, response, error);
-                  }
-                })
+            .setSpanStatusExtractor((status, request, response, error) -> {
+              if (response != null && response.getErrorType() != null) {
+                status.setStatus(StatusCode.ERROR);
+              } else {
+                SpanStatusExtractor.getDefault().extract(status, request, response, error);
+              }
+            })
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(queryBuilder);
 

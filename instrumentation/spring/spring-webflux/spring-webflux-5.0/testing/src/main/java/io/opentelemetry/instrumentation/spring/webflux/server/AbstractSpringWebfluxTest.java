@@ -95,51 +95,50 @@ public abstract class AbstractSpringWebfluxTest {
 
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo(parameter.expectedResponseBody);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + parameter.urlPathWithVariables)
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, parameter.urlPath),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(URL_SCHEME, "http"),
-                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
-                span -> {
-                  if (parameter.annotatedMethod == null) {
-                    // Functional API
-                    assertThat(trace.getSpan(1).getName())
-                        .contains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle");
-                  } else {
-                    // Annotation API
-                    span.hasName(
-                        TestController.class.getSimpleName() + "." + parameter.annotatedMethod);
-                  }
-                  span.hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          satisfies(
-                              CODE_FUNCTION_NAME,
-                              val -> {
-                                if (parameter.annotatedMethod == null) {
-                                  val.startsWith(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
-                                      .endsWith("handle");
-                                } else {
-                                  val.startsWith(TestController.class.getName())
-                                      .endsWith(parameter.annotatedMethod);
-                                }
-                              }));
-                }));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET " + parameter.urlPathWithVariables)
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                        equalTo(URL_PATH, parameter.urlPath),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(URL_SCHEME, "http"),
+                        satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                        equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
+            span -> {
+              if (parameter.annotatedMethod == null) {
+                // Functional API
+                assertThat(trace.getSpan(1).getName())
+                    .contains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle");
+              } else {
+                // Annotation API
+                span.hasName(
+                    TestController.class.getSimpleName() + "." + parameter.annotatedMethod);
+              }
+              span.hasKind(SpanKind.INTERNAL)
+                  .hasParent(trace.getSpan(0))
+                  .hasAttributesSatisfyingExactly(
+                      satisfies(
+                          CODE_FUNCTION_NAME,
+                          val -> {
+                            if (parameter.annotatedMethod == null) {
+                              val.startsWith(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
+                                  .endsWith("handle");
+                            } else {
+                              val.startsWith(TestController.class.getName())
+                                  .endsWith(parameter.annotatedMethod);
+                            }
+                          }));
+            }));
   }
 
   private static Stream<Arguments> provideParameters() {
@@ -220,55 +219,54 @@ public abstract class AbstractSpringWebfluxTest {
 
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo(parameter.expectedResponseBody);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + parameter.urlPathWithVariables)
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, parameter.urlPath),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(URL_SCHEME, "http"),
-                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
-                span -> {
-                  if (parameter.annotatedMethod == null) {
-                    // Functional API
-                    assertThat(trace.getSpan(1).getName())
-                        .contains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle");
-                  } else {
-                    // Annotation API
-                    span.hasName(
-                        TestController.class.getSimpleName() + "." + parameter.annotatedMethod);
-                  }
-                  span.hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          satisfies(
-                              CODE_FUNCTION_NAME,
-                              val -> {
-                                if (parameter.annotatedMethod == null) {
-                                  val.startsWith(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
-                                      .endsWith("handle");
-                                } else {
-                                  val.startsWith(TestController.class.getName())
-                                      .endsWith(parameter.annotatedMethod);
-                                }
-                              }));
-                },
-                span ->
-                    span.hasName("tracedMethod")
-                        .hasParent(trace.getSpan(1))
-                        .hasTotalAttributeCount(0)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET " + parameter.urlPathWithVariables)
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                        equalTo(URL_PATH, parameter.urlPath),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(URL_SCHEME, "http"),
+                        satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                        equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
+            span -> {
+              if (parameter.annotatedMethod == null) {
+                // Functional API
+                assertThat(trace.getSpan(1).getName())
+                    .contains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle");
+              } else {
+                // Annotation API
+                span.hasName(
+                    TestController.class.getSimpleName() + "." + parameter.annotatedMethod);
+              }
+              span.hasKind(SpanKind.INTERNAL)
+                  .hasParent(trace.getSpan(0))
+                  .hasAttributesSatisfyingExactly(
+                      satisfies(
+                          CODE_FUNCTION_NAME,
+                          val -> {
+                            if (parameter.annotatedMethod == null) {
+                              val.startsWith(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
+                                  .endsWith("handle");
+                            } else {
+                              val.startsWith(TestController.class.getName())
+                                  .endsWith(parameter.annotatedMethod);
+                            }
+                          }));
+            },
+            span ->
+                span.hasName("tracedMethod")
+                    .hasParent(trace.getSpan(1))
+                    .hasTotalAttributeCount(0)));
   }
 
   private static Stream<Arguments> provideAsyncParameters() {
@@ -332,55 +330,54 @@ public abstract class AbstractSpringWebfluxTest {
 
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo(parameter.expectedResponseBody);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + parameter.urlPathWithVariables)
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, parameter.urlPath),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(URL_SCHEME, "http"),
-                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
-                span -> {
-                  if (parameter.annotatedMethod == null) {
-                    // Functional API
-                    assertThat(trace.getSpan(1).getName())
-                        .contains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle");
-                  } else {
-                    // Annotation API
-                    span.hasName(
-                        TestController.class.getSimpleName() + "." + parameter.annotatedMethod);
-                  }
-                  span.hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          satisfies(
-                              CODE_FUNCTION_NAME,
-                              val -> {
-                                if (parameter.annotatedMethod == null) {
-                                  val.startsWith(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
-                                      .endsWith("handle");
-                                } else {
-                                  val.startsWith(TestController.class.getName())
-                                      .endsWith(parameter.annotatedMethod);
-                                }
-                              }));
-                },
-                span ->
-                    span.hasName("tracedMethod")
-                        .hasParent(trace.getSpan(1))
-                        .hasTotalAttributeCount(0)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET " + parameter.urlPathWithVariables)
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                        equalTo(URL_PATH, parameter.urlPath),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(URL_SCHEME, "http"),
+                        satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                        equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
+            span -> {
+              if (parameter.annotatedMethod == null) {
+                // Functional API
+                assertThat(trace.getSpan(1).getName())
+                    .contains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle");
+              } else {
+                // Annotation API
+                span.hasName(
+                    TestController.class.getSimpleName() + "." + parameter.annotatedMethod);
+              }
+              span.hasKind(SpanKind.INTERNAL)
+                  .hasParent(trace.getSpan(0))
+                  .hasAttributesSatisfyingExactly(
+                      satisfies(
+                          CODE_FUNCTION_NAME,
+                          val -> {
+                            if (parameter.annotatedMethod == null) {
+                              val.startsWith(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
+                                  .endsWith("handle");
+                            } else {
+                              val.startsWith(TestController.class.getName())
+                                  .endsWith(parameter.annotatedMethod);
+                            }
+                          }));
+            },
+            span ->
+                span.hasName("tracedMethod")
+                    .hasParent(trace.getSpan(1))
+                    .hasTotalAttributeCount(0)));
   }
 
   private static Stream<Arguments> provideAsyncHandlerFuncParameters() {
@@ -408,43 +405,41 @@ public abstract class AbstractSpringWebfluxTest {
     AggregatedHttpResponse response = client.get("/notfoundgreet").aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(404);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET /**")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasStatus(StatusData.unset())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, "/notfoundgreet"),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 404),
-                            equalTo(URL_SCHEME, "http"),
-                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, "/**")),
-                span -> {
-                  span.hasName("ResourceWebHandler.handle")
-                      .hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(0))
-                      .hasStatus(StatusData.error());
-                  if (emitExceptionAsSpanEvents()) {
-                    span.hasEventsSatisfyingExactly(
-                        AbstractSpringWebfluxTest::resource404Exception);
-                  } else {
-                    span.hasEventsSatisfyingExactly();
-                  }
-                  span.hasAttributesSatisfyingExactly(
-                      equalTo(
-                          CODE_FUNCTION_NAME,
-                          "org.springframework.web.reactive.resource.ResourceWebHandler.handle"));
-                }));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET /**")
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent()
+                    .hasStatus(StatusData.unset())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                        equalTo(URL_PATH, "/notfoundgreet"),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 404),
+                        equalTo(URL_SCHEME, "http"),
+                        satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                        equalTo(HTTP_ROUTE, "/**")),
+            span -> {
+              span.hasName("ResourceWebHandler.handle")
+                  .hasKind(SpanKind.INTERNAL)
+                  .hasParent(trace.getSpan(0))
+                  .hasStatus(StatusData.error());
+              if (emitExceptionAsSpanEvents()) {
+                span.hasEventsSatisfyingExactly(AbstractSpringWebfluxTest::resource404Exception);
+              } else {
+                span.hasEventsSatisfyingExactly();
+              }
+              span.hasAttributesSatisfyingExactly(
+                  equalTo(
+                      CODE_FUNCTION_NAME,
+                      "org.springframework.web.reactive.resource.ResourceWebHandler.handle"));
+            }));
     if (emitExceptionAsLogs()) {
       assertResource404ExceptionLog();
     }
@@ -500,36 +495,33 @@ public abstract class AbstractSpringWebfluxTest {
 
     assertThat(response.status().code()).isEqualTo(202);
     assertThat(response.contentUtf8()).isEqualTo(echoString);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("POST /echo")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, "/echo"),
-                            equalTo(HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 202),
-                            equalTo(URL_SCHEME, "http"),
-                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, "/echo")),
-                span ->
-                    span.hasName(EchoHandlerFunction.class.getSimpleName() + ".handle")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                EchoHandlerFunction.class.getName() + ".handle")),
-                span ->
-                    span.hasName("echo").hasParent(trace.getSpan(1)).hasTotalAttributeCount(0)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("POST /echo")
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                        equalTo(URL_PATH, "/echo"),
+                        equalTo(HTTP_REQUEST_METHOD, "POST"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 202),
+                        equalTo(URL_SCHEME, "http"),
+                        satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                        equalTo(HTTP_ROUTE, "/echo")),
+            span ->
+                span.hasName(EchoHandlerFunction.class.getSimpleName() + ".handle")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            CODE_FUNCTION_NAME, EchoHandlerFunction.class.getName() + ".handle")),
+            span -> span.hasName("echo").hasParent(trace.getSpan(1)).hasTotalAttributeCount(0)));
   }
 
   @ParameterizedTest(name = "{index}: {0}")
@@ -538,68 +530,65 @@ public abstract class AbstractSpringWebfluxTest {
     AggregatedHttpResponse response = client.get(parameter.urlPath).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(500);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + parameter.urlPathWithVariables)
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET " + parameter.urlPathWithVariables)
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                        equalTo(URL_PATH, parameter.urlPath),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
+                        equalTo(URL_SCHEME, "http"),
+                        satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                        equalTo(HTTP_ROUTE, parameter.urlPathWithVariables),
+                        equalTo(ERROR_TYPE, "500")),
+            span -> {
+              if (parameter.annotatedMethod == null) {
+                // Functional API
+                assertThat(trace.getSpan(1).getName())
+                    .contains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle");
+              } else {
+                // Annotation API
+                span.hasName(
+                    TestController.class.getSimpleName() + "." + parameter.annotatedMethod);
+              }
+              span.hasKind(SpanKind.INTERNAL)
+                  .hasParent(trace.getSpan(0))
+                  .hasStatus(StatusData.error());
+              if (emitExceptionAsSpanEvents()) {
+                span.hasEventsSatisfyingExactly(event ->
+                    event
+                        .hasName("exception")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, parameter.urlPath),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
-                            equalTo(URL_SCHEME, "http"),
-                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, parameter.urlPathWithVariables),
-                            equalTo(ERROR_TYPE, "500")),
-                span -> {
-                  if (parameter.annotatedMethod == null) {
-                    // Functional API
-                    assertThat(trace.getSpan(1).getName())
-                        .contains(SPRING_APP_CLASS_ANON_NESTED_CLASS_PREFIX, ".handle");
-                  } else {
-                    // Annotation API
-                    span.hasName(
-                        TestController.class.getSimpleName() + "." + parameter.annotatedMethod);
-                  }
-                  span.hasKind(SpanKind.INTERNAL)
-                      .hasParent(trace.getSpan(0))
-                      .hasStatus(StatusData.error());
-                  if (emitExceptionAsSpanEvents()) {
-                    span.hasEventsSatisfyingExactly(
-                        event ->
-                            event
-                                .hasName("exception")
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
-                                    equalTo(EXCEPTION_MESSAGE, "bad things happen"),
-                                    satisfies(
-                                        EXCEPTION_STACKTRACE,
-                                        val -> val.isInstanceOf(String.class))));
-                  } else {
-                    span.hasEventsSatisfyingExactly();
-                  }
-                  span.hasAttributesSatisfyingExactly(
-                      satisfies(
-                          CODE_FUNCTION_NAME,
-                          val -> {
-                            if (parameter.annotatedMethod == null) {
-                              val.startsWith(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
-                                  .endsWith("handle");
-                            } else {
-                              val.startsWith(TestController.class.getName())
-                                  .endsWith(parameter.annotatedMethod);
-                            }
-                          }));
-                }));
+                            equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
+                            equalTo(EXCEPTION_MESSAGE, "bad things happen"),
+                            satisfies(
+                                EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+              } else {
+                span.hasEventsSatisfyingExactly();
+              }
+              span.hasAttributesSatisfyingExactly(
+                  satisfies(
+                      CODE_FUNCTION_NAME,
+                      val -> {
+                        if (parameter.annotatedMethod == null) {
+                          val.startsWith(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
+                              .endsWith("handle");
+                        } else {
+                          val.startsWith(TestController.class.getName())
+                              .endsWith(parameter.annotatedMethod);
+                        }
+                      }));
+            }));
     if (emitExceptionAsLogs()) {
       assertHandlerExceptionLog(
           type -> type.isEqualTo("java.lang.IllegalStateException"),
@@ -610,26 +599,23 @@ public abstract class AbstractSpringWebfluxTest {
   private static void assertHandlerExceptionLog(
       StringAssertConsumer exceptionTypeAssertion, StringAssertConsumer exceptionMessageAssertion) {
     Awaitility.await()
-        .untilAsserted(
-            () -> {
-              List<LogRecordData> logs =
-                  testing.logRecords().stream()
-                      .filter(log -> "exception".equals(log.getEventName()))
-                      .filter(
-                          log ->
-                              INSTRUMENTATION_NAME.equals(
-                                  log.getInstrumentationScopeInfo().getName()))
-                      .collect(toList());
+        .untilAsserted(() -> {
+          List<LogRecordData> logs =
+              testing.logRecords().stream()
+                  .filter(log -> "exception".equals(log.getEventName()))
+                  .filter(log ->
+                      INSTRUMENTATION_NAME.equals(log.getInstrumentationScopeInfo().getName()))
+                  .collect(toList());
 
-              assertThat(logs).hasSize(1);
-              assertThat(logs.get(0))
-                  .hasSeverity(Severity.WARN)
-                  .hasEventName("exception")
-                  .hasAttributesSatisfyingExactly(
-                      satisfies(EXCEPTION_TYPE, exceptionTypeAssertion),
-                      satisfies(EXCEPTION_MESSAGE, exceptionMessageAssertion),
-                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)));
-            });
+          assertThat(logs).hasSize(1);
+          assertThat(logs.get(0))
+              .hasSeverity(Severity.WARN)
+              .hasEventName("exception")
+              .hasAttributesSatisfyingExactly(
+                  satisfies(EXCEPTION_TYPE, exceptionTypeAssertion),
+                  satisfies(EXCEPTION_MESSAGE, exceptionMessageAssertion),
+                  satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)));
+        });
   }
 
   private static Stream<Arguments> provideBadEndpointParameters() {
@@ -824,37 +810,36 @@ public abstract class AbstractSpringWebfluxTest {
       // this is expected when cancellation occurs
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET /slow")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasStatus(StatusData.unset())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, "/slow"),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(URL_SCHEME, "http"),
-                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, "/slow"),
-                            equalTo(ERROR_TYPE, "_OTHER")),
-                span ->
-                    span.hasName("SpringWebFluxTestApplication$$Lambda.handle")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            satisfies(
-                                CODE_FUNCTION_NAME,
-                                val ->
-                                    val.startsWith("server.SpringWebFluxTestApplication$$Lambda")
-                                        .endsWith("handle")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET /slow")
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent()
+                    .hasStatus(StatusData.unset())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                        equalTo(URL_PATH, "/slow"),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(URL_SCHEME, "http"),
+                        satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                        equalTo(HTTP_ROUTE, "/slow"),
+                        equalTo(ERROR_TYPE, "_OTHER")),
+            span ->
+                span.hasName("SpringWebFluxTestApplication$$Lambda.handle")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME,
+                            val ->
+                                val.startsWith("server.SpringWebFluxTestApplication$$Lambda")
+                                    .endsWith("handle")))));
 
     SpringWebFluxTestApplication.resumeSlowRequest();
   }

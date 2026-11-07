@@ -67,19 +67,18 @@ class DruidDataSourceTest {
           }
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("DruidDataSource.getConnection")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                "com.alibaba.druid.pool.DruidDataSource.getConnection"),
-                            equalTo(DB_NAMESPACE, "test"),
-                            equalTo(DB_SYSTEM_NAME, "h2database"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("DruidDataSource.getConnection")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            CODE_FUNCTION_NAME,
+                            "com.alibaba.druid.pool.DruidDataSource.getConnection"),
+                        equalTo(DB_NAMESPACE, "test"),
+                        equalTo(DB_SYSTEM_NAME, "h2database"))));
   }
 }

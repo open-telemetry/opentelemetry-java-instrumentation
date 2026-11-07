@@ -75,17 +75,16 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("GET " + getContextPath() + "/test-resource-super")
-                            .hasKind(SpanKind.SERVER)
-                            .hasNoParent(),
-                    span ->
-                        span.hasName("controller")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET " + getContextPath() + "/test-resource-super")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent(),
+                span ->
+                    span.hasName("controller")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -99,17 +98,16 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("GET " + getContextPath() + "/test-resource-interface/call")
-                            .hasKind(SpanKind.SERVER)
-                            .hasNoParent(),
-                    span ->
-                        span.hasName("controller")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET " + getContextPath() + "/test-resource-interface/call")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent(),
+                span ->
+                    span.hasName("controller")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -124,48 +122,45 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
     testing()
-        .waitAndAssertTraces(
-            trace -> {
-              if (CONTROLLER_TELEMETRY_ENABLED) {
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(
-                                "GET " + getContextPath() + "/test-sub-resource-locator/call/sub")
-                            .hasKind(SpanKind.SERVER)
-                            .hasNoParent(),
-                    span ->
-                        span.hasName("JaxRsSubResourceLocatorTestResource.call")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName("controller")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(1)),
-                    span ->
-                        span.hasName("SubResource.call")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName("controller")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(3)));
-              } else {
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(
-                                "GET " + getContextPath() + "/test-sub-resource-locator/call/sub")
-                            .hasKind(SpanKind.SERVER)
-                            .hasNoParent(),
-                    span ->
-                        span.hasName("controller")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName("controller")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)));
-              }
-            });
+        .waitAndAssertTraces(trace -> {
+          if (CONTROLLER_TELEMETRY_ENABLED) {
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET " + getContextPath() + "/test-sub-resource-locator/call/sub")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent(),
+                span ->
+                    span.hasName("JaxRsSubResourceLocatorTestResource.call")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("controller")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(1)),
+                span ->
+                    span.hasName("SubResource.call")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("controller")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(3)));
+          } else {
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET " + getContextPath() + "/test-sub-resource-locator/call/sub")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent(),
+                span ->
+                    span.hasName("controller")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("controller")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0)));
+          }
+        });
   }
 
   private enum AsyncResponseTestKind {
@@ -217,52 +212,43 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     testKind.assertBody(response.contentUtf8());
 
     testing()
-        .waitAndAssertTraces(
-            trace -> {
-              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-              assertions.add(
-                  span ->
-                      assertServerSpan(
-                          span,
-                          "GET",
-                          new ServerEndpoint(
-                              "async",
-                              "async?action=" + testKind.action,
-                              testKind.statusCode,
-                              null,
-                              false),
-                          testKind.statusCode));
-              if (CONTROLLER_TELEMETRY_ENABLED) {
-                assertions.add(
-                    span -> {
-                      span.hasName("JaxRsTestResource.asyncOp")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              satisfies(
-                                  CODE_FUNCTION_NAME,
-                                  val -> val.endsWith("test.JaxRsTestResource.asyncOp")),
-                              equalTo(
-                                  booleanKey("jaxrs.canceled"),
-                                  (testKind == AsyncResponseTestKind.CANCELED && testExperimental())
-                                      ? true
-                                      : null));
-                      if (testKind == AsyncResponseTestKind.FAILING) {
-                        span.hasStatus(StatusData.error())
-                            .hasException(new IllegalStateException("failure"));
-                      }
-                    });
+        .waitAndAssertTraces(trace -> {
+          List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+          assertions.add(span ->
+              assertServerSpan(
+                  span,
+                  "GET",
+                  new ServerEndpoint(
+                      "async", "async?action=" + testKind.action, testKind.statusCode, null, false),
+                  testKind.statusCode));
+          if (CONTROLLER_TELEMETRY_ENABLED) {
+            assertions.add(span -> {
+              span.hasName("JaxRsTestResource.asyncOp")
+                  .hasKind(SpanKind.INTERNAL)
+                  .hasParent(trace.getSpan(0))
+                  .hasAttributesSatisfyingExactly(
+                      satisfies(
+                          CODE_FUNCTION_NAME,
+                          val -> val.endsWith("test.JaxRsTestResource.asyncOp")),
+                      equalTo(
+                          booleanKey("jaxrs.canceled"),
+                          (testKind == AsyncResponseTestKind.CANCELED && testExperimental())
+                              ? true
+                              : null));
+              if (testKind == AsyncResponseTestKind.FAILING) {
+                span.hasStatus(StatusData.error())
+                    .hasException(new IllegalStateException("failure"));
               }
-              if (asyncCancelHasSendError() && testKind == AsyncResponseTestKind.CANCELED) {
-                assertions.add(
-                    span ->
-                        span.satisfies(
-                                spanData -> assertThat(spanData.getName()).endsWith("sendError"))
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(CONTROLLER_TELEMETRY_ENABLED ? 1 : 0)));
-              }
-              trace.hasSpansSatisfyingExactly(assertions);
             });
+          }
+          if (asyncCancelHasSendError() && testKind == AsyncResponseTestKind.CANCELED) {
+            assertions.add(span ->
+                span.satisfies(spanData -> assertThat(spanData.getName()).endsWith("sendError"))
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(CONTROLLER_TELEMETRY_ENABLED ? 1 : 0)));
+          }
+          trace.hasSpansSatisfyingExactly(assertions);
+        });
   }
 
   private enum CompletionStageTestKind {
@@ -311,40 +297,39 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     testKind.assertBody(response.contentUtf8());
 
     testing()
-        .waitAndAssertTraces(
-            trace -> {
-              Consumer<SpanDataAssert> serverSpan =
-                  span ->
-                      assertServerSpan(
-                          span,
-                          "GET",
-                          new ServerEndpoint(
-                              "async",
-                              "async-completion-stage?action=" + testKind.action,
-                              testKind.statusCode,
-                              null,
-                              false),
-                          testKind.statusCode);
-              if (CONTROLLER_TELEMETRY_ENABLED) {
-                trace.hasSpansSatisfyingExactly(
-                    serverSpan,
-                    span -> {
-                      span.hasName("JaxRsTestResource.jaxRs21Async")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              satisfies(
-                                  CODE_FUNCTION_NAME,
-                                  val -> val.endsWith(".JaxRsTestResource.jaxRs21Async")));
-                      if (testKind == CompletionStageTestKind.FAILING) {
-                        span.hasStatus(StatusData.error())
-                            .hasException(new IllegalStateException("failure"));
-                      }
-                    });
-              } else {
-                trace.hasSpansSatisfyingExactly(serverSpan);
-              }
-            });
+        .waitAndAssertTraces(trace -> {
+          Consumer<SpanDataAssert> serverSpan =
+              span ->
+                  assertServerSpan(
+                      span,
+                      "GET",
+                      new ServerEndpoint(
+                          "async",
+                          "async-completion-stage?action=" + testKind.action,
+                          testKind.statusCode,
+                          null,
+                          false),
+                      testKind.statusCode);
+          if (CONTROLLER_TELEMETRY_ENABLED) {
+            trace.hasSpansSatisfyingExactly(
+                serverSpan,
+                span -> {
+                  span.hasName("JaxRsTestResource.jaxRs21Async")
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          satisfies(
+                              CODE_FUNCTION_NAME,
+                              val -> val.endsWith(".JaxRsTestResource.jaxRs21Async")));
+                  if (testKind == CompletionStageTestKind.FAILING) {
+                    span.hasStatus(StatusData.error())
+                        .hasException(new IllegalStateException("failure"));
+                  }
+                });
+          } else {
+            trace.hasSpansSatisfyingExactly(serverSpan);
+          }
+        });
   }
 
   @Override

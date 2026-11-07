@@ -39,47 +39,35 @@ class SpringRabbitMetricsAssertions {
         SPRING_INSTRUMENTATION_NAME,
         "messaging.client.consumed.messages",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("{message}")
-                        .hasDescription(
-                            "Number of messages that were delivered to the application.")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.satisfies(data -> assertThat(data.getPoints()).hasSize(1))
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(consumedMessagesCount)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(
-                                                        stringKey("messaging.system.name"),
-                                                        "rabbitmq"),
-                                                    equalTo(ERROR_TYPE, springErrorType),
-                                                    equalTo(
-                                                        MESSAGING_DESTINATION_NAME, destination),
-                                                    satisfies(
-                                                        SERVER_ADDRESS, val -> val.isNotBlank()),
-                                                    satisfies(
-                                                        SERVER_PORT, val -> val.isPositive()))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasUnit("{message}")
+                    .hasDescription("Number of messages that were delivered to the application.")
+                    .hasLongSumSatisfying(sum ->
+                        sum.satisfies(data -> assertThat(data.getPoints()).hasSize(1))
+                            .hasPointsSatisfying(point ->
+                                point
+                                    .hasValue(consumedMessagesCount)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                        equalTo(stringKey("messaging.system.name"), "rabbitmq"),
+                                        equalTo(ERROR_TYPE, springErrorType),
+                                        equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                        satisfies(SERVER_ADDRESS, val -> val.isNotBlank()),
+                                        satisfies(SERVER_PORT, val -> val.isPositive()))))));
     assertThat(testing.metrics())
-        .filteredOn(
-            metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(RABBIT_INSTRUMENTATION_NAME)
-                    && metric.getName().equals("messaging.process.duration"))
+        .filteredOn(metric ->
+            metric.getInstrumentationScopeInfo().getName().equals(RABBIT_INSTRUMENTATION_NAME)
+                && metric.getName().equals("messaging.process.duration"))
         .isEmpty();
     assertThat(testing.metrics())
-        .filteredOn(
-            metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(RABBIT_INSTRUMENTATION_NAME)
-                    && metric.getName().equals("messaging.client.consumed.messages"))
+        .filteredOn(metric ->
+            metric.getInstrumentationScopeInfo().getName().equals(RABBIT_INSTRUMENTATION_NAME)
+                && metric.getName().equals("messaging.client.consumed.messages"))
         .isEmpty();
     assertThat(testing.metrics())
-        .filteredOn(
-            metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(SPRING_INSTRUMENTATION_NAME))
+        .filteredOn(metric ->
+            metric.getInstrumentationScopeInfo().getName().equals(SPRING_INSTRUMENTATION_NAME))
         .extracting(MetricData::getName)
         .containsExactlyInAnyOrder(
             "messaging.process.duration", "messaging.client.consumed.messages");
@@ -99,31 +87,23 @@ class SpringRabbitMetricsAssertions {
         instrumentationName,
         "messaging.process.duration",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasDescription("Duration of processing operation.")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram
-                                    .satisfies(data -> assertThat(data.getPoints()).hasSize(1))
-                                    .hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasCount(1)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(
-                                                        stringKey("messaging.system.name"),
-                                                        "rabbitmq"),
-                                                    equalTo(ERROR_TYPE, errorType),
-                                                    equalTo(
-                                                        MESSAGING_DESTINATION_NAME, destination),
-                                                    satisfies(
-                                                        SERVER_ADDRESS, val -> val.isNotBlank()),
-                                                    satisfies(
-                                                        SERVER_PORT, val -> val.isPositive()))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasUnit("s")
+                    .hasDescription("Duration of processing operation.")
+                    .hasHistogramSatisfying(histogram ->
+                        histogram
+                            .satisfies(data -> assertThat(data.getPoints()).hasSize(1))
+                            .hasPointsSatisfying(point ->
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                        equalTo(stringKey("messaging.system.name"), "rabbitmq"),
+                                        equalTo(ERROR_TYPE, errorType),
+                                        equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                        satisfies(SERVER_ADDRESS, val -> val.isNotBlank()),
+                                        satisfies(SERVER_PORT, val -> val.isPositive()))))));
   }
 
   private SpringRabbitMetricsAssertions() {}

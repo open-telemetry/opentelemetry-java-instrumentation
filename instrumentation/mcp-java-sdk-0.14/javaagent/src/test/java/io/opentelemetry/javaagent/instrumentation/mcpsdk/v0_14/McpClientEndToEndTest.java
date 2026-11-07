@@ -50,15 +50,14 @@ class McpClientEndToEndTest {
           initializeAndCallTool.block();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("tools/call async-tool")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttribute(MCP_PROTOCOL_VERSION, ProtocolVersions.MCP_2024_11_05)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span ->
+                span.hasName("tools/call async-tool")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttribute(MCP_PROTOCOL_VERSION, ProtocolVersions.MCP_2024_11_05)));
   }
 
   @Test
@@ -74,14 +73,11 @@ class McpClientEndToEndTest {
             client.callTool(
                 new McpSchema.CallToolRequest("sync-tool", Map.of("secret", "value"), null)));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("tools/call sync-tool")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span ->
+                span.hasName("tools/call sync-tool").hasKind(CLIENT).hasParent(trace.getSpan(0))));
   }
 
   @Test

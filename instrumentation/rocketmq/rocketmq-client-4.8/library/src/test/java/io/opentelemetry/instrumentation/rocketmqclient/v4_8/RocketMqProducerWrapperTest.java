@@ -91,29 +91,28 @@ class RocketMqProducerWrapperTest {
     AtomicReference<SendResult> callbackResult = new AtomicReference<>();
     SendResult result = new SendResult(SendStatus.SEND_OK, "batch-id", "offset-id", null, 0);
     MQProducer producer =
-        wrap(
-            invocation -> {
-              if (invocation.getMethod().getName().equals("send")) {
-                Collection<Message> sent = invocation.getArgument(0);
-                SendMessageContext request = encodedRequest(sent);
-                request.setCommunicationMode(
-                    invocation.getMethod().getReturnType() == void.class
-                        ? CommunicationMode.ASYNC
-                        : CommunicationMode.SYNC);
-                encoded.set(request.getMessage().getBody());
-                hook.get().sendMessageBefore(request);
-                assertThat(request.getMessage().getBody()).isSameAs(encoded.get());
-                request.setSendResult(result);
-                hook.get().sendMessageAfter(request);
-                for (Object arg : invocation.getArguments()) {
-                  if (arg instanceof SendCallback) {
-                    ((SendCallback) arg).onSuccess(result);
-                  }
-                }
-                return invocation.getMethod().getReturnType() == void.class ? null : result;
+        wrap(invocation -> {
+          if (invocation.getMethod().getName().equals("send")) {
+            Collection<Message> sent = invocation.getArgument(0);
+            SendMessageContext request = encodedRequest(sent);
+            request.setCommunicationMode(
+                invocation.getMethod().getReturnType() == void.class
+                    ? CommunicationMode.ASYNC
+                    : CommunicationMode.SYNC);
+            encoded.set(request.getMessage().getBody());
+            hook.get().sendMessageBefore(request);
+            assertThat(request.getMessage().getBody()).isSameAs(encoded.get());
+            request.setSendResult(result);
+            hook.get().sendMessageAfter(request);
+            for (Object arg : invocation.getArguments()) {
+              if (arg instanceof SendCallback) {
+                ((SendCallback) arg).onSuccess(result);
               }
-              return null;
-            });
+            }
+            return invocation.getMethod().getReturnType() == void.class ? null : result;
+          }
+          return null;
+        });
     Object[] args = new Object[method.getParameterCount()];
     args[0] = messages;
     for (int i = 1; i < args.length; i++) {
@@ -161,11 +160,10 @@ class RocketMqProducerWrapperTest {
 
   private static Stream<Arguments> batchSendMethods() {
     return Stream.of(MQProducer.class.getMethods())
-        .filter(
-            method ->
-                method.getName().equals("send")
-                    && method.getParameterCount() > 0
-                    && method.getParameterTypes()[0] == Collection.class)
+        .filter(method ->
+            method.getName().equals("send")
+                && method.getParameterCount() > 0
+                && method.getParameterTypes()[0] == Collection.class)
         .flatMap(method -> IntStream.of(1, 2).mapToObj(count -> Arguments.of(method, count)));
   }
 
@@ -176,23 +174,21 @@ class RocketMqProducerWrapperTest {
     SendResult result = new SendResult(SendStatus.SEND_OK, "batch-id", "offset-id", null, 0);
     AtomicReference<SendResult> callbackResult = new AtomicReference<>();
     MQProducer producer =
-        wrap(
-            invocation -> {
-              if (invocation.getMethod().getName().equals("send")) {
-                Collection<Message> sent = invocation.getArgument(0);
-                SendMessageContext request = encodedRequest(sent);
-                request.setCommunicationMode(CommunicationMode.ASYNC);
-                SendCallback callback = invocation.getArgument(1);
-                pendingSend.set(
-                    () -> {
-                      hook.get().sendMessageBefore(request);
-                      request.setSendResult(result);
-                      hook.get().sendMessageAfter(request);
-                      callback.onSuccess(result);
-                    });
-              }
-              return null;
+        wrap(invocation -> {
+          if (invocation.getMethod().getName().equals("send")) {
+            Collection<Message> sent = invocation.getArgument(0);
+            SendMessageContext request = encodedRequest(sent);
+            request.setCommunicationMode(CommunicationMode.ASYNC);
+            SendCallback callback = invocation.getArgument(1);
+            pendingSend.set(() -> {
+              hook.get().sendMessageBefore(request);
+              request.setSendResult(result);
+              hook.get().sendMessageAfter(request);
+              callback.onSuccess(result);
             });
+          }
+          return null;
+        });
     testing.runWithSpan(
         "parent",
         () ->
@@ -220,13 +216,12 @@ class RocketMqProducerWrapperTest {
     AtomicReference<SendCallback> callback = new AtomicReference<>();
     AtomicReference<Throwable> callbackError = new AtomicReference<>();
     MQProducer producer =
-        wrap(
-            invocation -> {
-              if (invocation.getMethod().getName().equals("send")) {
-                callback.set(invocation.getArgument(1));
-              }
-              return null;
-            });
+        wrap(invocation -> {
+          if (invocation.getMethod().getName().equals("send")) {
+            callback.set(invocation.getArgument(1));
+          }
+          return null;
+        });
     List<Message> messages = messages(2);
     producer.send(
         messages,
@@ -245,44 +240,40 @@ class RocketMqProducerWrapperTest {
     callback.get().onException(error);
     assertThat(callbackError.get()).isSameAs(error);
     assertStateCleared();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("send topic").hasKind(PRODUCER).hasException(error)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("send topic").hasKind(PRODUCER).hasException(error)));
   }
 
   @Test
   void completesOnSynchronousFailureAndPreservesException() {
     MQClientException error = new MQClientException("failed", null);
     MQProducer producer =
-        wrap(
-            invocation -> {
-              if (invocation.getMethod().getName().equals("send")) {
-                throw error;
-              }
-              return null;
-            });
+        wrap(invocation -> {
+          if (invocation.getMethod().getName().equals("send")) {
+            throw error;
+          }
+          return null;
+        });
     List<Message> messages = messages(2);
     assertThatThrownBy(() -> producer.send(messages)).isSameAs(error);
     assertStateCleared();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("send topic").hasKind(PRODUCER).hasException(error)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("send topic").hasKind(PRODUCER).hasException(error)));
   }
 
   @Test
   void supportsNullAsyncCallback() throws Exception {
     MQProducer producer =
-        wrap(
-            invocation -> {
-              if (invocation.getMethod().getName().equals("send")) {
-                SendCallback callback = invocation.getArgument(1);
-                callback.onSuccess(
-                    new SendResult(SendStatus.SEND_OK, "batch-id", "offset-id", null, 0));
-              }
-              return null;
-            });
+        wrap(invocation -> {
+          if (invocation.getMethod().getName().equals("send")) {
+            SendCallback callback = invocation.getArgument(1);
+            callback.onSuccess(
+                new SendResult(SendStatus.SEND_OK, "batch-id", "offset-id", null, 0));
+          }
+          return null;
+        });
     List<Message> messages = messages(2);
     producer.send(messages, (SendCallback) null);
     assertStateCleared();
@@ -293,16 +284,15 @@ class RocketMqProducerWrapperTest {
   @Test
   void doesNotStartAnotherOperationWhenSuppressed() throws Exception {
     MQProducer producer =
-        wrap(
-            invocation -> {
-              if (invocation.getMethod().getName().equals("send")) {
-                SendMessageContext request = encodedRequest(invocation.getArgument(0));
-                hook.get().sendMessageBefore(request);
-                hook.get().sendMessageAfter(request);
-                return new SendResult(SendStatus.SEND_OK, "batch-id", "offset-id", null, 0);
-              }
-              return null;
-            });
+        wrap(invocation -> {
+          if (invocation.getMethod().getName().equals("send")) {
+            SendMessageContext request = encodedRequest(invocation.getArgument(0));
+            hook.get().sendMessageBefore(request);
+            hook.get().sendMessageAfter(request);
+            return new SendResult(SendStatus.SEND_OK, "batch-id", "offset-id", null, 0);
+          }
+          return null;
+        });
     Instrumenter<SendMessageContext, Void> outer =
         RocketMqInstrumenterFactory.createProducerInstrumenter(
             testing.getOpenTelemetry(), IncludeExclude.builder().build(), false);
@@ -355,14 +345,13 @@ class RocketMqProducerWrapperTest {
     List<SendMessageContext> requests = new ArrayList<>();
     List<SendCallback> callbacks = new ArrayList<>();
     MQProducer producer =
-        wrap(
-            invocation -> {
-              if (invocation.getMethod().getName().equals("send")) {
-                requests.add(encodedRequest(invocation.getArgument(0)));
-                callbacks.add(invocation.getArgument(1));
-              }
-              return null;
-            });
+        wrap(invocation -> {
+          if (invocation.getMethod().getName().equals("send")) {
+            requests.add(encodedRequest(invocation.getArgument(0)));
+            callbacks.add(invocation.getArgument(1));
+          }
+          return null;
+        });
     List<Message> messages = messages(2);
     testing.runWithSpan("first", () -> producer.send(messages, (SendCallback) null));
     testing.runWithSpan("second", () -> producer.send(messages, (SendCallback) null));
@@ -393,21 +382,20 @@ class RocketMqProducerWrapperTest {
   void sharesPayloadAndPreservesClientMessageMutations() throws Exception {
     List<Message> originals = messages(2);
     MQProducer producer =
-        wrap(
-            invocation -> {
-              if (invocation.getMethod().getName().equals("send")) {
-                List<Message> sent = invocation.getArgument(0);
-                for (int i = 0; i < sent.size(); i++) {
-                  assertThat(sent.get(i)).isNotSameAs(originals.get(i));
-                  assertThat(sent.get(i).getBody()).isSameAs(originals.get(i).getBody());
-                  sent.get(i).setTopic("namespace%topic");
-                  assertThat(originals.get(i).getTopic()).isEqualTo("namespace%topic");
-                  MessageAccessor.putProperty(sent.get(i), "UNIQ_KEY", "id-" + i);
-                }
-                return new SendResult(SendStatus.SEND_OK, "batch-id", "offset-id", null, 0);
-              }
-              return null;
-            });
+        wrap(invocation -> {
+          if (invocation.getMethod().getName().equals("send")) {
+            List<Message> sent = invocation.getArgument(0);
+            for (int i = 0; i < sent.size(); i++) {
+              assertThat(sent.get(i)).isNotSameAs(originals.get(i));
+              assertThat(sent.get(i).getBody()).isSameAs(originals.get(i).getBody());
+              sent.get(i).setTopic("namespace%topic");
+              assertThat(originals.get(i).getTopic()).isEqualTo("namespace%topic");
+              MessageAccessor.putProperty(sent.get(i), "UNIQ_KEY", "id-" + i);
+            }
+            return new SendResult(SendStatus.SEND_OK, "batch-id", "offset-id", null, 0);
+          }
+          return null;
+        });
     producer.send(originals);
     for (int i = 0; i < originals.size(); i++) {
       assertThat(originals.get(i).getTopic()).isEqualTo("namespace%topic");
@@ -423,11 +411,10 @@ class RocketMqProducerWrapperTest {
     message.setTopic("topic");
     message.setBody("body".getBytes(UTF_8));
     MQProducer producer =
-        wrap(
-            invocation ->
-                invocation.getMethod().getName().equals("send")
-                    ? new SendResult(SendStatus.SEND_OK, "batch-id", "offset-id", null, 0)
-                    : null);
+        wrap(invocation ->
+            invocation.getMethod().getName().equals("send")
+                ? new SendResult(SendStatus.SEND_OK, "batch-id", "offset-id", null, 0)
+                : null);
     producer.send(singletonList(message));
     assertThat(message.getProperty("traceparent")).isNotNull();
     assertStateCleared();
@@ -479,20 +466,19 @@ class RocketMqProducerWrapperTest {
   }
 
   private static void assertBatchTrace(int count) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span ->
-                    span.hasName("send topic")
-                        .hasKind(PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "topic"),
-                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, count),
-                            equalTo(MESSAGING_MESSAGE_ID, null))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span ->
+                span.hasName("send topic")
+                    .hasKind(PRODUCER)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                        equalTo(MESSAGING_DESTINATION_NAME, "topic"),
+                        equalTo(MESSAGING_OPERATION_NAME, "send"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                        equalTo(MESSAGING_BATCH_MESSAGE_COUNT, count),
+                        equalTo(MESSAGING_MESSAGE_ID, null))));
   }
 }

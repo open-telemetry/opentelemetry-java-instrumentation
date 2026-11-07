@@ -256,21 +256,18 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
 
   private void verifyMetricNotReported(String metricName) {
     assertThat(testing().metrics())
-        .filteredOn(
-            metricData ->
-                metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
+        .filteredOn(metricData ->
+            metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
         .noneMatch(metricData -> metricData.getName().equals(metricName));
   }
 
   protected void verifyPoolNameNotReported(String poolName) {
     assertThat(testing().metrics())
-        .filteredOn(
-            metricData ->
-                metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-        .noneMatch(
-            metricData ->
-                metricData.getLongSumData().getPoints().stream()
-                    .anyMatch(point -> poolName.equals(point.getAttributes().get(POOL_NAME))));
+        .filteredOn(metricData ->
+            metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
+        .noneMatch(metricData ->
+            metricData.getLongSumData().getPoints().stream()
+                .anyMatch(point -> poolName.equals(point.getAttributes().get(POOL_NAME))));
   }
 
   private void verifyObjectCount(String poolName) {
@@ -284,14 +281,12 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
   protected void assertObjectCountPoolNames(String... poolNames) {
     List<Consumer<LongPointAssert>> assertions = new ArrayList<>();
     for (String poolName : poolNames) {
-      assertions.add(
-          point ->
-              point.hasAttributesSatisfyingExactly(
-                  equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "idle")));
-      assertions.add(
-          point ->
-              point.hasAttributesSatisfyingExactly(
-                  equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "used")));
+      assertions.add(point ->
+          point.hasAttributesSatisfyingExactly(
+              equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "idle")));
+      assertions.add(point ->
+          point.hasAttributesSatisfyingExactly(
+              equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "used")));
     }
 
     testing()
@@ -299,11 +294,10 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
             INSTRUMENTATION_NAME,
             "apache_commons_pool.object.count",
             metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasLongSumSatisfying(
-                                sum -> sum.isNotMonotonic().hasPointsSatisfying(assertions))));
+                metrics.anySatisfy(metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(
+                            sum -> sum.isNotMonotonic().hasPointsSatisfying(assertions))));
   }
 
   private static void verifyObjectCountMetric(MetricData metric, String poolName) {
@@ -311,16 +305,15 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
         .hasUnit("{object}")
         .hasDescription(
             "The number of objects currently in the state described by the state attribute.")
-        .hasLongSumSatisfying(
-            sum ->
-                sum.isNotMonotonic()
-                    .hasPointsSatisfying(
-                        point ->
-                            point.hasAttributesSatisfyingExactly(
-                                equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "idle")),
-                        point ->
-                            point.hasAttributesSatisfyingExactly(
-                                equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "used"))));
+        .hasLongSumSatisfying(sum ->
+            sum.isNotMonotonic()
+                .hasPointsSatisfying(
+                    point ->
+                        point.hasAttributesSatisfyingExactly(
+                            equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "idle")),
+                    point ->
+                        point.hasAttributesSatisfyingExactly(
+                            equalTo(POOL_NAME, poolName), equalTo(OBJECT_STATE, "used"))));
   }
 
   private void verifyMinIdleObjects(String poolName) {
@@ -392,16 +385,11 @@ public abstract class AbstractCommonsPoolInstrumentationTest {
     testing().clearData();
 
     await()
-        .untilAsserted(
-            () ->
-                assertThat(testing().metrics())
-                    .filteredOn(
-                        metricData ->
-                            metricData
-                                .getInstrumentationScopeInfo()
-                                .getName()
-                                .equals(INSTRUMENTATION_NAME))
-                    .isEmpty());
+        .untilAsserted(() ->
+            assertThat(testing().metrics())
+                .filteredOn(metricData ->
+                    metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
+                .isEmpty());
   }
 
   private static class TestObjectFactory extends BasePooledObjectFactory<Object> {

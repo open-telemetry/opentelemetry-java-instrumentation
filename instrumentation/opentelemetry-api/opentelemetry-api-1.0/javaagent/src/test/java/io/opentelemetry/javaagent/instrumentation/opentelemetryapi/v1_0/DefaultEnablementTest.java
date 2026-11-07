@@ -27,11 +27,10 @@ class DefaultEnablementTest {
     bridgedSpan();
 
     if (INSTRUMENTATION_ENABLED) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasNoParent(),
-                  span -> span.hasName("bridged").hasParent(trace.getSpan(0))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasNoParent(),
+              span -> span.hasName("bridged").hasParent(trace.getSpan(0))));
     } else {
       testing.waitAndAssertTraces(
           trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent").hasNoParent()));

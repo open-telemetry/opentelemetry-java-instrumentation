@@ -69,92 +69,86 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
       testing()
           .waitAndAssertTraces(
               trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName(spanName("CLIENT"))
-                              .hasKind(SpanKind.CLIENT)
-                              .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
-                                      equalTo(NETWORK_PEER_ADDRESS, ip),
-                                      equalTo(NETWORK_PEER_PORT, port),
-                                      equalTo(SERVER_ADDRESS, host),
-                                      equalTo(SERVER_PORT, port),
-                                      equalTo(DB_SYSTEM_NAME, REDIS),
-                                      equalTo(DB_QUERY_TEXT, "CLIENT SETINFO lib-name Lettuce"),
-                                      equalTo(DB_OPERATION_NAME, "CLIENT"),
-                                      equalTo(
-                                          ERROR_TYPE,
-                                          RedisCommandExecutionException.class.getName())))),
+                  trace.hasSpansSatisfyingExactly(span ->
+                      span.hasName(spanName("CLIENT"))
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              addExtraAttributes(
+                                  equalTo(NETWORK_PEER_ADDRESS, ip),
+                                  equalTo(NETWORK_PEER_PORT, port),
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, port),
+                                  equalTo(DB_SYSTEM_NAME, REDIS),
+                                  equalTo(DB_QUERY_TEXT, "CLIENT SETINFO lib-name Lettuce"),
+                                  equalTo(DB_OPERATION_NAME, "CLIENT"),
+                                  equalTo(
+                                      ERROR_TYPE,
+                                      RedisCommandExecutionException.class.getName())))),
               trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName(spanName("CLIENT"))
-                              .hasKind(SpanKind.CLIENT)
-                              .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
-                                      equalTo(NETWORK_PEER_ADDRESS, ip),
-                                      equalTo(NETWORK_PEER_PORT, port),
-                                      equalTo(SERVER_ADDRESS, host),
-                                      equalTo(SERVER_PORT, port),
-                                      equalTo(DB_SYSTEM_NAME, REDIS),
-                                      satisfies(
-                                          DB_QUERY_TEXT,
-                                          val -> val.startsWith("CLIENT SETINFO lib-ver")),
-                                      equalTo(DB_OPERATION_NAME, "CLIENT"),
-                                      equalTo(
-                                          ERROR_TYPE,
-                                          RedisCommandExecutionException.class.getName())))),
+                  trace.hasSpansSatisfyingExactly(span ->
+                      span.hasName(spanName("CLIENT"))
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              addExtraAttributes(
+                                  equalTo(NETWORK_PEER_ADDRESS, ip),
+                                  equalTo(NETWORK_PEER_PORT, port),
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, port),
+                                  equalTo(DB_SYSTEM_NAME, REDIS),
+                                  satisfies(
+                                      DB_QUERY_TEXT,
+                                      val -> val.startsWith("CLIENT SETINFO lib-ver")),
+                                  equalTo(DB_OPERATION_NAME, "CLIENT"),
+                                  equalTo(
+                                      ERROR_TYPE,
+                                      RedisCommandExecutionException.class.getName())))),
               trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName(spanName("CLIENT"))
-                              .hasKind(SpanKind.CLIENT)
-                              .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
-                                      equalTo(NETWORK_PEER_ADDRESS, ip),
-                                      equalTo(NETWORK_PEER_PORT, port),
-                                      equalTo(SERVER_ADDRESS, host),
-                                      equalTo(SERVER_PORT, port),
-                                      equalTo(DB_SYSTEM_NAME, REDIS),
-                                      satisfies(
-                                          DB_QUERY_TEXT,
-                                          val -> val.startsWith("CLIENT MAINT_NOTIFICATIONS")),
-                                      equalTo(DB_OPERATION_NAME, "CLIENT"),
-                                      equalTo(
-                                          ERROR_TYPE,
-                                          RedisCommandExecutionException.class.getName())))),
+                  trace.hasSpansSatisfyingExactly(span ->
+                      span.hasName(spanName("CLIENT"))
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              addExtraAttributes(
+                                  equalTo(NETWORK_PEER_ADDRESS, ip),
+                                  equalTo(NETWORK_PEER_PORT, port),
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, port),
+                                  equalTo(DB_SYSTEM_NAME, REDIS),
+                                  satisfies(
+                                      DB_QUERY_TEXT,
+                                      val -> val.startsWith("CLIENT MAINT_NOTIFICATIONS")),
+                                  equalTo(DB_OPERATION_NAME, "CLIENT"),
+                                  equalTo(
+                                      ERROR_TYPE,
+                                      RedisCommandExecutionException.class.getName())))),
               trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName(spanName("AUTH"))
-                              .hasKind(SpanKind.CLIENT)
-                              .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
-                                      equalTo(NETWORK_PEER_ADDRESS, ip),
-                                      equalTo(NETWORK_PEER_PORT, port),
-                                      equalTo(SERVER_ADDRESS, host),
-                                      equalTo(SERVER_PORT, port),
-                                      equalTo(DB_SYSTEM_NAME, REDIS),
-                                      equalTo(DB_QUERY_TEXT, "AUTH ?"),
-                                      equalTo(DB_OPERATION_NAME, "AUTH")))));
+                  trace.hasSpansSatisfyingExactly(span ->
+                      span.hasName(spanName("AUTH"))
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              addExtraAttributes(
+                                  equalTo(NETWORK_PEER_ADDRESS, ip),
+                                  equalTo(NETWORK_PEER_PORT, port),
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, port),
+                                  equalTo(DB_SYSTEM_NAME, REDIS),
+                                  equalTo(DB_QUERY_TEXT, "AUTH ?"),
+                                  equalTo(DB_OPERATION_NAME, "AUTH")))));
 
     } else {
       testing()
-          .waitAndAssertTraces(
-              trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName(spanName("AUTH"))
-                              .hasKind(SpanKind.CLIENT)
-                              .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
-                                      equalTo(NETWORK_PEER_ADDRESS, ip),
-                                      equalTo(NETWORK_PEER_PORT, port),
-                                      equalTo(SERVER_ADDRESS, host),
-                                      equalTo(SERVER_PORT, port),
-                                      equalTo(DB_SYSTEM_NAME, REDIS),
-                                      equalTo(DB_QUERY_TEXT, "AUTH ?"),
-                                      equalTo(DB_OPERATION_NAME, "AUTH")))));
+          .waitAndAssertTraces(trace ->
+              trace.hasSpansSatisfyingExactly(span ->
+                  span.hasName(spanName("AUTH"))
+                      .hasKind(SpanKind.CLIENT)
+                      .hasAttributesSatisfyingExactly(
+                          addExtraAttributes(
+                              equalTo(NETWORK_PEER_ADDRESS, ip),
+                              equalTo(NETWORK_PEER_PORT, port),
+                              equalTo(SERVER_ADDRESS, host),
+                              equalTo(SERVER_PORT, port),
+                              equalTo(DB_SYSTEM_NAME, REDIS),
+                              equalTo(DB_QUERY_TEXT, "AUTH ?"),
+                              equalTo(DB_OPERATION_NAME, "AUTH")))));
     }
   }
 }

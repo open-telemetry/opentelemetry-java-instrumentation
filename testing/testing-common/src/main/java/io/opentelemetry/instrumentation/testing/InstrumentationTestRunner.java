@@ -189,17 +189,15 @@ public abstract class InstrumentationTestRunner {
   public void waitAndAssertMetrics(
       String instrumentationName, String metricName, Consumer<ListAssert<MetricData>> assertion) {
 
-    awaitUntilAsserted(
-        () ->
-            assertion.accept(
-                assertThat(getExportedMetrics())
-                    .describedAs(
-                        "Metrics for instrumentation %s and metric name %s",
-                        instrumentationName, metricName)
-                    .filteredOn(
-                        data ->
-                            data.getInstrumentationScopeInfo().getName().equals(instrumentationName)
-                                && data.getName().equals(metricName))));
+    awaitUntilAsserted(() ->
+        assertion.accept(
+            assertThat(getExportedMetrics())
+                .describedAs(
+                    "Metrics for instrumentation %s and metric name %s",
+                    instrumentationName, metricName)
+                .filteredOn(data ->
+                    data.getInstrumentationScopeInfo().getName().equals(instrumentationName)
+                        && data.getName().equals(metricName))));
 
     TelemetryDataUtil.assertMetricScopeVersion(metricsForScope(instrumentationName));
 
@@ -211,18 +209,17 @@ public abstract class InstrumentationTestRunner {
   @SafeVarargs
   public final void waitAndAssertMetrics(
       String instrumentationName, Consumer<MetricAssert>... assertions) {
-    awaitUntilAsserted(
-        () -> {
-          Collection<MetricData> metrics = instrumentationMetrics(instrumentationName);
-          assertThat(metrics).isNotEmpty();
-          for (int i = 0; i < assertions.length; i++) {
-            int index = i;
-            assertThat(metrics)
-                .describedAs(
-                    "Metrics for instrumentation %s and assertion %d", instrumentationName, index)
-                .anySatisfy(metric -> assertions[index].accept(assertThat(metric)));
-          }
-        });
+    awaitUntilAsserted(() -> {
+      Collection<MetricData> metrics = instrumentationMetrics(instrumentationName);
+      assertThat(metrics).isNotEmpty();
+      for (int i = 0; i < assertions.length; i++) {
+        int index = i;
+        assertThat(metrics)
+            .describedAs(
+                "Metrics for instrumentation %s and assertion %d", instrumentationName, index)
+            .anySatisfy(metric -> assertions[index].accept(assertThat(metric)));
+      }
+    });
 
     TelemetryDataUtil.assertMetricScopeVersion(metricsForScope(instrumentationName));
 
@@ -434,11 +431,10 @@ public abstract class InstrumentationTestRunner {
    * spanName}.
    */
   public <E extends Throwable> void runWithHttpServerSpan(ThrowingRunnable<E> callback) throws E {
-    runWithHttpServerSpan(
-        () -> {
-          callback.run();
-          return null;
-        });
+    runWithHttpServerSpan(() -> {
+      callback.run();
+      return null;
+    });
   }
 
   /**

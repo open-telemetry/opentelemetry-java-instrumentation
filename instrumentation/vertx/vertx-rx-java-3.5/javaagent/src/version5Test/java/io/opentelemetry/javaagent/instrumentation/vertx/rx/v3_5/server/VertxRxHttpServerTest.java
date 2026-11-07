@@ -40,27 +40,25 @@ class VertxRxHttpServerTest extends AbstractVertxRxHttpServerTest {
       configure(router);
       router
           .route(EXCEPTION.getPath())
-          .handler(
-              ctx ->
-                  handle(
-                      ctx,
-                      EXCEPTION,
-                      () -> {
-                        throw new IllegalStateException(EXCEPTION.getBody());
-                      }));
+          .handler(ctx ->
+              handle(
+                  ctx,
+                  EXCEPTION,
+                  () -> {
+                    throw new IllegalStateException(EXCEPTION.getBody());
+                  }));
 
       vertx
           .createHttpServer()
           .requestHandler(router)
           .listen(port)
-          .onComplete(
-              httpServerAsyncResult -> {
-                if (httpServerAsyncResult.failed()) {
-                  startFuture.fail(httpServerAsyncResult.cause());
-                  return;
-                }
-                startFuture.complete();
-              });
+          .onComplete(httpServerAsyncResult -> {
+            if (httpServerAsyncResult.failed()) {
+              startFuture.fail(httpServerAsyncResult.cause());
+              return;
+            }
+            startFuture.complete();
+          });
     }
   }
 }

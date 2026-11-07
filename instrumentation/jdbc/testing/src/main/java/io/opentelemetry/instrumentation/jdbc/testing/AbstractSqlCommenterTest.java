@@ -42,11 +42,10 @@ public abstract class AbstractSqlCommenterTest {
     testing().runWithSpan("parent", () -> statement.execute(query));
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasNoParent(),
-                    span -> span.hasName("SELECT").hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("SELECT").hasParent(trace.getSpan(0))));
 
     assertThat(executedSql).hasSize(1);
     assertThat(executedSql.get(0)).contains(query).contains("traceparent");
@@ -74,11 +73,10 @@ public abstract class AbstractSqlCommenterTest {
             });
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasNoParent(),
-                    span -> span.hasName("INSERT test").hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("INSERT test").hasParent(trace.getSpan(0))));
 
     assertThat(executedSql).hasSize(1);
     assertThat(executedSql.get(0)).contains(query).contains("traceparent");
@@ -107,11 +105,10 @@ public abstract class AbstractSqlCommenterTest {
             });
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasNoParent(),
-                    span -> span.hasName("BATCH INSERT test").hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("BATCH INSERT test").hasParent(trace.getSpan(0))));
 
     assertThat(executedSql).hasSize(2);
     assertThat(executedSql.get(0)).contains("INSERT INTO test VALUES(1)").contains("traceparent");
@@ -136,11 +133,10 @@ public abstract class AbstractSqlCommenterTest {
             });
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasNoParent(),
-                    span -> span.hasName("SELECT").hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("SELECT").hasParent(trace.getSpan(0))));
 
     assertThat(executedSql).hasSize(1);
     assertThat(executedSql.get(0)).contains(query).contains("traceparent");
@@ -169,11 +165,10 @@ public abstract class AbstractSqlCommenterTest {
             });
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasNoParent(),
-                    span -> span.hasName("INSERT test").hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("INSERT test").hasParent(trace.getSpan(0))));
 
     assertThat(executedSql).hasSize(1);
     assertThat(executedSql.get(0)).contains(query).contains("traceparent");

@@ -39,16 +39,12 @@ class MongoClientTest extends AbstractMongo31ClientTest {
   void emitsInstrumentationScope() {
     createCollection("test_db", createCollectionName());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.satisfies(
-                        spanData -> {
-                          assertThat(spanData.getInstrumentationScopeInfo().getName())
-                              .isEqualTo("io.opentelemetry.mongo-3.1");
-                          assertThat(spanData.getInstrumentationScopeInfo().getVersion())
-                              .isNotEmpty();
-                        })));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.satisfies(spanData -> {
+              assertThat(spanData.getInstrumentationScopeInfo().getName())
+                  .isEqualTo("io.opentelemetry.mongo-3.1");
+              assertThat(spanData.getInstrumentationScopeInfo().getVersion()).isNotEmpty();
+            })));
   }
 }

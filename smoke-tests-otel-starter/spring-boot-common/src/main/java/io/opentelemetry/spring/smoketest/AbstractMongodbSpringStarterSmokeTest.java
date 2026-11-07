@@ -20,23 +20,21 @@ abstract class AbstractMongodbSpringStarterSmokeTest extends AbstractSpringStart
 
   @Test
   void mongodb() {
-    runMongoClientTest(
-        () -> {
-          testing.runWithSpan(
-              "server",
-              () -> {
-                mongoClient.listDatabaseNames().into(new ArrayList<>());
-              });
+    runMongoClientTest(() -> {
+      testing.runWithSpan(
+          "server",
+          () -> {
+            mongoClient.listDatabaseNames().into(new ArrayList<>());
+          });
 
-          testing.waitAndAssertTraces(
-              trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span -> span.hasName("server"),
-                      span ->
-                          span.hasKind(SpanKind.CLIENT)
-                              .hasName("listDatabases admin")
-                              .hasAttribute(DB_SYSTEM_NAME, MONGODB)));
-        });
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("server"),
+              span ->
+                  span.hasKind(SpanKind.CLIENT)
+                      .hasName("listDatabases admin")
+                      .hasAttribute(DB_SYSTEM_NAME, MONGODB)));
+    });
   }
 
   protected void runMongoClientTest(Runnable runnable) {

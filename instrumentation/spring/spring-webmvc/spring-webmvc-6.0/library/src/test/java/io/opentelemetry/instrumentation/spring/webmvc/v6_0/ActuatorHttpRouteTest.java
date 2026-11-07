@@ -40,13 +40,11 @@ class ActuatorHttpRouteTest {
         WebClient.of("http://localhost:" + port).get("/actuator/health").aggregate().join();
     assertThat(response.status().code()).isEqualTo(200);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET /actuator/health")
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttribute(equalTo(HTTP_ROUTE, "/actuator/health"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("GET /actuator/health")
+                .hasKind(SpanKind.SERVER)
+                .hasAttribute(equalTo(HTTP_ROUTE, "/actuator/health"))));
   }
 
   // Avoid @SpringBootApplication so TestWebSpringBootApp's component scan doesn't pick up
