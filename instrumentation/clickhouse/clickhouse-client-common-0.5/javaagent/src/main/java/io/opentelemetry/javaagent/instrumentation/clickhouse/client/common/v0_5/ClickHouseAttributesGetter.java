@@ -61,6 +61,13 @@ class ClickHouseAttributesGetter implements SqlClientAttributesGetter<ClickHouse
 
   @Nullable
   @Override
+  public String getDbResponseStatusCode(
+      ClickHouseDbRequest request, @Nullable Void response, @Nullable Throwable error) {
+    return errorCodeExtractor.apply(error);
+  }
+
+  @Nullable
+  @Override
   public String getServerAddress(ClickHouseDbRequest request) {
     DbServerTarget serverTarget = request.getServerTarget();
     return serverTarget == null ? null : serverTarget.getAddress();

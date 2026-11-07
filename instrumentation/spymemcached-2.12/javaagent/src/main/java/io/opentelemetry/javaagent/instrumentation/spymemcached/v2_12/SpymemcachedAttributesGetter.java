@@ -9,8 +9,9 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
+import java.util.concurrent.Future;
 import javax.annotation.Nullable;
-import net.spy.memcached.internal.OperationFuture;
+import net.spy.memcached.ops.OperationException;
 import net.spy.memcached.ops.OperationStatus;
 import net.spy.memcached.ops.StatusCode;
 
@@ -40,21 +41,14 @@ class SpymemcachedAttributesGetter
 
   @Override
   @Nullable
-  public String getErrorType(
+  public String getDbResponseStatusCode(
       SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
-    if (error != null || !(response instanceof OperationFuture)) {
-      return null;
-    }
-    OperationFuture<?> future = (OperationFuture<?>) response;
-    if (future.isCancelled()) {
-      return null;
-    }
-    OperationStatus status = future.getStatus();
-    if (status == null || status.isSuccess()) {
+    OperationStatus status = SpymemcachedSingletons.getResponseStatus(response);
+    if (status == null) {
       return null;
     }
     StatusCode code = status.getStatusCode();
-    if (code == null) {
+    if (code == null || status.isSuccess()) {
       return null;
     }
     switch (code) {
@@ -65,8 +59,22 @@ class SpymemcachedAttributesGetter
       case CANCELLED:
         return null;
       default:
-        return code.name();
+        break;
     }
+    return code.name();
+  }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
+    if (error != null && !(error instanceof OperationException)) {
+      return null;
+    }
+    if (response instanceof Future && ((Future<?>) response).isCancelled()) {
+      return null;
+    }
+    return getDbResponseStatusCode(request, response, error);
   }
 
   @Override

@@ -18,6 +18,9 @@ import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.proxy.test.MockConnectionInfo;
 import io.r2dbc.proxy.test.MockQueryExecutionInfo;
 import io.r2dbc.spi.ConnectionFactoryOptions;
+import io.r2dbc.spi.R2dbcBadGrammarException;
+import io.r2dbc.spi.R2dbcException;
+import io.r2dbc.spi.R2dbcTimeoutException;
 import java.util.Collection;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -29,6 +32,57 @@ import org.junit.jupiter.params.provider.ValueSource;
 class R2dbcSqlAttributesGetterTest {
 
   private final R2dbcSqlAttributesGetter getter = new R2dbcSqlAttributesGetter();
+
+  @ParameterizedTest
+  @MethodSource("responseStatuses")
+  void responseStatus(
+      String dbSystemName, Throwable error, String expectedErrorType, String expectedStatus) {
+    DbExecution request = request(dbSystemName);
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo(expectedStatus);
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo(expectedErrorType);
+  }
+
+  private static Stream<Arguments> responseStatuses() {
+    return Stream.of(
+        argumentSet(
+            "SQLSTATE takes precedence for PostgreSQL",
+            "postgresql",
+            new R2dbcBadGrammarException("test", "42601", 42),
+            "42601",
+            "42601"),
+        argumentSet(
+            "vendor code takes precedence for MySQL",
+            "mysql",
+            new R2dbcBadGrammarException("test", "42000", 1064),
+            "1064",
+            "1064"),
+        argumentSet(
+            "ordinary SPI exception exposes SQLSTATE",
+            "postgresql",
+            new R2dbcException("test", "08006", 0) {},
+            "08006",
+            "08006"),
+        argumentSet("no SQLSTATE", "postgresql", new R2dbcBadGrammarException("test"), null, null),
+        argumentSet(
+            "non-database failure", "postgresql", new IllegalStateException("test"), null, null),
+        argumentSet(
+            "success SQLSTATE",
+            "postgresql",
+            new R2dbcBadGrammarException("test", "00000", 42),
+            null,
+            "00000"));
+  }
+
+  @Test
+  void prefersR2dbcTimeoutExceptionOverDatabaseCodes() {
+    DbExecution request = request("mysql");
+    R2dbcTimeoutException error = new TestR2dbcTimeoutException();
+
+    assertThat(getter.getErrorType(request, null, error))
+        .isEqualTo(TestR2dbcTimeoutException.class.getName());
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
+  }
 
   @Test
   void rawQueryTextsForSingleQuery() {
@@ -236,5 +290,20 @@ class R2dbcSqlAttributesGetterTest {
         .queryInfo(new QueryInfo("SELECT 1"))
         .connectionInfo(MockConnectionInfo.builder().build())
         .build();
+  }
+
+  private static DbExecution request(String dbSystemName) {
+    return new DbExecution(
+        queryExecutionInfo(),
+        ConnectionFactoryOptions.parse("r2dbc:" + dbSystemName + "://localhost/db"));
+  }
+
+  private static final class TestR2dbcTimeoutException extends R2dbcTimeoutException {
+
+    private static final long serialVersionUID = 1L;
+
+    TestR2dbcTimeoutException() {
+      super("test", "SELECT 1", 1064, "HYT00");
+    }
   }
 }

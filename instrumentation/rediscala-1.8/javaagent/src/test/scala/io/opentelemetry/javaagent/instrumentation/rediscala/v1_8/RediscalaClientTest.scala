@@ -23,6 +23,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIn
 import io.opentelemetry.semconv.DbAttributes.{
   DB_NAMESPACE,
   DB_OPERATION_NAME,
+  DB_RESPONSE_STATUS_CODE,
   DB_SYSTEM_NAME
 }
 import io.opentelemetry.semconv.NetworkAttributes.{
@@ -203,7 +204,7 @@ class RediscalaClientTest {
       }
     }).isInstanceOf(classOf[ReplyErrorException])
 
-    assertErrorType("LPUSH", "WRONGTYPE")
+    assertErrorType("LPUSH", "WRONGTYPE", responseStatusCode = "WRONGTYPE")
   }
 
   @Test def testCustomServerErrorPrefixSetsErrorType(): Unit = {
@@ -223,7 +224,11 @@ class RediscalaClientTest {
       }
     }).isInstanceOf(classOf[ReplyErrorException])
 
-    assertErrorType("EVAL", "Custom.Code!É")
+    assertErrorType(
+      "EVAL",
+      "Custom.Code!É",
+      responseStatusCode = "Custom.Code!É"
+    )
   }
 
   @Test def testClientFailureUsesExceptionClassAsErrorType(): Unit = {
@@ -472,7 +477,8 @@ class RediscalaClientTest {
   private def assertErrorType(
       operationName: String,
       errorType: String,
-      serverPort: JLong = port
+      serverPort: JLong = port,
+      responseStatusCode: String = null
   ): Unit = {
     testing.waitAndAssertTraces(new Consumer[TraceAssert] {
       override def accept(trace: TraceAssert): Unit =
@@ -495,6 +501,10 @@ class RediscalaClientTest {
                   equalTo(DB_NAMESPACE, defaultDbIndex.toString),
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, serverPort),
+                  equalTo(
+                    DB_RESPONSE_STATUS_CODE,
+                    responseStatusCode
+                  ),
                   equalTo(ERROR_TYPE, errorType)
                 )
             }
