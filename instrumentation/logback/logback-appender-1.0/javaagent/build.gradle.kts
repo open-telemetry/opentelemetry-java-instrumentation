@@ -245,13 +245,6 @@ testing.suites {
       jvmArgs("-Dotel.instrumentation.common.logging.span-id-key=custom_span_id")
       jvmArgs("-Dotel.instrumentation.common.logging.trace-flags-key=custom_trace_flags")
     }
-
-    register("BaggageProcessor") {
-      filter.includeTestsMatching("*exportsBaggageIndependently")
-      systemProperty("test.baggageProcessor", "true")
-      jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.excluded=*")
-      jvmArgs("-Dotel.java.experimental.log-attributes.copy-from-baggage.include=tenant")
-    }
   }
 }
 

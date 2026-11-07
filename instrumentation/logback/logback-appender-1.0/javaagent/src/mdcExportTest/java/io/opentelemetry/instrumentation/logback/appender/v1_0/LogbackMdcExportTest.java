@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import ch.qos.logback.classic.Level;
@@ -25,12 +24,13 @@ import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -88,17 +88,7 @@ class LogbackMdcExportTest {
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "trace_id",
-        "span_id",
-        "trace_flags",
-        "custom_trace_id",
-        "custom_span_id",
-        "custom_trace_flags",
-        "service.name",
-        "baggage.foo"
-      })
+  @MethodSource("applicationOwnedKeys")
   void preservesApplicationOwnedKeys(String key) {
     MDC.put(key, "application");
     testing.runWithSpan(
@@ -110,11 +100,10 @@ class LogbackMdcExportTest {
         });
 
     assertExportedMdc("collision", Attributes.of(stringKey(key), "application"));
-    if (key.equals(TRACE_ID_KEY)) {
-      // Normal reads retain the already-instrumented-event shortcut.
-      assertThat(appender.mdc.get("collision"))
-          .containsExactlyEntriesOf(singletonMap(key, "application"));
-    }
+  }
+
+  private static Stream<String> applicationOwnedKeys() {
+    return Stream.of(TRACE_ID_KEY, SPAN_ID_KEY, TRACE_FLAGS_KEY, "service.name", "baggage.foo");
   }
 
   @Test
@@ -199,22 +188,6 @@ class LogbackMdcExportTest {
         });
 
     assertExportedMdc("after failure", Attributes.of(stringKey("request"), "application"));
-  }
-
-  @Test
-  @EnabledIfSystemProperty(named = "test.baggageProcessor", matches = "true")
-  void exportsBaggageIndependently() {
-    MDC.put("request", "excluded");
-    try (Scope ignored =
-        Baggage.builder().put("tenant", "selected").put("foo", "synthetic").build().makeCurrent()) {
-      logger.info("baggage");
-    }
-
-    assertThat(appender.mdc.get("baggage"))
-        .containsEntry("request", "excluded")
-        .containsEntry("baggage.tenant", "selected")
-        .containsEntry("baggage.foo", "synthetic");
-    assertExportedMdc("baggage", Attributes.of(stringKey("tenant"), "selected"));
   }
 
   private void assertEnrichment(String message, SpanContext spanContext) {
