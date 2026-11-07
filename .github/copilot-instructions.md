@@ -4,6 +4,13 @@ These rules and the applicable `.github/instructions/*.instructions.md` files gu
 implementation and code review. Apply a rule only when its stated conditions hold. Keep its
 exceptions, rationale, and useful examples in the same topic file, not in a second guidance catalog.
 
+## Release-note fragments
+
+For user-visible changes, check that release-note fragments follow
+[CONTRIBUTING.md](../CONTRIBUTING.md#changelog) and accurately describe the changed behavior.
+Report missing fragments with `[General]` on a changed line responsible for that behavior.
+Changes with no user-visible effect need no fragment.
+
 ## Correctness and compatibility
 
 - Preserve lifecycle ownership, reentrancy, concurrency, error handling, and telemetry under
@@ -25,7 +32,9 @@ exceptions, rationale, and useful examples in the same topic file, not in a seco
   behavior migration for an alpha API that should be removed immediately. A replacement must be
   at least as stable as the old API; deprecated methods delegate to their replacements, not vice
   versa. Include the replacement and removal timing in `@deprecated` Javadoc. Use plain
-  `@Deprecated` for Java-8-compatible APIs, without `since` or `forRemoval`.
+  `@Deprecated` for Java-8-compatible APIs, without `since` or `forRemoval`. Add a `deprecation`
+  fragment for deprecations and an `alpha-breaking` fragment for breaking changes to published
+  alpha APIs.
 - A deprecation scheduled for a major-version behavior change keeps that timing even in an alpha
   artifact. Examples include semconv migrations, interface overrides following an upstream removal,
   and the flat `ConfigProperties` bridge.
@@ -53,16 +62,47 @@ public ReturnType oldMethod() {
 
 For a stable API, the Javadoc states removal in the next major version instead.
 
+- When adding or changing an `otel.instrumentation.*` setting, check both its flat property
+  and declarative YAML name. New flat-property segments use kebab-case; new declarative YAML
+  keys use snake_case. For a new feature, check intended config stability on both forms:
+  experimental flat names need an `experimental` marker and the corresponding `/development`
+  YAML form; preview flat names need a `preview` marker and an unstable YAML form
+  (`/development` or `preview` in the YAML key). Stable feature names need neither marker.
+  An alpha implementation artifact does not make its user-facing settings experimental. Do
+  not rename an already-published declarative name merely to match these naming rules or
+  mechanical conversion; determine whether the bridge needs a `SPECIAL_MAPPINGS` entry instead.
+- Stable flat property names remain stable even when read by alpha implementation code.
+  On rename, retain the old name until the next major version: read the replacement first,
+  fall back to the old name, and log a `WARN` once at startup *when
+  the old value is applied*, naming the old and replacement flat properties (or declarative
+  paths if there is no flat form). Add a `deprecation` fragment in `changelog.d`. Experimental/preview
+  names may be removed after a subsequent minor release.
+  Instrumentation enablement aliases have distinct warning semantics; do not apply ordinary
+  replacement-first warning logic to them.
+- Read module settings from `java.<module>` and general settings from `general`; HTTP
+  header capture is general configuration. For a declarative `ComponentProvider`, its
+  `getName()` must match the YAML node. If the replacement config value already determines
+  an ordinary property's result, merely carrying the deprecated name must not cause a
+  warning; deduplicate warnings when reads may repeat.
+- In javaagent instrumentation, ordinary instrumentation settings are read through
+  `DeclarativeConfigUtil`, with a default for unavailable YAML. A nullable read is intentional
+  when probing for a replacement or deprecated name before choosing a default. Flat
+  `ConfigProperties` reads are reserved for enablement bootstrapping in
+  `AgentDistributionConfig`. Outside javaagent instrumentation, direct reads remain valid when
+  required by an SDK SPI or bridge contract. Structured YAML-only settings need declarative-mode
+  coverage.
+
 ## Documentation
 
 - Document flat properties without repeating equivalent declarative configuration.
   Include declarative configuration only when it has different behavior, requires a distinct
   migration, or supports configuration unavailable through flat properties.
-- Add hand-written changelog entries only for deprecations or breaking changes, as specified in
-  CONTRIBUTING.md; normal changes rely on the generated changelog. Use the appropriate stable or
-  non-stable breaking-change heading and the corresponding PR label. Keep entries short, naming a
-  deprecated interface and its replacement without repeating removal timing or obvious migration
-  steps. Describe the released behavior directly, without
+- Add release-note fragments for user-visible changes, as specified in CONTRIBUTING.md.
+  Normal changes are generated from these fragments; do not edit `CHANGELOG.md` directly.
+  Review fragments for unnecessary verbosity. Redundant explanations and obvious migration
+  instructions violate the changelog guidance, even when technically correct. Flag concrete
+  redundancy, not personal wording preferences.
+  Describe the released behavior directly, without
   referring to preview flags used to stage the change. Omit statements about behavior that is
   unchanged unless they are necessary to clarify the change's scope.
 - Add README and usage documentation for a concrete reader need: setup,
@@ -77,7 +117,7 @@ For a stable API, the Javadoc states removal in the next major version instead.
   metadata and generated catalogs for telemetry inventories when they already cover the detail.
   Targeted source comments and contributor documentation remain appropriate for non-obvious
   implementation rationale or development workflows.
-- Keep migration notes in CHANGELOG.md, not READMEs or other documentation.
+- Keep migration notes in `changelog.d` fragments, not READMEs or other documentation.
   READMEs and usage documentation should describe current supported behavior without migration
   sections or historical comparisons. PR descriptions may include migration guidance, old/new
   examples, and removed properties or APIs.
