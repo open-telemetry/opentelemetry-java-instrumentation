@@ -16,7 +16,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
-import io.opentelemetry.instrumentation.api.incubator.log.internal.MdcContext;
+import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.MdcContext;
 import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.Map;
