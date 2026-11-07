@@ -25,6 +25,11 @@
     <servlet-name>Jsp</servlet-name>
     <servlet-class>io.opentelemetry.smoketest.matrix.JspServlet</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>AsyncStreamSnippet</servlet-name>
+    <servlet-class>io.opentelemetry.smoketest.matrix.AsyncStreamSnippetServlet</servlet-class>
+    <async-supported>true</async-supported>
+  </servlet>
   <servlet-mapping>
     <servlet-name>Headers</servlet-name>
     <url-pattern>/headers</url-pattern>
@@ -44,5 +49,9 @@
   <servlet-mapping>
     <servlet-name>Jsp</servlet-name>
     <url-pattern>/jsp</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>AsyncStreamSnippet</servlet-name>
+    <url-pattern>/async-stream-snippet/*</url-pattern>
   </servlet-mapping>
 </web-app>
