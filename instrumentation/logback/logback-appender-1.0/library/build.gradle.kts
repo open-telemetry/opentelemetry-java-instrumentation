@@ -58,6 +58,7 @@ dependencies {
   }
 
   testImplementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
+  testImplementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 }
 

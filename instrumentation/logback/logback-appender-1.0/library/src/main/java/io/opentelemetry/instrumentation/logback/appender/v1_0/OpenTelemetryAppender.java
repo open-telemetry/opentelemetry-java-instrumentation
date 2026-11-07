@@ -15,6 +15,7 @@ import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.incubator.log.internal.MdcContext;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.AttributeSelectors;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import java.util.ArrayList;
@@ -109,6 +110,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   public void start() {
     mapper =
         LoggingEventMapper.builder()
+            .setMdcReader(event -> MdcContext.getApplicationMdc(event.getMDCPropertyMap()))
             .setCaptureExperimentalAttributes(captureExperimentalAttributes)
             .setMdcAttributes(resolveMdcAttributes())
             .setCaptureCodeAttributes(captureCodeAttributes)
