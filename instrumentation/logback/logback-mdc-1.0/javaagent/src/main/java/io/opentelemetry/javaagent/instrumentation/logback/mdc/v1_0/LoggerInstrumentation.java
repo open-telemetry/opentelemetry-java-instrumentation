@@ -15,6 +15,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -37,9 +39,11 @@ class LoggerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CallAppendersAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter(@Advice.Argument(0) ILoggingEvent event) {
+    public static ILoggingEvent onEnter(@Advice.Argument(0) ILoggingEvent event) {
       CONTEXT.set(event, Context.current());
+      return event;
     }
   }
 }
