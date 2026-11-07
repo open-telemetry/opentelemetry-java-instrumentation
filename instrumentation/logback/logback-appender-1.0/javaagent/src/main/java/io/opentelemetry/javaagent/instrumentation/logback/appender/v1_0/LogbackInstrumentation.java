@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0;
 
-import static io.opentelemetry.javaagent.bootstrap.internal.LogbackMdcState.currentExportRead;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0.LogbackSingletons.mapper;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -50,14 +49,8 @@ class LogbackInstrumentation implements TypeInstrumentation {
         return callDepth;
       }
       try {
-        Boolean previous = currentExportRead().set(true);
-        try {
-          mapper()
-              .emit(
-                  GlobalOpenTelemetry.get().getLogsBridge(), event, Thread.currentThread().getId());
-        } finally {
-          currentExportRead().restore(previous);
-        }
+        mapper()
+            .emit(GlobalOpenTelemetry.get().getLogsBridge(), event, Thread.currentThread().getId());
       } catch (Throwable t) {
         callDepth.decrementAndGet();
         throw t;

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0;
 
-import static io.opentelemetry.javaagent.bootstrap.internal.LogbackMdcState.currentExportRead;
+import static io.opentelemetry.javaagent.bootstrap.internal.LogbackMdcState.suppressMdcEnrichment;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.ADD_BAGGAGE;
@@ -63,7 +63,7 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
         @Advice.This ILoggingEvent event,
         @Advice.Return(typing = Typing.DYNAMIC) Map<String, String> contextData) {
 
-      if (Boolean.TRUE.equals(currentExportRead().get())) {
+      if (suppressMdcEnrichment().get() == event) {
         return contextData == null ? emptyMap() : contextData;
       }
 

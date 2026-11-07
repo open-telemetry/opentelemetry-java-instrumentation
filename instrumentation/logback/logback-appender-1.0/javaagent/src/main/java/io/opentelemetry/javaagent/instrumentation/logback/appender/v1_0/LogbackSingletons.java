@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.javaagent.bootstrap.internal.LogbackMdcState.suppressMdcEnrichment;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
@@ -41,6 +43,15 @@ public class LogbackSingletons {
         LoggingEventMapper.builder()
             .setCaptureExperimentalAttributes(captureExperimentalAttributes)
             .setMdcAttributes(mdcAttributes)
+            .setMdcReader(
+                event -> {
+                  Object previous = suppressMdcEnrichment().set(event);
+                  try {
+                    return event.getMDCPropertyMap();
+                  } finally {
+                    suppressMdcEnrichment().restore(previous);
+                  }
+                })
             .setCaptureCodeAttributes(captureCodeAttributes)
             .setCaptureMarkerAttribute(captureMarkerAttribute)
             .setStructuredAttributes(structuredAttributes)
