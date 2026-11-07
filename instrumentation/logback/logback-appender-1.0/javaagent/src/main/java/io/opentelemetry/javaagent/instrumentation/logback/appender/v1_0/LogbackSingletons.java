@@ -45,6 +45,8 @@ public class LogbackSingletons {
             .setMdcAttributes(mdcAttributes)
             .setMdcReader(
                 event -> {
+                  // Suppress enrichment only for this event, so nested logs from a custom MDC
+                  // getter still receive enrichment.
                   Object previous = suppressMdcEnrichment().set(event);
                   try {
                     return event.getMDCPropertyMap();
