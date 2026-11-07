@@ -407,6 +407,9 @@ fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean): S
 
       for (version in entry.version) {
         val downloadTask = if (server == "tomcat") {
+          // Apache archive connections intermittently time out in CI, and Docker's remote ADD
+          // offers no configurable retries. Use curl's bounded retries and share each download
+          // across JDK/VM image variants to reduce requests to the archive.
           val platformSuffix = if (isWindows) "-windows" else ""
           val archiveSuffix = if (isWindows) "-windows-x64.zip" else ".tar.gz"
           val archiveName = if (isWindows) "server.zip" else "server.tgz"
