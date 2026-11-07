@@ -45,6 +45,7 @@ public class LogbackSingletons {
             .setMdcAttributes(mdcAttributes)
             .setMdcReader(
                 event -> {
+                  // Read application-owned MDC without exporting agent-added values.
                   // Suppress enrichment only for this event, so nested logs from a custom MDC
                   // getter still receive enrichment.
                   Object previous = suppressMdcEnrichment().set(event);
