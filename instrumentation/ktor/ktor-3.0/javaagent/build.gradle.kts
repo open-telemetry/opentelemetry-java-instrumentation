@@ -55,9 +55,32 @@ kotlin {
 }
 
 testing.suites {
+  register<JvmTestSuite>("externalJobTest") {
+    dependencies {
+      implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+      implementation("io.ktor:ktor-server-cio:${baseVersion(ktorVersion).orLatest("+")}")
+    }
+  }
+
+  register<JvmTestSuite>("version343Test") {
+    dependencies {
+      implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+      implementation("io.ktor:ktor-server-cio:${baseVersion("3.4.3").orLatest("+")}")
+    }
+    sources {
+      kotlin {
+        setSrcDirs(listOf("src/externalJobTest/kotlin"))
+      }
+    }
+  }
+
   executions("test") {
     register("Experimental") {
       jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
     }
   }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }
