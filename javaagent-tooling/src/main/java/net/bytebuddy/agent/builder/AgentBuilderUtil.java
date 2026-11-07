@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.tooling.DefineClassHandler;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
+import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -23,6 +24,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder.Default.Transformation;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.BooleanMatcher;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ErasureMatcher;
@@ -58,11 +60,29 @@ public class AgentBuilderUtil {
   private static final Field stringSetMatcherValuesField =
       getField(StringSetMatcher.class, "values");
 
+  private static final ClassValue<Set<String>> loadedTypeNames =
+      new ClassValue<Set<String>>() {
+        @Override
+        protected Set<String> computeValue(Class<?> type) {
+          Set<String> names = new HashSet<>();
+          names.add(type.getName());
+          Class<?> superClass = type.getSuperclass();
+          if (superClass != null) {
+            names.addAll(loadedTypeNames.get(superClass));
+          }
+          for (Class<?> interfaceType : type.getInterfaces()) {
+            names.addAll(loadedTypeNames.get(interfaceType));
+          }
+          return names;
+        }
+      };
+
   private AgentBuilderUtil() {}
 
   /**
    * Replaces byte buddy transformer list with a proxy that does not return the transformers that we
-   * know are not going to match for currently transformed class.
+   * know are not going to match for currently transformed class. Also prefilters matchers for
+   * loaded classes using their names and hierarchies.
    */
   public static AgentBuilder optimize(AgentBuilder agentBuilder) {
     try {
@@ -81,8 +101,8 @@ public class AgentBuilderUtil {
     // class names that have a matcher that matches subtypes
     Set<String> superTypeNames = new HashSet<>();
     List<Transformation> unoptimizedTransformations = new ArrayList<>();
-    List<Transformation> transformations = agentBuilder.transformations;
-    for (Transformation transformation : transformations) {
+    List<Transformation> transformations = new ArrayList<>();
+    for (Transformation transformation : agentBuilder.transformations) {
       AgentBuilder.RawMatcher matcher = transformation.getMatcher();
       // attempt to decompose the matcher and find if it applies to a named class or a subclass
       Result result = inspect(matcher);
@@ -94,6 +114,14 @@ public class AgentBuilderUtil {
       } else {
         classNames.addAll(result.names);
       }
+      if (result != null) {
+        transformation =
+            new Transformation(
+                new LoadedTypeMatcher(matcher, result),
+                transformation.getTransformers(),
+                transformation.isTerminal());
+      }
+      transformations.add(transformation);
     }
 
     List<?> list =
@@ -120,9 +148,11 @@ public class AgentBuilderUtil {
                     if (loadingSuperTypes.isEmpty()) {
                       return transformations.iterator();
                     }
+                    // A class usually has fewer supertypes than the combined targets of all
+                    // matchers, so iterate the class's supertypes and search the matcher targets.
                     for (String className : loadingSuperTypes) {
-                      // we know that this class is going to be transformed
                       if (superTypeNames.contains(className)) {
+                        // we know that this class is going to be transformed
                         return transformations.iterator();
                       }
                     }
@@ -361,6 +391,54 @@ public class AgentBuilderUtil {
 
   private static boolean shouldLog(ElementMatcher<?> elementMatcher) {
     return !(elementMatcher instanceof BooleanMatcher);
+  }
+
+  // During agent installation, Byte Buddy checks already-loaded classes before
+  // onDiscovery() records their names for the transformation-list proxy.
+  // This matcher can reject those classes directly using their loaded hierarchy.
+  private static class LoadedTypeMatcher implements AgentBuilder.RawMatcher {
+    private final AgentBuilder.RawMatcher delegate;
+    private final Result result;
+
+    LoadedTypeMatcher(AgentBuilder.RawMatcher delegate, Result result) {
+      this.delegate = delegate;
+      this.result = result;
+    }
+
+    @Override
+    public boolean matches(
+        TypeDescription typeDescription,
+        @Nullable ClassLoader classLoader,
+        @Nullable JavaModule module,
+        @Nullable Class<?> classBeingRedefined,
+        @Nullable ProtectionDomain protectionDomain) {
+
+      if (classBeingRedefined != null
+          && cannotMatchLoadedType(result, typeDescription, classBeingRedefined)) {
+        return false;
+      }
+      return delegate.matches(
+          typeDescription, classLoader, module, classBeingRedefined, protectionDomain);
+    }
+
+    private static boolean cannotMatchLoadedType(
+        Result result, TypeDescription typeDescription, Class<?> loadedClass) {
+      if (result.names.contains(typeDescription.getName())) {
+        return false;
+      }
+      if (!result.subtype) {
+        return true;
+      }
+      Set<String> hierarchy = loadedTypeNames.get(loadedClass);
+      // One matcher usually targets fewer names than a class hierarchy contains,
+      // so iterate the matcher targets and search the class hierarchy.
+      for (String name : result.names) {
+        if (hierarchy.contains(name)) {
+          return false;
+        }
+      }
+      return true;
+    }
   }
 
   private static class TransformContext extends AgentBuilder.Listener.Adapter {
