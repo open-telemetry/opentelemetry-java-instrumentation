@@ -14,9 +14,6 @@ Baggage entries are exposed with a `baggage.` prefix, to avoid clashes with exis
 baggage entry named `clientId` is therefore available as `baggage.clientId`, for example
 `%mdc{baggage.clientId}` in a Logback pattern.
 
-This setting does not enable baggage export as OTLP log attributes. See the
-[Logback appender settings](../../logback-appender-1.0/javaagent/README.md) for independent baggage export.
-
 ## How these values are exposed
 
 The values above are added to the MDC property map that Logback passes to appenders and encoders.
