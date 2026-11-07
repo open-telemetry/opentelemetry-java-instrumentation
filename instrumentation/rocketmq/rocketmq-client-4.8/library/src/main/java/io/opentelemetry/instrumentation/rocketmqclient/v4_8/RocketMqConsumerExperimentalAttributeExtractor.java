@@ -9,7 +9,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import java.net.SocketAddress;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
 import org.apache.rocketmq.common.message.MessageExt;
@@ -25,8 +24,6 @@ final class RocketMqConsumerExperimentalAttributeExtractor
       AttributeKey.longKey("rocketmq.queue_id");
   private static final AttributeKey<Long> ROCKETMQ_QUEUE_OFFSET =
       AttributeKey.longKey("rocketmq.queue_offset");
-  private static final AttributeKey<String> ROCKETMQ_BROKER_ADDRESS =
-      AttributeKey.stringKey("rocketmq.broker_address");
 
   @Override
   public void onStart(
@@ -35,14 +32,6 @@ final class RocketMqConsumerExperimentalAttributeExtractor
     attributes.put(ROCKETMQ_MESSAGE_TAG, msg.getTags());
     attributes.put(ROCKETMQ_QUEUE_ID, msg.getQueueId());
     attributes.put(ROCKETMQ_QUEUE_OFFSET, msg.getQueueOffset());
-    SocketAddress storeHost = msg.getStoreHost();
-    if (storeHost != null) {
-      attributes.put(ROCKETMQ_BROKER_ADDRESS, getBrokerHost(storeHost));
-    }
-  }
-
-  private static String getBrokerHost(SocketAddress storeHost) {
-    return storeHost.toString().replace("/", "");
   }
 
   @Override

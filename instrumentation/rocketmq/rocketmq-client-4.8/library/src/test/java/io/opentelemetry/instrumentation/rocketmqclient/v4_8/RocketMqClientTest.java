@@ -32,7 +32,7 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
                 .setIncluded("Test-Message-*")
                 .setExcluded("*-Excluded-Header")
                 .build())
-        .setCaptureExperimentalSpanAttributes(true)
+        .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
         .build()
         .instrument(producer);
   }
@@ -48,7 +48,7 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
                         .setIncluded("Test-Message-*")
                         .setExcluded("*-Excluded-Header")
                         .build())
-                .setCaptureExperimentalSpanAttributes(true)
+                .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
                 .build()
                 .createConsumeMessageHook());
   }
