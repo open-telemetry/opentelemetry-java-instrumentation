@@ -149,9 +149,9 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Test release configuration and workflows
+      - name: Test automation configuration and workflows
         if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
-        run: python3 -m unittest discover -s .github/scripts -p test_release_config.py
+        run: python3 -m unittest discover -s .github/scripts -p 'test_*.py'
 
       - name: Test release notes
         if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
