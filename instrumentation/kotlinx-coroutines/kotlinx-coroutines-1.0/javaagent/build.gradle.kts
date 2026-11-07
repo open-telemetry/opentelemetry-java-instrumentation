@@ -83,8 +83,8 @@ dependencies {
   testImplementation(project(":instrumentation:reactor:reactor-3.1:library"))
   testImplementation(project(":instrumentation-annotations"))
 
-  testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
-  testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.4.3")
+  testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.0.0")
+  testLibrary("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.0.0")
   testLibrary("io.vertx:vertx-lang-kotlin-coroutines:3.6.0")
 }
 
@@ -107,22 +107,33 @@ testing.suites {
       implementation("io.opentelemetry:opentelemetry-extension-kotlin")
       implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
       implementation(
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core:${baseVersion("1.4.3").orLatest()}",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:${baseVersion("1.3.0").orLatest()}",
       )
       implementation(
-        "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:${baseVersion("1.4.3").orLatest()}",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-reactor:${baseVersion("1.3.0").orLatest()}",
       )
       implementation(project(":instrumentation:reactor:reactor-3.1:library"))
       implementation(project(":instrumentation-annotations"))
     }
   }
 
-  executions("test") {
-    configureDefault {
-      jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
+  // @WithSpan on suspend functions needs kotlinx-coroutines 1.4.3 or later
+  register<JvmTestSuite>("suspendWithSpanTest") {
+    executions {
+      configureDefault {
+        jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
+      }
+      register("Disabled") {
+        filter { includeTestsMatching("*DefaultEnablementTest") }
+      }
     }
-    register("Disabled") {
-      filter { includeTestsMatching("*DefaultEnablementTest") }
+    dependencies {
+      implementation("io.opentelemetry:opentelemetry-extension-kotlin")
+      implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+      implementation(
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:${baseVersion("1.4.3").orLatest()}",
+      )
+      implementation(project(":instrumentation-annotations"))
     }
   }
 }
