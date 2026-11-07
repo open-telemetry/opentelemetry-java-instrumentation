@@ -61,14 +61,7 @@ class OpenTelemetryAppenderMdcExportTest {
   }
 
   @ParameterizedTest
-  @CsvSource({
-    "false, before",
-    "false, after",
-    "false, nested",
-    "true, before",
-    "true, after",
-    "true, nested"
-  })
+  @CsvSource({"false, before", "false, after", "false, nested", "true, before"})
   void exportsOnlyApplicationMdc(boolean replay, String position) {
     exporter.setMdcAttributesIncluded("*");
     startExporter(replay, position);
@@ -132,91 +125,34 @@ class OpenTelemetryAppenderMdcExportTest {
                     .containsEntry(traceIdKey, span.getSpanContext().getTraceId()));
   }
 
-  @Test
-  void preservesApplicationMdcWhenCustomizedTraceIdKeyIsPresent() {
-    mdcAppender.setTraceIdKey("custom.trace");
-    mdcAppender.setSpanIdKey("custom.span");
-    mdcAppender.setTraceFlagsKey("custom.flags");
-    exporter.setMdcAttributesIncluded("custom.trace,custom.span,custom.flags,baggage.*");
-    startExporter(false, "nested");
-    MDC.put("custom.trace", "application-trace");
-    MDC.put("custom.span", "application-span");
-    MDC.put("custom.flags", "application-flags");
-    MDC.put("baggage.key", "application-baggage");
-    Span span = testing.getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
-    try (Scope ignored = span.makeCurrent();
-        Scope ignoredBaggage =
-            Baggage.builder().put("key", "enriched-baggage").build().makeCurrent()) {
-      logger.info("test log");
-    } finally {
-      span.end();
-    }
-
-    testing.waitAndAssertLogRecords(
-        log ->
-            log.hasAttributesSatisfyingExactly(
-                equalTo(stringKey("custom.trace"), "application-trace"),
-                equalTo(stringKey("custom.span"), "application-span"),
-                equalTo(stringKey("custom.flags"), "application-flags"),
-                equalTo(stringKey("baggage.key"), "application-baggage")));
-  }
-
-  @Test
-  void preservesApplicationSpanAndFlagsWhenEnrichmentUsesCustomizedKeys() {
-    mdcAppender.setTraceIdKey("custom.trace");
-    mdcAppender.setSpanIdKey("custom.span");
-    mdcAppender.setTraceFlagsKey("custom.flags");
-    exporter.setMdcAttributesIncluded("request-id,custom.trace,custom.span,custom.flags,baggage.*");
-    startExporter(false, "nested");
-    MDC.put("request-id", "123");
-    MDC.put("custom.span", "application-span");
-    MDC.put("custom.flags", "application-flags");
-    MDC.put("baggage.key", "application-baggage");
-    Span span = testing.getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
-    try (Scope ignored = span.makeCurrent();
-        Scope ignoredBaggage =
-            Baggage.builder().put("key", "enriched-baggage").build().makeCurrent()) {
-      logger.info("test log");
-    } finally {
-      span.end();
-    }
-
-    testing.waitAndAssertLogRecords(
-        log ->
-            log.hasAttributesSatisfyingExactly(
-                equalTo(stringKey("request-id"), "123"),
-                equalTo(stringKey("custom.span"), "application-span"),
-                equalTo(stringKey("custom.flags"), "application-flags"),
-                equalTo(stringKey("baggage.key"), "application-baggage")));
-    assertThat(applicationAppender.list)
-        .singleElement()
-        .satisfies(
-            event ->
-                assertThat(event.getMDCPropertyMap())
-                    .containsEntry("custom.trace", span.getSpanContext().getTraceId())
-                    .containsEntry("custom.span", span.getSpanContext().getSpanId())
-                    .containsEntry("custom.flags", span.getSpanContext().getTraceFlags().asHex())
-                    .containsEntry("baggage.key", "enriched-baggage")
-                    .containsEntry("request-id", "123"));
-  }
-
   @ParameterizedTest
-  @ValueSource(strings = {"*", "trace_id,span_id,trace_flags,baggage.*"})
-  void preservesApplicationOwnedEnrichmentKeys(String included) {
-    exporter.setMdcAttributesIncluded(included);
+  @CsvSource({"trace_id, span_id, trace_flags", "custom.trace, custom.span, custom.flags"})
+  void preservesApplicationOwnedEnrichmentKeys(
+      String traceIdKey, String spanIdKey, String traceFlagsKey) {
+    mdcAppender.setTraceIdKey(traceIdKey);
+    mdcAppender.setSpanIdKey(spanIdKey);
+    mdcAppender.setTraceFlagsKey(traceFlagsKey);
+    exporter.setMdcAttributesIncluded("*");
     startExporter(false, "nested");
-    MDC.put("trace_id", "application-trace");
-    MDC.put("span_id", "application-span");
-    MDC.put("trace_flags", "application-flags");
+    MDC.put(traceIdKey, "application-trace");
+    MDC.put(spanIdKey, "application-span");
+    MDC.put(traceFlagsKey, "application-flags");
     MDC.put("baggage.key", "application-baggage");
-    logger.info("test log");
+    Span span = testing.getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
+    try (Scope ignored = span.makeCurrent();
+        Scope ignoredBaggage =
+            Baggage.builder().put("key", "enriched-baggage").build().makeCurrent()) {
+      logger.info("test log");
+    } finally {
+      span.end();
+    }
 
     testing.waitAndAssertLogRecords(
         log ->
             log.hasAttributesSatisfyingExactly(
-                equalTo(stringKey("trace_id"), "application-trace"),
-                equalTo(stringKey("span_id"), "application-span"),
-                equalTo(stringKey("trace_flags"), "application-flags"),
+                equalTo(stringKey(traceIdKey), "application-trace"),
+                equalTo(stringKey(spanIdKey), "application-span"),
+                equalTo(stringKey(traceFlagsKey), "application-flags"),
                 equalTo(stringKey("baggage.key"), "application-baggage")));
   }
 

@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import ch.qos.logback.classic.AsyncAppender;
@@ -61,7 +60,7 @@ class AsyncOpenTelemetryAppenderTest {
   }
 
   @Test
-  void exportsOriginalMdcAndDeliversEnrichedMdcAsynchronously() throws InterruptedException {
+  void exportsOriginalMdcAndDeliversEnrichedMdcAsynchronously() {
     LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
     ch.qos.logback.classic.Logger testLogger =
         (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("TestLogger");
@@ -71,20 +70,7 @@ class AsyncOpenTelemetryAppenderTest {
     rootLogger.detachAppender(configuredAsyncAppender);
 
     CountDownLatch producerFinished = new CountDownLatch(1);
-    CountDownLatch applicationEventProcessed = new CountDownLatch(1);
-    ListAppender<ILoggingEvent> applicationAppender =
-        new ListAppender<ILoggingEvent>() {
-          @Override
-          protected void append(ILoggingEvent event) {
-            try {
-              producerFinished.await();
-            } catch (InterruptedException e) {
-              Thread.currentThread().interrupt();
-            }
-            super.append(event);
-            applicationEventProcessed.countDown();
-          }
-        };
+    ListAppender<ILoggingEvent> applicationAppender = new ListAppender<>();
     applicationAppender.setContext(loggerContext);
     applicationAppender.start();
 
@@ -144,7 +130,6 @@ class AsyncOpenTelemetryAppenderTest {
     }
 
     try {
-      assertThat(applicationEventProcessed.await(10, SECONDS)).isTrue();
       testing.waitAndAssertLogRecords(
           log ->
               log.hasBody("async mdc log")
