@@ -43,25 +43,7 @@ class SpymemcachedAttributesGetter
   @Nullable
   public String getDbResponseStatusCode(
       SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
-    OperationStatus status = SpymemcachedSingletons.getResponseStatus(response);
-    if (status == null) {
-      return null;
-    }
-    StatusCode code = status.getStatusCode();
-    if (code == null || status.isSuccess()) {
-      return null;
-    }
-    switch (code) {
-      case SUCCESS:
-      case ERR_NOT_FOUND:
-      case ERR_EXISTS:
-      case ERR_NOT_STORED:
-      case CANCELLED:
-        return null;
-      default:
-        break;
-    }
-    return code.name();
+    return getErrorStatusCode(response);
   }
 
   @Override
