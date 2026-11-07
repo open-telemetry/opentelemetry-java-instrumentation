@@ -17,7 +17,7 @@ jobs:
         target-branch:
           - main
           - maintenance/v2.x
-    uses: ./.github/workflows/reusable-update-otel-sdk.yml
+    uses: $/.github/workflows/reusable-update-otel-sdk.yml
     with:
       target-branch: ${{ matrix.target-branch }}
     secrets:
