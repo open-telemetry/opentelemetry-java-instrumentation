@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0;
 
-import static io.opentelemetry.javaagent.bootstrap.internal.LogbackMdcState.suppressMdcEnrichment;
+import static io.opentelemetry.javaagent.bootstrap.logback.LogbackMdcState.suppressMdcEnrichment;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.ADD_BAGGAGE;

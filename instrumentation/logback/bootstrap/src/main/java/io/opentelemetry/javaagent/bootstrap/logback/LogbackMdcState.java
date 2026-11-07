@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.bootstrap.internal;
+package io.opentelemetry.javaagent.bootstrap.logback;
 
 import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 

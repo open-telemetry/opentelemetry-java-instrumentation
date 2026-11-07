@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0;
 
-import static io.opentelemetry.javaagent.bootstrap.internal.LogbackMdcState.suppressMdcEnrichment;
+import static io.opentelemetry.javaagent.bootstrap.logback.LogbackMdcState.suppressMdcEnrichment;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
