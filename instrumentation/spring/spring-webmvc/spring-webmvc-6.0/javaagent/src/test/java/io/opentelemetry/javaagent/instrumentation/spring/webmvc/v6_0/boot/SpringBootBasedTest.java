@@ -46,6 +46,9 @@ import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 
 class SpringBootBasedTest extends AbstractSpringBootBasedTest {
 
+  private static final ServerEndpoint REJECTED_LOGIN =
+      new ServerEndpoint("REJECTED_LOGIN", "login", 403, "");
+
   @RegisterExtension
   private static final InstrumentationExtension testing =
       HttpServerInstrumentationExtension.forAgent();
@@ -111,6 +114,14 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
         .set("X-CSRF-TOKEN", csrfToken.group(1));
   }
 
+  @Override
+  public String expectedHttpRoute(ServerEndpoint endpoint, String method) {
+    if (endpoint == REJECTED_LOGIN) {
+      return getContextPath() + "/error";
+    }
+    return super.expectedHttpRoute(endpoint, method);
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {"", "invalid"})
   void loginWithMissingOrInvalidCsrfTokenIsForbidden(String csrfToken) {
@@ -131,7 +142,7 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> assertServerSpan(span, "POST", LOGIN, 403),
+                span -> assertServerSpan(span, "POST", REJECTED_LOGIN, 403),
                 span ->
                     span.satisfies(
                             spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
