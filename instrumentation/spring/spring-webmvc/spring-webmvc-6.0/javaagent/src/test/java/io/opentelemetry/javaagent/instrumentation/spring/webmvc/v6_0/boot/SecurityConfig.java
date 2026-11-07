@@ -12,7 +12,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -33,8 +32,7 @@ public class SecurityConfig {
   SecurityFilterChain apiWebSecurity(
       HttpSecurity http, SavingAuthenticationProvider savingAuthenticationProvider)
       throws Exception {
-    return http.csrf(AbstractHttpConfigurer::disable)
-        .securityMatcher("/basicsecured/**")
+    return http.securityMatcher("/basicsecured/**")
         .authorizeHttpRequests(auth -> auth.requestMatchers("/basicsecured/**").authenticated())
         .authenticationProvider(savingAuthenticationProvider)
         .httpBasic(Customizer.withDefaults())
@@ -46,8 +44,7 @@ public class SecurityConfig {
   SecurityFilterChain formLoginWebSecurity(
       HttpSecurity http, SavingAuthenticationProvider savingAuthenticationProvider)
       throws Exception {
-    return http.csrf(AbstractHttpConfigurer::disable)
-        .authorizeHttpRequests(auth ->
+    return http.authorizeHttpRequests(auth ->
             auth.requestMatchers("/formsecured/**").authenticated().anyRequest().permitAll())
         .authenticationProvider(savingAuthenticationProvider)
         .formLogin(Customizer.withDefaults())

@@ -9,21 +9,21 @@ The remaining sections apply to test code and shared testing modules.
 
 ## Behavior coverage
 
-- Prefer integration tests for instrumentation behavior. Exercise the library through its normal
-  API, use a real service when relevant, and assert emitted telemetry. For javaagent changes, use
-  the installed agent against the required library versions to exercise class transformation and
-  library compatibility.
+- Cover instrumentation behavior primarily through integration tests using normal library APIs,
+  real services where relevant, and emitted-telemetry assertions. For javaagent changes, use the
+  installed agent against the required library versions to verify transformation and compatibility.
 - Keep library and javaagent instrumentation tests separate. Do not activate both for the same
   library in one JVM. Cross-process tests may use different forms in different processes to verify
   context propagation.
-- Use focused unit tests for nontrivial standalone logic and shared infrastructure when they add
-  coverage beyond integration tests. Choose cases for distinct behavior and important edge cases,
-  not to enumerate every implementation branch or combination of mocked responses.
-- Tests that exercise javaagent helper classes directly, without requiring installed-agent behavior,
-  belong in a `JvmTestSuite` named `unitTests` under `src/unitTests/java`. Prefer direct same-package
-  access over `AgentClassLoaderAccess` or reflection used solely to bypass integration-test
-  class-loader isolation. Reflection or class-loader access remains appropriate when that behavior
-  is itself under test.
+- Supplement integration coverage with focused unit tests for nontrivial helper logic and shared
+  infrastructure when they cover behavior beyond the integration tests. Choose cases for distinct
+  behavior and important edge cases, not to enumerate every implementation branch or combination
+  of mocked responses. Direct javaagent-helper tests belong in a `JvmTestSuite` named `unitTests`
+  under `src/unitTests/java`, using direct same-package access.
+- In ordinary instrumentation integration tests, assert emitted telemetry rather than inspecting
+  helpers through reflection or `AgentClassLoaderAccess`, even when the test needs transformed
+  classes or agent-populated state. Reserve those mechanisms for tests of class loading, helper
+  injection/isolation, or reflective behavior itself.
 - Test supported behavior. Do not add tests that only prove
   removed settings are ignored, or preview variants that repeat the same behavior.
   When configuration wiring changes, test the real initialization path and emitted

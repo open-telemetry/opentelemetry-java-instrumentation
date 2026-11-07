@@ -37,22 +37,13 @@ testing.suites {
       // Redisson 3.24.3 routes configuration through ServiceManager.
       implementation("org.redisson:redisson:3.24.3")
     }
+  }
 
-    targets.all {
-      testTask.configure {
-        filter {
-          includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
-          includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
-        }
-      }
-    }
-
-    executions {
-      register("ServerTarget") {
-        filter {
-          includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
-          includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
-        }
+  executions("redisson324Test") {
+    configureEach {
+      filter {
+        includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
+        includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
       }
     }
   }
