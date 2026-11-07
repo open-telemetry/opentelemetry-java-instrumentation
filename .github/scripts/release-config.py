@@ -95,9 +95,9 @@ def resolve_development_branch(version: str) -> str:
 def release_config(
     ref: str, version: str, changelog: str, development_branch: str
 ) -> dict[str, str]:
-    major, minor, _ = parse_version(version)
-    if ref != f"release/v{major}.{minor}.x":
-        raise ValueError(f"version {version} does not match release branch {ref}")
+    major, _, _ = parse_version(version)
+    if ref != f"v{version}":
+        raise ValueError(f"version {version} does not match release tag {ref}")
     if development_branch not in ("main", f"maintenance/v{major}.x"):
         raise ValueError(f"release {version} does not match development branch {development_branch}")
     prior_version = prior_release_version(version, changelog)
