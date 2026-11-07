@@ -126,7 +126,8 @@ class SpymemcachedPassiveStatusTest {
     assertThat(retrievalError).isInstanceOf(ExecutionException.class);
     assertThat(retrievalError).hasCauseInstanceOf(IllegalStateException.class);
     assertThat(getter.getDbResponseStatusCode(null, future, retrievalError)).isEqualTo("ERR_2BIG");
-    assertThat(getter.getErrorType(null, future, retrievalError)).isNull();
+    assertThat(getter.getErrorType(null, future, retrievalError))
+        .isEqualTo(ExecutionException.class.getName());
     assertThat(getter.getErrorType(null, future, new OperationException())).isEqualTo("ERR_2BIG");
   }
 
