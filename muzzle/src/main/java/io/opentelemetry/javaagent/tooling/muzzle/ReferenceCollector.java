@@ -91,7 +91,11 @@ public final class ReferenceCollector {
         if (line.isEmpty()) {
           continue;
         }
-        if (!PROVIDER_CLASS_NAME.matcher(line).matches()) {
+        // Provider names become class-resource paths, so reject path syntax explicitly.
+        if (line.contains("/")
+            || line.contains("\\")
+            || line.contains("..")
+            || !PROVIDER_CLASS_NAME.matcher(line).matches()) {
           throw new MuzzleCompilationException(
               "Invalid provider name in resource "
                   + helperResource.getAgentPath()
