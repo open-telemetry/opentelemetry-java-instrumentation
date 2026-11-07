@@ -74,11 +74,33 @@ class SpymemcachedAttributesGetter
     if (response instanceof Future && ((Future<?>) response).isCancelled()) {
       return error == null ? null : error.getClass().getName();
     }
-    String responseStatusCode = getDbResponseStatusCode(request, response, error);
-    if (responseStatusCode != null) {
-      return responseStatusCode;
+    String errorStatusCode = getErrorStatusCode(response);
+    if (errorStatusCode != null) {
+      return errorStatusCode;
     }
     return error == null ? null : error.getClass().getName();
+  }
+
+  @Nullable
+  private static String getErrorStatusCode(@Nullable Object response) {
+    OperationStatus status = SpymemcachedSingletons.getResponseStatus(response);
+    if (status == null) {
+      return null;
+    }
+    StatusCode code = status.getStatusCode();
+    if (code == null || status.isSuccess()) {
+      return null;
+    }
+    switch (code) {
+      case SUCCESS:
+      case ERR_NOT_FOUND:
+      case ERR_EXISTS:
+      case ERR_NOT_STORED:
+      case CANCELLED:
+        return null;
+      default:
+        return code.name();
+    }
   }
 
   @Override
