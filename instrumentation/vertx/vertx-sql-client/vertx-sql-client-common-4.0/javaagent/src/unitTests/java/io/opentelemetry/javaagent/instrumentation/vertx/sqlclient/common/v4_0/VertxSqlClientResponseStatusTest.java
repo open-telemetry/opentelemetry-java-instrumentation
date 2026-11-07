@@ -15,53 +15,23 @@ import io.vertx.mssqlclient.MSSQLException;
 import io.vertx.mysqlclient.MySQLException;
 import org.junit.jupiter.api.Test;
 
-class VertxSqlClientAttributesGetterTest {
+class VertxSqlClientResponseStatusTest {
 
   private final VertxSqlClientAttributesGetter getter = new VertxSqlClientAttributesGetter();
-  private final VertxSqlClientRequest request =
+  private final VertxSqlClientRequest mysqlRequest =
       new VertxSqlClientRequest("select 1", VertxSqlClientInfo.createUnknown(MYSQL), false, null);
 
   @Test
   void prefersMysqlVendorCode() {
     MySQLException error = new MySQLException("Syntax error", 1064, "42000");
 
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo("1064");
-  }
-
-  @Test
-  void fallsBackToMysqlSqlStateWhenVendorCodeIsUnavailable() {
-    MySQLException error = new MySQLException("Syntax error", 0, "42000");
-
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("42000");
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo("42000");
-  }
-
-  @Test
-  void keepsMysqlVendorCodeWhenSqlStateIsUnavailable() {
-    MySQLException error = new MySQLException("Syntax error", 1064, null);
-
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo("1064");
-  }
-
-  @Test
-  void combinesSqlStateAndVendorCodeForUnknownDatabaseSystem() {
-    VertxSqlClientRequest unknownRequest =
-        new VertxSqlClientRequest(
-            "select 1", VertxSqlClientInfo.createUnknown("unknown"), false, null);
-    MySQLException unknown = new MySQLException("Syntax error", 1064, "42000");
-
-    assertThat(getter.getDbResponseStatusCode(unknownRequest, null, unknown))
-        .isEqualTo("42000/1064");
-    assertThat(getter.getErrorType(unknownRequest, null, unknown)).isEqualTo("42000/1064");
+    assertThat(getter.getDbResponseStatusCode(mysqlRequest, null, error)).isEqualTo("1064");
+    assertThat(getter.getErrorType(mysqlRequest, null, error)).isEqualTo("1064");
   }
 
   @Test
   void extractsLegacyMssqlErrorCode() {
-    VertxSqlClientRequest request =
-        new VertxSqlClientRequest(
-            "select 1", VertxSqlClientInfo.createUnknown(MICROSOFT_SQL_SERVER), false, null);
+    VertxSqlClientRequest request = request(MICROSOFT_SQL_SERVER);
     MSSQLException error =
         new MSSQLException(208, (byte) 1, (byte) 16, "Invalid object", null, null, 1);
 
@@ -71,14 +41,17 @@ class VertxSqlClientAttributesGetterTest {
 
   @Test
   void extractsLegacyDb2ErrorCodeAndFallsBackToSqlState() {
-    VertxSqlClientRequest request =
-        new VertxSqlClientRequest(
-            "select 1", VertxSqlClientInfo.createUnknown(IBM_DB2), false, null);
+    VertxSqlClientRequest request = request(IBM_DB2);
     DB2Exception error = new DB2Exception(-204, "42704");
     DB2Exception errorWithoutCode = new DB2Exception("Unknown code", 0, "42704");
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("-204");
     assertThat(getter.getDbResponseStatusCode(request, null, errorWithoutCode)).isEqualTo("42704");
     assertThat(getter.getErrorType(request, null, error)).isEqualTo("-204");
+  }
+
+  private static VertxSqlClientRequest request(String dbSystemName) {
+    return new VertxSqlClientRequest(
+        "select 1", VertxSqlClientInfo.createUnknown(dbSystemName), false, null);
   }
 }

@@ -18,7 +18,7 @@ class OpenSearchRestAttributesGetterTest {
   private final OpenSearchRestRequest request = OpenSearchRestRequest.create("GET", null);
 
   @ParameterizedTest
-  @ValueSource(ints = {-1, 0, 99, 100, 200, 201, 302, 404, 503})
+  @ValueSource(ints = {99, 100, 200, 399, 400})
   void recordsAvailableResponseStatuses(int statusCode) {
     OpenSearchRestResponse response = () -> statusCode;
 

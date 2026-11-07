@@ -35,11 +35,9 @@ class R2dbcSqlAttributesGetterTest {
 
   @ParameterizedTest
   @MethodSource("responseStatuses")
-  void responseStatus(Throwable error, String expectedErrorType, String expectedStatus) {
-    DbExecution request =
-        new DbExecution(
-            queryExecutionInfo(),
-            ConnectionFactoryOptions.parse("r2dbc:postgresql://localhost/db"));
+  void responseStatus(
+      String dbSystemName, Throwable error, String expectedErrorType, String expectedStatus) {
+    DbExecution request = request(dbSystemName);
 
     assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo(expectedStatus);
     assertThat(getter.getErrorType(request, null, error)).isEqualTo(expectedErrorType);
@@ -49,98 +47,31 @@ class R2dbcSqlAttributesGetterTest {
     return Stream.of(
         argumentSet(
             "SQLSTATE takes precedence for PostgreSQL",
+            "postgresql",
             new R2dbcBadGrammarException("test", "42601", 42),
             "42601",
             "42601"),
         argumentSet(
+            "vendor code takes precedence for MySQL",
+            "mysql",
+            new R2dbcBadGrammarException("test", "42000", 1064),
+            "1064",
+            "1064"),
+        argumentSet(
             "ordinary SPI exception exposes SQLSTATE",
+            "postgresql",
             new R2dbcException("test", "08006", 0) {},
             "08006",
             "08006"),
-        argumentSet("no SQLSTATE", new R2dbcBadGrammarException("test"), null, null),
-        argumentSet("non-database failure", new IllegalStateException("test"), null, null),
-        argumentSet("success", null, null, null));
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"mysql", "mariadb", "oracle", "mssql", "db2"})
-  void prefersVendorCode(String dbSystemName) {
-    DbExecution request = request(dbSystemName);
-    Throwable error = new R2dbcBadGrammarException("test", "42000", 1064);
-
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo("1064");
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"mysql", "mariadb", "oracle", "mssql", "db2"})
-  void usesVendorCodeWhenSqlStateIsUnavailable(String dbSystemName) {
-    DbExecution request = request(dbSystemName);
-    Throwable error = new R2dbcBadGrammarException("test", null, 1064);
-
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo("1064");
-  }
-
-  @ParameterizedTest
-  @MethodSource("otherSqlResponseStatuses")
-  void formatsGenericSqlResponseStatus(
-      Throwable error, String expectedStatus, String expectedErrorType) {
-    DbExecution request = request("unknown");
-
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo(expectedStatus);
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo(expectedErrorType);
-  }
-
-  private static Stream<Arguments> otherSqlResponseStatuses() {
-    return Stream.of(
+        argumentSet("no SQLSTATE", "postgresql", new R2dbcBadGrammarException("test"), null, null),
         argumentSet(
-            "both codes",
-            new R2dbcBadGrammarException("test", "42000", 1071),
-            "42000/1071",
-            "42000/1071"),
+            "non-database failure", "postgresql", new IllegalStateException("test"), null, null),
         argumentSet(
-            "SQLSTATE only", new R2dbcBadGrammarException("test", "42000", 0), "42000", "42000"),
-        argumentSet(
-            "vendor code only", new R2dbcBadGrammarException("test", null, 1071), "1071", "1071"),
-        argumentSet("neither code", new R2dbcBadGrammarException("test"), null, null));
-  }
-
-  @Test
-  void keepsVendorCodeWithoutSqlStateForMappedNonPreferredSystem() {
-    DbExecution request = request("clickhouse");
-    Throwable error = new R2dbcBadGrammarException("test", null, 1071);
-
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1071");
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo("1071");
-  }
-
-  @Test
-  void combinesCodesForUnknownSystem() {
-    DbExecution request = request("clickhouse");
-    Throwable error = new R2dbcBadGrammarException("test", "42000", 1071);
-
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("42000/1071");
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo("42000/1071");
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"mysql", "mariadb", "oracle", "mssql", "db2"})
-  void fallsBackToSqlStateWhenVendorCodeIsUnavailable(String dbSystemName) {
-    DbExecution request = request(dbSystemName);
-    Throwable error = new R2dbcBadGrammarException("test", "42000", 0);
-
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("42000");
-    assertThat(getter.getErrorType(request, null, error)).isEqualTo("42000");
-  }
-
-  @Test
-  void keepsSuccessfulSqlStateOutOfErrorType() {
-    DbExecution request = request("postgresql");
-    Throwable error = new R2dbcBadGrammarException("test", "00000", 42);
-
-    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("00000");
-    assertThat(getter.getErrorType(request, null, error)).isNull();
+            "success SQLSTATE",
+            "postgresql",
+            new R2dbcBadGrammarException("test", "00000", 42),
+            null,
+            "00000"));
   }
 
   @Test

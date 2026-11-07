@@ -32,6 +32,7 @@ class SqlResponseStatusCodeUtilTest {
         argumentSet("Oracle prefers vendor code", "oracle.db", "42000", "42", "42"),
         argumentSet("SQLite prefers vendor code", "sqlite", "42000", "42", "42"),
         argumentSet("PostgreSQL prefers SQLSTATE", "postgresql", "42601", "42", "42601"),
+        argumentSet("PostgreSQL falls back to vendor code", "postgresql", null, "42", "42"),
         argumentSet("ambiguous codes are combined", "other", "42000", "42", "42000/42"),
         argumentSet("SQLSTATE fallback", "other", "42000", null, "42000"),
         argumentSet("vendor code fallback", "other", null, "42", "42"),

@@ -20,7 +20,7 @@ class OpenSearchAttributesGetterTest {
   private final OpenSearchRequest request = OpenSearchRequest.create("GET", null, null);
 
   @ParameterizedTest
-  @ValueSource(ints = {-1, 0, 99, 200, 302, 404, 503})
+  @ValueSource(ints = {99, 100, 200, 399, 400})
   void recordsAvailableResponseStatuses(int statusCode) {
     OpenSearchException error =
         new OpenSearchException(

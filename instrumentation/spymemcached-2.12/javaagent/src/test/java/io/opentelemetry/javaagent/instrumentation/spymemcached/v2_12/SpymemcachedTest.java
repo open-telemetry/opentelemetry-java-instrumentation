@@ -330,6 +330,15 @@ class SpymemcachedTest {
                             equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()),
                             equalTo(stringKey("spymemcached.result"), experimental("miss")))));
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.spymemcached-2.12",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test
@@ -464,6 +473,17 @@ class SpymemcachedTest {
                                 memcachedAddress.getAddress().getHostAddress()),
                             equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.spymemcached-2.12",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS,
+        SERVER_PORT,
+        DB_RESPONSE_STATUS_CODE,
+        ERROR_TYPE);
   }
 
   @ParameterizedTest
@@ -533,6 +553,15 @@ class SpymemcachedTest {
                                 memcachedAddress.getAddress().getHostAddress()),
                             equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.spymemcached-2.12",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test
@@ -562,6 +591,15 @@ class SpymemcachedTest {
                                 memcachedAddress.getAddress().getHostAddress()),
                             equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.spymemcached-2.12",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test
@@ -725,6 +763,15 @@ class SpymemcachedTest {
                             equalTo(
                                 booleanKey("spymemcached.command.cancelled"),
                                 experimental(true)))));
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.spymemcached-2.12",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test
