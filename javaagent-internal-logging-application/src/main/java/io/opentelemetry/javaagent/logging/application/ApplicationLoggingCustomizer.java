@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.logging.application;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import io.opentelemetry.javaagent.bootstrap.logging.ApplicationLoggerBridge;
 import io.opentelemetry.javaagent.tooling.LoggingCustomizer;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
+import io.opentelemetry.javaagent.tooling.logging.LoggerInitializer;
 
 @AutoService(LoggingCustomizer.class)
 public final class ApplicationLoggingCustomizer implements LoggingCustomizer {
@@ -27,7 +27,7 @@ public final class ApplicationLoggingCustomizer implements LoggingCustomizer {
     // register a shutdown hook that'll dump the logs to stderr in case something goes wrong
     Runtime.getRuntime().addShutdownHook(new Thread(() -> inMemoryLogStore.dump(System.err)));
     ApplicationLoggerBridge.set(loggerFactory);
-    InternalLogger.initialize(loggerFactory);
+    LoggerInitializer.initialize(loggerFactory);
   }
 
   @Override

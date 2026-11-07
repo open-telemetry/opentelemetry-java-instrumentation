@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import java.text.MessageFormat;
 import javax.annotation.Nullable;
 
 public interface InternalLogger {
@@ -20,6 +21,14 @@ public interface InternalLogger {
   boolean isLoggable(Level level);
 
   void log(Level level, String message, @Nullable Throwable error);
+
+  default void log(
+      Level level, String message, @Nullable Object[] parameters, @Nullable Throwable error) {
+    if (parameters != null) {
+      message = MessageFormat.format(message, parameters);
+    }
+    log(level, message, error);
+  }
 
   String name();
 
