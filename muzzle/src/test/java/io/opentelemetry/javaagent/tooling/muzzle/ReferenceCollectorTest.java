@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumVisibilityFlag.PACKAGE_OR_HIGHER;
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumVisibilityFlag.PROTECTED_OR_HIGHER;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -16,6 +17,7 @@ import external.instrumentation.ExternalHelper;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.OtherTestHelperClasses;
 import io.opentelemetry.instrumentation.TestHelperClasses;
+import io.opentelemetry.javaagent.tooling.ByteArrayUrl;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings.Mapping;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldTestClasses.State;
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
@@ -25,6 +27,9 @@ import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.ManifestationFl
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.OwnershipFlag;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.VisibilityFlag;
 import io.opentelemetry.javaagent.tooling.muzzle.references.MethodRef;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import muzzle.TestClasses;
@@ -37,6 +42,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.objectweb.asm.Type;
 
 class ReferenceCollectorTest {
@@ -326,15 +332,33 @@ class ReferenceCollectorTest {
             "com/amazonaws/services/testservice/testsubservice/request.handler2s"));
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {"../Provider", "example/Provider", "example..Provider"})
+  void shouldRejectMalformedProviderNames(String provider) {
+    RecordingClassLoader loader = new RecordingClassLoader("agent/providers", provider);
+    ReferenceCollector collector = new ReferenceCollector(s -> false, loader);
+
+    assertThatExceptionOfType(MuzzleCompilationException.class)
+        .isThrownBy(
+            () ->
+                collector.collectReferencesFromResource(
+                    HelperResource.create(
+                        "META-INF/services/example.Service", "agent/providers", false)))
+        .withMessage("Invalid provider name in resource agent/providers: '" + provider + "'");
+    assertThat(loader.lookups).containsExactly("agent/providers");
+  }
+
   @Test
   public void shouldIgnoreArbitraryResourceFile() {
-    ReferenceCollector collector = new ReferenceCollector(s -> false);
+    RecordingClassLoader loader = new RecordingClassLoader("agent/providers", "../not.a.Provider");
+    ReferenceCollector collector = new ReferenceCollector(s -> false, loader);
     collector.collectReferencesFromResource(
-        HelperResource.create("application.properties", "application.properties", false));
+        HelperResource.create("application.properties", "agent/providers", false));
     collector.prune();
 
     assertThat(collector.getReferences()).isEmpty();
     assertThat(collector.getSortedHelperClasses()).isEmpty();
+    assertThat(loader.lookups).isEmpty();
   }
 
   @Test
@@ -480,5 +504,22 @@ class ReferenceCollectorTest {
       }
     }
     return null;
+  }
+
+  private static class RecordingClassLoader extends ClassLoader {
+    private final Map<String, URL> resources = new LinkedHashMap<>();
+    private final List<String> lookups = new ArrayList<>();
+
+    RecordingClassLoader(String resource, String content) {
+      super(ReferenceCollectorTest.class.getClassLoader());
+      resources.put(resource, ByteArrayUrl.create(resource, content.getBytes(UTF_8)));
+    }
+
+    @Override
+    public URL getResource(String name) {
+      lookups.add(name);
+      URL resource = resources.get(name);
+      return resource != null ? resource : super.getResource(name);
+    }
   }
 }
