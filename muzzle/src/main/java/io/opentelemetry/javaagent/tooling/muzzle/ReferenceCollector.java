@@ -84,20 +84,10 @@ public final class ReferenceCollector {
     }
 
     List<String> spiImplementations = new ArrayList<>();
-    boolean javaSpi = helperResource.getApplicationPath().startsWith("META-INF/services/");
     try (InputStream stream = getResourceStream(helperResource.getAgentPath())) {
       BufferedReader reader = new BufferedReader(new InputStreamReader(stream, UTF_8));
       String line;
-      int lineNumber = 0;
       while ((line = reader.readLine()) != null) {
-        lineNumber++;
-        if (javaSpi) {
-          int comment = line.indexOf('#');
-          if (comment >= 0) {
-            line = line.substring(0, comment);
-          }
-        }
-        line = line.trim();
         if (line.isEmpty()) {
           continue;
         }
@@ -105,8 +95,6 @@ public final class ReferenceCollector {
           throw new MuzzleCompilationException(
               "Invalid provider name in resource "
                   + helperResource.getAgentPath()
-                  + " at line "
-                  + lineNumber
                   + ": '"
                   + line
                   + "'");

@@ -332,32 +332,6 @@ class ReferenceCollectorTest {
             "com/amazonaws/services/testservice/testsubservice/request.handler2s"));
   }
 
-  @Test
-  void shouldTrimProviderNames() {
-    String helper = TestHelperClasses.Helper.class.getName();
-    RecordingClassLoader loader =
-        new RecordingClassLoader("agent/providers", "\n \t" + helper + " \t\n");
-    ReferenceCollector collector = new ReferenceCollector(s -> false, loader);
-
-    collector.collectReferencesFromResource(
-        HelperResource.create("META-INF/services/example.Service", "agent/providers", false));
-
-    assertThat(collector.getReferences()).containsKey(TestHelperClasses.Helper.class.getName());
-  }
-
-  @Test
-  void shouldStripJavaSpiComments() {
-    String helper = TestHelperClasses.Helper.class.getName();
-    RecordingClassLoader loader =
-        new RecordingClassLoader("agent/providers", "# comment\n" + helper + " # inline comment\n");
-    ReferenceCollector collector = new ReferenceCollector(s -> false, loader);
-
-    collector.collectReferencesFromResource(
-        HelperResource.create("META-INF/services/example.Service", "agent/providers", false));
-
-    assertThat(collector.getReferences()).containsKey(TestHelperClasses.Helper.class.getName());
-  }
-
   @ParameterizedTest
   @ValueSource(strings = {"../Provider", "example/Provider", "example..Provider"})
   void shouldRejectMalformedProviderNames(String provider) {
@@ -370,27 +344,7 @@ class ReferenceCollectorTest {
                 collector.collectReferencesFromResource(
                     HelperResource.create(
                         "META-INF/services/example.Service", "agent/providers", false)))
-        .withMessage(
-            "Invalid provider name in resource agent/providers at line 1: '" + provider + "'");
-    assertThat(loader.lookups).containsExactly("agent/providers");
-  }
-
-  @Test
-  void shouldNotStripAwsComments() {
-    String provider = TestHelperClasses.Helper.class.getName() + " # inline comment";
-    RecordingClassLoader loader = new RecordingClassLoader("agent/providers", provider);
-    ReferenceCollector collector = new ReferenceCollector(s -> false, loader);
-
-    assertThatExceptionOfType(MuzzleCompilationException.class)
-        .isThrownBy(
-            () ->
-                collector.collectReferencesFromResource(
-                    HelperResource.create(
-                        "software/amazon/awssdk/services/testservice/execution.interceptors",
-                        "agent/providers",
-                        false)))
-        .withMessage(
-            "Invalid provider name in resource agent/providers at line 1: '" + provider + "'");
+        .withMessage("Invalid provider name in resource agent/providers: '" + provider + "'");
     assertThat(loader.lookups).containsExactly("agent/providers");
   }
 
