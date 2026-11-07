@@ -45,13 +45,13 @@ targets:
       target: ':sdk-autoconfigure-support'
     - type: gradle
       path: ./
-      target: ':testing-common'
-    - type: gradle
-      path: ./
       target: ':javaagent-tooling:javaagent-tooling-java9'
     - type: gradle
       path: ./
-      target: ':testing:agent-for-testing'
+      target: ':testing:javaagent-for-testing'
+    - type: gradle
+      path: ./
+      target: ':testing:testing-common'
     - type: gradle
       path: ./
       target: ':instrumentation:activej-http-6.0:javaagent'
@@ -219,6 +219,9 @@ targets:
       target: ':instrumentation:kubernetes-client-7.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:mcp-java-sdk-0.14:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:methods:javaagent'
     - type: gradle
       path: ./
@@ -300,7 +303,7 @@ targets:
       target: ':instrumentation:sofa-rpc-5.4:library-autoconfigure'
     - type: gradle
       path: ./
-      target: ':instrumentation:spark-2.3:javaagent'
+      target: ':instrumentation:spark-2.4:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-boot-autoconfigure'
@@ -1026,7 +1029,7 @@ targets:
       target: ':instrumentation:spring:spring-pulsar-1.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:spring:spring-rabbit-1.0:javaagent'
+      target: ':instrumentation:spring:spring-rabbit-1.1:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-rmi-4.0:javaagent'

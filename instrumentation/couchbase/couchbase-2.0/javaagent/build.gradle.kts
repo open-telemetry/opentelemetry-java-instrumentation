@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -52,72 +55,65 @@ dependencies {
   library("com.couchbase.client:java-client:2.0.0")
   compileOnly("com.couchbase.client:core-io:1.6.0")
 
-  testImplementation(project(":instrumentation:couchbase:couchbase-common:testing"))
+  testImplementation("com.couchbase.mock:CouchbaseMock:1.5.19")
 
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
 
-  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:2.+") // see test suite below
   latestDepTestLibrary("com.couchbase.client:java-client:2.5.+") // see test suite below
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("version26Test") {
-      dependencies {
-        implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
-        implementation("com.couchbase.client:java-client:${baseVersion("2.6.0").orLatest("2.+")}")
-        implementation(
-          "org.springframework.data:spring-data-couchbase:${baseVersion("3.1.0.RELEASE").orLatest("3.1.+")}"
-        )
-        implementation("com.couchbase.client:encryption:${baseVersion("1.0.0").orLatest("1.+")}")
+testing.suites {
+  register<JvmTestSuite>("version25Test") {
+    dependencies {
+      implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
+      implementation("com.couchbase.client:java-client:${baseVersion("2.5.0").orLatest("2.5.+")}")
+      implementation(
+        "org.springframework.data:spring-data-couchbase:${baseVersion("2.0.0.RELEASE").orLatest("2.+")}"
+      )
+    }
+  }
+  register<JvmTestSuite>("version26Test") {
+    dependencies {
+      implementation(project(":instrumentation:couchbase:couchbase-common:testing"))
+      implementation("com.couchbase.client:java-client:${baseVersion("2.6.0").orLatest("2.+")}")
+      implementation(
+        "org.springframework.data:spring-data-couchbase:${baseVersion("3.1.0.RELEASE").orLatest("3.1.+")}"
+      )
+      implementation("com.couchbase.client:encryption:${baseVersion("1.0.0").orLatest("1.+")}")
+    }
+  }
+
+  executions("test", "version26Test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
+    }
+  }
+  executions("version25Test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
+    }
+    register("QuerySanitizationDisabled") {
+      filter {
+        includeTestsMatching("CouchbaseQuerySanitizationTest")
       }
+      jvmArgs("-Dotel.instrumentation.couchbase.query-sanitization.enabled=false")
+      systemProperty("testQuerySanitizationEnabled", "false")
     }
   }
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  }
-
-  val experimentalSuites = testing.suites.withType(JvmTestSuite::class).map { suite ->
-    register<Test>("${suite.name}Experimental") {
-      isEnabled = named<Test>(suite.name).get().enabled
-      testClassesDirs = suite.sources.output.classesDirs
-      classpath = suite.sources.runtimeClasspath
-
-      jvmArgs("-Dotel.instrumentation.couchbase.emit-experimental-telemetry=true")
-      systemProperty("metadataConfig", "otel.instrumentation.couchbase.emit-experimental-telemetry=true")
-    }
-  }
-
-  val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
-    val sourceTask = named<Test>("test").get()
-    isEnabled = sourceTask.enabled
-    setJvmArgs(sourceTask.jvmArgs)
-    setSystemProperties(sourceTask.systemProperties)
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("CouchbaseQuerySanitizationTest")
-    }
-    jvmArgs("-Dotel.instrumentation.couchbase.query-sanitization.enabled=false")
-    systemProperty("testQuerySanitizationEnabled", "false")
-  }
-
-  check {
-    dependsOn(testing.suites, experimentalSuites, testQuerySanitizationDisabled)
-  }
-
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
-    }
+    enabled = false
   }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }

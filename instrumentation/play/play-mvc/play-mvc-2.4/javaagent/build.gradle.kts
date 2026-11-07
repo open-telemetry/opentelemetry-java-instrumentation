@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -47,45 +50,26 @@ dependencies {
   latestDepTestLibrary("com.typesafe.play:play-test_2.11:2.5.+") // see play-2.6 module
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("play24Test") {
-      dependencies {
-        val version = baseVersion("2.4.0").orLatest("2.4.+")
-        implementation("com.typesafe.play:play-java_2.11:$version")
-        implementation("com.typesafe.play:play-java-ws_2.11:$version")
-        implementation("com.typesafe.play:play-test_2.11:$version")
-      }
+testing.suites {
+  register<JvmTestSuite>("play24Test") {
+    dependencies {
+      val version = baseVersion("2.4.0").orLatest("2.4.+")
+      implementation("com.typesafe.play:play-java_2.11:$version")
+      implementation("com.typesafe.play:play-java-ws_2.11:$version")
+      implementation("com.typesafe.play:play-test_2.11:$version")
+    }
+  }
+
+  executions {
+    configureEach {
+      telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
     }
   }
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.controller-telemetry.enabled=true"
-    )
-    jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-  }
-
-  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}PreviewSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-        systemProperty(
-          "metadataConfig",
-          "otel.instrumentation.common.controller-telemetry.enabled=true," +
-            "otel.semconv-stability.preview=service.peer"
-        )
-      }
-    }
-
   check {
-    dependsOn(testing.suites, previewSemconvSuites)
+    dependsOn(testing.suites)
   }
 }
 

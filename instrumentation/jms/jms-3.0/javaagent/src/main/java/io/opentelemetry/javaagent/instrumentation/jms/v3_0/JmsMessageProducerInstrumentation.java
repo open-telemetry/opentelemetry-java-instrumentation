@@ -7,11 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.jms.v3_0.JmsSingletons.producerInstrumenter;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -45,60 +45,59 @@ class JmsMessageProducerInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    ElementMatcher.Junction<MethodDescription> messageSend =
-        named("send").and(isPublic()).and(takesArgument(0, named("jakarta.jms.Message")));
-    ElementMatcher.Junction<MethodDescription> destinationSend =
-        named("send")
-            .and(isPublic())
-            .and(takesArgument(0, named("jakarta.jms.Destination")))
-            .and(takesArgument(1, named("jakarta.jms.Message")));
+    ElementMatcher.Junction<MethodDescription> send = named("send").and(isPublic());
 
     transformer.applyAdviceToMethod(
-        messageSend
-            .and(takesArguments(1))
-            .or(
-                messageSend
-                    .and(takesArguments(4))
-                    .and(takesArgument(1, int.class))
-                    .and(takesArgument(2, int.class))
-                    .and(takesArgument(3, long.class))),
+        send.and(
+            takesArguments(named("jakarta.jms.Message"))
+                .or(
+                    takesArguments(
+                        named("jakarta.jms.Message"),
+                        is(int.class),
+                        is(int.class),
+                        is(long.class)))),
         getClass().getName() + "$ProducerAdvice");
     transformer.applyAdviceToMethod(
-        destinationSend
-            .and(takesArguments(2))
-            .or(
-                destinationSend
-                    .and(takesArguments(5))
-                    .and(takesArgument(2, int.class))
-                    .and(takesArgument(3, int.class))
-                    .and(takesArgument(4, long.class))),
+        send.and(
+            takesArguments(named("jakarta.jms.Destination"), named("jakarta.jms.Message"))
+                .or(
+                    takesArguments(
+                        named("jakarta.jms.Destination"),
+                        named("jakarta.jms.Message"),
+                        is(int.class),
+                        is(int.class),
+                        is(long.class)))),
         getClass().getName() + "$ProducerWithDestinationAdvice");
 
     transformer.applyAdviceToMethod(
-        messageSend
-            .and(takesArguments(2))
-            .and(takesArgument(1, named("jakarta.jms.CompletionListener"))),
+        send.and(
+            takesArguments(named("jakarta.jms.Message"), named("jakarta.jms.CompletionListener"))),
         getClass().getName() + "$AsyncProducerAdvice");
     transformer.applyAdviceToMethod(
-        messageSend
-            .and(takesArguments(5))
-            .and(takesArgument(1, int.class))
-            .and(takesArgument(2, int.class))
-            .and(takesArgument(3, long.class))
-            .and(takesArgument(4, named("jakarta.jms.CompletionListener"))),
+        send.and(
+            takesArguments(
+                named("jakarta.jms.Message"),
+                is(int.class),
+                is(int.class),
+                is(long.class),
+                named("jakarta.jms.CompletionListener"))),
         getClass().getName() + "$AsyncProducerWithOptionsAdvice");
     transformer.applyAdviceToMethod(
-        destinationSend
-            .and(takesArguments(3))
-            .and(takesArgument(2, named("jakarta.jms.CompletionListener"))),
+        send.and(
+            takesArguments(
+                named("jakarta.jms.Destination"),
+                named("jakarta.jms.Message"),
+                named("jakarta.jms.CompletionListener"))),
         getClass().getName() + "$AsyncProducerWithDestinationAdvice");
     transformer.applyAdviceToMethod(
-        destinationSend
-            .and(takesArguments(6))
-            .and(takesArgument(2, int.class))
-            .and(takesArgument(3, int.class))
-            .and(takesArgument(4, long.class))
-            .and(takesArgument(5, named("jakarta.jms.CompletionListener"))),
+        send.and(
+            takesArguments(
+                named("jakarta.jms.Destination"),
+                named("jakarta.jms.Message"),
+                is(int.class),
+                is(int.class),
+                is(long.class),
+                named("jakarta.jms.CompletionListener"))),
         getClass().getName() + "$AsyncProducerWithDestinationAndOptionsAdvice");
   }
 

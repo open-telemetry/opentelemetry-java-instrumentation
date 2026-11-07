@@ -10,6 +10,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
@@ -81,6 +82,17 @@ public final class NettyServerTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setResponseHeaders(IncludeExclude responseHeaders) {
     builder.setResponseHeaders(responseHeaders);
+    return this;
+  }
+
+  /**
+   * Adds an {@link AttributesExtractor} to extract attributes from requests and responses. Executed
+   * after all default extractors.
+   */
+  @CanIgnoreReturnValue
+  public NettyServerTelemetryBuilder addAttributesExtractor(
+      AttributesExtractor<NettyRequest, HttpResponse> attributesExtractor) {
+    builder.addAttributesExtractor(new AttributesExtractorAdapter(attributesExtractor));
     return this;
   }
 

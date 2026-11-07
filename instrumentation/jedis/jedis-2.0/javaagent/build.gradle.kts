@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -38,46 +39,31 @@ dependencies {
   latestDepTestLibrary("redis.clients:jedis:2.+") // see jedis-3.0 module
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":javaagent-extension-api"))
-        implementation(project(":instrumentation-api-incubator"))
-        implementation("redis.clients:jedis:2.0.0")
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
+      implementation(project(":javaagent-extension-api"))
+      implementation(project(":instrumentation-api-incubator"))
+      implementation("redis.clients:jedis:2.0.0")
     }
+  }
 
-    register<JvmTestSuite>("version23Test") {
-      dependencies {
-        implementation("redis.clients:jedis:2.3.0")
-        implementation("org.testcontainers:testcontainers")
-      }
+  register<JvmTestSuite>("version23Test") {
+    dependencies {
+      implementation("redis.clients:jedis:2.3.0")
+      implementation("org.testcontainers:testcontainers")
     }
   }
 }
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .matching { it.name != "unitTests" }
-    .map { suite ->
-      register<Test>("${suite.name}PreviewSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-        if (suite.name != "version23Test") {
-          systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-        }
-      }
-    }
-
   check {
-    dependsOn(testing.suites, previewSemconvSuites)
+    dependsOn(testing.suites)
   }
 }

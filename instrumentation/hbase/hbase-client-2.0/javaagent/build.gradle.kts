@@ -1,5 +1,9 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 otelJava {
@@ -32,13 +36,20 @@ dependencies {
   latestDepTestLibrary("org.apache.hbase:hbase-client:2.4.+") // native on-by-default instrumentation after this version
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("shadedClientTest") {
-      dependencies {
-        implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("2.0.0").orLatest("2.4.+")}")
-        implementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
+testing.suites {
+  register<JvmTestSuite>("shadedClientTest") {
+    dependencies {
+      implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("2.0.0").orLatest("2.4.+")}")
+      implementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
+    }
+  }
+
+  executions("test") {
+    register("ExceptionSignalLogs") {
+      filter {
+        includeTestsMatching("*HbaseClient20Test.testGetTimeout")
       }
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
   }
 }
@@ -52,24 +63,12 @@ gradle.sharedServices.registerIfAbsent("hbaseBuildService", HbaseBuildService::c
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     usesService(gradle.sharedServices.registrations["hbaseBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("*HbaseClient20Test.testGetTimeout")
-    }
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-    systemProperty("metadataConfig", "otel.semconv.exception.signal.preview=logs")
-  }
-
   check {
-    dependsOn(testing.suites, testExceptionSignalLogs)
+    dependsOn(testing.suites)
   }
 
   if (otelProps.denyUnsafe) {

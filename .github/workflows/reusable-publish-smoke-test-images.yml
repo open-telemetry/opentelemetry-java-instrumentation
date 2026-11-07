@@ -52,7 +52,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Login to GitHub package registry
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -62,7 +62,7 @@ jobs:
         run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 

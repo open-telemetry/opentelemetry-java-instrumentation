@@ -79,6 +79,13 @@ final class UnsafeAttributes extends HashMap<AttributeKey<?>, Object>
   }
 
   @Override
+  @CanIgnoreReturnValue
+  public <T> AttributesBuilder remove(AttributeKey<T> key) {
+    super.remove(key);
+    return this;
+  }
+
+  @Override
   public void forEach(BiConsumer<? super AttributeKey<?>, ? super Object> action) {
     // https://github.com/open-telemetry/opentelemetry-java/issues/4161
     // Help out android desugaring by having an explicit call to HashMap.forEach, when forEach is

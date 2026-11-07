@@ -1,6 +1,9 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
   id("otel.nullaway-conventions")
+  id("otel.testcontainers-testing")
 }
 
 dependencies {
@@ -23,10 +26,25 @@ dependencies {
   latestDepTestLibrary("org.springframework.cloud:spring-cloud-stream-binder-rabbit:3.+") // documented limitation
 }
 
+testing.suites {
+  register<JvmTestSuite>("version41Test") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:spring:spring-integration-4.1:testing"))
+      implementation("org.springframework.integration:spring-integration-core:4.1.0.RELEASE")
+    }
+  }
+
+  executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+  }
+}
+
 tasks {
-  test {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  check {
+    dependsOn(testing.suites)
   }
 }
 

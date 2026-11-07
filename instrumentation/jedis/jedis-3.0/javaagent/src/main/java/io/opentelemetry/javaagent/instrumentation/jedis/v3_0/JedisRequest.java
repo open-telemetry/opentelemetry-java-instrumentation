@@ -12,6 +12,8 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisServerErrorContext;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisServerErrorRequest;
 import java.util.List;
 import javax.annotation.Nullable;
 import redis.clients.jedis.BinaryClient;
@@ -20,12 +22,13 @@ import redis.clients.jedis.Protocol;
 import redis.clients.jedis.commands.ProtocolCommand;
 
 @AutoValue
-public abstract class JedisRequest {
+public abstract class JedisRequest implements JedisServerErrorRequest {
 
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "jedis"));
   private static final int LIMIT = 32 * 1024;
+  @Nullable private JedisServerErrorContext serverErrorContext;
 
   public static JedisRequest create(
       Connection connection, ProtocolCommand command, List<byte[]> args) {
@@ -79,6 +82,15 @@ public abstract class JedisRequest {
 
   @Nullable
   public abstract Long getBatchSize();
+
+  @Override
+  public void setServerErrorContext(JedisServerErrorContext context) {
+    serverErrorContext = context;
+  }
+
+  public boolean isServerError(@Nullable Throwable error) {
+    return error != null && serverErrorContext != null && serverErrorContext.isServerError(error);
+  }
 
   private static String operationName(ProtocolCommand command) {
     if (command instanceof Protocol.Command) {

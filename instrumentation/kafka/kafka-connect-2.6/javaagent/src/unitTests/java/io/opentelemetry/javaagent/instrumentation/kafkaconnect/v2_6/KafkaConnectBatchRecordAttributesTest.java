@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -144,8 +144,8 @@ class KafkaConnectBatchRecordAttributesTest {
     return Attributes.builder()
         .put(MESSAGING_DESTINATION_NAME, destination)
         .put(MESSAGING_DESTINATION_PARTITION_ID, partition)
-        .put(MESSAGING_KAFKA_OFFSET, offset)
-        .put(MESSAGING_KAFKA_MESSAGE_KEY, key)
+        .put(longKey("kafka.offset"), offset)
+        .put(stringKey("kafka.message.key"), key)
         .build();
   }
 

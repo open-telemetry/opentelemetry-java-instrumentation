@@ -24,7 +24,7 @@ version = "1.0"
 
 val versions = mapOf(
   // this line is managed by .github/scripts/update-sdk-version.sh
-  "opentelemetrySdk" to "1.67.0",
+  "opentelemetrySdk" to "1.68.0",
 
   // these lines are managed by .github/scripts/update-version.sh
   "opentelemetryJavaagent" to "3.0.0-SNAPSHOT",
@@ -103,7 +103,7 @@ dependencies {
   testImplementation("org.testcontainers:testcontainers:2.0.5")
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.4")
   testImplementation("com.google.protobuf:protobuf-java-util:4.36.2")
-  testImplementation("com.squareup.okhttp3:okhttp:5.5.0")
+  testImplementation("com.squareup.okhttp3:okhttp:5.5.1")
   testImplementation("io.opentelemetry:opentelemetry-api")
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.11.1-alpha")
   testImplementation("org.assertj:assertj-core:3.27.7")
@@ -113,7 +113,7 @@ dependencies {
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-  testRuntimeOnly("ch.qos.logback:logback-classic:1.6.5")
+  testRuntimeOnly("ch.qos.logback:logback-classic:1.6.6")
 
   //Otel Java instrumentation that we use and extend during integration tests
   add("otel", "io.opentelemetry.javaagent:opentelemetry-javaagent:${versions["opentelemetryJavaagent"]}")

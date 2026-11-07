@@ -21,6 +21,9 @@ import javax.annotation.Nullable;
 
 class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Response<?>> {
   private static final boolean CAN_GET_RESPONSE_METADATA = canGetResponseMetadata();
+  private static final AttributeKey<String> RPC_SYSTEM = stringKey("rpc.system");
+  private static final AttributeKey<String> RPC_SERVICE = stringKey("rpc.service");
+  private static final AttributeKey<String> RPC_METHOD = stringKey("rpc.method");
   // copied from AwsIncubatingAttributes
   private static final AttributeKey<String> AWS_REQUEST_ID = stringKey("aws.request_id");
   private static final AttributeKey<String> AWS_SECRETSMANAGER_SECRET_ARN =
@@ -51,6 +54,9 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
     Object originalRequest = request.getOriginalRequest();
+    attributes.put(RPC_SYSTEM, "aws-api");
+    attributes.put(RPC_SERVICE, request.getServiceName());
+    attributes.put(RPC_METHOD, AwsSdkSpanNameExtractor.operationName(request));
     setAttribute(
         attributes,
         AWS_LAMBDA_RESOURCE_MAPPING_ID,

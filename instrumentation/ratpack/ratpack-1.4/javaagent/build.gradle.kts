@@ -1,6 +1,4 @@
 import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
-
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -62,16 +60,6 @@ listOf("testCompileClasspath", "testRuntimeClasspath").forEach {
   }
 }
 
-testing.suites.register<JvmTestSuite>("version17Test") {
-  dependencies {
-    implementation(project(":instrumentation:ratpack:ratpack-1.4:testing"))
-    implementation(project(":instrumentation:ratpack:ratpack-1.7:library"))
-    val ratpackVersion = baseVersion("1.7.0").orLatest()
-    implementation("io.ratpack:ratpack-core:$ratpackVersion")
-    implementation("io.ratpack:ratpack-test:$ratpackVersion")
-  }
-}
-
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
@@ -84,27 +72,40 @@ tasks {
       enabled = false
     }
   }
+}
 
-  testing.suites.withType<JvmTestSuite>().configureEach {
-    val ratpack14Test = name == "test"
-    executions {
-      configureEach {
-        if (ratpack14Test) {
-          systemProperty("ratpack14Test", true)
-        }
-      }
-      register("PreviewSemconv") {
-        telemetryConfig("otel.semconv-stability.preview", "service.peer")
-      }
-      register("ControllerTelemetryDisabled") {
-        filter {
-          includeTestsMatching(
-            "io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.server.RatpackErrorContextTest"
-          )
-        }
-        systemProperty("otel.instrumentation.common.controller-telemetry.enabled", false)
-        systemProperties.remove("metadataConfig")
-      }
+testing.suites {
+  register<JvmTestSuite>("version17Test") {
+    dependencies {
+      implementation(project(":instrumentation:ratpack:ratpack-1.4:testing"))
+      implementation(project(":instrumentation:ratpack:ratpack-1.7:library"))
+      val ratpackVersion = baseVersion("1.7.0").orLatest()
+      implementation("io.ratpack:ratpack-core:$ratpackVersion")
+      implementation("io.ratpack:ratpack-test:$ratpackVersion")
     }
   }
+
+  val controllerTelemetryDisabled = Action<Test> {
+    filter {
+      includeTestsMatching(
+        "io.opentelemetry.javaagent.instrumentation.ratpack.v1_4.server.RatpackErrorContextTest"
+      )
+    }
+    systemProperty("otel.instrumentation.common.controller-telemetry.enabled", false)
+    systemProperties.remove("metadataConfig")
+  }
+
+  executions("test") {
+    configureEach {
+      systemProperty("ratpack14Test", true)
+    }
+    register("ControllerTelemetryDisabled", controllerTelemetryDisabled)
+  }
+  executions("version17Test") {
+    register("ControllerTelemetryDisabled", controllerTelemetryDisabled)
+  }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }

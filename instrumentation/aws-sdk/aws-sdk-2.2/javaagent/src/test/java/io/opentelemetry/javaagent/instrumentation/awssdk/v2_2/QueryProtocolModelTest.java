@@ -24,4 +24,9 @@ class QueryProtocolModelTest extends AbstractQueryProtocolModelTest {
   protected InstrumentationExtension getTesting() {
     return testing;
   }
+
+  @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return EXPERIMENTAL_ATTRIBUTES;
+  }
 }

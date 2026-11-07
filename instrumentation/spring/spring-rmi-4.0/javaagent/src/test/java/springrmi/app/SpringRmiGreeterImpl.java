@@ -12,6 +12,21 @@ public class SpringRmiGreeterImpl implements SpringRmiGreeter {
     return someMethod(name);
   }
 
+  @Override
+  public String inherited(String name) {
+    return "Inherited " + name;
+  }
+
+  @Override
+  public String overloaded(String name) {
+    return "String " + name;
+  }
+
+  @Override
+  public String overloaded(Integer value) {
+    return "Integer " + value;
+  }
+
   private static String someMethod(String name) {
     return "Hello " + name;
   }

@@ -1,5 +1,8 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -25,94 +28,72 @@ dependencies {
   testLibrary("io.vertx:vertx-codegen:4.4.2")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("hibernateReactive1Test") {
-      dependencies {
-        implementation("org.testcontainers:testcontainers")
-        implementation("org.hibernate.reactive:hibernate-reactive-core:${baseVersion("1.0.0.Final").orLatest("1.+")}")
-        implementation("io.vertx:vertx-pg-client:${baseVersion("4.1.5").orLatest("4.+")}")
-        compileOnly("io.vertx:vertx-codegen:4.1.5")
+val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
+
+testing.suites {
+  register<JvmTestSuite>("hibernateReactive1Test") {
+    dependencies {
+      implementation("org.testcontainers:testcontainers")
+      implementation("org.hibernate.reactive:hibernate-reactive-core:${baseVersion("1.0.0.Final").orLatest("1.+")}")
+      implementation("io.vertx:vertx-pg-client:${baseVersion("4.1.5").orLatest("4.+")}")
+      compileOnly("io.vertx:vertx-codegen:4.1.5")
+    }
+  }
+
+  register<JvmTestSuite>("hibernateReactive2Test") {
+    dependencies {
+      implementation("org.testcontainers:testcontainers")
+      implementation(project(":instrumentation:hibernate:hibernate-reactive-1.0:hibernate-reactive-2.0-testing"))
+      implementation("org.hibernate.reactive:hibernate-reactive-core:${baseVersion("2.0.0.Final").orLatest("3.+")}")
+      implementation("io.vertx:vertx-pg-client:${baseVersion("4.4.2").orLatest("4.+")}")
+      compileOnly("io.vertx:vertx-codegen:4.4.2")
+    }
+    project.tasks.named<JavaCompile>(sources.compileJavaTaskName) {
+      options.release.set(11)
+    }
+  }
+
+  register<JvmTestSuite>("hibernateReactive4Test") {
+    dependencies {
+      implementation("org.testcontainers:testcontainers")
+      implementation(project(":instrumentation:hibernate:hibernate-reactive-1.0:hibernate-reactive-2.0-testing"))
+      implementation("org.hibernate.reactive:hibernate-reactive-core:${baseVersion("4.0.0.Final").orLatest()}")
+      implementation("io.vertx:vertx-pg-client:${baseVersion("5.0.0").orLatest()}")
+      compileOnly("io.vertx:vertx-codegen:4.4.2")
+    }
+    project.tasks.named<JavaCompile>(sources.compileJavaTaskName) {
+      options.release.set(17)
+    }
+  }
+
+  executions("hibernateReactive1Test") {
+    configureEach {
+      if (testJavaVersion.isJava8 && otelProps.testLatestDeps) {
+        enabled = false
       }
     }
+  }
 
-    register<JvmTestSuite>("hibernateReactive2Test") {
-      dependencies {
-        implementation("org.testcontainers:testcontainers")
-        implementation(project(":instrumentation:hibernate:hibernate-reactive-1.0:hibernate-reactive-2.0-testing"))
-        implementation("org.hibernate.reactive:hibernate-reactive-core:${baseVersion("2.0.0.Final").orLatest("3.+")}")
-        implementation("io.vertx:vertx-pg-client:${baseVersion("4.4.2").orLatest("4.+")}")
-        compileOnly("io.vertx:vertx-codegen:4.4.2")
+  executions("hibernateReactive2Test") {
+    configureEach {
+      if (testJavaVersion.isJava8) {
+        enabled = false
       }
     }
+  }
 
-    register<JvmTestSuite>("hibernateReactive4Test") {
-      dependencies {
-        implementation("org.testcontainers:testcontainers")
-        implementation(project(":instrumentation:hibernate:hibernate-reactive-1.0:hibernate-reactive-2.0-testing"))
-        implementation("org.hibernate.reactive:hibernate-reactive-core:${baseVersion("4.0.0.Final").orLatest()}")
-        implementation("io.vertx:vertx-pg-client:${baseVersion("5.0.0").orLatest()}")
-        compileOnly("io.vertx:vertx-codegen:4.4.2")
+  executions("hibernateReactive4Test") {
+    configureEach {
+      if (testJavaVersion.isJava8 || testJavaVersion.isJava11) {
+        enabled = false
       }
     }
   }
 }
 
 tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-  named("compileHibernateReactive2TestJava", JavaCompile::class).configure {
-    options.release.set(11)
-  }
-  named("compileHibernateReactive4TestJava", JavaCompile::class).configure {
-    options.release.set(17)
-  }
-  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
-  if (testJavaVersion.isJava8) {
-    named("hibernateReactive2Test", Test::class).configure {
-      enabled = false
-    }
-    if (otelProps.testLatestDeps) {
-      named("hibernateReactive1Test", Test::class).configure {
-        enabled = false
-      }
-    }
-  }
-  if (testJavaVersion.isJava8 || testJavaVersion.isJava11) {
-    named("hibernateReactive4Test", Test::class).configure {
-      enabled = false
-    }
-  }
-
-  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}PreviewSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-      }
-    }
-
-  if (testJavaVersion.isJava8) {
-    named("hibernateReactive2TestPreviewSemconv", Test::class).configure {
-      enabled = false
-    }
-    if (otelProps.testLatestDeps) {
-      named("hibernateReactive1TestPreviewSemconv", Test::class).configure {
-        enabled = false
-      }
-    }
-  }
-  if (testJavaVersion.isJava8 || testJavaVersion.isJava11) {
-    named("hibernateReactive4TestPreviewSemconv", Test::class).configure {
-      enabled = false
-    }
-  }
-
   check {
-    dependsOn(testing.suites, previewSemconvSuites)
+    dependsOn(testing.suites)
   }
 }
 

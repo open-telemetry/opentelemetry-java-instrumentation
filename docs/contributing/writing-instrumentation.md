@@ -164,6 +164,11 @@ instrumented library: some of them expose interceptor/listener interfaces that c
 into the library, some others have a library interface that you can use to implement a decorator that
 emits telemetry when used.
 
+Factories and builders for instrumented library objects should return the library's interface or base
+class when it provides the full caller-facing contract. Concrete types are appropriate when required
+for supported setup or framework integration. This rule does not apply to OpenTelemetry-defined types
+or SPIs.
+
 Consider the following builder class:
 
 ```java
@@ -206,7 +211,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api(project(":testing:testing-common"))
 
   // ...
 }
@@ -326,7 +331,7 @@ method. Unlike the library instrumentation, the javaagent instrumentation is sup
 without any explicit user code modification. Add an `AgentInstrumentationExtension` and try running
 tests in this class. All tests should pass.
 
-Note that all the tests inside the `javaagent` module are run using the `agent-for-testing`
+Note that all the tests inside the `javaagent` module are run using the `javaagent-for-testing`
 javaagent, with the instrumentation being loaded as an extension. This is done to perform the same
 bytecode instrumentation as when the agent is run against a normal app, and means that the javaagent
 instrumentation will be hidden inside the javaagent (loaded by the `AgentClassLoader`) and will not

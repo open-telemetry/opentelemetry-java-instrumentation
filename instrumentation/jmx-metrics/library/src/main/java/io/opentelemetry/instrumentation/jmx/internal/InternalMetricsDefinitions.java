@@ -85,7 +85,7 @@ public class InternalMetricsDefinitions {
       List<MetricDef> metricDefs = RuleParser.get().parseMetricDefs(input);
       // Only the bundled JVM rules import the upstream OpenTelemetry convention.
       String schemaUrl =
-          systemName.equals("jvm") ? "https://opentelemetry.io/schemas/1.44.0" : null;
+          systemName.equals("jvm") ? "https://opentelemetry.io/schemas/1.45.0" : null;
       loadedRules.add(new RuleSet(metricDefs, stable, schemaUrl, handlerRegistry));
     } catch (IOException e) {
       throw new IllegalStateException("unable to load resource " + path, e);

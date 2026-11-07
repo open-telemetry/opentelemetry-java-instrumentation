@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
@@ -30,8 +30,8 @@ class R2dbcStatementTest extends AbstractR2dbcStatementTest {
   }
 
   @Override
-  protected String expectedPeerService() {
-    return "test-peer-service";
+  protected String expectedMappedServiceName() {
+    return "test-server-service";
   }
 
   @BeforeAll
@@ -49,9 +49,10 @@ class R2dbcStatementTest extends AbstractR2dbcStatementTest {
       ConnectionFactoryOptions connectionFactoryOptions) {
     return R2dbcTelemetry.builder(testing.getOpenTelemetry())
         .addAttributesExtractor(
-            AttributesExtractor.constant(maybeStablePeerService(), expectedPeerService()))
+            AttributesExtractor.constant(
+                stringKey("server.service.name"), expectedMappedServiceName()))
         .build()
-        .wrapConnectionFactory(
+        .instrument(
             super.createProxyConnectionFactory(connectionFactoryOptions), connectionFactoryOptions);
   }
 }

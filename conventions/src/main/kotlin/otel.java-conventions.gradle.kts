@@ -163,7 +163,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.139.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.140.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -189,8 +189,8 @@ dependencies {
   }
 }
 
-testing {
-  suites.withType(JvmTestSuite::class).configureEach {
+testing.suites {
+  withType(JvmTestSuite::class).configureEach {
     dependencies {
       implementation("org.junit.jupiter:junit-jupiter-api")
       implementation("org.junit.jupiter:junit-jupiter-params")
@@ -317,18 +317,6 @@ fun isJavaVersionAllowed(version: JavaVersion): Boolean {
   return true
 }
 
-abstract class TestcontainersBuildService : BuildService<BuildServiceParameters.None>
-
-// To limit number of concurrently running resource intensive tests add
-// tasks {
-//   test {
-//     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-//   }
-// }
-gradle.sharedServices.registerIfAbsent("testcontainersBuildService", TestcontainersBuildService::class.java) {
-  maxParallelUsages.convention(2)
-}
-
 val resourceNames = listOf("Host", "Os", "Process", "ProcessRuntime")
 val resourceClassesCsv = resourceNames.joinToString(",") { "io.opentelemetry.sdk.extension.resources.${it}ResourceProvider" }
 
@@ -363,7 +351,7 @@ tasks.withType<Test>().configureEach {
   // Disable default resource providers since they cause lots of output we don't need.
   jvmArgs("-Dotel.java.disabled.resource.providers=$resourceClassesCsv")
 
-  val trustStore = project(":testing-common").file("src/misc/testing-keystore.p12")
+  val trustStore = project(":testing:testing-common").file("src/misc/testing-keystore.p12")
   // Work around payara not working when this is set for some reason.
   // Don't set for:
   // - aws-sdk as we have tests that interact with AWS and need normal trustStore
@@ -484,8 +472,8 @@ configurations.configureEach {
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-bootstrap")).using(project(":javaagent-bootstrap"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")).using(project(":javaagent-extension-api"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")).using(project(":javaagent-tooling"))
-      substitute(module("io.opentelemetry.javaagent:opentelemetry-agent-for-testing")).using(project(":testing:agent-for-testing"))
-      substitute(module("io.opentelemetry.javaagent:opentelemetry-testing-common")).using(project(":testing-common:with-shaded-dependencies"))
+      substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing")).using(project(":testing:javaagent-for-testing"))
+      substitute(module("io.opentelemetry.javaagent:opentelemetry-testing-common")).using(project(":testing:testing-common:with-shaded-dependencies"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-muzzle")).using(project(":muzzle"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent")).using(project(":javaagent"))
     }

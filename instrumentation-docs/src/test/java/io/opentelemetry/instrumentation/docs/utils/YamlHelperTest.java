@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.docs.utils;
 
 import static io.opentelemetry.instrumentation.docs.internal.SemanticConvention.DATABASE_CLIENT_METRICS;
 import static io.opentelemetry.instrumentation.docs.internal.SemanticConvention.DATABASE_CLIENT_SPANS;
+import static io.opentelemetry.instrumentation.docs.internal.SemanticConvention.MCP_CLIENT_METRICS;
+import static io.opentelemetry.instrumentation.docs.internal.SemanticConvention.MCP_CLIENT_SPANS;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,6 +38,35 @@ import org.junit.jupiter.api.Test;
 import org.yaml.snakeyaml.Yaml;
 
 class YamlHelperTest {
+  @Test
+  void testMcpSemanticConventionsMetadataRoundTrip() throws Exception {
+    InstrumentationMetadata metadata =
+        YamlHelper.metaDataParser(
+            """
+            semantic_conventions:
+              - MCP_CLIENT_SPANS
+              - MCP_CLIENT_METRICS
+            """);
+    assertThat(metadata.getSemanticConventions())
+        .containsExactly(MCP_CLIENT_SPANS, MCP_CLIENT_METRICS);
+
+    InstrumentationModule module =
+        new InstrumentationModule.Builder("mcp-java-sdk-0.14").metadata(metadata).build();
+
+    assertThat(generateInstrumentationYaml(List.of(module)))
+        .isEqualTo(
+            """
+            libraries:
+            - name: mcp-java-sdk-0.14
+              semantic_conventions:
+              - MCP_CLIENT_SPANS
+              - MCP_CLIENT_METRICS
+              source_path: instrumentation/mcp-java-sdk-0.14
+              scope:
+                name: io.opentelemetry.mcp-java-sdk-0.14
+            """);
+  }
+
   @Test
   void testPrintInstrumentationList() throws Exception {
     List<InstrumentationModule> modules = new ArrayList<>();

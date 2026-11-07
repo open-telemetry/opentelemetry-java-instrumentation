@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.javaagent.bootstrap.ApplicationSpanHolder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.ValueBridging;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
@@ -16,8 +17,17 @@ public class ApplicationSpan implements application.io.opentelemetry.api.trace.S
 
   private final Span agentSpan;
 
+  @Nullable private volatile application.io.opentelemetry.api.trace.SpanContext spanContext;
+
   public ApplicationSpan(Span agentSpan) {
     this.agentSpan = agentSpan;
+    // we add ApplicationSpanHolder interface to span implementations used in agent via
+    // instrumentation
+    // this lets us associate the original application span with the agent span so we can convert
+    // the agent span back to exactly the same application span that the agent span was created for
+    if (agentSpan instanceof ApplicationSpanHolder && agentSpan != Span.getInvalid()) {
+      ((ApplicationSpanHolder) agentSpan).setApplicationSpan(this);
+    }
   }
 
   Span getAgentSpan() {
@@ -171,7 +181,13 @@ public class ApplicationSpan implements application.io.opentelemetry.api.trace.S
 
   @Override
   public application.io.opentelemetry.api.trace.SpanContext getSpanContext() {
-    return Bridging.toApplication(agentSpan.getSpanContext());
+    application.io.opentelemetry.api.trace.SpanContext context = spanContext;
+    if (context == null) {
+      // SpanContext is immutable. Concurrent first calls may safely convert it more than once.
+      context = Bridging.toApplication(agentSpan.getSpanContext());
+      spanContext = context;
+    }
+    return context;
   }
 
   @Override

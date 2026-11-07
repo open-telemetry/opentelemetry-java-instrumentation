@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.jms.common.v1_1.JmsReceiveSpanUtil.createReceiveSpan;
 import static io.opentelemetry.javaagent.instrumentation.jms.v3_0.JmsSingletons.consumerReceiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.instrumentation.api.internal.Timer;
@@ -56,8 +56,7 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$ConsumerAdvice");
     transformer.applyAdviceToMethod(
         named("setMessageListener")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("jakarta.jms.MessageListener")))
+            .and(takesArguments(named("jakarta.jms.MessageListener")))
             .and(isPublic()),
         getClass().getName() + "$SetMessageListenerAdvice");
   }
@@ -80,7 +79,13 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
     }
 
     public void exit(MessageConsumer consumer, @Nullable Message message) {
-      if (callDepth.decrementAndGet() > 0 || timer == null) {
+      boolean nested = callDepth.decrementAndGet() > 0;
+      if (message != null) {
+        // also when nested: a JMSConsumer delegates its receive to this consumer, and the
+        // JMSConsumer receive advice that creates the span reads the name from the message
+        JmsSubscriptionNames.set(message, JmsSubscriptionNames.get(consumer));
+      }
+      if (nested || timer == null) {
         return;
       }
       if (message == null) {
@@ -88,8 +93,7 @@ class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      String subscriptionName = JmsSubscriptionNames.get(consumer);
-      JmsSubscriptionNames.set(message, subscriptionName);
+      String subscriptionName = JmsSubscriptionNames.get(message);
       MessageWithDestination request =
           MessageWithDestination.create(
               JakartaMessageAdapter.create(message), null, subscriptionName);

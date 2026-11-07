@@ -16,13 +16,13 @@ final class RocketMqBatchProcessAttributeExtractor
     implements AttributesExtractor<RocketMqConsumerRequest, ConsumeMessageContext> {
 
   // copied from MessagingIncubatingAttributes
-  private static final AttributeKey<String> MESSAGING_ROCKETMQ_MESSAGE_TAG =
-      AttributeKey.stringKey("messaging.rocketmq.message.tag");
+  private static final AttributeKey<String> ROCKETMQ_MESSAGE_TAG =
+      AttributeKey.stringKey("rocketmq.message.tag");
 
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, RocketMqConsumerRequest request) {
-    attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TAG, request.getMessageTag());
+    attributes.put(ROCKETMQ_MESSAGE_TAG, request.getMessageTag());
   }
 
   @Override

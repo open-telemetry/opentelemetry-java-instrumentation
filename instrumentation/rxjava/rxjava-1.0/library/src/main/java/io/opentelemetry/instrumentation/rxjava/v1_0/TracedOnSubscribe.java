@@ -20,7 +20,7 @@ public final class TracedOnSubscribe<T, REQUEST> implements Observable.OnSubscri
   private final Supplier<REQUEST> requestFactory;
   private final Context parentContext;
 
-  public static <T, REQUEST> TracedOnSubscribe<T, REQUEST> perSubscription(
+  public static <T, REQUEST> Observable.OnSubscribe<T> perSubscription(
       Observable<T> originalObservable,
       Instrumenter<REQUEST, ?> instrumenter,
       Supplier<REQUEST> requestFactory) {

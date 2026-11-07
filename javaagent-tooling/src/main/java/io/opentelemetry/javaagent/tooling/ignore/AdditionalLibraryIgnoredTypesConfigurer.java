@@ -100,6 +100,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("org.springframework.boot.")
+        .allowClass("org.springframework.boot.loader.LaunchedURLClassLoader")
         .allowClass("org.springframework.boot.context.web.")
         .allowClass("org.springframework.boot.logging.logback.")
         .allowClass("org.springframework.boot.web.filter.")

@@ -78,6 +78,7 @@ public final class UrlParsingUtils {
    * @return a map of key-value pairs
    */
   // Source: https://stackoverflow.com/a/13592567
+  @SuppressWarnings("PreferCharsetOverload") // URLDecoder.decode accepts Charset since 10
   public static Map<String, String> splitQuery(String query, String separator) {
     if (query == null || query.isEmpty()) {
       return emptyMap();
@@ -214,7 +215,7 @@ public final class UrlParsingUtils {
     return indexOfAny(str, 0, chars);
   }
 
-  private static int indexOfAny(String str, int fromIndex, char... chars) {
+  static int indexOfAny(String str, int fromIndex, char... chars) {
     for (int i = Math.max(fromIndex, 0); i < str.length(); i++) {
       char c = str.charAt(i);
       for (char match : chars) {
@@ -226,7 +227,7 @@ public final class UrlParsingUtils {
     return -1;
   }
 
-  /** Extract the authority from a JDBC URL without reporting ambiguous credential text. */
+  /** Extract the authority from a URL-shaped JDBC connection string. */
   @Nullable
   public static String extractAuthority(String url) {
     int protoLoc = url.indexOf("://");
@@ -235,104 +236,18 @@ public final class UrlParsingUtils {
     }
     int start = protoLoc + 3;
     int end = indexOfAny(url, start, '/', '?', '#');
-    int lastAt = url.lastIndexOf('@');
-    if (lastAt >= start && end >= 0 && lastAt > end) {
-      int possibleAuthorityEnd = indexOfAny(url, lastAt + 1, '/', '?', '#');
-      possibleAuthorityEnd = possibleAuthorityEnd < 0 ? url.length() : possibleAuthorityEnd;
-      int commaAfterAt = url.indexOf(',', lastAt + 1);
-      int commaBeforeEnd = url.indexOf(',', start);
-      boolean atInQueryParameter = isAtInQueryParameter(url, end, lastAt);
-      if (!atInQueryParameter
-          && ((commaAfterAt >= 0 && commaAfterAt < possibleAuthorityEnd)
-              || (commaBeforeEnd >= 0 && commaBeforeEnd < end))) {
-        // Comma-separated text around an early delimiter may be part of a malformed password.
-        // Dropping the group is safer than reporting credential text as a host.
-        return null;
-      }
-    }
     return end < 0 ? url.substring(start) : url.substring(start, end);
   }
 
-  /** Extract an authority when an at sign in a later query parameter obscures its boundary. */
+  /** Extract the authority from a JDBC URL with semicolon-delimited connection properties. */
   @Nullable
-  static String extractAuthorityWithQueryAt(String url) {
-    int authorityStart = url.indexOf("://");
-    authorityStart = authorityStart < 0 ? 0 : authorityStart + 3;
-    int authorityEnd = indexOfAny(url, authorityStart, '/', '?', '#');
-    if (authorityEnd < 0) {
+  public static String extractSemicolonAuthority(String url) {
+    String authority = extractAuthority(url);
+    if (authority == null) {
       return null;
     }
-    int queryStart = url.indexOf('?', authorityEnd);
-    int fragmentStart = url.indexOf('#', authorityEnd);
-    int credentialsEnd = url.lastIndexOf('@');
-    int parameterStart =
-        queryStart < 0 ? -1 : Math.max(queryStart, url.lastIndexOf('&', credentialsEnd)) + 1;
-    int parameterEnd = url.indexOf('&', credentialsEnd);
-    if (parameterEnd < 0) {
-      parameterEnd = url.length();
-    }
-    int equals = parameterStart < 0 ? -1 : url.indexOf('=', parameterStart);
-    if (queryStart < 0
-        || (fragmentStart >= 0 && fragmentStart < queryStart)
-        || credentialsEnd < queryStart
-        || equals < parameterStart
-        || equals > credentialsEnd) {
-      return null;
-    }
-
-    String authority = url.substring(authorityStart, authorityEnd);
-    if (!isEndpointAuthority(authority)) {
-      return null;
-    }
-    String suffix = url.substring(credentialsEnd + 1, parameterEnd);
-    int suffixAuthorityEnd = indexOfAny(suffix, '/', '?', '#');
-    String suffixAuthority =
-        suffixAuthorityEnd < 0 ? suffix : suffix.substring(0, suffixAuthorityEnd);
-    if (isEndpointAuthority(suffixAuthority)) {
-      return null;
-    }
-    if (authority.indexOf(',') >= 0) {
-      return authority;
-    }
-
-    return suffix.indexOf('/') < 0 && suffix.indexOf(',') < 0 ? authority : null;
-  }
-
-  private static boolean isEndpointAuthority(String authority) {
-    return hasValidHostPorts(authority)
-        || isSingleEndpointAuthority(authority)
-        || sanitizeHostList(authority) != null;
-  }
-
-  private static boolean isSingleEndpointAuthority(String authority) {
-    List<String> endpoints = splitHostList(stripUserInfo(authority));
-    return endpoints.size() == 1 && sanitizeHostEntry(endpoints.get(0)) != null;
-  }
-
-  private static boolean isAtInQueryParameter(String url, int authorityEnd, int at) {
-    int queryStart = url.indexOf('?', authorityEnd);
-    if (queryStart < 0 || queryStart > at) {
-      return false;
-    }
-    int fragmentStart = url.indexOf('#', authorityEnd);
-    if (fragmentStart >= 0 && fragmentStart < at) {
-      return false;
-    }
-    int parameterStart = Math.max(queryStart, url.lastIndexOf('&', at)) + 1;
-    int equals = url.indexOf('=', parameterStart);
-    if (equals < parameterStart || equals > at) {
-      return false;
-    }
-    int protocol = url.indexOf("://");
-    int authorityStart = protocol < 0 ? 0 : protocol + 3;
-    if (queryStart > authorityEnd
-        || isSingleEndpointAuthority(url.substring(authorityStart, authorityEnd))) {
-      return true;
-    }
-    int parameterEnd = indexOfAny(url, at + 1, '&', '#');
-    parameterEnd = parameterEnd < 0 ? url.length() : parameterEnd;
-    String suffix = url.substring(at + 1, parameterEnd);
-    return suffix.indexOf('/') < 0 && suffix.indexOf(',') < 0;
+    int semicolon = authority.indexOf(';');
+    return semicolon < 0 ? authority : authority.substring(0, semicolon);
   }
 
   private static String stripUserInfo(String authority) {
@@ -348,45 +263,13 @@ public final class UrlParsingUtils {
     return authority.indexOf('(') < 0;
   }
 
-  /** Returns whether a JDBC URL contains more than one configured target. */
-  public static boolean hasMultipleTargets(String jdbcUrl) {
-    int protocol = jdbcUrl.indexOf("://");
-    if (protocol < 0) {
-      return false;
-    }
-
-    int authorityStart = protocol + 3;
-    int authorityEnd = indexOfAny(jdbcUrl, authorityStart, '/', '?', '#', ';');
-    authorityEnd = authorityEnd < 0 ? jdbcUrl.length() : authorityEnd;
-    String authority = jdbcUrl.substring(authorityStart, authorityEnd);
-    if (splitHostList(stripUserInfo(authority)).size() > 1) {
-      return true;
-    }
-
-    int lastAt = jdbcUrl.lastIndexOf('@');
-    if (lastAt < authorityEnd) {
-      return false;
-    }
-    if (isAtInQueryParameter(jdbcUrl, authorityEnd, lastAt)
-        || isAtInSemicolonParameter(jdbcUrl, authorityEnd, lastAt)) {
-      return false;
-    }
-    int targetEnd = indexOfAny(jdbcUrl, lastAt + 1, '/', '?', '#', '&', ';');
-    targetEnd = targetEnd < 0 ? jdbcUrl.length() : targetEnd;
-    return splitHostList(jdbcUrl.substring(lastAt + 1, targetEnd)).size() > 1;
-  }
-
-  private static boolean isAtInSemicolonParameter(String url, int authorityEnd, int at) {
-    int parameterStart = Math.max(url.lastIndexOf(';', at), url.lastIndexOf('&', at));
-    if (parameterStart < authorityEnd) {
-      return false;
-    }
-    int equals = url.indexOf('=', parameterStart + 1);
-    return equals > parameterStart && equals < at;
+  /** Returns whether an extracted authority contains more than one configured target. */
+  public static boolean hasMultipleTargets(String authority) {
+    return splitHostList(stripUserInfo(authority)).size() > 1;
   }
 
   // IPv6 brackets and address=(...) blocks may contain commas.
-  private static List<String> splitHostList(String hostList) {
+  static List<String> splitHostList(String hostList) {
     List<String> entries = new ArrayList<>();
     int depth = 0;
     int start = 0;
@@ -412,35 +295,16 @@ public final class UrlParsingUtils {
       return host.indexOf('=') < 0 && isValidHostPort(host) ? host : null;
     }
 
-    Matcher hostMatcher = ADDRESS_HOST_PATTERN.matcher(host);
-    if (!hostMatcher.find()) {
+    HostPort endpoint = extractAddressHostPort(host);
+    if (endpoint == null) {
       return null;
     }
-    String addressHost = hostMatcher.group(1).trim();
-    if (!isValidHostPort(addressHost) || hostMatcher.find()) {
-      return null;
-    }
-    StringBuilder sanitized = new StringBuilder("address=(host=");
-    sanitized.append(addressHost).append(')');
-
-    Matcher portMatcher = ADDRESS_PORT_PATTERN.matcher(host);
-    if (portMatcher.find()) {
-      String addressPort = portMatcher.group(1).trim();
-      if (!isValidPort(addressPort) || portMatcher.find()) {
-        return null;
-      }
-      sanitized.append("(port=").append(addressPort).append(')');
+    StringBuilder sanitized =
+        new StringBuilder("address=(host=").append(endpoint.host()).append(')');
+    if (endpoint.port() != null) {
+      sanitized.append("(port=").append(endpoint.port()).append(')');
     }
     return sanitized.toString();
-  }
-
-  private static boolean hasValidHostPorts(String authority) {
-    for (String endpoint : authority.split(",")) {
-      if (!isValidHostPort(endpoint.trim())) {
-        return false;
-      }
-    }
-    return true;
   }
 
   private static boolean isValidHostPort(String value) {
@@ -460,7 +324,7 @@ public final class UrlParsingUtils {
     return firstColon < 0 || (firstColon > 0 && isValidPort(value.substring(firstColon + 1)));
   }
 
-  private static boolean isValidPort(String value) {
+  static boolean isValidPort(String value) {
     if (value.isEmpty()) {
       return false;
     }
@@ -511,6 +375,9 @@ public final class UrlParsingUtils {
     boolean hasSpecialTarget = defaultPort == null;
     for (String entry : entries) {
       HostPort endpoint = extractSanitizedHostPort(entry);
+      if (endpoint == null) {
+        return null;
+      }
       endpoints.add(endpoint);
       if (endpoint.host().startsWith("/") || endpoint.host().indexOf('\\') >= 0) {
         hasSpecialTarget = true;
@@ -586,15 +453,33 @@ public final class UrlParsingUtils {
     return address.toString();
   }
 
+  @Nullable
   private static HostPort extractSanitizedHostPort(String entry) {
     if (!ADDRESS_ENTRY_PATTERN.matcher(entry).find()) {
       return extractHostPort(entry);
     }
+    return extractAddressHostPort(entry);
+  }
+
+  @Nullable
+  static HostPort extractAddressHostPort(String entry) {
     Matcher hostMatcher = ADDRESS_HOST_PATTERN.matcher(entry);
-    hostMatcher.find();
-    Matcher portMatcher = ADDRESS_PORT_PATTERN.matcher(entry);
-    Integer port = portMatcher.find() ? parsePort(portMatcher.group(1)) : null;
+    if (!hostMatcher.find()) {
+      return null;
+    }
     String host = hostMatcher.group(1).trim();
+    if (!isValidHostPort(host) || hostMatcher.find()) {
+      return null;
+    }
+    Matcher portMatcher = ADDRESS_PORT_PATTERN.matcher(entry);
+    Integer port = null;
+    if (portMatcher.find()) {
+      String value = portMatcher.group(1).trim();
+      if (!isValidPort(value) || portMatcher.find()) {
+        return null;
+      }
+      port = Integer.valueOf(value);
+    }
     return new HostPort(stripIpv6Brackets(host), port, host.indexOf(':') >= 0 ? host : null);
   }
 
@@ -609,7 +494,7 @@ public final class UrlParsingUtils {
     @Nullable private final Integer port;
     @Nullable private final String ipv6Address;
 
-    private HostPort(String host, @Nullable Integer port, @Nullable String ipv6Address) {
+    HostPort(String host, @Nullable Integer port, @Nullable String ipv6Address) {
       this.host = host;
       this.port = port;
       this.ipv6Address = ipv6Address;

@@ -5,21 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
-
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
 class RabbitChannelExtraAttributesExtractor implements AttributesExtractor<ChannelAndMethod, Void> {
+  // copied from semconv
+  private static final AttributeKey<String> RABBITMQ_DESTINATION_ROUTING_KEY =
+      AttributeKey.stringKey("rabbitmq.destination.routing_key");
 
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, ChannelAndMethod channelAndMethod) {
     String routingKey = channelAndMethod.getRoutingKey();
     if (routingKey != null && !routingKey.isEmpty()) {
-      attributes.put(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
+      attributes.put(RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
     }
   }
 

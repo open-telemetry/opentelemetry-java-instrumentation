@@ -268,6 +268,11 @@ public final class ParseContext {
       return;
     }
 
+    String authority = UrlParsingUtils.extractAuthority(urlPart);
+    if (authority != null && UrlParsingUtils.hasMultipleTargets(authority)) {
+      disableSingleServerFallback();
+    }
+
     // Parse URL host/port
     String serverName = urlPart.substring(hostIndex + 3);
     if (serverName.isEmpty()) {
