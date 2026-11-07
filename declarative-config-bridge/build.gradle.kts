@@ -7,6 +7,8 @@ plugins {
 group = "io.opentelemetry.instrumentation"
 
 dependencies {
+  // DefaultInstrumentationConfig exposes declarative config model types in its public API.
+  api("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   implementation("io.opentelemetry:opentelemetry-api-incubator")
 
