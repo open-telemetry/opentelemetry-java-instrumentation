@@ -6,11 +6,15 @@
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
 import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.instrumentation.runtimetelemetry.internal.garbagecollection.GarbageCollectionHandler;
+import io.opentelemetry.sdk.metrics.SdkMeterProvider;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class HandlerRegistryTest {
@@ -23,5 +27,21 @@ class HandlerRegistryTest {
             HandlerRegistry.getHandlers(meter, "jvm.class.count"::equals, false, false, emptySet()))
         .isEmpty();
     verifyNoInteractions(meter);
+  }
+
+  @Test
+  void handlesNativeImageGarbageCollectionOnce() {
+    Meter meter = SdkMeterProvider.builder().build().get("test");
+
+    assertThat(
+            HandlerRegistry.getHandlers(
+                meter,
+                "jvm.gc.duration"::equals,
+                false,
+                false,
+                singleton("jdk.GarbageCollection"),
+                List.of("young generation scavenger", "complete scavenger")))
+        .singleElement()
+        .isInstanceOf(GarbageCollectionHandler.class);
   }
 }
