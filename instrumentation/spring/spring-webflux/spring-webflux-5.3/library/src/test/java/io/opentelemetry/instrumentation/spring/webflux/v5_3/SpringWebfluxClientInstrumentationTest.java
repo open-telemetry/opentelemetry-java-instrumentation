@@ -32,6 +32,11 @@ class SpringWebfluxClientInstrumentationTest
   }
 
   @Override
+  protected boolean emitExperimentalTelemetry() {
+    return Boolean.getBoolean("test.emitExperimentalTelemetry");
+  }
+
+  @Override
   protected WebClient.Builder instrument(WebClient.Builder builder) {
     SpringWebfluxClientTelemetryBuilder telemetryBuilder =
         SpringWebfluxClientTelemetry.builder(testing.getOpenTelemetry())

@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.library-instrumentation")
   id("otel.nullaway-conventions")
@@ -32,27 +35,22 @@ if (!otelProps.testLatestDeps) {
     }
   }
 }
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    include("**/SpringWebfluxClientInstrumentationTest*")
-    systemProperty("otel.instrumentation.http.client.emit-experimental-telemetry", true)
-    systemProperty("metadataConfig", "Experimental.setEmitExperimentalTelemetry(telemetryBuilder, true)")
-  }
-
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-  }
-
-  check {
-    dependsOn(testPreviewSemconv, testExperimental)
+testing.suites {
+  executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+    register("Experimental") {
+      include("**/SpringWebfluxClientInstrumentationTest*")
+      systemProperty("test.emitExperimentalTelemetry", "true")
+      systemProperty(
+        "metadataConfig",
+        "Experimental.setEmitExperimentalTelemetry(telemetryBuilder, true)",
+      )
+    }
+    register("PreviewSemconv") {
+      telemetryConfig("otel.semconv-stability.preview", "service.peer")
+    }
   }
 }

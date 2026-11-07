@@ -106,7 +106,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
 
   protected abstract boolean includesBasePathInUriTemplate();
 
-  protected static boolean emitExperimentalTelemetry() {
+  protected boolean emitExperimentalTelemetry() {
     return Boolean.getBoolean("otel.instrumentation.http.client.emit-experimental-telemetry");
   }
 

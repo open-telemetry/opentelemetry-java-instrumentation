@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-testing")
 }
@@ -22,19 +24,14 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
-tasks.test {
-  jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-}
-
-tasks {
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    include("**/client/**")
-    jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
-  }
-
-  check {
-    dependsOn(testExperimental)
+testing.suites {
+  executions("test") {
+    configureDefault {
+      jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
+    }
+    register("Experimental") {
+      include("**/client/**")
+      jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
+    }
   }
 }
