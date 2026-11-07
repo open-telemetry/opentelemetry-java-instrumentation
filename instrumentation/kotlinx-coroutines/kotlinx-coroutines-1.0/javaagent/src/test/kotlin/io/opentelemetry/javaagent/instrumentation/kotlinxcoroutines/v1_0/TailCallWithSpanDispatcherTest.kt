@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0
 
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.annotations.WithSpan
@@ -12,7 +13,9 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -234,8 +237,50 @@ class TailCallWithSpanDispatcherTest {
     )
   }
 
-  private fun runWith(interceptor: ContinuationInterceptor, block: suspend () -> Int): Int {
-    val result = CompletableFuture<Int>()
+  // Only a dispatcher applies the caller's context when it resumes the caller, so with another
+  // interceptor the caller must still resume with the context it had before the call.
+  @Test
+  fun `caller resumes with its own context under an interceptor that is not a dispatcher`() {
+    for (annotated in listOf(false, true)) {
+      val parent = tracer.spanBuilder("parent").startSpan()
+      val current = runWith(CountingInterceptor()) {
+        withContext(Context.root().with(parent).asContextElement()) {
+          if (annotated) annotatedNonCancellableDelay() else unannotatedNonCancellableDelay()
+          tracedChild("after")
+          Span.current()
+        }
+      }
+      parent.end()
+      assertThat(current.spanContext).isEqualTo(parent.spanContext)
+    }
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          { it.hasName("parent").hasNoParent() },
+          { it.hasName("after").hasParent(trace.getSpan(0)) },
+        )
+      },
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          { it.hasName("parent").hasNoParent() },
+          { it.hasName("non-cancellable-delay").hasParent(trace.getSpan(0)) },
+          { it.hasName("after").hasParent(trace.getSpan(0)) },
+        )
+      },
+    )
+  }
+
+  @WithSpan("non-cancellable-delay")
+  private suspend fun annotatedNonCancellableDelay(): Int = unannotatedNonCancellableDelay()
+
+  private suspend fun unannotatedNonCancellableDelay(): Int = withContext(NonCancellable) {
+    delay(10)
+    1
+  }
+
+  private fun <T> runWith(interceptor: ContinuationInterceptor, block: suspend () -> T): T {
+    val result = CompletableFuture<T>()
     block.startCoroutine(Continuation(interceptor) { result.complete(it.getOrThrow()) })
     return result.get(10, TimeUnit.SECONDS)
   }

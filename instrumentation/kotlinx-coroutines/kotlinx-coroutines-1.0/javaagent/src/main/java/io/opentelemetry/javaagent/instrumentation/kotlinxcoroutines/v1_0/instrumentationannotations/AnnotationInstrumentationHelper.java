@@ -255,11 +255,16 @@ public class AnnotationInstrumentationHelper {
       // When the runtime resumed the callee with its context, resuming the caller here switches the
       // thread context in the middle of that task. Under an undispatched withContext the runtime
       // may restore the task's context later, out of order with the switch, so let the caller's
-      // interceptor resume it with its own context instead.
-      if (Context.current() == spanContext && UndispatchedMarker.mayBeIn(delegate.getContext())) {
+      // dispatcher resume it with its own context instead. Other interceptors do not apply the
+      // caller's context, so they resume it below.
+      CoroutineContext callerContext = delegate.getContext();
+      ContinuationInterceptor interceptor = callerContext.get(ContinuationInterceptor.Key);
+      if (Context.current() == spanContext
+          && interceptor instanceof CoroutineDispatcher
+          && UndispatchedMarker.mayBeIn(callerContext)) {
         Continuation<T> intercepted = IntrinsicsKt.intercepted(delegate);
         if (intercepted != delegate) {
-          if (!dispatchedAnyway(result)) {
+          if (!dispatchedAnyway((CoroutineDispatcher) interceptor, result)) {
             intercepted.resumeWith(result);
           }
           return;
@@ -278,15 +283,9 @@ public class AnnotationInstrumentationHelper {
     // where the same out of order restore happens, so make it dispatch anyway. A dispatcher that
     // can not dispatch, such as Unconfined, which queues the resumption until this task completes,
     // resumes the caller as it otherwise would.
-    private boolean dispatchedAnyway(Object result) {
-      CoroutineContext callerContext = delegate.getContext();
-      ContinuationInterceptor interceptor = callerContext.get(ContinuationInterceptor.Key);
-      if (!(interceptor instanceof CoroutineDispatcher)
-          || interceptor == Dispatchers.getUnconfined()) {
-        return false;
-      }
-      CoroutineDispatcher dispatcher = (CoroutineDispatcher) interceptor;
-      if (dispatcher.isDispatchNeeded(callerContext)) {
+    private boolean dispatchedAnyway(CoroutineDispatcher dispatcher, Object result) {
+      if (dispatcher == Dispatchers.getUnconfined()
+          || dispatcher.isDispatchNeeded(delegate.getContext())) {
         return false;
       }
       AlwaysDispatch alwaysDispatch = new AlwaysDispatch(dispatcher);
