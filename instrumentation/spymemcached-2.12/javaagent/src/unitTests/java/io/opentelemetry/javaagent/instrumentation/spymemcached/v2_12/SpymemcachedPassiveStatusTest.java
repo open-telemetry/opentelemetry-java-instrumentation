@@ -10,7 +10,11 @@ import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -112,6 +116,34 @@ class SpymemcachedPassiveStatusTest {
   }
 
   @Test
+  void errorTypeDoesNotCallPublicResponseStatusGetter() {
+    SpymemcachedAttributesGetter getterSpy = spy(getter);
+    doReturn(StatusCode.ERR_NOT_FOUND.name())
+        .when(getterSpy)
+        .getDbResponseStatusCode(null, null, null);
+
+    assertThat(getterSpy.getErrorType(null, null, null)).isNull();
+    verify(getterSpy, never()).getDbResponseStatusCode(null, null, null);
+  }
+
+  @Test
+  void successfulAndPassiveStatusesAreNotClassifiedAsErrors() {
+    StatusCode[] statuses = {
+      StatusCode.SUCCESS, StatusCode.ERR_NOT_FOUND, StatusCode.ERR_EXISTS, StatusCode.ERR_NOT_STORED
+    };
+
+    for (StatusCode statusCode : statuses) {
+      OperationStatus status =
+          new OperationStatus(statusCode == StatusCode.SUCCESS, statusCode.name(), statusCode);
+      GetFuture<Object> future = getFuture(new CountDownLatch(0));
+      SpymemcachedSingletons.captureResponseStatus(future, status);
+
+      assertThat(getter.getDbResponseStatusCode(null, future, null)).isNull();
+      assertThat(getter.getErrorType(null, future, null)).isNull();
+    }
+  }
+
+  @Test
   void responseStatusSurvivesResultRetrievalFailureWithoutReplacingErrorType()
       throws InterruptedException {
     OperationStatus status = new OperationStatus(false, "too large", StatusCode.ERR_2BIG);
@@ -126,7 +158,8 @@ class SpymemcachedPassiveStatusTest {
     assertThat(retrievalError).isInstanceOf(ExecutionException.class);
     assertThat(retrievalError).hasCauseInstanceOf(IllegalStateException.class);
     assertThat(getter.getDbResponseStatusCode(null, future, retrievalError)).isEqualTo("ERR_2BIG");
-    assertThat(getter.getErrorType(null, future, retrievalError)).isNull();
+    assertThat(getter.getErrorType(null, future, retrievalError))
+        .isEqualTo(ExecutionException.class.getName());
     assertThat(getter.getErrorType(null, future, new OperationException())).isEqualTo("ERR_2BIG");
   }
 

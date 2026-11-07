@@ -28,6 +28,10 @@ class RediscalaAttributesGetterTest {
                 null, null, new IllegalStateException("WRONGTYPE detail")))
         .isNull();
     assertThat(getter.getDbResponseStatusCode(null, null, null)).isNull();
+    assertThat(getter.getErrorType(null, null, new ReplyErrorException(" ")))
+        .isEqualTo(ReplyErrorException.class.getName());
+    assertThat(getter.getErrorType(null, null, new IllegalStateException("WRONGTYPE detail")))
+        .isEqualTo(IllegalStateException.class.getName());
   }
 
   @Test
