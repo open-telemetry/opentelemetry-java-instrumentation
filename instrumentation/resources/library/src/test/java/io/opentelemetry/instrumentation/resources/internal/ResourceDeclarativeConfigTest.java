@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.resources.internal;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toSet;
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -19,7 +18,6 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfigura
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.ByteArrayInputStream;
 import java.util.Set;
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -34,6 +32,10 @@ class ResourceDeclarativeConfigTest {
     String yaml =
         "file_format: \"1.1\"\n"
             + "tracer_provider:\n"
+            + "  processors:\n"
+            + "    - simple:\n"
+            + "        exporter:\n"
+            + "          test:\n"
             + "resource:\n"
             + "  attributes:\n"
             + "    - name: service.name\n"
@@ -46,8 +48,11 @@ class ResourceDeclarativeConfigTest {
     OpenTelemetrySdk openTelemetrySdk =
         DeclarativeConfiguration.parseAndCreate(new ByteArrayInputStream(yaml.getBytes(UTF_8)))
             .getSdk();
-    assertThat(openTelemetrySdk.getSdkTracerProvider())
-        .extracting("sharedState.resource", as(InstanceOfAssertFactories.type(Resource.class)))
+    openTelemetrySdk.getTracer("test").spanBuilder("test").startSpan().end();
+    testing.waitForTraces(1);
+    assertThat(testing.spans()).hasSize(1);
+    Resource exportedResource = testing.spans().get(0).getResource();
+    assertThat(exportedResource)
         .satisfies(
             resource -> {
               // From .resource.attributes
