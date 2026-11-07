@@ -24,17 +24,6 @@ MDC capture selects only the application's original event MDC. Trace IDs, span I
 resource attributes, and baggage added by the Java agent's Logback MDC instrumentation are available
 to application appenders and log patterns, but are not exported as MDC log attributes. Application-owned
 values under the same names, such as `trace_id`, `service.name`, or `baggage.foo`, remain selectable.
-Trace correlation is carried in the OTLP log record's trace and span fields independently.
-
-To export baggage as log attributes, configure the bundled baggage log record processor separately:
-
-```properties
-otel.java.experimental.log-attributes.copy-from-baggage.include=tenant
-```
-
-This exports the selected baggage entry as `tenant`, without a `baggage.` prefix. It is independent
-of `otel.instrumentation.logback-mdc.add-baggage` and the MDC capture selector, including when that
-selector excludes all MDC entries.
 
 Structured key-value pairs, Logstash markers, and structured arguments are captured by default.
 Use `otel.instrumentation.common.logging.structured-attributes.excluded` to exclude selected keys;
