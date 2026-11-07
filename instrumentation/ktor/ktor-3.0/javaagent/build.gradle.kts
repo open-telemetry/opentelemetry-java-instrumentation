@@ -62,6 +62,8 @@ testing.suites {
     }
   }
 
+  // Ktor 3.4.3 changes how SuspendFunctionGun resumes pipeline continuations (KTOR-9431), so
+  // rerun the external job tests against it.
   register<JvmTestSuite>("version343Test") {
     dependencies {
       implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
