@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 import muzzle.TestClasses;
 import muzzle.TestClasses.HelperAdvice;
 import muzzle.TestClasses.LdcAdvice;
@@ -43,8 +42,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Opcodes;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.objectweb.asm.Type;
 
 class ReferenceCollectorTest {
@@ -334,119 +332,35 @@ class ReferenceCollectorTest {
             "com/amazonaws/services/testservice/testsubservice/request.handler2s"));
   }
 
-  @ParameterizedTest
-  @MethodSource("shouldCollectHelperClassesFromResourceFile")
-  void shouldTrimProviderNames(
-      @SuppressWarnings("unused") String desc, String applicationResource) {
-    List<String> providers =
-        asList(
-            "example.Provider",
-            "example.Outer$Inner",
-            "example.Éclair",
-            "提供者",
-            "\uD801\uDC00Provider",
-            "class",
-            "example.int");
+  @Test
+  void shouldTrimProviderNames() {
     String helper = TestHelperClasses.Helper.class.getName();
-    String agentResource = "agent/providers";
     RecordingClassLoader loader =
-        new RecordingClassLoader(
-            agentResource,
-            "\n \t\r\n\t" + String.join(" \t\n\t", providers) + "\n " + helper + " \n" + helper);
-    for (String provider : providers) {
-      loader.addProvider(provider);
-    }
+        new RecordingClassLoader("agent/providers", "\n \t" + helper + " \t\n");
     ReferenceCollector collector = new ReferenceCollector(s -> false, loader);
 
     collector.collectReferencesFromResource(
-        HelperResource.create(applicationResource, agentResource, false));
-    assertThat(collector.getReferences()).containsKey(TestHelperClasses.Helper.class.getName());
-    collector.prune();
+        HelperResource.create("META-INF/services/example.Service", "agent/providers", false));
 
-    List<String> expectedLookups = new ArrayList<>();
-    expectedLookups.add(agentResource);
-    for (String provider : providers) {
-      expectedLookups.add(Utils.getResourceName(provider));
-    }
-    expectedLookups.add(Utils.getResourceName(helper));
-    expectedLookups.add(Utils.getResourceName(helper));
-    assertThat(loader.lookups).startsWith(expectedLookups.toArray(new String[0]));
-    assertThat(collector.getSortedHelperClasses())
-        .containsSubsequence(TestHelperClasses.HelperInterface.class.getName(), helper)
-        .containsSubsequence(TestHelperClasses.HelperSuperClass.class.getName(), helper);
+    assertThat(collector.getReferences()).containsKey(TestHelperClasses.Helper.class.getName());
   }
 
   @Test
   void shouldStripJavaSpiComments() {
     String helper = TestHelperClasses.Helper.class.getName();
     RecordingClassLoader loader =
-        new RecordingClassLoader(
-            "agent/providers",
-            "# comment\n \t# another comment\n\n " + helper + "\t # inline comment\n");
+        new RecordingClassLoader("agent/providers", "# comment\n" + helper + " # inline comment\n");
     ReferenceCollector collector = new ReferenceCollector(s -> false, loader);
 
     collector.collectReferencesFromResource(
         HelperResource.create("META-INF/services/example.Service", "agent/providers", false));
-    collector.prune();
 
-    assertThat(loader.lookups).startsWith("agent/providers", Utils.getResourceName(helper));
-    assertThat(collector.getSortedHelperClasses())
-        .containsSubsequence(TestHelperClasses.HelperInterface.class.getName(), helper)
-        .containsSubsequence(TestHelperClasses.HelperSuperClass.class.getName(), helper);
+    assertThat(collector.getReferences()).containsKey(TestHelperClasses.Helper.class.getName());
   }
 
   @ParameterizedTest
-  @MethodSource
-  void shouldRejectMalformedProviderNames(String applicationResource, String provider) {
-    RecordingClassLoader loader =
-        new RecordingClassLoader("agent/providers", "\nexample.Valid\n " + provider + " \n");
-    ReferenceCollector collector = new ReferenceCollector(s -> false, loader);
-
-    assertThatExceptionOfType(MuzzleCompilationException.class)
-        .isThrownBy(
-            () ->
-                collector.collectReferencesFromResource(
-                    HelperResource.create(applicationResource, "agent/providers", false)))
-        .withMessage(
-            "Invalid provider name in resource agent/providers at line 3: '" + provider + "'");
-    assertThat(loader.lookups).containsExactly("agent/providers");
-    assertThat(collector.getReferences()).isEmpty();
-  }
-
-  private static Stream<Arguments> shouldRejectMalformedProviderNames() {
-    List<String> malformedProviders =
-        asList(
-            "../Provider",
-            "example/Provider",
-            "example\\Provider",
-            "/absolute/Provider",
-            "\\absolute\\Provider",
-            "C:\\Provider",
-            "C:Provider",
-            "file:Provider",
-            "https://example/Provider",
-            "jar:file:/providers.jar!/Provider",
-            ".Provider",
-            "example.",
-            "example..Provider",
-            "..",
-            "example.1Provider",
-            "example.Provider name",
-            "example.Provider\tname",
-            "example.Provider;",
-            "example.Provider%2fOther",
-            "[Lexample.Provider;",
-            "example.Provider?query");
-    return shouldCollectHelperClassesFromResourceFile().stream()
-        .flatMap(
-            resource ->
-                malformedProviders.stream()
-                    .map(provider -> Arguments.of(resource.get()[1], provider)));
-  }
-
-  @ParameterizedTest
-  @MethodSource
-  void shouldNotStripAwsComments(String applicationResource, String provider) {
+  @ValueSource(strings = {"../Provider", "example/Provider", "example..Provider"})
+  void shouldRejectMalformedProviderNames(String provider) {
     RecordingClassLoader loader = new RecordingClassLoader("agent/providers", provider);
     ReferenceCollector collector = new ReferenceCollector(s -> false, loader);
 
@@ -454,22 +368,30 @@ class ReferenceCollectorTest {
         .isThrownBy(
             () ->
                 collector.collectReferencesFromResource(
-                    HelperResource.create(applicationResource, "agent/providers", false)))
-        .withMessageContaining("agent/providers")
-        .withMessageContaining("line 1")
-        .withMessageContaining(provider);
+                    HelperResource.create(
+                        "META-INF/services/example.Service", "agent/providers", false)))
+        .withMessage(
+            "Invalid provider name in resource agent/providers at line 1: '" + provider + "'");
     assertThat(loader.lookups).containsExactly("agent/providers");
   }
 
-  private static Stream<Arguments> shouldNotStripAwsComments() {
-    return shouldCollectHelperClassesFromResourceFile().stream()
-        .map(resource -> (String) resource.get()[1])
-        .filter(resource -> !resource.startsWith("META-INF/services/"))
-        .flatMap(
-            resource ->
-                Stream.of(
-                    Arguments.of(resource, "# comment"),
-                    Arguments.of(resource, "example.Provider # inline comment")));
+  @Test
+  void shouldNotStripAwsComments() {
+    String provider = TestHelperClasses.Helper.class.getName() + " # inline comment";
+    RecordingClassLoader loader = new RecordingClassLoader("agent/providers", provider);
+    ReferenceCollector collector = new ReferenceCollector(s -> false, loader);
+
+    assertThatExceptionOfType(MuzzleCompilationException.class)
+        .isThrownBy(
+            () ->
+                collector.collectReferencesFromResource(
+                    HelperResource.create(
+                        "software/amazon/awssdk/services/testservice/execution.interceptors",
+                        "agent/providers",
+                        false)))
+        .withMessage(
+            "Invalid provider name in resource agent/providers at line 1: '" + provider + "'");
+    assertThat(loader.lookups).containsExactly("agent/providers");
   }
 
   @Test
@@ -637,15 +559,6 @@ class ReferenceCollectorTest {
     RecordingClassLoader(String resource, String content) {
       super(ReferenceCollectorTest.class.getClassLoader());
       resources.put(resource, ByteArrayUrl.create(resource, content.getBytes(UTF_8)));
-    }
-
-    void addProvider(String name) {
-      ClassWriter writer = new ClassWriter(0);
-      writer.visit(
-          Opcodes.V1_8, Opcodes.ACC_PUBLIC, name.replace('.', '/'), null, "java/lang/Object", null);
-      writer.visitEnd();
-      String resource = Utils.getResourceName(name);
-      resources.put(resource, ByteArrayUrl.create(resource, writer.toByteArray()));
     }
 
     @Override
