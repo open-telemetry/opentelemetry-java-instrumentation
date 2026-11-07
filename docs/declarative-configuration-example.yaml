@@ -506,6 +506,12 @@ instrumentation/development:
       histogram_gauges/development:
         # Enables gauge-based Micrometer histograms for DistributionSummary and Timer instruments.
         enabled: false
+      jvm_metrics_ownership/development:
+        # Stops bridging standard Micrometer JVM metrics that duplicate agent runtime telemetry.
+        # Buffer, system CPU and load, and file descriptor metrics are only suppressed when
+        # `otel.instrumentation.runtime-telemetry.emit-experimental-metrics` is also enabled. Custom
+        # meters with the same names and types are also suppressed.
+        enabled: false
       prometheus_mode:
         # Simulates the behavior of Micrometer's PrometheusMeterRegistry. The instruments will be
         # renamed to match Micrometer instrument naming, and the base time unit will be set to

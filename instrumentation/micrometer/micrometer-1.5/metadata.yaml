@@ -6,6 +6,15 @@ description: >
   with metrics already captured by other instrumentations.
 library_link: https://micrometer.io/
 configurations:
+  - name: otel.instrumentation.micrometer.experimental.jvm-metrics-ownership.enabled
+    declarative_name: java.micrometer.jvm_metrics_ownership/development.enabled
+    description: >
+      Stops bridging standard Micrometer JVM metrics that duplicate agent runtime telemetry. Buffer,
+      system CPU and load, and file descriptor metrics are only suppressed when
+      `otel.instrumentation.runtime-telemetry.emit-experimental-metrics` is also enabled. Custom
+      meters with the same names and types are also suppressed.
+    type: boolean
+    default: false
   - name: otel.instrumentation.micrometer.prometheus-mode.enabled
     declarative_name: java.micrometer.prometheus_mode.enabled
     description: >
