@@ -6,44 +6,48 @@
 package io.opentelemetry.instrumentation.resources.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
+import static io.opentelemetry.semconv.incubating.HostIncubatingAttributes.HOST_ARCH;
+import static io.opentelemetry.semconv.incubating.HostIncubatingAttributes.HOST_NAME;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
-import static java.util.Collections.singletonMap;
-import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static org.mockito.Mockito.mockStatic;
 
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.instrumentation.resources.HostResource;
+import io.opentelemetry.instrumentation.resources.HostResourceProvider;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.assertj.core.util.Strings;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.MockedStatic;
 
 class ResourceProviderPropertiesCustomizerTest {
 
-  private static final String HOST_ID_RESOURCE_PROVIDER =
-      "io.opentelemetry.instrumentation.resources.HostIdResourceProvider";
   private static final String PROVIDER_CLASS_NAME = Provider.class.getName();
+
+  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   public static class Provider implements ResourceProvider {
     @Override
     public Resource createResource(ConfigProperties config) {
-      return Resource.create(Attributes.of(stringKey("key"), "value"));
+      return Resource.create(
+          Attributes.of(
+              stringKey("key"), "value", HOST_NAME, "provider-host", HOST_ARCH, "provider-arch"));
     }
   }
 
@@ -66,13 +70,7 @@ class ResourceProviderPropertiesCustomizerTest {
       props.put("otel.resource.providers.test.enabled", Boolean.toString(explicitEnabled));
     }
 
-    props.put("otel.traces.exporter", "none");
-    props.put("otel.metrics.exporter", "none");
-    props.put("otel.logs.exporter", "none");
-
-    Attributes attributes =
-        SdkAutoconfigureAccess.getResourceAttributes(
-            AutoConfiguredOpenTelemetrySdk.builder().addPropertiesSupplier(() -> props).build());
+    Attributes attributes = configure(props);
 
     if (expectedEnabled) {
       assertThat(attributes.get(stringKey("key"))).isEqualTo("value");
@@ -82,23 +80,35 @@ class ResourceProviderPropertiesCustomizerTest {
   }
 
   @Test
-  void hostIdResourceProviderDisabledByDefault() {
-    assertThat(disabledProviders(emptyMap())).contains(HOST_ID_RESOURCE_PROVIDER);
+  void preservesEarlierHostDescriptions() {
+    Map<String, String> props = new HashMap<>();
+    props.put(
+        ResourceProviderPropertiesCustomizer.ENABLED_KEY,
+        PROVIDER_CLASS_NAME + "," + HostResourceProvider.class.getName());
+    Resource descriptions =
+        Resource.create(Attributes.of(HOST_NAME, "local-host", HOST_ARCH, "local-arch"));
+    try (MockedStatic<HostResource> host = mockStatic(HostResource.class)) {
+      host.when(() -> HostResource.create(true)).thenReturn(descriptions);
+
+      Attributes attributes = configure(props);
+
+      assertThat(attributes.get(HOST_NAME)).isEqualTo("provider-host");
+      assertThat(attributes.get(HOST_ARCH)).isEqualTo("provider-arch");
+      host.verify(() -> HostResource.create(true));
+    }
   }
 
-  @Test
-  void hostIdResourceProviderCanBeEnabled() {
-    assertThat(disabledProviders(singletonMap("otel.resource.providers.host-id.enabled", "true")))
-        .doesNotContain(HOST_ID_RESOURCE_PROVIDER);
-  }
-
-  private static List<String> disabledProviders(Map<String, String> config) {
-    Map<String, String> customized =
-        new ResourceProviderPropertiesCustomizer()
-            .customize(DefaultConfigProperties.createFromMap(config));
-    return asList(
-        requireNonNull(customized.get(ResourceProviderPropertiesCustomizer.DISABLED_KEY))
-            .split(","));
+  private Attributes configure(Map<String, String> props) {
+    props.put("otel.traces.exporter", "none");
+    props.put("otel.metrics.exporter", "none");
+    props.put("otel.logs.exporter", "none");
+    AutoConfiguredOpenTelemetrySdk sdk =
+        AutoConfiguredOpenTelemetrySdk.builder()
+            .addPropertiesCustomizer(config -> props)
+            .disableShutdownHook()
+            .build();
+    cleanup.deferCleanup(sdk.getOpenTelemetrySdk());
+    return SdkAutoconfigureAccess.getResourceAttributes(sdk);
   }
 
   private static Stream<Arguments> enabledTestCases() {
