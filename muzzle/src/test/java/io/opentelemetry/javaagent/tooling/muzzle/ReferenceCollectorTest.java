@@ -344,10 +344,10 @@ class ReferenceCollectorTest {
         "example.$Provider",
         "example._Provider",
         "example.Provider123",
-        "example.Pr\u00f8vider",
-        "\u03c0.Provider",
-        "example.\uD801\uDC00Provider",
-        "example.Provi\u0301der"
+        "example.Prøvider",
+        "π.Provider",
+        "example.𐐀Provider",
+        "example.Províder"
       })
   void shouldCollectHelperClassesFromValidProviderNames(String provider) {
     RecordingClassLoader loader =
