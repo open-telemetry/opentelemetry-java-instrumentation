@@ -9,6 +9,7 @@ dependencies {
   testImplementation(project(":instrumentation-api-incubator"))
   testImplementation(project(":javaagent-bootstrap"))
   testImplementation(project(":javaagent-extension-api"))
+  testImplementation(project(":testing-common"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.apache.pulsar:pulsar-client:2.8.0")
 }
