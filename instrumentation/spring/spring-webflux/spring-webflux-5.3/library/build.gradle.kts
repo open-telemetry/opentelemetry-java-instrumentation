@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.library-instrumentation")
   id("otel.nullaway-conventions")
@@ -29,6 +32,25 @@ if (!otelProps.testLatestDeps) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       force("ch.qos.logback:logback-classic:1.2.3")
+    }
+  }
+}
+
+testing.suites {
+  executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+    register("Experimental") {
+      include("**/SpringWebfluxClientInstrumentationTest*")
+      systemProperty("test.emitExperimentalTelemetry", "true")
+      systemProperty(
+        "metadataConfig",
+        "Experimental.setEmitExperimentalTelemetry(telemetryBuilder, true)",
+      )
+    }
+    register("PreviewSemconv") {
+      telemetryConfig("otel.semconv-stability.preview", "service.peer")
     }
   }
 }
