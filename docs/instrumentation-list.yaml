@@ -1638,6 +1638,52 @@ definitions:
         type: STRING
       - name: server.address
         type: STRING
+    db.client.operation.duration-05f9ae2a:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.response.status_code
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    db.client.operation.duration-09246bda:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.query.summary
+        type: STRING
+      - name: db.response.status_code
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
     db.client.operation.duration-18bcff8b:
       name: db.client.operation.duration
       description: Duration of database client operations.
@@ -1710,19 +1756,6 @@ definitions:
         type: LONG
       - name: server.address
         type: STRING
-    db.client.operation.duration-4f486dc3:
-      name: db.client.operation.duration
-      description: Duration of database client operations.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: db.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
     db.client.operation.duration-55295033:
       name: db.client.operation.duration
       description: Duration of database client operations.
@@ -1817,25 +1850,6 @@ definitions:
         type: STRING
       - name: server.address
         type: STRING
-    db.client.operation.duration-691e5fa4:
-      name: db.client.operation.duration
-      description: Duration of database client operations.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.name
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
     db.client.operation.duration-6dc4ed81:
       name: db.client.operation.duration
       description: Duration of database client operations.
@@ -1857,7 +1871,30 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    db.client.operation.duration-7210186d:
+    db.client.operation.duration-741322b9:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.operation.name
+        type: STRING
+      - name: db.response.status_code
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    db.client.operation.duration-7485dd63:
       name: db.client.operation.duration
       description: Duration of database client operations.
       instrument: histogram
@@ -1870,13 +1907,36 @@ definitions:
         type: STRING
       - name: db.operation.name
         type: STRING
-      - name: db.query.summary
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
       - name: error.type
         type: STRING
-    db.client.operation.duration-83708a92:
+      - name: network.peer.address
+        type: STRING
+      - name: network.peer.port
+        type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    db.client.operation.duration-993db6d7:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.response.status_code
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    db.client.operation.duration-9daeca95:
       name: db.client.operation.duration
       description: Duration of database client operations.
       instrument: histogram
@@ -1887,14 +1947,33 @@ definitions:
         type: STRING
       - name: db.query.summary
         type: STRING
+      - name: db.response.status_code
+        type: STRING
       - name: db.system.name
         type: STRING
       - name: error.type
         type: STRING
-      - name: network.peer.address
+      - name: server.address
         type: STRING
-      - name: network.peer.port
+      - name: server.port
         type: LONG
+    db.client.operation.duration-b57c69a0:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.response.status_code
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
@@ -1916,6 +1995,29 @@ definitions:
         type: STRING
       - name: db.system.name
         type: STRING
+    db.client.operation.duration-ce9d3037:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.collection.name
+        type: STRING
+      - name: db.namespace
+        type: STRING
+      - name: db.operation.name
+        type: STRING
+      - name: db.response.status_code
+        type: STRING
+      - name: db.system.name
+        type: STRING
+      - name: error.type
+        type: STRING
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
     db.client.operation.duration-d183b382:
       name: db.client.operation.duration
       description: Duration of database client operations.
@@ -1956,39 +2058,18 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    db.client.operation.duration-d440c7d0:
+    db.client.operation.duration-e72c0cc1:
       name: db.client.operation.duration
       description: Duration of database client operations.
       instrument: histogram
       data_type: HISTOGRAM
       unit: s
       attributes:
-      - name: db.collection.name
-        type: STRING
       - name: db.namespace
         type: STRING
-      - name: db.operation.name
+      - name: db.query.summary
         type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: error.type
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    db.client.operation.duration-dd161d27:
-      name: db.client.operation.duration
-      description: Duration of database client operations.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: db.collection.name
-        type: STRING
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.name
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -1998,6 +2079,23 @@ definitions:
         type: STRING
       - name: network.peer.port
         type: LONG
+      - name: server.address
+        type: STRING
+      - name: server.port
+        type: LONG
+    db.client.operation.duration-f3d68a28:
+      name: db.client.operation.duration
+      description: Duration of database client operations.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: db.operation.name
+        type: STRING
+      - name: db.response.status_code
+        type: STRING
+      - name: db.system.name
+        type: STRING
       - name: server.address
         type: STRING
       - name: server.port
@@ -7304,7 +7402,7 @@ libraries:
   telemetry:
   - when: AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)
     metric_refs:
-    - db.client.operation.duration-7210186d
+    - db.client.operation.duration-09246bda
     - messaging.client.consumed.messages-a3a9fe80
     - messaging.client.operation.duration-7bc8c876
     - messaging.client.sent.messages-db1f42a5
@@ -7371,6 +7469,8 @@ libraries:
       - name: db.query.summary
         type: STRING
       - name: db.query.text
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -8746,7 +8846,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-83708a92
+    - db.client.operation.duration-e72c0cc1
     spans:
     - span_kind: CLIENT
       attributes:
@@ -8755,6 +8855,8 @@ libraries:
       - name: db.query.summary
         type: STRING
       - name: db.query.text
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -8789,7 +8891,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-83708a92
+    - db.client.operation.duration-e72c0cc1
     spans:
     - span_kind: CLIENT
       attributes:
@@ -8798,6 +8900,8 @@ libraries:
       - name: db.query.summary
         type: STRING
       - name: db.query.text
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -9134,7 +9238,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-32559b79
+    - db.client.operation.duration-f3d68a28
     spans:
     - span_kind: CLIENT
       attributes:
@@ -9145,6 +9249,8 @@ libraries:
       - name: db.operation.parameter.index
         type: STRING
       - name: db.query.text
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -9179,13 +9285,17 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-4f486dc3
+    - db.client.operation.duration-993db6d7
     spans:
     - span_kind: CLIENT
       attributes:
       - name: db.query.text
         type: STRING
+      - name: db.response.status_code
+        type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: http.request.method
         type: STRING
@@ -9217,13 +9327,17 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-4f486dc3
+    - db.client.operation.duration-993db6d7
     spans:
     - span_kind: CLIENT
       attributes:
       - name: db.query.text
         type: STRING
+      - name: db.response.status_code
+        type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: http.request.method
         type: STRING
@@ -9255,11 +9369,15 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-4f486dc3
+    - db.client.operation.duration-993db6d7
     spans:
     - span_kind: CLIENT
       attributes:
+      - name: db.response.status_code
+        type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: http.request.method
         type: STRING
@@ -11159,6 +11277,8 @@ libraries:
         type: STRING
       - name: db.query.text
         type: STRING
+      - name: db.response.status_code
+        type: STRING
       - name: db.stored_procedure.name
         type: STRING
       - name: db.system.name
@@ -11203,6 +11323,8 @@ libraries:
         type: STRING
       - name: db.query.text
         type: STRING
+      - name: db.response.status_code
+        type: STRING
       - name: db.system.name
         type: STRING
       - name: error.type
@@ -11220,6 +11342,8 @@ libraries:
       - name: db.query.summary
         type: STRING
       - name: db.query.text
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.stored_procedure.name
         type: STRING
@@ -13906,7 +14030,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-d183b382
+    - db.client.operation.duration-05f9ae2a
     spans:
     - span_kind: CLIENT
       attributes:
@@ -13915,6 +14039,8 @@ libraries:
       - name: db.operation.batch.size
         type: LONG
       - name: db.operation.name
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -13930,7 +14056,7 @@ libraries:
         type: LONG
   - when: otel.instrumentation.lettuce.connection-telemetry.enabled=true
     metric_refs:
-    - db.client.operation.duration-d183b382
+    - db.client.operation.duration-05f9ae2a
     spans:
     - span_kind: CLIENT
       attributes:
@@ -13939,6 +14065,8 @@ libraries:
       - name: db.operation.batch.size
         type: LONG
       - name: db.operation.name
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -13956,7 +14084,7 @@ libraries:
         type: STRING
   - when: otel.instrumentation.lettuce.experimental-span-attributes=true
     metric_refs:
-    - db.client.operation.duration-d183b382
+    - db.client.operation.duration-05f9ae2a
     spans:
     - span_kind: CLIENT
       attributes:
@@ -13965,6 +14093,8 @@ libraries:
       - name: db.operation.batch.size
         type: LONG
       - name: db.operation.name
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -14004,7 +14134,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-d183b382
+    - db.client.operation.duration-05f9ae2a
     spans:
     - span_kind: CLIENT
       attributes:
@@ -14015,6 +14145,8 @@ libraries:
       - name: db.operation.name
         type: STRING
       - name: db.query.text
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -14030,7 +14162,7 @@ libraries:
         type: LONG
   - when: otel.instrumentation.lettuce.connection-telemetry.enabled=true
     metric_refs:
-    - db.client.operation.duration-d183b382
+    - db.client.operation.duration-05f9ae2a
     spans:
     - span_kind: CLIENT
       attributes:
@@ -14041,6 +14173,8 @@ libraries:
       - name: db.operation.name
         type: STRING
       - name: db.query.text
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -14058,7 +14192,7 @@ libraries:
         type: STRING
   - when: otel.instrumentation.lettuce.experimental-span-attributes=true
     metric_refs:
-    - db.client.operation.duration-d183b382
+    - db.client.operation.duration-05f9ae2a
     spans:
     - span_kind: CLIENT
       attributes:
@@ -14069,6 +14203,8 @@ libraries:
       - name: db.operation.name
         type: STRING
       - name: db.query.text
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -14356,7 +14492,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-dd161d27
+    - db.client.operation.duration-7485dd63
     spans:
     - span_kind: CLIENT
       attributes:
@@ -14367,6 +14503,8 @@ libraries:
       - name: db.operation.name
         type: STRING
       - name: db.query.text
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -14401,7 +14539,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-dd161d27
+    - db.client.operation.duration-7485dd63
     spans:
     - span_kind: CLIENT
       attributes:
@@ -14412,6 +14550,8 @@ libraries:
       - name: db.operation.name
         type: STRING
       - name: db.query.text
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -14446,7 +14586,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-d440c7d0
+    - db.client.operation.duration-ce9d3037
     spans:
     - span_kind: CLIENT
       attributes:
@@ -14457,6 +14597,8 @@ libraries:
       - name: db.operation.name
         type: STRING
       - name: db.query.text
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -15119,6 +15261,8 @@ libraries:
         type: STRING
       - name: db.query.text
         type: STRING
+      - name: db.response.status_code
+        type: STRING
       - name: db.system.name
         type: STRING
       - name: error.type
@@ -15146,13 +15290,17 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-32559b79
+    - db.client.operation.duration-f3d68a28
     spans:
     - span_kind: CLIENT
       attributes:
       - name: db.operation.name
         type: STRING
+      - name: db.response.status_code
+        type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: server.address
         type: STRING
@@ -15177,13 +15325,17 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-32559b79
+    - db.client.operation.duration-f3d68a28
     spans:
     - span_kind: CLIENT
       attributes:
       - name: db.operation.name
         type: STRING
+      - name: db.response.status_code
+        type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: server.address
         type: STRING
@@ -15816,7 +15968,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-d4212042
+    - db.client.operation.duration-9daeca95
     spans:
     - span_kind: CLIENT
       attributes:
@@ -15827,6 +15979,8 @@ libraries:
       - name: db.query.summary
         type: STRING
       - name: db.query.text
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -16461,7 +16615,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-691e5fa4
+    - db.client.operation.duration-b57c69a0
     spans:
     - span_kind: CLIENT
       attributes:
@@ -16470,6 +16624,8 @@ libraries:
       - name: db.operation.batch.size
         type: LONG
       - name: db.operation.name
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -18560,13 +18716,15 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-6dc4ed81
+    - db.client.operation.duration-741322b9
     spans:
     - span_kind: CLIENT
       attributes:
       - name: db.operation.name
         type: STRING
       - name: db.query.text
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -18582,13 +18740,15 @@ libraries:
         type: LONG
   - when: otel.instrumentation.spymemcached.experimental-span-attributes=true
     metric_refs:
-    - db.client.operation.duration-6dc4ed81
+    - db.client.operation.duration-741322b9
     spans:
     - span_kind: CLIENT
       attributes:
       - name: db.operation.name
         type: STRING
       - name: db.query.text
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -19404,7 +19564,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-d183b382
+    - db.client.operation.duration-05f9ae2a
     spans:
     - span_kind: CLIENT
       attributes:
@@ -19415,6 +19575,8 @@ libraries:
       - name: db.operation.name
         type: STRING
       - name: db.query.text
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
@@ -19476,6 +19638,8 @@ libraries:
         type: STRING
       - name: db.query.text
         type: STRING
+      - name: db.response.status_code
+        type: STRING
       - name: db.system.name
         type: STRING
       - name: error.type
@@ -19508,7 +19672,7 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - db.client.operation.duration-d4212042
+    - db.client.operation.duration-9daeca95
     spans:
     - span_kind: CLIENT
       attributes:
@@ -19519,6 +19683,8 @@ libraries:
       - name: db.query.summary
         type: STRING
       - name: db.query.text
+        type: STRING
+      - name: db.response.status_code
         type: STRING
       - name: db.system.name
         type: STRING
