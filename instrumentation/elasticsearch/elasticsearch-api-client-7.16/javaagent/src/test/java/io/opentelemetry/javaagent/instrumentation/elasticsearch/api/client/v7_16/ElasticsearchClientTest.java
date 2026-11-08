@@ -7,12 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.api.client.v7_1
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
-import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetricWithResponseStatus;
 import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -110,6 +111,7 @@ class ElasticsearchClientTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "200"),
                             equalTo(DB_OPERATION_NAME, "info"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
@@ -147,6 +149,7 @@ class ElasticsearchClientTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "201"),
                             equalTo(DB_OPERATION_NAME, "index"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -171,9 +174,10 @@ class ElasticsearchClientTest {
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
 
-    assertDurationMetric(
+    assertDurationMetricWithResponseStatus(
         testing,
         "io.opentelemetry.elasticsearch-rest-7.0",
+        "201",
         DB_OPERATION_NAME,
         DB_SYSTEM_NAME,
         SERVER_ADDRESS,
@@ -213,6 +217,7 @@ class ElasticsearchClientTest {
         new ArrayList<>(
             asList(
                 equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                equalTo(DB_RESPONSE_STATUS_CODE, "200"),
                 equalTo(DB_OPERATION_NAME, "search"),
                 equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                 equalTo(SERVER_PORT, httpHost.getPort()),
@@ -254,6 +259,7 @@ class ElasticsearchClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "200"),
                             equalTo(DB_OPERATION_NAME, "info"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -313,6 +319,7 @@ class ElasticsearchClientTest {
                 .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfyingExactly(
                     equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                    equalTo(DB_RESPONSE_STATUS_CODE, "200"),
                     equalTo(DB_OPERATION_NAME, "info"),
                     equalTo(HTTP_REQUEST_METHOD, "GET"),
                     equalTo(URL_FULL, httpHost.toURI() + "/"),

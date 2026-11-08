@@ -11,10 +11,24 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import org.junit.jupiter.api.Test;
+import redis.actors.ReplyErrorException;
 
 class RediscalaAttributesGetterTest {
 
   private final RediscalaAttributesGetter getter = new RediscalaAttributesGetter();
+
+  @Test
+  void responseStatusUsesOnlyServerErrorPrefixes() {
+    assertThat(
+            getter.getDbResponseStatusCode(null, null, new ReplyErrorException("WRONGTYPE detail")))
+        .isEqualTo("WRONGTYPE");
+    assertThat(getter.getDbResponseStatusCode(null, null, new ReplyErrorException(" "))).isNull();
+    assertThat(
+            getter.getDbResponseStatusCode(
+                null, null, new IllegalStateException("WRONGTYPE detail")))
+        .isNull();
+    assertThat(getter.getDbResponseStatusCode(null, null, null)).isNull();
+  }
 
   @Test
   void requestWithoutTargetDoesNotUseSelectedAddressAsServer() {

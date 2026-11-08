@@ -9,7 +9,9 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlResponseStatusCodeUtil;
 import io.r2dbc.spi.R2dbcException;
+import io.r2dbc.spi.R2dbcTimeoutException;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -51,6 +53,35 @@ public final class R2dbcSqlAttributesGetter
   @Override
   public String getErrorType(
       DbExecution request, @Nullable Void response, @Nullable Throwable error) {
+    if (error instanceof R2dbcTimeoutException) {
+      return error.getClass().getName();
+    }
+    String responseStatusCode = getResponseStatusCode(request, error);
+    return "00000".equals(responseStatusCode) ? null : responseStatusCode;
+  }
+
+  @Nullable
+  @Override
+  public String getDbResponseStatusCode(
+      DbExecution request, @Nullable Void response, @Nullable Throwable error) {
+    return getResponseStatusCode(request, error);
+  }
+
+  @Nullable
+  private static String getResponseStatusCode(DbExecution request, @Nullable Throwable error) {
+    String dbSystemName = request.getSystemName();
+    int errorCode = getErrorCode(error);
+    String sqlState = getSqlState(error);
+    String vendorCode = errorCode == 0 ? null : Integer.toString(errorCode);
+    return SqlResponseStatusCodeUtil.getResponseStatusCode(dbSystemName, sqlState, vendorCode);
+  }
+
+  private static int getErrorCode(@Nullable Throwable error) {
+    return error instanceof R2dbcException ? ((R2dbcException) error).getErrorCode() : 0;
+  }
+
+  @Nullable
+  private static String getSqlState(@Nullable Throwable error) {
     if (error instanceof R2dbcException) {
       return ((R2dbcException) error).getSqlState();
     }

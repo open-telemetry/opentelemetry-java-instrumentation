@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -236,7 +237,8 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
                                 equalTo(DB_OPERATION_NAME, "GET"),
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort())),
-                                equalTo(ERROR_TYPE, "404")),
+                                equalTo(ERROR_TYPE, "404"),
+                                equalTo(DB_RESPONSE_STATUS_CODE, "404")),
                     span ->
                         span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
