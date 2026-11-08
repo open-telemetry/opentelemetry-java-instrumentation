@@ -225,6 +225,19 @@
       ],
     },
     {
+      // Keep major formatter updates out of the maintenance branch.
+      matchBaseBranches: [
+        'maintenance/v2.x',
+      ],
+      matchPackageNames: [
+        'com.google.googlejavaformat:google-java-format',
+      ],
+      matchUpdateTypes: [
+        'major',
+      ],
+      enabled: false,
+    },
+    {
       // junit 6+ requires Java 17+
       matchPackageNames: [
         'org.junit:**',

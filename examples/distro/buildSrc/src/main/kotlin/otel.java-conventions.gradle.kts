@@ -15,7 +15,7 @@ repositories {
 
 spotless {
   java {
-    googleJavaFormat()
+    googleJavaFormat("1.36.1")
     licenseHeaderFile(rootProject.file("../../buildscripts/spotless.license.java"), "(package|import|public)")
     target("src/**/*.java")
   }

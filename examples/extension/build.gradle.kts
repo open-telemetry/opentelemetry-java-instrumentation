@@ -13,7 +13,7 @@ plugins {
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
   id("com.gradleup.shadow") version "9.6.1"
-  id("com.diffplug.spotless") version "8.10.4"
+  id("com.diffplug.spotless") version "8.11.0"
 
   id("io.opentelemetry.instrumentation.muzzle-generation") version "2.34.0-alpha-SNAPSHOT"
   id("io.opentelemetry.instrumentation.muzzle-check") version "2.34.0-alpha-SNAPSHOT"
@@ -54,7 +54,7 @@ configurations {
 
 spotless {
   java {
-    googleJavaFormat()
+    googleJavaFormat("1.36.1")
     licenseHeaderFile(rootProject.file("../../buildscripts/spotless.license.java"), "(package|import|public)")
     target("src/**/*.java")
   }
@@ -101,7 +101,7 @@ dependencies {
 
   //All dependencies below are only for tests
   testImplementation("org.testcontainers:testcontainers:2.0.5")
-  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.4")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.23.0")
   testImplementation("com.google.protobuf:protobuf-java-util:4.36.2")
   testImplementation("com.squareup.okhttp3:okhttp:5.5.1")
   testImplementation("io.opentelemetry:opentelemetry-api")
