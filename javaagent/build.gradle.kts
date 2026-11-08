@@ -54,6 +54,17 @@ val licenseReportDependencies = configurations.create("licenseReportDependencies
   extendsFrom(baseJavaagentLibs)
 }
 
+val log4jStartupRuntime = configurations.create("log4jStartupRuntime") {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+}
+val log4jStartupJpl = configurations.create("log4jStartupJpl") {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+  isTransitive = false
+}
+val log4jStartupVersion = "2.26.1"
+
 dependencies {
   bootstrapLibs(project(":instrumentation-api"))
   // opentelemetry-api is an api dependency of :instrumentation-api, but opentelemetry-api-incubator is not
@@ -116,6 +127,11 @@ dependencies {
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2")
+  testCompileOnly("io.opentelemetry:opentelemetry-api")
+  testCompileOnly("org.apache.logging.log4j:log4j-api:$log4jStartupVersion")
+  log4jStartupRuntime("io.opentelemetry:opentelemetry-api")
+  log4jStartupRuntime("org.apache.logging.log4j:log4j-core:$log4jStartupVersion")
+  log4jStartupJpl("org.apache.logging.log4j:log4j-jpl:$log4jStartupVersion")
 }
 
 val javaagentDependencies = dependencies
@@ -276,6 +292,10 @@ tasks {
     testLogging {
       events("started")
     }
+  }
+
+  test {
+    jvmArgumentProviders.add(Log4jStartupClasspathProvider(log4jStartupRuntime, log4jStartupJpl))
   }
 
   val cleanLicenses = register<Delete>("cleanLicenses") {
@@ -451,5 +471,15 @@ class JavaagentProvider(
   override fun asArguments(): Iterable<String> = listOf(
     "-javaagent:${agentJarPath.get()}",
     "-Dotel.javaagent.testing.transform-safe-logging.enabled=true"
+  )
+}
+
+class Log4jStartupClasspathProvider(
+  @Classpath val runtime: FileCollection,
+  @Classpath val jpl: FileCollection,
+) : CommandLineArgumentProvider {
+  override fun asArguments(): Iterable<String> = listOf(
+    "-Dlog4jStartup.runtime=${runtime.asPath}",
+    "-Dlog4jStartup.jpl=${jpl.singleFile.absolutePath}",
   )
 }
