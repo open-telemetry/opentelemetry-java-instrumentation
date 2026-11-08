@@ -12,6 +12,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
+import static org.objectweb.asm.Opcodes.V1_8;
 
 import external.instrumentation.ExternalHelper;
 import io.opentelemetry.context.Context;
@@ -43,6 +45,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
 
 class ReferenceCollectorTest {
@@ -333,7 +336,39 @@ class ReferenceCollectorTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"../Provider", "example/Provider", "example..Provider"})
+  @ValueSource(
+      strings = {
+        "example.Provider",
+        "example.Provider$Nested",
+        "example.Prøvider",
+      })
+  void shouldCollectHelperClassesFromValidProviderNames(String provider) {
+    RecordingClassLoader loader =
+        new RecordingClassLoader("agent/providers", "\n" + provider + "\n\n");
+    String internalName = provider.replace('.', '/');
+    ClassWriter writer = new ClassWriter(0);
+    writer.visit(V1_8, ACC_PUBLIC, internalName, null, "java/lang/Object", null);
+    writer.visitEnd();
+    loader.resources.put(
+        internalName + ".class",
+        ByteArrayUrl.create(internalName + ".class", writer.toByteArray()));
+    ReferenceCollector collector = new ReferenceCollector(provider::equals, loader);
+
+    collector.collectReferencesFromResource(
+        HelperResource.create("META-INF/services/example.Service", "agent/providers", false));
+    collector.prune();
+
+    assertThat(collector.getSortedHelperClasses()).containsExactly(provider);
+    assertThat(loader.lookups).containsExactly("agent/providers", internalName + ".class");
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "example/Provider",
+        "example\\Provider",
+        "example..Provider",
+      })
   void shouldRejectMalformedProviderNames(String provider) {
     RecordingClassLoader loader = new RecordingClassLoader("agent/providers", provider);
     ReferenceCollector collector = new ReferenceCollector(s -> false, loader);
