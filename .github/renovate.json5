@@ -98,6 +98,15 @@
 
     {
       matchPackageNames: [
+        'net.bytebuddy:**',
+      ],
+      allowedVersions: '!/\\-jdk5/',
+      // Maven's latest tag can point to a -jdk5 variant that sorts below the regular release.
+      // TODO remove once Mend-hosted Renovate includes https://github.com/renovatebot/renovate/pull/46472
+      respectLatest: false,
+    },
+    {
+      matchPackageNames: [
         'io.opentelemetry.contrib:opentelemetry-azure-resources',
         'io.opentelemetry.contrib:opentelemetry-aws-resources',
         'io.opentelemetry.contrib:opentelemetry-aws-xray-propagator',
@@ -204,70 +213,6 @@
         'ch.qos.logback:**',
       ],
       allowedVersions: '/^1\\.3\\./',
-    },
-
-    // ── Package family groups ──────────────────────────────────────────
-
-    {
-      groupName: 'quarkus packages',
-      matchPackageNames: [
-        'io.quarkus:**',
-      ],
-    },
-    {
-      groupName: 'gradle develocity packages',
-      matchPackageNames: [
-        'com.gradle.develocity:**',
-      ],
-    },
-    {
-      groupName: 'armeria packages',
-      matchPackageNames: [
-        'com.linecorp.armeria:**',
-      ],
-    },
-    {
-      groupName: 'spotless packages',
-      matchPackageNames: [
-        'com.diffplug.spotless',
-        'com.diffplug.spotless:**',
-      ],
-    },
-    {
-      groupName: 'byte buddy packages',
-      matchPackageNames: [
-        'net.bytebuddy:**',
-      ],
-      allowedVersions: '!/\\-jdk5/',
-      // Maven's latest tag can point to a -jdk5 variant that sorts below the regular release.
-      // TODO remove once Mend-hosted Renovate includes https://github.com/renovatebot/renovate/pull/46472
-      respectLatest: false,
-    },
-    {
-      groupName: 'gradle shadow packages',
-      matchPackageNames: [
-        'com.gradleup.shadow:**',
-      ],
-    },
-    {
-      groupName: 'guava packages',
-      matchPackageNames: [
-        'com.google.guava:**',
-      ],
-    },
-    {
-      groupName: 'jackson packages',
-      matchPackageNames: [
-        'com.fasterxml.jackson:**',
-        'com.fasterxml.jackson.core:**',
-      ],
-    },
-    {
-      groupName: 'graalvm buildtools packages',
-      matchPackageNames: [
-        'org.graalvm.buildtools:**',
-        'org.graalvm.buildtools.native:**',
-      ],
     },
 
     // ── Disabled updates (Java version compatibility) ──────────────────
