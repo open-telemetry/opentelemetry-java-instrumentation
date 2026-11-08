@@ -97,16 +97,6 @@
     // ── Version constraints ────────────────────────────────────────────
 
     {
-      // Keep formatter updates aligned with the version pinned in maintenance build configurations.
-      matchBaseBranches: [
-        'maintenance/v2.x',
-      ],
-      matchPackageNames: [
-        'com.google.googlejavaformat:google-java-format',
-      ],
-      allowedVersions: '/^1\\.36\\.1$/',
-    },
-    {
       matchPackageNames: [
         'net.bytebuddy:**',
       ],
@@ -233,6 +223,19 @@
       matchPackageNames: [
         'io.opentelemetry:**',
       ],
+    },
+    {
+      // Keep major formatter updates out of the maintenance branch.
+      matchBaseBranches: [
+        'maintenance/v2.x',
+      ],
+      matchPackageNames: [
+        'com.google.googlejavaformat:google-java-format',
+      ],
+      matchUpdateTypes: [
+        'major',
+      ],
+      enabled: false,
     },
     {
       // junit 6+ requires Java 17+
