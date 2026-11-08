@@ -56,8 +56,8 @@ class ContextDataInjectorInstrumentation implements TypeInstrumentation {
     public static StringMap onExit(
         @Advice.FieldValue("providers") List<ContextDataProvider> providers,
         @Advice.Return StringMap contextData) {
-      for (ContextDataProvider provider : providers) {
-        if (provider instanceof OpenTelemetryContextDataProvider) {
+      for (int i = 0; i < providers.size(); i++) {
+        if (providers.get(i) instanceof OpenTelemetryContextDataProvider) {
           return contextData;
         }
       }

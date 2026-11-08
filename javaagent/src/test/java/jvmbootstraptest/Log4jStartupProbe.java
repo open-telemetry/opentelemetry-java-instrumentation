@@ -30,6 +30,12 @@ public class Log4jStartupProbe {
           CloseableThreadContext.Instance threadContext =
               CloseableThreadContext.put("request", "application-value")) {
         logger.info("inside span");
+        if (Boolean.parseBoolean(args[0])) {
+          try (CloseableThreadContext.Instance spanId =
+              CloseableThreadContext.put("span_id", "application-span-id")) {
+            logger.info("inside span with application span ID");
+          }
+        }
       }
     } finally {
       span.end();
