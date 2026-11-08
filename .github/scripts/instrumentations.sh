@@ -381,7 +381,6 @@ readonly INSTRUMENTATIONS=(
   "undertow-1.4:javaagent:test"
   "undertow-1.4:javaagent:testExceptionSignalLogs"
   "vaadin-14.2:javaagent:vaadin142Test"
-  "vaadin-14.2:javaagent:vaadin16Test"
   "vertx:vertx-http-client:vertx-http-client-3.0:javaagent:test"
   "vertx:vertx-http-client:vertx-http-client-3.0:javaagent:testStableSemconv"
   "vertx:vertx-http-client:vertx-http-client-4.0:javaagent:test"
