@@ -22,7 +22,8 @@ public final class HttpConstants {
       unmodifiableSet(
           new HashSet<>(
               asList(
-                  "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "TRACE")));
+                  "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "QUERY",
+                  "TRACE")));
 
   // Default sensitive query parameters from semantic conventions:
   // https://opentelemetry.io/docs/specs/semconv/attributes-registry/url/#url-full

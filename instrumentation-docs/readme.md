@@ -277,7 +277,7 @@ definitions:
       declarative_name: java.common.http.known_methods
       description: ...
       type: list
-      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,QUERY,TRACE
   metrics:
     http.client.request.duration-1a2b3c4d:   # <metric name>-<short content hash>
       name: http.client.request.duration
