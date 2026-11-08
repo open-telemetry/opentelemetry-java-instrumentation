@@ -120,6 +120,9 @@ class JdbcAttributesGetterTest {
     assertThat(attributesGetter.getDbResponseStatusCode(request, null, null)).isNull();
     assertThat(attributesGetter.getDbResponseStatusCode(request, null, new IllegalStateException()))
         .isNull();
+    assertThat(attributesGetter.getErrorType(request, null, null)).isNull();
+    assertThat(attributesGetter.getErrorType(request, null, new IllegalStateException()))
+        .isEqualTo(IllegalStateException.class.getName());
   }
 
   private static Stream<Arguments> errorCodes() {
@@ -127,10 +130,14 @@ class JdbcAttributesGetterTest {
         argumentSet("PostgreSQL SQLSTATE takes precedence", 42, "42601", "42601", "42601"),
         argumentSet("negative vendor code", -42, null, "-42", "-42"),
         argumentSet("SQLSTATE with zero vendor code", 0, "42601", "42601", "42601"),
-        argumentSet("null SQLSTATE is unavailable", 0, null, null, null),
-        argumentSet("empty SQLSTATE is unavailable", 0, "", null, null),
+        argumentSet("null SQLSTATE is unavailable", 0, null, SQLException.class.getName(), null),
+        argumentSet("empty SQLSTATE is unavailable", 0, "", SQLException.class.getName(), null),
         argumentSet(
-            "successful completion SQLSTATE is available for status", 42, "00000", null, "00000"));
+            "successful completion SQLSTATE is available for status",
+            42,
+            "00000",
+            SQLException.class.getName(),
+            "00000"));
   }
 
   private static final class TestSqlTimeoutException extends SQLTimeoutException {

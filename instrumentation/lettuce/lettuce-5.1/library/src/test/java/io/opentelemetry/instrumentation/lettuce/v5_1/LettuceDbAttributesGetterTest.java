@@ -16,9 +16,9 @@ class LettuceDbAttributesGetterTest {
   private final LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
   @Test
-  void ignoresClientErrorWithoutResponse() {
+  void returnsExceptionFallbackWithoutResponse() {
     assertThat(getter.getErrorType(null, null, new RedisCommandTimeoutException("timed out")))
-        .isNull();
+        .isEqualTo(RedisCommandTimeoutException.class.getName());
     assertThat(
             getter.getDbResponseStatusCode(
                 null, null, new RedisCommandTimeoutException("timed out")))
@@ -32,7 +32,7 @@ class LettuceDbAttributesGetterTest {
     assertThat(getter.getErrorType(null, response, null)).isEqualTo("_OTHER");
     assertThat(getter.getDbResponseStatusCode(null, response, null)).isNull();
     assertThat(getter.getErrorType(null, response, new RedisNoScriptException("missing script")))
-        .isNull();
+        .isEqualTo(RedisNoScriptException.class.getName());
   }
 
   @Test

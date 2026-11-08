@@ -68,7 +68,10 @@ class VertxSqlClientAttributesGetter
   public String getErrorType(
       VertxSqlClientRequest request, @Nullable Void response, @Nullable Throwable error) {
     String responseStatusCode = getResponseStatusCode(request, error);
-    return "00000".equals(responseStatusCode) ? null : responseStatusCode;
+    if (responseStatusCode != null && !"00000".equals(responseStatusCode)) {
+      return responseStatusCode;
+    }
+    return error == null ? null : error.getClass().getName();
   }
 
   @Nullable

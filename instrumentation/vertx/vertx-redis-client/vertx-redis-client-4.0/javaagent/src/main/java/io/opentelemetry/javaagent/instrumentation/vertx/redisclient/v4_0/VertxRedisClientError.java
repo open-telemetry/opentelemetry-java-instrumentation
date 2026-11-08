@@ -43,6 +43,15 @@ public final class VertxRedisClientError {
     return error instanceof ErrorType ? SERVER_ERROR.get((ErrorType) error) : null;
   }
 
+  @Nullable
+  static String getErrorType(@Nullable Throwable error) {
+    if (error == null) {
+      return null;
+    }
+    String errorPrefix = getErrorCode(error);
+    return errorPrefix != null ? errorPrefix : error.getClass().getName();
+  }
+
   // Vert.x can complete successfully with errors inside a collection reply, such as EXEC results.
   // Find the first error to classify the telemetry.
   @Nullable

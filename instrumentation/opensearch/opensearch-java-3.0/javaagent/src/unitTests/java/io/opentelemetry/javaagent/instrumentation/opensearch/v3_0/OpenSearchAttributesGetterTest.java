@@ -35,8 +35,15 @@ class OpenSearchAttributesGetterTest {
   private void assertStatus(Throwable error, int statusCode) {
     assertThat(getter.getDbResponseStatusCode(request, null, error))
         .isEqualTo(Integer.toString(statusCode));
-    assertThat(getter.getErrorType(request, null, error))
-        .isEqualTo(statusCode >= 400 || statusCode < 100 ? Integer.toString(statusCode) : null);
+    String expectedErrorType;
+    if (statusCode >= 400 || statusCode < 100) {
+      expectedErrorType = Integer.toString(statusCode);
+    } else if (error instanceof CompletionException) {
+      expectedErrorType = CompletionException.class.getName();
+    } else {
+      expectedErrorType = OpenSearchException.class.getName();
+    }
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo(expectedErrorType);
   }
 
   @Test
@@ -44,5 +51,7 @@ class OpenSearchAttributesGetterTest {
     assertThat(getter.getDbResponseStatusCode(request, null, null)).isNull();
     assertThat(getter.getDbResponseStatusCode(request, null, new IllegalStateException("test")))
         .isNull();
+    assertThat(getter.getErrorType(request, null, new IllegalStateException("test")))
+        .isEqualTo(IllegalStateException.class.getName());
   }
 }

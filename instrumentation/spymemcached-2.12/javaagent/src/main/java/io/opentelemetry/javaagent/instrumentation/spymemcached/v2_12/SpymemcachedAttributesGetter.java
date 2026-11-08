@@ -43,6 +43,28 @@ class SpymemcachedAttributesGetter
   @Nullable
   public String getDbResponseStatusCode(
       SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
+    return getErrorStatusCode(response);
+  }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
+    if (error != null && !(error instanceof OperationException)) {
+      return error.getClass().getName();
+    }
+    if (response instanceof Future && ((Future<?>) response).isCancelled()) {
+      return error == null ? null : error.getClass().getName();
+    }
+    String errorStatusCode = getErrorStatusCode(response);
+    if (errorStatusCode != null) {
+      return errorStatusCode;
+    }
+    return error == null ? null : error.getClass().getName();
+  }
+
+  @Nullable
+  private static String getErrorStatusCode(@Nullable Object response) {
     OperationStatus status = SpymemcachedSingletons.getResponseStatus(response);
     if (status == null) {
       return null;
@@ -59,22 +81,8 @@ class SpymemcachedAttributesGetter
       case CANCELLED:
         return null;
       default:
-        break;
+        return code.name();
     }
-    return code.name();
-  }
-
-  @Override
-  @Nullable
-  public String getErrorType(
-      SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
-    if (error != null && !(error instanceof OperationException)) {
-      return null;
-    }
-    if (response instanceof Future && ((Future<?>) response).isCancelled()) {
-      return null;
-    }
-    return getDbResponseStatusCode(request, response, error);
   }
 
   @Override
