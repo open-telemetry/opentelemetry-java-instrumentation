@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.boot;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.LOGIN;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -26,13 +25,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
-import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
-import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames;
-import io.opentelemetry.testing.internal.armeria.common.RequestHeadersBuilder;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
@@ -72,38 +65,6 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
             "always"));
     context = app.run();
     return context;
-  }
-
-  @Override
-  protected AggregatedHttpRequest request(ServerEndpoint endpoint, String method) {
-    AggregatedHttpRequest request = super.request(endpoint, method);
-    if (endpoint != LOGIN || !"POST".equals(method)) {
-      return request;
-    }
-    return AggregatedHttpRequest.of(prepareLoginHeaders(request.headers().toBuilder()).build());
-  }
-
-  private RequestHeadersBuilder prepareLoginHeaders(RequestHeadersBuilder headers) {
-    AggregatedHttpResponse loginPage =
-        client.execute(super.request(LOGIN, "GET")).aggregate().join();
-    assertThat(loginPage.status().code()).isEqualTo(200);
-    String sessionCookie =
-        loginPage.headers().getAll(HttpHeaderNames.SET_COOKIE).stream()
-            .filter(cookie -> cookie.startsWith("JSESSIONID="))
-            .map(cookie -> cookie.split(";", 2)[0])
-            .findFirst()
-            .orElseThrow();
-    Matcher csrfToken =
-        Pattern.compile("name=\"_csrf\"[^>]*value=\"([^\"]+)\"").matcher(loginPage.contentUtf8());
-    assertThat(csrfToken.find()).isTrue();
-
-    // Receiving the page does not guarantee its server span has finished exporting.
-    testing.waitForTraces(1);
-    testing.clearData();
-
-    return headers
-        .set(HttpHeaderNames.COOKIE, sessionCookie)
-        .set("X-CSRF-TOKEN", csrfToken.group(1));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
