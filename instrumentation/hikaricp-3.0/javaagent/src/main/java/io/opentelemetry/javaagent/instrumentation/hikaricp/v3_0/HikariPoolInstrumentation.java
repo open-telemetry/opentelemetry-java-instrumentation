@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.hikaricp.v3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
@@ -41,7 +40,7 @@ class HikariPoolInstrumentation implements TypeInstrumentation {
             .and(takesArguments(named("com.zaxxer.hikari.metrics.MetricsTrackerFactory"))),
         getClass().getName() + "$SetMetricsTrackerFactoryAdvice");
     transformer.applyAdviceToMethod(
-        named("initializeHouseKeepingExecutorService").and(returns(ScheduledExecutorService.class)),
+        named("initializeHouseKeepingExecutorService"),
         getClass().getName() + "$InitializeHouseKeepingExecutorServiceAdvice");
   }
 
