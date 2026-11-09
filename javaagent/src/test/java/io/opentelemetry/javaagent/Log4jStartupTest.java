@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
@@ -17,21 +18,22 @@ import jvmbootstraptest.Log4jStartupProbe;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 
 @EnabledForJreRange(min = JRE.JAVA_11)
 class Log4jStartupTest {
-  @ParameterizedTest(name = "withJpl={0}")
-  @ValueSource(booleans = {false, true})
-  void correlatesLogsWhenPrometheusStarts(boolean withJpl) throws Exception {
+  @ParameterizedTest(name = "withJpl={0}, map={1}")
+  @CsvSource({"false, DEFAULT", "true, DEFAULT", "true, COPY_ON_WRITE", "true, GARBAGE_FREE"})
+  void correlatesLogsWhenPrometheusStarts(boolean withJpl, MapMode mapMode) throws Exception {
     String probeClasses =
         new File(
                 Log4jStartupProbe.class.getProtectionDomain().getCodeSource().getLocation().toURI())
             .getPath();
-    String classpath =
-        probeClasses + File.pathSeparator + System.getProperty("log4jStartup.runtime");
-    if (withJpl) {
-      classpath += File.pathSeparator + System.getProperty("log4jStartup.jpl");
+    String runtime = System.getProperty("log4jStartup.runtime");
+    if (mapMode == MapMode.COPY_ON_WRITE) {
+      runtime = System.getProperty("log4jStartup.copyOnWriteRuntime");
+    } else if (withJpl) {
+      runtime += File.pathSeparator + System.getProperty("log4jStartup.jpl");
     }
 
     IntegrationTestUtils.ProcessResult result =
@@ -43,27 +45,28 @@ class Log4jStartupTest {
               "-Dotel.exporter.prometheus.port=0",
               "-Dotel.traces.exporter=console",
               "-Dotel.logs.exporter=none",
+              "-Dlog4j2.threadContextMap=" + mapMode.setting,
               "-Dlog4j2.configurationFile="
                   + requireNonNull(getClass().getResource("log4j-startup.xml")).toExternalForm()
             },
-            new String[] {Boolean.toString(withJpl)},
+            new String[] {Boolean.toString(withJpl), mapMode.className},
             emptyMap(),
-            classpath,
+            probeClasses + File.pathSeparator + runtime,
             false);
 
     String output = result.getOutput();
-    assertThat(result.getExitCode()).as("Child JVM output:%n%s", output).isZero();
+    assertThat(result.getExitCode()).isZero();
     String[] lines = output.split("\\R");
-    String correlation =
+    List<String> correlations =
         Arrays.stream(lines)
             .filter(line -> line.startsWith("SPAN|"))
-            .findFirst()
-            .orElseThrow(() -> new AssertionError(output))
-            .substring("SPAN|".length());
+            .map(line -> line.substring("SPAN|".length()))
+            .collect(toList());
+    assertThat(correlations).hasSize(2).doesNotHaveDuplicates();
     List<String> expectedLogs = new ArrayList<>();
-    expectedLogs.add("LOG|inside span|" + correlation + "|application-value");
+    expectedLogs.add("LOG|first span|" + correlations.get(0) + "|application-value");
     if (withJpl) {
-      String[] spanContext = correlation.split("\\|");
+      String[] spanContext = correlations.get(0).split("\\|");
       expectedLogs.add(
           "LOG|inside span with application span ID|"
               + spanContext[0]
@@ -71,9 +74,25 @@ class Log4jStartupTest {
               + spanContext[2]
               + "|application-value");
     }
+    expectedLogs.add("LOG|second span|" + correlations.get(1) + "|application-value");
     expectedLogs.add("LOG|outside span||||");
     assertThat(Arrays.stream(lines).filter(line -> line.startsWith("LOG|")))
-        .as("Log4j event correlation with JPL enabled: %s", withJpl)
         .containsExactlyElementsOf(expectedLogs);
+  }
+
+  private enum MapMode {
+    DEFAULT("WebApp", "default"),
+    COPY_ON_WRITE(
+        "org.apache.logging.log4j.spi.CopyOnWriteSortedArrayThreadContextMap",
+        "CopyOnWriteSortedArrayThreadContextMap"),
+    GARBAGE_FREE("GarbageFree", "GarbageFreeSortedArrayThreadContextMap");
+
+    private final String setting;
+    private final String className;
+
+    MapMode(String setting, String className) {
+      this.setting = setting;
+      this.className = className;
+    }
   }
 }

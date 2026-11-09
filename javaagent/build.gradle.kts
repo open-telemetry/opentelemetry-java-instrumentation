@@ -63,7 +63,13 @@ val log4jStartupJpl = configurations.create("log4jStartupJpl") {
   isCanBeConsumed = false
   isTransitive = false
 }
+val log4jStartupCopyOnWriteRuntime = configurations.create("log4jStartupCopyOnWriteRuntime") {
+  isCanBeResolved = true
+  isCanBeConsumed = false
+}
 val log4jStartupVersion = "2.26.1"
+// Newer Log4j versions no longer ship a built-in copy-on-write thread context map.
+val log4jStartupCopyOnWriteVersion = "2.23.1"
 
 dependencies {
   bootstrapLibs(project(":instrumentation-api"))
@@ -132,6 +138,9 @@ dependencies {
   log4jStartupRuntime("io.opentelemetry:opentelemetry-api")
   log4jStartupRuntime("org.apache.logging.log4j:log4j-core:$log4jStartupVersion")
   log4jStartupJpl("org.apache.logging.log4j:log4j-jpl:$log4jStartupVersion")
+  log4jStartupCopyOnWriteRuntime("io.opentelemetry:opentelemetry-api")
+  log4jStartupCopyOnWriteRuntime("org.apache.logging.log4j:log4j-core:$log4jStartupCopyOnWriteVersion")
+  log4jStartupCopyOnWriteRuntime("org.apache.logging.log4j:log4j-jpl:$log4jStartupCopyOnWriteVersion")
 }
 
 val javaagentDependencies = dependencies
@@ -295,7 +304,9 @@ tasks {
   }
 
   test {
-    jvmArgumentProviders.add(Log4jStartupClasspathProvider(log4jStartupRuntime, log4jStartupJpl))
+    jvmArgumentProviders.add(
+      Log4jStartupClasspathProvider(log4jStartupRuntime, log4jStartupJpl, log4jStartupCopyOnWriteRuntime)
+    )
   }
 
   val cleanLicenses = register<Delete>("cleanLicenses") {
@@ -477,9 +488,11 @@ class JavaagentProvider(
 class Log4jStartupClasspathProvider(
   @Classpath val runtime: FileCollection,
   @Classpath val jpl: FileCollection,
+  @Classpath val copyOnWriteRuntime: FileCollection,
 ) : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> = listOf(
     "-Dlog4jStartup.runtime=${runtime.asPath}",
     "-Dlog4jStartup.jpl=${jpl.singleFile.absolutePath}",
+    "-Dlog4jStartup.copyOnWriteRuntime=${copyOnWriteRuntime.asPath}",
   )
 }

@@ -12,12 +12,28 @@ import io.opentelemetry.context.Scope;
 import org.apache.logging.log4j.CloseableThreadContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
+import org.apache.logging.log4j.spi.ReadOnlyThreadContextMap;
 
 public class Log4jStartupProbe {
-  @SuppressWarnings("SystemOut") // The parent test captures the probe's output.
   public static void main(String[] args) {
     Logger logger = LogManager.getLogger(Log4jStartupProbe.class);
-    Span span = GlobalOpenTelemetry.getTracer("log4j-startup-test").spanBuilder("test").startSpan();
+    ReadOnlyThreadContextMap map = ThreadContext.getThreadContextMap();
+    String mapClass = map == null ? "default" : map.getClass().getSimpleName();
+    if (!mapClass.equals(args[1])) {
+      throw new IllegalStateException(
+          "Expected thread context map " + args[1] + ", got " + mapClass);
+    }
+    logSpan("first span", Boolean.parseBoolean(args[0]));
+    logSpan("second span", false);
+    logger.info("outside span");
+    LogManager.shutdown();
+  }
+
+  @SuppressWarnings("SystemOut") // The parent test captures the probe's output.
+  private static void logSpan(String name, boolean withApplicationSpanId) {
+    Logger logger = LogManager.getLogger(Log4jStartupProbe.class);
+    Span span = GlobalOpenTelemetry.getTracer("log4j-startup-test").spanBuilder(name).startSpan();
     try {
       SpanContext context = span.getSpanContext();
       if (!context.isValid()) {
@@ -29,8 +45,8 @@ public class Log4jStartupProbe {
       try (Scope ignored = span.makeCurrent();
           CloseableThreadContext.Instance threadContext =
               CloseableThreadContext.put("request", "application-value")) {
-        logger.info("inside span");
-        if (Boolean.parseBoolean(args[0])) {
+        logger.info(name);
+        if (withApplicationSpanId) {
           try (CloseableThreadContext.Instance spanId =
               CloseableThreadContext.put("span_id", "application-span-id")) {
             logger.info("inside span with application span ID");
@@ -40,8 +56,6 @@ public class Log4jStartupProbe {
     } finally {
       span.end();
     }
-    logger.info("outside span");
-    LogManager.shutdown();
   }
 
   private Log4jStartupProbe() {}
