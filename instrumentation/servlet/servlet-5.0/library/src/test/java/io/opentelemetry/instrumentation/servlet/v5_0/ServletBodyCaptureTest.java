@@ -46,7 +46,7 @@ class ServletBodyCaptureTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  // TODO: to be replaced with 1.45.0 semconv incubating attribute when available
+  // TODO: to be replaced with semconv incubating attribute when available
   private static final AttributeKey<Value<?>> BODY_ATTRIBUTE_KEY =
       valueKey("http.request.body.content");
 

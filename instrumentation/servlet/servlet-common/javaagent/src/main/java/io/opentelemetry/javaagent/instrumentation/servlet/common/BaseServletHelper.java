@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRe
 import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.extractRequestBody;
 import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
 
-import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -145,7 +144,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
       return;
     }
 
-    Value<?> body = extractRequestBody(accessor, request);
+    String body = extractRequestBody(accessor, request);
     if (body != null) {
       serverSpan.setAttribute(SPAN_BODY_ATTRIBUTE, body);
     }

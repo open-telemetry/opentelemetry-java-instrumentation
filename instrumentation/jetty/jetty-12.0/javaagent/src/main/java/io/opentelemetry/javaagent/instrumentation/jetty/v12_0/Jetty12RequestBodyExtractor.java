@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRe
 import static org.eclipse.jetty.http.HttpHeader.CONTENT_TYPE;
 
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.common.Value;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor;
@@ -43,7 +42,7 @@ class Jetty12RequestBodyExtractor implements AttributesExtractor<Request, Respon
     request.setAttribute(REQUEST_BODY_ATTRIBUTE, null);
 
     String contentType = request.getHeaders().get(CONTENT_TYPE);
-    Value<?> body = ServletRequestBodyExtractor.getRequestBodyValue(buffer, contentType);
+    String body = ServletRequestBodyExtractor.getRequestBodyValue(buffer, contentType);
     if (body != null) {
       attributes.put(SPAN_BODY_ATTRIBUTE, body);
     }

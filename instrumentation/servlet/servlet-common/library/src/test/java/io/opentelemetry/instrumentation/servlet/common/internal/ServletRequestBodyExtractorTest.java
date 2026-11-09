@@ -17,7 +17,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.common.Value;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -85,7 +84,7 @@ class ServletRequestBodyExtractorTest {
     ByteBuffer buffer = bufferOf("abc".getBytes(UTF_8));
     requestAttributes.put(REQUEST_BODY_ATTRIBUTE, buffer);
 
-    assertThat(extractRequestBody(accessor, request)).isEqualTo(Value.of("abc"));
+    assertThat(extractRequestBody(accessor, request)).isEqualTo("abc");
     assertThat(extractRequestBody(accessor, request)).isNull();
   }
 
@@ -93,15 +92,15 @@ class ServletRequestBodyExtractorTest {
   void validUtf8Body() {
     ByteBuffer buffer = bufferOf("request-body".getBytes(UTF_8));
 
-    Value<?> body = getRequestBodyValue(buffer, null);
-    assertThat(body).isEqualTo(Value.of("request-body"));
+    String body = getRequestBodyValue(buffer, null);
+    assertThat(body).isEqualTo("request-body");
   }
 
   private static final byte[] ISO_8859_1_BODY = "café".getBytes(ISO_8859_1);
 
   @Test
-  void nonUtf8WithoutContentTypeCapturedAsBinary() {
-    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), null)).isEqualTo(Value.of("caf"));
+  void nonUtf8WithoutContentTypeCapturedAsUtf8() {
+    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), null)).isEqualTo("caf");
   }
 
   @ParameterizedTest
@@ -112,24 +111,21 @@ class ServletRequestBodyExtractorTest {
         "text/plain; charset=\"ISO-8859-1\"",
         "text/plain; charset=ISO-8859-1; boundary=x"
       })
-  void nonUtf8WithContentTypeWithEncodingCapturedAsText(String contentType) {
-    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), contentType))
-        .isEqualTo(Value.of("café"));
+  void nonUtf8WithContentTypeWithEncoding(String contentType) {
+    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), contentType)).isEqualTo("café");
   }
 
   @Test
-  void unknownCharsetFallsBackToUtf8() {
+  void unknownCharsetAssumedUtf8() {
     assertThat(getRequestBodyValue(bufferOf("café".getBytes(UTF_8)), "text/plain; charset=unknown"))
-        .isEqualTo(Value.of("café"));
-    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), "text/plain; charset=unknown"))
-        .isEqualTo(Value.of("caf"));
+        .isEqualTo("café");
   }
 
   @Test
   void truncatedUtf8() {
     ByteBuffer buffer = ByteBuffer.allocate(6);
     buffer.put("café".getBytes(UTF_8)).put((byte) 0xC3); // truncated UTF-8 sequence
-    assertThat(getRequestBodyValue(buffer, null)).isEqualTo(Value.of("café"));
+    assertThat(getRequestBodyValue(buffer, null)).isEqualTo("café");
   }
 
   private static ByteBuffer bufferOf(byte[] bytes) {
