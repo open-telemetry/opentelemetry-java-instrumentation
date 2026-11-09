@@ -53,8 +53,8 @@ testing.suites {
       filter { includeTestsMatching("*LogPatternTest") }
       environment("OTEL_INSTRUMENTATION_LOGGING_PATTERN_INJECTION_ENABLED", "true")
       environment("OTEL_SERVICE_NAME", "pattern-service")
-      systemProperty("otel.instrumentation.common.logging.trace-id-key", "custom_trace")
-      systemProperty("otel.instrumentation.common.logging.span-id-key", "custom_span")
+      systemProperty("otel.instrumentation.common.logging.trace-id-key", "custom,trace")
+      systemProperty("otel.instrumentation.common.logging.span-id-key", "custom,%span{}")
     }
 
     // Very different codepaths when threadlocals are enabled or not so we check both.

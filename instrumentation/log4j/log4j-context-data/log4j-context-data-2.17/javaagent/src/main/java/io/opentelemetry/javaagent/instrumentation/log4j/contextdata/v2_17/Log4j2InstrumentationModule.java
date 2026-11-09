@@ -48,7 +48,10 @@ public class Log4j2InstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new ResourceInjectingTypeInstrumentation(), new PatternLayoutInstrumentation());
+    return asList(
+        new ResourceInjectingTypeInstrumentation(),
+        new PatternLayoutInstrumentation(),
+        new MdcPatternConverterInstrumentation());
   }
 
   // A type instrumentation is needed to trigger resource injection.

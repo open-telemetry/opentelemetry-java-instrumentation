@@ -210,6 +210,59 @@ class LogPatternInjectionTest {
   }
 
   @ParameterizedTest
+  @MethodSource("complexLog4j2Keys")
+  void preservesComplexLog4j2Keys(String traceKey, String label, String option) {
+    String enhanced = LogPatternInjection.enhance("%d %m%n", Framework.LOG4J2, traceKey, "span_id");
+    assertThat(enhanced)
+        .isEqualTo(
+            "%d service.name=%X{service.name} "
+                + label
+                + "=%X{"
+                + option
+                + "} span_id=%X{span_id} %m%n");
+    assertThat(LogPatternInjection.enhance(enhanced, Framework.LOG4J2, traceKey, "span_id"))
+        .isEqualTo(enhanced);
+  }
+
+  private static Stream<Arguments> complexLog4j2Keys() {
+    return Stream.of(
+        argumentSet(
+            "comma",
+            "custom,trace",
+            "custom,trace",
+            "otel.pattern-injection.log4j2.trace.Y3VzdG9tLHRyYWNl"),
+        argumentSet(
+            "literal pattern syntax",
+            "custom,%trace{}",
+            "custom,%%trace{}",
+            "otel.pattern-injection.log4j2.trace.Y3VzdG9tLCV0cmFjZXt9"),
+        argumentSet(
+            "quotes and backslash",
+            "custom,'\"trace\\",
+            "custom,'\"trace\\",
+            "otel.pattern-injection.log4j2.trace.Y3VzdG9tLCcidHJhY2Vc"),
+        argumentSet(
+            "whitespace",
+            " custom trace ",
+            " custom trace ",
+            "otel.pattern-injection.log4j2.trace.IGN1c3RvbSB0cmFjZSA"));
+  }
+
+  @Test
+  void doesNotReuseLog4j2KeyListForCommaContainingKey() {
+    String pattern = "%d %X{custom,trace} %m%n";
+    String enhanced =
+        LogPatternInjection.enhance(pattern, Framework.LOG4J2, "custom,trace", "span_id");
+    assertThat(enhanced)
+        .isEqualTo(
+            "%d service.name=%X{service.name} "
+                + "custom,trace=%X{otel.pattern-injection.log4j2.trace.Y3VzdG9tLHRyYWNl} "
+                + "span_id=%X{span_id} %X{custom,trace} %m%n");
+    assertThat(LogPatternInjection.enhance(enhanced, Framework.LOG4J2, "custom,trace", "span_id"))
+        .isEqualTo(enhanced);
+  }
+
+  @ParameterizedTest
   @ValueSource(strings = {"black", "blue", "cyan", "green", "magenta", "red", "white", "yellow"})
   void recognizesLog4j2ColorWrappedMdc(String color) {
     String keyed = "%d %" + color + "{%X{trace_id}} %m%n";

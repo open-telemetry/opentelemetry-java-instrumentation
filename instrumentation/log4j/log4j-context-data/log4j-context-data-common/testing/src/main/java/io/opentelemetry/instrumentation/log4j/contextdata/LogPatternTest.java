@@ -126,13 +126,37 @@ public abstract class LogPatternTest {
         (layout, rendered) -> {
           assertThat(rendered).containsOnlyOnce(Span.current().getSpanContext().getTraceId());
           if (ENABLED) {
-            assertThat(layout.getConversionPattern()).doesNotContain(TRACE + "=%X{");
             assertThat(rendered).containsOnlyOnce(Span.current().getSpanContext().getSpanId());
             if (wholeMdc) {
               assertThat(layout.getConversionPattern()).isEqualTo(pattern);
+              assertThat(rendered).doesNotContain("otel.pattern-injection.");
             }
           }
         });
+  }
+
+  @Test
+  void preservesNativeMdcKeyLists() {
+    ThreadContext.put("first", "first-value");
+    ThreadContext.put("second", "second-value");
+    ThreadContext.put("otel.pattern-injection.log4j2.trace.app", "application-placeholder");
+    try {
+      assertRenderedPattern(
+          "%d %X{first,second} %X{otel.pattern-injection.log4j2.trace.app} %m%n",
+          (layout, rendered) -> {
+            assertThat(rendered)
+                .containsOnlyOnce("first=first-value")
+                .containsOnlyOnce("second=second-value")
+                .containsOnlyOnce("application-placeholder");
+            if (ENABLED) {
+              assertThat(rendered)
+                  .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
+                  .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
+            }
+          });
+    } finally {
+      ThreadContext.clearAll();
+    }
   }
 
   private void assertRenderedPattern(String pattern, BiConsumer<PatternLayout, String> assertion) {

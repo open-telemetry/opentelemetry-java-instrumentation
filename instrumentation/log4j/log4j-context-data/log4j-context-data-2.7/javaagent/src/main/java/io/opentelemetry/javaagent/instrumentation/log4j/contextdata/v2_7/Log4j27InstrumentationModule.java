@@ -39,6 +39,8 @@ public class Log4j27InstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new ContextDataInjectorFactoryInstrumentation(), new PatternLayoutInstrumentation());
+        new ContextDataInjectorFactoryInstrumentation(),
+        new PatternLayoutInstrumentation(),
+        new MdcPatternConverterInstrumentation());
   }
 }

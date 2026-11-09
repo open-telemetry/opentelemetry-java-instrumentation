@@ -35,7 +35,7 @@ class MdcConverterInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Nullable
     public static String onExit(@Advice.FieldValue("key") @Nullable String key) {
-      return LogPatternInjection.resolveLogbackMdcKey(key);
+      return LogPatternInjection.resolveMdcKey(key, LogPatternInjection.Framework.LOGBACK);
     }
   }
 }

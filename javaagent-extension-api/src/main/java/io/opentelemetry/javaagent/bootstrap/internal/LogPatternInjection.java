@@ -21,7 +21,9 @@ import javax.annotation.Nullable;
 public final class LogPatternInjection {
   private static final String LOGBACK_TRACE_PREFIX = "otel.pattern-injection.trace.";
   private static final String LOGBACK_SPAN_PREFIX = "otel.pattern-injection.span.";
-  private static final Base64.Encoder logbackKeyEncoder = Base64.getUrlEncoder().withoutPadding();
+  private static final String LOG4J2_TRACE_PREFIX = "otel.pattern-injection.log4j2.trace.";
+  private static final String LOG4J2_SPAN_PREFIX = "otel.pattern-injection.log4j2.span.";
+  private static final Base64.Encoder mdcKeyEncoder = Base64.getUrlEncoder().withoutPadding();
   private static final boolean ENABLED =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "logging")
           .get("pattern_injection")
@@ -44,16 +46,16 @@ public final class LogPatternInjection {
   }
 
   @Nullable
-  public static String resolveLogbackMdcKey(@Nullable String key) {
+  public static String resolveMdcKey(@Nullable String key, Framework framework) {
     if (!ENABLED || key == null) {
       return key;
     }
     String traceKey = AgentCommonConfig.get().getTraceIdKey();
-    if (key.equals(logbackMdcOption(traceKey, 1))) {
+    if (key.equals(mdcOption(traceKey, 1, framework))) {
       return traceKey;
     }
     String spanKey = AgentCommonConfig.get().getSpanIdKey();
-    if (key.equals(logbackMdcOption(spanKey, 2))) {
+    if (key.equals(mdcOption(spanKey, 2, framework))) {
       return spanKey;
     }
     return key;
@@ -69,12 +71,17 @@ public final class LogPatternInjection {
     String[] keys = {"service.name", traceKey, spanKey};
     for (int i = 0; i < keys.length; i++) {
       String key = keys[i];
-      String option = framework == Framework.LOGBACK ? logbackMdcOption(key, i) : key;
+      String option = mdcOption(key, i, framework);
       if (!contains(pattern, framework, key, option)) {
         if (fields.length() > 0) {
           fields.append(' ');
         }
-        String label = framework == Framework.LOGBACK ? escapeLogbackLiteral(key) : key;
+        String label = key;
+        if (framework == Framework.LOGBACK) {
+          label = escapeLogbackLiteral(key);
+        } else if (framework == Framework.LOG4J2) {
+          label = key.replace("%", "%%");
+        }
         fields.append(label).append("=%X{").append(option).append('}');
       }
     }
@@ -115,7 +122,10 @@ public final class LogPatternInjection {
         + pattern.substring(end);
   }
 
-  private static String logbackMdcOption(String key, int field) {
+  private static String mdcOption(String key, int field, Framework framework) {
+    if (framework != Framework.LOGBACK && framework != Framework.LOG4J2) {
+      return key;
+    }
     boolean simple = !key.isEmpty();
     for (int i = 0; i < key.length(); i++) {
       char c = key.charAt(i);
@@ -127,9 +137,15 @@ public final class LogPatternInjection {
     if (simple) {
       return key;
     }
-    // Native Logback options cannot represent every MDC key, even when quoted.
-    String prefix = field == 1 ? LOGBACK_TRACE_PREFIX : LOGBACK_SPAN_PREFIX;
-    return prefix + logbackKeyEncoder.encodeToString(key.getBytes(UTF_8));
+    // Native option parsers cannot represent every MDC key. Restore generated options
+    // in the native converter after it has parsed them, without adding entries to the MDC map.
+    String prefix;
+    if (framework == Framework.LOGBACK) {
+      prefix = field == 1 ? LOGBACK_TRACE_PREFIX : LOGBACK_SPAN_PREFIX;
+    } else {
+      prefix = field == 1 ? LOG4J2_TRACE_PREFIX : LOG4J2_SPAN_PREFIX;
+    }
+    return prefix + mdcKeyEncoder.encodeToString(key.getBytes(UTF_8));
   }
 
   private static String escapeLogbackLiteral(String value) {
@@ -175,13 +191,13 @@ public final class LogPatternInjection {
         } else {
           int close = balancedEnd(pattern, end, '{', '}', framework);
           String option = pattern.substring(end + 1, Math.max(end + 1, close - 1));
+          if (option.equals(mdcOption)) {
+            return true;
+          }
           if (framework == Framework.LOGBACK) {
-            if (option.equals(mdcOption)) {
-              return true;
-            }
             option = firstLogbackOption(option);
           }
-          if (option.equals(key)
+          if ((option.equals(key) && (framework != Framework.LOG4J2 || option.indexOf(',') <= 0))
               || (framework == Framework.LOGBACK && option.startsWith(key + ":-"))
               || ((framework == Framework.LOGBACK || framework == Framework.LOG4J2)
                   && option.isEmpty())) {
