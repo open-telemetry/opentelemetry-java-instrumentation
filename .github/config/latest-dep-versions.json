@@ -57,7 +57,7 @@
     "com.linecorp.armeria:armeria-grpc#+": "1.43.0",
     "com.linecorp.armeria:armeria-junit5#+": "1.43.0",
     "com.lmax:disruptor#+": "4.0.0",
-    "com.mchange:c3p0#+": "0.14.2",
+    "com.mchange:c3p0#+": "0.15.0",
     "com.mysql:mysql-connector-j#+": "26.10.0",
     "com.netflix.hystrix:hystrix-core#+": "1.5.18",
     "com.ning:async-http-client#+": "1.9.40",
